@@ -14,7 +14,8 @@ Prepare development (& testing) environment
 -------------------------------------------
 
 Before run, you need to install required dependencies and run
-`bundle` in working directory.
+`bundle` in working directory. Then you can edit local configuration
+(`.env.local`) if you need to change any default value.
 
 install gems dependencies:
 ```bash
