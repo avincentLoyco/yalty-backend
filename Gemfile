@@ -12,6 +12,7 @@ end
 # Development environment dependencies (also needed by test environement)
 group :development, :test do
   gem 'dotenv-rails'
+  gem 'codeclimate-test-reporter', require: false
 
   # tests
   gem 'rspec-rails'
