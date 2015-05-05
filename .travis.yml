@@ -1,0 +1,16 @@
+language: ruby
+env:
+  global:
+    - DATABASE_URL="postgresql://postgres@localhost/travis_ci_test"
+notifications:
+  email: false
+  slack:
+    secure: J0J4BfYxVT2C0xfuHpRY6mqKfNGcef2b+4VmwAyU3BK+kZAy452p5BkPNIgmSJaj0pl4UE1dmTjFDRxyxOxF4q3KC3Ih61gYVqZ1a/3T940OokCjQowoJBiABSgXRimojTm7rlUD2Jq7zGKaJWJX/Ddinu5eOC8KcEqRh8wQ03Q=
+bundler_args: "--without production staging --deployment"
+before_script:
+  - psql -c 'create database travis_ci_test;' -U postgres
+script: bundle exec rake ci
+cache:
+  - bundler
+addons:
+  postgresql: '9.3'

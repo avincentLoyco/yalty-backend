@@ -1,6 +1,8 @@
 yalty API server
 ================
 
+[![Build Status](https://magnum.travis-ci.com/yalty/yalty-server.svg?token=35p5MLza67zdcUbXZDsS&branch=master)](https://magnum.travis-ci.com/yalty/yalty-server)
+
 Requireements
 -------------
 
@@ -31,7 +33,20 @@ rake db:setup
 Running tests
 -------------
 
-TODO
+Before run, you need to install required dependencies and run
+`bundle` in working directory. Then you can run test with rspec command
+or guard when you are in active development. All tests run on
+[Travis CI](https://magnum.travis-ci.com/yalty/yalty-server)
+when code is pushed on repository.
+
+```bash
+bundle install
+```
+
+```bash
+bin/rspec
+guard
+```
 
 How to deploy
 -------------

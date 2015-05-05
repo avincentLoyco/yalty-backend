@@ -13,13 +13,26 @@ end
 group :development, :test do
   gem 'dotenv-rails'
 
+  # tests
+  gem 'rspec-rails'
+  gem 'shoulda-matchers', require: false
+  gem 'factory_girl_rails'
+  gem 'airborne'
+  gem 'faker'
+  gem 'guard-rspec'
+
   # debug
   gem 'byebug'
-  gem 'better_errors'
-  gem 'binding_of_caller'
-  gem 'web-console', '~> 2.0'
 
   # spring
   gem 'spring'
+  gem 'spring-commands-rspec'
 end
 
+# Development environment dependencies (only)
+group :development do
+  gem 'meta_request'
+  gem 'better_errors'
+  gem 'binding_of_caller'
+  gem 'web-console', '~> 2.0'
+end
