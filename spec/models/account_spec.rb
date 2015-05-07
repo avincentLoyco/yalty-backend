@@ -40,7 +40,7 @@ RSpec.describe Account, type: :model do
       account = FactoryGirl.build(:account, subdomain: nil, company_name: 'The Company')
 
       expect(account).to be_valid
-      expect(account.subdomain).to match(/\Athe-company-[a-z0-9]{4}\z/)
+      expect(account.subdomain).to match(/\Athe-company-[0-9]+\z/)
     end
 
   end

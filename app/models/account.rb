@@ -34,7 +34,7 @@ class Account < ActiveRecord::Base
 
     loop do
       if Account.where(subdomain: subdomain + suffix).exists?
-        suffix = '-' + SecureRandom.hex(2).downcase
+        suffix = '-' + String(SecureRandom.random_number(999) + 1)
       else
         self.subdomain = subdomain + suffix
         break
