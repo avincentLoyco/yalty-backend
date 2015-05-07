@@ -8,22 +8,36 @@ class Account < ActiveRecord::Base
 
   private
 
+  # Generate a subdomain from company name
+  #
+  # Use activesupport transliatera to transform non ascii characters
+  # and remove all other special characters except dash
   def generate_subdomain
-    if subdomain.blank? && company_name.present?
-      generated_subdomain = ActiveSupport::Inflector.transliterate(company_name)
-                            .strip
-                            .gsub(/\s/, '-')
-                            .gsub(/(\A[\-]+)|([^0-9A-Za-z\-])|([\-]+\z)/, '')
-                            .downcase
+    return unless new_record?
 
-      suffix = ''
-      loop do
-        if Account.where(subdomain: generated_subdomain + suffix).exists?
-          suffix = '-' + SecureRandom.hex(2).downcase
-        else
-          self.subdomain = generated_subdomain + suffix
-          break
-        end
+    if subdomain.blank? && company_name.present?
+      self.subdomain = ActiveSupport::Inflector.transliterate(company_name)
+                       .strip
+                       .gsub(/\s/, '-')
+                       .gsub(/(\A[\-]+)|([^0-9A-Za-z\-])|([\-]+\z)/, '')
+                       .downcase
+
+      ensure_subdomain_is_unique
+    end
+  end
+
+  # Ensure subdomain is unique
+  #
+  # Add a random suffix to subdomain composed by 4 chars after a dash
+  def ensure_subdomain_is_unique
+    suffix = ''
+
+    loop do
+      if Account.where(subdomain: subdomain + suffix).exists?
+        suffix = '-' + SecureRandom.hex(2).downcase
+      else
+        self.subdomain = subdomain + suffix
+        break
       end
     end
   end
