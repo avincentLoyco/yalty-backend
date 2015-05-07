@@ -19,7 +19,7 @@ RSpec.describe Account, type: :model do
     end
 
     { #  Company Name        subdomain
-        'The Company'    =>  'the-company',
+         'The Company'   =>  'the-company',
          '123 éàïôù'     =>  '123-eaiou',
          ':ratio'        =>  'ratio',
          'Dash-Company'  =>  'dash-company',
@@ -34,6 +34,13 @@ RSpec.describe Account, type: :model do
       end
     end
 
+    it 'must be unique' do
+      FactoryGirl.create(:account, subdomain: nil, company_name: 'The Company')
+      account = FactoryGirl.build(:account, subdomain: nil, company_name: 'The Company')
+
+      expect(account).to be_valid
+      expect(account.subdomain).to match(/\Athe-company-[a-z0-9]{4}\z/)
+    end
 
   end
 

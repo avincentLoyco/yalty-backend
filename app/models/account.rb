@@ -10,11 +10,21 @@ class Account < ActiveRecord::Base
 
   def generate_subdomain
     if subdomain.blank? && company_name.present?
-      self.subdomain = ActiveSupport::Inflector.transliterate(company_name)
-                       .strip
-                       .gsub(/\s/, '-')
-                       .gsub(/(\A[\-]+)|([^0-9A-Za-z\-])|([\-]+\z)/, '')
-                       .downcase
+      generated_subdomain = ActiveSupport::Inflector.transliterate(company_name)
+                            .strip
+                            .gsub(/\s/, '-')
+                            .gsub(/(\A[\-]+)|([^0-9A-Za-z\-])|([\-]+\z)/, '')
+                            .downcase
+
+      suffix = ''
+      loop do
+        if Account.where(subdomain: generated_subdomain + suffix).exists?
+          suffix = '-' + SecureRandom.hex(2).downcase
+        else
+          self.subdomain = generated_subdomain + suffix
+          break
+        end
+      end
     end
   end
 end
