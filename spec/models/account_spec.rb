@@ -13,7 +13,6 @@ RSpec.describe Account, type: :model do
     it 'should not be blank' do
       account = FactoryGirl.build(:account, subdomain: nil, company_name: 'Company')
 
-
       expect(account).to be_valid
       expect(account.subdomain).to_not be_blank
     end
@@ -26,12 +25,14 @@ RSpec.describe Account, type: :model do
          '-dash first'   =>  'dash-first',
          'dash last-'    =>  'dash-last'
     }.each do |company_name, subdomain|
+
       it "should transcode `#{company_name}` to `#{subdomain}`" do
         account = FactoryGirl.build(:account, subdomain: nil, company_name: company_name)
 
         expect(account).to be_valid
         expect(account.subdomain).to eql(subdomain)
       end
+
     end
 
     it 'must be unique' do
