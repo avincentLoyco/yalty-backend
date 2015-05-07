@@ -3,10 +3,39 @@ require 'rails_helper'
 RSpec.describe Account, type: :model do
   it { should have_db_column(:subdomain).with_options(null: false) }
   it { should have_db_index(:subdomain).unique(true) }
-  it { should validate_presence_of(:subdomain) }
+  it { should validate_presence_of(:subdomain).on(:update) }
   it { should validate_uniqueness_of(:subdomain).case_insensitive }
   it { should allow_value('subdomain', 'sub-domain', '123subdomain', 'subdomain-123').for(:subdomain) }
   it { should_not allow_value('-subdomain', 'subdomain-', 'sub domain', 'subdömaìn', 'SubDomain').for(:subdomain) }
+
+  context 'generate subdomain from company name on create' do
+
+    it 'should not be blank' do
+      account = FactoryGirl.build(:account, subdomain: nil, company_name: 'Company')
+
+
+      expect(account).to be_valid
+      expect(account.subdomain).to_not be_blank
+    end
+
+    { #  Company Name        subdomain
+        'The Company'    =>  'the-company',
+         '123 éàïôù'     =>  '123-eaiou',
+         ':ratio'        =>  'ratio',
+         'Dash-Company'  =>  'dash-company',
+         '-dash first'   =>  'dash-first',
+         'dash last-'    =>  'dash-last'
+    }.each do |company_name, subdomain|
+      it "should transcode `#{company_name}` to `#{subdomain}`" do
+        account = FactoryGirl.build(:account, subdomain: nil, company_name: company_name)
+
+        expect(account).to be_valid
+        expect(account.subdomain).to eql(subdomain)
+      end
+    end
+
+
+  end
 
   it { should have_db_column(:company_name) }
   it { should validate_presence_of(:company_name) }
