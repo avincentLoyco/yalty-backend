@@ -5,6 +5,7 @@ ruby '2.2.2'
 gem 'rails', '4.2.1'
 gem 'pg'
 gem 'bcrypt'
+gem 'jsonapi-resources'
 
 # Production environment dependencies
 group :production, :staging do
