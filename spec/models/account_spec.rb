@@ -8,6 +8,7 @@ RSpec.describe Account, type: :model do
   it { should validate_length_of(:subdomain).is_at_most(63) }
   it { should allow_value('a', 'subdomain', 'sub-domain', '123subdomain', 'subdomain-123').for(:subdomain) }
   it { should_not allow_value('-subdomain', 'subdomain-', 'sub domain', 'subdömaìn', 'SubDomain').for(:subdomain) }
+  it { should validate_exclusion_of(:subdomain).in_array(['www', 'staging']) }
 
   context 'generate subdomain from company name on create' do
 

@@ -2,7 +2,8 @@ class Account < ActiveRecord::Base
   validates :subdomain, presence: true,
                         uniqueness: { case_sensitive: false },
                         length: { maximum: 63 },
-                        format: { with: /\A[a-z\d]+(?:[-][a-z\d]+)*\z/, allow_blank: true }
+                        format: { with: /\A[a-z\d]+(?:[-][a-z\d]+)*\z/, allow_blank: true },
+                        exclusion: { in: Yalty.reserved_subdomains }
   validates :company_name, presence: true
 
   before_validation :generate_subdomain, on: :create
