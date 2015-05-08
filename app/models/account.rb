@@ -6,6 +6,8 @@ class Account < ActiveRecord::Base
                         exclusion: { in: Yalty.reserved_subdomains }
   validates :company_name, presence: true
 
+  has_many :users, inverse_of: :account
+
   before_validation :generate_subdomain, on: :create
 
   private
