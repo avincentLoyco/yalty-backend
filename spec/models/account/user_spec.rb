@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe User, type: :model do
+RSpec.describe Account::User, type: :model do
   it { should have_db_column(:email).with_options(null: false) }
   it { should have_db_index([:email, :account_id]).unique(true) }
   it { should validate_presence_of(:email) }

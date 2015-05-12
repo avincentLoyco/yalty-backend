@@ -16,7 +16,7 @@ RSpec.describe AccountsController, type: :controller do
     it 'should create user' do
       expect do
         post :create, params
-      end.to change(User, :count).by(1)
+      end.to change(Account::User, :count).by(1)
 
       expect(response).to have_http_status(:created)
     end

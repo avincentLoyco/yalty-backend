@@ -11,10 +11,21 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150512100209) do
+ActiveRecord::Schema.define(version: 20150512130821) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "account_users", force: :cascade do |t|
+    t.string   "email",           null: false
+    t.string   "password_digest", null: false
+    t.integer  "account_id",      null: false
+    t.datetime "created_at",      null: false
+    t.datetime "updated_at",      null: false
+  end
+
+  add_index "account_users", ["account_id"], name: "index_account_users_on_account_id", using: :btree
+  add_index "account_users", ["email", "account_id"], name: "index_account_users_on_email_and_account_id", unique: true, using: :btree
 
   create_table "accounts", force: :cascade do |t|
     t.string   "subdomain",    null: false
@@ -65,16 +76,5 @@ ActiveRecord::Schema.define(version: 20150512100209) do
 
   add_index "oauth_applications", ["uid"], name: "index_oauth_applications_on_uid", unique: true, using: :btree
 
-  create_table "users", force: :cascade do |t|
-    t.string   "email",           null: false
-    t.string   "password_digest", null: false
-    t.integer  "account_id",      null: false
-    t.datetime "created_at",      null: false
-    t.datetime "updated_at",      null: false
-  end
-
-  add_index "users", ["account_id"], name: "index_users_on_account_id", using: :btree
-  add_index "users", ["email", "account_id"], name: "index_users_on_email_and_account_id", unique: true, using: :btree
-
-  add_foreign_key "users", "accounts", on_delete: :cascade
+  add_foreign_key "account_users", "accounts", on_delete: :cascade
 end
