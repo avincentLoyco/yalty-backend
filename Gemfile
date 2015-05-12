@@ -7,6 +7,7 @@ gem 'pg'
 gem 'bcrypt'
 gem 'rack-cors', require: 'rack/cors'
 gem 'jsonapi-resources', github: 'cerebris/jsonapi-resources'
+gem 'doorkeeper'
 
 # Production environment dependencies
 group :production, :staging do
