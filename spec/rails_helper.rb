@@ -45,4 +45,10 @@ RSpec.configure do |config|
   # The different available types are documented in the features, such as in
   # https://relishapp.com/rspec/rspec-rails/docs
   config.infer_spec_type_from_file_location!
+
+  config.before(:all) do
+    client = FactoryGirl.create(:oauth_client)
+    ENV['YALTY_OAUTH_ID'] = client.uid
+    ENV['YALTY_OAUTH_SECRET'] = client.secret
+  end
 end
