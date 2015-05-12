@@ -21,6 +21,7 @@ module Yalty
     # Application configuration should go into files in config/initializers
     # -- all .rb files in that directory are automatically loaded.
 
+    # Genrators
     config.generators do |g|
       g.orm                 :active_record
       g.template_engine     nil
@@ -35,6 +36,18 @@ module Yalty
       g.view_specs          false
       g.request_specs       false
       g.fixture_replacement :factory_girl, dir: 'spec/factories'
+    end
+
+    # CORS configuration
+    config.middleware.insert_before 0, 'Rack::Cors', debug: !Rails.env.production?, logger: (-> { Rails.logger }) do
+      allow do
+        origins '*'
+
+        resource '*',
+          headers: :any,
+          methods: %i(get post delete put options head),
+          max_age: 0
+      end
     end
 
     # Set Time.zone default to the specified zone and make Active Record auto-convert to this zone.
