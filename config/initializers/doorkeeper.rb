@@ -20,7 +20,8 @@ Doorkeeper.configure do
 
   # This block will be called to check user credentials when use password grant type
   resource_owner_from_credentials do |routes|
-    user = Account::User.joins(:account).where(email: params[:username], accounts: { subdomain: params[:account] }).first
+    username, subdomain = params[:username].match(/\A(.*?)(?:\(([^()]*)\)){0,1}\z/)[1..2]
+    user = Account::User.joins(:account).where(email: username, accounts: { subdomain: subdomain }).first
     user.try(:authenticate, params[:password])
   end
 
@@ -57,7 +58,7 @@ Doorkeeper.configure do
   # For more information go to
   # https://github.com/doorkeeper-gem/doorkeeper/wiki/Using-Scopes
   default_scopes  :public
-  optional_scopes :private
+  optional_scopes :all_access
 
   # Change the way client credentials are retrieved from the request object.
   # By default it retrieves first from the `HTTP_AUTHORIZATION` header, then
