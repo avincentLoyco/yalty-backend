@@ -30,7 +30,7 @@ class Auth::AccountsController < Doorkeeper::ApplicationController
       {
         response_type: 'code',
         redirect_uri: client.redirect_uri,
-        scope: 'all_access'
+        scope: client.scopes.to_s
       }
     )
   end

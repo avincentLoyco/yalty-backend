@@ -12,7 +12,8 @@ Rails.application.routes.draw do
       use_doorkeeper
 
       with_options as: nil do
-        post 'accounts', to: 'auth/accounts#create'
+        post 'accounts',       to: 'auth/accounts#create'
+        get  'accounts/token', to: 'auth/accounts/tokens#create'
       end
     end
   end
