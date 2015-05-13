@@ -7,8 +7,8 @@ class Auth::Accounts::TokensController < Doorkeeper::ApplicationMetalController
     self.response_body = response.body.to_json
     self.status        = response.status
 
-    strategy.grant.destroy
-  rescue Errors::DoorkeeperError => e
+    strategy.grant.try(:destroy)
+  rescue Doorkeeper::Errors::DoorkeeperError => e
     handle_token_exception e
   end
 

@@ -67,5 +67,13 @@ RSpec.describe Auth::Accounts::TokensController, type: :controller do
       expect_json_types(created_at: :integer)
     end
 
+    it 'should return error whith wrong code' do
+      get :create, params.merge(code: 'wrong')
+
+      expect(response).to have_http_status(:unauthorized)
+      expect_json_keys(:error)
+      expect_json_keys(:error_description)
+    end
+
   end
 end
