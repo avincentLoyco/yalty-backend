@@ -8,8 +8,8 @@ Rails.application.routes.draw do
 
   # LAUNCHPAD
   constraints subdomain: 'launchpad' do
-    scope :oauth do
-      use_doorkeeper
+    scope 'oauth' do
+      use_doorkeeper scope: ''
 
       with_options as: nil do
         post 'accounts',       to: 'auth/accounts#create'
