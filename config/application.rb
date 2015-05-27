@@ -21,6 +21,35 @@ module Yalty
     # Application configuration should go into files in config/initializers
     # -- all .rb files in that directory are automatically loaded.
 
+    # Genrators
+    config.generators do |g|
+      g.orm                 :active_record
+      g.template_engine     nil
+
+      g.assets              false
+      g.stylesheets         false
+      g.stylesheet_engine   nil
+      g.javascripts         false
+      g.helper              false
+
+      g.test_framework      :rspec, fixtures: true
+      g.view_specs          false
+      g.request_specs       false
+      g.fixture_replacement :factory_girl, dir: 'spec/factories'
+    end
+
+    # CORS configuration
+    config.middleware.insert_before 0, 'Rack::Cors', debug: !Rails.env.production?, logger: (-> { Rails.logger }) do
+      allow do
+        origins '*'
+
+        resource '*',
+          headers: :any,
+          methods: %i(get post delete put options head),
+          max_age: 0
+      end
+    end
+
     # Set Time.zone default to the specified zone and make Active Record auto-convert to this zone.
     # Run "rake -D time" for a list of tasks for finding time zone names. Default is UTC.
     config.time_zone = 'UTC'
@@ -31,5 +60,15 @@ module Yalty
 
     # Do not swallow errors in after_commit/after_rollback callbacks.
     config.active_record.raise_in_transactional_callbacks = true
+  end
+
+  #
+  # Yalty config accessors
+  #
+  module_function
+
+  # list of reserved subdomains (not valid for account subdomin)
+  def reserved_subdomains
+    @reserved_subdomains ||= %w(www staging) + ENV['RESERVED_SUBDOMAINS'].to_s.split(' ')
   end
 end
