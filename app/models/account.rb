@@ -7,6 +7,7 @@ class Account < ActiveRecord::Base
   validates :company_name, presence: true
 
   has_many :users, class_name: 'Account::User', inverse_of: :account
+  has_many :employees, inverse_of: :account
 
   before_validation :generate_subdomain, on: :create
 

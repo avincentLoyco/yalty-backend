@@ -51,4 +51,6 @@ RSpec.describe Account, type: :model do
   it { should validate_presence_of(:company_name) }
 
   it { should have_many(:users).class_name('Account::User').inverse_of(:account) }
+
+  it { should have_many(:employees).inverse_of(:account) }
 end
