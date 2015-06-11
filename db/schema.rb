@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150611082337) do
+ActiveRecord::Schema.define(version: 20150611083344) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -37,6 +37,17 @@ ActiveRecord::Schema.define(version: 20150611082337) do
   end
 
   add_index "accounts", ["subdomain"], name: "index_accounts_on_subdomain", unique: true, using: :btree
+
+  create_table "employee_attributes", force: :cascade do |t|
+    t.string   "name",        null: false
+    t.hstore   "data"
+    t.string   "type",        null: false
+    t.integer  "employee_id"
+    t.datetime "created_at",  null: false
+    t.datetime "updated_at",  null: false
+  end
+
+  add_index "employee_attributes", ["employee_id"], name: "index_employee_attributes_on_employee_id", using: :btree
 
   create_table "employees", force: :cascade do |t|
     t.uuid     "uuid",       default: "uuid_generate_v4()"
@@ -89,5 +100,6 @@ ActiveRecord::Schema.define(version: 20150611082337) do
   add_index "oauth_applications", ["uid"], name: "index_oauth_applications_on_uid", unique: true, using: :btree
 
   add_foreign_key "account_users", "accounts", on_delete: :cascade
+  add_foreign_key "employee_attributes", "employees", on_delete: :cascade
   add_foreign_key "employees", "accounts", on_delete: :cascade
 end
