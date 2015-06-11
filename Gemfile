@@ -8,6 +8,7 @@ gem 'bcrypt'
 gem 'rack-cors', require: 'rack/cors'
 gem 'jsonapi-resources', github: 'cerebris/jsonapi-resources'
 gem 'doorkeeper'
+gem 'virtus'
 
 # Production environment dependencies
 group :production, :staging do
@@ -24,6 +25,7 @@ group :development, :test do
   gem 'factory_girl_rails'
   gem 'airborne'
   gem 'faker'
+  gem 'temping'
   gem 'guard-rspec'
 
   # debug
