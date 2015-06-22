@@ -1,6 +1,6 @@
 notification :tmux, display_message: true
 
-guard :rspec, cmd: 'bin/rspec' do
+guard :rspec, cmd: 'bin/rspec --profile 0' do
   require 'guard/rspec/dsl'
   dsl = Guard::RSpec::Dsl.new(self)
 
