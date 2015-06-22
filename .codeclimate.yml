@@ -1,0 +1,16 @@
+---
+languages:
+  Ruby: true
+engines:
+  rubocop:
+    enabled: true
+  bundler-audit:
+    enabled: true
+ratings:
+  paths:
+  - "**.rb"
+exclude_paths:
+- "config/**/*"
+- "db/**/*"
+- "spec/**/*"
+- "bin/*"
