@@ -8,6 +8,7 @@ class Account < ActiveRecord::Base
 
   has_many :users, class_name: 'Account::User', inverse_of: :account
   has_many :employees, inverse_of: :account
+  has_many :employee_attributes, class_name: 'Employee::AttributeDefinition', inverse_of: :account
 
   before_validation :generate_subdomain, on: :create
 

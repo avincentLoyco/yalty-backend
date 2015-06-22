@@ -53,4 +53,6 @@ RSpec.describe Account, type: :model do
   it { should have_many(:users).class_name('Account::User').inverse_of(:account) }
 
   it { should have_many(:employees).inverse_of(:account) }
+
+  it { is_expected.to have_many(:employee_attributes).class_name('Employee::AttributeDefinition').inverse_of(:account) }
 end
