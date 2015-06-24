@@ -14,6 +14,11 @@ RSpec.describe Employee::Attribute, type: :model do
 
   it { is_expected.to have_one(:account).through(:employee) }
 
+  it '.attribute_type should return attribute type name' do
+    expect(subject.class).to respond_to(:attribute_type)
+    expect(subject.class.attribute_type).to eql('Text')
+  end
+
   describe '.attribute_types' do
     subject { Employee::Attribute }
 

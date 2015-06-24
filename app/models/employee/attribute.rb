@@ -7,12 +7,18 @@ class Employee::Attribute < ActiveRecord::Base
   def self.inherited(klass)
     super
 
-    name = klass.name.gsub(/^.+::/, '')
-    attribute_types << name
+    attribute_types << klass.attribute_type
   end
 
   def self.attribute_types
     @attribute_types ||= []
   end
 
+  def self.attribute_type
+    name.gsub(/^.+::/, '')
+  end
+
+  def attribute_type
+    self.class.attribute_type
+  end
 end
