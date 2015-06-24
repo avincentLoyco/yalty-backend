@@ -29,6 +29,8 @@ group :development, :test do
   gem 'guard-rspec'
 
   # debug
+  gem 'pry-rails'
+  gem 'pry-byebug'
   gem 'byebug'
 
   # spring
