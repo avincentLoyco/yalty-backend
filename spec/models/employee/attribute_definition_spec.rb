@@ -23,6 +23,6 @@ RSpec.describe Employee::AttributeDefinition, type: :model do
 
   it { is_expected.to have_db_column(:validation) }
 
-  it { is_expected.to belong_to(:account).inverse_of(:employee_attributes) }
+  it { is_expected.to belong_to(:account).inverse_of(:employee_attribute_definitions) }
   it { is_expected.to validate_presence_of(:account) }
 end

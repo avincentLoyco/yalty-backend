@@ -8,5 +8,5 @@ class Employee::AttributeDefinition < ActiveRecord::Base
     presence: true,
     inclusion: { in: ->(model) { Employee::Attribute.attribute_types } }
 
-  belongs_to :account, inverse_of: :employee_attributes, required: true
+  belongs_to :account, inverse_of: :employee_attribute_definitions, required: true
 end

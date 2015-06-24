@@ -1,14 +1,22 @@
 class Account < ActiveRecord::Base
-  validates :subdomain, presence: true,
-                        uniqueness: { case_sensitive: false },
-                        length: { maximum: 63 },
-                        format: { with: /\A[a-z\d]+(?:[-][a-z\d]+)*\z/, allow_blank: true },
-                        exclusion: { in: Yalty.reserved_subdomains }
+  validates :subdomain,
+    presence: true,
+    uniqueness: { case_sensitive: false },
+    length: { maximum: 63 },
+    format: {
+      with: /\A[a-z\d]+(?:[-][a-z\d]+)*\z/,
+      allow_blank: true
+    },
+    exclusion: { in: Yalty.reserved_subdomains }
   validates :company_name, presence: true
 
-  has_many :users, class_name: 'Account::User', inverse_of: :account
+  has_many :users,
+    class_name: 'Account::User',
+    inverse_of: :account
   has_many :employees, inverse_of: :account
-  has_many :employee_attributes, class_name: 'Employee::AttributeDefinition', inverse_of: :account
+  has_many :employee_attribute_definitions,
+    class_name: 'Employee::AttributeDefinition',
+    inverse_of: :account
 
   before_validation :generate_subdomain, on: :create
 

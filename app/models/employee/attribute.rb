@@ -36,7 +36,7 @@ class Employee::Attribute < ActiveRecord::Base
     if account.nil?
       self.attribute_definition = nil
     else
-      self.attribute_definition = account.employee_attributes.where(
+      self.attribute_definition = account.employee_attribute_definitions.where(
         name: value,
         attribute_type: attribute_type
       ).readonly.first
