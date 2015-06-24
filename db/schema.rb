@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150622100614) do
+ActiveRecord::Schema.define(version: 20150624093809) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -53,14 +53,15 @@ ActiveRecord::Schema.define(version: 20150622100614) do
   add_index "employee_attribute_definitions", ["name", "account_id"], name: "index_employee_attribute_definitions_on_name_and_account_id", unique: true, using: :btree
 
   create_table "employee_attributes", force: :cascade do |t|
-    t.string   "name",        null: false
     t.hstore   "data"
-    t.string   "type",        null: false
+    t.string   "type",                    null: false
     t.integer  "employee_id"
-    t.datetime "created_at",  null: false
-    t.datetime "updated_at",  null: false
+    t.datetime "created_at",              null: false
+    t.datetime "updated_at",              null: false
+    t.integer  "attribute_definition_id"
   end
 
+  add_index "employee_attributes", ["attribute_definition_id"], name: "index_employee_attributes_on_attribute_definition_id", using: :btree
   add_index "employee_attributes", ["employee_id"], name: "index_employee_attributes_on_employee_id", using: :btree
 
   create_table "employees", force: :cascade do |t|
@@ -115,6 +116,7 @@ ActiveRecord::Schema.define(version: 20150622100614) do
 
   add_foreign_key "account_users", "accounts", on_delete: :cascade
   add_foreign_key "employee_attribute_definitions", "accounts", on_delete: :cascade
+  add_foreign_key "employee_attributes", "employee_attribute_definitions", column: "attribute_definition_id", on_delete: :cascade
   add_foreign_key "employee_attributes", "employees", on_delete: :cascade
   add_foreign_key "employees", "accounts", on_delete: :cascade
 end
