@@ -1,7 +1,7 @@
 class Employee::Attribute < ActiveRecord::Base
   include AttributeSerializer
 
-  belongs_to :employee, inverse_of: :employee_attributes
+  belongs_to :employee, inverse_of: :employee_attributes, required: true
   has_one :account, through: :employee
 
   def self.inherited(klass)
