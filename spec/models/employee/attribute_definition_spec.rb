@@ -11,7 +11,7 @@ RSpec.describe Employee::AttributeDefinition, type: :model do
   it { is_expected.to validate_presence_of(:label) }
 
   it { is_expected.to have_db_column(:system).with_options(default: false) }
-  it { is_expected.to validate_presence_of(:system) }
+  it { is_expected.to_not allow_value(nil).for(:system) }
 
   it { is_expected.to have_db_column(:attribute_type) }
   it { is_expected.to validate_presence_of(:attribute_type) }
