@@ -35,6 +35,5 @@ RSpec.describe Employee::Attribute, type: :model do
     it 'should include inherited models' do
       expect(subject.attribute_types).to include('Fake')
     end
-?
   end
 end
