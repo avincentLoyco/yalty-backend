@@ -1,6 +1,4 @@
 ---
-languages:
-  Ruby: true
 engines:
   rubocop:
     enabled: true
