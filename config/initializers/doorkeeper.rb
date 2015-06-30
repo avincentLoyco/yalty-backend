@@ -112,5 +112,5 @@ Doorkeeper.configure do
   # end
 
   # WWW-Authenticate Realm (default "Doorkeeper").
-  realm 'Yalty'
+  realm 'yalty'
 end

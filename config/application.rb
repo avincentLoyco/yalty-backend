@@ -21,6 +21,9 @@ module Yalty
     # Application configuration should go into files in config/initializers
     # -- all .rb files in that directory are automatically loaded.
 
+    # add middlewares to load path
+    config.autoload_paths << config.root.join('lib', 'middlewares')
+
     # Genrators
     config.generators do |g|
       g.orm                 :active_record
@@ -37,6 +40,9 @@ module Yalty
       g.request_specs       false
       g.fixture_replacement :factory_girl, dir: 'spec/factories'
     end
+
+    # Set current account
+   config.middleware.use 'CurrentAccountMiddleware'
 
     # CORS configuration
     config.middleware.insert_before 0, 'Rack::Cors', debug: !Rails.env.production?, logger: (-> { Rails.logger }) do
