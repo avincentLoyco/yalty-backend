@@ -9,6 +9,7 @@ gem 'rack-cors', require: 'rack/cors'
 gem 'jsonapi-resources', github: 'cerebris/jsonapi-resources'
 gem 'doorkeeper'
 gem 'virtus'
+gem 'request_store'
 
 # Production environment dependencies
 group :production, :staging do
