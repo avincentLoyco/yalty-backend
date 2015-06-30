@@ -57,4 +57,21 @@ RSpec.describe Account, type: :model do
   it { should have_many(:employees).inverse_of(:account) }
 
   it { is_expected.to have_many(:employee_attribute_definitions).class_name('Employee::AttributeDefinition').inverse_of(:account) }
+
+  it '#current= should accept an account' do
+    account = FactoryGirl.create(:account)
+
+    expect(Account).to respond_to(:current=)
+    expect {
+      Account.current = account
+    }.to_not raise_error
+  end
+
+  it '#current should return account' do
+    account = FactoryGirl.create(:account)
+    Account.current = account
+
+    expect(Account.current).to eql(account)
+  end
+
 end

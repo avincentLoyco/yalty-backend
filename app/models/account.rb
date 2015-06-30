@@ -20,6 +20,14 @@ class Account < ActiveRecord::Base
 
   before_validation :generate_subdomain, on: :create
 
+  def self.current=(account)
+    RequestStore.write(:current_account, account)
+  end
+
+  def self.current
+    RequestStore.read(:current_account)
+  end
+
   private
 
   # Generate a subdomain from company name
