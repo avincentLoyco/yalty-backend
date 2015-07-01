@@ -47,12 +47,22 @@ RSpec.describe Employee::Attribute, type: :model do
 
   it { is_expected.to belong_to(:attribute_definition).class_name('Employee::AttributeDefinition') }
   it { is_expected.to validate_presence_of(:attribute_definition) }
+
   it 'should validate uniqueness of attribute_definition' do
     subject.save!
 
-    attr = FactoryGirl.build(:employee_attribute, name: subject.name, account: account)
+    attr = FactoryGirl.build(:employee_attribute, name: subject.name, employee: subject.employee)
 
     expect(attr).to_not be_valid
+  end
+
+  it 'should validate uniqueness of attribute_definition scoped to employee' do
+    subject.save!
+
+    employee = FactoryGirl.create(:employee, account: subject.account)
+    attr = FactoryGirl.build(:employee_attribute, name: subject.name, employee: employee)
+
+    expect(attr).to be_valid
   end
 
   it 'should validate presence of attribute definition' do

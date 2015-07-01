@@ -1,8 +1,8 @@
 GIT
   remote: git://github.com/cerebris/jsonapi-resources.git
-  revision: af52a52d4e95798637ff042b7d8d89699103fa3a
+  revision: 5b1336bacb53d60da51ab8dc3c04716c730e2471
   specs:
-    jsonapi-resources (0.3.3)
+    jsonapi-resources (0.4.2)
       rails (>= 4.0)
 
 GEM
@@ -131,7 +131,7 @@ GEM
       rack-contrib (~> 1.1)
       railties (>= 3.0.0, < 5.0.0)
     method_source (0.8.2)
-    mime-types (2.5)
+    mime-types (2.6.1)
     mini_portile (0.6.2)
     minitest (5.7.0)
     nenv (0.2.0)
@@ -225,7 +225,7 @@ GEM
       spring (>= 0.9.1)
     sprockets (3.2.0)
       rack (~> 1.0)
-    sprockets-rails (2.3.1)
+    sprockets-rails (2.3.2)
       actionpack (>= 3.0)
       activesupport (>= 3.0)
       sprockets (>= 2.8, < 4.0)

@@ -8,7 +8,8 @@ class Employee::Attribute < ActiveRecord::Base
     required: true
   has_one :account, through: :employee
 
-  validates :attribute_definition_id, uniqueness: { allow_nil: true }
+  validates :attribute_definition_id,
+    uniqueness: { allow_nil: true, scope: [:employee] }
 
   def self.inherited(klass)
     super
