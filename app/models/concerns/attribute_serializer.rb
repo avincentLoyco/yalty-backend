@@ -1,33 +1,42 @@
 module AttributeSerializer
-  extend ActiveSupport::Concern
-
-  class_methods do
-    def serialized_attributes(&block)
-      if self.const_defined?('DataSerializer')
-        klass = self.const_get('DataSerializer')
-        klass.class_eval(&block) if block
-      else
-        klass = Class.new(AttributeSerializer::Base, &block)
-        self.const_set('DataSerializer', klass)
-      end
-
-      klass.attribute_set.each do |attribute|
-        self.delegate attribute.name, "#{attribute.name}=", to: :data
-      end
-
-      self.serialize :data, klass
-    end
+  def self.dump(data)
+    data.to_hash
   end
 
-  class Base
-    include Virtus.model
+  def self.load(data)
+    AttributeSerializer::Proxy.new(data)
+  end
 
-    def self.dump(data)
-      data.to_hash
+  class Proxy
+    attr_reader :attribute_type
+
+    def initialize(data)
+      @data = data || {}
+      @attribute_type = @data[:attribute_type] || @data['attribute_type']
     end
 
-    def self.load(data)
-      new(data)
+    def attribute_type=(attribute_type)
+      @attribute_type ||= attribute_type
+    end
+
+    def to_hash
+      (attribute_model || {}).to_hash
+    end
+
+    private
+
+    def attribute_model
+      if attribute_type.present?
+        @attribute_model ||= ::Attribute.const_get(attribute_type).new(@data)
+      end
+    end
+
+    def method_missing(meth, *args)
+      if attribute_model
+        attribute_model.send(meth, *args)
+      else
+        super
+      end
     end
   end
 end

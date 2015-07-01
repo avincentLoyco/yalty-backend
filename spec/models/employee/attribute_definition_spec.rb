@@ -16,7 +16,7 @@ RSpec.describe Employee::AttributeDefinition, type: :model do
   it { is_expected.to have_db_column(:attribute_type) }
   it { is_expected.to validate_presence_of(:attribute_type) }
   it 'should validate inclusion in list of defined attribute types' do
-    allow(Employee::Attribute).to receive(:attribute_types).and_return(['Fake', 'Test'])
+    allow(Attribute::Base).to receive(:attribute_types).and_return(['Fake', 'Test'])
 
     is_expected.to validate_inclusion_of(:attribute_type).in_array(['Fake', 'Test'])
   end

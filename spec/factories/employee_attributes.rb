@@ -1,9 +1,10 @@
 FactoryGirl.define do
-  factory :employee_attribute, class: 'Employee::Attribute::Text' do
+  factory :employee_attribute, class: 'Employee::Attribute' do
     employee
 
     transient do
       sequence(:name) {|n| "test#{n}" }
+      attribute_type { Attribute::Line.attribute_type }
     end
 
     after(:build) do |attr, evaluator|
@@ -12,7 +13,7 @@ FactoryGirl.define do
       if attr.name.nil?
         FactoryGirl.create(:employee_attribute_definition,
           name: evaluator.name,
-          attribute_type: attr.attribute_type,
+          attribute_type: evaluator.attribute_type,
           account: attr.account
         )
 

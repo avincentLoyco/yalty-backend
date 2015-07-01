@@ -1,6 +1,4 @@
 class Employee::Attribute < ActiveRecord::Base
-  include AttributeSerializer
-
   belongs_to :employee, inverse_of: :employee_attributes, required: true
   belongs_to :attribute_definition,
     ->(attr) { readonly },
@@ -11,22 +9,12 @@ class Employee::Attribute < ActiveRecord::Base
   validates :attribute_definition_id,
     uniqueness: { allow_nil: true, scope: [:employee] }
 
-  def self.inherited(klass)
-    super
+  serialize :data, AttributeSerializer
 
-    attribute_types << klass.attribute_type
-  end
-
-  def self.attribute_types
-    @attribute_types ||= []
-  end
-
-  def self.attribute_type
-    name.gsub(/^.+::/, '')
-  end
+  after_initialize :set_attribute_definition
 
   def attribute_type
-    self.class.attribute_type
+    attribute_definition.try(:attribute_type)
   end
 
   def name
@@ -34,15 +22,26 @@ class Employee::Attribute < ActiveRecord::Base
   end
 
   def name=(value)
+    @name ||= value
+
+    set_attribute_definition
+
+    @name
+  end
+
+  private
+
+  def set_attribute_definition
+    return if attribute_definition.present?
+
     if account.nil?
       self.attribute_definition = nil
     else
-      self.attribute_definition = account.employee_attribute_definitions.where(
-        name: value,
-        attribute_type: attribute_type
-      ).readonly.first
+      self.attribute_definition = account.employee_attribute_definitions
+        .where(name: @name)
+        .readonly
+        .first
     end
-
-    name
+    data.attribute_type = attribute_type
   end
 end

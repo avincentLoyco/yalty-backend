@@ -3,7 +3,7 @@ FactoryGirl.define do
     name 'comment'
     label 'Comment'
     system false
-    attribute_type Employee::Attribute::Text.attribute_type
+    attribute_type Attribute::Line.attribute_type
     account
   end
 end

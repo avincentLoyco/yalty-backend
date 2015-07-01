@@ -5,8 +5,6 @@ RSpec.describe Employee::Attribute, type: :model do
 
   let (:account) { subject.account }
 
-  it { is_expected.to have_db_column(:type).with_options(null: false) }
-
   it { is_expected.to have_db_column(:data) }
 
   it { is_expected.to have_db_column(:employee_id) }
@@ -15,35 +13,6 @@ RSpec.describe Employee::Attribute, type: :model do
   it { is_expected.to validate_presence_of(:employee) }
 
   it { is_expected.to have_one(:account).through(:employee) }
-
-  it '.attribute_type should return attribute type name' do
-    expect(subject.class).to respond_to(:attribute_type)
-    expect(subject.class.attribute_type).to eql('Text')
-  end
-
-  describe '.attribute_types' do
-    subject { Employee::Attribute }
-
-    before(:all) do
-      class Employee::Attribute::Fake < Employee::Attribute; end
-    end
-
-    after(:all) do
-      Employee::Attribute.send(:remove_const, :Fake)
-    end
-
-    it 'should respond' do
-      is_expected.to respond_to(:attribute_types)
-    end
-
-    it 'should respond with an array' do
-      expect(subject.attribute_types).to be_a(Array)
-    end
-
-    it 'should include inherited models' do
-      expect(subject.attribute_types).to include('Fake')
-    end
-  end
 
   it { is_expected.to belong_to(:attribute_definition).class_name('Employee::AttributeDefinition') }
   it { is_expected.to validate_presence_of(:attribute_definition) }
@@ -92,6 +61,26 @@ RSpec.describe Employee::Attribute, type: :model do
     subject.reload
 
     expect(subject.attribute_definition).to be_readonly
+  end
+
+  it 'should set attribute definition by name on initialize' do
+    attribute_definition = FactoryGirl.create(:employee_attribute_definition, name: 'test')
+    employee = FactoryGirl.create(:employee, account: attribute_definition.account)
+
+    attr = Employee::Attribute.new(employee: employee, name: 'test')
+
+    expect(attr.attribute_definition).to_not be_nil
+    expect(attr.attribute_definition.name).to eql('test')
+  end
+
+  it 'should set attribute definition by name on build through employee' do
+    attribute_definition = FactoryGirl.create(:employee_attribute_definition, name: 'test')
+    employee = FactoryGirl.create(:employee, account: attribute_definition.account)
+
+    attr = employee.employee_attributes.build(name: 'test')
+
+    expect(attr.attribute_definition).to_not be_nil
+    expect(attr.attribute_definition.name).to eql('test')
   end
 
 end
