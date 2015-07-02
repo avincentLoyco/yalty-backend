@@ -2,7 +2,7 @@ Rails.application.routes.draw do
   # API
   namespace :api, path: '', constraints: { subdomain: 'api' } do
     namespace :v1 do
-      # TODO
+      jsonapi_resources :employees
     end
   end
 
