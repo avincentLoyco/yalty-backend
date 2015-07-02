@@ -22,7 +22,7 @@ module Yalty
     # -- all .rb files in that directory are automatically loaded.
 
     # add middlewares to load path
-    config.autoload_paths << config.root.join('lib', 'middlewares')
+    config.autoload_once_paths << config.root.join('lib', 'middlewares')
 
     # Genrators
     config.generators do |g|
