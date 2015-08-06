@@ -1,8 +1,10 @@
 Rails.application.routes.draw do
   # API
-  namespace :api, path: '', constraints: { subdomain: 'api' } do
+  namespace :api, path: 'api', constraints: { subdomain: 'api' } do
     namespace :v1 do
-      jsonapi_resources :employees
+      jsonapi_resources :employees do
+        jsonapi_relationships
+      end
     end
   end
 
