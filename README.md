@@ -50,6 +50,11 @@ createuser -s rails
 rake db:create:all db:setup
 ```
 
+Setup the application:
+```bash
+rake setup
+```
+
 Make sure everything is ok by running specs:
 ```bash
 bin/rspec
