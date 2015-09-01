@@ -16,7 +16,8 @@ Following dependencies is required:
 Following decencies is recommended, default configuration and
 setup instruction require them:
 
-* [pow](http://pow.cx/)
+* [pow](http://pow.cx/) on OS X
+* [prax](http://ysbaddaden.github.io/prax/) on Linux
 
 [homebrew](http://brew.sh/) is recommended on OS X to install dependencies. For
 the installation of required version of ruby you can use
