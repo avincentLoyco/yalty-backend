@@ -45,7 +45,9 @@ install gems dependencies:
 bundle install
 ```
 
-Create a postgres superuser role if not exist and setup databases:
+On Linux, ensure method is set to *trust* in `pg_hba.conf` file.
+
+Then, create a postgres superuser role if not exist and setup databases:
 ```bash
 createuser -s rails
 rake db:create:all db:setup
