@@ -95,4 +95,7 @@ Known issues
 ------------
 
 With *prax* and *RVM*, ensure RVM works. To do that you can follow instruction
-from [prax wiki](https://github.com/ysbaddaden/prax/wiki/Ruby-Version-Managers).
+from [prax wiki](https://github.com/ysbaddaden/prax/wiki/Ruby-Version-Managers#rvm).
+
+With *prax* and *Chrome*, the .dev urls may not work. You can follow instructions
+from this issue [Chrome can't resolve .dev domains #117](https://github.com/ysbaddaden/prax/issues/117#issuecomment-78342316), by creating the script and restarting the network-manager.
