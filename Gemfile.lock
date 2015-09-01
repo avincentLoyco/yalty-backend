@@ -136,6 +136,7 @@ GEM
       coderay (~> 1.1.0)
       method_source (~> 0.8.1)
       slop (~> 3.4)
+    puma (2.13.4)
     rack (1.6.4)
     rack-contrib (1.2.0)
       rack (>= 0.9.1)
@@ -161,6 +162,11 @@ GEM
       rails-deprecated_sanitizer (>= 1.0.1)
     rails-html-sanitizer (1.0.2)
       loofah (~> 2.0)
+    rails_12factor (0.0.3)
+      rails_serve_static_assets
+      rails_stdout_logging
+    rails_serve_static_assets (0.0.4)
+    rails_stdout_logging (0.0.4)
     railties (4.2.1)
       actionpack (= 4.2.1)
       activesupport (= 4.2.1)
@@ -246,8 +252,10 @@ DEPENDENCIES
   jsonapi-resources!
   meta_request
   pg
+  puma
   rack-cors
   rails (= 4.2.1)
+  rails_12factor
   rspec-rails
   shoulda-matchers
   spring
