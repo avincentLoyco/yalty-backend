@@ -1,13 +1,15 @@
 Rails.application.routes.draw do
   # API
-  namespace :api, path: '', constraints: { subdomain: 'api' } do
-    namespace :v1 do
-      # TODO
+  constraints lambda {|request| request.subdomain.start_with?('api') } do
+    namespace :api, path: '' do
+      namespace :v1 do
+        # TODO
+      end
     end
   end
 
   # LAUNCHPAD
-  constraints subdomain: 'launchpad' do
+  constraints lambda {|request| request.subdomain.start_with?('launchpad') } do
     scope 'oauth' do
       use_doorkeeper scope: ''
 
