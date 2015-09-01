@@ -90,3 +90,9 @@ How to deploy
 -------------
 
 TODO
+
+Known issues
+------------
+
+With *prax* and *RVM*, ensure RVM works. To do that you can follow instruction
+from [prax wiki](https://github.com/ysbaddaden/prax/wiki/Ruby-Version-Managers).
