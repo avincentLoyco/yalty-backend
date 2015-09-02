@@ -11,6 +11,8 @@ gem 'doorkeeper'
 
 # Production environment dependencies
 group :production, :staging do
+  gem 'puma'
+  gem 'rails_12factor'
 end
 
 # Development environment dependencies (also needed by test environement)
