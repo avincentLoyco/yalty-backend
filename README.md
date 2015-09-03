@@ -16,7 +16,8 @@ Following dependencies is required:
 Following decencies is recommended, default configuration and
 setup instruction require them:
 
-* [pow](http://pow.cx/)
+* [pow](http://pow.cx/) on OS X
+* [prax](http://ysbaddaden.github.io/prax/) on Linux
 
 [homebrew](http://brew.sh/) is recommended on OS X to install dependencies. For
 the installation of required version of ruby you can use
@@ -44,7 +45,9 @@ install gems dependencies:
 bundle install
 ```
 
-Create a postgres superuser role if not exist and setup databases:
+On Linux, ensure method is set to *trust* in `pg_hba.conf` file.
+
+Then, create a postgres superuser role if not exist and setup databases:
 ```bash
 createuser -s rails
 rake db:create:all db:setup
@@ -87,3 +90,12 @@ How to deploy
 -------------
 
 TODO
+
+Known issues
+------------
+
+With *prax* and *RVM*, ensure RVM works. To do that you can follow instruction
+from [prax wiki](https://github.com/ysbaddaden/prax/wiki/Ruby-Version-Managers#rvm).
+
+With *prax* and *Chrome*, the .dev urls may not work. You can follow instructions
+from this issue [Chrome can't resolve .dev domains #117](https://github.com/ysbaddaden/prax/issues/117#issuecomment-78342316), by creating the script and restarting the network-manager.
