@@ -4,6 +4,10 @@ class Employee::AttributeVersion < ActiveRecord::Base
     ->(attr) { readonly },
     class_name: 'Employee::AttributeDefinition',
     required: true
+  belongs_to :event,
+    class_name: 'Employee::Event',
+    foreign_key: 'employee_event_id',
+    required: true
   has_one :account, through: :employee
 
   validates :attribute_definition_id,

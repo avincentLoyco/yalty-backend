@@ -1,6 +1,7 @@
 FactoryGirl.define do
-  factory :employee_attribute, class: 'Employee::AttributeVersion' do
+  factory :employee_attribute_version, aliases: [:employee_attribute], class: 'Employee::AttributeVersion' do
     employee
+    association :event, factory: 'employee_event'
 
     transient do
       sequence(:name) {|n| "test#{n}" }
