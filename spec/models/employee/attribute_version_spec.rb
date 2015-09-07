@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe Employee::Attribute, type: :model do
+RSpec.describe Employee::AttributeVersion, type: :model do
   subject! { FactoryGirl.build(:employee_attribute) }
 
   let (:account) { subject.account }
@@ -9,7 +9,7 @@ RSpec.describe Employee::Attribute, type: :model do
 
   it { is_expected.to have_db_column(:employee_id) }
   it { is_expected.to have_db_index(:employee_id) }
-  it { is_expected.to belong_to(:employee).inverse_of(:employee_attributes) }
+  it { is_expected.to belong_to(:employee).inverse_of(:employee_attribute_versions) }
   it { is_expected.to validate_presence_of(:employee) }
 
   it { is_expected.to have_one(:account).through(:employee) }
@@ -67,7 +67,7 @@ RSpec.describe Employee::Attribute, type: :model do
     attribute_definition = FactoryGirl.create(:employee_attribute_definition, name: 'test')
     employee = FactoryGirl.create(:employee, account: attribute_definition.account)
 
-    attr = Employee::Attribute.new(employee: employee, name: 'test')
+    attr = Employee::AttributeVersion.new(employee: employee, name: 'test')
 
     expect(attr.attribute_definition).to_not be_nil
     expect(attr.attribute_definition.name).to eql('test')
@@ -77,7 +77,7 @@ RSpec.describe Employee::Attribute, type: :model do
     attribute_definition = FactoryGirl.create(:employee_attribute_definition, name: 'test')
     employee = FactoryGirl.create(:employee, account: attribute_definition.account)
 
-    attr = employee.employee_attributes.build(name: 'test')
+    attr = employee.employee_attribute_versions.build(name: 'test')
 
     expect(attr.attribute_definition).to_not be_nil
     expect(attr.attribute_definition.name).to eql('test')

@@ -1,5 +1,5 @@
-class Employee::Attribute < ActiveRecord::Base
-  belongs_to :employee, inverse_of: :employee_attributes, required: true
+class Employee::AttributeVersion < ActiveRecord::Base
+  belongs_to :employee, inverse_of: :employee_attribute_versions, required: true
   belongs_to :attribute_definition,
     ->(attr) { readonly },
     class_name: 'Employee::AttributeDefinition',

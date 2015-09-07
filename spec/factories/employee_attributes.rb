@@ -1,5 +1,5 @@
 FactoryGirl.define do
-  factory :employee_attribute, class: 'Employee::Attribute' do
+  factory :employee_attribute, class: 'Employee::AttributeVersion' do
     employee
 
     transient do

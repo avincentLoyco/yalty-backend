@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150701074146) do
+ActiveRecord::Schema.define(version: 20150907081812) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -52,7 +52,7 @@ ActiveRecord::Schema.define(version: 20150701074146) do
   add_index "employee_attribute_definitions", ["account_id"], name: "index_employee_attribute_definitions_on_account_id", using: :btree
   add_index "employee_attribute_definitions", ["name", "account_id"], name: "index_employee_attribute_definitions_on_name_and_account_id", unique: true, using: :btree
 
-  create_table "employee_attributes", force: :cascade do |t|
+  create_table "employee_attribute_versions", force: :cascade do |t|
     t.hstore   "data"
     t.integer  "employee_id"
     t.datetime "created_at",              null: false
@@ -60,8 +60,8 @@ ActiveRecord::Schema.define(version: 20150701074146) do
     t.integer  "attribute_definition_id"
   end
 
-  add_index "employee_attributes", ["attribute_definition_id"], name: "index_employee_attributes_on_attribute_definition_id", using: :btree
-  add_index "employee_attributes", ["employee_id"], name: "index_employee_attributes_on_employee_id", using: :btree
+  add_index "employee_attribute_versions", ["attribute_definition_id"], name: "index_employee_attribute_versions_on_attribute_definition_id", using: :btree
+  add_index "employee_attribute_versions", ["employee_id"], name: "index_employee_attribute_versions_on_employee_id", using: :btree
 
   create_table "employees", force: :cascade do |t|
     t.uuid     "uuid",       default: "uuid_generate_v4()"
@@ -115,7 +115,7 @@ ActiveRecord::Schema.define(version: 20150701074146) do
 
   add_foreign_key "account_users", "accounts", on_delete: :cascade
   add_foreign_key "employee_attribute_definitions", "accounts", on_delete: :cascade
-  add_foreign_key "employee_attributes", "employee_attribute_definitions", column: "attribute_definition_id", on_delete: :cascade
-  add_foreign_key "employee_attributes", "employees", on_delete: :cascade
+  add_foreign_key "employee_attribute_versions", "employee_attribute_definitions", column: "attribute_definition_id", on_delete: :cascade
+  add_foreign_key "employee_attribute_versions", "employees", on_delete: :cascade
   add_foreign_key "employees", "accounts", on_delete: :cascade
 end
