@@ -207,6 +207,29 @@ CREATE TABLE employee_events (
 
 
 --
+-- Name: employee_attributes; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW employee_attributes AS
+ SELECT DISTINCT ON (employee_attribute_versions.employee_id, employee_attribute_versions.attribute_definition_id) employee_attribute_versions.id,
+    employee_attribute_versions.data,
+    employee_events.effective_at,
+    employee_attribute_definitions.name AS attribute_name,
+    employee_attribute_definitions.attribute_type,
+    employee_attribute_versions.employee_id,
+    employee_attribute_versions.id AS employee_attribute_version_id,
+    employee_attribute_versions.employee_event_id,
+    employee_attribute_versions.attribute_definition_id,
+    employee_attribute_versions.created_at,
+    employee_attribute_versions.updated_at
+   FROM ((employee_attribute_versions
+     JOIN employee_events ON ((employee_attribute_versions.employee_event_id = employee_events.id)))
+     JOIN employee_attribute_definitions ON ((employee_attribute_versions.attribute_definition_id = employee_attribute_definitions.id)))
+  WHERE (employee_events.effective_at <= now())
+  ORDER BY employee_attribute_versions.employee_id, employee_attribute_versions.attribute_definition_id, employee_events.effective_at DESC;
+
+
+--
 -- Name: employee_events_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -719,3 +742,4 @@ INSERT INTO schema_migrations (version) VALUES ('20150907081812');
 
 INSERT INTO schema_migrations (version) VALUES ('20150907082834');
 
+INSERT INTO schema_migrations (version) VALUES ('20150907123909');
