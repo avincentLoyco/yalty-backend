@@ -10,6 +10,7 @@ gem 'jsonapi-resources'
 gem 'doorkeeper'
 gem 'virtus'
 gem 'request_store'
+gem 'scenic'
 
 # Production environment dependencies
 group :production, :staging do
