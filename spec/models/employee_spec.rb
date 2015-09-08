@@ -18,5 +18,7 @@ RSpec.describe Employee, type: :model do
 
   it { is_expected.to have_many(:employee_attribute_versions).inverse_of(:employee) }
 
+  it { is_expected.to have_many(:employee_attributes).inverse_of(:employee) }
+
   it { is_expected.to have_many(:events).inverse_of(:employee) }
 end
