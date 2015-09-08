@@ -17,6 +17,9 @@ RSpec.describe Employee::AttributeVersion, type: :model do
   it { is_expected.to belong_to(:attribute_definition).class_name('Employee::AttributeDefinition') }
   it { is_expected.to validate_presence_of(:attribute_definition) }
 
+  it { is_expected.to belong_to(:event).class_name('Employee::Event') }
+  it { is_expected.to validate_presence_of(:event) }
+
   it 'should validate uniqueness of attribute_definition' do
     subject.save!
 
