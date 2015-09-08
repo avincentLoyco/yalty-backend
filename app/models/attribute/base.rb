@@ -1,6 +1,6 @@
 module Attribute
   class Base
-    include Virtus.model
+    include Virtus.model(coerce: false)
 
     attribute :attribute_type
 

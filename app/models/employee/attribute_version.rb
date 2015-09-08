@@ -7,6 +7,7 @@ class Employee::AttributeVersion < ActiveRecord::Base
   belongs_to :event,
     class_name: 'Employee::Event',
     foreign_key: 'employee_event_id',
+    inverse_of: :employee_attribute_versions,
     required: true
   has_one :account, through: :employee
 
@@ -36,16 +37,17 @@ class Employee::AttributeVersion < ActiveRecord::Base
   private
 
   def set_attribute_definition
-    return if attribute_definition.present?
-
-    if account.nil?
-      self.attribute_definition = nil
-    else
-      self.attribute_definition = account.employee_attribute_definitions
-        .where(name: @name)
-        .readonly
-        .first
+    if !attribute_definition.present?
+      if account.nil?
+        self.attribute_definition = nil
+      else
+        self.attribute_definition = account.employee_attribute_definitions
+          .where(name: @name)
+          .readonly
+          .first
+      end
     end
+
     data.attribute_type = attribute_type
   end
 end
