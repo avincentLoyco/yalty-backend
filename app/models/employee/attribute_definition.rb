@@ -1,3 +1,5 @@
+require 'attribute'
+
 class Employee::AttributeDefinition < ActiveRecord::Base
   belongs_to :account,
     inverse_of: :employee_attribute_definitions,

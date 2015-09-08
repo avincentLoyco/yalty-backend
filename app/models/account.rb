@@ -30,8 +30,8 @@ class Account < ActiveRecord::Base
   end
 
   DEFAULT_ATTRIBUTE_DEFINITIONS = [
-    {name: 'firstname', type: 'Line'},
-    {name: 'lastname', type: 'Line'}
+    { name: 'firstname', type: Attribute::String.attribute_type },
+    { name: 'lastname',  type: Attribute::String.attribute_type }
   ].freeze
 
   # Add defaults attribute definiitons
