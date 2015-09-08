@@ -19,6 +19,7 @@ class Account < ActiveRecord::Base
     inverse_of: :account
 
   before_validation :generate_subdomain, on: :create
+  after_create :update_default_attribute_definitions!
 
   def self.current=(account)
     RequestStore.write(:current_account, account)
@@ -26,6 +27,31 @@ class Account < ActiveRecord::Base
 
   def self.current
     RequestStore.read(:current_account)
+  end
+
+  DEFAULT_ATTRIBUTE_DEFINITIONS = [
+    {name: 'firstname', type: 'Line'},
+    {name: 'lastname', type: 'Line'}
+  ].freeze
+
+  # Add defaults attribute definiitons
+  #
+  # Create all required Employee::AttributeDefinition for
+  # the account
+  def update_default_attribute_definitions!
+    DEFAULT_ATTRIBUTE_DEFINITIONS.each do |attr|
+      definition = employee_attribute_definitions.where(name: attr[:name]).first
+
+      if definition.nil?
+        definition = employee_attribute_definitions.build(
+          name: attr[:name],
+          attribute_type: attr[:type],
+          system: true
+        )
+      end
+
+      definition.save
+    end
   end
 
   private

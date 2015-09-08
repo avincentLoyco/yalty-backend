@@ -129,7 +129,7 @@ ALTER SEQUENCE accounts_id_seq OWNED BY accounts.id;
 CREATE TABLE employee_attribute_definitions (
     id integer NOT NULL,
     name character varying NOT NULL,
-    label character varying NOT NULL,
+    label character varying,
     system boolean DEFAULT false NOT NULL,
     attribute_type character varying NOT NULL,
     validation hstore,
@@ -743,3 +743,5 @@ INSERT INTO schema_migrations (version) VALUES ('20150907081812');
 INSERT INTO schema_migrations (version) VALUES ('20150907082834');
 
 INSERT INTO schema_migrations (version) VALUES ('20150907123909');
+
+INSERT INTO schema_migrations (version) VALUES ('20150908082010');

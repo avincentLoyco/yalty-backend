@@ -49,6 +49,26 @@ RSpec.describe Account, type: :model do
 
   end
 
+  context 'default attribute definitions' do
+    it 'should create definitions on create' do
+      account = FactoryGirl.build(:account)
+
+      expect {
+        account.save
+      }.to change(Employee::AttributeDefinition, :count)
+
+    end
+
+    it 'should not add definitions if allready exist' do
+      account = FactoryGirl.create(:account)
+
+      expect {
+        account.update_default_attribute_definitions!
+      }.to_not change(Employee::AttributeDefinition, :count)
+
+    end
+  end
+
   it { should have_db_column(:company_name) }
   it { should validate_presence_of(:company_name) }
 

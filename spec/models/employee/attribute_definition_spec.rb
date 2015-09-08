@@ -8,7 +8,6 @@ RSpec.describe Employee::AttributeDefinition, type: :model do
   it { is_expected.to validate_uniqueness_of(:name).scoped_to(:account_id).case_insensitive }
 
   it { is_expected.to have_db_column(:label) }
-  it { is_expected.to validate_presence_of(:label) }
 
   it { is_expected.to have_db_column(:system).with_options(default: false) }
   it { is_expected.to_not allow_value(nil).for(:system) }
