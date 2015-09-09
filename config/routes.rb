@@ -4,9 +4,6 @@ Rails.application.routes.draw do
     namespace :v1 do
       namespace :employees do
         jsonapi_resources :attribute_definitions
-        jsonapi_resources :attributes do
-          jsonapi_relationships
-        end
         jsonapi_resources :events
       end
       jsonapi_resources :employees do
