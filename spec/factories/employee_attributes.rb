@@ -4,21 +4,21 @@ FactoryGirl.define do
     association :event, factory: 'employee_event'
 
     transient do
-      sequence(:name) {|n| "test#{n}" }
+      sequence(:attribute_name) {|n| "test#{n}" }
       attribute_type { Attribute::Line.attribute_type }
     end
 
     after(:build) do |attr, evaluator|
-      attr.name = evaluator.name
+      attr.attribute_name = evaluator.attribute_name
 
-      if attr.name.nil?
+      if attr.attribute_name.nil?
         FactoryGirl.create(:employee_attribute_definition,
-          name: evaluator.name,
+          name: evaluator.attribute_name,
           attribute_type: evaluator.attribute_type,
           account: attr.account
         )
 
-        attr.name = evaluator.name
+        attr.attribute_name = evaluator.attribute_name
       end
     end
   end

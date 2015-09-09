@@ -22,16 +22,20 @@ class Employee::AttributeVersion < ActiveRecord::Base
     attribute_definition.try(:attribute_type)
   end
 
-  def name
+  def attribute_name
     attribute_definition.try(:name)
   end
 
-  def name=(value)
-    @name ||= value
+  def attribute_name=(value)
+    @attribute_name ||= value
 
     set_attribute_definition
 
-    @name
+    @attribute_name
+  end
+
+  def effective_at
+    event.try(:effective_at)
   end
 
   private
@@ -42,7 +46,7 @@ class Employee::AttributeVersion < ActiveRecord::Base
         self.attribute_definition = nil
       else
         self.attribute_definition = account.employee_attribute_definitions
-          .where(name: @name)
+          .where(name: @attribute_name)
           .readonly
           .first
       end

@@ -1,7 +1,8 @@
 module API
   module V1
     class EmployeeResource < JSONAPI::Resource
-      has_many :employee_attributes, class_name: 'Employees::Attribute'
+      has_many :employee_attributes, class_name: 'EmployeeAttribute'
+      has_many :events, class_name: 'EmployeeEvent'
 
       def self.records(options = {})
         Account.current.employees

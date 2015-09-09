@@ -23,7 +23,7 @@ RSpec.describe Employee::AttributeVersion, type: :model do
   it 'should validate uniqueness of attribute_definition' do
     subject.save!
 
-    attr = FactoryGirl.build(:employee_attribute, name: subject.name, employee: subject.employee)
+    attr = FactoryGirl.build(:employee_attribute, attribute_name: subject.attribute_name, employee: subject.employee)
 
     expect(attr).to_not be_valid
   end
@@ -32,7 +32,7 @@ RSpec.describe Employee::AttributeVersion, type: :model do
     subject.save!
 
     employee = FactoryGirl.create(:employee, account: subject.account)
-    attr = FactoryGirl.build(:employee_attribute, name: subject.name, employee: employee)
+    attr = FactoryGirl.build(:employee_attribute, attribute_name: subject.attribute_name, employee: employee)
 
     expect(attr).to be_valid
   end
@@ -45,7 +45,7 @@ RSpec.describe Employee::AttributeVersion, type: :model do
 
   it 'should be associeted with attribute definition record' do
     attribute_definition = Employee::AttributeDefinition.where(
-      name: subject.name,
+      name: subject.attribute_name,
       attribute_type: subject.attribute_type,
       account: subject.account
     ).first!
@@ -70,7 +70,7 @@ RSpec.describe Employee::AttributeVersion, type: :model do
     attribute_definition = FactoryGirl.create(:employee_attribute_definition, name: 'test')
     employee = FactoryGirl.create(:employee, account: attribute_definition.account)
 
-    attr = Employee::AttributeVersion.new(employee: employee, name: 'test')
+    attr = Employee::AttributeVersion.new(employee: employee, attribute_name: 'test')
 
     expect(attr.attribute_definition).to_not be_nil
     expect(attr.attribute_definition.name).to eql('test')
@@ -80,10 +80,15 @@ RSpec.describe Employee::AttributeVersion, type: :model do
     attribute_definition = FactoryGirl.create(:employee_attribute_definition, name: 'test')
     employee = FactoryGirl.create(:employee, account: attribute_definition.account)
 
-    attr = employee.employee_attribute_versions.build(name: 'test')
+    attr = employee.employee_attribute_versions.build(attribute_name: 'test')
 
     expect(attr.attribute_definition).to_not be_nil
     expect(attr.attribute_definition.name).to eql('test')
+  end
+
+  it 'should delegate effective_at to event' do
+    is_expected.to respond_to(:effective_at)
+    expect(subject.effective_at).to eq(subject.event.effective_at)
   end
 
 end
