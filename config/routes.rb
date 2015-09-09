@@ -7,6 +7,7 @@ Rails.application.routes.draw do
         jsonapi_resources :attributes do
           jsonapi_relationships
         end
+        jsonapi_resources :events
       end
       jsonapi_resources :employees do
         jsonapi_relationships

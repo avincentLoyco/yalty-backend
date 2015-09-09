@@ -6,6 +6,7 @@ module API
         attributes :attribute_name, :attribute_type, :value, :effective_at
 
         has_one :attribute_definition, class_name: 'AttributeDefinition'
+        has_one :event, class_name: 'Event', foreign_key: 'employee_event_id'
 
         def value
           value = model.data.dup
