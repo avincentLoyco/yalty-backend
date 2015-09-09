@@ -127,7 +127,6 @@ ALTER SEQUENCE accounts_id_seq OWNED BY accounts.id;
 --
 
 CREATE TABLE employee_attribute_definitions (
-    id integer NOT NULL,
     name character varying NOT NULL,
     label character varying,
     system boolean DEFAULT false NOT NULL,
@@ -135,27 +134,9 @@ CREATE TABLE employee_attribute_definitions (
     validation hstore,
     account_id integer NOT NULL,
     created_at timestamp without time zone NOT NULL,
-    updated_at timestamp without time zone NOT NULL
+    updated_at timestamp without time zone NOT NULL,
+    id uuid DEFAULT uuid_generate_v4() NOT NULL
 );
-
-
---
--- Name: employee_attribute_definitions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE employee_attribute_definitions_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: employee_attribute_definitions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE employee_attribute_definitions_id_seq OWNED BY employee_attribute_definitions.id;
 
 
 --
@@ -163,33 +144,14 @@ ALTER SEQUENCE employee_attribute_definitions_id_seq OWNED BY employee_attribute
 --
 
 CREATE TABLE employee_attribute_versions (
-    id integer NOT NULL,
     data hstore,
-    employee_id integer,
+    employee_id uuid,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
-    attribute_definition_id integer,
-    employee_event_id integer
+    attribute_definition_id uuid,
+    employee_event_id uuid,
+    id uuid DEFAULT uuid_generate_v4() NOT NULL
 );
-
-
---
--- Name: employee_attribute_versions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE employee_attribute_versions_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: employee_attribute_versions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE employee_attribute_versions_id_seq OWNED BY employee_attribute_versions.id;
 
 
 --
@@ -197,12 +159,12 @@ ALTER SEQUENCE employee_attribute_versions_id_seq OWNED BY employee_attribute_ve
 --
 
 CREATE TABLE employee_events (
-    id integer NOT NULL,
-    employee_id integer,
+    employee_id uuid,
     effective_at timestamp without time zone,
     comment text,
     created_at timestamp without time zone NOT NULL,
-    updated_at timestamp without time zone NOT NULL
+    updated_at timestamp without time zone NOT NULL,
+    id uuid DEFAULT uuid_generate_v4() NOT NULL
 );
 
 
@@ -230,54 +192,15 @@ CREATE VIEW employee_attributes AS
 
 
 --
--- Name: employee_events_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE employee_events_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: employee_events_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE employee_events_id_seq OWNED BY employee_events.id;
-
-
---
 -- Name: employees; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE TABLE employees (
-    id integer NOT NULL,
-    uuid uuid DEFAULT uuid_generate_v4(),
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
     account_id integer,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL
 );
-
-
---
--- Name: employees_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE employees_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: employees_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE employees_id_seq OWNED BY employees.id;
 
 
 --
@@ -408,34 +331,6 @@ ALTER TABLE ONLY account_users ALTER COLUMN id SET DEFAULT nextval('account_user
 --
 
 ALTER TABLE ONLY accounts ALTER COLUMN id SET DEFAULT nextval('accounts_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY employee_attribute_definitions ALTER COLUMN id SET DEFAULT nextval('employee_attribute_definitions_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY employee_attribute_versions ALTER COLUMN id SET DEFAULT nextval('employee_attribute_versions_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY employee_events ALTER COLUMN id SET DEFAULT nextval('employee_events_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY employees ALTER COLUMN id SET DEFAULT nextval('employees_id_seq'::regclass);
 
 
 --
@@ -602,10 +497,10 @@ CREATE INDEX index_employees_on_account_id ON employees USING btree (account_id)
 
 
 --
--- Name: index_employees_on_uuid_and_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_employees_on_id_and_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
-CREATE UNIQUE INDEX index_employees_on_uuid_and_account_id ON employees USING btree (uuid, account_id);
+CREATE UNIQUE INDEX index_employees_on_id_and_account_id ON employees USING btree (id, account_id);
 
 
 --
@@ -651,43 +546,11 @@ CREATE UNIQUE INDEX unique_schema_migrations ON schema_migrations USING btree (v
 
 
 --
--- Name: fk_rails_474a9d4b79; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY employee_attribute_versions
-    ADD CONSTRAINT fk_rails_474a9d4b79 FOREIGN KEY (attribute_definition_id) REFERENCES employee_attribute_definitions(id) ON DELETE CASCADE;
-
-
---
--- Name: fk_rails_5a8fc35128; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY employee_events
-    ADD CONSTRAINT fk_rails_5a8fc35128 FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE;
-
-
---
--- Name: fk_rails_6e495897f4; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY employee_attribute_versions
-    ADD CONSTRAINT fk_rails_6e495897f4 FOREIGN KEY (employee_event_id) REFERENCES employee_events(id);
-
-
---
 -- Name: fk_rails_836004d785; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY employee_attribute_definitions
     ADD CONSTRAINT fk_rails_836004d785 FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE;
-
-
---
--- Name: fk_rails_c0f87401f9; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY employee_attribute_versions
-    ADD CONSTRAINT fk_rails_c0f87401f9 FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE;
 
 
 --
@@ -745,3 +608,5 @@ INSERT INTO schema_migrations (version) VALUES ('20150907082834');
 INSERT INTO schema_migrations (version) VALUES ('20150907123909');
 
 INSERT INTO schema_migrations (version) VALUES ('20150908082010');
+
+INSERT INTO schema_migrations (version) VALUES ('20150909143548');
