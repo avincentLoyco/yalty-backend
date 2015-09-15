@@ -1,6 +1,6 @@
 FactoryGirl.define do
   factory :employee_attribute_definition, class: 'Employee::AttributeDefinition' do
-    name 'comment'
+    name {|n| "comment#{n}" }
     label 'Comment'
     system false
     attribute_type Attribute::Line.attribute_type

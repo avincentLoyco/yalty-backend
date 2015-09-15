@@ -68,8 +68,8 @@ module API
 
           attribute_definition = Account.current.employee_attribute_definitions
           .where(
-            id: attr.require(:relationships).require(:attribute_definition)[:id]
-          ).first
+            id: attr.require(:relationships).require(:attribute_definition).require(:data)[:id]
+          ).first!
 
           attributes << {
             data: attr.require(:attributes),

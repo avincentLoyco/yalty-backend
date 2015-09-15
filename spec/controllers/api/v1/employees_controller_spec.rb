@@ -29,11 +29,12 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
                 'id' => event_uuid,
                 'attributes' => {
                   'event-type' => 'hired',
-                  'effective-at' => '2015-09-10T00:00:00.000Z'
+                  'effective-at' => '2015-09-10T00:00:00.000Z',
+                  'comment' => 'A comment'
                 },
                 'relationships' => {
                   'employee-attributes': {
-                    data: [
+                    'data' => [
                       {
                         'type' => 'employee-attributes',
                         'id' => attribute_uuid,
@@ -42,8 +43,10 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
                         },
                         'relationships' => {
                           'attribute-definition' => {
-                            'type' => 'employee-attribute-definitions',
-                            'id' => "#{attribute_definition.id}"
+                            'data' => {
+                              'type' => 'employee-attribute-definitions',
+                              'id' => "#{attribute_definition.id}"
+                            }
                           }
                         }
                       }
@@ -108,6 +111,23 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
       expect {
         post :create, json_payload
       }.to change(Employee::AttributeVersion.where(id: attribute_uuid), :count).by(1)
+
+      expect(response).to have_http_status(:created)
+    end
+
+    it 'load sample json payload' do
+      json_payload = JSON.parse(File.read(Rails.root.join('spec', 'fixtures', 'files', 'employee_create.json')))
+
+      json_payload['data']['relationships']['events']['data'][0]['relationships']['employee-attributes']['data'].each do |attr|
+        FactoryGirl.create(
+          :employee_attribute_definition,
+          id: attr['relationships']['attribute-definition']['data']['id'],
+          attribute_type: 'String',
+          account: account
+        )
+      end
+
+      post :create, json_payload
 
       expect(response).to have_http_status(:created)
     end
