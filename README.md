@@ -73,6 +73,11 @@ the user credentials displayed.
 
 API use *Authentication* header with *bearer* token.
 
+You can use the following command if you want a complete set of sample data:
+```bash
+rake yalty:load_sample_data
+```
+
 
 Running tests
 -------------
