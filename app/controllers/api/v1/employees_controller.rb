@@ -29,7 +29,7 @@ module API
       def create
         params.deep_transform_keys! {|key| unformat_key(key) }
 
-        # Validate employee data
+        # Build Employee
         employee_data = params.require(:data)
 
         verify_type(employee_data[:type], EmployeeResource)
@@ -37,7 +37,9 @@ module API
           fail JSONAPI::Exceptions::EntityAlreadyExists.new(employee_data[:id])
         end
 
-        # Validate and extract event data
+        employee = Account.current.employees.build(id: employee_data[:id])
+
+        # Build Employee::Event
         event_data = employee_data.require(:relationships).require(:events).require(:data)
 
         if !event_data.is_a?(Array) || event_data.size != 1
@@ -46,13 +48,38 @@ module API
 
         verify_type(event_data.first[:type], EmployeeEventResource)
 
-        event_attributes = event_data.first.require(:attributes).permit('effective_at')
+        event_attributes = event_data.first.require(:attributes).permit(:effective_at)
         event_attributes[:id] = event_data.first[:id]
 
-        # Create employee
-        employee = Account.current.employees.build(id: employee_data[:id])
         event = employee.events.build(event_attributes)
 
+        # Build Employee::AttributeVersion
+        attribute_data = event_data.first.require(:relationships).require(:employee_attributes).require(:data)
+
+        if !event_data.is_a?(Array) || event_data.size < 1
+          fail JSONAP::Exceptions::InvalidLinksObject.new
+        end
+
+        attributes = []
+        attribute_data.each do |data|
+          verify_type(data[:type], EmployeeAttributeResource)
+
+          attribute_definition = Account.current.employee_attribute_definitions
+          .where(
+            id: data.require(:relationships).require(:attribute_definition)[:id]
+          ).first
+
+          attributes << {
+            data: data.require(:attributes),
+            id: data[:id],
+            event: event,
+            attribute_definition: attribute_definition
+          }
+        end
+
+        employee.employee_attribute_versions.build(attributes)
+
+        # Save new Employee
         if employee.save
           render status: :created, nothing: true
         else

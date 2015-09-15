@@ -104,5 +104,13 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
       expect(response).to have_http_status(:created)
     end
 
+    it 'create an attribute with given uuid' do
+      expect {
+        post :create, json_payload
+      }.to change(Employee::AttributeVersion.where(id: attribute_uuid), :count).by(1)
+
+      expect(response).to have_http_status(:created)
+    end
+
   end
 end
