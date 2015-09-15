@@ -23,6 +23,7 @@ module Yalty
 
     # add middlewares to load path
     config.autoload_once_paths << config.root.join('lib', 'middlewares')
+    config.autoload_once_paths << config.root.join('lib', 'attributes')
 
     # Genrators
     config.generators do |g|
