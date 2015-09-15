@@ -59,8 +59,19 @@ bin/rspec
 Running development
 -------------------
 
-TODO: using *postman* to access to API, describe how to get an access token to
-do this.
+The API can be acceded through the API endpoint (http://api.yalty.dev) with a
+user token. You can also use the frontend if you have its development
+environment.
+
+To load an account and get user credentials, run the following command:
+```bash
+rake yalty:load_sample_account
+```
+
+An account for "My Company" with a user is created (or loaded when it exists) and
+the user credentials displayed.
+
+API use *Authentication* header with *bearer* token.
 
 
 Running tests
