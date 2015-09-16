@@ -67,15 +67,14 @@ module API
 
           attribute_definition = Account.current.employee_attribute_definitions
           .where(
-            id: attr.require(:relationships).require(:attribute_definition).require(:data)[:id]
-          ).first!
+            id: attr.require(:relationships).require(:attribute_definition).require(:data).require(:id)
+          ).first
 
           attribute = @employee.employee_attribute_versions.build(
             id: attr[:id],
             event: @event,
             attribute_definition: attribute_definition
           )
-
           attribute.value = attr.require(:attributes).require(:value)
         end
       end
