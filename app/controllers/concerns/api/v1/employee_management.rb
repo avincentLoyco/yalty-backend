@@ -81,11 +81,9 @@ module API
       end
 
       def save_employee
-        if @employee.save
-          render status: :created, nothing: true
-        else
-          fail JSONAPI::Exceptions::SaveFailed.new
-        end
+        @employee.save!
+      rescue
+        fail JSONAPI::Exceptions::SaveFailed.new
       end
 
       def verify_type(type, resource_klass)

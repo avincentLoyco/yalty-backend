@@ -11,6 +11,8 @@ module API
         build_employee_event(employee_event_data)
         build_employee_attributes(employee_attribute_data)
         save_employee
+
+        render status: :no_content, nothing: true
       rescue => e
         handle_exceptions(e)
       end

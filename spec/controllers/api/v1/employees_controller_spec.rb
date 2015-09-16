@@ -97,7 +97,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
         post :create, json_payload
       }.to change(account.employees.where(id: employee_uuid), :count).by(1)
 
-      expect(response).to have_http_status(:created)
+      expect(response).to have_http_status(:no_content)
     end
 
     it 'create an event with given uuid' do
@@ -105,7 +105,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
         post :create, json_payload
       }.to change(Employee::Event.where(id: event_uuid), :count).by(1)
 
-      expect(response).to have_http_status(:created)
+      expect(response).to have_http_status(:no_content)
     end
 
     it 'create an attribute with given uuid' do
@@ -113,7 +113,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
         post :create, json_payload
       }.to change(Employee::AttributeVersion.where(id: attribute_uuid), :count).by(1)
 
-      expect(response).to have_http_status(:created)
+      expect(response).to have_http_status(:no_content)
     end
 
     it 'set the attribute value' do
@@ -139,7 +139,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
 
       post :create, json_payload
 
-      expect(response).to have_http_status(:created)
+      expect(response).to have_http_status(:no_content)
     end
 
   end
