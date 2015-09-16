@@ -12,56 +12,6 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
     )
   }
 
-  let(:employee_uuid) { SecureRandom.uuid }
-  let(:event_uuid) { SecureRandom.uuid }
-  let(:attribute_uuid) { SecureRandom.uuid }
-  let(:attribute_value) { 'Fred' }
-
-  let(:json_payload) {
-    {
-      'data'=> {
-        'type' => 'employees',
-        'id' => employee_uuid,
-        'relationships' => {
-          'events' => {
-            'data' => [
-              {
-                'type' => 'employee-events',
-                'id' => event_uuid,
-                'attributes' => {
-                  'event-type' => 'hired',
-                  'effective-at' => '2015-09-10T00:00:00.000Z',
-                  'comment' => 'A comment'
-                },
-                'relationships' => {
-                  'employee-attributes': {
-                    'data' => [
-                      {
-                        'type' => 'employee-attributes',
-                        'id' => attribute_uuid,
-                        'attributes' => {
-                          'value' => attribute_value,
-                        },
-                        'relationships' => {
-                          'attribute-definition' => {
-                            'data' => {
-                              'type' => 'employee-attribute-definitions',
-                              'id' => "#{attribute_definition.id}"
-                            }
-                          }
-                        }
-                      }
-                    ]
-                  }
-                }
-              }
-            ]
-          }
-        }
-      }
-    }
-  }
-
   before(:each) do
     Account.current = account
     @request.headers.merge!(
@@ -71,6 +21,55 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
   end
 
   context 'POST #create' do
+    let(:employee_uuid) { SecureRandom.uuid }
+    let(:event_uuid) { SecureRandom.uuid }
+    let(:attribute_uuid) { SecureRandom.uuid }
+    let(:attribute_value) { 'Fred' }
+
+    let(:json_payload) do
+      {
+        'data'=> {
+          'type' => 'employees',
+          'id' => employee_uuid,
+          'relationships' => {
+            'events' => {
+              'data' => [
+                {
+                  'type' => 'employee-events',
+                  'id' => event_uuid,
+                  'attributes' => {
+                    'event-type' => 'hired',
+                    'effective-at' => '2015-09-10T00:00:00.000Z',
+                    'comment' => 'A comment'
+                  },
+                  'relationships' => {
+                    'employee-attributes': {
+                      'data' => [
+                        {
+                          'type' => 'employee-attributes',
+                          'id' => attribute_uuid,
+                          'attributes' => {
+                            'value' => attribute_value,
+                          },
+                          'relationships' => {
+                            'attribute-definition' => {
+                              'data' => {
+                                'type' => 'employee-attribute-definitions',
+                                'id' => "#{attribute_definition.id}"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    end
 
     it 'should return bad request status if data is not present' do
       post :create, {}
@@ -141,6 +140,17 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
 
       expect(response).to have_http_status(:no_content)
     end
+  end
 
+  context 'GET /employees?include=employee-attributes' do
+    before(:each) do
+      FactoryGirl.create_list(:employee, 3, :with_attributes, account: account)
+    end
+
+    it 'should respond with success' do
+      get :index, include: 'employee-attributes'
+
+      expect(response).to have_http_status(:success)
+    end
   end
 end
