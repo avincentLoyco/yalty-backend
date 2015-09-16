@@ -61,7 +61,6 @@ module API
           fail JSONAP::Exceptions::InvalidLinksObject.new
         end
 
-        attributes = []
         data.each do |attr|
           verify_type(attr[:type], EmployeeAttributeResource)
           verify_entity_uniqueness(attr[:id], Employee::AttributeVersion)
@@ -71,15 +70,14 @@ module API
             id: attr.require(:relationships).require(:attribute_definition).require(:data)[:id]
           ).first!
 
-          attributes << {
-            data: attr.require(:attributes),
+          attribute = @employee.employee_attribute_versions.build(
             id: attr[:id],
             event: @event,
             attribute_definition: attribute_definition
-          }
-        end
+          )
 
-        @employee.employee_attribute_versions.build(attributes)
+          attribute.value = attr.require(:attributes).require(:value)
+        end
       end
 
       def save_employee

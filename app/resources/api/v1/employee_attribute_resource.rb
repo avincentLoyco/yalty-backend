@@ -8,14 +8,7 @@ module API
       has_one :event, class_name: 'EmployeeEvent', foreign_key: 'employee_event_id'
 
       def value
-        value = model.data.to_hash.dup
-        value.delete('attribute_type')
-
-        if value.keys.size > 1
-          value
-        else
-          value.values.first
-        end
+        model.attribute_value
       end
     end
   end

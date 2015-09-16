@@ -1,10 +1,9 @@
 class Employee::Attribute < ActiveRecord::Base
+  include ActsAsAttribute
+
   self.primary_key = 'id'
 
   belongs_to :employee, inverse_of: :employee_attributes
-  belongs_to :attribute_definition,
-    ->(attr) { readonly },
-    class_name: 'Employee::AttributeDefinition'
   belongs_to :event,
     class_name: 'Employee::Event',
     foreign_key: 'employee_event_id'

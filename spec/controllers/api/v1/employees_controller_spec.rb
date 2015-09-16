@@ -15,6 +15,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
   let(:employee_uuid) { SecureRandom.uuid }
   let(:event_uuid) { SecureRandom.uuid }
   let(:attribute_uuid) { SecureRandom.uuid }
+  let(:attribute_value) { 'Fred' }
 
   let(:json_payload) {
     {
@@ -39,7 +40,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
                         'type' => 'employee-attributes',
                         'id' => attribute_uuid,
                         'attributes' => {
-                          'value' => 'Fred',
+                          'value' => attribute_value,
                         },
                         'relationships' => {
                           'attribute-definition' => {
@@ -113,6 +114,15 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
       }.to change(Employee::AttributeVersion.where(id: attribute_uuid), :count).by(1)
 
       expect(response).to have_http_status(:created)
+    end
+
+    it 'set the attribute value' do
+      post :create, json_payload
+
+      attribute = Employee::AttributeVersion.where(id: attribute_uuid).first!
+
+      expect(attribute.value).to_not be_nil
+      expect(attribute.value).to eql(attribute_value)
     end
 
     it 'load sample json payload' do
