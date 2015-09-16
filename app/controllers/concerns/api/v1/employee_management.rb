@@ -94,7 +94,7 @@ module API
       end
 
       def verify_entity_uniqueness(id, entity_klass)
-        if entity_klass.where(id: id).exists?
+        if id.present? && entity_klass.where(id: id).exists?
           fail JSONAPI::Exceptions::EntityAlreadyExists.new(id)
         end
       end
