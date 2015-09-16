@@ -164,7 +164,8 @@ CREATE TABLE employee_events (
     comment text,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
-    id uuid DEFAULT uuid_generate_v4() NOT NULL
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    event_type character varying NOT NULL
 );
 
 
@@ -610,3 +611,5 @@ INSERT INTO schema_migrations (version) VALUES ('20150907123909');
 INSERT INTO schema_migrations (version) VALUES ('20150908082010');
 
 INSERT INTO schema_migrations (version) VALUES ('20150909143548');
+
+INSERT INTO schema_migrations (version) VALUES ('20150916153548');

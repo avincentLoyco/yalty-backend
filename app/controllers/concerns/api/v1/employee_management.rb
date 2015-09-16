@@ -50,7 +50,9 @@ module API
         verify_type(data[:type], EmployeeEventResource)
         verify_entity_uniqueness(data[:id], Employee::Event)
 
-        event_attributes = data.require(:attributes).permit(:effective_at)
+        event_attributes = data
+          .require(:attributes)
+          .permit(:effective_at, :comment, :event_type)
         event_attributes[:id] = data[:id]
 
         @event = @employee.events.build(event_attributes)

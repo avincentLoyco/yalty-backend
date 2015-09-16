@@ -14,4 +14,16 @@ RSpec.describe Employee::Event, type: :model do
   it { is_expected.to validate_presence_of(:effective_at) }
 
   it { is_expected.to have_db_column(:comment) }
+
+  it { is_expected.to have_db_column(:event_type) }
+  it { is_expected.to validate_presence_of(:event_type) }
+  it do
+    is_expected.to validate_inclusion_of(:event_type)
+      .in_array(
+        %w{
+          default
+          hired
+        }
+      )
+  end
 end

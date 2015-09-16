@@ -107,6 +107,33 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
       expect(response).to have_http_status(:no_content)
     end
 
+    it 'create an event with given type' do
+      post :create, json_payload
+
+      event = Employee::Event.where(id: event_uuid).first!
+
+      expect(event.event_type).to_not be_nil
+      expect(event.event_type).to eql('hired')
+    end
+
+    it 'create an event with given effective date' do
+      post :create, json_payload
+
+      event = Employee::Event.where(id: event_uuid).first!
+
+      expect(event.effective_at).to_not be_nil
+      expect(event.effective_at).to match(Date.new(2015, 9, 10))
+    end
+
+    it 'create an event with given comment' do
+      post :create, json_payload
+
+      event = Employee::Event.where(id: event_uuid).first!
+
+      expect(event.comment).to_not be_nil
+      expect(event.comment).to eql('A comment')
+    end
+
     it 'create an attribute with given uuid' do
       expect {
         post :create, json_payload
@@ -115,7 +142,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
       expect(response).to have_http_status(:no_content)
     end
 
-    it 'set the attribute value' do
+    it 'create an attribute with given value' do
       post :create, json_payload
 
       attribute = Employee::AttributeVersion.where(id: attribute_uuid).first!

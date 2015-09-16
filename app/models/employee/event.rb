@@ -7,4 +7,7 @@ class Employee::Event < ActiveRecord::Base
     class_name: 'Employee::AttributeVersion'
 
   validates :effective_at, presence: true
+  validates :event_type,
+    presence: true,
+    inclusion: { in: %w(default hired), allow_nil: true }
 end
