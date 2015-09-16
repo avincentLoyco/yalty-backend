@@ -1,11 +1,12 @@
 FactoryGirl.define do
   factory :employee_attribute_version, aliases: [:employee_attribute], class: 'Employee::AttributeVersion' do
     employee
-    association :event, factory: 'employee_event'
+    account { employee.account }
+    event { FactoryGirl.build(:employee_event, employee: employee) }
 
     transient do
       sequence(:attribute_name) {|n| "test#{n}" }
-      attribute_type { Attribute::Line.attribute_type }
+      attribute_type { Attribute::String.attribute_type }
     end
 
     after(:build) do |attr, evaluator|
@@ -15,7 +16,7 @@ FactoryGirl.define do
         FactoryGirl.create(:employee_attribute_definition,
           name: evaluator.attribute_name,
           attribute_type: evaluator.attribute_type,
-          account: attr.account
+          account: attr.employee.account
         )
 
         attr.attribute_name = evaluator.attribute_name
