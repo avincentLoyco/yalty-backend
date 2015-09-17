@@ -1,6 +1,6 @@
 Rails.application.routes.draw do
   # API
-  namespace :api, path: 'api', constraints: { subdomain: 'api' } do
+  namespace :api, path: 'api', constraints: { subdomain: /^api/ } do
     namespace :v1 do
       jsonapi_resources :employees do
         jsonapi_relationships
@@ -11,7 +11,7 @@ Rails.application.routes.draw do
   end
 
   # LAUNCHPAD
-  constraints subdomain: 'launchpad' do
+  constraints subdomain: /^launchpad/ do
     scope 'oauth' do
       use_doorkeeper scope: ''
 
