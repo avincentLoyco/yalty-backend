@@ -36,7 +36,7 @@ take yalty:load_sample_data [ACCOUNT_SUBDOMAIN=my-company]
         employee = account.employees.create!(id: uuid) if employee.nil?
 
         if employee.events.empty?
-          event = employee.events.create!(effective_at: 1.day.ago)
+          event = employee.events.create!(effective_at: 1.day.ago, event_type: 'hired')
         else
           event = employee.events.order('id ASC').first
         end
@@ -80,8 +80,11 @@ def load_or_create_account
 end
 
 def load_or_create_user(account)
-  user   = account.users.where(email: `git config user.email`).first
-  user ||= account.users.create!(email: `git config user.email`, password: '12345678')
+  email = `git config user.email`
+  email = 'test@example.com' if email.blank?
+
+  user   = account.users.where(email: email).first
+  user ||= account.users.create!(email: email, password: '12345678')
 end
 
 def print_access_information(account, user)
