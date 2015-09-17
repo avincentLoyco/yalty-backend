@@ -13,7 +13,7 @@ gem 'request_store'
 gem 'scenic'
 
 # Production environment dependencies
-group :production, :staging do
+group :production, :staging, :review do
   gem 'rails_12factor'
   gem 'puma'
 end
