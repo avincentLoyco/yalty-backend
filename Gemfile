@@ -15,6 +15,7 @@ gem 'scenic'
 # Production environment dependencies
 group :production, :staging do
   gem 'rails_12factor'
+  gem 'puma'
 end
 
 # Development environment dependencies (also needed by test environement)
