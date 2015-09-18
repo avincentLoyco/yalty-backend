@@ -169,15 +169,67 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
     end
   end
 
-  context 'GET /employees?include=employee-attributes' do
+  context 'GET /employees' do
     before(:each) do
+      FactoryGirl.create_list(:employee, 3) # in other account
       FactoryGirl.create_list(:employee, 3, :with_attributes, account: account)
     end
 
     it 'should respond with success' do
-      get :index, include: 'employee-attributes'
+      get :index
 
       expect(response).to have_http_status(:success)
+    end
+
+    it 'should be scoped to current account' do
+      get :index
+
+      expect_json_types(data: :array_of_objects)
+      expect_json_sizes(data: 3)
+    end
+
+    it 'should have employee-attributes' do
+      get :index
+
+      expect_json_keys('data.*.relationships', :'employee-attributes')
+    end
+
+    it 'should have events' do
+      get :index
+
+      expect_json_keys('data.*.relationships', :events)
+    end
+
+    context 'include employee-attributes' do
+
+      it 'should respond with success' do
+        get :index, include: 'employee-attributes'
+
+        expect(response).to have_http_status(:success)
+      end
+
+      it 'should have data' do
+        get :index, include: 'employee-attributes'
+
+        expect_json_types('data.*.relationships.employee-attributes', data: :array_of_objects)
+      end
+
+    end
+
+    context 'include employee-events' do
+
+      it 'should respond with success' do
+        get :index, include: 'events'
+
+        expect(response).to have_http_status(:success)
+      end
+
+      it 'should have data' do
+        get :index, include: 'events'
+
+        expect_json_types('data.*.relationships.events', data: :array_of_objects)
+      end
+
     end
   end
 end
