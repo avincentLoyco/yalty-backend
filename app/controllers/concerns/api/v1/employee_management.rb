@@ -40,12 +40,18 @@ module API
         @employee = Account.current.employees.build(id: data[:id])
       end
 
+      def load_employee(data)
+        verify_type(data[:type], EmployeeResource)
+
+        @employee = Account.current.employees.where(id: data.require(:id)).first!
+      end
+
       def build_employee_event(data)
-        if !data.is_a?(Array) || data.size != 1
+        if data.is_a?(Array) && data.size != 1
           fail JSONAP::Exceptions::InvalidLinksObject.new
         end
 
-        data = data.first
+        data = data.first if data.is_a?(Array)
 
         verify_type(data[:type], EmployeeEventResource)
         verify_entity_uniqueness(data[:id], Employee::Event)
@@ -72,9 +78,9 @@ module API
             id: attr.require(:relationships).require(:attribute_definition).require(:data).require(:id)
           ).first
 
-          attribute = @employee.employee_attribute_versions.build(
+          attribute = @event.employee_attribute_versions.build(
             id: attr[:id],
-            event: @event,
+            employee: @employee,
             attribute_definition: attribute_definition
           )
           attribute.value = attr.require(:attributes).require(:value)
@@ -83,6 +89,12 @@ module API
 
       def save_employee
         @employee.save!
+      rescue
+        fail JSONAPI::Exceptions::SaveFailed.new
+      end
+
+      def save_event
+        @event.save!
       rescue
         fail JSONAPI::Exceptions::SaveFailed.new
       end
