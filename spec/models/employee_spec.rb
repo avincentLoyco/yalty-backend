@@ -4,6 +4,7 @@ RSpec.describe Employee, type: :model do
   it { is_expected.to have_db_column(:account_id) }
   it { is_expected.to have_db_index(:account_id) }
   it { is_expected.to belong_to(:account).inverse_of(:employees) }
+  it { is_expected.to belong_to(:working_place) }
 
   it { is_expected.to have_many(:employee_attribute_versions).inverse_of(:employee) }
 

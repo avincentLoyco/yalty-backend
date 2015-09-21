@@ -200,7 +200,8 @@ CREATE TABLE employees (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
     account_id integer,
     created_at timestamp without time zone NOT NULL,
-    updated_at timestamp without time zone NOT NULL
+    updated_at timestamp without time zone NOT NULL,
+    working_place_id integer
 );
 
 
@@ -321,6 +322,38 @@ CREATE TABLE schema_migrations (
 
 
 --
+-- Name: working_places; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE working_places (
+    id integer NOT NULL,
+    name character varying NOT NULL,
+    account_id integer,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL
+);
+
+
+--
+-- Name: working_places_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE working_places_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: working_places_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE working_places_id_seq OWNED BY working_places.id;
+
+
+--
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -353,6 +386,13 @@ ALTER TABLE ONLY oauth_access_tokens ALTER COLUMN id SET DEFAULT nextval('oauth_
 --
 
 ALTER TABLE ONLY oauth_applications ALTER COLUMN id SET DEFAULT nextval('oauth_applications_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY working_places ALTER COLUMN id SET DEFAULT nextval('working_places_id_seq'::regclass);
 
 
 --
@@ -428,6 +468,14 @@ ALTER TABLE ONLY oauth_applications
 
 
 --
+-- Name: working_places_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY working_places
+    ADD CONSTRAINT working_places_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: index_account_users_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -498,10 +546,17 @@ CREATE INDEX index_employees_on_account_id ON employees USING btree (account_id)
 
 
 --
--- Name: index_employees_on_id_and_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: index_employees_on_id_and_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE UNIQUE INDEX index_employees_on_id_and_account_id ON employees USING btree (id, account_id);
+
+
+--
+-- Name: index_employees_on_working_place_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE INDEX index_employees_on_working_place_id ON employees USING btree (working_place_id);
 
 
 --
@@ -540,10 +595,25 @@ CREATE UNIQUE INDEX index_oauth_applications_on_uid ON oauth_applications USING 
 
 
 --
+-- Name: index_working_places_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE INDEX index_working_places_on_account_id ON working_places USING btree (account_id);
+
+
+--
 -- Name: unique_schema_migrations; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE UNIQUE INDEX unique_schema_migrations ON schema_migrations USING btree (version);
+
+
+--
+-- Name: fk_rails_1c5b30ec32; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY working_places
+    ADD CONSTRAINT fk_rails_1c5b30ec32 FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE;
 
 
 --
@@ -552,6 +622,14 @@ CREATE UNIQUE INDEX unique_schema_migrations ON schema_migrations USING btree (v
 
 ALTER TABLE ONLY employee_attribute_definitions
     ADD CONSTRAINT fk_rails_836004d785 FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE;
+
+
+--
+-- Name: fk_rails_a296bb8d32; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY employees
+    ADD CONSTRAINT fk_rails_a296bb8d32 FOREIGN KEY (working_place_id) REFERENCES working_places(id) ON DELETE CASCADE;
 
 
 --
@@ -613,3 +691,8 @@ INSERT INTO schema_migrations (version) VALUES ('20150908082010');
 INSERT INTO schema_migrations (version) VALUES ('20150909143548');
 
 INSERT INTO schema_migrations (version) VALUES ('20150916153548');
+
+INSERT INTO schema_migrations (version) VALUES ('20150921123410');
+
+INSERT INTO schema_migrations (version) VALUES ('20150921134559');
+

@@ -3,14 +3,14 @@ require 'rails_helper'
 RSpec.describe Account, type: :model do
   subject { FactoryGirl.build(:account) }
 
-  it { should have_db_column(:subdomain).with_options(null: false) }
-  it { should have_db_index(:subdomain).unique(true) }
-  it { should validate_presence_of(:subdomain).on(:update) }
-  it { should validate_uniqueness_of(:subdomain).case_insensitive }
-  it { should validate_length_of(:subdomain).is_at_most(63) }
-  it { should allow_value('a', 'subdomain', 'sub-domain', '123subdomain', 'subdomain-123').for(:subdomain) }
-  it { should_not allow_value('-subdomain', 'subdomain-', 'sub domain', 'subdömaìn', 'SubDomain').for(:subdomain) }
-  it { should validate_exclusion_of(:subdomain).in_array(['www', 'staging']) }
+  it { is_expected.to have_db_column(:subdomain).with_options(null: false) }
+  it { is_expected.to have_db_index(:subdomain).unique(true) }
+  it { is_expected.to validate_presence_of(:subdomain).on(:update) }
+  it { is_expected.to validate_uniqueness_of(:subdomain).case_insensitive }
+  it { is_expected.to validate_length_of(:subdomain).is_at_most(63) }
+  it { is_expected.to allow_value('a', 'subdomain', 'sub-domain', '123subdomain', 'subdomain-123').for(:subdomain) }
+  it { is_expected.to_not allow_value('-subdomain', 'subdomain-', 'sub domain', 'subdömaìn', 'SubDomain').for(:subdomain) }
+  it { is_expected.to validate_exclusion_of(:subdomain).in_array(['www', 'staging']) }
 
   context 'generate subdomain from company name on create' do
 
@@ -69,12 +69,14 @@ RSpec.describe Account, type: :model do
     end
   end
 
-  it { should have_db_column(:company_name) }
-  it { should validate_presence_of(:company_name) }
+  it { is_expected.to have_db_column(:company_name) }
+  it { is_expected.to validate_presence_of(:company_name) }
 
-  it { should have_many(:users).class_name('Account::User').inverse_of(:account) }
+  it { is_expected.to have_many(:working_places) }
 
-  it { should have_many(:employees).inverse_of(:account) }
+  it { is_expected.to have_many(:users).class_name('Account::User').inverse_of(:account) }
+
+  it { is_expected.to have_many(:employees).inverse_of(:account) }
 
   it { is_expected.to have_many(:employee_attribute_definitions).class_name('Employee::AttributeDefinition').inverse_of(:account) }
 
