@@ -1,8 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe API::V1::EmployeesController, type: :controller do
-  let(:account) { user.account }
-  let(:user) { FactoryGirl.create(:account_user) }
+  include_context 'shared_context_headers'
 
   let(:attribute_definition) {
     FactoryGirl.create(
@@ -11,14 +10,6 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
       account: account
     )
   }
-
-  before(:each) do
-    Account.current = account
-    @request.headers.merge!(
-      'CONTENT-TYPE' => 'application/vnd.api+json',
-      'ACCEPT' => 'application/vnd.api+json'
-    )
-  end
 
   context 'POST #create' do
     let(:employee_uuid) { SecureRandom.uuid }
