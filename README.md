@@ -36,6 +36,13 @@ ln -sf `pwd` ~/.pow/api.yalty
 ln -sf `pwd` ~/.pow/launchpad.yalty
 ```
 
+lvh.me as alternative for pow. Run server like that and then app will be available
+under: `api.yalty.lvh.me:3000` and `launchpad.yalty.lvh.me:3000`:
+
+```bash
+rails s -p 3000 -b lvh.me
+```
+
 Now you need to run *bundler* in working directory. Then you can edit local
 configuration (*.env.local*) if you need to change any default value.
 
