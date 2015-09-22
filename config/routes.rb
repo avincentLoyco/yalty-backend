@@ -8,7 +8,11 @@ Rails.application.routes.draw do
       jsonapi_resources :employee_attributes
       jsonapi_resources :employee_events
       jsonapi_resources :employee_attribute_definitions
-      jsonapi_resources :working_places
+      jsonapi_resources :working_places do
+        member do
+          put :assing_employee, to: 'working_places#assign_employee'
+        end
+      end
     end
   end
 

@@ -201,7 +201,7 @@ CREATE TABLE employees (
     account_id integer,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
-    working_place_id integer
+    working_place_id uuid
 );
 
 
@@ -326,31 +326,12 @@ CREATE TABLE schema_migrations (
 --
 
 CREATE TABLE working_places (
-    id integer NOT NULL,
     name character varying NOT NULL,
     account_id integer,
     created_at timestamp without time zone NOT NULL,
-    updated_at timestamp without time zone NOT NULL
+    updated_at timestamp without time zone NOT NULL,
+    id uuid DEFAULT uuid_generate_v4() NOT NULL
 );
-
-
---
--- Name: working_places_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE working_places_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: working_places_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE working_places_id_seq OWNED BY working_places.id;
 
 
 --
@@ -386,13 +367,6 @@ ALTER TABLE ONLY oauth_access_tokens ALTER COLUMN id SET DEFAULT nextval('oauth_
 --
 
 ALTER TABLE ONLY oauth_applications ALTER COLUMN id SET DEFAULT nextval('oauth_applications_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY working_places ALTER COLUMN id SET DEFAULT nextval('working_places_id_seq'::regclass);
 
 
 --
@@ -625,14 +599,6 @@ ALTER TABLE ONLY employee_attribute_definitions
 
 
 --
--- Name: fk_rails_a296bb8d32; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY employees
-    ADD CONSTRAINT fk_rails_a296bb8d32 FOREIGN KEY (working_place_id) REFERENCES working_places(id) ON DELETE CASCADE;
-
-
---
 -- Name: fk_rails_c96445f213; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -695,4 +661,6 @@ INSERT INTO schema_migrations (version) VALUES ('20150916153548');
 INSERT INTO schema_migrations (version) VALUES ('20150921123410');
 
 INSERT INTO schema_migrations (version) VALUES ('20150921134559');
+
+INSERT INTO schema_migrations (version) VALUES ('20150922085326');
 
