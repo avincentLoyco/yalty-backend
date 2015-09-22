@@ -52,7 +52,7 @@ module Yalty
 
         resource '*',
           headers: :any,
-          methods: %i(get post delete put options head),
+          methods: %i(get post delete put patch options head),
           max_age: 0
       end
     end
