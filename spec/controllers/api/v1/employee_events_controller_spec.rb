@@ -166,7 +166,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
   context 'GET /employee-events' do
     before(:each) do
-      FactoryGirl.create_list(:employee_event, 3) # in another account
       FactoryGirl.create_list(:employee_event, 3, employee: employee)
     end
 
@@ -174,13 +173,17 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       get :index
 
       expect(response).to have_http_status(:success)
+      expect_json_sizes(data: 3)
     end
 
-    it 'should be scoped to current account' do
+    it 'should not be visible in context of other account' do
+      user = FactoryGirl.create(:account_user)
+      Account.current = user.account
+
       get :index
 
-      expect_json_types(data: :array_of_objects)
-      expect_json_sizes(data: 3)
+      expect(response).to have_http_status(:success)
+      expect_json []
     end
 
     it 'should have effective-at attribute' do

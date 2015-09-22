@@ -171,7 +171,6 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
 
   context 'GET /employees' do
     before(:each) do
-      FactoryGirl.create_list(:employee, 3) # in other account
       FactoryGirl.create_list(:employee, 3, :with_attributes, account: account)
     end
 
@@ -179,13 +178,17 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
       get :index
 
       expect(response).to have_http_status(:success)
+      expect_json_sizes(data: 3)
     end
 
-    it 'should be scoped to current account' do
+    it 'should not be visible in context of other account' do
+      user = FactoryGirl.create(:account_user)
+      Account.current = user.account
+
       get :index
 
-      expect_json_types(data: :array_of_objects)
-      expect_json_sizes(data: 3)
+      expect(response).to have_http_status(:success)
+      expect_json []
     end
 
     it 'should have employee-attributes' do
