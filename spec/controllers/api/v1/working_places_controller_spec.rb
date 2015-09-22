@@ -27,62 +27,139 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
     end
   end
 
-  context 'PUT /working_places/:id/assign_employee' do
-    let(:first_employee) { FactoryGirl.create(:employee) }
-    let(:second_employee) { FactoryGirl.create(:employee) }
-    subject { put :assign_employee, params }
+  describe '/working-places/:working_place_id/relationships/employees' do
+    let!(:first_employee) { FactoryGirl.create(:employee, account_id: account.id) }
+    let!(:second_employee) { FactoryGirl.create(:employee, account_id: account.id) }
+    let(:params) {{ working_place_id: working_place.id, relationship: "employees" }}
 
-    context 'when valid employee ids are sended' do
-      let(:params) do
-        {
-          id: working_place.id,
-          employees: [first_employee.id, second_employee.id]
-        }
+    let(:first_employee_json) do
+      {
+        "data": [
+          { "type": "employees",
+            "id": first_employee.id }
+        ]
+      }
+    end
+    let(:second_employee_json) do
+      {
+        "data": [
+          { "type": "employees",
+            "id": second_employee.id }
+        ]
+      }
+    end
+    let(:both_employees_json) do
+      {
+        "data": [
+          { "type": "employees",
+            "id": first_employee.id },
+          { "type": "employees",
+            "id": second_employee.id }
+        ]
+      }
+    end
+
+    let(:invalid_employees_json) do
+      {
+        "data": [
+          { "type": "employees",
+            "id": '12345678-1234-1234-1234-123456789012' }
+        ]
+      }
+    end
+
+    context 'post #create_relationship' do
+      it 'assigns employee to working place when new id given' do
+        expect {
+          post :create_relationship, params.merge(first_employee_json)
+        }.to change { working_place.reload.employees.size }.from(0).to(1)
+
+        expect(response).to have_http_status(:no_content)
       end
-      it { expect { subject }.to change { working_place.reload.employees.size }.from(0).to(2) }
 
-      context 'response' do
-        before { subject }
-        it { expect(response).to have_http_status(:success) }
-        it { expect_json_types(name: :string,
-                               account_id: :integer,
-                               created_at: :date,
-                               updated_at: :date,
-                               id: :string,
-                               employees: :array)
-        }
+      it 'adds employee to working place employees when new id given' do
+        working_place.employees.push(first_employee)
+        working_place.save
+        expect {
+          post :create_relationship, params.merge(second_employee_json)
+        }.to change { working_place.reload.employees.size }.from(1).to(2)
+
+        expect(response).to have_http_status(:no_content)
+      end
+
+      it 'allows for adding few employees at time when new ids given' do
+        expect {
+          post :create_relationship, params.merge(both_employees_json)
+        }.to change { working_place.reload.employees.size }.from(0).to(2)
+
+        expect(response).to have_http_status(:no_content)
+      end
+
+      it 'returns status 400 if employee already exists' do
+        working_place.employees.push(first_employee)
+        working_place.save
+
+        post :create_relationship, params.merge(first_employee_json)
+
+        expect(response).to have_http_status(400)
+        expect(response.body).to include "Relation exists"
+      end
+
+      it 'returns bad request when wrong working place id given' do
+        params = { working_place_id: '12345678-1234-1234-1234-123456789012',
+                   relationship: "employees" }
+        post :create_relationship, params.merge(first_employee_json)
+
+        expect(response).to have_http_status(404)
+        expect(response.body).to include "Record not found"
+      end
+
+      it 'returns bad request when wrong employee id given' do
+        post :create_relationship, params.merge(invalid_employees_json)
+
+        expect(response).to have_http_status(404)
+        expect(response.body).to include "Record not found"
+      end
+
+      it 'returns 400 when parameters not given' do
+        post :create_relationship, params
+
+        expect(response).to have_http_status(400)
+        expect(response.body).to include "Missing Parameter"
       end
     end
 
-    context 'when invalid employee id is sended' do
-      let(:params) do
-        {
-          id: working_place.id,
-          employees: ['1', '2']
-        }
-      end
-      it { expect { subject }.to_not change { working_place.reload.employees.size } }
+    context 'delete #destroy_relationship' do
+      it 'delete employee from relationship if exist' do
+        working_place.employees.push(first_employee)
+        working_place.save
+        expect {
+          delete :destroy_relationship, params.merge(keys: first_employee.id)
+        }.to change { working_place.reload.employees.size }.from(1).to(0)
 
-      context 'response' do
-        before { subject }
-        it { expect(response).to_not have_http_status(:success) }
-        it { expect(response.body).to eq 'Record not found' }
+        expect(response).to have_http_status(:no_content)
+      end
+
+      it 'return 404 when wrong employee id given' do
+        post :destroy_relationship, params.merge(
+          keys: '12345678-1234-1234-1234-123456789012'
+        )
+
+        expect(response).to have_http_status(404)
+        expect(response.body).to include "Record not found"
       end
     end
 
-    context 'when invalid working_place_id is sended' do
-      let(:params) do
-        {
-          id: 'aaaaaaaa-bbbb-cccc-eeee-dddddddddddd',
-          employees: [first_employee.id, second_employee.id]
-        }
-      end
-      it { expect { subject }.to_not change { working_place.reload.employees.size } }
+    context 'get #show_relationship' do
+      it 'list all working place employees' do
+        working_place.employees.push([first_employee, second_employee])
+        working_place.save
 
-      context 'response' do
-        before { subject }
-        it { expect(response).to_not have_http_status(:success) }
-        it { expect(response.body).to eq 'Record not found' }
+        get :show_relationship, params
+
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include first_employee.id
+        expect(response.body).to include second_employee.id
       end
     end
   end
