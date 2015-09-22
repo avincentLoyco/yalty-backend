@@ -96,4 +96,20 @@ RSpec.describe Account, type: :model do
     expect(Account.current).to eql(account)
   end
 
+  context '#timezone' do
+    it 'should save account with valid timezone name' do
+      timezone_name = ActiveSupport::TimeZone.all.last.name
+      account = FactoryGirl.build(:account, timezone: timezone_name)
+
+      expect(account).to be_valid
+      expect(account.timezone).to eq(timezone_name)
+    end
+
+    it 'should not save account with not valid timezone name' do
+      account = FactoryGirl.build(:account, timezone: 'ABC')
+
+      expect(account).to_not be_valid
+    end
+  end
+
 end
