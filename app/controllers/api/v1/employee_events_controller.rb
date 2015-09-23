@@ -5,7 +5,7 @@ module API
 
       skip_before_filter :setup_request, only: [:create]
       def create
-        setup_employee_management
+        setup_params
         load_employee(employee_data)
         build_employee_event(employee_event_data)
         build_employee_attributes(employee_attribute_data)
