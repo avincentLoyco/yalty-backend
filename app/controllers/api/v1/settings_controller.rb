@@ -5,19 +5,18 @@ module API
       include API::V1::ExceptionsHandler
 
       def show
-        setup_request
         process_request_operations
       end
 
       def update
-        setup_request
         process_request_operations
       end
 
       private
 
       def setup_request(id = Account.current.try(:id).to_s)
-        @request = JSONAPI::Request.new(params.merge(id: id), context: context, key_formatter: key_formatter)
+        new_params = params.merge(id: id).deep_merge(data: {id: id})
+        @request = JSONAPI::Request.new(new_params, context: context, key_formatter: key_formatter)
 
         render_errors(@request.errors) unless @request.errors.empty?
       rescue => e
