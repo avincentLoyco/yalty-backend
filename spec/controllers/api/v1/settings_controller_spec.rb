@@ -1,8 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe API::V1::SettingsController, type: :controller do
-  let(:account) { user.account }
-  let(:user) { FactoryGirl.create(:account_user) }
+  include_context 'shared_context_headers'
+
   let(:settings_json) do
     {
       "data": {
@@ -16,14 +16,6 @@ RSpec.describe API::V1::SettingsController, type: :controller do
         }
       }
     }
-  end
-
-  before(:each) do
-    Account.current = account
-    @request.headers.merge!(
-      'CONTENT-TYPE' => 'application/vnd.api+json',
-      'ACCEPT' => 'application/vnd.api+json'
-    )
   end
 
   context 'GET #show' do
