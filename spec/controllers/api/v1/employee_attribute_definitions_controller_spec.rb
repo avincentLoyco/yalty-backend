@@ -1,16 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe API::V1::EmployeeAttributeDefinitionsController, type: :controller do
-  let(:account) { user.account }
+  include_context 'shared_context_headers'
   let(:user) { FactoryGirl.create(:account_user) }
-
-  before(:each) do
-    Account.current = account
-    @request.headers.merge!(
-      'CONTENT-TYPE' => 'application/vnd.api+json',
-      'ACCEPT' => 'application/vnd.api+json'
-    )
-  end
 
   context 'GET /employee-attribute-definitions' do
     before(:each) do

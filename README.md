@@ -36,6 +36,13 @@ ln -sf `pwd` ~/.pow/api.yalty
 ln -sf `pwd` ~/.pow/launchpad.yalty
 ```
 
+lvh.me as alternative for pow. Run server like that and then app will be available
+under: `api.yalty.lvh.me:3000` and `launchpad.yalty.lvh.me:3000`:
+
+```bash
+rails s -p 3000 -b lvh.me
+```
+
 Now you need to run *bundler* in working directory. Then you can edit local
 configuration (*.env.local*) if you need to change any default value.
 
@@ -78,6 +85,53 @@ You can use the following command if you want a complete set of sample data:
 rake yalty:load_sample_data
 ```
 
+### Postman
+
+If you want to test api with Postman you have to run rails server first (with lvh.me or pow) and you have to have valid user's access token. You can obtain it with:
+```ruby
+Account::User.last.access_token
+```
+To every hit to api you have to add access_token. You can add it in Postman params section or in url directly:
+```
+?access_token=YOUR_ACCESS_TOKEN
+```
+
+List of available routes and their http methods may be obtained by:
+```bash
+rake routes
+```
+
+#### Examples (with lvh.me usage)
+
+Required headers:
+```
+Content-Type:    application/vnd.api+json
+Accept:          application/vnd.api+json
+```
+
+GET for receiving list of working places:
+```
+http://api.lvh.me:3000/api/v1/working-places?access_token=YOUR_ACCESS_TOKEN
+```
+
+POST for adding employee to working place
+```
+http://api.lvh.me:3000/api/v1/working-places/WORKING_PLACE_ID/relationships/employees?access_token=YOUR_ACCESS_TOKEN
+```
+body:
+```
+{
+  "data": [
+    { "type": "employees", "id": "first_employee_id" },
+    { "type": "employees", "id": "second_employee_id" }
+  ]
+}
+```
+
+DELETE for removing employee from working place
+```
+http://api.lvh.me:3000/api/v1/working-places/WORKING_PLACE_ID/relationships/employees/employee_id?access_token=YOUR_ACCESS_TOKEN
+```
 
 Running tests
 -------------

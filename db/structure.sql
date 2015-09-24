@@ -200,7 +200,8 @@ CREATE TABLE employees (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
     account_id integer,
     created_at timestamp without time zone NOT NULL,
-    updated_at timestamp without time zone NOT NULL
+    updated_at timestamp without time zone NOT NULL,
+    working_place_id uuid
 );
 
 
@@ -321,6 +322,19 @@ CREATE TABLE schema_migrations (
 
 
 --
+-- Name: working_places; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE working_places (
+    name character varying NOT NULL,
+    account_id integer,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL,
+    id uuid DEFAULT uuid_generate_v4() NOT NULL
+);
+
+
+--
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -428,6 +442,14 @@ ALTER TABLE ONLY oauth_applications
 
 
 --
+-- Name: working_places_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY working_places
+    ADD CONSTRAINT working_places_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: index_account_users_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -498,10 +520,17 @@ CREATE INDEX index_employees_on_account_id ON employees USING btree (account_id)
 
 
 --
--- Name: index_employees_on_id_and_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: index_employees_on_id_and_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE UNIQUE INDEX index_employees_on_id_and_account_id ON employees USING btree (id, account_id);
+
+
+--
+-- Name: index_employees_on_working_place_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE INDEX index_employees_on_working_place_id ON employees USING btree (working_place_id);
 
 
 --
@@ -540,10 +569,25 @@ CREATE UNIQUE INDEX index_oauth_applications_on_uid ON oauth_applications USING 
 
 
 --
+-- Name: index_working_places_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE INDEX index_working_places_on_account_id ON working_places USING btree (account_id);
+
+
+--
 -- Name: unique_schema_migrations; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE UNIQUE INDEX unique_schema_migrations ON schema_migrations USING btree (version);
+
+
+--
+-- Name: fk_rails_1c5b30ec32; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY working_places
+    ADD CONSTRAINT fk_rails_1c5b30ec32 FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE;
 
 
 --
@@ -613,3 +657,10 @@ INSERT INTO schema_migrations (version) VALUES ('20150908082010');
 INSERT INTO schema_migrations (version) VALUES ('20150909143548');
 
 INSERT INTO schema_migrations (version) VALUES ('20150916153548');
+
+INSERT INTO schema_migrations (version) VALUES ('20150921123410');
+
+INSERT INTO schema_migrations (version) VALUES ('20150921134559');
+
+INSERT INTO schema_migrations (version) VALUES ('20150922085326');
+
