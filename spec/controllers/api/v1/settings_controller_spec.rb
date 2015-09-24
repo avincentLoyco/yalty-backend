@@ -38,5 +38,17 @@ RSpec.describe API::V1::SettingsController, type: :controller do
       put :update, settings_json
       expect(response).to have_http_status(:success)
     end
+
+    it "should not update when timezone is not valid" do
+      settings_json[:data][:attributes][:timezone] = 'abc'
+
+      put :update, settings_json
+      expect(response).to have_http_status(400)
+    end
+
+    it 'should not update when there is no params' do
+      put :update, {}
+      expect(response).to have_http_status(400)
+    end
   end
 end
