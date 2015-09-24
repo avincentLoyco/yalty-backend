@@ -6,7 +6,7 @@ RSpec.describe API::V1::SettingsController, type: :controller do
   let(:settings_json) do
     {
       "data": {
-        "id": "20",
+        "id": Account.current.id,
         "type": "settings",
         "attributes": {
           "company-name": "My Company",
@@ -43,7 +43,7 @@ RSpec.describe API::V1::SettingsController, type: :controller do
       settings_json[:data][:attributes][:timezone] = 'abc'
 
       put :update, settings_json
-      expect(response).to have_http_status(400)
+      expect(response).to have_http_status(422)
     end
 
     it 'should not update when there is no params' do
