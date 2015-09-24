@@ -32,7 +32,7 @@ RSpec.describe API::V1::EmployeeAttributesController, type: :controller do
       get :index
 
       expect(response).to have_http_status(:success)
-      expect_json []
+      expect_json_sizes(data: 0)
     end
   end
 end

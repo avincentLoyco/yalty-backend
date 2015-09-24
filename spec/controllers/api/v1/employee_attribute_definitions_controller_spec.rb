@@ -13,6 +13,17 @@ RSpec.describe API::V1::EmployeeAttributeDefinitionsController, type: :controlle
       get :index
 
       expect(response).to have_http_status(:success)
+      expect_json_sizes(data: 5)
+    end
+
+    it 'should not be visible in context of other account' do
+      user = FactoryGirl.create(:account_user)
+      Account.current = user.account
+
+      get :index
+
+      expect(response).to have_http_status(:success)
+      expect_json_sizes(data: 2)
     end
   end
 end
