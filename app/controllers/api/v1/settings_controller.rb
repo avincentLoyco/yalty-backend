@@ -2,9 +2,11 @@ module API
   module V1
     class SettingsController < JSONAPI::ResourceController
       include API::V1::ParamsManagement
+      include API::V1::ExceptionsHandler
 
       def show
-        render json: Account.current.to_json, status: 200
+        setup_request
+        process_request_operations
       end
 
       def update
@@ -23,6 +25,14 @@ module API
         settings_data
           .require(:attributes)
           .permit(:company_name, :subdomain, :timezone, :default_locale)
+      end
+
+      def setup_request(id = Account.current.try(:id))
+        @request = JSONAPI::Request.new(params.merge(id: id), context: context, key_formatter: key_formatter)
+
+        render_errors(@request.errors) unless @request.errors.empty?
+      rescue => e
+        handle_exceptions(e)
       end
     end
   end

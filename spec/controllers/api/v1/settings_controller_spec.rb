@@ -26,7 +26,7 @@ RSpec.describe API::V1::SettingsController, type: :controller do
     )
   end
 
-  context 'GET #index' do
+  context 'GET #show' do
     it 'should response with success' do
       get :show
 
