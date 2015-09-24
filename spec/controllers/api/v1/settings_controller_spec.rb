@@ -6,7 +6,6 @@ RSpec.describe API::V1::SettingsController, type: :controller do
   let(:settings_json) do
     {
       "data": {
-        "id": Account.current.id,
         "type": "settings",
         "attributes": {
           "company-name": "My Company",
@@ -49,6 +48,18 @@ RSpec.describe API::V1::SettingsController, type: :controller do
     it 'should not update when there is no params' do
       put :update, {}
       expect(response).to have_http_status(400)
+    end
+  end
+
+  context 'POST #create' do
+    it 'should not be routable' do
+      expect(:post => "/api/v1/settings").not_to be_routable
+    end
+  end
+
+  context 'DELETE #delete' do
+    it 'should not be routable' do
+      expect(:delete => "/api/v1/settings/#{account.id}").not_to be_routable
     end
   end
 end
