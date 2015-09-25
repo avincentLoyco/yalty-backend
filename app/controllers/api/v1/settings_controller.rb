@@ -2,14 +2,6 @@ module API
   module V1
     class SettingsController < JSONAPI::ResourceController
 
-      def show
-        process_request_operations
-      end
-
-      def update
-        process_request_operations
-      end
-
       private
 
       def setup_request(id = Account.current.try(:id).to_s)
