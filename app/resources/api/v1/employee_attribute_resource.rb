@@ -8,7 +8,7 @@ module API
       has_one :event, class_name: 'EmployeeEvent', foreign_key: 'employee_event_id'
 
       def self.records(options = {})
-        Employee::AttributeVersion.joins(:account).where(accounts: {id: Account.current.id })
+        Account.current.employee_attribute_versions
       end
     end
   end

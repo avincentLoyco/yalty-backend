@@ -96,4 +96,7 @@ RSpec.describe Account, type: :model do
     expect(Account.current).to eql(account)
   end
 
+  it { is_expected.to have_many(:employee_events).through(:employees) }
+  it { is_expected.to have_many(:employee_attribute_versions).through(:employees) }
+
 end

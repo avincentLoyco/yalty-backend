@@ -18,6 +18,8 @@ class Account < ActiveRecord::Base
     class_name: 'Employee::AttributeDefinition',
     inverse_of: :account
   has_many :working_places, inverse_of: :account
+  has_many :employee_events, through: :employees, source: :events
+  has_many :employee_attribute_versions, through: :employees
 
   before_validation :generate_subdomain, on: :create
   after_create :update_default_attribute_definitions!
