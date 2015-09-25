@@ -1,6 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe API::V1::HolidayPoliciesController, type: :controller do
+  include_context 'shared_context_headers'
 
   context 'GET /holiday_policies' do
     before(:each) do
