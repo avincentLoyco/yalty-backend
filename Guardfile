@@ -1,6 +1,6 @@
 notification :tmux, display_message: true
 
-guard :rspec, cmd: 'bin/rspec' do
+guard :rspec, cmd: 'bin/rspec --profile 0' do
   require 'guard/rspec/dsl'
   dsl = Guard::RSpec::Dsl.new(self)
 
@@ -25,6 +25,9 @@ guard :rspec, cmd: 'bin/rspec' do
       rspec.spec.("controllers/#{m[1]}_controller"),
       # rspec.spec.("acceptance/#{m[1]}")
     ]
+  end
+  watch(%r{^app/resources/(.+)_resource\.rb$}) do |m|
+    "#{rspec.spec_dir}/controllers"
   end
 
   # Rails config changes

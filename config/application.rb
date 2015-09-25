@@ -21,6 +21,10 @@ module Yalty
     # Application configuration should go into files in config/initializers
     # -- all .rb files in that directory are automatically loaded.
 
+    # add middlewares to load path
+    config.autoload_once_paths << config.root.join('lib', 'middlewares')
+    config.autoload_once_paths << config.root.join('lib', 'attributes')
+
     # Genrators
     config.generators do |g|
       g.orm                 :active_record
@@ -38,6 +42,9 @@ module Yalty
       g.fixture_replacement :factory_girl, dir: 'spec/factories'
     end
 
+    # Set current account
+   config.middleware.use 'CurrentAccountMiddleware'
+
     # CORS configuration
     config.middleware.insert_before 0, 'Rack::Cors', debug: !Rails.env.production?, logger: (-> { Rails.logger }) do
       allow do
@@ -45,10 +52,13 @@ module Yalty
 
         resource '*',
           headers: :any,
-          methods: %i(get post delete put options head),
+          methods: %i(get post delete put patch options head),
           max_age: 0
       end
     end
+
+    # SQL database schema
+    config.active_record.schema_format = :sql
 
     # Set Time.zone default to the specified zone and make Active Record auto-convert to this zone.
     # Run "rake -D time" for a list of tasks for finding time zone names. Default is UTC.

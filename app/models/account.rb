@@ -1,14 +1,64 @@
 class Account < ActiveRecord::Base
-  validates :subdomain, presence: true,
-                        uniqueness: { case_sensitive: false },
-                        length: { maximum: 63 },
-                        format: { with: /\A[a-z\d]+(?:[-][a-z\d]+)*\z/, allow_blank: true },
-                        exclusion: { in: Yalty.reserved_subdomains }
+  validates :subdomain,
+    presence: true,
+    uniqueness: { case_sensitive: false },
+    length: { maximum: 63 },
+    format: {
+      with: /\A[a-z\d]+(?:[-][a-z\d]+)*\z/,
+      allow_blank: true
+    },
+    exclusion: { in: Yalty.reserved_subdomains }
   validates :company_name, presence: true
+  validates :timezone,
+    inclusion: { in: ActiveSupport::TimeZone.all.map { |tz| tz.tzinfo.name } },
+    if: -> { timezone.present? }
 
-  has_many :users, class_name: 'Account::User', inverse_of: :account
+  has_many :users,
+    class_name: 'Account::User',
+    inverse_of: :account
+  has_many :employees, inverse_of: :account
+  has_many :employee_attribute_definitions,
+    class_name: 'Employee::AttributeDefinition',
+    inverse_of: :account
+  has_many :working_places, inverse_of: :account
+  has_many :employee_events, through: :employees, source: :events
+  has_many :employee_attribute_versions, through: :employees
 
   before_validation :generate_subdomain, on: :create
+  after_create :update_default_attribute_definitions!
+
+  def self.current=(account)
+    RequestStore.write(:current_account, account)
+  end
+
+  def self.current
+    RequestStore.read(:current_account)
+  end
+
+  DEFAULT_ATTRIBUTE_DEFINITIONS = [
+    { name: 'firstname', type: Attribute::String.attribute_type },
+    { name: 'lastname',  type: Attribute::String.attribute_type }
+  ].freeze
+
+  # Add defaults attribute definiitons
+  #
+  # Create all required Employee::AttributeDefinition for
+  # the account
+  def update_default_attribute_definitions!
+    DEFAULT_ATTRIBUTE_DEFINITIONS.each do |attr|
+      definition = employee_attribute_definitions.where(name: attr[:name]).first
+
+      if definition.nil?
+        definition = employee_attribute_definitions.build(
+          name: attr[:name],
+          attribute_type: attr[:type],
+          system: true
+        )
+      end
+
+      definition.save
+    end
+  end
 
   private
 

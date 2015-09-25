@@ -2,17 +2,20 @@ source 'https://rubygems.org'
 
 ruby '2.2.2'
 
-gem 'rails', '4.2.1'
+gem 'rails', '4.2.3'
 gem 'pg'
 gem 'bcrypt'
 gem 'rack-cors', require: 'rack/cors'
-gem 'jsonapi-resources', github: 'cerebris/jsonapi-resources'
+gem 'jsonapi-resources'
 gem 'doorkeeper'
+gem 'virtus'
+gem 'request_store'
+gem 'scenic'
 
 # Production environment dependencies
 group :production, :staging do
-  gem 'puma'
   gem 'rails_12factor'
+  gem 'puma'
 end
 
 # Development environment dependencies (also needed by test environement)
@@ -26,9 +29,12 @@ group :development, :test do
   gem 'factory_girl_rails'
   gem 'airborne'
   gem 'faker'
+  gem 'temping'
   gem 'guard-rspec'
 
   # debug
+  gem 'pry-rails'
+  gem 'pry-byebug'
   gem 'byebug'
 
   # spring

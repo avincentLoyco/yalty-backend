@@ -1,0 +1,57 @@
+{
+  "data": {
+    "type": "employees",
+    "id": "2d648acb-5824-4074-aed1-3943aa81b3f8",
+    "relationships": {
+      "events": {
+        "data": [
+          {
+            "type": "employee-events",
+            "id": "72dedf30-ae29-40fb-9ee2-cdfdcd26be1f",
+            "attributes": {
+              "comment": "test",
+              "effective-at": "2015-09-15T15:15:17.706Z",
+              "event-type": "hired"
+            },
+            "relationships": {
+              "employee-attributes": {
+                "data": [
+                  {
+                    "id": "e6e6014b-dfa0-4cdb-adaf-7ec6019dbb1b",
+                    "attributes": {
+                      "value": "Minnich"
+                    },
+                    "relationships": {
+                      "attribute-definition": {
+                        "data": {
+                          "type": "employee-attribute-definitions",
+                          "id": "27fb4aaa-0d14-4623-835a-8220c0749170"
+                        }
+                      }
+                    },
+                    "type": "employee-attributes"
+                  },
+                  {
+                    "id": "2e8d808d-32e0-4c23-a485-0608f008b889",
+                    "attributes": {
+                      "value": "Andreas"
+                    },
+                    "relationships": {
+                      "attribute-definition": {
+                        "data": {
+                          "type": "employee-attribute-definitions",
+                          "id": "3c42245e-bdf3-4e5e-ac56-7d62290d811d"
+                        }
+                      }
+                    },
+                    "type": "employee-attributes"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

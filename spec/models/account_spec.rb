@@ -1,14 +1,19 @@
 require 'rails_helper'
 
 RSpec.describe Account, type: :model do
-  it { should have_db_column(:subdomain).with_options(null: false) }
-  it { should have_db_index(:subdomain).unique(true) }
-  it { should validate_presence_of(:subdomain).on(:update) }
-  it { should validate_uniqueness_of(:subdomain).case_insensitive }
-  it { should validate_length_of(:subdomain).is_at_most(63) }
-  it { should allow_value('a', 'subdomain', 'sub-domain', '123subdomain', 'subdomain-123').for(:subdomain) }
-  it { should_not allow_value('-subdomain', 'subdomain-', 'sub domain', 'subdömaìn', 'SubDomain').for(:subdomain) }
-  it { should validate_exclusion_of(:subdomain).in_array(['www', 'staging']) }
+  subject { FactoryGirl.build(:account) }
+
+  it { is_expected.to have_db_column(:subdomain).with_options(null: false) }
+  it { is_expected.to have_db_index(:subdomain).unique(true) }
+  it { is_expected.to validate_presence_of(:subdomain).on(:update) }
+  it { is_expected.to validate_uniqueness_of(:subdomain).case_insensitive }
+  it { is_expected.to validate_length_of(:subdomain).is_at_most(63) }
+  it { is_expected.to allow_value('a', 'subdomain', 'sub-domain', '123subdomain', 'subdomain-123').for(:subdomain) }
+  it { is_expected.to_not allow_value('-subdomain', 'subdomain-', 'sub domain', 'subdömaìn', 'SubDomain').for(:subdomain) }
+  it { is_expected.to validate_exclusion_of(:subdomain).in_array(['www', 'staging']) }
+
+  it { is_expected.to have_many(:employee_events).through(:employees) }
+  it { is_expected.to have_many(:employee_attribute_versions).through(:employees) }
 
   context 'generate subdomain from company name on create' do
 
@@ -47,8 +52,66 @@ RSpec.describe Account, type: :model do
 
   end
 
-  it { should have_db_column(:company_name) }
-  it { should validate_presence_of(:company_name) }
+  context 'default attribute definitions' do
+    it 'should create definitions on create' do
+      account = FactoryGirl.build(:account)
 
-  it { should have_many(:users).class_name('Account::User').inverse_of(:account) }
+      expect {
+        account.save
+      }.to change(Employee::AttributeDefinition, :count)
+
+    end
+
+    it 'should not add definitions if allready exist' do
+      account = FactoryGirl.create(:account)
+
+      expect {
+        account.update_default_attribute_definitions!
+      }.to_not change(Employee::AttributeDefinition, :count)
+
+    end
+  end
+
+  it { is_expected.to have_db_column(:company_name) }
+  it { is_expected.to validate_presence_of(:company_name) }
+
+  it { is_expected.to have_many(:working_places) }
+
+  it { is_expected.to have_many(:users).class_name('Account::User').inverse_of(:account) }
+
+  it { is_expected.to have_many(:employees).inverse_of(:account) }
+
+  it { is_expected.to have_many(:employee_attribute_definitions).class_name('Employee::AttributeDefinition').inverse_of(:account) }
+
+  it '#current= should accept an account' do
+    account = FactoryGirl.create(:account)
+
+    expect(Account).to respond_to(:current=)
+    expect {
+      Account.current = account
+    }.to_not raise_error
+  end
+
+  it '#current should return account' do
+    account = FactoryGirl.create(:account)
+    Account.current = account
+
+    expect(Account.current).to eql(account)
+  end
+
+  context '#timezone' do
+    it 'should save account with valid timezone name' do
+      timezone_name = ActiveSupport::TimeZone.all.last.tzinfo.name
+      account = FactoryGirl.build(:account, timezone: timezone_name)
+
+      expect(account).to be_valid
+      expect(account.timezone).to eq(timezone_name)
+    end
+
+    it 'should not save account with not valid timezone name' do
+      account = FactoryGirl.build(:account, timezone: 'ABC')
+
+      expect(account).to_not be_valid
+    end
+  end
 end

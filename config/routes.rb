@@ -1,15 +1,22 @@
 Rails.application.routes.draw do
   # API
-  constraints lambda {|request| request.subdomain.start_with?('api') } do
-    namespace :api, path: '' do
-      namespace :v1 do
-        # TODO
+  namespace :api, path: 'api', constraints: { subdomain: /^api/ } do
+    namespace :v1 do
+      jsonapi_resources :employees do
+        jsonapi_relationships
       end
+      jsonapi_resources :employee_attributes
+      jsonapi_resources :employee_events
+      jsonapi_resources :employee_attribute_definitions
+      jsonapi_resources :working_places do
+        jsonapi_relationships
+      end
+      jsonapi_resource :settings, only: [:show, :update]
     end
   end
 
   # LAUNCHPAD
-  constraints lambda {|request| request.subdomain.start_with?('launchpad') } do
+  constraints subdomain: /^launchpad/ do
     scope 'oauth' do
       use_doorkeeper scope: ''
 

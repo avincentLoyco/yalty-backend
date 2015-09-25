@@ -2,7 +2,7 @@ default: &default
   adapter: postgresql
   username: rails
   encoding: unicode
-  pool: 5
+  pool: <%= ENV["DB_POOL"] || ENV['MAX_THREADS'] || 5 %>
 
 development:
   <<: *default
@@ -15,6 +15,10 @@ test:
 staging:
   <<: *default
   database: yalty_staging
+
+review:
+  <<: *default
+  database: yalty_review
 
 production:
   <<: *default

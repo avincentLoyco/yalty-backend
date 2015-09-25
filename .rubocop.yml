@@ -1,0 +1,13 @@
+inherit_from: .rubocop_todo.yml
+
+AllCops:
+  Exclude:
+    - 'bin/**/*'
+    - 'config/**/*'
+    - 'db/**/*'
+    - 'vendor/**/*'
+    - 'spec/**/*'
+
+Style/Documentation:
+  Description: Document classes and non-namespace modules.
+  Enabled: false
