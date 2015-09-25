@@ -1,8 +1,6 @@
 module API
   module V1
     class SettingsController < JSONAPI::ResourceController
-      include API::V1::ParamsManagement
-      include API::V1::ExceptionsHandler
 
       def show
         process_request_operations
