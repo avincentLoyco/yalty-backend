@@ -208,6 +208,20 @@ CREATE TABLE employees (
 
 
 --
+-- Name: holiday_policies; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE holiday_policies (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    name character varying NOT NULL,
+    country character varying,
+    region character varying,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL
+);
+
+
+--
 -- Name: oauth_access_grants; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -417,6 +431,14 @@ ALTER TABLE ONLY employee_events
 
 ALTER TABLE ONLY employees
     ADD CONSTRAINT employees_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: holiday_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY holiday_policies
+    ADD CONSTRAINT holiday_policies_pkey PRIMARY KEY (id);
 
 
 --
@@ -667,4 +689,6 @@ INSERT INTO schema_migrations (version) VALUES ('20150921134559');
 INSERT INTO schema_migrations (version) VALUES ('20150922083433');
 
 INSERT INTO schema_migrations (version) VALUES ('20150922085326');
+
+INSERT INTO schema_migrations (version) VALUES ('20150925101401');
 
