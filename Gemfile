@@ -11,6 +11,7 @@ gem 'doorkeeper'
 gem 'virtus'
 gem 'request_store'
 gem 'scenic'
+gem 'countries'
 
 # Production environment dependencies
 group :production, :staging do
