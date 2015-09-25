@@ -99,7 +99,9 @@ CREATE TABLE accounts (
     subdomain character varying NOT NULL,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
-    company_name character varying
+    company_name character varying,
+    default_locale character varying DEFAULT 'en'::character varying,
+    timezone character varying
 );
 
 
@@ -661,6 +663,8 @@ INSERT INTO schema_migrations (version) VALUES ('20150916153548');
 INSERT INTO schema_migrations (version) VALUES ('20150921123410');
 
 INSERT INTO schema_migrations (version) VALUES ('20150921134559');
+
+INSERT INTO schema_migrations (version) VALUES ('20150922083433');
 
 INSERT INTO schema_migrations (version) VALUES ('20150922085326');
 

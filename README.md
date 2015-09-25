@@ -91,10 +91,6 @@ If you want to test api with Postman you have to run rails server first (with lv
 ```ruby
 Account::User.last.access_token
 ```
-To every hit to api you have to add access_token. You can add it in Postman params section or in url directly:
-```
-?access_token=YOUR_ACCESS_TOKEN
-```
 
 List of available routes and their http methods may be obtained by:
 ```bash
@@ -107,16 +103,17 @@ Required headers:
 ```
 Content-Type:    application/vnd.api+json
 Accept:          application/vnd.api+json
+Authorization:   Bearer YOUR_ACCESS_TOKEN
 ```
 
 GET for receiving list of working places:
 ```
-http://api.lvh.me:3000/api/v1/working-places?access_token=YOUR_ACCESS_TOKEN
+http://api.lvh.me:3000/api/v1/working-places
 ```
 
 POST for adding employee to working place
 ```
-http://api.lvh.me:3000/api/v1/working-places/WORKING_PLACE_ID/relationships/employees?access_token=YOUR_ACCESS_TOKEN
+http://api.lvh.me:3000/api/v1/working-places/WORKING_PLACE_ID/relationships/employees
 ```
 body:
 ```
@@ -130,7 +127,7 @@ body:
 
 DELETE for removing employee from working place
 ```
-http://api.lvh.me:3000/api/v1/working-places/WORKING_PLACE_ID/relationships/employees/employee_id?access_token=YOUR_ACCESS_TOKEN
+http://api.lvh.me:3000/api/v1/working-places/WORKING_PLACE_ID/relationships/employees/EMPLOYEE_ID
 ```
 
 Running tests

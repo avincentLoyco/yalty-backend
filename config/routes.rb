@@ -11,6 +11,7 @@ Rails.application.routes.draw do
       jsonapi_resources :working_places do
         jsonapi_relationships
       end
+      jsonapi_resource :settings, only: [:show, :update]
     end
   end
 

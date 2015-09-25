@@ -12,6 +12,9 @@ RSpec.describe Account, type: :model do
   it { is_expected.to_not allow_value('-subdomain', 'subdomain-', 'sub domain', 'subdömaìn', 'SubDomain').for(:subdomain) }
   it { is_expected.to validate_exclusion_of(:subdomain).in_array(['www', 'staging']) }
 
+  it { is_expected.to have_many(:employee_events).through(:employees) }
+  it { is_expected.to have_many(:employee_attribute_versions).through(:employees) }
+
   context 'generate subdomain from company name on create' do
 
     it 'should not be blank' do
@@ -96,7 +99,19 @@ RSpec.describe Account, type: :model do
     expect(Account.current).to eql(account)
   end
 
-  it { is_expected.to have_many(:employee_events).through(:employees) }
-  it { is_expected.to have_many(:employee_attribute_versions).through(:employees) }
+  context '#timezone' do
+    it 'should save account with valid timezone name' do
+      timezone_name = ActiveSupport::TimeZone.all.last.tzinfo.name
+      account = FactoryGirl.build(:account, timezone: timezone_name)
 
+      expect(account).to be_valid
+      expect(account.timezone).to eq(timezone_name)
+    end
+
+    it 'should not save account with not valid timezone name' do
+      account = FactoryGirl.build(:account, timezone: 'ABC')
+
+      expect(account).to_not be_valid
+    end
+  end
 end

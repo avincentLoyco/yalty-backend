@@ -9,6 +9,9 @@ class Account < ActiveRecord::Base
     },
     exclusion: { in: Yalty.reserved_subdomains }
   validates :company_name, presence: true
+  validates :timezone,
+    inclusion: { in: ActiveSupport::TimeZone.all.map { |tz| tz.tzinfo.name } },
+    if: -> { timezone.present? }
 
   has_many :users,
     class_name: 'Account::User',
