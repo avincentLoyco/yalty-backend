@@ -26,6 +26,7 @@ class Account < ActiveRecord::Base
   has_many :working_places, inverse_of: :account
   has_many :employee_events, through: :employees, source: :events
   has_many :employee_attribute_versions, through: :employees
+  has_many :holiday_policies
 
   before_validation :generate_subdomain, on: :create
   after_create :update_default_attribute_definitions!

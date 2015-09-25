@@ -12,6 +12,7 @@ Rails.application.routes.draw do
         jsonapi_relationships
       end
       jsonapi_resource :settings, only: [:show, :update]
+      jsonapi_resources :holiday_policies
     end
   end
 
