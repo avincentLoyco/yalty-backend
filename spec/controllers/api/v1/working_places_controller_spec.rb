@@ -1,7 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe API::V1::WorkingPlacesController, type: :controller do
-  include_context 'shared_context_headers'
+  include_examples 'example_crud_resources',
+    resource_name: 'working_place'
 
   let!(:working_place) { FactoryGirl.create(:working_place, account_id: account.id) }
   let(:working_place_json) do
@@ -22,28 +23,6 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
       expect(response).to have_http_status(:success)
       expect(account.working_places.size).to eq(2)
       expect(account.working_places.map(&:name)).to include working_place_json[:data][:attributes][:name]    end
-  end
-
-  context 'GET /working_places' do
-    before(:each) do
-      FactoryGirl.create_list(:working_place, 3, account: account)
-    end
-
-    it 'should respond with success' do
-      get :index
-
-      expect(response).to have_http_status(:success)
-    end
-
-    it 'should not be visible in context of other account' do
-      user = FactoryGirl.create(:account_user)
-      Account.current = user.account
-
-      get :index
-
-      expect(response).to have_http_status(:success)
-      expect_json_sizes(data: 0)
-    end
   end
 
   describe '/working-places/:working_place_id/relationships/employees' do
