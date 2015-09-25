@@ -12,6 +12,7 @@ gem 'virtus'
 gem 'request_store'
 gem 'scenic'
 gem 'countries'
+gem 'database_cleaner'
 
 # Production environment dependencies
 group :production, :staging do
