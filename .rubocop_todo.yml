@@ -35,11 +35,6 @@ Style/ClassAndModuleChildren:
 Style/MultilineOperationIndentation:
   Enabled: false
 
-# Offense count: 7
-# Configuration parameters: SupportedStyles.
-Style/RaiseArgs:
-  EnforcedStyle: compact
-
 # Offense count: 2
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, SupportedStyles.

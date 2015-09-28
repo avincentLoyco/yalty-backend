@@ -24,7 +24,7 @@ module API
 
       def build_employee_event(data)
         if data.is_a?(Array) && data.size != 1
-          fail JSONAP::Exceptions::InvalidLinksObject.new
+          fail JSONAP::Exceptions::InvalidLinksObject
         end
 
         data = data.first if data.is_a?(Array)
@@ -42,7 +42,7 @@ module API
 
       def build_employee_attributes(data)
         if !data.is_a?(Array) || data.size < 1
-          fail JSONAP::Exceptions::InvalidLinksObject.new
+          fail JSONAP::Exceptions::InvalidLinksObject
         end
 
         data.each do |attr|
@@ -66,13 +66,13 @@ module API
       def save_employee
         @employee.save!
       rescue
-        fail JSONAPI::Exceptions::SaveFailed.new
+        fail JSONAPI::Exceptions::SaveFailed
       end
 
       def save_event
         @event.save!
       rescue
-        fail JSONAPI::Exceptions::SaveFailed.new
+        fail JSONAPI::Exceptions::SaveFailed
       end
     end
   end

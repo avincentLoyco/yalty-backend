@@ -13,16 +13,16 @@ module API
 
       def verify_type(type, resource_klass)
         if type.nil?
-          fail JSONAPI::Exceptions::ParameterMissing.new(:type)
+          fail JSONAPI::Exceptions::ParameterMissing, :type
         elsif unformat_key(type).to_sym != resource_klass._type
-          fail JSONAPI::Exceptions::InvalidResource.new(type)
+          fail JSONAPI::Exceptions::InvalidResource, type
         end
       end
 
       def verify_entity_uniqueness(id, entity_klass)
         return if id.present? && !entity_klass.where(id: id).exists?
 
-        fail JSONAPI::Exceptions::EntityAlreadyExists.new(id)
+        fail JSONAPI::Exceptions::EntityAlreadyExists, id
       end
 
       def unformat_key(key)
