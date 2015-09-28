@@ -83,8 +83,8 @@ def load_or_create_user(account)
   email = `git config user.email`
   email = 'test@example.com' if email.blank?
 
-  user   = account.users.where(email: email).first
-  user ||= account.users.create!(email: email, password: '12345678')
+  user = account.users.where(email: email).first
+  user || account.users.create!(email: email, password: '12345678')
 end
 
 def print_access_information(account, user)
