@@ -25,5 +25,8 @@ Style/BracesAroundHashParameters:
 Style/MultilineOperationIndentation:
   EnforcedStyle: indented
 
+Style/ClassAndModuleChildren:
+  Enabled: false
+
 Metrics/MethodLength:
   Max: 15
