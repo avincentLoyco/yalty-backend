@@ -49,11 +49,9 @@ class Auth::AccountsController < Doorkeeper::ApplicationController
     @pre_auth ||= Doorkeeper::OAuth::PreAuthorization.new(
       Doorkeeper.configuration,
       client,
-      {
-        response_type: 'code',
-        redirect_uri: client.redirect_uri,
-        scope: client.scopes.to_s
-      }
+      response_type: 'code',
+      redirect_uri: client.redirect_uri,
+      scope: client.scopes.to_s
     )
   end
 end
