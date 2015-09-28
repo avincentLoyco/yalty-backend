@@ -40,12 +40,6 @@ Style/GuardClause:
 Style/MultilineOperationIndentation:
   Enabled: false
 
-# Offense count: 1
-# Cop supports --auto-correct.
-# Configuration parameters: IncludeSemanticChanges.
-Style/NonNilCheck:
-  Enabled: false
-
 # Offense count: 7
 # Configuration parameters: SupportedStyles.
 Style/RaiseArgs:
