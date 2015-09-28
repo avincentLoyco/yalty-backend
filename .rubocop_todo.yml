@@ -29,11 +29,6 @@ Performance/Detect:
 Style/ClassAndModuleChildren:
   Enabled: false
 
-# Offense count: 3
-# Configuration parameters: MinBodyLength.
-Style/GuardClause:
-  Enabled: false
-
 # Offense count: 15
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, SupportedStyles.

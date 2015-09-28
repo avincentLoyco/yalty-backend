@@ -107,9 +107,9 @@ module ActsAsAttribute
     private
 
     def attribute_model
-      if attribute_type.present?
-        @attribute_model ||= ::Attribute.const_get(attribute_type).new(@data)
-      end
+      return unless attribute_type.present?
+
+      @attribute_model ||= ::Attribute.const_get(attribute_type).new(@data)
     end
 
     def method_missing(meth, *args)
