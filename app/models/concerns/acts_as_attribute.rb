@@ -5,7 +5,7 @@ module ActsAsAttribute
 
   included do
     belongs_to :attribute_definition,
-      ->(attr) { readonly },
+      ->(_attr) { readonly },
       class_name: 'Employee::AttributeDefinition',
       required: true
 

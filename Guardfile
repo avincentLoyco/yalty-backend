@@ -26,7 +26,7 @@ guard :rspec, cmd: 'bin/rspec --profile 0' do
       # rspec.spec.("acceptance/#{m[1]}")
     ]
   end
-  watch(%r{^app/resources/(.+)_resource\.rb$}) do |m|
+  watch(%r{^app/resources/(.+)_resource\.rb$}) do |_|
     "#{rspec.spec_dir}/controllers"
   end
 
