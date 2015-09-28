@@ -66,13 +66,13 @@ module API
       def save_employee
         @employee.save!
       rescue
-        fail JSONAPI::Exceptions::SaveFailed
+        raise JSONAPI::Exceptions::SaveFailed
       end
 
       def save_event
         @event.save!
       rescue
-        fail JSONAPI::Exceptions::SaveFailed
+        raise JSONAPI::Exceptions::SaveFailed
       end
     end
   end
