@@ -24,7 +24,7 @@ class CurrentAccountMiddleware
       Account.current = nil
     else
       Account.current = Account.joins(:users)
-        .where(account_users: {id: access_token.resource_owner_id})
+        .where(account_users: { id: access_token.resource_owner_id })
         .first
     end
   end

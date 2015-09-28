@@ -4,7 +4,7 @@ module API
       private
 
       def setup_request(id = Account.current.try(:id).to_s)
-        new_params = params.merge(id: id).deep_merge(data: {id: id})
+        new_params = params.merge(id: id).deep_merge(data: { id: id })
         @request = JSONAPI::Request.new(
           new_params,
           context: context,

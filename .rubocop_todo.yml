@@ -50,9 +50,3 @@ Style/SignalException:
 # Cop supports --auto-correct.
 Style/SingleSpaceBeforeFirstArg:
   Enabled: false
-
-# Offense count: 8
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBraces, SupportedStyles.
-Style/SpaceInsideHashLiteralBraces:
-  Enabled: false

@@ -26,8 +26,16 @@ take yalty:load_sample_data [ACCOUNT_SUBDOMAIN=my-company]
 
     # create or update employees
     [
-      {uuid: 'dc85dc33-600a-4e12-a87d-1fd785478020', firstname: 'Hugo', lastname: 'Fray'},
-      {uuid: '158c2005-baaf-4fbf-ba2c-1516c313a798', firstname: 'Lars', lastname: 'Weibel'}
+      {
+        uuid: 'dc85dc33-600a-4e12-a87d-1fd785478020',
+        firstname: 'Hugo',
+        lastname: 'Fray'
+      },
+      {
+        uuid: '158c2005-baaf-4fbf-ba2c-1516c313a798',
+        firstname: 'Lars',
+        lastname: 'Weibel'
+      }
     ].each do |data|
       ActiveRecord::Base.transaction do
         uuid = data.delete(:uuid)
