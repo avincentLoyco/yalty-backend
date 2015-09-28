@@ -90,6 +90,6 @@ def print_access_information(account, user)
   puts "app: http://#{account.subdomain}.yaltyapp.dev"
   puts 'api: http://api.yalty.dev'
   puts "email: #{user.email}"
-  puts "password: 12345678"
+  puts 'password: 12345678'
   puts "access token: #{user.access_token}"
 end
