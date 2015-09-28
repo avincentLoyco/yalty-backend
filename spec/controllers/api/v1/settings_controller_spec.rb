@@ -49,6 +49,16 @@ RSpec.describe API::V1::SettingsController, type: :controller do
       put :update, {}
       expect(response).to have_http_status(400)
     end
+
+    it 'should allow to set Zurich timezone' do
+      zurich_timezone = "Europe/Zurich"
+      settings_json[:data][:attributes][:timezone] = zurich_timezone
+
+      put :update, settings_json
+
+      expect(response).to have_http_status(:success)
+      expect(account.reload.timezone).to eq(zurich_timezone)
+    end
   end
 
   context 'POST #create' do

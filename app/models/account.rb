@@ -1,4 +1,7 @@
 class Account < ActiveRecord::Base
+  SUPPORTED_TIMEZONES = ActiveSupport::TimeZone.all.map { |tz| tz.tzinfo.name } +
+    ['Europe/Zurich']
+
   validates :subdomain,
     presence: true,
     uniqueness: { case_sensitive: false },
@@ -10,7 +13,7 @@ class Account < ActiveRecord::Base
     exclusion: { in: Yalty.reserved_subdomains }
   validates :company_name, presence: true
   validates :timezone,
-    inclusion: { in: ActiveSupport::TimeZone.all.map { |tz| tz.tzinfo.name } },
+    inclusion: { in: SUPPORTED_TIMEZONES },
     if: -> { timezone.present? }
 
   has_many :users,
