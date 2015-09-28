@@ -48,22 +48,33 @@ module API
         end
 
         data.each do |attr|
-          verify_type(attr[:type], EmployeeAttributeResource)
-          verify_entity_uniqueness(attr[:id], Employee::AttributeVersion)
-
-          attribute_definition = Account.current.employee_attribute_definitions
-            .where(
-              id: attr.require(:relationships).require(:attribute_definition)
-                  .require(:data).require(:id)
-            ).first
-
-          attribute = @event.employee_attribute_versions.build(
-            id: attr[:id],
-            employee: @employee,
-            attribute_definition: attribute_definition
-          )
-          attribute.value = attr.require(:attributes).require(:value)
+          build_employee_attribute(attr)
         end
+      end
+
+      def build_employee_attribute(data)
+        verify_type(data[:type], EmployeeAttributeResource)
+        verify_entity_uniqueness(data[:id], Employee::AttributeVersion)
+
+        attribute_definition = load_attribute_definition(data)
+
+        attribute = @event.employee_attribute_versions.build(
+          id: data[:id],
+          employee: @employee,
+          attribute_definition: attribute_definition
+        )
+        attribute.value = data.require(:attributes).require(:value)
+      end
+
+      def load_attribute_definition(data)
+        attribute_definition_id = data
+          .require(:relationships)
+          .require(:attribute_definition)
+          .require(:data).require(:id)
+
+        Account.current.employee_attribute_definitions
+          .where(id: attribute_definition_id)
+          .first
       end
 
       def save_employee

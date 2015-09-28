@@ -9,11 +9,6 @@
 Metrics/AbcSize:
   Max: 26
 
-# Offense count: 5
-# Configuration parameters: CountComments.
-Metrics/MethodLength:
-  Max: 18
-
 # Offense count: 8
 # Configuration parameters: EnforcedStyle, SupportedStyles.
 Style/ClassAndModuleChildren:

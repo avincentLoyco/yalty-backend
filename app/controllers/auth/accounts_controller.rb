@@ -7,16 +7,16 @@ class Auth::AccountsController < Doorkeeper::ApplicationController
       @current_resource_owner = account.users.create!(user_params)
     end
 
-    auth = authorization.authorize
-
     respond_to do |format|
       format.json do
         render status: 201, json: {
-          code: auth.auth.token.token,
-          redirect_uri: redirect_uri_with_subdomain(auth.redirect_uri)
+          code: authorization.auth.token.token,
+          redirect_uri: redirect_uri_with_subdomain(authorization.redirect_uri)
         }
       end
-      format.any  { redirect_to redirect_uri_with_subdomain(auth.redirect_uri) }
+      format.any do
+        redirect_to redirect_uri_with_subdomain(authorization.redirect_uri)
+      end
     end
   end
 
@@ -29,11 +29,11 @@ class Auth::AccountsController < Doorkeeper::ApplicationController
   end
 
   def authorization
-    @authorization ||= strategy.request
+    @authorization ||= strategy.request.authorize
   end
 
   def strategy
-    @strategy ||= server.authorization_request pre_auth.response_type
+    @strategy ||= server.authorization_request(pre_auth.response_type)
   end
 
   def account_params

@@ -24,3 +24,6 @@ Style/BracesAroundHashParameters:
 
 Style/MultilineOperationIndentation:
   EnforcedStyle: indented
+
+Metrics/MethodLength:
+  Max: 15
