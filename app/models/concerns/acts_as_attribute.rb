@@ -39,13 +39,13 @@ module ActsAsAttribute
     if value.is_a?(Hash)
       self.data = value.dup.merge(:attribute_type => data.attribute_type)
     else
-      key = data.attributes.keys
+      attribute_key = data.attributes.keys
         .select{|key| key.to_sym != :attribute_type }
         .first.to_sym
 
       self.data = {
         :attribute_type => data.attribute_type,
-        key => value
+        attribute_key => value
       }
     end
   end
