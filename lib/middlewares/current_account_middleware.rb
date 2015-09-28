@@ -14,7 +14,9 @@ class CurrentAccountMiddleware
   private
 
   def access_token
-    @access_token ||= Doorkeeper.authenticate(@request)
+    RequestStore.fetch(:access_token) do
+      Doorkeeper.authenticate(@request)
+    end
   end
 
   def set_current_account

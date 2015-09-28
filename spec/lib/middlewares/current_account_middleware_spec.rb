@@ -9,6 +9,10 @@ RSpec.describe CurrentAccountMiddleware do
   let(:app) { ->(env) { [200, env, ['']] }}
   let(:middleware) { CurrentAccountMiddleware.new(app) }
 
+  after do
+    RequestStore.clear!
+  end
+
   it 'should call app when is called' do
     expect(app).to receive(:call).with(env).and_call_original
 
@@ -22,6 +26,20 @@ RSpec.describe CurrentAccountMiddleware do
   end
 
   it 'should not set current account if authentication header is not present' do
+    env.delete('HTTP_AUTHORIZATION')
+
+    expect {
+      middleware.call(env)
+    }.to_not raise_error
+
+    expect(Account.current).to be_nil
+  end
+
+  it 'should not use access token from previous request' do
+    middleware.call(env)
+    expect(Account.current).to_not be_nil
+
+    RequestStore.clear!
     env.delete('HTTP_AUTHORIZATION')
 
     expect {
