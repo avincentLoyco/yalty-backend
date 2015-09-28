@@ -38,12 +38,6 @@ Metrics/MethodLength:
 Performance/Detect:
   Enabled: false
 
-# Offense count: 2
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, SupportedStyles, Include.
-Rails/ActionFilter:
-  Enabled: false
-
 # Offense count: 1
 Style/AccessorMethodName:
   Enabled: false
