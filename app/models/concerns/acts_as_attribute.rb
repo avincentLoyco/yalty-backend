@@ -14,7 +14,7 @@ module ActsAsAttribute
     validates :attribute_definition_id,
       uniqueness: { allow_nil: true, scope: [:employee] }
 
-    after_initialize :set_attribute_definition
+    after_initialize :setup_attribute_definition
   end
 
   def attribute_type
@@ -26,7 +26,7 @@ module ActsAsAttribute
   end
 
   def attribute_name=(value)
-    set_attribute_definition(value)
+    setup_attribute_definition(value)
   end
 
   def value
@@ -34,7 +34,7 @@ module ActsAsAttribute
   end
 
   def value=(value)
-    set_attribute_definition
+    setup_attribute_definition
 
     if value.is_a?(Hash)
       self.data = value.dup.merge(:attribute_type => data.attribute_type)
@@ -52,7 +52,7 @@ module ActsAsAttribute
 
   private
 
-  def set_attribute_definition(name = nil)
+  def setup_attribute_definition(name = nil)
     if !attribute_definition.present?
       if account.nil?
         self.attribute_definition = nil

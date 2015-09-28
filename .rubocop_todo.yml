@@ -38,10 +38,6 @@ Metrics/MethodLength:
 Performance/Detect:
   Enabled: false
 
-# Offense count: 1
-Style/AccessorMethodName:
-  Enabled: false
-
 # Offense count: 14
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, SupportedStyles.
