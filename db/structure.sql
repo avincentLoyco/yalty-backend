@@ -101,7 +101,8 @@ CREATE TABLE accounts (
     updated_at timestamp without time zone NOT NULL,
     company_name character varying,
     default_locale character varying DEFAULT 'en'::character varying,
-    timezone character varying
+    timezone character varying,
+    holiday_policy_id uuid
 );
 
 
@@ -204,7 +205,7 @@ CREATE TABLE employees (
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
     working_place_id uuid,
-    holiday_policy uuid
+    holiday_policy_id uuid
 );
 
 
@@ -741,4 +742,8 @@ INSERT INTO schema_migrations (version) VALUES ('20150928091924');
 INSERT INTO schema_migrations (version) VALUES ('20150928121456');
 
 INSERT INTO schema_migrations (version) VALUES ('20150928140803');
+
+INSERT INTO schema_migrations (version) VALUES ('20150928150447');
+
+INSERT INTO schema_migrations (version) VALUES ('20150928151520');
 
