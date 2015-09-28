@@ -13,5 +13,8 @@ Style/Documentation:
   Description: Document classes and non-namespace modules.
   Enabled: false
 
+Style/AlignParameters:
+  EnforcedStyle: with_fixed_indentation
+
 Rails/FindBy:
   Enabled: false
