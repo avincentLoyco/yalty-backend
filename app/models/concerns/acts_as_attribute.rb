@@ -53,7 +53,7 @@ module ActsAsAttribute
   private
 
   def setup_attribute_definition(name = nil)
-    if !attribute_definition.present?
+    unless attribute_definition.present?
       if account.nil?
         self.attribute_definition = nil
       else
