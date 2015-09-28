@@ -1,5 +1,4 @@
 namespace :yalty do
-
   desc <<-DESC
 Load an account without any data.
 
