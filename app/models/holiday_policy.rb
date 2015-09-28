@@ -1,5 +1,6 @@
 class HolidayPolicy < ActiveRecord::Base
   belongs_to :account
+  has_many :holidays
   validates :name, presence: true
   validates :country, inclusion: { in: :countries, allow_nil: true }
   validates :region, inclusion: { in: :regions, allow_nil: true}, if: :valid_country?
