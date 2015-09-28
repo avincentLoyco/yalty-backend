@@ -75,11 +75,11 @@ class Account < ActiveRecord::Base
     return unless company_name.present?
 
     self.subdomain = ActiveSupport::Inflector.transliterate(company_name)
-                      .strip
-                      .downcase
-                      .gsub(/\s/, '-')
-                      .gsub(/(\A[\-]+)|([^a-z\d-])|([\-]+\z)/, '')
-                      .squeeze('-')
+      .strip
+      .downcase
+      .gsub(/\s/, '-')
+      .gsub(/(\A[\-]+)|([^a-z\d-])|([\-]+\z)/, '')
+      .squeeze('-')
 
     ensure_subdomain_is_unique
   end

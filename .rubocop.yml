@@ -21,3 +21,6 @@ Rails/FindBy:
 
 Style/BracesAroundHashParameters:
   EnforcedStyle: context_dependent
+
+Style/MultilineOperationIndentation:
+  EnforcedStyle: indented

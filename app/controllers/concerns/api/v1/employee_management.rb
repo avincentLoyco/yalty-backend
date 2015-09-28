@@ -50,9 +50,10 @@ module API
           verify_entity_uniqueness(attr[:id], Employee::AttributeVersion)
 
           attribute_definition = Account.current.employee_attribute_definitions
-          .where(
-            id: attr.require(:relationships).require(:attribute_definition).require(:data).require(:id)
-          ).first
+            .where(
+              id: attr.require(:relationships).require(:attribute_definition)
+                  .require(:data).require(:id)
+            ).first
 
           attribute = @event.employee_attribute_versions.build(
             id: attr[:id],
