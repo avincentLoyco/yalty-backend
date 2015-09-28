@@ -203,7 +203,8 @@ CREATE TABLE employees (
     account_id integer,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
-    working_place_id uuid
+    working_place_id uuid,
+    holiday_policy uuid
 );
 
 
@@ -361,7 +362,8 @@ CREATE TABLE working_places (
     account_id integer,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
-    id uuid DEFAULT uuid_generate_v4() NOT NULL
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    holiday_policy_id uuid
 );
 
 
@@ -735,4 +737,8 @@ INSERT INTO schema_migrations (version) VALUES ('20150925111512');
 INSERT INTO schema_migrations (version) VALUES ('20150928085323');
 
 INSERT INTO schema_migrations (version) VALUES ('20150928091924');
+
+INSERT INTO schema_migrations (version) VALUES ('20150928121456');
+
+INSERT INTO schema_migrations (version) VALUES ('20150928140803');
 
