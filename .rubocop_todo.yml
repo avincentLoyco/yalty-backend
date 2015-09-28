@@ -14,11 +14,6 @@ Metrics/AbcSize:
 Metrics/MethodLength:
   Max: 18
 
-# Offense count: 1
-# Cop supports --auto-correct.
-Performance/Detect:
-  Enabled: false
-
 # Offense count: 8
 # Configuration parameters: EnforcedStyle, SupportedStyles.
 Style/ClassAndModuleChildren:

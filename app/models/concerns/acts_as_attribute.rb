@@ -40,8 +40,8 @@ module ActsAsAttribute
       self.data = value.dup.merge(attribute_type: data.attribute_type)
     else
       attribute_key = data.attributes.keys
-        .select { |key| key.to_sym != :attribute_type }
-        .first.to_sym
+        .find { |key| key.to_sym != :attribute_type }
+        .to_sym
 
       self.data = {
         :attribute_type => data.attribute_type,
