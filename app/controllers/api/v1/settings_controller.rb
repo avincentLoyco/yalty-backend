@@ -1,7 +1,6 @@
 module API
   module V1
     class SettingsController < JSONAPI::ResourceController
-
       private
 
       def setup_request(id = Account.current.try(:id).to_s)
