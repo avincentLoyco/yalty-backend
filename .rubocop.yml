@@ -1,5 +1,3 @@
-inherit_from: .rubocop_todo.yml
-
 AllCops:
   RunRailsCops: true
   Exclude:
@@ -9,24 +7,23 @@ AllCops:
     - 'vendor/**/*'
     - 'spec/**/*'
 
+Rails/FindBy:
+  Enabled: false
+
+Metrics/MethodLength:
+  Max: 15
+
 Style/Documentation:
-  Description: Document classes and non-namespace modules.
+  Enabled: false
+
+Style/ClassAndModuleChildren:
   Enabled: false
 
 Style/AlignParameters:
   EnforcedStyle: with_fixed_indentation
-
-Rails/FindBy:
-  Enabled: false
 
 Style/BracesAroundHashParameters:
   EnforcedStyle: context_dependent
 
 Style/MultilineOperationIndentation:
   EnforcedStyle: indented
-
-Style/ClassAndModuleChildren:
-  Enabled: false
-
-Metrics/MethodLength:
-  Max: 15
