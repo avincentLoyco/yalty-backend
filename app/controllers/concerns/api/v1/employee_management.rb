@@ -19,7 +19,9 @@ module API
       def load_employee(data)
         verify_type(data[:type], EmployeeResource)
 
-        @employee = Account.current.employees.where(id: data.require(:id)).first!
+        @employee = Account.current.employees
+          .where(id: data.require(:id))
+          .first!
       end
 
       def build_employee_event(data)

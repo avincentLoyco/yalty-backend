@@ -1,6 +1,6 @@
 class Account < ActiveRecord::Base
-  SUPPORTED_TIMEZONES = ActiveSupport::TimeZone.all.map { |tz| tz.tzinfo.name } +
-    ['Europe/Zurich']
+  SUPPORTED_TIMEZONES = ActiveSupport::TimeZone.all
+    .map { |tz| tz.tzinfo.name } + ['Europe/Zurich']
 
   validates :subdomain,
     presence: true,

@@ -43,7 +43,10 @@ take yalty:load_sample_data [ACCOUNT_SUBDOMAIN=my-company]
         employee = account.employees.create!(id: uuid) if employee.nil?
 
         if employee.events.empty?
-          event = employee.events.create!(effective_at: 1.day.ago, event_type: 'hired')
+          event = employee.events.create!(
+            effective_at: 1.day.ago,
+            event_type: 'hired'
+          )
         else
           event = employee.events.order('id ASC').first
         end

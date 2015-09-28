@@ -10,7 +10,12 @@ class Auth::AccountsController < Doorkeeper::ApplicationController
     auth = authorization.authorize
 
     respond_to do |format|
-      format.json { render json: { code: auth.auth.token.token, redirect_uri: redirect_uri_with_subdomain(auth.redirect_uri) }, status: 201 }
+      format.json do
+        render status: 201, json: {
+          code: auth.auth.token.token,
+          redirect_uri: redirect_uri_with_subdomain(auth.redirect_uri)
+        }
+      end
       format.any  { redirect_to redirect_uri_with_subdomain(auth.redirect_uri) }
     end
   end

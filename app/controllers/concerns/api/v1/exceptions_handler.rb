@@ -30,7 +30,8 @@ module API
       def handle_exceptions(e)
         case e
         when ActionController::ParameterMissing
-          render_errors(JSONAPI::Exceptions::ParameterMissing.new(e.param).errors)
+          errors = JSONAPI::Exceptions::ParameterMissing.new(e.param).errors
+          render_errors(errors)
         else
           super(e)
         end
