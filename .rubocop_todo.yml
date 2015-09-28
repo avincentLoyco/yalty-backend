@@ -96,11 +96,6 @@ Style/NonNilCheck:
 Style/RaiseArgs:
   EnforcedStyle: compact
 
-# Offense count: 1
-# Cop supports --auto-correct.
-Style/RedundantSelf:
-  Enabled: false
-
 # Offense count: 2
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, SupportedStyles.

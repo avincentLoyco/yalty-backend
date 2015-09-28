@@ -3,9 +3,10 @@ class Auth::Accounts::TokensController < Doorkeeper::ApplicationMetalController
     request.parameters.merge!(authorize_params)
     response = authorize_response
 
-    self.headers.merge!  response.headers
-    self.response_body = response.body.to_json
+    headers.merge!(response.headers)
+
     self.status        = response.status
+    self.response_body = response.body.to_json
 
     strategy.grant.try(:destroy)
   rescue Doorkeeper::Errors::DoorkeeperError => e
