@@ -8,7 +8,7 @@ module API
       has_one :employee
       has_many :employee_attributes, relation_name: :employee_attribute_versions
 
-      def self.records(options = {})
+      def self.records(_options = {})
         Account.current.employee_events
       end
     end

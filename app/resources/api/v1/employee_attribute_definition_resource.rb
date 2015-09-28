@@ -5,7 +5,7 @@ module API
 
       attributes :name, :label, :attribute_type, :system
 
-      def self.records(options = {})
+      def self.records(_options = {})
         Account.current.employee_attribute_definitions
       end
     end
