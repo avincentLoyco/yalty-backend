@@ -1,12 +1,9 @@
 class Auth::AccountsController < Doorkeeper::ApplicationController
   protect_from_forgery with: :null_session
 
-  def create
-    ActiveRecord::Base.transaction do
-      account = Account.create!(account_params)
-      @current_resource_owner = account.users.create!(user_params)
-    end
+  before_action :create_account, only: [:create]
 
+  def create
     respond_to do |format|
       format.json do
         render status: 201, json: {
@@ -58,5 +55,12 @@ class Auth::AccountsController < Doorkeeper::ApplicationController
       redirect_uri: client.redirect_uri,
       scope: client.scopes.to_s
     )
+  end
+
+  def create_account
+    ActiveRecord::Base.transaction do
+      account = Account.create!(account_params)
+      @current_resource_owner = account.users.create!(user_params)
+    end
   end
 end

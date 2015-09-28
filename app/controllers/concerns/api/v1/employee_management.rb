@@ -25,11 +25,7 @@ module API
       end
 
       def build_employee_event(data)
-        if data.is_a?(Array) && data.size != 1
-          fail JSONAP::Exceptions::InvalidLinksObject
-        end
-
-        data = data.first if data.is_a?(Array)
+        data = parse_unique_data(data)
 
         verify_type(data[:type], EmployeeEventResource)
         verify_entity_uniqueness(data[:id], Employee::Event)

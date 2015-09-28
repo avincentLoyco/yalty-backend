@@ -25,6 +25,12 @@ module ActsAsAttribute
     attribute_definition.try(:name)
   end
 
+  def attribute_key
+    data.attributes.keys
+      .find { |key| key.to_sym != :attribute_type }
+      .to_sym
+  end
+
   def attribute_name=(value)
     setup_attribute_definition(value)
   end
@@ -39,10 +45,6 @@ module ActsAsAttribute
     if value.is_a?(Hash)
       self.data = value.dup.merge(attribute_type: data.attribute_type)
     else
-      attribute_key = data.attributes.keys
-        .find { |key| key.to_sym != :attribute_type }
-        .to_sym
-
       self.data = {
         :attribute_type => data.attribute_type,
         attribute_key => value
