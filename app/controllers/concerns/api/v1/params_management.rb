@@ -8,7 +8,7 @@ module API
       private
 
       def setup_params
-        params.deep_transform_keys! {|key| unformat_key(key) }
+        params.deep_transform_keys! { |key| unformat_key(key) }
       end
 
       def verify_type(type, resource_klass)
