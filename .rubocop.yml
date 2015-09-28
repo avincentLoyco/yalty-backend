@@ -1,6 +1,7 @@
 inherit_from: .rubocop_todo.yml
 
 AllCops:
+  RunRailsCops: true
   Exclude:
     - 'bin/**/*'
     - 'config/**/*'
@@ -10,4 +11,7 @@ AllCops:
 
 Style/Documentation:
   Description: Document classes and non-namespace modules.
+  Enabled: false
+
+Rails/FindBy:
   Enabled: false
