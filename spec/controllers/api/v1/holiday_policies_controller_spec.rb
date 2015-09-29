@@ -5,4 +5,6 @@ RSpec.describe API::V1::HolidayPoliciesController, type: :controller do
     resource_name: 'holiday_policy'
   include_examples 'example_relationships_employees',
     resource_name: 'holiday_policy'
+  include_examples 'example_relationships_working_places',
+    resource_name: 'holiday_policy'
 end
