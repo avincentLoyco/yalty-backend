@@ -2,7 +2,7 @@ module API
   module V1
     class WorkingPlaceResource < JSONAPI::Resource
       model_name 'WorkingPlace'
-      attribute :name
+      attributes :name, :account_id
       has_many :employees, class_name: 'Employee'
 
       def self.records(options = {})
