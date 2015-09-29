@@ -1,16 +1,46 @@
 module API
   module V1
     class HolidaysController < JSONAPI::ResourceController
+      include API::V1::ExceptionsHandler
+      include API::V1::Exceptions
 
-    private
+      before_action :check_holiday_policy, only: [:create, :update]
 
-    def setup_request
-        new_params = params.deep_merge(data: { attributes: { "holiday-policy-id" => params[:holiday_policy_id] }})
-        @request = JSONAPI::Request.new(new_params, context: context, key_formatter: key_formatter)
+      private
 
-        render_errors(@request.errors) unless @request.errors.empty?
+      def check_holiday_policy
+        if holiday_policy
+          check_if_policy_exist && check_if_current_user_authorized
+        end
+      end
+
+      def set_holiday_policy
+        attributes = params['data']['attributes']
+        if attributes
+          attributes['holiday-policy-id']
+        end
+      end
+
+      def check_if_policy_exist
+        HolidayPolicy.find(holiday_policy)
       rescue => e
         handle_exceptions(e)
+      end
+
+      def check_if_current_user_authorized
+        unless user_holiday_policies.include?(holiday_policy)
+          raise Forbidden.new(holiday_policy)
+        end
+      rescue => e
+        handle_exceptions(e)
+      end
+
+      def holiday_policy
+        @holiday_policy ||= set_holiday_policy
+      end
+
+      def user_holiday_policies
+        @user_holiday_policies ||= HolidayPolicy.where(account_id: Account.current.id).pluck(:id)
       end
     end
   end

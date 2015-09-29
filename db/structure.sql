@@ -591,6 +591,13 @@ CREATE INDEX index_holiday_policies_on_account_id ON holiday_policies USING btre
 
 
 --
+-- Name: index_holidays_on_holiday_policy_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE INDEX index_holidays_on_holiday_policy_id ON holidays USING btree (holiday_policy_id);
+
+
+--
 -- Name: index_oauth_access_grants_on_token; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
@@ -653,6 +660,14 @@ ALTER TABLE ONLY working_places
 
 ALTER TABLE ONLY employee_attribute_definitions
     ADD CONSTRAINT fk_rails_836004d785 FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE;
+
+
+--
+-- Name: fk_rails_8df7ccdc3f; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY holidays
+    ADD CONSTRAINT fk_rails_8df7ccdc3f FOREIGN KEY (holiday_policy_id) REFERENCES holiday_policies(id) ON DELETE CASCADE;
 
 
 --
@@ -743,7 +758,10 @@ INSERT INTO schema_migrations (version) VALUES ('20150928121456');
 
 INSERT INTO schema_migrations (version) VALUES ('20150928140803');
 
+INSERT INTO schema_migrations (version) VALUES ('20150928144701');
+
 INSERT INTO schema_migrations (version) VALUES ('20150928150447');
 
 INSERT INTO schema_migrations (version) VALUES ('20150928151520');
 
+INSERT INTO schema_migrations (version) VALUES ('20150928144701');

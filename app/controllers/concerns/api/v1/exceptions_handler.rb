@@ -19,6 +19,23 @@ module JSONAPI
         ]
       end
     end
+
+    class ForbiddenAccess < Error
+      def initialize(id)
+        @id = id
+      end
+
+      def errors
+        [
+          JSONAPI::Error.new(
+            code: JSONAPI::SAVE_FAILED,
+            status: :forbidden,
+            title: 'Access to resource forbidden',
+            detail: "Can not use entity with id '#{@id}'"
+          )
+        ]
+      end
+    end
   end
 end
 
@@ -32,6 +49,10 @@ module API
         when ActionController::ParameterMissing
           errors = JSONAPI::Exceptions::ParameterMissing.new(e.param).errors
           render_errors(errors)
+        when ActiveRecord::RecordNotFound
+          render_errors(JSONAPI::Exceptions::RecordNotFound.new(e).errors) and return
+        when API::V1::Exceptions::Forbidden
+          render_errors(JSONAPI::Exceptions::ForbiddenAccess.new(e).errors) and return
         else
           super(e)
         end
