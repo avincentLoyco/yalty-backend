@@ -10,9 +10,16 @@ module API
         foreign_key: 'holiday_policy_id',
         foreign_key_on: :related
       attribute :name
+      before_create :setup_account
 
       def self.records(options = {})
         Account.current.holiday_policies
+      end
+
+      private
+
+      def setup_account
+        model.account = Account.current
       end
     end
   end
