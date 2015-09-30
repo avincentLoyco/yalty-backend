@@ -156,7 +156,23 @@ guard
 How to deploy
 -------------
 
-TODO
+Add git remotes:
+
+```bash
+git remote add review git@scalingo.com:yalty-api-server-review.git
+git remote add staging git@scalingo.com:yalty-api-server-staging.git
+```
+
+For review, push current branch to review environment:
+
+```bash
+git push review HEAD:master
+```
+
+or push master to staging enviroment:
+```bash
+git push review master:master
+```
 
 Known issues
 ------------

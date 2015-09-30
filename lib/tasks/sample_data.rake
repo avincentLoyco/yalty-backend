@@ -1,5 +1,4 @@
 namespace :yalty do
-
   desc <<-DESC
 Load an account without any data.
 
@@ -27,8 +26,16 @@ take yalty:load_sample_data [ACCOUNT_SUBDOMAIN=my-company]
 
     # create or update employees
     [
-      {uuid: 'dc85dc33-600a-4e12-a87d-1fd785478020', firstname: 'Hugo', lastname: 'Fray'},
-      {uuid: '158c2005-baaf-4fbf-ba2c-1516c313a798', firstname: 'Lars', lastname: 'Weibel'}
+      {
+        uuid: 'dc85dc33-600a-4e12-a87d-1fd785478020',
+        firstname: 'Hugo',
+        lastname: 'Fray'
+      },
+      {
+        uuid: '158c2005-baaf-4fbf-ba2c-1516c313a798',
+        firstname: 'Lars',
+        lastname: 'Weibel'
+      }
     ].each do |data|
       ActiveRecord::Base.transaction do
         uuid = data.delete(:uuid)
@@ -36,7 +43,10 @@ take yalty:load_sample_data [ACCOUNT_SUBDOMAIN=my-company]
         employee = account.employees.create!(id: uuid) if employee.nil?
 
         if employee.events.empty?
-          event = employee.events.create!(effective_at: 1.day.ago, event_type: 'hired')
+          event = employee.events.create!(
+            effective_at: 1.day.ago,
+            event_type: 'hired'
+          )
         else
           event = employee.events.order('id ASC').first
         end
@@ -83,14 +93,14 @@ def load_or_create_user(account)
   email = `git config user.email`
   email = 'test@example.com' if email.blank?
 
-  user   = account.users.where(email: email).first
-  user ||= account.users.create!(email: email, password: '12345678')
+  user = account.users.where(email: email).first
+  user || account.users.create!(email: email, password: '12345678')
 end
 
 def print_access_information(account, user)
   puts "app: http://#{account.subdomain}.yaltyapp.dev"
   puts 'api: http://api.yalty.dev'
   puts "email: #{user.email}"
-  puts "password: 12345678"
+  puts 'password: 12345678'
   puts "access token: #{user.access_token}"
 end

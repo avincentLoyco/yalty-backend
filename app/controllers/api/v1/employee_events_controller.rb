@@ -3,7 +3,8 @@ module API
     class EmployeeEventsController < JSONAPI::ResourceController
       include API::V1::EmployeeManagement
 
-      skip_before_filter :setup_request, only: [:create]
+      skip_before_action :setup_request, only: [:create]
+
       def create
         setup_params
         load_employee(employee_data)

@@ -5,7 +5,7 @@ module ActsAsAttribute
 
   included do
     belongs_to :attribute_definition,
-      ->(attr) { readonly },
+      ->(_attr) { readonly },
       class_name: 'Employee::AttributeDefinition',
       required: true
 
@@ -14,7 +14,7 @@ module ActsAsAttribute
     validates :attribute_definition_id,
       uniqueness: { allow_nil: true, scope: [:employee] }
 
-    after_initialize :set_attribute_definition
+    after_initialize :setup_attribute_definition
   end
 
   def attribute_type
@@ -25,8 +25,14 @@ module ActsAsAttribute
     attribute_definition.try(:name)
   end
 
+  def attribute_key
+    data.attributes.keys
+      .find { |key| key.to_sym != :attribute_type }
+      .to_sym
+  end
+
   def attribute_name=(value)
-    set_attribute_definition(value)
+    setup_attribute_definition(value)
   end
 
   def value
@@ -34,26 +40,22 @@ module ActsAsAttribute
   end
 
   def value=(value)
-    set_attribute_definition
+    setup_attribute_definition
 
     if value.is_a?(Hash)
-      self.data = value.dup.merge(:attribute_type => data.attribute_type)
+      self.data = value.dup.merge(attribute_type: data.attribute_type)
     else
-      key = data.attributes.keys
-        .select{|key| key.to_sym != :attribute_type }
-        .first.to_sym
-
       self.data = {
         :attribute_type => data.attribute_type,
-        key => value
+        attribute_key => value
       }
     end
   end
 
   private
 
-  def set_attribute_definition(name = nil)
-    if !attribute_definition.present?
+  def setup_attribute_definition(name = nil)
+    unless attribute_definition.present?
       if account.nil?
         self.attribute_definition = nil
       else
@@ -107,9 +109,9 @@ module ActsAsAttribute
     private
 
     def attribute_model
-      if attribute_type.present?
-        @attribute_model ||= ::Attribute.const_get(attribute_type).new(@data)
-      end
+      return unless attribute_type.present?
+
+      @attribute_model ||= ::Attribute.const_get(attribute_type).new(@data)
     end
 
     def method_missing(meth, *args)

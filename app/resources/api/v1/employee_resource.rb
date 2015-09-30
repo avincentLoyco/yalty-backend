@@ -5,7 +5,7 @@ module API
       has_many :events, class_name: 'EmployeeEvent'
       has_one :working_place, class_name: 'WorkingPlace'
 
-      def self.records(options = {})
+      def self.records(_options = {})
         Account.current.employees
       end
     end

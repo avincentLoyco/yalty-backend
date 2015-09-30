@@ -1,6 +1,6 @@
 class Account < ActiveRecord::Base
-  SUPPORTED_TIMEZONES = ActiveSupport::TimeZone.all.map { |tz| tz.tzinfo.name } +
-    ['Europe/Zurich']
+  SUPPORTED_TIMEZONES = ActiveSupport::TimeZone.all
+    .map { |tz| tz.tzinfo.name } + ['Europe/Zurich']
 
   validates :subdomain,
     presence: true,
@@ -71,17 +71,17 @@ class Account < ActiveRecord::Base
   # and remove all other special characters except dash
   def generate_subdomain
     return unless new_record?
+    return unless subdomain.blank?
+    return unless company_name.present?
 
-    if subdomain.blank? && company_name.present?
-      self.subdomain = ActiveSupport::Inflector.transliterate(company_name)
-                       .strip
-                       .downcase
-                       .gsub(/\s/, '-')
-                       .gsub(/(\A[\-]+)|([^a-z\d-])|([\-]+\z)/, '')
-                       .squeeze('-')
+    self.subdomain = ActiveSupport::Inflector.transliterate(company_name)
+      .strip
+      .downcase
+      .gsub(/\s/, '-')
+      .gsub(/(\A[\-]+)|([^a-z\d-])|([\-]+\z)/, '')
+      .squeeze('-')
 
-      ensure_subdomain_is_unique
-    end
+    ensure_subdomain_is_unique
   end
 
   # Ensure subdomain is unique
