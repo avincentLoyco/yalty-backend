@@ -6,7 +6,7 @@ class HolidayPolicy < ActiveRecord::Base
   has_one :assigned_account, class_name: 'Account', foreign_key: :holiday_policy_id,
     inverse_of: :holiday_policy
 
-  validates :name, presence: true
+  validates :name, :account_id, presence: true
   validates :country, inclusion: { in: :countries, allow_nil: true }
   validates :region, inclusion: { in: :regions, allow_nil: true}, if: :valid_country?
   validates :country, presence: :true, if: :region
