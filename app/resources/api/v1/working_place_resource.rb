@@ -2,11 +2,19 @@ module API
   module V1
     class WorkingPlaceResource < JSONAPI::Resource
       model_name 'WorkingPlace'
-      attributes :name, :account_id
+      attributes :name
       has_many :employees, class_name: 'Employee'
 
-      def self.records(options = {})
+      before_create :setup_account
+
+      def self.records(_options = {})
         Account.current.working_places
+      end
+
+      private
+
+      def setup_account
+        model.account = Account.current
       end
     end
   end
