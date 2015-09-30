@@ -29,9 +29,38 @@ RSpec.shared_examples 'example_crud_resources' do |settings|
           expect_json_sizes(data: 0)
         end
       end
+
       if actions.include?(:create)
         context 'POST #create' do
-          # TODO
+          let(:resource_params) { FactoryGirl.attributes_for(settings[:resource_name]) }
+          let(:params) do
+            {
+              "data": {
+                "attributes":
+                  resource_params,
+                "type": settings[:resource_name].pluralize
+              }
+            }
+          end
+
+          it 'should create resource' do
+            expect { post :create, params }.to change { resource_name.classify.
+                                                        safe_constantize.count }.by(1)
+          end
+
+          it 'should respond with success' do
+            post :create, params
+
+            expect(response).to have_http_status(:success)
+          end
+
+          it 'should assign current account id as account id' do
+            post :create, params
+
+            data = JSON.parse response.body
+            resource = resource_name.classify.safe_constantize.where(id: data['data']['id']).first
+            expect(resource.try(:account_id)).to eq Account.current.id
+          end
         end
       end
       if actions.include?(:update)
