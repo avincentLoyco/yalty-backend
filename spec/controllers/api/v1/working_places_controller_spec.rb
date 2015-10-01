@@ -6,7 +6,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
   include_examples 'example_relationships_employees',
     resource_name: 'working_place'
 
-  let!(:working_place) { FactoryGirl.create(:working_place, account_id: account.id) }
+  let!(:working_place) { create(:working_place, account_id: account.id) }
   let(:working_place_json) do
     {
       "data": {

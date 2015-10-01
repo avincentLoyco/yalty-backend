@@ -4,7 +4,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
   include_context 'shared_context_headers'
 
   let(:attribute_definition) {
-    FactoryGirl.create(
+    create(
       :employee_attribute_definition,
       attribute_type: 'String',
       account: account
@@ -75,7 +75,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
     end
 
     it 'should return conflict status if employee already exists' do
-      FactoryGirl.create(:employee, id: employee_uuid, account: account)
+      create(:employee, id: employee_uuid, account: account)
 
       post :create, json_payload
 
@@ -146,7 +146,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
       json_payload = JSON.parse(File.read(Rails.root.join('spec', 'fixtures', 'files', 'employee_create.json')))
 
       json_payload['data']['relationships']['events']['data'][0]['relationships']['employee-attributes']['data'].each do |attr|
-        FactoryGirl.create(
+        create(
           :employee_attribute_definition,
           id: attr['relationships']['attribute-definition']['data']['id'],
           attribute_type: 'String',
@@ -162,7 +162,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
 
   context 'GET /employees' do
     before(:each) do
-      FactoryGirl.create_list(:employee, 3, :with_attributes, account: account)
+      create_list(:employee, 3, :with_attributes, account: account)
     end
 
     it 'should respond with success' do
@@ -173,7 +173,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
     end
 
     it 'should not be visible in context of other account' do
-      user = FactoryGirl.create(:account_user)
+      user = create(:account_user)
       Account.current = user.account
 
       get :index

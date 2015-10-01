@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe Employee::AttributeVersion, type: :model do
-  subject! { FactoryGirl.build(:employee_attribute) }
+  subject! { build(:employee_attribute) }
 
   it { is_expected.to have_db_column(:data) }
 

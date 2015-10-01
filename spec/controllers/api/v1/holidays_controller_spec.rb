@@ -3,11 +3,11 @@ require 'rails_helper'
 RSpec.describe API::V1::HolidaysController, type: :controller do
   include_context 'shared_context_headers'
 
-  let(:account){ FactoryGirl.create(:account)}
-  let(:holiday_policy){ FactoryGirl.create(:holiday_policy, account: account) }
+  let(:account){ create(:account)}
+  let(:holiday_policy){ create(:holiday_policy, account: account) }
 
   describe "GET #show" do
-    let!(:holiday){ FactoryGirl.create(:holiday, holiday_policy: holiday_policy) }
+    let!(:holiday){ create(:holiday, holiday_policy: holiday_policy) }
 
     it 'should respond with success when valid params given' do
       params = { "id" => holiday.id }
@@ -23,7 +23,7 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
     end
 
     it 'should respond with 404 when not users holiday given' do
-      holiday_without_holiday_policy = FactoryGirl.create(:holiday)
+      holiday_without_holiday_policy = create(:holiday)
       params = { id: holiday_without_holiday_policy.id }
       get :show, params
 
@@ -32,9 +32,9 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
   end
 
   describe "GET #index" do
-    let!(:holiday_without_holiday_policy) { FactoryGirl.create(:holiday) }
+    let!(:holiday_without_holiday_policy) { create(:holiday) }
     let!(:holidays_with_holiday_policy) do
-      FactoryGirl.create_list(:holiday, 3, holiday_policy: holiday_policy)
+      create_list(:holiday, 3, holiday_policy: holiday_policy)
     end
 
     it 'should return current users holidays' do
@@ -106,9 +106,9 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
     end
 
     context 'valid data, user not authorized' do
-      let(:second_account) { FactoryGirl.create(:account) }
+      let(:second_account) { create(:account) }
       let(:holiday_policy_without_holiday) do
-        FactoryGirl.create(:holiday_policy, account: second_account)
+        create(:holiday_policy, account: second_account)
       end
       let(:valid_params_not_authorized_holiday_policy) do
         {
@@ -164,7 +164,7 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
   end
 
   describe "PUT #update" do
-    let!(:holiday){ FactoryGirl.create(:holiday, holiday_policy: holiday_policy) }
+    let!(:holiday){ create(:holiday, holiday_policy: holiday_policy) }
 
     let(:valid_params) do
       {
@@ -249,7 +249,7 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
     subject { delete :destroy, params }
 
     context 'when valid id' do
-      let!(:holiday){ FactoryGirl.create(:holiday, holiday_policy: holiday_policy) }
+      let!(:holiday){ create(:holiday, holiday_policy: holiday_policy) }
       let(:params) {{ id: holiday.id }}
 
       it 'should delete holiday' do
@@ -264,7 +264,7 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
     end
 
     context 'when user do not have access or not exist' do
-      let!(:holiday_without_policy){ FactoryGirl.create(:holiday) }
+      let!(:holiday_without_policy){ create(:holiday) }
       let(:params) {{ id: holiday_without_policy.id }}
 
       it 'should not delete holiday' do

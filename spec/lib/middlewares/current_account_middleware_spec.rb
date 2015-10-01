@@ -1,8 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe CurrentAccountMiddleware do
-  let(:account_user) { FactoryGirl.create(:account_user) }
-  let(:token) { FactoryGirl.create(:account_user_token, resource_owner_id: account_user.id).token }
+  let(:account_user) { create(:account_user) }
+  let(:token) { create(:account_user_token, resource_owner_id: account_user.id).token }
   let(:env) { Rack::MockRequest.env_for('https://api.yalty.io', {
     'HTTP_AUTHORIZATION' => "Bearer #{token}"
   })}

@@ -74,7 +74,7 @@ RSpec.describe API::V1::SettingsController, type: :controller do
   end
 
   context 'PUT #assign-holiday-policy' do
-    let(:holiday_policy) { FactoryGirl.create(:holiday_policy, account: account) }
+    let(:holiday_policy) { create(:holiday_policy, account: account) }
 
     it 'should assign holiday policy' do
       params = { data: { 'id': holiday_policy.id } }

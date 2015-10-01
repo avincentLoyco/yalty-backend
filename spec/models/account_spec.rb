@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe Account, type: :model do
-  subject { FactoryGirl.build(:account) }
+  subject { build(:account) }
 
   it { is_expected.to have_db_column(:subdomain).with_options(null: false) }
   it { is_expected.to have_db_index(:subdomain).unique(true) }
@@ -18,7 +18,7 @@ RSpec.describe Account, type: :model do
   context 'generate subdomain from company name on create' do
 
     it 'should not be blank' do
-      account = FactoryGirl.build(:account, subdomain: nil, company_name: 'Company')
+      account = build(:account, subdomain: nil, company_name: 'Company')
 
       expect(account).to be_valid
       expect(account.subdomain).to_not be_blank
@@ -34,7 +34,7 @@ RSpec.describe Account, type: :model do
     }.each do |company_name, subdomain|
 
       it "should transcode `#{company_name}` to `#{subdomain}`" do
-        account = FactoryGirl.build(:account, subdomain: nil, company_name: company_name)
+        account = build(:account, subdomain: nil, company_name: company_name)
 
         expect(account).to be_valid
         expect(account.subdomain).to eql(subdomain)
@@ -43,8 +43,8 @@ RSpec.describe Account, type: :model do
     end
 
     it 'must be unique' do
-      FactoryGirl.create(:account, subdomain: nil, company_name: 'The Company')
-      account = FactoryGirl.build(:account, subdomain: nil, company_name: 'The Company')
+      create(:account, subdomain: nil, company_name: 'The Company')
+      account = build(:account, subdomain: nil, company_name: 'The Company')
 
       expect(account).to be_valid
       expect(account.subdomain).to match(/\Athe-company-[0-9]+\z/)
@@ -54,7 +54,7 @@ RSpec.describe Account, type: :model do
 
   context 'default attribute definitions' do
     it 'should create definitions on create' do
-      account = FactoryGirl.build(:account)
+      account = build(:account)
 
       expect {
         account.save
@@ -63,7 +63,7 @@ RSpec.describe Account, type: :model do
     end
 
     it 'should not add definitions if allready exist' do
-      account = FactoryGirl.create(:account)
+      account = create(:account)
 
       expect {
         account.update_default_attribute_definitions!
@@ -84,7 +84,7 @@ RSpec.describe Account, type: :model do
   it { is_expected.to have_many(:employee_attribute_definitions).class_name('Employee::AttributeDefinition').inverse_of(:account) }
 
   it '#current= should accept an account' do
-    account = FactoryGirl.create(:account)
+    account = create(:account)
 
     expect(Account).to respond_to(:current=)
     expect {
@@ -93,7 +93,7 @@ RSpec.describe Account, type: :model do
   end
 
   it '#current should return account' do
-    account = FactoryGirl.create(:account)
+    account = create(:account)
     Account.current = account
 
     expect(Account.current).to eql(account)
@@ -102,14 +102,14 @@ RSpec.describe Account, type: :model do
   context '#timezone' do
     it 'should save account with valid timezone name' do
       timezone_name = ActiveSupport::TimeZone.all.last.tzinfo.name
-      account = FactoryGirl.build(:account, timezone: timezone_name)
+      account = build(:account, timezone: timezone_name)
 
       expect(account).to be_valid
       expect(account.timezone).to eq(timezone_name)
     end
 
     it 'should not save account with not valid timezone name' do
-      account = FactoryGirl.build(:account, timezone: 'ABC')
+      account = build(:account, timezone: 'ABC')
 
       expect(account).to_not be_valid
     end

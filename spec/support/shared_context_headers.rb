@@ -1,5 +1,5 @@
 RSpec.shared_context 'shared_context_headers', :a => :b do
-  let(:user) { FactoryGirl.create(:account_user) }
+  let(:user) { create(:account_user) }
   let(:account) { user.account }
 
   before(:each) do

@@ -8,7 +8,7 @@ RSpec.describe HolidayPolicy, type: :model do
   it { is_expected.to validate_presence_of(:name) }
   it { is_expected.to validate_presence_of(:account_id) }
 
-  let(:account) { FactoryGirl.create(:account) }
+  let(:account) { create(:account) }
 
   context 'validations' do
     context 'country presence' do

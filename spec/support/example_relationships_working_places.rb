@@ -3,11 +3,11 @@ RSpec.shared_examples 'example_relationships_working_places' do |settings|
   let(:resource_name) { settings[:resource_name] }
   let(:resource_id) { "#{settings[:resource_name]}_id" }
 
-  let!(:resource) { FactoryGirl.create(resource_name, account: account) }
+  let!(:resource) { create(resource_name, account: account) }
 
   describe "/#{settings[:resource_name]}/:resource_id/relationships/working_places" do
-    let!(:first_working_place) { FactoryGirl.create(:working_place, account: account) }
-    let!(:second_working_place) { FactoryGirl.create(:working_place, account: account) }
+    let!(:first_working_place) { create(:working_place, account: account) }
+    let!(:second_working_place) { create(:working_place, account: account) }
     let(:params) {{ resource_id => resource.id, relationship: "working_places" }}
 
     let(:first_working_place_json) do

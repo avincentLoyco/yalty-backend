@@ -11,7 +11,7 @@ RSpec.describe Account::User, type: :model do
   it { should validate_length_of(:password).is_at_least(8).is_at_most(74) }
 
   it 'should validate length of password only when is updated' do
-    user = FactoryGirl.create(:account_user)
+    user = create(:account_user)
     user = Account::User.find(user.id)
 
     expect(user).to be_valid

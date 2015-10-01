@@ -10,7 +10,7 @@ RSpec.shared_examples 'example_crud_resources' do |settings|
     if actions.include?(:index)
       context 'GET #index' do
         before(:each) do
-          FactoryGirl.create_list(settings[:resource_name], 3, account: account)
+          create_list(settings[:resource_name], 3, account: account)
         end
 
         it 'should respond with success' do
@@ -20,7 +20,7 @@ RSpec.shared_examples 'example_crud_resources' do |settings|
         end
 
         it 'should not be visible in context of other account' do
-          user = FactoryGirl.create(:account_user)
+          user = create(:account_user)
           Account.current = user.account
 
           get :index
@@ -32,7 +32,7 @@ RSpec.shared_examples 'example_crud_resources' do |settings|
 
       if actions.include?(:create)
         context 'POST #create' do
-          let(:resource_params) { FactoryGirl.attributes_for(settings[:resource_name]) }
+          let(:resource_params) { attributes_for(settings[:resource_name]) }
           let(:params) do
             {
               "data": {
@@ -65,8 +65,8 @@ RSpec.shared_examples 'example_crud_resources' do |settings|
       end
       if actions.include?(:update)
         context 'PUT #update' do
-          let(settings[:resource_name]) { FactoryGirl.create(settings[:resource_name], account: account)}
-          let(:resource_param) { (FactoryGirl.attributes_for(settings[:resource_name])).keys.first }
+          let(settings[:resource_name]) { create(settings[:resource_name], account: account)}
+          let(:resource_param) { (attributes_for(settings[:resource_name])).keys.first }
           let(:params) do
             {
               "data": {
@@ -93,7 +93,7 @@ RSpec.shared_examples 'example_crud_resources' do |settings|
       end
       if actions.include?(:show)
         context 'GET #show' do
-          let(settings[:resource_name]) { FactoryGirl.create(settings[:resource_name], account: account)}
+          let(settings[:resource_name]) { create(settings[:resource_name], account: account)}
 
           it 'should response with success' do
             get :show, { id: send(settings[:resource_name]).id }
@@ -106,7 +106,7 @@ RSpec.shared_examples 'example_crud_resources' do |settings|
       end
       if actions.include?(:delete)
         context 'DELETE #destroy' do
-          let(settings[:resource_name]) { FactoryGirl.create(settings[:resource_name], account: account)}
+          let(settings[:resource_name]) { create(settings[:resource_name], account: account)}
 
           it 'should delete proper resources' do
             delete :destroy, { id: send(settings[:resource_name]).id }

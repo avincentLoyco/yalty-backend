@@ -11,8 +11,8 @@ RSpec.describe API::V1::HolidayPoliciesController, type: :controller do
     resource_name: 'holiday_policy'
 
   describe '/#{settings[:resource_name]}/:resource_id/relationships/holidays' do
-    let!(:holiday_policy) { FactoryGirl.create(:holiday_policy, account: account) }
-    let!(:holiday) { FactoryGirl.create(:holiday, holiday_policy: holiday_policy) }
+    let!(:holiday_policy) { create(:holiday_policy, account: account) }
+    let!(:holiday) { create(:holiday, holiday_policy: holiday_policy) }
     let(:params) {{ holiday_policy_id: holiday_policy.id, relationship: "holidays" }}
 
     context 'DELETE #destroy_relationship' do

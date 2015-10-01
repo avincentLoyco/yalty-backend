@@ -3,10 +3,10 @@ RSpec.shared_examples 'example_relationships_holidays' do |settings|
   let(:resource_name) { settings[:resource_name] }
   let(:resource_id) { "#{settings[:resource_name]}_id" }
 
-  let!(:resource) { FactoryGirl.create(resource_name, account: account) }
-  let!(:second_resource) { FactoryGirl.create(resource_name, account: account) }
-  let!(:first_holiday) { FactoryGirl.create(:holiday, resource_name => second_resource) }
-  let!(:second_holiday) { FactoryGirl.create(:holiday) }
+  let!(:resource) { create(resource_name, account: account) }
+  let!(:second_resource) { create(resource_name, account: account) }
+  let!(:first_holiday) { create(:holiday, resource_name => second_resource) }
+  let!(:second_holiday) { create(:holiday) }
   let(:params) {{ resource_id => resource.id, relationship: "holidays" }}
 
   describe '/#{settings[:resource_name]}/:resource_id/relationships/holidays' do
