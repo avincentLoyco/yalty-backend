@@ -2,7 +2,7 @@ module API
   module V1
     class WorkingPlaceResource < JSONAPI::Resource
       model_name 'WorkingPlace'
-      attributes :name
+      attributes :name, :holiday_policy_id
       has_many :employees, class_name: 'Employee'
 
       before_create :setup_account

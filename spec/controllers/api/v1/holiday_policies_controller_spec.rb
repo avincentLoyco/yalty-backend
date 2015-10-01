@@ -23,4 +23,44 @@ RSpec.describe API::V1::HolidayPoliciesController, type: :controller do
       end
     end
   end
+
+  describe '/employee/:employee_id/holiday-policy' do
+    let(:holiday_policy) { create(:holiday_policy) }
+
+    context 'when employee has his holiday policy' do
+      let(:employee) { create(:employee, holiday_policy: holiday_policy, account: account) }
+
+      it 'should return holiday policy' do
+        get :get_related_resource, employee_id: employee.id, relationship: "holiday_policy", source: "api/v1/employees"
+
+        expect(response.body).to include holiday_policy.id
+      end
+    end
+
+    context 'when employee do not have holiday policy but his working place has' do
+      let(:working_place) { create(:working_place, holiday_policy: holiday_policy) }
+      let(:employee) { create(:employee, working_place: working_place, account: account) }
+
+      it 'should return holiday policy' do
+        get :get_related_resource, employee_id: employee.id, relationship: "holiday_policy", source: "api/v1/employees"
+
+        expect(employee.holiday_policy_id).to be nil
+        expect(response.body).to include holiday_policy.id
+      end
+    end
+
+    context 'when employee and his policy does not have holiday policy assigned' do
+      let(:working_place) { create(:working_place) }
+      let(:employee) { create(:employee, working_place: working_place, account: account) }
+
+      it 'should return holiday policy' do
+        Account.current.holiday_policy_id = holiday_policy.id
+        get :get_related_resource, employee_id: employee.id, relationship: "holiday_policy", source: "api/v1/employees"
+
+        expect(employee.holiday_policy_id).to be nil
+        expect(working_place.holiday_policy_id).to be nil
+        expect(response.body).to include holiday_policy.id
+      end
+    end
+  end
 end
