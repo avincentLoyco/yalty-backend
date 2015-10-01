@@ -65,27 +65,30 @@ RSpec.shared_examples 'example_crud_resources' do |settings|
       end
       if actions.include?(:update)
         context 'PUT #update' do
-          # TODO
-          # let(settings[:resource_name]) { FactoryGirl.create(settings[:resource_name], account: account)}
-          #
-          # it 'should response with success' do
-          #   attributes = send(settings[:resource_name]).attributes
-          #   attributes.delete('id')
-          #   attributes.delete('created_at')
-          #   attributes.delete('updated_at')
-          #
-          #   data = {
-          #     "id": send(settings[:resource_name]).id,
-          #     "data": {
-          #       "id": send(settings[:resource_name]).id,
-          #       "type": settings[:resource_name].pluralize.gsub('_', '-'),
-          #       "attributes": attributes
-          #     }
-          #   }
-          #   put :update, data
-          #
-          #   expect(response).to have_http_status(:success)
-          # end
+          let(settings[:resource_name]) { FactoryGirl.create(settings[:resource_name], account: account)}
+          let(:resource_param) { (FactoryGirl.attributes_for(settings[:resource_name])).keys.first }
+          let(:params) do
+            {
+              "data": {
+                "attributes": {
+                  resource_param => 'test',
+                },
+                "type": settings[:resource_name].pluralize.gsub('_', '-'),
+                "id": send(settings[:resource_name]).id
+              },
+              "id": send(settings[:resource_name]).id
+            }
+          end
+
+          it 'should update resource attribute' do
+            expect { put :update, params }.to change { send(settings[:resource_name])
+                                                       .reload[resource_param] }.to('test')
+          end
+
+          it 'should respond with success' do
+            put :update, params
+            expect(response).to have_http_status(:success)
+          end
         end
       end
       if actions.include?(:show)
