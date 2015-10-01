@@ -110,6 +110,7 @@ GEM
       guard-compat (~> 1.1)
       rspec (>= 2.99.0, < 4.0)
     hitimes (1.2.2)
+    holidays (2.2.0)
     http-cookie (1.0.2)
       domain_name (~> 0.5)
     i18n (0.7.0)
@@ -267,36 +268,37 @@ PLATFORMS
 
 DEPENDENCIES
   airborne
-  bcrypt
+  bcrypt (~> 3.1.10)
   better_errors
   binding_of_caller
   byebug
   codeclimate-test-reporter
-  countries
+  countries (~> 1.1.0)
   database_cleaner
-  doorkeeper
+  doorkeeper (~> 2.2.1)
   dotenv-rails
   factory_girl_rails
   faker
   guard-rspec
-  jsonapi-resources
+  holidays (~> 2.2.0)
+  jsonapi-resources (~> 0.5.9)
   meta_request
-  pg
+  pg (~> 0.18.1)
   pry-byebug
   pry-rails
   puma
   rack-cors
   rails (= 4.2.3)
   rails_12factor
-  request_store
+  request_store (~> 1.2.0)
   rspec-rails
-  scenic
+  scenic (~> 0.3.0)
   shoulda-matchers
   spring
   spring-commands-rspec
   temping
-  virtus
+  virtus (~> 1.0.5)
   web-console (~> 2.0)
 
 BUNDLED WITH
-   1.10.5
+   1.10.6

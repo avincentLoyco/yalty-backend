@@ -2,17 +2,18 @@ source 'https://rubygems.org'
 
 ruby '2.2.2'
 
-gem 'rails', '4.2.3'
-gem 'pg'
-gem 'bcrypt'
+gem 'rails',              '4.2.3'
+gem 'pg',                 '~> 0.18.1'
+gem 'bcrypt', '~> 3.1.10'
 gem 'rack-cors', require: 'rack/cors'
-gem 'jsonapi-resources'
-gem 'doorkeeper'
-gem 'virtus'
-gem 'request_store'
-gem 'scenic'
-gem 'countries'
-gem 'database_cleaner'
+gem 'jsonapi-resources',  '~> 0.5.9'
+gem 'doorkeeper',         '~> 2.2.1'
+gem 'virtus',             '~> 1.0.5'
+gem 'request_store',      '~> 1.2.0'
+gem 'scenic',             '~> 0.3.0'
+gem 'countries',          '~> 1.1.0'
+gem 'holidays',           '~> 2.2.0'
+
 
 # Production environment dependencies
 group :production, :staging do
@@ -33,6 +34,7 @@ group :development, :test do
   gem 'faker'
   gem 'temping'
   gem 'guard-rspec'
+  gem 'database_cleaner'
 
   # debug
   gem 'pry-rails'
