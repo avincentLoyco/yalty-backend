@@ -3,7 +3,9 @@ class HolidayPolicy < ActiveRecord::Base
   has_many :holidays
   has_many :working_places
   has_many :employees
-  has_one :assigned_account, class_name: 'Account', foreign_key: :holiday_policy_id,
+  has_one :assigned_account,
+    class_name: 'Account',
+    foreign_key: :holiday_policy_id,
     inverse_of: :holiday_policy
 
   validates :name, :account_id, presence: true

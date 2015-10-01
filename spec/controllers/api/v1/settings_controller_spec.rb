@@ -72,4 +72,31 @@ RSpec.describe API::V1::SettingsController, type: :controller do
       expect(:delete => "/api/v1/settings/#{account.id}").not_to be_routable
     end
   end
+
+  context 'PUT #assign-holiday-policy' do
+    let(:holiday_policy) { FactoryGirl.create(:holiday_policy, account: account) }
+
+    it 'should assign holiday policy' do
+      params = { data: { 'id': holiday_policy.id } }
+
+      put :assign_holiday_policy, params
+      expect(response).to have_http_status(:success)
+      expect(account.reload.holiday_policy).to eq(holiday_policy)
+    end
+
+    it 'should not change assigned policy' do
+      params = { data: { 'id': '' } }
+
+      put :assign_holiday_policy, params
+      expect(response).to have_http_status(404)
+    end
+
+    it 'should return record not found' do
+      params = { data: { 'id': 'abc' } }
+
+      put :assign_holiday_policy, params
+      expect(response).to have_http_status(404)
+    end
+
+  end
 end
