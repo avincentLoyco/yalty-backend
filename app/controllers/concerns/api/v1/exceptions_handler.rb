@@ -36,6 +36,23 @@ module JSONAPI
         ]
       end
     end
+
+    class ForbiddenAction < Error
+      def initialize(action)
+        @action = action
+      end
+
+      def errors
+        [
+          JSONAPI::Error.new(
+            code: JSONAPI::SAVE_FAILED,
+            status: :forbidden,
+            title: 'Action forbidden',
+            detail: "Action '#{@action}' forbidden"
+          )
+        ]
+      end
+    end
   end
 end
 
@@ -53,6 +70,8 @@ module API
           render_errors(JSONAPI::Exceptions::RecordNotFound.new(e).errors) and return
         when API::V1::Exceptions::Forbidden
           render_errors(JSONAPI::Exceptions::ForbiddenAccess.new(e).errors) and return
+        when API::V1::Exceptions::ForbiddenAction
+          render_errors(JSONAPI::Exceptions::ForbiddenAction.new(e).errors) and return
         else
           super(e)
         end
