@@ -3,7 +3,7 @@ RSpec.shared_examples 'example_relationships_employees' do |settings|
   let(:resource_name) { settings[:resource_name] }
   let(:resource_id) { "#{settings[:resource_name]}_id" }
 
-  let!(:resource) { FactoryGirl.create(resource_name, account: account) }
+  let(:resource) { FactoryGirl.create(resource_name, account: account) }
 
   describe "/#{settings[:resource_name]}/:resource_id/relationships/employees" do
     let!(:first_employee) { FactoryGirl.create(:employee, account: account) }
