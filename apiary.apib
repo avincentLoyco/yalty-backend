@@ -1,7 +1,7 @@
 FORMAT: 1A
 HOST: http://polls.apiblueprint.org/
 
-# Settings API
+# Yalty API
 
 ## Account Settings [/api/v1/settings]
 
@@ -37,3 +37,100 @@ Ability to update current account settings
   + holiday_policy_id: "5be2d5ee-5847-404e-b5c9-975bed61d9dc" (string) - Id holiday policy
 
 + Response 200
+
+
+## Working Places Collection [/api/v1/working_places]
+
+### List all user's working places [GET]
+
+Get a list of all available for user working places
+
++ Response 200 (application/json)
+    [
+        {
+          "id": "12345678-1234-1234-1234-123456789012",
+          "name": "test-working-place",
+          "account_id": "1",
+          "holiday_policy_id": "5be2d5ee-5847-404e-b5c9-975bed61d9dc"
+        },
+        {
+          "id": "87654321-1234-1234-1234-123456789012",
+          "name": "test-test",
+          "account_id": "1",
+          "holiday_policy_id": "5be2d5ee-5847-404e-b5c9-975bed61d9dc"
+        }
+    ]
+
+### Create a working place [POST]
+
+Create a new working place
+By default account_id is equal Account.current.id
+
++ Attributes (Working Place Base)
+
++ Request (application/json)
+
++ Response 201 (application/json)
+    {
+        "id": "12345678-1234-1234-1234-123456789012",
+        "name": "test-working-place",
+        "account_id": "1"
+    }
+
+## Working Place [/api/v1/working_places/{working_place_id}]
+
++ Parameters
+    + working_place_id: 12345678-1234-1234-1234-123456789012 (required, string) - ID of the Working Place is an uuid
+
+### Get Working Place Details [GET]
+
++ Response 200 (application/json)
+    {
+        "id": "12345678-1234-1234-1234-123456789012",
+        "name": "test-working-place",
+        "account_id": "1",
+    }
+
+### Get Working Place Details with holiday policy [GET /api/v1/working_places/{working_place_id}?embed=holiday_policy]
+
++ Response 200 (application/json)
+    {
+        "id": "12345678-5678-1234-1234-123456789012",
+        "name": "test-working-place",
+        "account_id": "1",
+        "holiday_policy": {
+          "id": "12345678-1234-1234-1234-123456789012",
+          "name": "test",
+          "country": "pl",
+          "region": "ds"
+        }
+    }
+
+### Get Working Place Details with holiday policy and its holidays [GET /api/v1/working_places/{working_place_id}?embed=holiday_policy,holidays]
+
++ Response 200 (application/json)
+    {
+        "id": "12345678-5678-1234-1234-123456789012",
+        "name": "test-working-place",
+        "account_id": "1",
+        "holiday_policy": {
+          "id": "12345678-1234-1234-1234-123456789012",
+          "name": "test",
+          "country": "pl",
+          "region": "ds"
+        },
+        "holidays": [
+          {
+            "id": "87654321-1234-1234-1234-123456789012",
+            "holiday_policy_id": "12345678-1234-1234-1234-123456789012",
+            "name": "test",
+            "date": "01.01.2015"
+          }
+        ]
+    }
+
+# Data Structures
+
+## Working Place Base (object)
+
++ name: Test (string, required)
