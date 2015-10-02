@@ -146,5 +146,21 @@ RSpec.describe API::V1::HolidayPoliciesController, type: :controller do
         expect(response.body).to include holiday_policy.id
       end
     end
+
+    context 'when holiday policy not defined in employee, working place and account' do
+      let(:working_place) { create(:working_place) }
+      let(:employee) { create(:employee, working_place: working_place, account: account) }
+
+      it 'should return empty response' do
+        subject
+
+        expect(employee.holiday_policy_id).to be nil
+        expect(working_place.holiday_policy_id).to be nil
+        expect(account.holiday_policy_id).to be nil
+
+        expect(response.body).to_not include holiday_policy.id
+        expect(response).to have_http_status(200)
+      end
+    end
   end
 end
