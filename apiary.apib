@@ -80,7 +80,7 @@ By default account_id is equal Account.current.id
 ## Working Place [/api/v1/working_places/{working_place_id}]
 
 + Parameters
-    + working_place_id: 12345678-1234-1234-1234-123456789012 (required, string) - ID of the Working Place is an uuid
+    + working_place_id: valid_id (required, string) - ID of the Working Place is an uuid
 
 ### Get Working Place Details [GET]
 
@@ -88,7 +88,7 @@ By default account_id is equal Account.current.id
     {
         "id": "12345678-1234-1234-1234-123456789012",
         "name": "test-working-place",
-        "account_id": "1",
+        "account_id": "1"
     }
 
 ### Get Working Place Details with holiday policy [GET /api/v1/working_places/{working_place_id}?embed=holiday_policy]
@@ -128,6 +128,26 @@ By default account_id is equal Account.current.id
           }
         ]
     }
+
+### Update Working Place name [PUT]
+
++ Attributes
+    + name: New name (required, string) - New name for working place
+
++ Request (application/json)
+
++ Response 200 (application/json)
+
+    {
+        "id": "12345678-1234-1234-1234-123456789012",
+        "name": "New name",
+        "account_id": "1"
+    }
+
+### Delete working place [DELETE]
+
++ Response 204
+
 
 # Data Structures
 
