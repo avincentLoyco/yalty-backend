@@ -1,0 +1,218 @@
+FORMAT: 1A
+HOST: http://api.lvh.me:3000
+
+# Yalty API
+
+## Account Settings [/api/v1/settings]
+
+### GET Account settings details [GET]
+
+Settings for current account
+
++ Request (application/json)
+
++ Response 200 (application/json)
+
+        {
+            "subdomain": "my-company-946",
+            "company_name": "My lol",
+            "timezone": "Europe/Madrid",
+            "default_locale": "en",
+            "type": "settings"
+        }
+
+### PUT Update account settings [PUT]
+
+Ability to update current account settings
+
++ Attributes
+  + subdomain: my.subdomain (string) - Account subdomain
+  + company_name: ABC company (string)
+  + timezone: Europe/Madrid (string)
+  + default_locale: en (string)
+  + type: settings (string)
+
++ Request (application/json)
+
+        {
+            "subdomain": "my.subdomain",
+            "company_name": "ABC",
+            "timezone": "Europe/Madrid",
+            "default_locale": "en",
+            "type": "settings"
+        }
+
++ Response 204
+
+### PATCH Assign holiday policy to account as default policy [PATCH]
+
++ Attributes
+  + holiday_policy:
+    + id: 1ab (string) - Id holiday policy
+    + type: holiday_policy (string)
+
++ Request (application/json)
+
+        {
+            "holiday_policy": {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "type": "holiday_policy"
+            }
+        }
+
++ Response 204
+
+## Working Places Collection [/api/v1/working_places]
+
+### GET List all user's working places [GET]
+
+Get a list of all available for user working places
+
++ Request (application/json)
+
++ Response 200 (application/json)
+
+        [
+            {
+              "id": "12345678-1234-1234-1234-123456789012",
+              "name": "test-working-place",
+              "type": "working_place"
+            },
+            {
+              "id": "87654321-1234-1234-1234-123456789012",
+              "name": "test-test",
+              "type": "working_place"
+            }
+        ]
+
+### POST Create a working place [POST]
+
+Create a new working place
+By default account_id is equal Account.current.id
+
++ Attributes (Working Place Base)
+
++ Request (application/json)
+
+        {
+            "name": "Office",
+            "type": "working_place"
+        }
+
++ Response 201 (application/json)
+
+        {
+            "id": "12345678-1234-1234-1234-123456789012",
+            "name": "test-working-place",
+            "type": "working_place"
+        }
+
+## Working Place [/api/v1/working_places/{working_place_id}]
+
++ Parameters
+    + working_place_id: 1ab (required, string) - ID of the Working Place is an uuid
+
+### GET Get Working Place Details [GET]
+
++ Request (application/json)
+
++ Response 200 (application/json)
+
+        {
+            "id": "12345678-1234-1234-1234-123456789012",
+            "name": "test-working-place",
+            "type": "working_place"
+        }
+
+### GET Get Working Place Details with holiday policy [GET /api/v1/working_places/{working_place_id}?embed=holiday_policy]
+
++ Response 200 (application/json)
+
+        {
+            "id": "12345678-5678-1234-1234-123456789012",
+            "name": "test-working-place",
+            "type": "working_place",
+            "holiday_policy": {
+              "id": "12345678-1234-1234-1234-123456789012",
+              "name": "test",
+              "country": "pl",
+              "region": "ds",
+              "type": "holiday_policy"
+            }
+        }
+
+### GET Get Working Place Details with holiday policy and its holidays [GET /api/v1/working_places/{working_place_id}?embed=holiday_policy.holidays]
+
++ Response 200 (application/json)
+
+        {
+            "id": "12345678-5678-1234-1234-123456789012",
+            "name": "test-working-place",
+            "type": "working_place",
+            "holiday_policy": {
+              "id": "12345678-1234-1234-1234-123456789012",
+              "name": "test",
+              "country": "pl",
+              "region": "ds",
+              "type": "holiday_policy"
+              "holidays": [
+                {
+                  "id": "87654321-1234-1234-1234-123456789012",
+                  "holiday_policy_id": "12345678-1234-1234-1234-123456789012",
+                  "name": "test",
+                  "date": "01.01.2015",
+                  "type": "holiday"
+                }
+              }
+            ]
+        }
+
+### PUT Update Working Place name [PUT]
+
++ Attributes
+    + name: New name (required, string) - New name for working place
+    + type: working_place (string)
+
++ Request (application/json)
+
+        {
+            "name": 'Smaple name',
+            "type": "working_place"
+        }
+
++ Response 200 (application/json)
+
+    {
+        "id": "12345678-1234-1234-1234-123456789012",
+        "name": "New name",
+        "type": "working_place"
+    }
+
+### DELETE Delete working place [DELETE]
+
++ Request (application/json)
+
++ Response 204
+
+### PATCH Assign employees to working place [PATCH /api/v1/working_places/{working_place_id}]
+
++ Attributes
+    + employees:
+
++ Request (application/json)
+
+        {
+            "employees": [
+                { "id": "123", "type": "employee"},
+                { "id": "1234", "type": "employee"}
+            ]
+        }
+
++ Response 204 (application/json)
+
+# Data Structures
+
+## Working Place Base (object)
+
++ name: Test (string, required)
++ type: working_place (string)
