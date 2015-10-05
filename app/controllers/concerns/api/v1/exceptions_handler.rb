@@ -67,11 +67,11 @@ module API
           errors = JSONAPI::Exceptions::ParameterMissing.new(e.param).errors
           render_errors(errors)
         when ActiveRecord::RecordNotFound
-          render_errors(JSONAPI::Exceptions::RecordNotFound.new(e).errors) and return
+          render_errors(JSONAPI::Exceptions::RecordNotFound.new(e).errors) && return
         when API::V1::Exceptions::Forbidden
-          render_errors(JSONAPI::Exceptions::ForbiddenAccess.new(e).errors) and return
+          render_errors(JSONAPI::Exceptions::ForbiddenAccess.new(e).errors) && return
         when API::V1::Exceptions::ForbiddenAction
-          render_errors(JSONAPI::Exceptions::ForbiddenAction.new(e).errors) and return
+          render_errors(JSONAPI::Exceptions::ForbiddenAction.new(e).errors) && return
         else
           super(e)
         end

@@ -14,7 +14,6 @@ gem 'scenic',             '~> 0.3.0'
 gem 'countries',          '~> 1.1.0'
 gem 'holidays',           '~> 2.2.0'
 
-
 # Production environment dependencies
 group :production, :staging do
   gem 'rails_12factor'

@@ -9,7 +9,7 @@ module API
       attribute :name
       before_create :setup_account
 
-      def self.records(options = {})
+      def self.records(_options = {})
         Account.current.holiday_policies
       end
 

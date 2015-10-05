@@ -12,10 +12,10 @@ module API
       end
 
       def record_for_holiday_policy
-        policy_id = holiday_policy_id || working_place.try(:holiday_policy_id) || account.try(:holiday_policy_id)
-        if policy_id
-          HolidayPolicy.find(policy_id)
-        end
+        policy_id = holiday_policy_id ||
+          working_place.try(:holiday_policy_id) ||
+          account.try(:holiday_policy_id)
+        HolidayPolicy.find(policy_id) if policy_id
       end
     end
   end

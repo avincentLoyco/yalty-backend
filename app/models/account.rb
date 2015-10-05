@@ -16,7 +16,8 @@ class Account < ActiveRecord::Base
     inclusion: { in: SUPPORTED_TIMEZONES },
     if: -> { timezone.present? }
 
-  belongs_to :holiday_policy, inverse_of: :assigned_account # It is assigned to account holiday_policy as default
+  # It is assigned to account holiday_policy as default
+  belongs_to :holiday_policy, inverse_of: :assigned_account
   has_many :users,
     class_name: 'Account::User',
     inverse_of: :account

@@ -9,8 +9,8 @@ module API
       private
 
       def lock_destroy
-        if params[:relationship] == "holidays"
-          raise ForbiddenAction.new(params[:action])
+        if params[:relationship] == 'holidays'
+          raise ForbiddenAction.new(params[:action]), 'Action forbidden'
         end
       rescue => e
         handle_exceptions(e)

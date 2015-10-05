@@ -9,16 +9,12 @@ module API
       private
 
       def check_holiday_policy
-        if holiday_policy
-          check_if_policy_exist && check_if_current_user_authorized
-        end
+        check_if_policy_exist && check_if_current_user_authorized if holiday_policy
       end
 
       def set_holiday_policy
         attributes = params['data']['attributes']
-        if attributes
-          attributes['holiday-policy-id']
-        end
+        attributes['holiday-policy-id'] if attributes
       end
 
       def check_if_policy_exist
@@ -29,7 +25,7 @@ module API
 
       def check_if_current_user_authorized
         unless user_holiday_policies.include?(holiday_policy)
-          raise Forbidden.new(holiday_policy)
+          raise Forbidden.new(holiday_policy), 'Holiday policy forbidden'
         end
       rescue => e
         handle_exceptions(e)
