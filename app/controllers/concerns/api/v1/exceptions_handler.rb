@@ -64,8 +64,7 @@ module API
       def handle_exceptions(e)
         case e
         when ActionController::ParameterMissing
-          errors = JSONAPI::Exceptions::ParameterMissing.new(e.param).errors
-          render_errors(errors)
+          render_errors(JSONAPI::Exceptions::ParameterMissing.new(e.param).errors)
         when ActiveRecord::RecordNotFound
           render_errors(JSONAPI::Exceptions::RecordNotFound.new(e).errors) && return
         when API::V1::Exceptions::Forbidden
