@@ -25,7 +25,7 @@ module API
 
       def check_if_current_user_authorized
         unless user_holiday_policies.include?(holiday_policy)
-          raise Forbidden.new(holiday_policy), 'Holiday policy forbidden'
+          fail Forbidden.new(holiday_policy), 'Holiday policy forbidden'
         end
       rescue => e
         handle_exceptions(e)
