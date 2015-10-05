@@ -141,7 +141,7 @@ By default account_id is equal Account.current.id
             }
         }
 
-### GET Get Working Place Details with holiday policy and its holidays [GET /api/v1/working_places/{working_place_id}?embed=holiday_policy,holidays]
+### GET Get Working Place Details with holiday policy and its holidays [GET /api/v1/working_places/{working_place_id}?embed=holiday_policy.holidays]
 
 + Response 200 (application/json)
 
@@ -155,14 +155,14 @@ By default account_id is equal Account.current.id
               "country": "pl",
               "region": "ds",
               "type": "holiday_policy"
-            },
-            "holidays": [
-              {
-                "id": "87654321-1234-1234-1234-123456789012",
-                "holiday_policy_id": "12345678-1234-1234-1234-123456789012",
-                "name": "test",
-                "date": "01.01.2015",
-                "type": "holiday"
+              "holidays": [
+                {
+                  "id": "87654321-1234-1234-1234-123456789012",
+                  "holiday_policy_id": "12345678-1234-1234-1234-123456789012",
+                  "name": "test",
+                  "date": "01.01.2015",
+                  "type": "holiday"
+                }
               }
             ]
         }
