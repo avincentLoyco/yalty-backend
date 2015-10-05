@@ -1,6 +1,7 @@
 class Employee < ActiveRecord::Base
   belongs_to :account, inverse_of: :employees, required: true
   belongs_to :working_place, inverse_of: :employees
+  belongs_to :holiday_policy
   has_many :employee_attribute_versions,
     class_name: 'Employee::AttributeVersion',
     inverse_of: :employee

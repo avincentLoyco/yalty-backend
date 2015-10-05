@@ -2,8 +2,8 @@ require 'rails_helper'
 
 RSpec.describe API::V1::EmployeeAttributesController, type: :controller do
   let(:account) { user.account }
-  let(:user) { FactoryGirl.create(:account_user) }
-  let(:employee) { FactoryGirl.create(:employee, account: account) }
+  let(:user) { create(:account_user) }
+  let(:employee) { create(:employee, account: account) }
 
   before(:each) do
     Account.current = account
@@ -15,7 +15,7 @@ RSpec.describe API::V1::EmployeeAttributesController, type: :controller do
 
   context 'GET /employee-events' do
     before(:each) do
-      FactoryGirl.create_list(:employee_attribute, 5, employee: employee)
+      create_list(:employee_attribute, 5, employee: employee)
     end
 
     it 'should respond with success' do
@@ -26,7 +26,7 @@ RSpec.describe API::V1::EmployeeAttributesController, type: :controller do
     end
 
     it 'should not be visible in context of other account' do
-      user = FactoryGirl.create(:account_user)
+      user = create(:account_user)
       Account.current = user.account
 
       get :index

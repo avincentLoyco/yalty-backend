@@ -2,11 +2,11 @@ require 'rails_helper'
 
 RSpec.describe API::V1::EmployeeEventsController, type: :controller do
   let(:account) { user.account }
-  let(:user) { FactoryGirl.create(:account_user) }
-  let(:employee) { FactoryGirl.create(:employee, account: account) }
+  let(:user) { create(:account_user) }
+  let(:employee) { create(:employee, account: account) }
 
   let(:attribute_definition) {
-    FactoryGirl.create(
+    create(
       :employee_attribute_definition,
       attribute_type: 'String',
       account: account
@@ -81,7 +81,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     end
 
     it 'should return conflict status if event already exists' do
-      FactoryGirl.create(:employee_event, id: event_uuid, employee: employee)
+      create(:employee_event, id: event_uuid, employee: employee)
 
       post :create, json_payload
 
@@ -143,14 +143,14 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     it 'load sample json payload' do
       json_payload = JSON.parse(File.read(Rails.root.join('spec', 'fixtures', 'files', 'employee_event_create.json')))
 
-      FactoryGirl.create(
+      create(
         :employee,
         id: json_payload['data']['relationships']['employee']['data']['id'],
         account: account
       )
 
       json_payload['data']['relationships']['employee-attributes']['data'].each do |attr|
-        FactoryGirl.create(
+        create(
           :employee_attribute_definition,
           id: attr['relationships']['attribute-definition']['data']['id'],
           attribute_type: 'String',
@@ -166,7 +166,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
   context 'GET /employee-events' do
     before(:each) do
-      FactoryGirl.create_list(:employee_event, 3, employee: employee)
+      create_list(:employee_event, 3, employee: employee)
     end
 
     it 'should respond with success' do
@@ -177,7 +177,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     end
 
     it 'should not be visible in context of other account' do
-      user = FactoryGirl.create(:account_user)
+      user = create(:account_user)
       Account.current = user.account
 
       get :index

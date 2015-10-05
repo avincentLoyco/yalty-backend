@@ -4,6 +4,7 @@ Rails.application.routes.draw do
     namespace :v1 do
       jsonapi_resources :employees do
         jsonapi_relationships
+        jsonapi_related_resource :holiday_policy
       end
       jsonapi_resources :employee_attributes
       jsonapi_resources :employee_events
@@ -11,7 +12,16 @@ Rails.application.routes.draw do
       jsonapi_resources :working_places do
         jsonapi_relationships
       end
-      jsonapi_resource :settings, only: [:show, :update]
+      jsonapi_resource :settings, only: [:show, :update] do
+        collection do
+          put :'assign-holiday-policy'
+        end
+      end
+      jsonapi_resources :holiday_policies do
+        jsonapi_relationships
+      end
+
+      jsonapi_resources :holidays
     end
   end
 

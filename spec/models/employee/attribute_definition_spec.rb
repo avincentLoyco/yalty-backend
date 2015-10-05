@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe Employee::AttributeDefinition, type: :model do
-  subject { FactoryGirl.build(:employee_attribute_definition) }
+  subject { build(:employee_attribute_definition) }
 
   it { is_expected.to have_db_column(:name) }
   it { is_expected.to validate_presence_of(:name) }

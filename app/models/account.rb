@@ -16,6 +16,8 @@ class Account < ActiveRecord::Base
     inclusion: { in: SUPPORTED_TIMEZONES },
     if: -> { timezone.present? }
 
+  # It is assigned to account holiday_policy as default
+  belongs_to :holiday_policy, inverse_of: :assigned_account
   has_many :users,
     class_name: 'Account::User',
     inverse_of: :account
@@ -26,6 +28,7 @@ class Account < ActiveRecord::Base
   has_many :working_places, inverse_of: :account
   has_many :employee_events, through: :employees, source: :events
   has_many :employee_attribute_versions, through: :employees
+  has_many :holiday_policies
 
   before_validation :generate_subdomain, on: :create
   after_create :update_default_attribute_definitions!

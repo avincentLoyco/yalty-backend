@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe Employee::Event, type: :model do
-  subject! { FactoryGirl.build(:employee_event) }
+  subject! { build(:employee_event) }
 
   it { is_expected.to have_db_column(:employee_id) }
   it { is_expected.to have_db_index(:employee_id) }

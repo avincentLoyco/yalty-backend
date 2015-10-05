@@ -65,6 +65,11 @@ GEM
     coercible (1.0.0)
       descendants_tracker (~> 0.0.1)
     columnize (0.9.0)
+    countries (1.1.0)
+      currencies (~> 0.4.2)
+      i18n_data (~> 0.7.0)
+    currencies (0.4.2)
+    database_cleaner (1.4.1)
     debug_inspector (0.0.2)
     descendants_tracker (0.0.4)
       thread_safe (~> 0.3, >= 0.3.1)
@@ -105,9 +110,11 @@ GEM
       guard-compat (~> 1.1)
       rspec (>= 2.99.0, < 4.0)
     hitimes (1.2.2)
+    holidays (2.2.0)
     http-cookie (1.0.2)
       domain_name (~> 0.5)
     i18n (0.7.0)
+    i18n_data (0.7.0)
     ice_nine (0.11.1)
     json (1.8.3)
     jsonapi-resources (0.5.9)
@@ -261,34 +268,37 @@ PLATFORMS
 
 DEPENDENCIES
   airborne
-  bcrypt
+  bcrypt (~> 3.1.10)
   better_errors
   binding_of_caller
   byebug
   codeclimate-test-reporter
-  doorkeeper
+  countries (~> 1.1.0)
+  database_cleaner
+  doorkeeper (~> 2.2.1)
   dotenv-rails
   factory_girl_rails
   faker
   guard-rspec
-  jsonapi-resources
+  holidays (~> 2.2.0)
+  jsonapi-resources (~> 0.5.9)
   meta_request
-  pg
+  pg (~> 0.18.1)
   pry-byebug
   pry-rails
   puma
   rack-cors
   rails (= 4.2.3)
   rails_12factor
-  request_store
+  request_store (~> 1.2.0)
   rspec-rails
-  scenic
+  scenic (~> 0.3.0)
   shoulda-matchers
   spring
   spring-commands-rspec
   temping
-  virtus
+  virtus (~> 1.0.5)
   web-console (~> 2.0)
 
 BUNDLED WITH
-   1.10.4
+   1.10.6

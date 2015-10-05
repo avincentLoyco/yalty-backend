@@ -8,9 +8,9 @@ RSpec.describe ActsAsAttribute do
     )
   }
 
-  let(:employee) { FactoryGirl.create(:employee) }
+  let(:employee) { create(:employee) }
   let(:attribute_definition) {
-    FactoryGirl.create(
+    create(
       :employee_attribute_definition,
       account: employee.account,
       attribute_type: 'String'
@@ -67,7 +67,7 @@ RSpec.describe ActsAsAttribute do
   it 'should validate uniqueness of attribute_definition scoped to employee' do
     subject.save!
 
-    attr = FactoryGirl.build(:employee_attribute, attribute_name: subject.attribute_name, employee: employee)
+    attr = build(:employee_attribute, attribute_name: subject.attribute_name, employee: employee)
 
     expect(attr).to be_valid
   end
@@ -102,8 +102,8 @@ RSpec.describe ActsAsAttribute do
   end
 
   it 'should set attribute definition by name on initialize' do
-    attribute_definition = FactoryGirl.create(:employee_attribute_definition, name: 'test')
-    employee = FactoryGirl.create(:employee, account: attribute_definition.account)
+    attribute_definition = create(:employee_attribute_definition, name: 'test')
+    employee = create(:employee, account: attribute_definition.account)
 
     attr = Employee::AttributeVersion.new(employee: employee, attribute_name: 'test')
 

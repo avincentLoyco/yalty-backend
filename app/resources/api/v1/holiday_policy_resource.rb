@@ -1,14 +1,16 @@
 module API
   module V1
-    class WorkingPlaceResource < JSONAPI::Resource
-      model_name 'WorkingPlace'
-      attributes :name, :holiday_policy_id
+    class HolidayPolicyResource < JSONAPI::Resource
+      model_name 'HolidayPolicy'
+      has_many :holidays, class_name: 'Holiday'
       has_many :employees, class_name: 'Employee'
+      has_many :working_places, class_name: 'WorkingPlace'
 
+      attribute :name
       before_create :setup_account
 
       def self.records(_options = {})
-        Account.current.working_places
+        Account.current.holiday_policies
       end
 
       private
