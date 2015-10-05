@@ -5,7 +5,7 @@ HOST: http://api.lvh.me:3000
 
 ## Account Settings [/api/v1/settings]
 
-### Account settings details [GET]
+### GET Account settings details [GET]
 
 Settings for current account
 
@@ -16,10 +16,9 @@ Settings for current account
             "company_name": "My lol",
             "timezone": "Europe/Madrid",
             "default_locale": "en",
-            "holiday_policy_id": "5be2d5ee-5847-404e-b5c9-975bed61d9dc"
         }
 
-### Update account settings [PUT]
+### PUT Update account settings [PUT]
 
 Ability to update current account settings
 
@@ -31,37 +30,35 @@ Ability to update current account settings
 
 + Response 200
 
-### Assign holiday policy to account as default policy [PATCH]
+### PATCH Assign holiday policy to account as default policy [PATCH]
 
 + Attributes
-  + holiday_policy_id: "5be2d5ee-5847-404e-b5c9-975bed61d9dc" (string) - Id holiday policy
+  + holiday_policy:
+    + id: 1ab (string) - Id holiday policy
 
 + Response 200
 
 
 ## Working Places Collection [/api/v1/working_places]
 
-### List all user's working places [GET]
+### GET List all user's working places [GET]
 
 Get a list of all available for user working places
 
 + Response 200 (application/json)
-    [
-        {
-          "id": "12345678-1234-1234-1234-123456789012",
-          "name": "test-working-place",
-          "account_id": "1",
-          "holiday_policy_id": "5be2d5ee-5847-404e-b5c9-975bed61d9dc"
-        },
-        {
-          "id": "87654321-1234-1234-1234-123456789012",
-          "name": "test-test",
-          "account_id": "1",
-          "holiday_policy_id": "5be2d5ee-5847-404e-b5c9-975bed61d9dc"
-        }
-    ]
 
-### Create a working place [POST]
+        [
+            {
+              "id": "12345678-1234-1234-1234-123456789012",
+              "name": "test-working-place",
+            },
+            {
+              "id": "87654321-1234-1234-1234-123456789012",
+              "name": "test-test",
+            }
+        ]
+
+### POST Create a working place [POST]
 
 Create a new working place
 By default account_id is equal Account.current.id
@@ -71,83 +68,102 @@ By default account_id is equal Account.current.id
 + Request (application/json)
 
 + Response 201 (application/json)
-    {
-        "id": "12345678-1234-1234-1234-123456789012",
-        "name": "test-working-place",
-        "account_id": "1"
-    }
+
+        {
+            "id": "12345678-1234-1234-1234-123456789012",
+            "name": "test-working-place",
+        }
 
 ## Working Place [/api/v1/working_places/{working_place_id}]
 
 + Parameters
-    + working_place_id: valid_id (required, string) - ID of the Working Place is an uuid
+    + working_place:
+        + id: 1ab (required, string) - ID of the Working Place is an uuid
 
-### Get Working Place Details [GET]
-
-+ Response 200 (application/json)
-    {
-        "id": "12345678-1234-1234-1234-123456789012",
-        "name": "test-working-place",
-        "account_id": "1"
-    }
-
-### Get Working Place Details with holiday policy [GET /api/v1/working_places/{working_place_id}?embed=holiday_policy]
+### GET Get Working Place Details [GET]
 
 + Response 200 (application/json)
-    {
-        "id": "12345678-5678-1234-1234-123456789012",
-        "name": "test-working-place",
-        "account_id": "1",
-        "holiday_policy": {
-          "id": "12345678-1234-1234-1234-123456789012",
-          "name": "test",
-          "country": "pl",
-          "region": "ds"
+
+        {
+            "id": "12345678-1234-1234-1234-123456789012",
+            "name": "test-working-place",
         }
-    }
 
-### Get Working Place Details with holiday policy and its holidays [GET /api/v1/working_places/{working_place_id}?embed=holiday_policy,holidays]
+### GET Get Working Place Details with holiday policy [GET /api/v1/working_places/{working_place_id}?embed=holiday_policy]
 
 + Response 200 (application/json)
-    {
-        "id": "12345678-5678-1234-1234-123456789012",
-        "name": "test-working-place",
-        "account_id": "1",
-        "holiday_policy": {
-          "id": "12345678-1234-1234-1234-123456789012",
-          "name": "test",
-          "country": "pl",
-          "region": "ds"
-        },
-        "holidays": [
-          {
-            "id": "87654321-1234-1234-1234-123456789012",
-            "holiday_policy_id": "12345678-1234-1234-1234-123456789012",
-            "name": "test",
-            "date": "01.01.2015"
-          }
-        ]
-    }
 
-### Update Working Place name [PUT]
+        {
+            "id": "12345678-5678-1234-1234-123456789012",
+            "name": "test-working-place",
+            "holiday_policy": {
+              "id": "12345678-1234-1234-1234-123456789012",
+              "name": "test",
+              "country": "pl",
+              "region": "ds"
+            }
+        }
+
+### GET Get Working Place Details with holiday policy and its holidays [GET /api/v1/working_places/{working_place_id}?embed=holiday_policy,holidays]
+
++ Response 200 (application/json)
+
+        {
+            "id": "12345678-5678-1234-1234-123456789012",
+            "name": "test-working-place",
+            "holiday_policy": {
+              "id": "12345678-1234-1234-1234-123456789012",
+              "name": "test",
+              "country": "pl",
+              "region": "ds"
+            },
+            "holidays": [
+              {
+                "id": "87654321-1234-1234-1234-123456789012",
+                "holiday_policy_id": "12345678-1234-1234-1234-123456789012",
+                "name": "test",
+                "date": "01.01.2015"
+              }
+            ]
+        }
+
+### PUT Update Working Place name [PUT]
 
 + Attributes
     + name: New name (required, string) - New name for working place
 
 + Request (application/json)
 
+        {
+            "name": 'Smaple name'
+        }
+
 + Response 200 (application/json)
 
     {
         "id": "12345678-1234-1234-1234-123456789012",
         "name": "New name",
-        "account_id": "1"
     }
 
-### Delete working place [DELETE]
+### DELETE Delete working place [DELETE]
 
 + Response 204
 
+### PUT Assign employees to working place [PUT /api/v1/working_places/{working_place_id}]
+
++ Attributes
+    + employees:
+        + ids: [ '1', '2'] (array[string])
+
++ Request (application/json)
+
+        {
+            "employees": {
+                ids: [ 1, 2]
+            }
+        }
+
++ Response 200 (application/json)
 
 # Data Structures
 
