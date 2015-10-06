@@ -2,7 +2,7 @@ Rails.application.routes.draw do
   # API
   namespace :api, path: 'api', constraints: { subdomain: /^api/ } do
     namespace :v1 do
-      resources :working_places, only: [:show, :index, :create, :update, :destroy]
+      resources :working_places, except: [:edit, :new]
 
       jsonapi_resources :employees do
         jsonapi_relationships

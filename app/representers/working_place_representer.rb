@@ -1,20 +1,21 @@
-class WorkingPlaceRepresenter
+class WorkingPlaceRepresenter < BaseRepresenter
   def initialize(working_place)
-    @working_place = working_place
+    @resource = working_place
   end
 
-  def basic(_ = {})
+  def complete
     {
-      id: working_place.id,
-      type: set_type
+      name: resource.name
+    }.merge(basic)
+  end
+
+  def relationships
+    {
+      holiday_policy: HolidayPolicyRepresenter.new(settings.holiday_policy).basic
     }
   end
 
   private
 
-  attr_reader :working_place
-
-  def set_type
-    working_place.class.name.underscore
-  end
+  attr_reader :resource
 end
