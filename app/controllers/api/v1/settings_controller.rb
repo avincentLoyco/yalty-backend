@@ -1,31 +1,43 @@
 module API
   module V1
-    class SettingsController < JSONAPI::ResourceController
-      include API::V1::ExceptionsHandler
+    class SettingsController < API::ApplicationController
 
-      def assign_holiday_policy
-        holiday_policy = Account.current.holiday_policies.find(params[:data][:id])
-        Account.current.holiday_policy = holiday_policy
-        Account.current.save!
-        render status: :no_content, nothing: true
-      rescue => e
-        handle_exceptions(e)
+      def show
+        render json: SettingsRepresenter.new(settings).complete
+      end
+
+      def update
+        gate = Gate.rules do
+          optional :subdomain
+          optional :company_name
+          optional :timezone
+          optional :default_locale
+          optional :holiday_policy do
+            required :id
+          end
+        end
+        result = gate.verify(params)
+        if result.valid?
+          holiday_policy_id = result.attributes.delete(:holiday_policy)[:id]
+          assign_holiday_policy!(holiday_policy_id)
+          settings.update!(result.attributes)
+          render status: :no_content, nothing: true
+        else
+        end
       end
 
       private
 
-      def setup_request(id = Account.current.try(:id).to_s)
-        new_params = params.merge(id: id).deep_merge(data: { id: id })
-        @request = JSONAPI::Request.new(
-          new_params,
-          context: context,
-          key_formatter: key_formatter
-        )
-
-        render_errors(@request.errors) unless @request.errors.empty?
-      rescue => e
-        handle_exceptions(e)
+      def assign_holiday_policy!(holiday_policy_id)
+        holiday_policy = settings.holiday_policies.find(holiday_policy_id)
+        settings.holiday_policy = holiday_policy
+        settings.save!
       end
+
+      def settings
+        Account.current
+      end
+
     end
   end
 end
