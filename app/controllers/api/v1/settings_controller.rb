@@ -25,10 +25,12 @@ module API
           if settings.save
             render status: :no_content, nothing: true
           else
-            render json: ResourceErrorsRepresenter.new(settings.errors.messages, 'settings').basic, status: 422
+            render json: ErrorsRepresenter.new(settings.errors.messages, 'settings').resource,
+              status: 422
           end
         else
-          render json: {status: "error", message: "Invalid params" }, status: 422
+          render json: ErrorsRepresenter.new(result.errors, 'settings').resource,
+            status: 422
         end
       end
 

@@ -17,7 +17,9 @@ class SettingsRepresenter
       company_name:     settings.company_name,
       timezone:         settings.timezone,
       default_locale:   settings.default_locale,
-    }.merge(basic).merge(relationships)
+    }
+    .merge(basic)
+    .merge(relationships)
   end
 
   def relationships

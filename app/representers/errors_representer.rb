@@ -1,4 +1,4 @@
-class ResourceErrorsRepresenter
+class ErrorsRepresenter
   attr_accessor :messages, :type
 
   def initialize(messages, type)
@@ -6,13 +6,13 @@ class ResourceErrorsRepresenter
     @type = type
   end
 
-  def basic
+  def resource
     {
       errors: messages.map do |key, value|
         {
           field: key.to_s,
           messages: value,
-          code: 'invalid',
+          status: 'invalid',
           type: type,
         }
       end
