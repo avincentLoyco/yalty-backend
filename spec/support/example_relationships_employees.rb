@@ -55,6 +55,19 @@ RSpec.shared_examples 'example_relationships_employees' do |settings|
       }
     end
 
+    let(:empty_employee_array_json) do
+      {
+        employees: []
+      }
+    end
+
+    let(:resource_param) { attributes_for(settings[:resource_name]).keys.first }
+    let(:empty_employee_json) do
+      {
+        resource_param => 'test'
+      }
+    end
+
     context 'post #create_relationship' do
       it 'assigns employee to working place when new id given' do
         expect {
@@ -64,12 +77,39 @@ RSpec.shared_examples 'example_relationships_employees' do |settings|
         expect(response).to have_http_status(:no_content)
       end
 
-      it 'adds employee to working place employees when new id given' do
-        resource.employees.push(first_employee)
+      it 'overwrites employees set when new id given' do
+        resource.employees.push(first_employee, second_employee)
         resource.save
+
+        expect(resource.employees.count).to eq(2)
         expect {
           patch :update, params.merge(second_employee_json)
-        }.to change { resource.reload.employees.size }.from(1).to(2)
+        }.to change { resource.employees.count }.from(2).to(1)
+
+        expect(response).to have_http_status(:no_content)
+      end
+
+      it 'overwrties all employees from resource when empty array send' do
+        resource.employees.push(first_employee, second_employee)
+        resource.save
+
+        expect(resource.employees.count).to eq(2)
+        expect {
+          patch :update, params.merge(empty_employee_array_json)
+        }.to change { resource.reload.employees.size }.from(2).to(0)
+
+        expect(response).to have_http_status(:no_content)
+      end
+
+      it 'does not overwrite employees when params without employees send' do
+        resource.employees.push(first_employee, second_employee)
+        resource.save
+
+        expect(resource.employees.count).to eq(2)
+        patch :update, params.merge(empty_employee_json)
+
+        expect(resource.reload[resource_param]).to eq('test')
+        expect(resource.reload.employees.count).to eq (2)
 
         expect(response).to have_http_status(:no_content)
       end

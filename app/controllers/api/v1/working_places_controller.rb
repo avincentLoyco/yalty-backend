@@ -58,7 +58,7 @@ module API
       private
 
       def assign_employees(employees)
-        working_place.employees.push(valid_employees(employees))
+        working_place.employee_ids = (valid_employees(employees).map(&:id))
       end
 
       def valid_employees(employees)
