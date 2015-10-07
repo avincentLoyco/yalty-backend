@@ -104,5 +104,14 @@ RSpec.describe API::V1::SettingsController, type: :controller do
       expect(response).to have_http_status(404)
     end
 
+    it 'should unassign holiday policy from account' do
+      account.update(holiday_policy: holiday_policy)
+
+      params = { holiday_policy: nil }
+
+      put :update, params
+      expect(response).to have_http_status(204)
+      expect(account.reload.holiday_policy).to eq(nil)
+    end
   end
 end
