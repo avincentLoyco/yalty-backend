@@ -17,10 +17,9 @@ module API
           end
         end
         result = gate.verify(params)
-
-        if result.valid?
-          holiday_policy_id = result.attributes.delete(:holiday_policy)[:id]
-          assign_holiday_policy(holiday_policy_id)
+        if result.valid? && result.attributes.present?
+          holiday_policy = result.attributes.delete(:holiday_policy)
+          assign_holiday_policy(holiday_policy)
           settings.update(result.attributes)
           if settings.save
             render status: :no_content, nothing: true
@@ -36,9 +35,12 @@ module API
 
       private
 
-      def assign_holiday_policy(holiday_policy_id)
-        holiday_policy = settings.holiday_policies.find(holiday_policy_id)
-        settings.holiday_policy = holiday_policy
+      def assign_holiday_policy(holiday_policy)
+        if holiday_policy.present?
+          holiday_policy_id = holiday_policy.try(:[], :id)
+          holiday_policy = settings.holiday_policies.find(holiday_policy_id)
+          settings.holiday_policy = holiday_policy
+        end
       end
 
       def settings

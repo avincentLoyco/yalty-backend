@@ -23,8 +23,11 @@ class SettingsRepresenter
   end
 
   def relationships
+    if settings.holiday_policy.present?
+      holiday_policy = HolidayPolicyRepresenter.new(settings.holiday_policy).basic
+    end
     {
-      holiday_policy: HolidayPolicyRepresenter.new(settings.holiday_policy).basic,
+      holiday_policy: holiday_policy || {},
     }
   end
 end

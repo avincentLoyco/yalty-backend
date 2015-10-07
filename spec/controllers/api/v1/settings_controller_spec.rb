@@ -5,15 +5,11 @@ RSpec.describe API::V1::SettingsController, type: :controller do
 
   let(:settings_json) do
     {
-      "data": {
-        "type": "settings",
-        "attributes": {
-          "company-name": "My Company",
-          "subdomain": "my-company-946",
-          "timezone": "Europe/Madrid",
-          "default-locale": "en"
-        }
-      }
+      "type": "settings",
+      "company_name": "My Company",
+      "subdomain": "my-company-946",
+      "timezone": "Europe/Madrid",
+      "default_locale": "en"
     }
   end
 
@@ -28,7 +24,7 @@ RSpec.describe API::V1::SettingsController, type: :controller do
       get :show
 
       data = JSON.parse(response.body)
-      expect(data.size).to eq(1)
+      expect(data['subdomain']).to eq(account.subdomain)
     end
   end
 
@@ -39,7 +35,7 @@ RSpec.describe API::V1::SettingsController, type: :controller do
     end
 
     it "should not update when timezone is not valid" do
-      settings_json[:data][:attributes][:timezone] = 'abc'
+      settings_json[:timezone] = 'abc'
 
       put :update, settings_json
       expect(response).to have_http_status(422)
@@ -47,12 +43,12 @@ RSpec.describe API::V1::SettingsController, type: :controller do
 
     it 'should not update when there is no params' do
       put :update, {}
-      expect(response).to have_http_status(400)
+      expect(response).to have_http_status(422)
     end
 
     it 'should allow to set Zurich timezone' do
       zurich_timezone = "Europe/Zurich"
-      settings_json[:data][:attributes][:timezone] = zurich_timezone
+      settings_json[:timezone] = zurich_timezone
 
       put :update, settings_json
 
@@ -73,28 +69,38 @@ RSpec.describe API::V1::SettingsController, type: :controller do
     end
   end
 
-  context 'PUT #assign-holiday-policy' do
+  context 'PATCH assign holiday policy' do
     let(:holiday_policy) { create(:holiday_policy, account: account) }
 
     it 'should assign holiday policy' do
-      params = { data: { 'id': holiday_policy.id } }
+      params = {
+        holiday_policy: { 'id': holiday_policy.id } ,
+        type: 'settings'
+      }
 
-      put :assign_holiday_policy, params
+      patch :update, params
       expect(response).to have_http_status(:success)
       expect(account.reload.holiday_policy).to eq(holiday_policy)
     end
 
     it 'should not change assigned policy' do
-      params = { data: { 'id': '' } }
+      params = { holiday_policy: {} }
 
-      put :assign_holiday_policy, params
+      put :update, params
+      expect(response).to have_http_status(422)
+    end
+
+    it 'should return record not found' do
+      params = { holiday_policy: { 'id': '' } }
+
+      put :update, params
       expect(response).to have_http_status(404)
     end
 
     it 'should return record not found' do
-      params = { data: { 'id': 'abc' } }
+      params = { holiday_policy: { 'id': 'abc' } }
 
-      put :assign_holiday_policy, params
+      put :update, params
       expect(response).to have_http_status(404)
     end
 
