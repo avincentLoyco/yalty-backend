@@ -2,22 +2,17 @@ module API
   module V1
     class WorkingPlacesController < ApplicationController
       def show
-        rules = gate_member_rule
-
-        with_verified_params(rules) do |attributes|
-          render json: WorkingPlaceRepresenter.new(working_place).basic
-        end
+        render json: WorkingPlaceRepresenter.new(working_place).complete
       end
 
       def index
-        render json: WorkingPlacesRepresenter.new(working_places).basic
+        render json: WorkingPlacesRepresenter.new(working_places).complete
       end
 
       def create
         rules = Gate.rules do
           required :name, :String
           optional :employees, :Array
-          optional :type, :String
         end
 
         with_verified_params(rules) do |attributes|
@@ -26,10 +21,10 @@ module API
           end
           working_place = Account.current.working_places.create(attributes)
           if working_place.save
-            render json: WorkingPlaceRepresenter.new(working_place).basic
+            render json: WorkingPlaceRepresenter.new(working_place).complete
           else
-            render json: ErrorsRepresenter.new(working_place.errors.messages, 'settings').resource,
-              status: 422
+            render json: ErrorsRepresenter.new(working_place.errors.messages, 'working_place')
+              .resource, status: 422
           end
         end
       end
@@ -39,7 +34,6 @@ module API
           required :id, :String
           optional :name, :String
           optional :employees, :Array
-          optional :type, :String
         end
 
         with_verified_params(rules) do |attributes|
@@ -48,21 +42,17 @@ module API
             attributes.delete(:employees)
           end
           if working_place.update(attributes)
-            render json: WorkingPlaceRepresenter.new(working_place).basic
+            head 204
           else
-            render json: ErrorsRepresenter.new(working_place.errors.messages, 'settings').resource,
-              status: 422
+            render json: ErrorsRepresenter.new(working_place.errors.messages, 'working_place')
+              .resource, status: 422
           end
         end
       end
 
       def destroy
-        rules = gate_member_rule
-
-        with_verified_params(rules) do |attributes|
-          working_place.destroy!
-          head 204
-        end
+        working_place.destroy!
+        head 204
       end
 
       private
@@ -81,7 +71,10 @@ module API
       end
 
       def working_place
-        @working_place ||= Account.current.working_places.find(params[:id])
+        rules = gate_member_rule
+        with_verified_params(rules) do |attributes|
+          Account.current.working_places.find(attributes[:id])
+        end
       end
 
       def working_places

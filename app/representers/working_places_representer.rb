@@ -11,6 +11,14 @@ class WorkingPlacesRepresenter < BaseRepresenter
     }
   end
 
+  def complete(_ = {})
+    {
+      working_places: working_places.map do |working_place|
+        WorkingPlaceRepresenter.new(working_place).complete
+      end
+    }
+  end
+
   private
 
   attr_reader :working_places
