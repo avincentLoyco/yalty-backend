@@ -5,6 +5,7 @@ RSpec.shared_examples 'example_crud_resources' do |settings|
       action
     end
   end.compact
+  let(:resource_name) { settings[:resource_name] }
 
   context '#example_crud_resources'do
     if actions.include?(:index)
@@ -26,22 +27,14 @@ RSpec.shared_examples 'example_crud_resources' do |settings|
           get :index
 
           expect(response).to have_http_status(:success)
-          expect_json_sizes(data: 0)
+          expect_json_sizes(settings[:resource_name].pluralize.to_sym => 0)
         end
       end
 
       if actions.include?(:create)
         context 'POST #create' do
           let(:resource_params) { attributes_for(settings[:resource_name]) }
-          let(:params) do
-            {
-              "data": {
-                "attributes":
-                  resource_params,
-                "type": settings[:resource_name].pluralize
-              }
-            }
-          end
+          let(:params) { resource_params.merge("type": settings[:resource_name].pluralize) }
 
           it 'should create resource' do
             expect { post :create, params }.to change { resource_name.classify.
@@ -58,7 +51,7 @@ RSpec.shared_examples 'example_crud_resources' do |settings|
             post :create, params
 
             data = JSON.parse response.body
-            resource = resource_name.classify.safe_constantize.where(id: data['data']['id']).first
+            resource = resource_name.classify.safe_constantize.where(id: data['id']).first
             expect(resource.try(:account_id)).to eq Account.current.id
           end
         end
@@ -69,13 +62,8 @@ RSpec.shared_examples 'example_crud_resources' do |settings|
           let(:resource_param) { (attributes_for(settings[:resource_name])).keys.first }
           let(:params) do
             {
-              "data": {
-                "attributes": {
-                  resource_param => 'test',
-                },
-                "type": settings[:resource_name].pluralize.gsub('_', '-'),
-                "id": send(settings[:resource_name]).id
-              },
+              resource_param => 'test',
+              "type": settings[:resource_name].pluralize.gsub('_', '-'),
               "id": send(settings[:resource_name]).id
             }
           end
@@ -100,23 +88,29 @@ RSpec.shared_examples 'example_crud_resources' do |settings|
 
             expect(response).to have_http_status(:success)
             data = JSON.parse(response.body)
-            expect(data['data']['id']).to eq(send(settings[:resource_name]).id)
+            expect(data['id']).to eq(send(settings[:resource_name]).id)
           end
         end
       end
       if actions.include?(:delete)
         context 'DELETE #destroy' do
           let(settings[:resource_name]) { create(settings[:resource_name], account: account)}
+          subject { delete :destroy, id: send(settings[:resource_name]).id }
 
           it 'should delete proper resources' do
-            delete :destroy, { id: send(settings[:resource_name]).id }
+            subject
+
             expect(response).to have_http_status(:success)
           end
 
-          it 'should delete resource from db' do
-            delete :destroy, { id: send(settings[:resource_name]).id }
-            get :show, { id: send(settings[:resource_name]).id }
+          it 'should change resource number' do
+            expect { subject }.to change { settings[:resource_name]
+                                            .classify.safe_constantize.count }.by(-1)
+          end
 
+          it 'should delete resource from db' do
+            subject
+            get :show, id: send(settings[:resource_name]).id
             expect(response).to have_http_status(404)
           end
         end
