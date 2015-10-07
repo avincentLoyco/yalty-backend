@@ -9,12 +9,8 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
   let!(:working_place) { create(:working_place, account_id: account.id) }
   let(:working_place_json) do
     {
-      "data": {
-        "type": "working-places",
-        "attributes": {
-          "name": "Nice office"
-        }
-      }
+      "type": "working-places",
+      "name": "Nice office"
     }
   end
 
@@ -24,7 +20,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
 
       expect(response).to have_http_status(:success)
       expect(account.working_places.size).to eq(2)
-      expect(account.working_places.map(&:name)).to include working_place_json[:data][:attributes][:name]
+      expect(account.working_places.map(&:name)).to include working_place_json[:name]
     end
   end
 end
