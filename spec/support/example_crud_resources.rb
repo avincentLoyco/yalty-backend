@@ -94,7 +94,7 @@ RSpec.shared_examples 'example_crud_resources' do |settings|
       end
       if actions.include?(:delete)
         context 'DELETE #destroy' do
-          let(settings[:resource_name]) { create(settings[:resource_name], account: account)}
+          let!(settings[:resource_name]) { create(settings[:resource_name], account: account) }
           subject { delete :destroy, id: send(settings[:resource_name]).id }
 
           it 'should delete proper resources' do

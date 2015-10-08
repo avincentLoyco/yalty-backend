@@ -1,14 +1,19 @@
-class HolidayPolicyRepresenter
-  attr_reader :holiday_policy
-
+class HolidayPolicyRepresenter < BaseRepresenter
   def initialize(holiday_policy)
-    @holiday_policy = holiday_policy
+    @resource = holiday_policy
   end
 
-  def basic
+  def complete
     {
-      id:   holiday_policy.id,
-      type: 'holiday_policy',
+      name: resource.name,
+      country: resource.country,
+      region: resource.region
     }
+    .merge(basic)
   end
+
+  private
+
+  attr_reader :resource
+
 end

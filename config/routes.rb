@@ -3,19 +3,15 @@ Rails.application.routes.draw do
   namespace :api, path: 'api', constraints: { subdomain: /^api/ } do
     namespace :v1 do
       resources :working_places, except: [:edit, :new]
+      resources :holiday_policies, except: [:edit, :new]
       resource :settings, only: [:show, :update]
 
       jsonapi_resources :employees do
         jsonapi_relationships
-        jsonapi_related_resource :holiday_policy
       end
       jsonapi_resources :employee_attributes
       jsonapi_resources :employee_events
       jsonapi_resources :employee_attribute_definitions
-      jsonapi_resources :holiday_policies do
-        jsonapi_relationships
-      end
-
       jsonapi_resources :holidays
     end
   end

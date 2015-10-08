@@ -17,6 +17,11 @@ class API::ApplicationController < ActionController::Base
     end
   end
 
+  def render_error_json(resource)
+    render json: ErrorsRepresenter.new(resource.errors.messages, resource.class.name.underscore)
+      .resource, status: 422
+  end
+
   protected
 
   def record_not_found_error(exception)
