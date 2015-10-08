@@ -15,7 +15,7 @@ module API
           optional :employees, :Array
         end
 
-        with_verified_params(rules) do |attributes|
+        verified_params(rules) do |attributes|
           if attributes[:employees]
             attributes[:employees] = valid_employees(attributes[:employees])
           end
@@ -36,7 +36,7 @@ module API
           optional :employees, :Array
         end
 
-        with_verified_params(rules) do |attributes|
+        verified_params(rules) do |attributes|
           if attributes[:employees]
             assign_employees(attributes[:employees])
             attributes.delete(:employees)
@@ -72,7 +72,7 @@ module API
 
       def working_place
         rules = gate_member_rule
-        with_verified_params(rules) do |attributes|
+        verified_params(rules) do |attributes|
           Account.current.working_places.find(attributes[:id])
         end
       end

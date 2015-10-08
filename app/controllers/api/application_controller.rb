@@ -2,7 +2,7 @@ class API::ApplicationController < ActionController::Base
   protect_from_forgery with: :null_session
   rescue_from ActiveRecord::RecordNotFound, with: :record_not_found_error
 
-  def with_verified_params(rules)
+  def verified_params(rules)
     result = rules.verify(params)
     if result.valid?
       yield(result.attributes)
