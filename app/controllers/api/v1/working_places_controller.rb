@@ -2,7 +2,10 @@ module API
   module V1
     class WorkingPlacesController < ApplicationController
       def show
-        render json: WorkingPlaceRepresenter.new(working_place).complete
+        rules = gate_member_rule
+        verified_params(rules) do |attributes|
+          render_json(working_place)
+        end
       end
 
       def index
@@ -22,12 +25,12 @@ module API
           if attributes[:employees]
             attributes[:employees] = valid_employees(attributes[:employees])
           end
+
           working_place = Account.current.working_places.create(attributes)
           if working_place.save
-            render json: WorkingPlaceRepresenter.new(working_place).complete
+            render_json(working_place)
           else
-            render json: ErrorsRepresenter.new(working_place.errors.messages, 'working_place')
-              .resource, status: 422
+            render_error_json(working_place)
           end
         end
       end
@@ -44,18 +47,21 @@ module API
             assign_employees(attributes[:employees])
             attributes.delete(:employees)
           end
+
           if working_place.update(attributes)
             head 204
           else
-            render json: ErrorsRepresenter.new(working_place.errors.messages, 'working_place')
-              .resource, status: 422
+            render_error_json(working_place)
           end
         end
       end
 
       def destroy
-        working_place.destroy!
-        head 204
+        rules = gate_member_rule
+        verified_params(rules) do |attributes|
+          working_place.destroy!
+          head 204
+        end
       end
 
       private
@@ -74,14 +80,15 @@ module API
       end
 
       def working_place
-        rules = gate_member_rule
-        verified_params(rules) do |attributes|
-          Account.current.working_places.find(attributes[:id])
-        end
+        @working_place ||= Account.current.working_places.find(params[:id])
       end
 
       def working_places
         @working_places ||= Account.current.working_places
+      end
+
+      def render_json(working_place)
+        render json: WorkingPlaceRepresenter.new(working_place).complete
       end
     end
   end
