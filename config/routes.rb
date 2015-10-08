@@ -5,13 +5,13 @@ Rails.application.routes.draw do
       resources :working_places, except: [:edit, :new]
       resources :holiday_policies, except: [:edit, :new]
       resource :settings, only: [:show, :update]
+      resources :employee_attribute_definitions
 
       jsonapi_resources :employees do
         jsonapi_relationships
       end
       jsonapi_resources :employee_attributes
       jsonapi_resources :employee_events
-      jsonapi_resources :employee_attribute_definitions
       jsonapi_resources :holidays
     end
   end

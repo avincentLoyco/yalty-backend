@@ -7,6 +7,7 @@ class Employee::Attribute < ActiveRecord::Base
   belongs_to :event,
     class_name: 'Employee::Event',
     foreign_key: 'employee_event_id'
+  belongs_to :employee_attribute_definition
   has_one :account, through: :employee
 
   private

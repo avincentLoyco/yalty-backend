@@ -22,8 +22,8 @@ module API
             holiday_policy = result.attributes.delete(:holiday_policy)
             assign_holiday_policy(holiday_policy)
           end
-          settings.update(result.attributes)
-          if settings.save
+
+          if settings.update(result.attributes)
             render status: :no_content, nothing: true
           else
             render json: ErrorsRepresenter.new(settings.errors.messages, 'settings').resource,
