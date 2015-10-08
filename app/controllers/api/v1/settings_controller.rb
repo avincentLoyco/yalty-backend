@@ -12,14 +12,16 @@ module API
           optional :company_name
           optional :timezone
           optional :default_locale
-          optional :holiday_policy do
+          optional :holiday_policy, allow_nil: true do
             required :id
           end
         end
         result = gate.verify(params)
         if result.valid? && result.attributes.present?
-          holiday_policy = result.attributes.delete(:holiday_policy)
-          assign_holiday_policy(holiday_policy)
+          if result.attributes.has_key?(:holiday_policy)
+            holiday_policy = result.attributes.delete(:holiday_policy)
+            assign_holiday_policy(holiday_policy)
+          end
           settings.update(result.attributes)
           if settings.save
             render status: :no_content, nothing: true
@@ -40,6 +42,8 @@ module API
           holiday_policy_id = holiday_policy.try(:[], :id)
           holiday_policy = settings.holiday_policies.find(holiday_policy_id)
           settings.holiday_policy = holiday_policy
+        else
+          settings.holiday_policy = nil
         end
       end
 
