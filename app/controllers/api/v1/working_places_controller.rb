@@ -6,7 +6,10 @@ module API
       end
 
       def index
-        render json: WorkingPlacesRepresenter.new(working_places).complete
+        response = working_places.map do |working_place|
+          WorkingPlaceRepresenter.new(working_place).complete
+        end
+        render json: response
       end
 
       def create
@@ -32,7 +35,7 @@ module API
       def update
         rules = Gate.rules do
           required :id, :String
-          optional :name, :String
+          required :name, :String
           optional :employees, :Array
         end
 

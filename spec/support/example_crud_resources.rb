@@ -27,7 +27,7 @@ RSpec.shared_examples 'example_crud_resources' do |settings|
           get :index
 
           expect(response).to have_http_status(:success)
-          expect_json_sizes(settings[:resource_name].pluralize.to_sym => 0)
+          expect(response.body).to eq "[]"
         end
       end
 

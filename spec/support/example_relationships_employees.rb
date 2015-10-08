@@ -7,8 +7,6 @@ RSpec.shared_examples 'example_relationships_employees' do |settings|
     let!(:first_employee) { create(:employee, account: account) }
     let!(:second_employee) { create(:employee, account: account) }
     let(:resource) { create(resource_name, account: account) }
-    let(:params) {{ id: resource.id }}
-
     let(:first_employee_json) do
       {
         employees: [
@@ -61,6 +59,8 @@ RSpec.shared_examples 'example_relationships_employees' do |settings|
       }
     end
 
+    let(:resource_params) { attributes_for(settings[:resource_name]) }
+    let(:params) { resource_params.merge({ id: resource.id }) }
     let(:resource_param) { attributes_for(settings[:resource_name]).keys.first }
     let(:empty_employee_json) do
       {
@@ -134,7 +134,7 @@ RSpec.shared_examples 'example_relationships_employees' do |settings|
       end
 
       it 'returns bad request when wrong working place id given' do
-        params = { id: '12345678-1234-1234-1234-123456789012' }
+        params = resource_params.merge({ id: '12345678-1234-1234-1234-123456789012' })
         patch :update, params.merge(first_employee_json)
 
         expect(response).to have_http_status(404)
@@ -148,45 +148,11 @@ RSpec.shared_examples 'example_relationships_employees' do |settings|
         expect(response.body).to include "Record not found"
       end
 
-      xit 'returns 400 when parameters not given' do
+      it 'returns 422 when parameters not given' do
+        params = { id: '12345678-1234-1234-1234-123456789012' }
         patch :update, params
 
-        expect(response).to have_http_status(400)
-        expect(response.body).to include "Missing Parameter"
-      end
-    end
-
-    context 'delete #destroy_relationship' do
-      xit 'delete employee from relationship if exist' do
-        resource.employees.push(first_employee)
-        resource.save
-        expect {
-          delete :destroy_relationship, params.merge(keys: first_employee.id)
-        }.to change { resource.reload.employees.size }.from(1).to(0)
-
-        expect(response).to have_http_status(:no_content)
-      end
-
-      xit 'return 404 when wrong employee id given' do
-        post :destroy_relationship, params.merge(
-          keys: '12345678-1234-1234-1234-123456789012'
-        )
-
-        expect(response).to have_http_status(404)
-        expect(response.body).to include "Record not found"
-      end
-    end
-
-    context 'get #show_relationship' do
-      xit 'list all working place employees' do
-        resource.employees.push([first_employee, second_employee])
-        resource.save
-
-        get :show_relationship, params
-
-        expect(response).to have_http_status(:success)
-        expect(response.body).to include first_employee.id
-        expect(response.body).to include second_employee.id
+        expect(response).to have_http_status(422)
       end
     end
   end
