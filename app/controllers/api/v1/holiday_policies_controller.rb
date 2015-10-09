@@ -1,32 +1,25 @@
 module API
   module V1
     class HolidayPoliciesController < ApplicationController
+      include HolidayPolicyRules
+
       def show
-        rules = gate_member_rule
-        verified_params(rules) do |attributes|
-          render_json(holiday_policy)
-        end
+        render_json(holiday_policy)
       end
 
       def index
         response = holiday_policies.map do |holiday_policy|
-          HolidayPolicyRepresenter.new(holiday_policy).complete
+          HolidayPolicyRepresenter
+            .new(holiday_policy)
+            .complete
         end
+
         render json: response
       end
 
       def create
-        rules = Gate.rules do
-          required :name, :String
-          optional :region, :String
-          optional :country, :String
-          optional :employees, :Array
-          optional :working_places, :Array
-          optional :holidays, :Array
-        end
-
-        verified_params(rules) do |attributes|
-          holiday_policy = Account.current.holiday_policies.create(attributes)
+        verified_params(gate_rules) do |attributes|
+          holiday_policy = Account.current.holiday_policies.new(attributes)
           if holiday_policy.save
             render_json(holiday_policy)
           else
@@ -36,17 +29,7 @@ module API
       end
 
       def update
-        rules = Gate.rules do
-          required :id, :String
-          required :name, :String
-          optional :region, :String
-          optional :country, :String
-          optional :employees, :Array
-          optional :working_places, :Array
-          optional :holidays, :Array
-        end
-
-        verified_params(rules) do |attributes|
+        verified_params(gate_rules) do |attributes|
           if holiday_policy.update(attributes)
             head 204
           else
@@ -56,11 +39,8 @@ module API
       end
 
       def destroy
-        rules = gate_member_rule
-        verified_params(rules) do |attributes|
-          holiday_policy.destroy!
-          head 204
-        end
+        holiday_policy.destroy!
+        head 204
       end
 
       private
