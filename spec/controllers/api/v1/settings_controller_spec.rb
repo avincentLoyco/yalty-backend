@@ -86,21 +86,21 @@ RSpec.describe API::V1::SettingsController, type: :controller do
     it 'should not change assigned policy' do
       params = { holiday_policy: {} }
 
-      put :update, params
+      patch :update, params
       expect(response).to have_http_status(422)
     end
 
     it 'should return record not found' do
       params = { holiday_policy: { 'id': '' } }
 
-      put :update, params
+      patch :update, params
       expect(response).to have_http_status(404)
     end
 
     it 'should return record not found' do
       params = { holiday_policy: { 'id': 'abc' } }
 
-      put :update, params
+      patch :update, params
       expect(response).to have_http_status(404)
     end
 
@@ -109,7 +109,7 @@ RSpec.describe API::V1::SettingsController, type: :controller do
 
       params = { holiday_policy: nil }
 
-      put :update, params
+      patch :update, params
       expect(response).to have_http_status(204)
       expect(account.reload.holiday_policy).to eq(nil)
     end

@@ -1,37 +1,24 @@
 module API
   module V1
     class SettingsController < API::ApplicationController
+      include SettingsRules
 
       def show
-        render json: SettingsRepresenter.new(settings).complete
+        render_json
       end
 
       def update
-        gate = Gate.rules do
-          optional :subdomain
-          optional :company_name
-          optional :timezone
-          optional :default_locale
-          optional :holiday_policy, allow_nil: true do
-            required :id
-          end
-        end
-        result = gate.verify(params)
-        if result.valid? && result.attributes.present?
-          if result.attributes.has_key?(:holiday_policy)
-            holiday_policy = result.attributes.delete(:holiday_policy)
+        verified_params(gate_rules) do |attr|
+          if attr.has_key?(:holiday_policy)
+            holiday_policy = attr.delete(:holiday_policy)
             assign_holiday_policy(holiday_policy)
           end
 
-          if settings.update(result.attributes)
-            render status: :no_content, nothing: true
+          if settings.update(attr)
+            render_no_content
           else
-            render json: ErrorsRepresenter.new(settings.errors.messages, 'settings').resource,
-              status: 422
+            render_error_json(settings)
           end
-        else
-          render json: ErrorsRepresenter.new(result.errors, 'settings').resource,
-            status: 422
         end
       end
 
@@ -45,6 +32,10 @@ module API
         else
           settings.holiday_policy = nil
         end
+      end
+
+      def render_json
+        render json: SettingsRepresenter.new(settings).complete
       end
 
       def settings
