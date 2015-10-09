@@ -53,6 +53,17 @@ RSpec.describe API::V1::EmployeeAttributeDefinitionsController, type: :controlle
       expect { delete :destroy, id: attribute.id }
         .to change { Employee::AttributeDefinition.count }.by(-1)
     end
+
+    it 'should not delete system resource' do
+      attribute.update(system: true)
+      delete :destroy, id: attribute.id
+
+      expect(response).to have_http_status(423)
+    end
+
+    it 'should not be routable without id' do
+      expect(:delete => "/api/v1/employee_attribute_definitions").not_to be_routable
+    end
   end
 
   context 'POST #create' do
@@ -96,6 +107,44 @@ RSpec.describe API::V1::EmployeeAttributeDefinitionsController, type: :controlle
       put :update, params
       expect(response).to have_http_status(:success)
       expect(attribute.reload.name).to eq(params[:name])
+    end
+  end
+
+  context 'Gate #rules' do
+    let!(:attribute) { create(:employee_attribute_definition, account: account)}
+    let(:invalid_post) do
+      {
+        label: Faker::Lorem.word,
+      }
+    end
+    let(:invalid_put) do
+      {
+        id: attribute.id,
+        label: Faker::Lorem.word,
+        attribute_type: 'String',
+        system: false,
+      }
+    end
+    let(:valid_patch) do
+      {
+        id: attribute.id,
+        name: Faker::Lorem.word,
+      }
+    end
+
+    it 'not valid post params' do
+      post :create, invalid_post
+      expect(response).to have_http_status(422)
+    end
+
+    it 'not valid put params' do
+      put :update, invalid_put
+      expect(response).to have_http_status(422)
+    end
+
+    it 'valid patch params' do
+      patch :update, valid_patch
+      expect(response).to have_http_status(204)
     end
   end
 end

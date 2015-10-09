@@ -22,9 +22,22 @@ class API::ApplicationController < ActionController::Base
       .resource, status: 422
   end
 
-  protected
+  def render_no_content
+    render status: :no_content, nothing: true
+  end
 
-  def record_not_found_error(exception)
+  def locked_error
+    render json: { status: "error", message: "Locked" },
+      status: 423
+  end
+
+  def method_not_allowed
+    render json: { status: "error", message: "Method Not Allowed" },
+      status: 405
+  end
+
+  def record_not_found_error
     render json: { status: "error", message: "Record not found" }, status: 404
   end
+
 end

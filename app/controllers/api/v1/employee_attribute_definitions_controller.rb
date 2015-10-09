@@ -1,6 +1,7 @@
 module API
   module V1
     class EmployeeAttributeDefinitionsController < API::ApplicationController
+      include AttributeDefinitionRules
 
       def index
         response = attributes.map do |attr|
@@ -13,23 +14,16 @@ module API
       end
 
       def show
-        render json: AttributeDefinitionRepresenter
-          .new(attribute)
-          .complete
+        render_json(attribute)
       end
 
       def create
         verified_params(gate_rules) do |attr|
           new_attribute = Account.current.employee_attribute_definitions.new(attr)
           if new_attribute.save
-            render json: AttributeDefinitionRepresenter
-              .new(new_attribute)
-              .complete
+            render_json(new_attribute)
           else
-            render json: ErrorsRepresenter
-              .new(new_attribute.errors.messages, 'employee_attribute_definition')
-              .resource,
-              status: 422
+            render_error_json(new_attribute)
           end
         end
       end
@@ -37,24 +31,19 @@ module API
       def update
         verified_params(gate_rules) do |attr|
           if attribute.update(attr)
-            render status: :no_content, nothing: true
+            render_no_content
           else
-            render json: ErrorsRepresenter
-              .new(attribute.errors.messages, 'employee_attribute_definition')
-              .resource,
-              status: 422
+            render_error_json(attribute)
           end
         end
       end
 
       def destroy
-        #TODO no system
-        if attribute.employee_attributes.blank?
+        if attribute.employee_attributes.blank? && !attribute.system?
           attribute.destroy!
           head 204
         else
-          render json: { status: "error", message: "Method Not Allowed" },
-            status: 405
+          locked_error
         end
       end
 
@@ -68,42 +57,8 @@ module API
         @attribute ||= attributes.find(params[:id])
       end
 
-      def gate_rules
-        result = put_rules     if request.put?
-        result = patch_rules   if request.patch?
-        result = post_rules    if request.post?
-        result = get_rules     if request.get?
-        result = delete_rules  if request.delete?
-        result
-      end
-
-      def patch_rules
-        Gate.rules do
-          required :id
-          required :name
-          optional :label
-          required :attribute_type
-          required :system
-        end
-      end
-
-      def post_rules
-        Gate.rules do
-          required :name
-          optional :label
-          required :attribute_type
-          required :system
-        end
-      end
-
-      def put_rules
-        Gate.rules do
-          required :id
-          required :name
-          optional :label
-          required :attribute_type
-          required :system
-        end
+      def render_json(attr_definition)
+        render json: AttributeDefinitionRepresenter.new(attr_definition).complete
       end
 
     end
