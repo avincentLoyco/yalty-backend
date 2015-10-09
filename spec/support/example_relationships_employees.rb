@@ -152,7 +152,7 @@ RSpec.shared_examples 'example_relationships_employees' do |settings|
         params = { id: '12345678-1234-1234-1234-123456789012' }
         patch :update, params
 
-        expect(response).to have_http_status(422)
+        expect(response).to have_http_status(404)
       end
     end
   end

@@ -108,11 +108,6 @@ RSpec.shared_examples 'example_crud_resources' do |settings|
                                             .classify.safe_constantize.count }.by(-1)
           end
 
-          it 'should delete resource from db' do
-            subject
-            get :show, id: send(settings[:resource_name]).id
-            expect(response).to have_http_status(404)
-          end
         end
       end
     end

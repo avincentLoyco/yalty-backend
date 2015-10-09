@@ -1,12 +1,7 @@
 module API
   module V1
     class WorkingPlacesController < ApplicationController
-      def show
-        rules = gate_member_rule
-        verified_params(rules) do |attributes|
-          render_json(working_place)
-        end
-      end
+      include WorkingPlaceRules
 
       def index
         response = working_places.map do |working_place|
@@ -15,19 +10,17 @@ module API
         render json: response
       end
 
+      def show
+        render_json(working_place)
+      end
+
       def create
-        rules = Gate.rules do
-          required :name, :String
-          optional :employees, :Array
-        end
+        verified_params(gate_rules) do |attributes|
+          employees = employees_params(attributes)
+          working_place = Account.current.working_places.new(attributes)
 
-        verified_params(rules) do |attributes|
-          if attributes[:employees]
-            attributes[:employees] = valid_employees(attributes[:employees])
-          end
-
-          working_place = Account.current.working_places.create(attributes)
           if working_place.save
+            assign_employees(employees)
             render_json(working_place)
           else
             render_error_json(working_place)
@@ -36,19 +29,11 @@ module API
       end
 
       def update
-        rules = Gate.rules do
-          required :id, :String
-          required :name, :String
-          optional :employees, :Array
-        end
-
-        verified_params(rules) do |attributes|
-          if attributes[:employees]
-            assign_employees(attributes[:employees])
-            attributes.delete(:employees)
-          end
+        verified_params(gate_rules) do |attributes|
+          employees = employees_params(attributes)
 
           if working_place.update(attributes)
+            assign_employees(employees)
             head 204
           else
             render_error_json(working_place)
@@ -57,26 +42,22 @@ module API
       end
 
       def destroy
-        rules = gate_member_rule
-        verified_params(rules) do |attributes|
-          working_place.destroy!
-          head 204
-        end
+        working_place.destroy!
+        head 204
       end
 
       private
 
       def assign_employees(employees)
-        working_place.employee_ids = (valid_employees(employees).map(&:id))
+        unless employees.nil?
+          AssignCollection.new(working_place, employees, 'employees').call
+        end
       end
 
-      def valid_employees(employees)
-        employee_ids = employees.map { |employee| employee[:id] }
-        employees = []
-        employee_ids.each do |id|
-          employees.push(Account.current.employees.find(id))
+      def employees_params(attributes)
+        if attributes[:employees]
+          employees_params = attributes.delete(:employees)
         end
-        employees
       end
 
       def working_place
