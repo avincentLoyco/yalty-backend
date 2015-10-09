@@ -1,42 +1,62 @@
 module API
   module V1
-    class HolidaysController < JSONAPI::ResourceController
-      include API::V1::ExceptionsHandler
-      include API::V1::Exceptions
+    class HolidaysController < ApplicationController
+      include HolidayRules
 
-      before_action :check_holiday_policy, only: [:create, :update]
+      def show
+        render_json(holiday)
+      end
+
+      def index
+        response =  holidays.map do |holiday|
+          HolidayRepresenter.new(holiday).complete
+        end
+
+        render json: response
+      end
+
+      def create
+        verified_params(gate_rules) do |attributes|
+          holiday = holiday_policy.holidays.new(attributes)
+          if holiday.save
+            render_json(holiday)
+          else
+            render_error_json(holiday)
+          end
+        end
+      end
+
+      def update
+        verified_params(gate_rules) do |attributes|
+          if holiday.update(attributes)
+            head 204
+          else
+            render_error_json(holiday)
+          end
+        end
+      end
+
+      def destroy
+        holiday.destroy!
+        head 204
+      end
 
       private
 
-      def check_holiday_policy
-        check_if_policy_exist && check_if_current_user_authorized if holiday_policy
+      def holiday
+        @holiday ||= holiday_policy.holidays.find(params[:id])
       end
 
-      def set_holiday_policy
-        attributes = params['data']['attributes']
-        attributes['holiday-policy-id'] if attributes
-      end
-
-      def check_if_policy_exist
-        HolidayPolicy.find(holiday_policy)
-      rescue => e
-        handle_exceptions(e)
-      end
-
-      def check_if_current_user_authorized
-        unless user_holiday_policies.include?(holiday_policy)
-          fail Forbidden.new(holiday_policy), 'Holiday policy forbidden'
-        end
-      rescue => e
-        handle_exceptions(e)
+      def holidays
+        @holidays ||= holiday_policy.holidays
       end
 
       def holiday_policy
-        @holiday_policy ||= set_holiday_policy
+        @holiday_policy ||= Account.current.holiday_policies.find(params[:holiday_policy_id])
       end
 
-      def user_holiday_policies
-        @user_holiday_policies ||= HolidayPolicy.where(account_id: Account.current.id).pluck(:id)
+      def render_json(holiday)
+        render json: HolidayRepresenter.new(holiday).complete
       end
     end
   end
