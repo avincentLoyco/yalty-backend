@@ -4,44 +4,39 @@ module API
       include AttributeDefinitionRules
 
       def index
-        response = attributes.map do |attr|
-          AttributeDefinitionRepresenter
-            .new(attr)
-            .complete
-        end
-
-        render json: response
+        render_resource(resources)
       end
 
       def show
-        render_json(attribute)
+        render_resource(resource)
       end
 
       def create
-        verified_params(gate_rules) do |attr|
-          new_attribute = Account.current.employee_attribute_definitions.new(attr)
-          if new_attribute.save
-            render_json(new_attribute)
+        verified_params(gate_rules) do |attributes|
+          @resource = Account.current.employee_attribute_definitions.new(attributes)
+
+          if resource.save
+            render_resource(resource)
           else
-            render_error_json(new_attribute)
+            render_error_json(resource)
           end
         end
       end
 
       def update
-        verified_params(gate_rules) do |attr|
-          if attribute.update(attr)
+        verified_params(gate_rules) do |attributes|
+          if resource.update(attributes)
             render_no_content
           else
-            render_error_json(attribute)
+            render_error_json(resource)
           end
         end
       end
 
       def destroy
-        if attribute.employee_attributes.blank? && !attribute.system?
-          attribute.destroy!
-          head 204
+        if resource.employee_attributes.blank? && !resource.system?
+          resource.destroy!
+          render_no_content
         else
           locked_error
         end
@@ -49,18 +44,17 @@ module API
 
       private
 
-      def attributes
-        @attributes ||= Account.current.employee_attribute_definitions
+      def resources
+        @resources ||= Account.current.employee_attribute_definitions
       end
 
-      def attribute
-        @attribute ||= attributes.find(params[:id])
+      def resource
+        @resource ||= resources.find(params[:id])
       end
 
-      def render_json(attr_definition)
-        render json: AttributeDefinitionRepresenter.new(attr_definition).complete
+      def resource_representer
+        AttributeDefinitionRepresenter
       end
-
     end
   end
 end

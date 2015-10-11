@@ -1,14 +1,10 @@
 class WorkingPlaceRepresenter < BaseRepresenter
-  def initialize(working_place)
-    @resource = working_place
-  end
-
   def complete
     {
       name: resource.name
     }
-    .merge(basic)
-    .merge(relationships)
+      .merge(basic)
+      .merge(relationships)
   end
 
   def relationships
@@ -19,8 +15,4 @@ class WorkingPlaceRepresenter < BaseRepresenter
       holiday_policy: holiday_policy || {}
     }
   end
-
-  private
-
-  attr_reader :resource
 end

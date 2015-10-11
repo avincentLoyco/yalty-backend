@@ -1,10 +1,4 @@
 class AttributeDefinitionRepresenter < BaseRepresenter
-  attr_reader :resource
-
-  def initialize(definition)
-    @resource = definition
-  end
-
   def complete
     {
       name:           resource.name,

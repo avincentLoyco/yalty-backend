@@ -4,26 +4,23 @@ module API
       include WorkingPlaceRules
 
       def index
-        response = working_places.map do |working_place|
-          WorkingPlaceRepresenter.new(working_place).complete
-        end
-        render json: response
+        render_resource(resources)
       end
 
       def show
-        render_json(working_place)
+        render_resource(resource)
       end
 
       def create
         verified_params(gate_rules) do |attributes|
           employees = employees_params(attributes)
-          working_place = Account.current.working_places.new(attributes)
+          @resource = Account.current.working_places.new(attributes)
 
-          if working_place.save
+          if resource.save
             assign_employees(employees)
-            render_json(working_place)
+            render_resource(resource, status: :created)
           else
-            render_error_json(working_place)
+            render_error_json(resource)
           end
         end
       end
@@ -32,44 +29,42 @@ module API
         verified_params(gate_rules) do |attributes|
           employees = employees_params(attributes)
 
-          if working_place.update(attributes)
+          if resource.update(attributes)
             assign_employees(employees)
-            head 204
+            render_no_content
           else
-            render_error_json(working_place)
+            render_error_json(resource)
           end
         end
       end
 
       def destroy
-        working_place.destroy!
-        head 204
+        resource.destroy!
+        render_no_content
       end
 
       private
 
       def assign_employees(employees)
-        unless employees.nil?
-          AssignCollection.new(working_place, employees, 'employees').call
-        end
+        return if employees.nil?
+
+        assign_collection(resource, employees, 'employees')
       end
 
       def employees_params(attributes)
-        if attributes[:employees]
-          employees_params = attributes.delete(:employees)
-        end
+        attributes.delete(:employees)
       end
 
-      def working_place
-        @working_place ||= Account.current.working_places.find(params[:id])
+      def resources
+        @resources ||= Account.current.working_places
       end
 
-      def working_places
-        @working_places ||= Account.current.working_places
+      def resource
+        @resource ||= resources.find(params[:id])
       end
 
-      def render_json(working_place)
-        render json: WorkingPlaceRepresenter.new(working_place).complete
+      def resource_representer
+        WorkingPlaceRepresenter
       end
     end
   end
