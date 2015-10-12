@@ -1,4 +1,4 @@
-module AttributeDefinitionRules
+module EmployeeAttributeDefinitionRules
   include BaseRules
 
   def patch_rules

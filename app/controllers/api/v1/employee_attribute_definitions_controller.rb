@@ -1,7 +1,7 @@
 module API
   module V1
     class EmployeeAttributeDefinitionsController < API::ApplicationController
-      include AttributeDefinitionRules
+      include EmployeeAttributeDefinitionRules
 
       def index
         render_resource(resources)
@@ -53,7 +53,7 @@ module API
       end
 
       def resource_representer
-        AttributeDefinitionRepresenter
+        EmployeeAttributeDefinitionRepresenter
       end
     end
   end

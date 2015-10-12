@@ -1,4 +1,4 @@
-class AttributeDefinitionRepresenter < BaseRepresenter
+class EmployeeAttributeDefinitionRepresenter < BaseRepresenter
   def complete
     {
       name:           resource.name,
