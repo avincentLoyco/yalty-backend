@@ -6,6 +6,6 @@ class EmployeeAttributeDefinitionRepresenter < BaseRepresenter
       attribute_type: resource.attribute_type,
       system:         resource.system,
     }
-    .merge(basic)
+      .merge(basic)
   end
 end

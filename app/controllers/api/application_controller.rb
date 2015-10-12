@@ -16,12 +16,6 @@ class API::ApplicationController < ActionController::Base
     fail NotImplementedError, "#{__method__} must be implemented in #{self.class.name}"
   end
 
-  def gate_member_rule
-    Gate.rules do
-      required :id, :String
-    end
-  end
-
   private
 
   def assign_collection(resource, collection, collection_name)

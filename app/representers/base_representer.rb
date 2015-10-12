@@ -6,10 +6,14 @@ class BaseRepresenter
   end
 
   def basic(_ = {})
-    {
-      id: resource.id,
-      type: resource_type
-    }
+    if resource.present?
+      {
+        id: resource.id,
+        type: resource_type
+      }
+    else
+      {}
+    end
   end
 
   private
