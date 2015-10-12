@@ -4,34 +4,34 @@ module API
       include HolidayPolicyRules
 
       def show
-        render_json(holiday_policy)
+        render_resource(resource)
       end
 
       def index
-        response = holiday_policies.map do |holiday_policy|
-          HolidayPolicyRepresenter
-            .new(holiday_policy)
-            .complete
-        end
-
-        render json: response
+        render_resource(resources)
       end
 
       def create
         verified_params(gate_rules) do |attributes|
-          holiday_policy = Account.current.holiday_policies.new(attributes)
-          if holiday_policy.save
-            render_json(holiday_policy)
+          related = related_params(attributes).compact
+          resource = Account.current.holiday_policies.new(attributes)
+
+          if resource.save
+            assign_related(resource, related)
+            render_resource(resource, status: :created)
           else
-            resource_invalid_error(holiday_policy)
+            resource_invalid_error(resource)
           end
         end
       end
 
       def update
         verified_params(gate_rules) do |attributes|
-          if holiday_policy.update(attributes)
-            head 204
+          related = related_params(attributes).compact
+
+          if resource.update(attributes)
+            assign_related(resource, related)
+            render_no_content
           else
             resource_invalid_error(holiday_policy)
           end
@@ -39,22 +39,49 @@ module API
       end
 
       def destroy
-        holiday_policy.destroy!
+        resource.destroy!
         head 204
       end
 
       private
 
-      def holiday_policy
-        @holiday_policy ||= Account.current.holiday_policies.find(params[:id])
+      def assign_related(resource, related_records)
+        return if related_records.empty?
+        related_records.each do |related|
+          key = related.keys.first
+          AssignCollection.new(resource, related[key], key.to_s).call
+        end
       end
 
-      def holiday_policies
-        @holiday_policies = Account.current.holiday_policies
+      def related_params(attributes)
+        [
+          related_employees(attributes),
+          related_working_places(attributes)
+        ]
       end
 
-      def render_json(holiday_policy)
-        render json: HolidayPolicyRepresenter.new(holiday_policy).complete
+      def related_employees(attributes)
+        if attributes[:employees]
+          { employees: attributes.delete(:employees) }
+        end
+      end
+
+      def related_working_places(attributes)
+        if attributes[:working_places]
+          { working_places: attributes.delete(:working_places) }
+        end
+      end
+
+      def resource
+        @resource ||= Account.current.holiday_policies.find(params[:id])
+      end
+
+      def resources
+        @resources = Account.current.holiday_policies
+      end
+
+      def resource_representer
+        HolidayPolicyRepresenter
       end
     end
   end

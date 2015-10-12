@@ -4,7 +4,7 @@ module HolidayPolicyRules
   def patch_rules
     Gate.rules do
       required :id, :String
-      required :name, :String
+      optional :name, :String
       optional :region, :String
       optional :country, :String
       optional :employees, :Array

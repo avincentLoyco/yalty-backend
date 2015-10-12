@@ -60,7 +60,6 @@ RSpec.shared_examples 'example_relationships_employees' do |settings|
     end
 
     let(:resource_params) { attributes_for(settings[:resource_name]) }
-    let(:params) { resource_params.merge({ id: resource.id }) }
     let(:resource_param) { attributes_for(settings[:resource_name]).keys.first }
     let(:empty_employee_json) do
       {
@@ -68,7 +67,49 @@ RSpec.shared_examples 'example_relationships_employees' do |settings|
       }
     end
 
-    context 'post #create_relationship' do
+    context 'post #create' do
+      subject { post :create, params }
+
+      context 'assigns employee to working place' do
+        let(:params) { resource_params.merge(first_employee_json) }
+
+        it { expect { subject }.to change { first_employee.reload.send(resource_name + "_id") } }
+
+        context 'response' do
+          before { subject }
+
+          it { expect(response).to have_http_status(:success) }
+        end
+      end
+
+      context 'assigns two employees to working place' do
+        let(:params) { resource_params.merge(both_employees_json) }
+
+        it { expect { subject }.to change { first_employee.reload.send(resource_name + "_id") } }
+        it { expect { subject }.to change { second_employee.reload.send(resource_name + "_id") } }
+
+        context 'response' do
+          before { subject }
+
+          it { expect(response).to have_http_status(:success) }
+        end
+      end
+
+      context 'it returns bad request when wrong employee ids given' do
+        let(:params) { resource_params.merge(invalid_employees_json) }
+
+        it 'returns bad request' do
+          subject
+
+          expect(response).to have_http_status(404)
+          expect(response.body).to include "Record Not Found"
+        end
+      end
+    end
+
+    context 'patch #update' do
+      let(:params) { resource_params.merge({ id: resource.id }) }
+
       it 'assigns employee to working place when new id given' do
         expect {
           patch :update, params.merge(first_employee_json)
@@ -146,13 +187,6 @@ RSpec.shared_examples 'example_relationships_employees' do |settings|
 
         expect(response).to have_http_status(404)
         expect(response.body).to include "Record Not Found"
-      end
-
-      it 'returns 422 when parameters not given' do
-        params = { id: '12345678-1234-1234-1234-123456789012' }
-        patch :update, params
-
-        expect(response).to have_http_status(404)
       end
     end
   end

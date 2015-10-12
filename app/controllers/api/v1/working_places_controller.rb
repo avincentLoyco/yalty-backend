@@ -17,7 +17,7 @@ module API
           @resource = Account.current.working_places.new(attributes)
 
           if resource.save
-            assign_employees(employees)
+            assign_employees(resource, employees)
             render_resource(resource, status: :created)
           else
             resource_invalid_error(resource)
@@ -30,7 +30,7 @@ module API
           employees = employees_params(attributes)
 
           if resource.update(attributes)
-            assign_employees(employees)
+            assign_employees(resource, employees)
             render_no_content
           else
             resource_invalid_error(resource)
@@ -45,7 +45,7 @@ module API
 
       private
 
-      def assign_employees(employees)
+      def assign_employees(resource, employees)
         return if employees.nil?
 
         assign_collection(resource, employees, 'employees')
