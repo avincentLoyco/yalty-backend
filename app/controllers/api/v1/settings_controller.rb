@@ -17,7 +17,7 @@ module API
           if settings.update(attr)
             render_no_content
           else
-            render_error_json(settings)
+            resource_invalid_error(settings)
           end
         end
       end

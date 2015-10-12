@@ -21,7 +21,7 @@ module API
           if holiday.save
             render_json(holiday)
           else
-            render_error_json(holiday)
+            resource_invalid_error(holiday)
           end
         end
       end
@@ -31,7 +31,7 @@ module API
           if holiday.update(attributes)
             head 204
           else
-            render_error_json(holiday)
+            resource_invalid_error(holiday)
           end
         end
       end

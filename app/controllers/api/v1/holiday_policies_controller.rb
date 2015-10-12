@@ -23,7 +23,7 @@ module API
           if holiday_policy.save
             render_json(holiday_policy)
           else
-            render_error_json(holiday_policy)
+            resource_invalid_error(holiday_policy)
           end
         end
       end
@@ -33,7 +33,7 @@ module API
           if holiday_policy.update(attributes)
             head 204
           else
-            render_error_json(holiday_policy)
+            resource_invalid_error(holiday_policy)
           end
         end
       end

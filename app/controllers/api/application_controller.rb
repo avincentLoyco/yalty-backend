@@ -53,22 +53,25 @@ class API::ApplicationController < ActionController::Base
     head 204
   end
 
-  def render_error_json(resource)
-    render json: ErrorsRepresenter.new(resource.errors.messages, resource.class.name.underscore)
-      .resource, status: 422
+  def resource_invalid_error(resource)
+    render json: ErrorsRepresenter.new('Resource invalid', resource).complete,
+      status: 422
   end
 
   def locked_error
-    render json: { status: "error", message: "Locked" },
+    render json: ErrorsRepresenter.new('Locked').complete,
       status: 423
   end
 
-  def method_not_allowed
-    render json: { status: "error", message: "Method Not Allowed" },
+  def method_not_allowed_error
+    render json: ErrorsRepresenter.new('Method Not Allowed').complete,
       status: 405
   end
 
-  def record_not_found_error
-    render json: { status: "error", message: "Record not found" }, status: 404
+  def record_not_found_error(exception = nil)
+    resource = exception.record if exception && exception.respond_to?(:record)
+
+    render json: ErrorsRepresenter.new('Record Not Found', resource).complete,
+      status: 404
   end
 end

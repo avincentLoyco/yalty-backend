@@ -1,22 +1,35 @@
-class ErrorsRepresenter
-  attr_accessor :messages, :type
+class ErrorsRepresenter < BaseRepresenter
+  attr_reader :message
 
-  def initialize(messages, type)
-    @messages = messages
-    @type = type
+  def initialize(message, resource = nil)
+    super(resource)
+
+    @message = message
   end
 
-  def resource
+  def basic(_ = {})
     {
-      errors: messages.map do |key, value|
+      status: 'error',
+      message: message
+    }
+  end
+
+  def complete
+    response = {}
+
+    if resource.kind_of?(ActiveRecord::Base) && !resource.errors.empty?
+      errors = resource.errors.messages.map do |field, message|
         {
-          field: key.to_s,
-          messages: value,
+          field: field.to_s,
+          messages: message,
           status: 'invalid',
-          type: type,
+          type: resource_type,
         }
       end
-    }
 
+      response[:errors] = errors
+    end
+
+    response.merge(basic)
   end
 end

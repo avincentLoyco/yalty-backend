@@ -18,7 +18,7 @@ module API
           if resource.save
             render_resource(resource)
           else
-            render_error_json(resource)
+            resource_invalid_error(resource)
           end
         end
       end
@@ -28,7 +28,7 @@ module API
           if resource.update(attributes)
             render_no_content
           else
-            render_error_json(resource)
+            resource_invalid_error(resource)
           end
         end
       end

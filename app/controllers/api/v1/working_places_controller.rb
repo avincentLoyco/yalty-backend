@@ -20,7 +20,7 @@ module API
             assign_employees(employees)
             render_resource(resource, status: :created)
           else
-            render_error_json(resource)
+            resource_invalid_error(resource)
           end
         end
       end
@@ -33,7 +33,7 @@ module API
             assign_employees(employees)
             render_no_content
           else
-            render_error_json(resource)
+            resource_invalid_error(resource)
           end
         end
       end
