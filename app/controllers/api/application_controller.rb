@@ -33,7 +33,8 @@ class API::ApplicationController < ActionController::Base
     if result.valid?
       yield(result.attributes)
     else
-      render json: ErrorsRepresenter.new(result.errors, 'settings').resource, status: 422
+      render json: ErrorsRepresenter.new('Resource invalid', result).complete,
+        status: 422
     end
   end
 
