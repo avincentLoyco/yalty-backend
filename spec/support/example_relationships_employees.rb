@@ -138,14 +138,14 @@ RSpec.shared_examples 'example_relationships_employees' do |settings|
         patch :update, params.merge(first_employee_json)
 
         expect(response).to have_http_status(404)
-        expect(response.body).to include "Record not found"
+        expect(response.body).to include "Record Not Found"
       end
 
       it 'returns bad request when wrong employee id given' do
         patch :update, params.merge(invalid_employees_json)
 
         expect(response).to have_http_status(404)
-        expect(response.body).to include "Record not found"
+        expect(response.body).to include "Record Not Found"
       end
 
       it 'returns 422 when parameters not given' do

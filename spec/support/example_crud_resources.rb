@@ -105,7 +105,7 @@ RSpec.shared_examples 'example_crud_resources' do |settings|
               it 'should respond with 404' do
                 subject
                 expect(response).to have_http_status(404)
-                expect(response.body).to include 'Record not found'
+                expect(response.body).to include 'Record Not Found'
               end
             end
 
@@ -115,7 +115,7 @@ RSpec.shared_examples 'example_crud_resources' do |settings|
               it 'should respond with 404' do
                 subject
                 expect(response).to have_http_status(404)
-                expect(response.body).to include 'Record not found'
+                expect(response.body).to include 'Record Not Found'
               end
             end
 
@@ -126,7 +126,7 @@ RSpec.shared_examples 'example_crud_resources' do |settings|
               it 'should respond with 404' do
                 subject
                 expect(response).to have_http_status(404)
-                expect(response.body).to include 'Record not found'
+                expect(response.body).to include 'Record Not Found'
               end
             end
           end
@@ -159,7 +159,7 @@ RSpec.shared_examples 'example_crud_resources' do |settings|
               it 'should respond with 404' do
                 subject
                 expect(response).to have_http_status(404)
-                expect(response.body).to include 'Record not found'
+                expect(response.body).to include 'Record Not Found'
               end
             end
 
@@ -170,7 +170,7 @@ RSpec.shared_examples 'example_crud_resources' do |settings|
               it 'should respond with 404' do
                 subject
                 expect(response).to have_http_status(404)
-                expect(response.body).to include 'Record not found'
+                expect(response.body).to include 'Record Not Found'
               end
             end
           end
