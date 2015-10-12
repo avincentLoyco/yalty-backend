@@ -4,20 +4,20 @@ module API
       include SettingsRules
 
       def show
-        render_json
+        render_resource(resource)
       end
 
       def update
-        verified_params(gate_rules) do |attr|
-          if attr.has_key?(:holiday_policy)
-            holiday_policy = attr.delete(:holiday_policy)
+        verified_params(gate_rules) do |attributes|
+          if attributes.has_key?(:holiday_policy)
+            holiday_policy = attributes.delete(:holiday_policy)
             assign_holiday_policy(holiday_policy)
           end
 
-          if settings.update(attr)
+          if resource.update(attributes)
             render_no_content
           else
-            resource_invalid_error(settings)
+            resource_invalid_error(resource)
           end
         end
       end
@@ -27,19 +27,19 @@ module API
       def assign_holiday_policy(holiday_policy)
         if holiday_policy.present?
           holiday_policy_id = holiday_policy.try(:[], :id)
-          holiday_policy = settings.holiday_policies.find(holiday_policy_id)
-          settings.holiday_policy = holiday_policy
+          holiday_policy = resource.holiday_policies.find(holiday_policy_id)
+          resource.holiday_policy = holiday_policy
         else
-          settings.holiday_policy = nil
+          resource.holiday_policy = nil
         end
       end
 
-      def render_json
-        render json: SettingsRepresenter.new(settings).complete
+      def resource
+        Account.current
       end
 
-      def settings
-        Account.current
+      def resource_representer
+        SettingsRepresenter
       end
 
     end

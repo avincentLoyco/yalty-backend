@@ -1,30 +1,19 @@
-class SettingsRepresenter
-  attr_accessor :settings
-
-  def initialize(settings)
-    @settings = settings
-  end
-
-  def basic
-    {
-      type: 'settings',
-    }
-  end
+class SettingsRepresenter < BaseRepresenter
 
   def complete
     {
-      subdomain:        settings.subdomain,
-      company_name:     settings.company_name,
-      timezone:         settings.timezone,
-      default_locale:   settings.default_locale,
+      subdomain:         resource.subdomain,
+      company_name:      resource.company_name,
+      timezone:          resource.timezone,
+      default_locale:    resource.default_locale,
     }
     .merge(basic)
     .merge(relationships)
   end
 
   def relationships
-    if settings.holiday_policy.present?
-      holiday_policy = HolidayPolicyRepresenter.new(settings.holiday_policy).basic
+    if  resource.holiday_policy.present?
+      holiday_policy = HolidayPolicyRepresenter.new( resource.holiday_policy).basic
     end
     {
       holiday_policy: holiday_policy || {},
