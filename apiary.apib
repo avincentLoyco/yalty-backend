@@ -77,52 +77,56 @@ Get a list of all account's Employee Attribute Definitions
 
 + Response 200 (application/json)
 
-    [
-        {
-            "id": "12345678-1234-1234-1234-123456789012",
-            "name": "firstname",
-            "label": "test",
-            "attribute_type": "String",
-            "type": "employee/attribute_definition",
-            "system": "true"
-        },
-        {
-            "id": "87654321-1234-1234-1234-123456789012",
-            "name": "lastname",
-            "label": "test",
-            "attribute_type": "String",
-            "type": "employee/attribute_definition",
-            "system": "true"
-        },
-    ]
+        [
+            {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "name": "firstname",
+                "label": "test",
+                "attribute_type": "String",
+                "type": "employee/attribute_definition",
+                "system": "true"
+            },
+            {
+                "id": "87654321-1234-1234-1234-123456789012",
+                "name": "lastname",
+                "label": "test",
+                "attribute_type": "String",
+                "type": "employee/attribute_definition",
+                "system": "true"
+            },
+        ]
 
 ### POST Create a new employee attribute definition [POST]
 
 Create a new employee attribute definition
 By default account_id is equal Account.current.id
 
-+ Attributes (Employee Attribute Definition Base)
++ Attributes
+  + name: lastname (string, required)
+  + label: test label (string)
+  + attribute_type: String (string, required)
+  + system: True (boolean, required)
 
 + Request (application/json)
 
-    {
-        "name": "lastname",
-        "system": "true",
-        "label": "test",
-        "attribute_type": "String"
-    }
+        {
+            "name": "lastname",
+            "system": "true",
+            "label": "test",
+            "attribute_type": "String"
+        }
 
 + Response 201 (application/json)
 
-    {
+        {
 
-        "id": "87654321-1234-1234-1234-123456789012",
-        "name": "lastname",
-        "label": "test",
-        "attribute_type": "String",
-        "type": "employee/attribute_definition",
-        "system": "true"
-    }
+            "id": "87654321-1234-1234-1234-123456789012",
+            "name": "lastname",
+            "label": "test",
+            "attribute_type": "String",
+            "type": "employee/attribute_definition",
+            "system": "true"
+        }
 
 ## Employee Attribute Definition [/api/v1/employee_attribute_definitions/{employee_attribute_definition_id}]
 
@@ -146,7 +150,12 @@ By default account_id is equal Account.current.id
 
 ### PUT Update Employee Attribute Definition [PUT]
 
-+ Attributes (Employee Attribute Definition Put)
++ Attributes
+  + id: 1 (string, required)
+  + name: lastname (string, required)
+  + label: test label (string)
+  + attribute_type: String (string, required)
+  + system: True (boolean, required)
 
 + Request (application/json)
 
@@ -161,7 +170,12 @@ By default account_id is equal Account.current.id
 
 ### PATCH Update Employee Attribute Definition [PATCH]
 
-+ Attributes (Employee Attribute Definition Patch)
++ Attributes
+  + id: 1 (string, required)
+  + name: lastname (string)
+  + label: test label (string)
+  + attribute_type: String (string)
+  + system: True (boolean)
 
 + Request (application/json)
 
@@ -191,18 +205,18 @@ Get a list of all available for account holiday policies
 + Response 200 (application/json)
         [
             {
-              "name": "test",
-              "country": "pl",
-              "region": null,
-              "id": "12345678-1234-1234-1234-123456789012",
-              "type": "holiday_policy"
+                "name": "test",
+                "country": "pl",
+                "region": null,
+                "id": "12345678-1234-1234-1234-123456789012",
+                "type": "holiday_policy"
             },
             {
-              "name": "test",
-              "country": "ch",
-              "region": zh,
-              "id": "87654321-1234-1234-1234-123456789012",
-              "type": "holiday_policy"
+                "name": "test",
+                "country": "ch",
+                "region": "zh",
+                "id": "87654321-1234-1234-1234-123456789012",
+                "type": "holiday_policy"
             }
         ]
 
@@ -211,7 +225,13 @@ Get a list of all available for account holiday policies
 Create a new holiday_policy
 By default account_id is equal Account.current.id
 
-+ Attributes (Holiday Policy Base)
++ Attributes
+  + name: test (string, required)
+  + country: ch (string)
+  + region: zh (string)
+  + employees: [employees: {"id": "1"}] (array)
+  + working_places: [working_places: {"id": "1"}] (array)
+  + holidays: [holidays: {"id": "1"}] (array)
 
 + Request (application/json)
 
@@ -273,7 +293,14 @@ By default account_id is equal Account.current.id
 
 ### PUT Update Holiday Policy [PUT]
 
-+ Attributes (Holiday Policy Put)
++ Attributes
+  + id: 1 (string, required)
+  + name: test (string, required)
+  + country: ch (string)
+  + region: zh (string)
+  + employees: [employees: {"id": "1"}] (array)
+  + working_places: [working_places: {"id": "1"}] (array)
+  + holidays: [holidays: {"id": "1"}] (array)
 
 + Request (application/json)
 
@@ -287,7 +314,14 @@ By default account_id is equal Account.current.id
 
 ### PATCH Update Holiday Policy [PATCH]
 
-+ Attributes (Holiday Policy Patch)
++ Attributes
+  + id: 1 (string, required)
+  + name: test (string)
+  + country: ch (string)
+  + region: zh (string)
+  + employees: [employees: {"id": "1"}] (array)
+  + working_places: [working_places: {"id": "1"}] (array)
+  + holidays: [holidays: {"id": "1"}] (array)
 
 + Request (application/json)
 
@@ -316,7 +350,10 @@ By default account_id is equal Account.current.id
 
 
 
-## Holiday Collection [/api/v1/holidays?holiday_policy_id=12345678-1234-1234-1234-123456789012]
+## Holiday Collection [/api/v1/holidays?holiday_policy_id={holiday_policy_id}]
+
++ Parameters
+   + holiday_policy_id: 12345678-1234-1234-123456789012 (required, string) - ID is in uuid format
 
 ### GET List of all holiday_policy holidays [GET]
 
@@ -343,7 +380,10 @@ Get a list of holidays which belongs to particular holiday_policy
 
 Create a new holiday
 
-+ Attributes (Holiday Base)
++ Attributes
+  + name: holiday (string, required)
+  + date: 1 (string, required)
+  + holiday_policy_id: 11 (string, required)
 
 + Request (application/json)
 
@@ -366,7 +406,11 @@ Create a new holiday
 + Parameters
     + holiday_id: 12345678-1234-1234-123456789012 (required, string) - ID of the Holiday is an uuid
 
-### GET Get Holiday Details [GET /api/v1/holidays/{holiday_id}?holiday_policy_id=12345678-1234-1234-1234-123456789012]
+### GET Get Holiday Details [GET /api/v1/holidays/{holiday_id}?holiday_policy_id={holiday_policy_id}]
+
++ Parameters
+   + holiday_policy_id: 12345678-1234-1234-123456789012 (required, string) - ID is in uuid format
+   + holiday_id: 12345678-1234-1234-123456789012 (required, string) - ID of the Holiday is an uuid
 
 + Request (application/json)
 
@@ -381,7 +425,11 @@ Create a new holiday
 
 ### PUT Update Holiday [PUT]
 
-+ Attributes (Holiday Put)
++ Attributes
+  + id: 1 (string, required)
+  + name: holiday (string, required)
+  + date: 1 (string, required)
+  + holiday_policy_id: 11 (string, required)
 
 + Request (application/json)
 
@@ -396,7 +444,11 @@ Create a new holiday
 
 ### PATCH Update Holiday [PATCH]
 
-+ Attributes (Holiday Patch)
++ Attributes
+  + id: 1 (string, required)
+  + name: holiday (string)
+  + date: 1 (string)
+  + holiday_policy_id: 11 (string, required)
 
 + Request (application/json)
 
@@ -408,10 +460,9 @@ Create a new holiday
 
 + Response 204 (application/json)
 
-### DELETE holiday [DELETE /api/v1/holidays/{holiday_id}]
+### DELETE holiday [DELETE]
 
 + Attributes
-
   + holiday_policy_id: 1 (string, required)
 
 + Request (application/json)
@@ -450,7 +501,9 @@ Get a list of all available for user working places
 Create a new working place
 By default account_id is equal Account.current.id
 
-+ Attributes (Working Place Base)
++ Attributes
+  + name: Test (string, required)
+  + type: working_place (string)
 
 + Request (application/json)
 
@@ -662,89 +715,3 @@ Get a list of all employees
             }
           ]
         }
-
-
-
-
-
-
-# Data Structures
-
-## Working Place Base (object)
-
-+ name: Test (string, required)
-+ type: working_place (string)
-
-## Employee Attribute Definition Base (object)
-
-+ name: lastname (string, required)
-+ label: test label (string)
-+ attribute_type: String (string, required)
-+ system: True (boolean, required)
-
-## Employee Attribute Definition Put (object)
-
-+ id: 1 (string, required)
-+ name: lastname (string, required)
-+ label: test label (string)
-+ attribute_type: String (string, required)
-+ system: True (boolean, required)
-
-
-## Employee Attribute Definition Patch (object)
-
-+ id: 1 (string, required)
-+ name: lastname (string)
-+ label: test label (string)
-+ attribute_type: String (string)
-+ system: True (boolean)
-
-## Holiday Policy Base
-
-+ name: test (string, required)
-+ country: ch (string)
-+ region: zh (string)
-+ employees: [employees: {"id": "1"}] (array)
-+ working_places: [working_places: {"id": "1"}] (array)
-+ holidays: [holidays: {"id": "1"}] (array)
-
-## Holiday Policy Put (object)
-
-+ id: 1 (string, required)
-+ name: test (string, required)
-+ country: ch (string)
-+ region: zh (string)
-+ employees: [employees: {"id": "1"}] (array)
-+ working_places: [working_places: {"id": "1"}] (array)
-+ holidays: [holidays: {"id": "1"}] (array)
-
-## Holiday Policy Patch (object)
-
-+ id: 1 (string, required)
-+ name: test (string)
-+ country: ch (string)
-+ region: zh (string)
-+ employees: [employees: {"id": "1"}] (array)
-+ working_places: [working_places: {"id": "1"}] (array)
-+ holidays: [holidays: {"id": "1"}] (array)
-
-## Holiday Base (object)
-
-+ name: holiday (string, required)
-+ date: 1 (string, required)
-+ holiday_policy_id: 11 (string, required)
-
-## Holiday Put (object)
-
-+ id: 1 (string, required)
-+ name: holiday (string, required)
-+ date: 1 (string, required)
-+ holiday_policy_id: 11 (string, required)
-
-## Holiday Patch (object)
-
-+ id: 1 (string, required)
-+ name: holiday (string)
-+ date: 1 (string)
-+ holiday_policy_id: 11 (string, required)
-
