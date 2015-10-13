@@ -77,7 +77,7 @@ RSpec.shared_examples 'example_crud_resources' do |settings|
 
             it 'should respond with success' do
               put :update, params
-              expect(response).to have_http_status(:success)
+              expect(response).to have_http_status(204)
             end
           end
         end
