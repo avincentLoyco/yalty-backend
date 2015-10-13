@@ -640,39 +640,30 @@ Get a list of all employees
             {
               "id": "12345678-1234-1234-1234-123456789012",
               "type": "employee",
-              "attributes": [
+              "employee_attributes": [
                 {
                   "id": "12345678-1234-1234-1234-123456789012",
                   "type": "employee_attribute",
                   "value": "ABC",
-                  "attribute_definition": {
-                    "type": "employee_attribute_definitions",
-                    "id": "xyz"
-                  }
+                  "attribute_name": "lastname"
                 },
                 {
                   "id": "12345678-1234-1234-1234-123456789013",
                   "type": "employee_attribute",
                   "value": "Asd",
-                  "attribute_definition": {
-                    "type": "employee_attribute_definitions",
-                    "id": "xyz"
-                  }
+                  "attribute_name": "firstname"
                 }
               ]
             },
             {
               "id": "87654321-1234-1234-1234-123456789012",
               "type": "employee",
-              "attributes": [
+              "employee_attributes": [
                 {
                   "id": "12345678-1234-1234-1234-123456789012",
                   "type": "employee_attribute",
                   "value": "ABC",
-                  "attribute_definition": {
-                    "type": "employee_attribute_definitions",
-                    "id": "xyz"
-                  }
+                  "attribute_name": "firstname"
                 }
               ]
             }
@@ -694,24 +685,156 @@ Get a list of all employees
         {
           "id": "12345678-1234-1234-1234-123456789012",
           "type": "employee",
-          "attributes": [
+          "employee_attributes": [
             {
               "id": "12345678-1234-1234-1234-123456789012",
               "type": "employee_attribute",
               "value": "ABC",
-              "attribute_definition": {
-                "type": "employee_attribute_definitions",
-                "id": "xyz"
-              }
+              "attribute_name": "firstname"
             },
             {
               "id": "12345678-1234-1234-1234-123456789013",
               "type": "employee_attribute",
               "value": "Asd",
-              "attribute_definition": {
-                "type": "employee_attribute_definitions",
-                "id": "xyz"
-              }
+              "attribute_name": "lastname"
             }
           ]
+        }
+
+
+
+## Employee events [/api/v1/employee_events]
+
+### GET Employee events [GET /api/v1/employee_events?employee_id={employee_id}]
+
++ Request (application/json)
+
+        {
+          "employee_id": "12345678-1234-1234-1234-123456789012"
+        }
+
++ Response 200 (application/json)
+
+        [
+          {
+            "id": "12345678-1234-1234-1234-123456789013",
+            "type": "employee_event",
+            "effective_at": "2015.02.02",
+            "comment": "Random",
+            "event_type": "hired",
+            "employee":
+            {
+              "id": "123",
+              "type": "employee",
+              "employee_attribute_versions": [
+                {
+                  "id": "12345678-1234-1234-1234-123456789012",
+                  "type": "employee_attribute_version",
+                  "value": "ABC",
+                  "attribute_name": "lastname"
+                },
+                {
+                  "id": "12345678-1234-1234-1234-123456789012",
+                  "type": "employee_attribute_version",
+                  "value": "Dsa",
+                  "attribute_name": "firstname"
+                }
+              ]
+            }
+          }
+        ]
+
+### GET Employee event [GET /api/v1/employee_events/{employee_event_id}]
+
++ Request (application/json)
+
+        {
+          "employee_event_id": "12345678-1234-1234-1234-123456789012"
+        }
+
++ Response 200 (application/json)
+
+
+        {
+          "id": "12345678-1234-1234-1234-123456789013",
+          "type": "employee_event",
+          "effective_at": "2015.02.02",
+          "comment": "Random",
+          "event_type": "hired",
+          "employee":
+          {
+            "id": "123",
+            "type": "employee",
+            "employee_attribute_versions": [
+              {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "type": "employee_attribute_version",
+                "value": "ABC",
+                "attribute_name": "lastname"
+              },
+              {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "type": "employee_attribute_version",
+                "value": "Dsa",
+                "attribute_name": "firstname"
+              }
+            ]
+          }
+        }
+
+
+### POST Employee event [POST /api/v1/employee_events]
+
++ Request (application/json)
+
+        {
+          "type": "employee_event",
+          "effective_at": "2015.02.02",
+          "comment": "Random",
+          "event_type": "hired",
+          "employee":
+          {
+            "type": "employee",
+            "employee_attribute_versions": [
+              {
+                "type": "employee_attribute_version",
+                "value": "ABC",
+                "attribute_name": "lastname"
+              },
+              {
+                "type": "employee_attribute_version",
+                "value": "Dsa",
+                "attribute_name": "firstname"
+              }
+            ]
+          }
+        }
+
++ Response 201 (application/json)
+
+        {
+          "id": "12345678-1234-1234-1234-123456789013",
+          "type": "employee_event",
+          "effective_at": "2015.02.02",
+          "comment": "Random",
+          "event_type": "hired",
+          "employee":
+          {
+            "id": "123",
+            "type": "employee",
+            "employee_attribute_versions": [
+              {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "type": "employee_attribute_version",
+                "value": "ABC",
+                "attribute_name": "lastname"
+              },
+              {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "type": "employee_attribute_version",
+                "value": "Dsa",
+                "attribute_name": "firstname"
+              }
+            ]
+          }
         }
