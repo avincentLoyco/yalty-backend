@@ -1,7 +1,8 @@
 class HolidayRepresenter < BaseRepresenter
   def complete
     {
-      date: date
+      date: date,
+      name: resource.name
     }
       .merge(basic)
   end

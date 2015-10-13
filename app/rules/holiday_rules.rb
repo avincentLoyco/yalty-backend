@@ -5,8 +5,8 @@ module HolidayRules
     Gate.rules do
       required :id, :String
       required :holiday_policy_id, :String
-      required :name, :String
-      required :date, :Date
+      optional :name, :String
+      optional :date, :Date
     end
   end
 
