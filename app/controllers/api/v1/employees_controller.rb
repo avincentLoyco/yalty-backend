@@ -1,9 +1,6 @@
 module API
   module V1
-    class EmployeesController < JSONAPI::ResourceController
-      include API::V1::EmployeeManagement
-
-      skip_before_action :setup_request, only: [:create]
+    class EmployeesController < ApplicationController
 
       def create
         setup_params

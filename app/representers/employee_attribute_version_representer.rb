@@ -1,0 +1,2 @@
+class EmployeeAttributeVersionRepresenter < BaseRepresenter
+end

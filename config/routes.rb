@@ -7,12 +7,8 @@ Rails.application.routes.draw do
       resources :holidays, except: [:edit, :new]
       resource :settings, only: [:show, :update]
       resources :employee_attribute_definitions
-
-      jsonapi_resources :employees do
-        jsonapi_relationships
-      end
-      jsonapi_resources :employee_attributes
-      jsonapi_resources :employee_events
+      resources :employees, only: [:index, :show]
+      resources :employee_events, except: [:destroy]
     end
   end
 

@@ -1,0 +1,2 @@
+class EmployeeEventRepresenter < BaseRepresenter
+end
