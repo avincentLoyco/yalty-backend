@@ -62,6 +62,125 @@ Ability to update current account settings
 
 + Response 204
 
+
+
+
+
+
+## Employee Attribute Definitions Collectiuon [/api/v1/employee_attribute_definitions]
+
+### GET List of all employee attributes definitions [GET]
+
+Get a list of all account's Employee Attribute Definitions
+
++ Request (application/json)
+
++ Response 200 (application/json)
+
+    [
+        {
+            "id": "12345678-1234-1234-1234-123456789012",
+            "name": "firstname",
+            "label": "test",
+            "attribute_type": "String",
+            "type": "employee/attribute_definition",
+            "system": "true"
+        },
+        {
+            "id": "87654321-1234-1234-1234-123456789012",
+            "name": "lastname",
+            "label": "test",
+            "attribute_type": "String",
+            "type": "employee/attribute_definition",
+            "system": "true"
+        },
+    ]
+
+### POST Create a new employee attribute definition [POST]
+
+Create a new employee attribute definition
+By default account_id is equal Account.current.id
+
++ Attributes (Employee Attribute Definition Base)
+
++ Request (application/json)
+
+    {
+        "name": "lastname",
+        "system": "true",
+        "label": "test",
+        "attribute_type": "String"
+    }
+
++ Response 201 (application/json)
+
+    {
+
+        "id": "87654321-1234-1234-1234-123456789012",
+        "name": "lastname",
+        "label": "test",
+        "attribute_type": "String",
+        "type": "employee/attribute_definition",
+        "system": "true"
+    }
+
+## Employee Attribute Definition [/api/v1/employee_attribute_definitions/{employee_attribute_definition_id}]
+
++ Parameters
+  + employee_attribute_definition_id: 12 (required, string) - ID is in uuid format
+
+### GET
+
++ Request (application/json)
+
++ Response 200 (application/json)
+
+        {
+            "id": "12345678-1234-1234-1234-123456789012",
+            "name": "firstname",
+            "label": "test",
+            "attribute_type": "String",
+            "type": "employee/attribute_definition",
+            "system": "true"
+        }
+
+### PUT Update Employee Attribute Definition [PUT]
+
++ Attributes (Employee Attribute Definition Put)
+
++ Request (application/json)
+
+        {
+            "label": "test",
+            "system": "true",
+            "type": "String",
+            "name": "firstname"
+        }
+
++ Response 204 (application/json)
+
+### PATCH Update Employee Attribute Definition [PATCH]
+
++ Attributes (Employee Attribute Definition Patch)
+
++ Request (application/json)
+
+        {
+            "label": "test"
+        }
+
++ Response 204 (application/json)
+
+### DELETE destroy Employee Attribute Definiiton [DELETE]
+
++ Request (application/json)
+
++ Response 204
+
+
+
+
+
 ## Working Places Collection [/api/v1/working_places]
 
 ### GET List all user's working places [GET]
@@ -210,9 +329,38 @@ By default account_id is equal Account.current.id
 
 + Response 204 (application/json)
 
+
+
+
+
 # Data Structures
 
 ## Working Place Base (object)
 
 + name: Test (string, required)
 + type: working_place (string)
+
+## Employee Attribute Definition Base (object)
+
++ name: lastname (string, required)
++ label: test label (string)
++ attribute_type: String (string, required)
++ system: True (boolean, required)
+
+## Employee Attribute Definition Put (object)
+
++ id: 1 (string, required)
++ name: lastname (string, required)
++ label: test label (string)
++ attribute_type: String (string, required)
++ system: True (boolean, required)
+
+
+## Employee Attribute Definition Patch (object)
+
++ id: 1 (string, required)
++ name: lastname (string)
++ label: test label (string)
++ attribute_type: String (string)
++ system: True (boolean)
+
