@@ -39,8 +39,12 @@ module API
       end
 
       def destroy
-        resource.destroy!
-        render_no_content
+        if resource.employees.blank?
+          resource.destroy!
+          render_no_content
+        else
+          locked_error
+        end
       end
 
       private

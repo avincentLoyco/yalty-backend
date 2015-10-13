@@ -23,4 +23,34 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
       expect(account.working_places.map(&:name)).to include working_place_json[:name]
     end
   end
+
+  context 'DELETE #destroy' do
+    let(:working_place){ create(:working_place, account: account) }
+
+    context 'when working place has not assigned employees' do
+      it 'should delete resource' do
+        expect { delete :destroy, id: working_place.id }.to change { WorkingPlace.count }.by(-1)
+      end
+
+      it 'should respond with success' do
+        delete :destroy, id: working_place.id
+
+        expect(response).to have_http_status(:no_content)
+      end
+    end
+
+    context 'when working place has employees assigned' do
+      let!(:employee) { create(:employee, working_place: working_place) }
+
+      it 'should not delete resource' do
+        expect { delete :destroy, id: working_place.id }.to_not change { WorkingPlace.count }
+      end
+
+      it 'should respond with lock status' do
+        delete :destroy, id: working_place.id
+
+        expect(response).to have_http_status(423)
+      end
+    end
+  end
 end
