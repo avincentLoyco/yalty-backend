@@ -870,3 +870,36 @@ Get a list of all employees
         }
 
 + Response 204
+
+### PATCH Employee event [PATCH /api/v1/employee_events/{employee_event_id}]
+
++ Request (application/json)
+
+        {
+          "id": "12345678-1234-1234-1234-123456789013",
+          "type": "employee_event",
+          "effective_at": "2015.02.02",
+          "comment": "Random",
+          "event_type": "hired",
+          "employee":
+          {
+            "id": "123",
+            "type": "employee",
+            "employee_attribute_versions": [
+              {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "type": "employee_attribute_version",
+                "value": "ABC",
+                "attribute_name": "lastname"
+              },
+              {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "type": "employee_attribute_version",
+                "value": "Dsa",
+                "attribute_name": "firstname"
+              }
+            ]
+          }
+        }
+
++ Response 204
