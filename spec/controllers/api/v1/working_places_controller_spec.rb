@@ -295,6 +295,28 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
 
     context 'PUT #update' do
       context 'missing params' do
+        let(:params) {{ id: working_place.id }}
+        subject { put :update, params.merge(missing_params_json) }
+
+        it 'does not update working place' do
+          expect { subject }.to_not change { working_place.reload.name }
+        end
+
+        it 'does not assign holiday policy' do
+          expect { subject }.to_not change { working_place.reload.holiday_policy_id }
+        end
+
+        it 'does not assign employees' do
+          subject
+
+          expect(working_place.employees).to eq []
+        end
+
+        it 'respond with missing params status' do
+          subject
+
+          expect(response).to have_http_status 422
+        end
       end
     end
   end
