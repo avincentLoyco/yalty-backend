@@ -20,7 +20,7 @@ module V1
     private
 
     def resource_type
-      @resource_type ||= resource.class.name.underscore
+      @resource_type ||= resource.class.name.underscore.gsub('/', '_')
     end
   end
 end
