@@ -16,7 +16,7 @@ module API
           related = related_params(attributes)
           @resource = Account.current.working_places.new(attributes)
           result = transactions do
-            resource.save
+            resource.save &&
             assign_related(related)
           end
           if result
@@ -31,7 +31,7 @@ module API
         verified_params(gate_rules) do |attributes|
           related = related_params(attributes)
           result = transactions do
-            resource.update(attributes)
+            resource.update(attributes) &&
             assign_related(related)
           end
           if result

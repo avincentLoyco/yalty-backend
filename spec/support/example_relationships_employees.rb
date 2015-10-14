@@ -61,7 +61,7 @@ RSpec.shared_examples 'example_relationships_employees' do |settings|
 
     let(:resource_params) { attributes_for(settings[:resource_name]) }
     let(:resource_param) { attributes_for(settings[:resource_name]).keys.first }
-    let(:empty_employee_json) do
+    let(:without_employee_json) do
       {
         resource_param => 'test'
       }
@@ -147,7 +147,7 @@ RSpec.shared_examples 'example_relationships_employees' do |settings|
         resource.save
 
         expect(resource.employees.count).to eq(2)
-        patch :update, params.merge(empty_employee_json)
+        patch :update, params.merge(without_employee_json)
 
         expect(resource.reload[resource_param]).to eq('test')
         expect(resource.reload.employees.count).to eq (2)

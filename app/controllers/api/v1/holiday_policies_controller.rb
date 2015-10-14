@@ -15,9 +15,12 @@ module API
         verified_params(gate_rules) do |attributes|
           related = related_params(attributes).compact
           resource = Account.current.holiday_policies.new(attributes)
-
-          if resource.save
+          result = transactions do
+            resource.save &&
             assign_related(resource, related)
+          end
+
+          if result
             render_resource(resource, status: :created)
           else
             resource_invalid_error(resource)
@@ -28,12 +31,14 @@ module API
       def update
         verified_params(gate_rules) do |attributes|
           related = related_params(attributes).compact
-
-          if resource.update(attributes)
+          result = transactions do
+            resource.update(attributes) &&
             assign_related(resource, related)
+          end
+          if result
             render_no_content
           else
-            resource_invalid_error(holiday_policy)
+            resource_invalid_error(resource)
           end
         end
       end
@@ -46,7 +51,7 @@ module API
       private
 
       def assign_related(resource, related_records)
-        return if related_records.empty?
+        return true if related_records.empty?
         related_records.each do |key, values|
           if key == :holidays
             assign_holidays(resource, values)
