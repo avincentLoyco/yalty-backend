@@ -99,7 +99,7 @@ module API
       end
 
       def resource_representer
-        HolidayPolicyRepresenter
+        ::V1::HolidayPolicyRepresenter
       end
 
       def valid_holiday_ids

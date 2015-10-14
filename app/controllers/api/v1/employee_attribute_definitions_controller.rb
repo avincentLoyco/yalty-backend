@@ -53,7 +53,7 @@ module API
       end
 
       def resource_representer
-        EmployeeAttributeDefinitionRepresenter
+        ::V1::EmployeeAttributeDefinitionRepresenter
       end
     end
   end

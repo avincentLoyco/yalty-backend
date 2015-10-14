@@ -31,7 +31,7 @@ class API::ApplicationController < ActionController::Base
     if result.valid?
       yield(result.attributes)
     else
-      render json: ErrorsRepresenter.new('Resource invalid', result).complete,
+      render json: ::V1::ErrorsRepresenter.new('Resource invalid', result).complete,
         status: 422
     end
   end
@@ -53,24 +53,24 @@ class API::ApplicationController < ActionController::Base
   end
 
   def resource_invalid_error(resource)
-    render json: ErrorsRepresenter.new('Resource invalid', resource).complete,
+    render json: ::V1::ErrorsRepresenter.new('Resource invalid', resource).complete,
       status: 422
   end
 
   def locked_error
-    render json: ErrorsRepresenter.new('Locked').complete,
+    render json: ::V1::ErrorsRepresenter.new('Locked').complete,
       status: 423
   end
 
   def method_not_allowed_error
-    render json: ErrorsRepresenter.new('Method Not Allowed').complete,
+    render json: ::V1::ErrorsRepresenter.new('Method Not Allowed').complete,
       status: 405
   end
 
   def record_not_found_error(exception = nil)
     resource = exception.record if exception && exception.respond_to?(:record)
 
-    render json: ErrorsRepresenter.new('Record Not Found', resource).complete,
+    render json: ::V1::ErrorsRepresenter.new('Record Not Found', resource).complete,
       status: 404
   end
 end

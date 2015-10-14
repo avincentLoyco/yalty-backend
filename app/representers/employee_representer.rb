@@ -1,2 +1,0 @@
-class EmployeeRepresenter < BaseRepresenter
-end
