@@ -22,6 +22,10 @@ class API::ApplicationController < ActionController::Base
     AssignCollection.new(resource, collection, collection_name).call
   end
 
+  def assign_member(resource, member, member_name)
+    AssignMember.new(resource, member, member_name).call
+  end
+
   def verified_params(rules)
     result = rules.verify(params)
     if result.valid?
