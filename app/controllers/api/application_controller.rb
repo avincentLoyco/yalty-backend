@@ -36,6 +36,12 @@ class API::ApplicationController < ActionController::Base
     end
   end
 
+  def transactions
+    ActiveRecord::Base.transaction do
+      yield
+    end
+  end
+
   def render_resource(resource, options = {})
     representer = options.delete(:representer) || resource_representer
 

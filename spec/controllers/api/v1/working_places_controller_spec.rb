@@ -22,6 +22,14 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
       expect(account.working_places.size).to eq(2)
       expect(account.working_places.map(&:name)).to include working_place_json[:name]
     end
+
+    it 'should not create working_place when invalid params' do
+      working_place_count = WorkingPlace.count
+      post :create, { "type": "working-places" }
+
+      expect(working_place_count).to eq(WorkingPlace.count)
+      expect(response).to have_http_status(422)
+    end
   end
 
   context 'related records assign' do
@@ -138,7 +146,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
 
         context 'invalid employee id given' do
           it 'creates new working place' do
-            expect { subject }.to change { WorkingPlace.count }.by(1)
+            expect { subject }.to_not change { WorkingPlace.count }
           end
 
           it 'does not assign holiday_policy to working place' do
@@ -164,7 +172,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
           subject { post :create, invalid_holiday_policy_json }
 
           it 'creates new working place' do
-            expect { subject }.to change { WorkingPlace.count }.by(1)
+            expect { subject }.to_not change { WorkingPlace.count }
           end
 
           it 'does not assign holiday_policy to working place' do
@@ -246,7 +254,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
           subject { patch :update, params.merge(invalid_employee_json) }
 
           it 'update working place' do
-            expect { subject }.to change { working_place.reload.name }
+            expect { subject }.to_not change { working_place.reload.name }
           end
 
           it 'does not assign holiday policy' do
@@ -271,7 +279,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
           subject { patch :update, params.merge(invalid_holiday_policy_json) }
 
           it 'update working place' do
-            expect { subject }.to change { working_place.reload.name }
+            expect { subject }.to_not change { working_place.reload.name }
           end
 
           it 'does not assign holiday policy' do
