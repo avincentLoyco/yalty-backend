@@ -6,6 +6,9 @@ module WorkingPlaceRules
       required :id, :String
       optional :name, :String
       optional :employees, :Array
+      optional :holiday_policy, allow_nil: true do
+        required :id
+      end
     end
   end
 
@@ -13,6 +16,9 @@ module WorkingPlaceRules
     Gate.rules do
       required :name, :String
       optional :employees, :Array
+      optional :holiday_policy, allow_nil: true do
+        required :id
+      end
     end
   end
 
@@ -21,6 +27,9 @@ module WorkingPlaceRules
       required :id, :String
       required :name, :String
       optional :employees, :Array
+      optional :holiday_policy, allow_nil: true do
+        required :id
+      end
     end
   end
 

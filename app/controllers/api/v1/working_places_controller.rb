@@ -13,11 +13,11 @@ module API
 
       def create
         verified_params(gate_rules) do |attributes|
-          employees = employees_params(attributes)
+          related = related_params(attributes)
           @resource = Account.current.working_places.new(attributes)
 
           if resource.save
-            assign_employees(resource, employees)
+            assign_related(related)
             render_resource(resource, status: :created)
           else
             resource_invalid_error(resource)
@@ -27,10 +27,10 @@ module API
 
       def update
         verified_params(gate_rules) do |attributes|
-          employees = employees_params(attributes)
+          related = related_params(attributes)
 
           if resource.update(attributes)
-            assign_employees(resource, employees)
+            assign_related(related)
             render_no_content
           else
             resource_invalid_error(resource)
@@ -49,14 +49,32 @@ module API
 
       private
 
-      def assign_employees(resource, employees)
-        return if employees.nil?
+      def assign_related(related_records)
+        return if related_records.empty?
+        related_records.each do |key, value|
+          if key == :holiday_policy
+            assign_member(resource, value, key.to_s)
+          else
+            assign_collection(resource, value, key.to_s)
+          end
+        end
+      end
 
-        assign_collection(resource, employees, 'employees')
+      def related_params(attributes)
+        holiday_policy_params(attributes).to_h
+          .merge(employees_params(attributes).to_h)
       end
 
       def employees_params(attributes)
-        attributes.delete(:employees)
+        if attributes[:employees]
+          { employees: attributes.delete(:employees) }
+        end
+      end
+
+      def holiday_policy_params(attributes)
+        if attributes[:holiday_policy]
+          { holiday_policy: attributes.delete(:holiday_policy).try(:[], :id) }
+        end
       end
 
       def resources
