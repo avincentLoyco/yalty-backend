@@ -126,8 +126,6 @@ GEM
     i18n_data (0.7.0)
     ice_nine (0.11.1)
     json (1.8.3)
-    jsonapi-resources (0.5.9)
-      rails (>= 4.0)
     listen (2.10.0)
       celluloid (~> 0.16.0)
       rb-fsevent (>= 0.9.3)
@@ -292,7 +290,6 @@ DEPENDENCIES
   gate (~> 0.3.0)
   guard-rspec
   holidays (~> 2.2.0)
-  jsonapi-resources (~> 0.5.9)
   meta_request
   pg (~> 0.18.1)
   pry-byebug
