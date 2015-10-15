@@ -42,7 +42,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
         expect(response).to have_http_status(404)
       end
 
-      it 'should repsons with 404 when not user employee id given' do
+      it 'should repsond with 404 when not user employee id given' do
         not_account_employee = create(:employee)
         get :show, id: not_account_employee.id
 
@@ -67,6 +67,12 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
       get :index
 
       expect_json_types('*', id: :string, type: :string, employee_attributes: :array)
+    end
+
+    it 'should have employee attributes' do
+      get :index
+
+      expect_json_keys('*.employee_attributes.0', [:attribute_name, :type, :id, :value])
     end
 
     it 'should not be visible in context of other account' do
