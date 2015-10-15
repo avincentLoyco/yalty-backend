@@ -3,7 +3,7 @@ require 'rails_helper'
 RSpec.describe API::V1::EmployeeEventsController, type: :controller do
   let(:account) { user.account }
   let(:user) { create(:account_user) }
-  let(:employee) { create(:employee, account: account) }
+  let(:employee) { create(:employee, :with_attributes, account: account) }
 
   let(:attribute_definition) {
     create(
@@ -164,56 +164,95 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     end
   end
 
-  context 'GET /employee-events' do
+  context 'GET #index' do
     before(:each) do
       create_list(:employee_event, 3, employee: employee)
     end
 
+    let(:subject) { get :index, employee_id: employee.id }
+
     it 'should respond with success' do
-      get :index
+      subject
 
       expect(response).to have_http_status(:success)
-      expect_json_sizes(data: 3)
+      expect_json_sizes(4)
+    end
+
+    it 'should have employee events attributes' do
+      subject
+
+      expect_json_keys('*', [:effective_at, :event_type, :comment, :employee])
+    end
+
+    it 'should have employee' do
+      subject
+
+      expect_json_keys('*.employee', [:id, :type])
+    end
+
+    it 'should have employee attributes' do
+      subject
+
+      expect_json_keys('*.employee.employee_attributes.0', [:value, :attribute_name, :id, :type])
     end
 
     it 'should not be visible in context of other account' do
       user = create(:account_user)
       Account.current = user.account
 
-      get :index
+      subject
+
+      expect(response).to have_http_status(404)
+    end
+
+    it 'should return 404 when invalid employee id' do
+      get :index, employee_id: '12345678-1234-1234-1234-123456789012'
+
+      expect(response).to have_http_status(404)
+    end
+  end
+
+  context 'GET #show' do
+    let(:employee_event) { create(:employee_event, employee: employee) }
+    subject { get :show, id: employee_event.id }
+
+    it 'should respond with success' do
+      subject
 
       expect(response).to have_http_status(:success)
-      expect_json_sizes(data: 0)
     end
 
-    it 'should have effective-at attribute' do
-      get :index
+    it 'should have employee events attributes' do
+      subject
 
-      expect_json_keys('data.*.attributes', :'effective-at')
-    end
-
-    it 'should have event-type attribute' do
-      get :index
-
-      expect_json_keys('data.*.attributes', :'event-type')
-    end
-
-    it 'should have comment attribute' do
-      get :index
-
-      expect_json_keys('data.*.attributes', :comment)
+      expect_json_keys([:effective_at, :event_type, :comment, :employee])
     end
 
     it 'should have employee' do
-      get :index
+      subject
 
-      expect_json_keys('data.*.relationships', :'employee')
+      expect_json_keys('employee', [:id, :type])
     end
 
-    it 'should have employee-attributes' do
-      get :index
+    it 'should have employee attributes' do
+      subject
 
-      expect_json_keys('data.*.relationships', :'employee-attributes')
+      expect_json_keys('employee.employee_attributes.0', [:value, :attribute_name, :id, :type])
+    end
+
+    it 'should respond with 404 when not user event' do
+      user = create(:account_user)
+      Account.current = user.account
+
+      subject
+
+      expect(response).to have_http_status(404)
+    end
+
+    it 'should respond with 404 when invalid id' do
+      get :show, id: '12345678-1234-1234-1234-123456789012'
+
+      expect(response).to have_http_status(404)
     end
   end
 end

@@ -1,37 +1,30 @@
 module API
   module V1
     class EmployeeEventsController < ApplicationController
+      def show
+        render_resource(resource)
+      end
 
-      def create
-        setup_params
-        load_employee(employee_data)
-        build_employee_event(employee_event_data)
-        build_employee_attributes(employee_attribute_data)
-        save_event
-
-        render status: :no_content, nothing: true
-      rescue => e
-        handle_exceptions(e)
+      def index
+        render_resource(resources)
       end
 
       private
 
-      def employee_data
-        employee_event_data
-          .require(:relationships)
-          .require(:employee)
-          .require(:data)
+      def resource
+        @resource ||= Account.current.employee_events.find(params[:id])
       end
 
-      def employee_event_data
-        params.require(:data)
+      def resources
+        @resources ||= employee.events
       end
 
-      def employee_attribute_data
-        employee_event_data
-          .require(:relationships)
-          .require(:employee_attributes)
-          .require(:data)
+      def employee
+        Account.current.employees.find(params[:employee_id])
+      end
+
+      def resource_representer
+        ::V1::EmployeeEventRepresenter
       end
     end
   end
