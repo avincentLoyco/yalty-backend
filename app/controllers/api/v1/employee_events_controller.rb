@@ -27,7 +27,7 @@ module API
         verified_params(gate_rules) do |attributes|
           event = UpdateEvent.new(attributes, request.method).call
           if event
-            render_resource(event, status: :created)
+            render_no_content
           else
             resource_invalid_error(resource)
           end
