@@ -4,7 +4,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
   include_context 'shared_context_headers'
 
   let(:user) { create(:account_user) }
-  let(:employee) { create(:employee, :with_attributes, account: account) }
+  let!(:employee) { create(:employee, :with_attributes, account: account) }
   let(:valid_event_params) do
     {
       type: "employee_event",
@@ -17,7 +17,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     {
       employee_attributes: [
         {
-          attribute_name: "surname",
+          attribute_name: "lastname",
           value: "smith",
           type: "employee_attribute"
         },
@@ -56,7 +56,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       ]
     }
   end
-  let(:new_employee_json) do
+  let!(:new_employee_json) do
     valid_event_params.deep_merge(employee: { type: 'employee'}.merge(valid_attributes))
   end
   let(:existing_employee_json) do
@@ -71,23 +71,23 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     valid_event_params.deep_merge(employee: { type: 'employee', id: employee.id }
       .merge(remove_attribute))
   end
-  let(:missing_event_params) { new_employee_json.delete(:event_type)}
+  let(:missing_event_params) { new_employee_json.tap { |json| json.delete(:event_type) }}
   let(:invalid_event_params) { new_employee_json.merge(event_type: 'test')}
   let(:missing_attribute_params) do
-    new_employee_json[:employee][:employee_attributes].first.delete(:attribute_name)
+    new_employee_json.tap { |json| json[:employee][:employee_attributes].first.delete(:attribute_name) }
   end
   let(:invalid_attribute_params) do
-    new_employee_json.deep_merge(employee: { employee_attributes: { type: 'test' } })
+    new_employee_json.deep_merge(employee: { employee_attributes: [{ type: 'test' }] })
   end
-  let(:invalid_employee_id_params) { new_employee_json.deep_merge(employee: { id: '1' } )}
+  let(:invalid_employee_id_params) { new_employee_json.deep_merge(employee: { id: '1' } ) }
   let(:invalid_attribute_id_params) do
-    new_employee_json.deep_merge(employee: { employee_attributes: { id: '1' } })
+    new_employee_json.deep_merge(employee: { employee_attributes: [{ id: '1' }] })
   end
 
   describe 'POST #create' do
     context 'valid data' do
       context 'new employee' do
-        subject { post :create, :new_emoloyee_json }
+        subject { post :create, new_employee_json }
 
         it 'should create an event' do
           expect { subject }.to change { Employee::Event.count }.by(1)
@@ -117,9 +117,8 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           it 'should have given values' do
             subject
 
-            expect_json(effective_at: new_employee_json[:effective_at],
-                        comment: new_employee_json[:comment],
-                        event_type: new_employee_json[:event]
+            expect_json(comment: new_employee_json[:comment],
+                        event_type: new_employee_json[:event_type]
             )
           end
 
@@ -140,7 +139,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       end
 
       context 'employee already exist' do
-        subject { post :create, :existing_employee_json }
+        subject { post :create, existing_employee_json }
 
         context 'new attributes send' do
           it 'should create an event' do
@@ -223,7 +222,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           subject { post :create, missing_event_params }
 
           it 'should not create event' do
-            expect { subject }.to_not change { Event.count }
+            expect { subject }.to_not change { Employee::Event.count }
           end
 
           it 'should not create employee' do
@@ -244,9 +243,8 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         context 'for employee attributes' do
           subject { post :create, missing_attribute_params }
 
-
           it 'should not create event' do
-            expect { subject }.to_not change { Event.count }
+            expect { subject }.to_not change {  Employee::Event.count }
           end
 
           it 'should not create employee' do
@@ -270,7 +268,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           subject { post :create, invalid_event_params }
 
           it 'should not create event' do
-            expect { subject }.to_not change { Event.count }
+            expect { subject }.to_not change { Employee::Event.count }
           end
 
           it 'should not create employee' do
@@ -291,9 +289,8 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         context 'for employee attributes' do
           subject { post :create, invalid_attribute_params }
 
-
           it 'should not create event' do
-            expect { subject }.to_not change { Event.count }
+            expect { subject }.to_not change { Employee::Event.count }
           end
 
           it 'should not create employee' do
@@ -317,7 +314,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           subject { post :create, invalid_employee_id_params }
 
           it 'should not create event' do
-            expect { subject }.to_not change { Event.count }
+            expect { subject }.to_not change { Employee::Event.count }
           end
 
           it 'should not create employee' do
@@ -339,7 +336,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           subject { post :create, invalid_attribute_id_params }
 
           it 'should not create event' do
-            expect { subject }.to_not change { Event.count }
+            expect { subject }.to_not change { Employee::Event.count }
           end
 
           it 'should not create employee' do

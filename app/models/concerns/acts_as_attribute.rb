@@ -11,8 +11,9 @@ module ActsAsAttribute
 
     serialize :data, AttributeSerializer
 
-    validates :attribute_definition_id,
-      uniqueness: { allow_nil: true, scope: [:employee] }
+    # TODO add validation for employee + event
+    # validates :attribute_definition_id,
+    #   uniqueness: { allow_nil: true, scope: [:employee] }
 
     after_initialize :setup_attribute_definition
   end
