@@ -1,4 +1,5 @@
 class CreateEvent
+  include EmployeeAttributeVersionRules
   attr_reader :employee, :employee_attributes, :event, :versions
 
   def initialize(attributes)
@@ -20,7 +21,7 @@ class CreateEvent
       begin
         employee.save!
         versions.each do |version|
-          version.event = event
+          version.event = event if event.persisted?
           version.employee = employee
           version.save!
         end
@@ -45,14 +46,14 @@ class CreateEvent
   def employee_attributes(attributes)
     attributes.each do |attribute|
       verify(attribute) do |result|
-        version = set_version(result)
+        version = find_or_initialize_version(result)
         version.value = result[:value]
         versions.push version
       end
     end
   end
 
-  def set_version(attributes)
+  def find_or_initialize_version(attributes)
     if attributes.key?(:id)
       employee.employee_attribute_versions.find(attributes[:id])
     else
@@ -65,7 +66,7 @@ class CreateEvent
   end
 
   def verify(attribute)
-    result = gate_rules.verify(attribute.deep_symbolize_keys)
+    result = gate_rules('POST').verify(attribute.deep_symbolize_keys)
     if result.valid? && value_valid?(result.attributes)
       yield(result.attributes)
     else
@@ -75,13 +76,5 @@ class CreateEvent
 
   def value_valid?(attributes)
     return true unless attributes.key?(:id) && attributes[:value].to_s != "nil"
-  end
-
-  def gate_rules
-    Gate.rules do
-      required :attribute_name
-      required :value
-      optional :id
-    end
   end
 end

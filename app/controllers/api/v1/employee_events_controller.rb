@@ -23,20 +23,16 @@ module API
         end
       end
 
-      # version with employee_management_usage
-      # def create
-      #   verified_params(gate_rules) do |attributes|
-      #     load_or_build_employee(attributes[:employee])
-      #     build_employee_event(attributes)
-      #     build_employee_attributes(attributes[:employee][:employee_attributes])
-      #     event = save_entities
-      #     if event.persisted?
-      #       render_resource(event, status: :created)
-      #     else
-      #       resource_invalid_error(resource)
-      #     end
-      #   end
-      # end
+      def update
+        verified_params(gate_rules) do |attributes|
+          event = UpdateEvent.new(attributes, request.method).call
+          if event
+            render_resource(event, status: :created)
+          else
+            resource_invalid_error(resource)
+          end
+        end
+      end
 
       private
 

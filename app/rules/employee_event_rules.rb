@@ -7,7 +7,10 @@ module EmployeeEventRules
       optional :effective_at
       optional :event_type
       optional :comment
-      optional :employee, :Hash
+      optional :employee, :Hash do
+        optional :id, :String
+        required :employee_attributes, :Array
+      end
     end
   end
 
@@ -29,7 +32,10 @@ module EmployeeEventRules
       required :effective_at
       required :event_type
       optional :comment
-      required :employee, :Hash
+      required :employee, :Hash do
+        required :id, :String
+        required :employee_attributes, :Array
+      end
     end
   end
 end
