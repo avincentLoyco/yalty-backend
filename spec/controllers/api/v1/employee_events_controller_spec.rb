@@ -89,17 +89,9 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       context 'new employee' do
         subject { post :create, new_employee_json }
 
-        it 'should create an event' do
-          expect { subject }.to change { Employee::Event.count }.by(1)
-        end
-
-        it 'should create an employee' do
-          expect { subject }.to change { Employee.count }.by(1)
-        end
-
-        it 'should create attribute versions' do
-          expect { subject }.to change { Employee::AttributeVersion.count }.by(2)
-        end
+        it { expect { subject }.to change { Employee::Event.count }.by(1) }
+        it { expect { subject }.to change { Employee.count }.by(1) }
+        it { expect { subject }.to change { Employee::AttributeVersion.count }.by(2) }
 
         context 'response' do
           it 'should respond with success' do
@@ -142,17 +134,9 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         subject { post :create, existing_employee_json }
 
         context 'new attributes send' do
-          it 'should create an event' do
-            expect { subject }.to change { Employee::Event.count }.by(1)
-          end
-
-          it 'should not create new employee' do
-            expect { subject }.to_not change { Employee.count }
-          end
-
-          it 'should create attributes' do
-            expect { subject }.to change { Employee::AttributeVersion.count }.by(2)
-          end
+          it { expect { subject }.to change { Employee::Event.count }.by(1) }
+          it { expect { subject }.to_not change { Employee.count } }
+          it { expect { subject }.to change { Employee::AttributeVersion.count }.by(2) }
 
           it 'should respond with success' do
             subject
@@ -162,55 +146,17 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         end
 
         context 'already added attributes send' do
-          context 'add attribute with value' do
-            subject { post :create, existing_employee_params_json }
+          subject { post :create, existing_employee_remove_param_json }
 
-            it 'should create an event' do
-              expect { subject }.to change { Employee::Event.count }.by(1)
-            end
+          it { expect { subject }.to_not change { Employee::Event.count } }
+          it { expect { subject }.to_not change { Employee.count } }
+          it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
+          it { expect { subject }.to change { employee_attribute.reload.value }.to(nil) }
 
-            it 'should not create new employee' do
-              expect { subject }.to_not change { Employee.count }
-            end
+          it 'should respond with success' do
+            subject
 
-            it 'should create attributes' do
-              expect { subject }.to change { Employee::AttributeVersion.count }.by(1)
-            end
-
-            it 'should have two attributes with the same definition' do
-              subject
-
-              expect(employee.employee_attribute_versions.first.attribute_definition)
-                .to eq(employee.employee_attribute_versions.last.attribute_definition)
-            end
-
-            it 'should respond with success' do
-              subject
-
-              expect(response).to have_http_status(201)
-            end
-          end
-
-          context 'add attribute with null value' do
-            subject { post :create, existing_employee_remove_param_json }
-
-            it 'should create an event' do
-              expect { subject }.to change { Employee::Event.count }.by(1)
-            end
-
-            it 'should not create new employee' do
-              expect { subject }.to_not change { Employee.count }
-            end
-
-            it 'should remove attribute' do
-              expect { subject }.to change { Employee::AttributeVersion.count }.by(-1)
-            end
-
-            it 'should respond with success' do
-              subject
-
-              expect(response).to have_http_status(201)
-            end
+            expect(response).to have_http_status(201)
           end
         end
       end
@@ -221,17 +167,9 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         context 'for event' do
           subject { post :create, missing_event_params }
 
-          it 'should not create event' do
-            expect { subject }.to_not change { Employee::Event.count }
-          end
-
-          it 'should not create employee' do
-            expect { subject }.to_not change { Employee.count }
-          end
-
-          it 'should not create attributes' do
-            expect { subject }.to_not change { Employee::AttributeVersion.count }
-          end
+          it { expect { subject }.to_not change { Employee::Event.count } }
+          it { expect { subject }.to_not change { Employee.count } }
+          it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
 
           it 'should respond with 422' do
             subject
@@ -243,17 +181,9 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         context 'for employee attributes' do
           subject { post :create, missing_attribute_params }
 
-          it 'should not create event' do
-            expect { subject }.to_not change {  Employee::Event.count }
-          end
-
-          it 'should not create employee' do
-            expect { subject }.to_not change { Employee.count }
-          end
-
-          it 'should not create attributes' do
-            expect { subject }.to_not change { Employee::AttributeVersion.count }
-          end
+          it { expect { subject }.to_not change { Employee::Event.count } }
+          it { expect { subject }.to_not change { Employee.count } }
+          it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
 
           it 'should respond with 422' do
             subject
@@ -267,17 +197,9 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         context 'for event' do
           subject { post :create, invalid_event_params }
 
-          it 'should not create event' do
-            expect { subject }.to_not change { Employee::Event.count }
-          end
-
-          it 'should not create employee' do
-            expect { subject }.to_not change { Employee.count }
-          end
-
-          it 'should not create attributes' do
-            expect { subject }.to_not change { Employee::AttributeVersion.count }
-          end
+          it { expect { subject }.to_not change { Employee::Event.count } }
+          it { expect { subject }.to_not change { Employee.count } }
+          it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
 
           it 'should respond with 422' do
             subject
@@ -289,17 +211,9 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         context 'for employee attributes' do
           subject { post :create, invalid_attribute_params }
 
-          it 'should not create event' do
-            expect { subject }.to_not change { Employee::Event.count }
-          end
-
-          it 'should not create employee' do
-            expect { subject }.to_not change { Employee.count }
-          end
-
-          it 'should not create attributes' do
-            expect { subject }.to_not change { Employee::AttributeVersion.count }
-          end
+          it { expect { subject }.to_not change { Employee::Event.count } }
+          it { expect { subject }.to_not change { Employee.count } }
+          it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
 
           it 'should respond with 422' do
             subject
@@ -313,17 +227,9 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         context 'for employee' do
           subject { post :create, invalid_employee_id_params }
 
-          it 'should not create event' do
-            expect { subject }.to_not change { Employee::Event.count }
-          end
-
-          it 'should not create employee' do
-            expect { subject }.to_not change { Employee.count }
-          end
-
-          it 'should not create attributes' do
-            expect { subject }.to_not change { Employee::AttributeVersion.count }
-          end
+          it { expect { subject }.to_not change { Employee::Event.count } }
+          it { expect { subject }.to_not change { Employee.count } }
+          it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
 
           it 'should respond with 404' do
             subject
@@ -335,17 +241,9 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         context 'for employee attribute' do
           subject { post :create, invalid_attribute_id_params }
 
-          it 'should not create event' do
-            expect { subject }.to_not change { Employee::Event.count }
-          end
-
-          it 'should not create employee' do
-            expect { subject }.to_not change { Employee.count }
-          end
-
-          it 'should not create attributes' do
-            expect { subject }.to_not change { Employee::AttributeVersion.count }
-          end
+          it { expect { subject }.to_not change { Employee::Event.count } }
+          it { expect { subject }.to_not change { Employee.count } }
+          it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
 
           it 'should respond with 404' do
             subject
@@ -354,10 +252,181 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           end
         end
       end
+
+      context 'exitisting attribute send with value other than nil' do
+        subject { post :create, existing_employee_params_json }
+        it { expect { subject }.to_not change { Employee::Event.count } }
+        it { expect { subject }.to_not change { Employee.count } }
+        it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
+
+        it 'should respond with 422' do
+          subject
+
+          expect(response).to have_http_status(422)
+        end
+      end
     end
   end
 
-   context 'GET #index' do
+  # context 'PUT #update' do
+
+
+  #   context 'valid data' do
+  #     context 'event data update' do
+  #       subject { put :update, update_event_json }
+
+  #       it { expect { subject }.to change { event.reload.comment } }
+  #       it { expect { subject }.to_not change { employee } }
+  #       it { expect { subject }.to_not change { employee_attribute } }
+
+  #       it 'should respond with success' do
+  #         subject
+
+  #         expect(response).to have_htt_status(204)
+  #       end
+  #     end
+
+  #     context 'employee attribute data update' do
+  #       subject { put :update, update_attribute_params }
+
+  #       it { expect { subject }.to change { employee_attribute.reload.value } }
+  #       it { expect { subject }.to_not change { employee } }
+  #       it { expect { subject }.to_not change { event } }
+
+  #       it 'should respond with success' do
+  #         subject
+
+  #         expect(response).to have_http_status(204)
+  #       end
+  #     end
+
+  #     context 'employee and event update' do
+  #       subject { put :update, update_attribute_and_event_params }
+
+  #       it { expect { subject }.to change { employee_attribute.reload.value } }
+  #       it { expect { subject }.to_not change { employee } }
+  #       it { expect { subject }.to change { event.reload.comment } }
+
+  #       it 'should respond with success' do
+  #         subject
+
+  #         expect(response).to have_http_status(204)
+  #       end
+  #     end
+
+  #     context 'remove employee attribute version' do
+  #       subject { put :update, remove_attribute_version_params }
+
+  #       it { expect { subject }.to_not change { employee } }
+  #       it { expect { subject }.to_not change { event } }
+  #       it { expect { subject }.to change { Employee::AttributeVersion.count}.by(-1) }
+
+  #       it 'should respond with success' do
+  #         subject
+
+  #         expect(response).to have_http_status(204)
+  #       end
+  #     end
+  #   end
+
+  #   context 'invalid data' do
+  #     context 'invalid event id' do
+  #       subject { put :update, invalid_event_id }
+
+  #       it { expect { subject }.to_not change { employee } }
+  #       it { expect { subject }.to_not change { event } }
+  #       it { expect { subject }.to_not change { employee_attribute } }
+
+  #       it 'should repsond with 404' do
+  #         subject
+
+  #         expect(response).to have_http_status(404)
+  #       end
+  #     end
+
+  #     context 'invalid employee id' do
+  #       subject { put :update, invalid_employee_id }
+
+  #       it { expect { subject }.to_not change { employee } }
+  #       it { expect { subject }.to_not change { event } }
+  #       it { expect { subject }.to_not change { employee_attribute } }
+
+  #       it 'should repsond with 404' do
+  #         subject
+
+  #         expect(response).to have_http_status(404)
+  #       end
+  #     end
+
+  #     context 'invalid attribute id' do
+  #       subject { put :update, invalid_attribute_id }
+
+  #       it { expect { subject }.to_not change { employee } }
+  #       it { expect { subject }.to_not change { event } }
+  #       it { expect { subject }.to_not change { employee_attribute } }
+
+  #       it 'should repsond with 404' do
+  #         subject
+
+  #         expect(response).to have_http_status(404)
+  #       end
+  #     end
+
+  #     context 'parameters are missing' do
+  #       context 'event params are missing' do
+  #         it { expect { subject }.to_not change { employee } }
+  #         it { expect { subject }.to_not change { event } }
+  #         it { expect { subject }.to_not change { employee_attribute } }
+
+  #         it 'should repsond with 404' do
+  #           subject
+
+  #           expect(response).to have_http_status(422)
+  #         end
+  #       end
+
+  #       context 'employee attribute params are missing' do
+  #         it { expect { subject }.to_not change { employee } }
+  #         it { expect { subject }.to_not change { event } }
+  #         it { expect { subject }.to_not change { employee_attribute } }
+
+  #         it 'should repsond with 404' do
+  #           subject
+
+  #           expect(response).to have_http_status(422)
+  #         end
+  #       end
+  #     end
+
+  #     context 'data do not pass validation' do
+  #       context 'event data do not pass validation' do
+  #         it { expect { subject }.to_not change { employee } }
+  #         it { expect { subject }.to_not change { event } }
+  #         it { expect { subject }.to_not change { employee_attribute } }
+
+  #         it 'should repsond with 404' do
+  #           subject
+
+  #           expect(response).to have_http_status(422)
+  #         end
+  #       end
+
+  #       context 'employee attribute data do not pass validation' do
+  #         it { expect { subject }.to_not change { employee } }
+  #         it { expect { subject }.to_not change { event } }
+  #         it { expect { subject }.to_not change { employee_attribute } }
+
+  #         it 'should repsond with 404' do
+  #           subject
+
+  #           expect(response).to have_http_status(422)
+  #         end
+  #       end
+  #     end
+  #   end
+  # end
+
+  context 'GET #index' do
     before(:each) do
       create_list(:employee_event, 3, employee: employee)
     end

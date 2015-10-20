@@ -45,34 +45,43 @@ class CreateEvent
   def employee_attributes(attributes)
     attributes.each do |attribute|
       verify(attribute) do |result|
-        # two types of attributes: new and existing
-          # new -> find definition, push to versions
-          # exisiting -> check if valid id and value nil, update, push to versions
-        definition = Employee::AttributeDefinition.find_by!(name: result[:attribute_name])
-        if result.key?(:id)
-          version = Employee::AttributeVersion.find(result[:id])
-        else
-          version = Employee::AttributeVersion.new(attribute_definition: definition)
-        end
+        version = set_version(result)
         version.value = result[:value]
         versions.push version
       end
     end
   end
 
+  def set_version(attributes)
+    if attributes.key?(:id)
+      employee.employee_attribute_versions.find(attributes[:id])
+    else
+      Employee::AttributeVersion.new(attribute_definition: set_definition(attributes))
+    end
+  end
+
+  def set_definition(attributes)
+    Account.current.employee_attribute_definitions.find_by!(name: attributes[:attribute_name])
+  end
+
   def verify(attribute)
-    # write it prettier, move rules outside, add check for vattribute value for create
-    rules = Gate.rules do
+    result = gate_rules.verify(attribute.deep_symbolize_keys)
+    if result.valid? && value_valid?(result.attributes)
+      yield(result.attributes)
+    else
+      raise ActiveRecord::RecordNotFound
+    end
+  end
+
+  def value_valid?(attributes)
+    return true unless attributes.key?(:id) && attributes[:value].to_s != "nil"
+  end
+
+  def gate_rules
+    Gate.rules do
       required :attribute_name
       required :value
       optional :id
-    end
-    result = rules.verify(attribute.deep_symbolize_keys)
-    if result.valid?
-      yield(result.attributes)
-    else
-      # TODO add better exception
-      raise ActiveRecord::RecordNotFound
     end
   end
 end
