@@ -53,7 +53,7 @@ module API
       def assign_related(resource, related_records)
         return true if related_records.empty?
         related_records.each do |key, values|
-          if key == :holidays
+          if key == :custom_holidays
             assign_holidays(resource, values)
           else
             AssignCollection.new(resource, values, key.to_s).call
@@ -66,8 +66,8 @@ module API
         if result.size != values.size
           raise ActiveRecord::RecordNotFound
         else
-          Holiday.where(id: (resource.holiday_ids - result)).destroy_all
-          resource.holiday_ids = result
+          Holiday.where(id: (resource.custom_holiday_ids - result)).destroy_all
+          resource.custom_holiday_ids = result
         end
       end
 
@@ -91,7 +91,7 @@ module API
 
       def related_holidays(attributes)
         if attributes[:holidays]
-          { holidays: attributes.delete(:holidays) }
+          { custom_holidays: attributes.delete(:holidays) }
         end
       end
 
@@ -108,7 +108,7 @@ module API
       end
 
       def valid_holiday_ids
-        Account.current.holiday_policies.map(&:holidays).flatten.map { |holiday| holiday[:id] }
+        Account.current.holiday_policies.map(&:custom_holidays).flatten.map { |holiday| holiday[:id] }
       end
     end
   end

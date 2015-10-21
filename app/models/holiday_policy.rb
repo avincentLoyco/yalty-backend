@@ -1,6 +1,7 @@
 class HolidayPolicy < ActiveRecord::Base
   belongs_to :account
-  has_many :holidays
+  has_many :custom_holidays,
+    class_name: 'Holiday'
   has_many :working_places
   has_many :employees
   has_one :assigned_account,
@@ -23,7 +24,29 @@ class HolidayPolicy < ActiveRecord::Base
                                'nl', 'no', 'pl', 'pt', 'ro', 'sk', 'si', 'fi', 'jp', 'ma',
                                'ph', 'se', 'sg', 've', 'vi', 'za']
 
+  def holidays
+    if country.present? || region.present?
+      custom_holidays + country_holidays
+    else
+      custom_holidays
+    end
+  end
+
   private
+
+  def country_holidays
+    Holidays.between(Time.now.beginning_of_year, Time.now.end_of_year, country_with_region).map do |holiday|
+      { date: holiday[:date], name: 'Holiday' }
+    end
+  end
+
+  def country_with_region
+    if region.present?
+      "#{country}_#{region}".to_sym
+    else
+      country.to_sym
+    end
+  end
 
   def country_or_region_present?
     country.present? || region.present?

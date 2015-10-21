@@ -124,13 +124,13 @@ RSpec.describe API::V1::HolidayPoliciesController, type: :controller do
       it 'assigns holiday to holiday_policy' do
         expect {
           patch :update, params.merge(first_holiday_json)
-        }.to change { holiday_policy.reload.holidays.size }.by(1)
+        }.to change { holiday_policy.reload.custom_holidays.size }.by(1)
       end
 
       it 'allows for more than one holiday assign' do
         expect {
           patch :update, params.merge(both_holiday_json)
-        }.to change { holiday_policy.reload.holidays.size }.by(2)
+        }.to change { holiday_policy.reload.custom_holidays.size }.by(2)
       end
 
       it 'respond with success' do
@@ -140,16 +140,16 @@ RSpec.describe API::V1::HolidayPoliciesController, type: :controller do
       end
 
       it 'unnassign record which is not send' do
-        holiday_policy.holidays.push(first_holiday, third_holiday)
-        expect(holiday_policy.holidays.count).to eq(2)
+        holiday_policy.custom_holidays.push(first_holiday, third_holiday)
+        expect(holiday_policy.custom_holidays.count).to eq(2)
 
         patch :update, params.merge(first_holiday_json)
-        expect(holiday_policy.holidays.count).to eq(1)
+        expect(holiday_policy.custom_holidays.count).to eq(1)
       end
 
       it 'delete record which is unnasigned' do
-        holiday_policy.holidays.push(first_holiday, third_holiday)
-        expect(holiday_policy.holidays.count).to eq(2)
+        holiday_policy.custom_holidays.push(first_holiday, third_holiday)
+        expect(holiday_policy.custom_holidays.count).to eq(2)
 
         expect {
           patch :update, params.merge(first_holiday_json)

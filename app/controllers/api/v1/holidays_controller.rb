@@ -8,12 +8,12 @@ module API
       end
 
       def index
-        render_resource(resources)
+        render_resource(holiday_policy.holidays)
       end
 
       def create
         verified_params(gate_rules) do |attributes|
-          resource = holiday_policy.holidays.new(attributes)
+          resource = holiday_policy.custom_holidays.new(attributes)
           if resource.save
             render_resource(resource, status: :created)
           else
@@ -44,7 +44,7 @@ module API
       end
 
       def resources
-        @resources ||= holiday_policy.holidays
+        @resources ||= holiday_policy.custom_holidays
       end
 
       def holiday_policy
