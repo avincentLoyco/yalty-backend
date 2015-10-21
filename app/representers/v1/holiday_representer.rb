@@ -3,9 +3,10 @@ module V1
     def complete
       {
         date: date,
-        name: resource.name
+        name: resource.name,
+        id:   resource.try(:id),
+        type: resource_type,
       }
-        .merge(basic)
     end
 
     private

@@ -109,6 +109,34 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
       data = JSON.parse(response.body)
       expect(data.size).to eq 1
     end
+
+    it 'should return default holidays for country Poland' do
+      holiday_policy = create(:holiday_policy, :with_country, account: account)
+
+      get :index, holiday_policy_id: holiday_policy.id
+      expect(response).to have_http_status(:success)
+      data = JSON.parse(response.body)
+      expect(data.size).to eq 14
+    end
+
+    it 'should return default holidays for country Switzerland and land Zuruch' do
+      holiday_policy = create(:holiday_policy, :with_region, account: account)
+
+      get :index, holiday_policy_id: holiday_policy.id
+      expect(response).to have_http_status(:success)
+      data = JSON.parse(response.body)
+      expect(data.size).to eq 10
+    end
+
+    it 'should return default holidays for country Poland and custom' do
+      holiday_policy = create(:holiday_policy, :with_country, account: account)
+      create(:holiday, holiday_policy: holiday_policy)
+
+      get :index, holiday_policy_id: holiday_policy.id
+      expect(response).to have_http_status(:success)
+      data = JSON.parse(response.body)
+      expect(data.size).to eq 15
+    end
   end
 
   describe "POST #create" do

@@ -23,6 +23,7 @@ class HolidayPolicy < ActiveRecord::Base
                                'je', 'gg', 'im', 'hr', 'hu', 'ie', 'is', 'it', 'li', 'lt',
                                'nl', 'no', 'pl', 'pt', 'ro', 'sk', 'si', 'fi', 'jp', 'ma',
                                'ph', 'se', 'sg', 've', 'vi', 'za']
+  HolidayStruct = Struct.new(:date, :name)
 
   def holidays
     if country.present? || region.present?
@@ -35,8 +36,10 @@ class HolidayPolicy < ActiveRecord::Base
   private
 
   def country_holidays
-    Holidays.between(Time.now.beginning_of_year, Time.now.end_of_year, country_with_region).map do |holiday|
-      { date: holiday[:date], name: 'Holiday' }
+    from = Time.now.beginning_of_year
+    to = Time.now.end_of_year
+    Holidays.between(from, to, country_with_region).map do |holiday|
+      HolidayStruct.new(holiday[:date], 'Holiday')
     end
   end
 
