@@ -1,5 +1,6 @@
 class CreateEvent
   include EmployeeAttributeVersionRules
+  include API::V1::Exceptions
   attr_reader :employee, :employee_attributes, :event, :versions
 
   def initialize(attributes)
@@ -70,11 +71,15 @@ class CreateEvent
     if result.valid? && value_valid?(result.attributes)
       yield(result.attributes)
     else
-      raise ActiveRecord::RecordNotFound
+      fail MissingOrInvalidData.new(set_exception(result)), 'Missing or Invalid Data'
     end
   end
 
+  def set_exception(result)
+    result.errors.any? ? result.errors : 'Invalid Value for Attribute'
+  end
+
   def value_valid?(attributes)
-    return true unless attributes.key?(:id) && attributes[:value].to_s != "nil"
+    return true unless (attributes.key?(:id) && attributes[:value] != nil)
   end
 end

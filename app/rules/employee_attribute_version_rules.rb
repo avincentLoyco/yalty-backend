@@ -3,7 +3,7 @@ module EmployeeAttributeVersionRules
 
   def patch_rules
     Gate.rules do
-      optional :value
+      optional :value, allow_nil: true 
       required :id
     end
   end
@@ -12,14 +12,15 @@ module EmployeeAttributeVersionRules
     Gate.rules do
       optional :id
       required :attribute_name
-      required :value
+      required :value, allow_nil: true 
     end
   end
 
   def put_rules
     Gate.rules do
       required :id
-      required :value
+      required :value, allow_nil: true
     end
   end
+
 end

@@ -1,5 +1,6 @@
 class UpdateEvent
   include EmployeeAttributeVersionRules
+  include API::V1::Exceptions
   attr_reader :versions, :action, :employee, :event, :employee_attributes
 
   def initialize(attributes, action)
@@ -21,9 +22,8 @@ class UpdateEvent
     ActiveRecord::Base.transaction do
       begin
         event.save!
-        versions.each do |version|
-          process_version(version)
-        end
+        remove_absent_versions
+        versions.map &:save!
       rescue
         raise ActiveRecord::Rollback
       end
@@ -54,8 +54,11 @@ class UpdateEvent
     end
   end
 
-  def process_version(version)
-    version.value == "nil" ? version.destroy! : version.save!
+  def remove_absent_versions
+    if event.employee_attribute_versions.size > versions.size
+      versions_to_remove = event.employee_attribute_versions - versions
+      versions_to_remove.map &:destroy!
+    end
   end
 
   def verify(attribute)
@@ -63,7 +66,7 @@ class UpdateEvent
     if result.valid?
       yield(result.attributes)
     else
-      raise ActiveRecord::RecordNotFound
+      fail MissingOrInvalidData.new(result.errors), 'Missing or Invalid Data'
     end
   end
 end

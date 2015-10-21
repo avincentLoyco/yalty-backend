@@ -5,7 +5,9 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
   let(:user) { create(:account_user) }
   let!(:employee) { create(:employee, :with_attributes, account: account) }
-  let(:valid_event_params) do
+  
+  describe 'POST #create' do
+    let(:valid_event_params) do
     {
       type: "employee_event",
       effective_at: "12.12.2015",
@@ -35,12 +37,12 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         {
           id: employee.employee_attribute_versions.first.id,
           value: 'smith',
-          type: employee.employee_attribute_versions.first.attribute_definition.name
+          attribute_name: employee.employee_attribute_versions.first.attribute_definition.name
         },
         {
           id: employee.employee_attribute_versions.last.id,
           value: 'smith',
-          type: employee.employee_attribute_versions.last.attribute_definition.name
+          attribute_name: employee.employee_attribute_versions.last.attribute_definition.name
         }
       ]
     }
@@ -51,7 +53,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         {
           id: employee.employee_attribute_versions.first.id,
           value: nil,
-          type: employee.employee_attribute_versions.first.attribute_definition.name
+          attribute_name: employee.employee_attribute_versions.first.attribute_definition.name
         }
       ]
     }
@@ -81,14 +83,16 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
   end
   let(:invalid_employee_id_params) { new_employee_json.deep_merge(employee: { id: '1' } ) }
   let(:invalid_attribute_id_params) do
-    new_employee_json.deep_merge(employee: { employee_attributes: [{ id: '1' }] })
+    new_employee_json.deep_merge(employee: { employee_attributes: [{ 
+      id: '1', 
+      value: 'ABC', 
+      attribute_name: 'test' }] 
+    })
   end
 
-  describe 'POST #create' do
     context 'valid data' do
       context 'new employee' do
         subject { post :create, new_employee_json }
-
         it { expect { subject }.to change { Employee::Event.count }.by(1) }
         it { expect { subject }.to change { Employee.count }.by(1) }
         it { expect { subject }.to change { Employee::AttributeVersion.count }.by(2) }
@@ -121,7 +125,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           end
 
           it 'should contain employee attributes' do
-            subject
+            expect(response.body).to eq 'heee'
 
             expect_json_keys('employee.employee_attributes.0',
               [:value, :attribute_name, :id, :type]
@@ -147,11 +151,15 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
         context 'already added attributes send' do
           subject { post :create, existing_employee_remove_param_json }
+          before { employee.employee_attribute_versions.first.update!(value: 'test') }
 
-          it { expect { subject }.to_not change { Employee::Event.count } }
+          it { expect { subject }.to change { Employee::Event.count }.by(1) }
           it { expect { subject }.to_not change { Employee.count } }
           it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
-          it { expect { subject }.to change { employee_attribute.reload.value }.to(nil) }
+
+          it 'changes value to nil'  do 
+            expect { subject }.to change { employee.employee_attribute_versions.first.reload.value }.to(nil) 
+          end
 
           it 'should respond with success' do
             subject
@@ -268,163 +276,244 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     end
   end
 
-  # context 'PUT #update' do
+  context 'PUT #update' do
+    let(:employee) { create(:employee, :with_attributes, account: account) }
+    let(:event) { employee.events.first }
+    let(:first_employee_attribute) { employee.employee_attribute_versions.first }
+    let(:second_employee_attribute) { employee.employee_attribute_versions.last }
+    let(:base_json) do
+      {
+        "type": "employee_event",
+        "id": event.id,
+        "effective_at": event.effective_at,
+        "comment": event.comment,
+        "event_type": event.event_type,
+        "employee": {
+          "type": "employee",
+          "id": employee.id,
+          "employee_attributes": [
+            {
+              "id": first_employee_attribute.id,
+              "type": "employee_attribute",
+              "value": first_employee_attribute.data.value,
+              "attribute_name": first_employee_attribute.attribute_definition.name
+            },
+            {
+              "id": second_employee_attribute.id,
+              "type": "employee_attribute",
+              "value": second_employee_attribute.data.value,
+              "attribute_name": second_employee_attribute.attribute_definition.name
+            }
+          ]
+        }
+      }
+    end
+    let(:update_event_json) { base_json.merge(comment: 'test') }
+    let(:update_attribute_json) do 
+      base_json.deep_merge(employee: { employee_attributes: [ 
+        { value: 'test', id: first_employee_attribute.id }, 
+        { value: 'test2', id: second_employee_attribute.id }
+      ]})
+    end
+    let(:update_attribute_and_event_params) { update_attribute_json.merge(comment: 'test') }
+    let(:invalid_event_id) { base_json.merge(id: '1') }
+    let(:invalid_employee_id) { base_json.deep_merge(employee: { id: '1' } ) }
+    let(:missing_event_params) { base_json.tap { |json| json.delete(:effective_at) } }
+    let(:missing_attribute_params) do
+      base_json.tap { |json| json[:employee][:employee_attributes].first.delete(:attribute_name) }
+    end
+    let(:invalid_event_params) { base_json.merge(event_type: 'test')}
+    let(:invalid_attribute_params) do
+      base_json.deep_merge(employee: { employee_attributes: [{ value: '' }] })
+    end
+    let(:invalid_attribute_id) do base_json.deep_merge(employee: { 
+        employee_attributes: [ {
+          id: '1',
+          value: 'test'
+        }]
+      })
+    end
+    let(:json_without_attribute) do
+      base_json.deep_merge(employee: { employee_attributes: [
+        { 
+          "id": first_employee_attribute.id, 
+          "value": first_employee_attribute.data.value
+        }
+      ]})
+    end
 
+    context 'valid data' do
+      context 'event data update' do
+        subject { put :update, update_event_json }
 
-  #   context 'valid data' do
-  #     context 'event data update' do
-  #       subject { put :update, update_event_json }
+        it { expect { subject }.to change { event.reload.comment }.to('test') }
+        it { expect { subject }.to_not change { employee.reload.employee_attribute_versions } }
+        it { expect { subject }.to_not change { first_employee_attribute.reload.value } }
+        it { expect { subject }.to_not change { second_employee_attribute.reload.value } }
 
-  #       it { expect { subject }.to change { event.reload.comment } }
-  #       it { expect { subject }.to_not change { employee } }
-  #       it { expect { subject }.to_not change { employee_attribute } }
+        it 'should respond with success' do
+          subject
 
-  #       it 'should respond with success' do
-  #         subject
+          expect(response).to have_http_status(204)
+        end
+      end
 
-  #         expect(response).to have_htt_status(204)
-  #       end
-  #     end
+      context 'employee attribute data update' do
+        subject { put :update, update_attribute_json }
 
-  #     context 'employee attribute data update' do
-  #       subject { put :update, update_attribute_params }
+        it { expect { subject }.to change { first_employee_attribute.reload.value } }
+        it { expect { subject }.to change { second_employee_attribute.reload.value } }
+        it { expect { subject }.to_not change { employee } }
+        it { expect { subject }.to_not change { event } }
 
-  #       it { expect { subject }.to change { employee_attribute.reload.value } }
-  #       it { expect { subject }.to_not change { employee } }
-  #       it { expect { subject }.to_not change { event } }
+        it 'should respond with success' do
+          subject
 
-  #       it 'should respond with success' do
-  #         subject
+          expect(response).to have_http_status(204)
+        end
+      end
 
-  #         expect(response).to have_http_status(204)
-  #       end
-  #     end
+      context 'employee and event update' do
+        subject { put :update, update_attribute_and_event_params }
 
-  #     context 'employee and event update' do
-  #       subject { put :update, update_attribute_and_event_params }
+        it { expect { subject }.to change { first_employee_attribute.reload.value  } }
+        it { expect { subject }.to change { second_employee_attribute.reload.value  } }
+        it { expect { subject }.to_not change { employee } }
+        it { expect { subject }.to change { event.reload.comment } }
 
-  #       it { expect { subject }.to change { employee_attribute.reload.value } }
-  #       it { expect { subject }.to_not change { employee } }
-  #       it { expect { subject }.to change { event.reload.comment } }
+        it 'should respond with success' do
+          subject
 
-  #       it 'should respond with success' do
-  #         subject
+          expect(response).to have_http_status(204)
+        end
+      end
 
-  #         expect(response).to have_http_status(204)
-  #       end
-  #     end
+      context 'attribute without one attribute send' do
+        subject { put :update, json_without_attribute }
 
-  #     context 'remove employee attribute version' do
-  #       subject { put :update, remove_attribute_version_params }
+        it { expect { subject }.to_not change { employee } }
+        it { expect { subject }.to_not change { event } }
+        it { expect { subject }.to change { Employee::AttributeVersion.count}.by(-1) }
 
-  #       it { expect { subject }.to_not change { employee } }
-  #       it { expect { subject }.to_not change { event } }
-  #       it { expect { subject }.to change { Employee::AttributeVersion.count}.by(-1) }
+        it 'should respond with success' do
+          subject
 
-  #       it 'should respond with success' do
-  #         subject
+          expect(response).to have_http_status(204)
+        end
+      end
+    end
 
-  #         expect(response).to have_http_status(204)
-  #       end
-  #     end
-  #   end
+    context 'invalid data' do
+      context 'invalid event id' do
+        subject { put :update, invalid_event_id }
 
-  #   context 'invalid data' do
-  #     context 'invalid event id' do
-  #       subject { put :update, invalid_event_id }
+        it { expect { subject }.to_not change { employee } }
+        it { expect { subject }.to_not change { event } }
+        it { expect { subject }.to_not change { first_employee_attribute.reload.value } }
+        it { expect { subject }.to_not change { second_employee_attribute.reload.value } }
 
-  #       it { expect { subject }.to_not change { employee } }
-  #       it { expect { subject }.to_not change { event } }
-  #       it { expect { subject }.to_not change { employee_attribute } }
+        it 'should repsond with 404' do
+          subject
 
-  #       it 'should repsond with 404' do
-  #         subject
+          expect(response).to have_http_status(404)
+        end
+      end
 
-  #         expect(response).to have_http_status(404)
-  #       end
-  #     end
+      context 'invalid employee id' do
+        subject { put :update, invalid_employee_id }
 
-  #     context 'invalid employee id' do
-  #       subject { put :update, invalid_employee_id }
+        it { expect { subject }.to_not change { employee } }
+        it { expect { subject }.to_not change { event } }
+        it { expect { subject }.to_not change { first_employee_attribute.reload.value } }
+        it { expect { subject }.to_not change { second_employee_attribute.reload.value } }
 
-  #       it { expect { subject }.to_not change { employee } }
-  #       it { expect { subject }.to_not change { event } }
-  #       it { expect { subject }.to_not change { employee_attribute } }
+        it 'should repsond with 404' do
+          subject
 
-  #       it 'should repsond with 404' do
-  #         subject
+          expect(response).to have_http_status(404)
+        end
+      end
 
-  #         expect(response).to have_http_status(404)
-  #       end
-  #     end
+      context 'invalid attribute id' do
+        subject { put :update, invalid_attribute_id }
 
-  #     context 'invalid attribute id' do
-  #       subject { put :update, invalid_attribute_id }
+        it { expect { subject }.to_not change { employee } }
+        it { expect { subject }.to_not change { event } }
+        it { expect { subject }.to_not change { first_employee_attribute.reload.value } }
+        it { expect { subject }.to_not change { second_employee_attribute.reload.value } }
 
-  #       it { expect { subject }.to_not change { employee } }
-  #       it { expect { subject }.to_not change { event } }
-  #       it { expect { subject }.to_not change { employee_attribute } }
+        it 'should repsond with 404' do
+          subject
 
-  #       it 'should repsond with 404' do
-  #         subject
+          expect(response).to have_http_status(404)
+        end
+      end
 
-  #         expect(response).to have_http_status(404)
-  #       end
-  #     end
+      context 'parameters are missing' do
+        context 'event params are missing' do
+          subject { put :update, missing_event_params }
 
-  #     context 'parameters are missing' do
-  #       context 'event params are missing' do
-  #         it { expect { subject }.to_not change { employee } }
-  #         it { expect { subject }.to_not change { event } }
-  #         it { expect { subject }.to_not change { employee_attribute } }
+          it { expect { subject }.to_not change { employee } }
+          it { expect { subject }.to_not change { event } }
+          it { expect { subject }.to_not change { first_employee_attribute.reload.value } }
+          it { expect { subject }.to_not change { second_employee_attribute.reload.value } } 
 
-  #         it 'should repsond with 404' do
-  #           subject
+          it 'should repsond with 422' do
+            subject
 
-  #           expect(response).to have_http_status(422)
-  #         end
-  #       end
+            expect(response).to have_http_status(422)
+          end
+        end
 
-  #       context 'employee attribute params are missing' do
-  #         it { expect { subject }.to_not change { employee } }
-  #         it { expect { subject }.to_not change { event } }
-  #         it { expect { subject }.to_not change { employee_attribute } }
+        context 'employee attribute params are missing' do
+          subject { put :update, missing_attribute_params }
 
-  #         it 'should repsond with 404' do
-  #           subject
+          it { expect { subject }.to_not change { employee } }
+          it { expect { subject }.to_not change { event } }
+          it { expect { subject }.to_not change { first_employee_attribute.reload.value } }
+          it { expect { subject }.to_not change { second_employee_attribute.reload.value } }
 
-  #           expect(response).to have_http_status(422)
-  #         end
-  #       end
-  #     end
+          it 'should repsond with 422' do
+            subject
 
-  #     context 'data do not pass validation' do
-  #       context 'event data do not pass validation' do
-  #         it { expect { subject }.to_not change { employee } }
-  #         it { expect { subject }.to_not change { event } }
-  #         it { expect { subject }.to_not change { employee_attribute } }
+            expect(response).to have_http_status(422)
+          end
+        end
+      end
 
-  #         it 'should repsond with 404' do
-  #           subject
+      context 'data do not pass validation' do
+        context 'event data do not pass validation' do
+          subject { put :update, invalid_event_params }
 
-  #           expect(response).to have_http_status(422)
-  #         end
-  #       end
+          it { expect { subject }.to_not change { employee } }
+          it { expect { subject }.to_not change { event } }
+          it { expect { subject }.to_not change { first_employee_attribute.reload.value } }
+          it { expect { subject }.to_not change { second_employee_attribute.reload.value } }
 
-  #       context 'employee attribute data do not pass validation' do
-  #         it { expect { subject }.to_not change { employee } }
-  #         it { expect { subject }.to_not change { event } }
-  #         it { expect { subject }.to_not change { employee_attribute } }
+          it 'should repsond with 404' do
+            subject
 
-  #         it 'should repsond with 404' do
-  #           subject
+            expect(response).to have_http_status(422)
+          end
+        end
 
-  #           expect(response).to have_http_status(422)
-  #         end
-  #       end
-  #     end
-  #   end
-  # end
+        context 'employee attribute data do not pass validation' do
+          subject { put :update, invalid_attribute_params }
+
+          it { expect { subject }.to_not change { employee } }
+          it { expect { subject }.to_not change { event } }
+          it { expect { subject }.to_not change { first_employee_attribute.reload.value } }
+          it { expect { subject }.to_not change { second_employee_attribute.reload.value } }
+
+          it 'should repsond with 404' do
+            subject
+
+            expect(response).to have_http_status(422)
+          end
+        end
+      end
+    end
+  end
 
   context 'GET #index' do
     before(:each) do

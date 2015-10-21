@@ -2,7 +2,6 @@ module API
   module V1
     class EmployeeEventsController < ApplicationController
       include EmployeeEventRules
-      include EmployeeManagement
 
       def show
         render_resource(resource)
@@ -14,9 +13,9 @@ module API
 
       def create
         verified_params(gate_rules) do |attributes|
-          event = CreateEvent.new(attributes).call
-          if event.persisted?
-            render_resource(event, status: :created)
+          resource = CreateEvent.new(attributes).call
+          if resource.persisted?
+            render_resource(resource, status: :created)
           else
             resource_invalid_error(resource)
           end
@@ -25,8 +24,8 @@ module API
 
       def update
         verified_params(gate_rules) do |attributes|
-          event = UpdateEvent.new(attributes, request.method).call
-          if event
+          resource = UpdateEvent.new(attributes, request.method).call
+          if !resource.errors.any?
             render_no_content
           else
             resource_invalid_error(resource)

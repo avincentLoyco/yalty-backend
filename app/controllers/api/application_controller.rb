@@ -1,6 +1,8 @@
 class API::ApplicationController < ActionController::Base
+  include API::V1::Exceptions
   protect_from_forgery with: :null_session
   rescue_from ActiveRecord::RecordNotFound, with: :record_not_found_error
+  rescue_from MissingOrInvalidData, with: :resource_invalid_error
 
   protected
 
