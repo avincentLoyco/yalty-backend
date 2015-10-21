@@ -19,15 +19,11 @@ class CreateEvent
 
   def save_records
     ActiveRecord::Base.transaction do
-      begin
-        employee.save!
-        versions.each do |version|
-          version.event = event if event.persisted?
-          version.employee = employee
-          version.save!
-        end
-      rescue
-        raise ActiveRecord::Rollback
+      employee.save
+      versions.each do |version|
+        version.event = event if event.persisted?
+        version.employee = employee
+        version.save
       end
     end
   end

@@ -20,13 +20,9 @@ class UpdateEvent
 
   def save_records
     ActiveRecord::Base.transaction do
-      begin
-        event.save!
-        remove_absent_versions
-        versions.map &:save!
-      rescue
-        raise ActiveRecord::Rollback
-      end
+      event.save
+      remove_absent_versions
+      versions.map &:save
     end
   end
 
