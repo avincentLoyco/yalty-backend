@@ -20,4 +20,20 @@ RSpec.describe Account::User, type: :model do
   it { should have_db_column(:account_id) }
   it { should have_db_index(:account_id) }
   it { should belong_to(:account).inverse_of(:users) }
+
+  it '#current= should accept an user' do
+    user = create(:account_user)
+
+    expect(Account::User).to respond_to(:current=)
+    expect {
+      Account::User.current = user
+    }.to_not raise_error
+  end
+
+  it '#current should return user' do
+    user = create(:account_user)
+    Account::User.current = user
+
+    expect(Account::User.current).to eql(user)
+  end
 end

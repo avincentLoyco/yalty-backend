@@ -6,6 +6,14 @@ class Account::User < ActiveRecord::Base
 
   belongs_to :account, inverse_of: :users, required: true
 
+  def self.current=(user)
+    RequestStore.write(:current_account_user, user)
+  end
+
+  def self.current
+    RequestStore.read(:current_account_user)
+  end
+
   def access_token
     app = Doorkeeper::Application.where(uid: ENV['YALTY_OAUTH_ID']).first!
 
