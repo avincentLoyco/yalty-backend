@@ -6,9 +6,11 @@ class UpdateEvent
   def initialize(attributes, action)
     @versions = []
     @action = action
-    @employee = find_employee(attributes)
-    @event = find_and_update_event(attributes)
-    @employee_attributes = employee_attributes(attributes[:employee].try(:[], :employee_attributes))
+    employee_attributes = attributes[:employee]
+    event_attributes = attributes.tap { |attr| attr.delete(:employee) }
+    @employee = find_employee(employee_attributes)
+    @event = find_and_update_event(event_attributes)
+    @employee_attributes = employee_attributes(employee_attributes.try(:[], :employee_attributes))
   end
 
   def call
@@ -27,14 +29,14 @@ class UpdateEvent
   end
 
   def find_employee(attributes)
-    if attributes[:employee].try(:[], :id)
-      Account.current.employees.find(attributes[:employee][:id])
+    if attributes.try(:[], :id)
+      Account.current.employees.find(attributes[:id])
     end
   end
 
   def find_and_update_event(attributes)
     event = Account.current.employee_events.find(attributes[:id])
-    event.attributes = attributes.except(:id, :employee)
+    event.attributes = attributes
     event
   end
 

@@ -2,6 +2,7 @@ class API::ApplicationController < ActionController::Base
   include API::V1::Exceptions
   protect_from_forgery with: :null_session
   rescue_from ActiveRecord::RecordNotFound, with: :record_not_found_error
+  rescue_from ActiveRecord::RecordInvalid, with: :record_invalid_error
   rescue_from MissingOrInvalidData, with: :resource_invalid_error
 
   protected
@@ -80,5 +81,10 @@ class API::ApplicationController < ActionController::Base
 
     render json: ::V1::ErrorsRepresenter.new('Record Not Found', resource).complete,
       status: 404
+  end
+
+  def record_invalid_error(exception)
+    render json: ::V1::ErrorsRepresenter.new(exception.message, exception).complete,
+      status: 422
   end
 end

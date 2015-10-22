@@ -6,8 +6,8 @@ class CreateEvent
   def initialize(attributes)
     @versions = []
     @employee = find_or_initialize_employee(attributes[:employee])
-    @event = init_event(attributes)
     @employee_attributes = employee_attributes(attributes[:employee][:employee_attributes])
+    @event = init_event(attributes)
   end
 
   def call
@@ -37,7 +37,7 @@ class CreateEvent
   end
 
   def init_event(attributes)
-    employee.events.new(attributes.except(:employee))
+    employee.events.new(event_attributes(attributes))
   end
 
   def employee_attributes(attributes)
@@ -77,5 +77,9 @@ class CreateEvent
 
   def value_valid?(attributes)
     return true unless (attributes.key?(:id) && attributes[:value] != nil)
+  end
+
+  def event_attributes(attributes)
+    attributes.tap { |attr| attr.delete(:employee) }
   end
 end
