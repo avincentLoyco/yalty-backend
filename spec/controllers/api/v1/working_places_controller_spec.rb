@@ -238,7 +238,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
         it 'assign employees' do
           subject
 
-          expect(working_place.employees).to eq employees
+          expect(working_place.employees).to match_array employees
         end
 
         it 'respond with success' do
