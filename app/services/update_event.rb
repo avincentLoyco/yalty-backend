@@ -20,9 +20,9 @@ class UpdateEvent
 
   def save_records
     ActiveRecord::Base.transaction do
-      event.save
+      event.save!
       remove_absent_versions
-      versions.map &:save
+      versions.map { |version| version.save! }
     end
   end
 

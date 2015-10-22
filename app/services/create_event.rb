@@ -19,11 +19,11 @@ class CreateEvent
 
   def save_records
     ActiveRecord::Base.transaction do
-      employee.save
+      employee.save!
       versions.each do |version|
         version.event = event if event.persisted?
         version.employee = employee
-        version.save
+        version.save!
       end
     end
   end
