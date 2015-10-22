@@ -11,9 +11,18 @@ module V1
     end
 
     def relationship
-      employee = EmployeeRepresenter.new(resource.employee).complete
+      employee = EmployeeRepresenter.new(resource.employee).basic
       {
-        employee: employee
+        employee: employee.merge(attribute_versions)
+      }
+    end
+
+    def attribute_versions
+      response = resource.employee_attribute_versions.map do |attribute|
+        EmployeeAttributeVersionRepresenter.new(attribute).complete
+      end
+      {
+        employee_attributes: response
       }
     end
   end

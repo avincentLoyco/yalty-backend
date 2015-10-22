@@ -5,7 +5,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
   let(:user) { create(:account_user) }
   let!(:employee) { create(:employee, :with_attributes, account: account) }
-  
+
   describe 'POST #create' do
     let(:valid_event_params) do
     {
@@ -58,6 +58,22 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       ]
     }
   end
+  let(:same_type_params) do
+    {
+      employee_attributes: [
+        {
+          attribute_name: "lastname",
+          value: "smith",
+          type: "employee_attribute"
+        },
+        {
+          attribute_name: "lastname",
+          value: "john",
+          type: "employee_attribute"
+        }
+      ]
+    }
+  end
   let!(:new_employee_json) do
     valid_event_params.deep_merge(employee: { type: 'employee'}.merge(valid_attributes))
   end
@@ -83,11 +99,14 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
   end
   let(:invalid_employee_id_params) { new_employee_json.deep_merge(employee: { id: '1' } ) }
   let(:invalid_attribute_id_params) do
-    new_employee_json.deep_merge(employee: { employee_attributes: [{ 
-      id: '1', 
-      value: 'ABC', 
-      attribute_name: 'test' }] 
+    new_employee_json.deep_merge(employee: { employee_attributes: [{
+      id: '1',
+      value: nil,
+      attribute_name: 'test' }]
     })
+  end
+  let(:same_attribute_type_params) do
+    valid_event_params.deep_merge(employee: { type: 'employee'}.merge(same_type_params))
   end
 
     context 'valid data' do
@@ -125,7 +144,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           end
 
           it 'should contain employee attributes' do
-            expect(response.body).to eq 'heee'
+            subject
 
             expect_json_keys('employee.employee_attributes.0',
               [:value, :attribute_name, :id, :type]
@@ -157,8 +176,8 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           it { expect { subject }.to_not change { Employee.count } }
           it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
 
-          it 'changes value to nil'  do 
-            expect { subject }.to change { employee.employee_attribute_versions.first.reload.value }.to(nil) 
+          it 'changes value to nil'  do
+            expect { subject }.to change { employee.employee_attribute_versions.first.reload.value }.to(nil)
           end
 
           it 'should respond with success' do
@@ -171,6 +190,19 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     end
 
     context 'invalid data' do
+      context 'attributes with the same attributes name send' do
+        subject { post :create, same_attribute_type_params }
+        it { expect { subject }.to_not change { Employee::Event.count } }
+        it { expect { subject }.to_not change { Employee.count } }
+        it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
+
+        it 'should respond with 422' do
+          subject
+
+          expect(response).to have_http_status(422)
+        end
+      end
+
       context 'not all params given' do
         context 'for event' do
           subject { post :create, missing_event_params }
@@ -309,9 +341,9 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       }
     end
     let(:update_event_json) { base_json.merge(comment: 'test') }
-    let(:update_attribute_json) do 
-      base_json.deep_merge(employee: { employee_attributes: [ 
-        { value: 'test', id: first_employee_attribute.id }, 
+    let(:update_attribute_json) do
+      base_json.deep_merge(employee: { employee_attributes: [
+        { value: 'test', id: first_employee_attribute.id },
         { value: 'test2', id: second_employee_attribute.id }
       ]})
     end
@@ -320,13 +352,13 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     let(:invalid_employee_id) { base_json.deep_merge(employee: { id: '1' } ) }
     let(:missing_event_params) { base_json.tap { |json| json.delete(:effective_at) } }
     let(:missing_attribute_params) do
-      base_json.tap { |json| json[:employee][:employee_attributes].first.delete(:attribute_name) }
+      base_json.tap { |json| json[:employee][:employee_attributes].first.delete(:value) }
     end
     let(:invalid_event_params) { base_json.merge(event_type: 'test')}
     let(:invalid_attribute_params) do
       base_json.deep_merge(employee: { employee_attributes: [{ value: '' }] })
     end
-    let(:invalid_attribute_id) do base_json.deep_merge(employee: { 
+    let(:invalid_attribute_id) do base_json.deep_merge(employee: {
         employee_attributes: [ {
           id: '1',
           value: 'test'
@@ -335,8 +367,8 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     end
     let(:json_without_attribute) do
       base_json.deep_merge(employee: { employee_attributes: [
-        { 
-          "id": first_employee_attribute.id, 
+        {
+          "id": first_employee_attribute.id,
           "value": first_employee_attribute.data.value
         }
       ]})
@@ -458,7 +490,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
             it { expect { subject }.to_not change { employee } }
             it { expect { subject }.to_not change { event } }
             it { expect { subject }.to_not change { first_employee_attribute.reload.value } }
-            it { expect { subject }.to_not change { second_employee_attribute.reload.value } } 
+            it { expect { subject }.to_not change { second_employee_attribute.reload.value } }
 
             it 'should repsond with 422' do
               subject
@@ -532,7 +564,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
             expect(response).to have_http_status(204)
           end
-        end 
+        end
 
         context 'with event data only' do
           subject { patch :update, update_single_event_json }
@@ -574,12 +606,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       expect_json_keys('*.employee', [:id, :type])
     end
 
-    it 'should have employee attributes' do
-      subject
-
-      expect_json_keys('*.employee.employee_attributes.0', [:value, :attribute_name, :id, :type])
-    end
-
     it 'should not be visible in context of other account' do
       user = create(:account_user)
       Account.current = user.account
@@ -619,6 +645,9 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     end
 
     it 'should have employee attributes' do
+      employee.employee_attribute_versions.each do |version|
+        version.update!(employee_event_id: employee_event.id)
+      end
       subject
 
       expect_json_keys('employee.employee_attributes.0', [:value, :attribute_name, :id, :type])
