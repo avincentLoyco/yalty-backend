@@ -4,11 +4,12 @@ RSpec.describe ActsAsAttribute do
   subject! {
     FakeActsAsAttribute.new(
       employee: employee,
-      attribute_name: attribute_definition.name
+      attribute_name: attribute_definition.name,
+      event: employee.events.first
     )
   }
 
-  let(:employee) { create(:employee) }
+  let(:employee) { create(:employee, :with_attributes) }
   let(:attribute_definition) {
     create(
       :employee_attribute_definition,
@@ -22,11 +23,16 @@ RSpec.describe ActsAsAttribute do
       with_columns do |t|
         t.uuid :employee_id
         t.uuid :attribute_definition_id
+        t.uuid :employee_event_id
         t.hstore :data
       end
 
       include ActsAsAttribute
 
+      belongs_to :event,
+        class_name: 'Employee::Event',
+        foreign_key: 'employee_event_id',
+        inverse_of: :employee_attribute_versions
       belongs_to :employee, required: true
       has_one :account, through: :employee
     end
@@ -58,7 +64,8 @@ RSpec.describe ActsAsAttribute do
 
     attr = FakeActsAsAttribute.new(
       employee: subject.employee,
-      attribute_name: subject.attribute_name
+      attribute_name: subject.attribute_name,
+      event: employee.events.first
     )
 
     expect(attr).to_not be_valid
