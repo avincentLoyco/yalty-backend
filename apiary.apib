@@ -473,6 +473,342 @@ Create a new holiday
 
 
 
+
+
+## PresencePolicy Collection [/api/v1/presence_policies]
+
+## GET List of all PresencePolicies [GET]
+
+Get a list of presence_policies which belongs to current account
+
++ Request (application/json)
+
++ Response 200 (application/json)
+
+        [
+            {
+              "name": "test",
+              "id": "87654321-1234-1234-1234-123456789012",
+              "type": "presence_policy",
+              "presence_days": [
+                {
+                  "name": "test",
+                  "id": "87654321-1234-1234-1234-123456789012",
+                  "hours": "7.50",
+                  "type": "presence_day"
+                },
+                {
+                  "name": "test2",
+                  "id": "12345678-1234-1234-1234-123456789012",
+                  "hours": "8.00",
+                  "type": "presence_day"
+                }
+              ]
+            },
+            {
+              "name": "test2",
+              "id": "12345678-1234-1234-1234-123456789012",
+              "type": "presence_policy",
+              "presence_days": [
+                {
+                  "name": "test",
+                  "id": "87654321-1234-1234-1234-123456789012",
+                  "hours": "7.50",
+                  "type": "presence_day"
+                },
+                {
+                  "name": "test2",
+                  "id": "12345678-1234-1234-1234-123456789012",
+                  "hours": "8.00",
+                  "type": "presence_day"
+                }
+              ]
+            }
+        ]
+
+### POST Create a PresencePolicy [POST]
+
+Create a new Policy of Presence
+By default account_id is equal Account.current.id
+
++ Attributes
+  + name: test (string, required)
+  + employees: [employees: {"id": "1"}] (array)
+  + working_places: [working_places: {"id": "1"}] (array)
+  + presence_days: [days: {"id": "1"}] (array)
+
++ Request (application/json)
+
+        {
+             "name" : "test",
+             "type": "presence_policy",
+             "employees" : [
+                 {
+                     "id": "12345678-1234-1234-1234-123456789012",
+                     "type": "employee"
+                 },
+                 {
+                     "id": "87654321-1234-1234-1234-123456789012",
+                     "type": "employee"
+                 }
+              ],
+              "working_places" : [
+                  {
+                      "id": "12345678-1234-1234-1234-123456789012"
+                  }
+              ],
+              "presence_days": [
+                  {
+                      "id": "12345678-1234-1234-1234-123456789012"
+                  }
+              ]
+        }
+
++ Response 201 (application/json)
+
+        {
+            "id": "12345678-1234-1234-1234-123456789012",
+            "name": "test",
+            "type": "presence_policy",
+            "presence_days": [
+              {
+                "name": "test",
+                "id": "87654321-1234-1234-1234-123456789012",
+                "hours": "7.50"
+                "type": "presence_day"
+              },
+              {
+                "name": "test2",
+                "id": "12345678-1234-1234-1234-123456789012",
+                "hours": "8.00"
+                "type": "presence_day"
+              }
+            ]
+        }
+
+
+
+
+## PresencePolicy [/api/v1/presence_policies/{presence_policy_id}]
+
++ Parameters
+    + presence_policy_id: 12345678-1234-1234-123456789012 (required, string) - ID is an uuid
+
+### GET Get PresencePolicy [GET]
+
++ Request (application/json)
+
++ Response 200 (application/json)
+
+        {
+            "id": "12345678-1234-1234-1234-123456789012",
+            "name": "test",
+            "type": "presence_policy",
+            "presence_days": [
+              {
+                "name": "test",
+                "id": "87654321-1234-1234-1234-123456789012",
+                "hours": "7.50",
+                "type": "presence_day"
+              },
+              {
+                "name": "test2",
+                "id": "12345678-1234-1234-1234-123456789012",
+                "hours": "8.00",
+                "type": "presence_day"
+              }
+            ]
+        }
+
+### PUT Update PresencePolicy [PUT]
+
++ Attributes
+  + id: 1 (string, required)
+  + name: presence name (string, required)
+  + employees: [employees: {"id": "1"}] (array)
+  + working_places: [working_places: {"id": "1"}] (array)
+  + presence_days: [presence_days: {"id": "1"}] (array)
+
++ Request (application/json)
+
+        {
+            "type": "presence_policy",
+            "name": "presence name"
+        }
+
++ Response 204 (application/json)
+
+
+### PATCH Update PresencePolicy [PATCH]
+
++ Attributes
+  + id: 1 (string, required)
+  + name: presence name (string)
+  + employees: [employees: {"id": "1"}] (array)
+  + working_places: [working_places: {"id": "1"}] (array)
+  + presence_days: [presence_days: {"id": "1"}] (array)
+
++ Request (application/json)
+
+        {
+            "name": "presence name"
+        }
+
++ Response 204 (application/json)
+
+### DELETE presence policy [DELETE]
+
++ Request (application/json)
+
++ Response 204
+
+
+
+
+
+
+
+
+## PresenceDays Collection [/api/v1/presence_policies?presence_policy_id={presence_policy_id}]
+
++ Parameters
+   + presence_policy_id: 12345678-1234-1234-123456789012 (required, string) - ID is in uuid format
+
+## GET List of all PresenceDays [GET]
+
+Get a list of presence days which belongs to account's presence policy
+
++ Request (application/json)
+
++ Response 200 (application/json)
+
+        [
+            {
+              "name": "test",
+              "id": "87654321-1234-1234-1234-123456789012",
+              "hours": "7.50"
+              "type": "presence_day"
+            },
+            {
+              "name": "test2",
+              "id": "12345678-1234-1234-1234-123456789012",
+              "hours": "8.00"
+              "type": "presence_day"
+            }
+        ]
+
+### POST Create a PresenceDay [POST]
+
+Create a new presence day
+
++ Attributes
+  + name: test (string, required)
+  + presence_policy_id: 11 (string, required)
+  + hours: 8 (number, required)
+
++ Request (application/json)
+
+        {
+             "name" : "test",
+             "type": "presence_day",
+             "hours: "8.00",
+             "presence_policy_id": "12345678-1234-1234-1234-123456789012"
+        }
+
+
++ Response 201 (application/json)
+
+        {
+            "id": "12345678-1234-1234-1234-123456789012",
+            "name": "test",
+            "hours": "8.00",
+            "type": "presence_day"
+        }
+
+
+
+
+
+
+## PresenceDay [/api/v1/presence_days/{presence_day_id}]
+
++ Parameters
+    + presence_day_id: 12345678-1234-1234-123456789012 (required, string) - ID is an uuid
+
+### GET PresenceDay Details [GET /api/v1/presence_days/{presence_day_id}?presence_policy_id={presence_policy_id}]
+
++ Parameters
+   + presence_policy_id: 12345678-1234-1234-123456789012 (required, string) - ID is in uuid format
+   + presence_day_id: 12345678-1234-1234-123456789012 (required, string) - ID of the Holiday is an uuid
+
++ Request (application/json)
+
++ Response 200 (application/json)
+
+         {
+            "id": "12345678-1234-1234-1234-123456789012",
+            "name": "test",
+            "hours": "8.00",
+            "type": "presence_day"
+        }
+
+### PUT Update PresenceDay [PUT]
+
++ Attributes
+  + id: 1 (string, required)
+  + name: test (string, required)
+  + presence_policy_id: 11 (string, required)
+  + hours: 8 (number, required)
+
++ Request (application/json)
+
+        {
+            "id": "12345678-1234-1234-1234-123456789012",
+            "name": "test",
+            "hours": "8.00",
+            "type": "presence_day",
+            "presence_policy_id": "12345678-1234-1234-1234-123456789012"
+        }
+
++ Response 204 (application/json)
+
+
+### PATCH Update PresenceDay [PATCH]
+
++ Attributes
+  + id: 1 (string, required)
+  + name: test (string)
+  + presence_policy_id: 11 (string, required)
+  + hours: 8 (number)
+
++ Request (application/json)
+
+        {
+            "id": "12345678-1234-1234-1234-123456789012",
+            "name": "test",
+            "type": "presence_day",
+            "presence_policy_id": "12345678-1234-1234-1234-123456789012"
+        }
+
++ Response 204 (application/json)
+
+### DELETE PresenceDay [DELETE]
+
++ Attributes
+  + presence_policy_id: 1 (string, required)
+
++ Request (application/json)
+
++ Response 204
+
+
+
+
+
+
+
+
+
 ## Working Places Collection [/api/v1/working_places]
 
 ### GET List all user's working places [GET]
