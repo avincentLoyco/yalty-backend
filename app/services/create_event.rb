@@ -1,65 +1,39 @@
 class CreateEvent
   include EmployeeAttributeVersionRules
   include API::V1::Exceptions
-  attr_reader :employee, :employee_attributes, :event, :versions
+  attr_reader :employee_params, :attributes_params, :event_params, :versions
 
-  def initialize(attributes)
+  def initialize(params)
     @versions = []
-    @employee = find_or_initialize_employee(attributes[:employee])
-    @employee_attributes = employee_attributes(attributes[:employee][:employee_attributes])
-    @event = init_event(attributes)
+    @employee_params =   params[:employee]
+    @attributes_params = params[:employee][:employee_attributes]
+    @event_params =      params.tap { |attr| attr.delete(:employee) }
   end
 
   def call
-    save_records
-    event
-  end
-
-  private
-
-  def save_records
     ActiveRecord::Base.transaction do
-      employee.save!
-      versions.each do |version|
-        version.event = event if event.persisted?
+      event = Account.current.employee_events.new(event_params)
+      employee = find_or_initialize_employee(employee_params)
+      event.employee = employee
+      employee_attributes(attributes_params, employee)
+      ver = versions.map do |version|
         version.employee = employee
-        version.save!
+        version
       end
+      event.employee_attribute_versions = ver
+      event.save
+      event
     end
   end
 
-  def find_or_initialize_employee(attributes)
-    if attributes.key?(:id)
-      Account.current.employees.find(attributes[:id])
-    else
-      Account.current.employees.new
-    end
-  end
-
-  def init_event(attributes)
-    employee.events.new(event_attributes(attributes))
-  end
-
-  def employee_attributes(attributes)
+  def employee_attributes(attributes, employee)
     attributes.each do |attribute|
       verify(attribute) do |result|
-        version = find_or_initialize_version(result)
+        version = find_or_initialize_version(result, employee)
         version.value = result[:value]
         versions.push version
       end
     end
-  end
-
-  def find_or_initialize_version(attributes)
-    if attributes.key?(:id)
-      employee.employee_attribute_versions.find(attributes[:id])
-    else
-      Employee::AttributeVersion.new(attribute_definition: set_definition(attributes))
-    end
-  end
-
-  def set_definition(attributes)
-    Account.current.employee_attribute_definitions.find_by!(name: attributes[:attribute_name])
   end
 
   def verify(attribute)
@@ -71,6 +45,22 @@ class CreateEvent
     end
   end
 
+  def find_or_initialize_version(attributes, employee)
+    if attributes.key?(:id)
+      employee.employee_attribute_versions.find(attributes[:id])
+    else
+      Employee::AttributeVersion.new(attribute_definition: set_definition(attributes))
+    end
+  end
+
+  def find_or_initialize_employee(attributes)
+    if attributes.key?(:id)
+      Account.current.employees.find(attributes[:id])
+    else
+      Account.current.employees.new
+    end
+  end
+
   def set_exception(result)
     result.errors.any? ? result.errors : 'Invalid Value for Attribute'
   end
@@ -79,7 +69,8 @@ class CreateEvent
     return true unless (attributes.key?(:id) && attributes[:value] != nil)
   end
 
-  def event_attributes(attributes)
-    attributes.tap { |attr| attr.delete(:employee) }
+  def set_definition(attributes)
+    Account.current.employee_attribute_definitions.find_by!(name: attributes[:attribute_name])
   end
+
 end
