@@ -29,5 +29,4 @@ module EmployeeAttributeDefinitionRules
       required :system
     end
   end
-
 end

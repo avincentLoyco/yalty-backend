@@ -32,5 +32,4 @@ module WorkingPlaceRules
       end
     end
   end
-
 end

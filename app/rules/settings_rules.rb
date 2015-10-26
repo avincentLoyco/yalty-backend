@@ -24,5 +24,4 @@ module SettingsRules
       end
     end
   end
-
 end
