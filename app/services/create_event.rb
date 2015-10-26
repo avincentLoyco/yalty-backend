@@ -66,11 +66,10 @@ class CreateEvent
   end
 
   def value_valid?(attributes)
-    return true unless (attributes.key?(:id) && attributes[:value] != nil)
+    return true unless (attributes.key?(:id) &&  !attributes[:value].nil? )
   end
 
   def set_definition(attributes)
     Account.current.employee_attribute_definitions.find_by!(name: attributes[:attribute_name])
   end
-
 end

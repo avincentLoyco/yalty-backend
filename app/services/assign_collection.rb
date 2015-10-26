@@ -15,9 +15,9 @@ class AssignCollection
   private
 
   def ids
-    result = collection.map { |item| item[:id]} & valid_ids
+    result = collection.map { |item| item[:id] } & valid_ids
     if result.size != collection.size
-      raise ActiveRecord::RecordNotFound
+      fail ActiveRecord::RecordNotFound
     else
       result
     end
@@ -26,5 +26,4 @@ class AssignCollection
   def valid_ids
     Account.current.send(collection_name).map(&:id)
   end
-
 end

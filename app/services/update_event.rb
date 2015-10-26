@@ -31,9 +31,7 @@ class UpdateEvent
   private
 
   def find_employee(attributes)
-    if attributes.try(:[], :id)
-      Account.current.employees.find(attributes[:id])
-    end
+    Account.current.employees.find(attributes[:id]) if attributes.try(:[], :id)
   end
 
   def find_and_update_event(attributes)
