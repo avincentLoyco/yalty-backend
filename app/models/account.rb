@@ -30,6 +30,7 @@ class Account < ActiveRecord::Base
   has_many :employee_events, through: :employees, source: :events
   has_many :employee_attribute_versions, through: :employees
   has_many :holiday_policies
+  has_many :presence_policies
 
   before_validation :generate_subdomain, on: :create
   after_create :update_default_attribute_definitions!
