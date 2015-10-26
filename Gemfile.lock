@@ -293,10 +293,10 @@ DEPENDENCIES
   pg (~> 0.18.1)
   pry-byebug
   pry-rails
-  puma
-  rack-cors
+  puma (~> 2.13.4)
+  rack-cors (~> 0.4.0)
   rails (= 4.2.3)
-  rails_12factor
+  rails_12factor (~> 0.0.3)
   request_store (~> 1.2.0)
   rspec-rails
   scenic (~> 0.3.0)
@@ -308,4 +308,4 @@ DEPENDENCIES
   web-console (~> 2.0)
 
 BUNDLED WITH
-   1.10.5
+   1.10.6

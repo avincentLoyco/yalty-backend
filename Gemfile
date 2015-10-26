@@ -4,8 +4,8 @@ ruby '2.2.2'
 
 gem 'rails',              '4.2.3'
 gem 'pg',                 '~> 0.18.1'
-gem 'bcrypt', '~> 3.1.10'
-gem 'rack-cors', require: 'rack/cors'
+gem 'bcrypt',             '~> 3.1.10'
+gem 'rack-cors',          '~> 0.4.0',   require: 'rack/cors'
 gem 'jsonapi-resources',  '~> 0.5.9'
 gem 'doorkeeper',         '~> 2.2.1'
 gem 'virtus',             '~> 1.0.5'
@@ -15,9 +15,9 @@ gem 'countries',          '~> 1.1.0'
 gem 'holidays',           '~> 2.2.0'
 
 # Production environment dependencies
-group :production, :staging do
-  gem 'rails_12factor'
-  gem 'puma'
+group :production, :staging, :review do
+  gem 'rails_12factor',   '~> 0.0.3'
+  gem 'puma',             '~> 2.13.4'
 end
 
 # Development environment dependencies (also needed by test environement)
