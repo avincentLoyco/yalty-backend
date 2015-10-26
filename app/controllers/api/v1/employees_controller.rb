@@ -20,7 +20,7 @@ module API
       end
 
       def resource_representer
-        ::V1::EmployeeRepresenter
+        ::Api::V1::EmployeeRepresenter
       end
     end
   end

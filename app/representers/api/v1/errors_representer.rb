@@ -1,4 +1,4 @@
-module V1
+module Api::V1
   class ErrorsRepresenter < BaseRepresenter
     attr_reader :message
 

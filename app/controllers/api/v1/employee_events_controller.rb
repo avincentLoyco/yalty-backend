@@ -48,7 +48,7 @@ module API
       end
 
       def resource_representer
-        ::V1::EmployeeEventRepresenter
+        ::Api::V1::EmployeeEventRepresenter
       end
     end
   end

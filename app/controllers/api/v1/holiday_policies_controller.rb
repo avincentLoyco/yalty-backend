@@ -104,7 +104,7 @@ module API
       end
 
       def resource_representer
-        ::V1::HolidayPolicyRepresenter
+        ::Api::V1::HolidayPolicyRepresenter
       end
 
       def valid_holiday_ids

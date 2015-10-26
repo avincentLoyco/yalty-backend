@@ -90,7 +90,7 @@ module API
       end
 
       def resource_representer
-        ::V1::WorkingPlaceRepresenter
+        ::Api::V1::WorkingPlaceRepresenter
       end
     end
   end

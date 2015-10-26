@@ -52,7 +52,7 @@ module API
       end
 
       def resource_representer
-        ::V1::HolidayRepresenter
+        ::Api::V1::HolidayRepresenter
       end
     end
   end

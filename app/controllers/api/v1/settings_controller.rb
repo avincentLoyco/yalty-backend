@@ -39,7 +39,7 @@ module API
       end
 
       def resource_representer
-        ::V1::SettingsRepresenter
+        ::Api::V1::SettingsRepresenter
       end
 
     end
