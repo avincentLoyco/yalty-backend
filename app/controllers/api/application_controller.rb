@@ -4,6 +4,7 @@ class API::ApplicationController < ActionController::Base
   rescue_from ActiveRecord::RecordNotFound, with: :record_not_found_error
   rescue_from ActiveRecord::RecordInvalid, with: :record_invalid_error
   rescue_from MissingOrInvalidData, with: :resource_invalid_error
+  rescue_from ActiveRecord::RecordNotUnique, with: :record_invalid_error
 
   protected
 
