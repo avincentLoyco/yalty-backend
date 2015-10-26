@@ -1,7 +1,7 @@
 class CreateEvent
   include EmployeeAttributeVersionRules
   include API::V1::Exceptions
-  attr_reader :employee_params, :attributes_params, :event_params, :versions, :employee, :event
+  attr_reader :employee_params, :attributes_params, :event_params, :employee, :event, :versions
 
   def initialize(params)
     @employee          = nil
@@ -14,11 +14,10 @@ class CreateEvent
 
   def call
     ActiveRecord::Base.transaction do
-      find_or_initialize_employee(employee_params)
-      initialize_event(event_params)
-      initialize_versions(attributes_params)
+      find_or_build_employee
+      build_event
+      build_versions
 
-      event.employee_attribute_versions = versions
       event.save
 
       event
@@ -26,6 +25,37 @@ class CreateEvent
   end
 
   private
+
+  def find_or_build_employee
+    if employee_params.key?(:id)
+      @employee = Account.current.employees.find(employee_params[:id])
+    else
+      @employee = Account.current.employees.new
+    end
+  end
+
+  def build_event
+    @event = employee.events.new(event_params)
+  end
+
+  def build_versions
+    attributes_params.each do |attribute|
+      verify(attribute) do |result|
+        version = build_version(result)
+        version.value = result[:value]
+        @versions << version
+      end
+    end
+
+    event.employee_attribute_versions = @versions
+  end
+
+  def build_version(version)
+    event.employee_attribute_versions.new(
+      employee: employee,
+      attribute_definition: definition_for(version)
+    )
+  end
 
   def verify(attribute)
     result = gate_rules('POST').verify(attribute.deep_symbolize_keys)
@@ -36,46 +66,15 @@ class CreateEvent
     end
   end
 
-  def find_or_initialize_employee(attributes)
-    if attributes.key?(:id)
-      @employee = Account.current.employees.find(attributes[:id])
-    else
-      @employee = Account.current.employees.new
-    end
-  end
-
-  def initialize_event(attributes)
-    @event = employee.events.new(attributes)
-  end
-
-  def initialize_versions(attributes)
-    attributes.each do |attribute|
-      verify(attribute) do |result|
-        version = initialize_version(result)
-        version.value = result[:value]
-        versions.push(version)
-      end
-    end
-
-    versions
-  end
-
-  def initialize_version(attributes)
-    event.employee_attribute_versions.new(
-      employee: employee,
-      attribute_definition: set_definition(attributes)
-    )
-  end
-
   def set_exception(result)
     result.errors.any? ? result.errors : 'Invalid Value for Attribute'
   end
 
   def value_valid?(attributes)
-    return true unless (attributes.key?(:id) &&  !attributes[:value].nil? )
+    return true unless (attributes.key?(:id) && !attributes[:value].nil? )
   end
 
-  def set_definition(attributes)
-    Account.current.employee_attribute_definitions.find_by!(name: attributes[:attribute_name])
+  def definition_for(attribute)
+    Account.current.employee_attribute_definitions.find_by!(name: attribute[:attribute_name])
   end
 end
