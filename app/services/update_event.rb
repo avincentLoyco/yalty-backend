@@ -1,32 +1,34 @@
 class UpdateEvent
   include EmployeeAttributeVersionRules
   include API::V1::Exceptions
-  attr_reader :versions, :action, :employee, :event, :employee_attributes
+  attr_reader :employee_params, :attributes_params, :event_params, :versions, :action
 
-  def initialize(attributes, action)
-    @versions = []
-    @action = action
-    employee_attributes = attributes[:employee]
-    event_attributes = attributes.tap { |attr| attr.delete(:employee) }
-    @employee = find_employee(employee_attributes)
-    @event = find_and_update_event(event_attributes)
-    @employee_attributes = employee_attributes(employee_attributes.try(:[], :employee_attributes))
+  def initialize(params, action)
+    @versions           = []
+    @action             = action
+    @employee_params    = params[:employee]
+    @attributes_params  = params[:employee].try(:[], :employee_attributes)
+    @event_params       = params.tap { |attr| attr.delete(:employee) }
   end
 
   def call
-    save_records
-    event
+    ActiveRecord::Base.transaction do
+      event = find_and_update_event(event_params)
+      employee = find_employee(employee_params)
+      employee_attributes(attributes_params, event)
+      remove_absent_versions(event)
+      ver = versions.map do |version|
+        version.employee = employee
+        version.save
+        version
+      end
+      event.employee_attribute_versions = ver
+      event.save
+      event
+    end
   end
 
   private
-
-  def save_records
-    ActiveRecord::Base.transaction do
-      event.save!
-      remove_absent_versions
-      versions.map { |version| version.save! }
-    end
-  end
 
   def find_employee(attributes)
     if attributes.try(:[], :id)
@@ -40,7 +42,7 @@ class UpdateEvent
     event
   end
 
-  def employee_attributes(attributes)
+  def employee_attributes(attributes, event)
     if attributes
       attributes.each do |attribute|
         verify(attribute) do |result|
@@ -52,7 +54,7 @@ class UpdateEvent
     end
   end
 
-  def remove_absent_versions
+  def remove_absent_versions(event)
     if event.employee_attribute_versions.size > versions.size
       versions_to_remove = event.employee_attribute_versions - versions
       versions_to_remove.map &:destroy!

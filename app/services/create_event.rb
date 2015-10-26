@@ -4,10 +4,10 @@ class CreateEvent
   attr_reader :employee_params, :attributes_params, :event_params, :versions
 
   def initialize(params)
-    @versions = []
-    @employee_params =   params[:employee]
+    @versions          = []
+    @employee_params   = params[:employee]
     @attributes_params = params[:employee][:employee_attributes]
-    @event_params =      params.tap { |attr| attr.delete(:employee) }
+    @event_params      = params.tap { |attr| attr.delete(:employee) }
   end
 
   def call
