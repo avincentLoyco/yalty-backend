@@ -13,6 +13,7 @@ Rails.application.routes.draw do
         resources :employee_events, only: :index
       end
       resources :employee_events, only: [:show, :create, :update]
+      resources :presence_policies, except: [:edit, :new]
     end
   end
 
