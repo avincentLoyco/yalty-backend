@@ -1,9 +1,11 @@
 class CreateEvent
   include EmployeeAttributeVersionRules
   include API::V1::Exceptions
-  attr_reader :employee_params, :attributes_params, :event_params, :versions
+  attr_reader :employee_params, :attributes_params, :event_params, :versions, :employee, :event
 
   def initialize(params)
+    @employee          = nil
+    @event             = nil
     @versions          = []
     @employee_params   = params[:employee]
     @attributes_params = params[:employee][:employee_attributes]
@@ -12,29 +14,18 @@ class CreateEvent
 
   def call
     ActiveRecord::Base.transaction do
-      event = Account.current.employee_events.new(event_params)
-      employee = find_or_initialize_employee(employee_params)
-      event.employee = employee
-      employee_attributes(attributes_params, employee)
-      ver = versions.map do |version|
-        version.employee = employee
-        version
-      end
-      event.employee_attribute_versions = ver
+      find_or_initialize_employee(employee_params)
+      initialize_event(event_params)
+      initialize_versions(attributes_params)
+
+      event.employee_attribute_versions = versions
       event.save
+
       event
     end
   end
 
-  def employee_attributes(attributes, employee)
-    attributes.each do |attribute|
-      verify(attribute) do |result|
-        version = find_or_initialize_version(result, employee)
-        version.value = result[:value]
-        versions.push version
-      end
-    end
-  end
+  private
 
   def verify(attribute)
     result = gate_rules('POST').verify(attribute.deep_symbolize_keys)
@@ -45,16 +36,35 @@ class CreateEvent
     end
   end
 
-  def find_or_initialize_version(attributes, employee)
-    Employee::AttributeVersion.new(attribute_definition: set_definition(attributes))
-  end
-
   def find_or_initialize_employee(attributes)
     if attributes.key?(:id)
-      Account.current.employees.find(attributes[:id])
+      @employee = Account.current.employees.find(attributes[:id])
     else
-      Account.current.employees.new
+      @employee = Account.current.employees.new
     end
+  end
+
+  def initialize_event(attributes)
+    @event = employee.events.new(attributes)
+  end
+
+  def initialize_versions(attributes)
+    attributes.each do |attribute|
+      verify(attribute) do |result|
+        version = initialize_version(result)
+        version.value = result[:value]
+        versions.push(version)
+      end
+    end
+
+    versions
+  end
+
+  def initialize_version(attributes)
+    event.employee_attribute_versions.new(
+      employee: employee,
+      attribute_definition: set_definition(attributes)
+    )
   end
 
   def set_exception(result)
