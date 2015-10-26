@@ -1,9 +1,9 @@
 module API
   module V1
     module Exceptions
-      class MissingOrInvalidData < StandardError 
+      class MissingOrInvalidData < StandardError
         def initialize(data)
-          super 
+          super
           @data = data
         end
       end

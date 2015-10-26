@@ -17,7 +17,7 @@ module API
           @resource = Account.current.working_places.new(attributes)
           result = transactions do
             resource.save &&
-            assign_related(related)
+              assign_related(related)
           end
           if result
             render_resource(resource, status: :created)
@@ -32,7 +32,7 @@ module API
           related = related_params(attributes)
           result = transactions do
             resource.update(attributes) &&
-            assign_related(related)
+              assign_related(related)
           end
           if result
             render_no_content

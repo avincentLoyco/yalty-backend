@@ -17,7 +17,7 @@ module API
           resource = Account.current.holiday_policies.new(attributes)
           result = transactions do
             resource.save &&
-            assign_related(resource, related)
+              assign_related(resource, related)
           end
 
           if result
@@ -33,7 +33,7 @@ module API
           related = related_params(attributes).compact
           result = transactions do
             resource.update(attributes) &&
-            assign_related(resource, related)
+              assign_related(resource, related)
           end
           if result
             render_no_content
@@ -64,7 +64,7 @@ module API
       def assign_holidays(resource, values)
         result = values.map { |holiday| holiday[:id] } & valid_holiday_ids
         if result.size != values.size
-          raise ActiveRecord::RecordNotFound
+          fail ActiveRecord::RecordNotFound
         else
           Holiday.where(id: (resource.custom_holiday_ids - result)).destroy_all
           resource.custom_holiday_ids = result
@@ -108,7 +108,8 @@ module API
       end
 
       def valid_holiday_ids
-        Account.current.holiday_policies.map(&:custom_holidays).flatten.map { |holiday| holiday[:id] }
+        Account.current.holiday_policies
+          .map(&:custom_holidays).flatten.map { |holiday| holiday[:id] }
       end
     end
   end

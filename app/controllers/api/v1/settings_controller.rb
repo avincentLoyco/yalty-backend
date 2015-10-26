@@ -9,7 +9,7 @@ module API
 
       def update
         verified_params(gate_rules) do |attributes|
-          if attributes.has_key?(:holiday_policy)
+          if attributes.key?(:holiday_policy)
             holiday_policy = attributes.delete(:holiday_policy)
             assign_holiday_policy(holiday_policy)
           end
@@ -41,7 +41,6 @@ module API
       def resource_representer
         ::Api::V1::SettingsRepresenter
       end
-
     end
   end
 end
