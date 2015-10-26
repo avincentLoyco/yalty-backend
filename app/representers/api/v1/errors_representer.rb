@@ -18,9 +18,9 @@ module Api::V1
     def complete
       response = {}
 
-      if resource.kind_of?(ActiveRecord::Base)
+      if resource.is_a?(ActiveRecord::Base)
         messages = resource.errors.messages
-      elsif resource.kind_of?(Gate::Result)
+      elsif resource.is_a?(Gate::Result)
         messages = resource.errors
       else
         messages = []
@@ -31,7 +31,7 @@ module Api::V1
           field: field.to_s,
           messages: message,
           status: 'invalid',
-          type: resource_type,
+          type: resource_type
         }
       end
 

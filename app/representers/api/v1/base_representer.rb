@@ -20,7 +20,7 @@ module Api::V1
     private
 
     def resource_type
-      @resource_type ||= resource.class.name.underscore.gsub('/', '_')
+      @resource_type ||= resource.class.name.underscore.tr('/', '_')
     end
   end
 end
