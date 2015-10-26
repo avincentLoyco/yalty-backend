@@ -170,15 +170,10 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
         context 'already added attributes send' do
           subject { post :create, existing_employee_remove_param_json }
-          before { employee.employee_attribute_versions.first.update!(value: 'test') }
 
           it { expect { subject }.to change { Employee::Event.count }.by(1) }
           it { expect { subject }.to_not change { Employee.count } }
-          it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
-
-          it 'changes value to nil'  do
-            expect { subject }.to change { employee.employee_attribute_versions.first.reload.value }.to(nil)
-          end
+          it { expect { subject }.to change { Employee::AttributeVersion.count }.by(1) }
 
           it 'should respond with success' do
             subject

@@ -46,11 +46,7 @@ class CreateEvent
   end
 
   def find_or_initialize_version(attributes, employee)
-    if attributes.key?(:id)
-      employee.employee_attribute_versions.find(attributes[:id])
-    else
-      Employee::AttributeVersion.new(attribute_definition: set_definition(attributes))
-    end
+    Employee::AttributeVersion.new(attribute_definition: set_definition(attributes))
   end
 
   def find_or_initialize_employee(attributes)
