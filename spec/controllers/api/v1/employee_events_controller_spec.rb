@@ -4,300 +4,269 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
   include_context 'shared_context_headers'
 
   let(:user) { create(:account_user) }
-  let!(:employee) { create(:employee, :with_attributes, account: account) }
+
+  let(:employee_first_name) { 'John' }
+  let(:employee_last_name) { 'Doe' }
+  let!(:employee) do
+    create(:employee, :with_attributes,
+      account: account,
+      event: {
+        effective_at: 2.days.from_now.at_beginning_of_day
+      },
+      employee_attributes: {
+        firstname: employee_first_name,
+        lastname: employee_last_name
+      }
+    )
+  end
 
   describe 'POST #create' do
-    let(:valid_event_params) do
-    {
-      type: "employee_event",
-      effective_at: "12.12.2015",
-      comment: "test",
-      event_type: "hired"
-    }
-  end
-  let(:valid_attributes) do
-    {
-      employee_attributes: [
-        {
-          attribute_name: "lastname",
-          value: "smith",
-          type: "employee_attribute"
-        },
-        {
-          attribute_name: "firstname",
-          value: "john",
-          type: "employee_attribute"
-        }
-      ]
-    }
-  end
-  let(:existing_attributes) do
-    {
-      employee_attributes: [
-        {
-          id: employee.employee_attribute_versions.first.id,
-          value: 'smith',
-          attribute_name: employee.employee_attribute_versions.first.attribute_definition.name
-        },
-        {
-          id: employee.employee_attribute_versions.last.id,
-          value: 'smith',
-          attribute_name: employee.employee_attribute_versions.last.attribute_definition.name
-        }
-      ]
-    }
-  end
-  let(:remove_attribute) do
-    {
-      employee_attributes: [
-        {
-          id: employee.employee_attribute_versions.first.id,
-          value: nil,
-          attribute_name: employee.employee_attribute_versions.first.attribute_definition.name
-        }
-      ]
-    }
-  end
-  let(:same_type_params) do
-    {
-      employee_attributes: [
-        {
-          attribute_name: "lastname",
-          value: "smith",
-          type: "employee_attribute"
-        },
-        {
-          attribute_name: "lastname",
-          value: "john",
-          type: "employee_attribute"
-        }
-      ]
-    }
-  end
-  let!(:new_employee_json) do
-    valid_event_params.deep_merge(employee: { type: 'employee'}.merge(valid_attributes))
-  end
-  let(:existing_employee_json) do
-    valid_event_params.deep_merge(employee: { type: 'employee', id: employee.id }
-      .merge(valid_attributes))
-  end
-  let(:existing_employee_params_json) do
-    valid_event_params.deep_merge(employee: { type: 'employee', id: employee.id }
-      .merge(existing_attributes))
-  end
-  let(:existing_employee_remove_param_json) do
-    valid_event_params.deep_merge(employee: { type: 'employee', id: employee.id }
-      .merge(remove_attribute))
-  end
-  let(:missing_event_params) { new_employee_json.tap { |json| json.delete(:event_type) }}
-  let(:invalid_event_params) { new_employee_json.merge(event_type: 'test')}
-  let(:missing_attribute_params) do
-    new_employee_json.tap { |json| json[:employee][:employee_attributes].first.delete(:attribute_name) }
-  end
-  let(:invalid_attribute_params) do
-    new_employee_json.deep_merge(employee: { employee_attributes: [{ type: 'test' }] })
-  end
-  let(:invalid_employee_id_params) { new_employee_json.deep_merge(employee: { id: '1' } ) }
-  let(:invalid_attribute_id_params) do
-    new_employee_json.deep_merge(employee: { employee_attributes: [{
-      id: '1',
-      value: nil,
-      attribute_name: 'test' }]
-    })
-  end
-  let(:same_attribute_type_params) do
-    valid_event_params.deep_merge(employee: { type: 'employee'}.merge(same_type_params))
-  end
+    subject { post :create, json_payload }
 
-    context 'valid data' do
-      context 'new employee' do
-        subject { post :create, new_employee_json }
-        it { expect { subject }.to change { Employee::Event.count }.by(1) }
-        it { expect { subject }.to change { Employee.count }.by(1) }
-        it { expect { subject }.to change { Employee::AttributeVersion.count }.by(2) }
+    let(:effective_at) { 1.days.from_now.at_beginning_of_day.as_json }
+    let(:comment) { 'A test comment' }
 
-        context 'response' do
-          it 'should respond with success' do
-            subject
+    let(:employee_id) { employee.id.to_s }
 
-            expect(response).to have_http_status(201)
+    let(:first_name) { 'Walter' }
+    let(:first_name_attribute_definition) { 'firstname'}
+    let(:last_name) { 'Smith' }
+    let(:last_name_attribute_definition) { 'lastname'}
+
+    let(:new_employee_json) do
+      {
+        type: "employee_event",
+        effective_at: effective_at,
+        comment: comment,
+        event_type: "hired",
+        employee: {
+          type: 'employee',
+          employee_attributes: [
+            {
+              type: "employee_attribute",
+              attribute_name: first_name_attribute_definition,
+              value: first_name
+            },
+            {
+              type: "employee_attribute",
+              attribute_name: last_name_attribute_definition,
+              value: last_name
+            }
+          ]
+        }
+      }
+    end
+
+    let(:existing_employee_json) do
+      {
+        type: "employee_event",
+        effective_at: effective_at,
+        comment: comment,
+        event_type: "hired",
+        employee: {
+          type: 'employee',
+          id: employee_id,
+          employee_attributes: [
+            {
+              type: "employee_attribute",
+              attribute_name: first_name_attribute_definition,
+              value: first_name
+            },
+            {
+              type: "employee_attribute",
+              attribute_name: last_name_attribute_definition,
+              value: last_name
+            }
+          ]
+        }
+      }
+    end
+
+    shared_examples 'Unprocessable Entity' do
+      context 'with two attributes with same name' do
+        before do
+          attr = json_payload[:employee][:employee_attributes].first
+          json_payload[:employee][:employee_attributes] << attr
+        end
+
+        it { expect { subject }.to_not change { Employee::Event.count } }
+        it { expect { subject }.to_not change { Employee.count } }
+        it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
+
+        it 'should respond with 422' do
+          expect(subject).to have_http_status(422)
+        end
+      end
+
+      context 'without all required params given' do
+        context 'for event' do
+          before do
+            json_payload.delete(:effective_at)
           end
 
-          it 'should contain event data' do
-            subject
+          it { expect { subject }.to_not change { Employee::Event.count } }
+          it { expect { subject }.to_not change { Employee.count } }
+          it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
 
-            expect_json_keys([:id, :type, :effective_at, :comment, :event_type, :employee])
+          it 'should respond with 422' do
+            expect(subject).to have_http_status(422)
+          end
+        end
+
+        context 'for employee attributes' do
+          before do
+            json_payload[:employee][:employee_attributes].first.delete(:attribute_name)
           end
 
-          it 'should have given values' do
-            subject
+          it { expect { subject }.to_not change { Employee::Event.count } }
+          it { expect { subject }.to_not change { Employee.count } }
+          it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
 
-            expect_json(comment: new_employee_json[:comment],
-                        event_type: new_employee_json[:event_type]
-            )
-          end
-
-          it 'should contain employee' do
-            subject
-
-            expect_json_keys('employee', [:id, :type])
-          end
-
-          it 'should contain employee attributes' do
-            subject
-
-            expect_json_keys('employee.employee_attributes.0',
-              [:value, :attribute_name, :id, :type]
-            )
+          it 'should respond with 422' do
+            expect(subject).to have_http_status(422)
           end
         end
       end
 
-      context 'employee already exist' do
-        subject { post :create, existing_employee_json }
+      context 'with invalid data given' do
+        context 'for event' do
+          let(:effective_at) { 'not a date' }
 
-        context 'new attributes send' do
-          it { expect { subject }.to change { Employee::Event.count }.by(1) }
+          it { expect { subject }.to_not change { Employee::Event.count } }
           it { expect { subject }.to_not change { Employee.count } }
-          it { expect { subject }.to change { Employee::AttributeVersion.count }.by(2) }
+          it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
 
-          it 'should respond with success' do
-            subject
-
-            expect(response).to have_http_status(201)
+          it 'should respond with 422' do
+            expect(subject).to have_http_status(422)
           end
         end
 
-        context 'already added attributes send' do
-          subject { post :create, existing_employee_remove_param_json }
+        context 'for employee attributes' do
+          let(:first_name_attribute_definition) { 'not a def'}
 
-          it { expect { subject }.to change { Employee::Event.count }.by(1) }
+          it { expect { subject }.to_not change { Employee::Event.count } }
           it { expect { subject }.to_not change { Employee.count } }
-          it { expect { subject }.to change { Employee::AttributeVersion.count }.by(1) }
+          it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
 
-          it 'should respond with success' do
-            subject
-
-            expect(response).to have_http_status(201)
+          it 'should respond with 422' do
+            expect(subject).to have_http_status(422)
           end
         end
       end
     end
 
-    context 'invalid data' do
-      context 'attributes with the same attributes name send' do
-        subject { post :create, same_attribute_type_params }
-        it { expect { subject }.to_not change { Employee::Event.count } }
+    context 'a new employee' do
+      let(:json_payload) { new_employee_json }
+
+      it { expect { subject }.to change { Employee::Event.count }.by(1) }
+      it { expect { subject }.to change { Employee.count }.by(1) }
+      it { expect { subject }.to change { Employee::AttributeVersion.count }.by(2) }
+
+      it 'should respond with success' do
+        expect(subject).to have_http_status(201)
+      end
+
+      it 'should contain event data' do
+        expect(subject).to be_success
+
+        expect_json_keys([:id, :type, :effective_at, :comment, :event_type, :employee])
+      end
+
+      it 'should have given values' do
+        expect(subject).to be_success
+
+        expect_json(comment: json_payload[:comment],
+                    event_type: json_payload[:event_type]
+                   )
+      end
+
+      it 'should contain employee' do
+        expect(subject).to be_success
+
+        expect_json_keys('employee', [:id, :type])
+      end
+
+      it 'should contain employee attributes' do
+        expect(subject).to be_success
+
+        expect_json_keys('employee.employee_attributes.0',
+                         [:value, :attribute_name, :id, :type]
+                        )
+      end
+
+      it_behaves_like 'Unprocessable Entity'
+    end
+
+    context 'for an employee that already exist' do
+      let(:json_payload) { existing_employee_json }
+
+      context 'with new content for attributes' do
+        it { expect { subject }.to change { Employee::Event.count }.by(1) }
+        it { expect { subject }.to_not change { Employee.count } }
+        it { expect { subject }.to change { Employee::AttributeVersion.count }.by(2) }
+
+        it 'should respond with success' do
+          expect(subject).to have_http_status(201)
+        end
+      end
+
+      context 'with same content for attributes' do
+        let(:first_name) { employee_first_name }
+        let(:last_name) { employee_last_name }
+
+        it { expect { subject }.to change { Employee::Event.count }.by(1) }
+        it { expect { subject }.to_not change { Employee.count } }
+        it { expect { subject }.to change { Employee::AttributeVersion.count }.by(2) }
+
+        it 'should respond with success' do
+          expect(subject).to have_http_status(201)
+        end
+      end
+
+      context 'without content for attributes' do
+        before do
+          json_payload[:employee][:employee_attributes] = []
+        end
+
+        it { expect { subject }.to change { Employee::Event.count }.by(1) }
         it { expect { subject }.to_not change { Employee.count } }
         it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
 
-        it 'should respond with 422' do
-          subject
-
-          expect(response).to have_http_status(422)
+        it 'should respond with success' do
+          expect(subject).to have_http_status(201)
         end
       end
 
-      context 'not all params given' do
-        context 'for event' do
-          subject { post :create, missing_event_params }
+      context 'with content of attributes to nil' do
+        let(:first_name) { nil }
 
-          it { expect { subject }.to_not change { Employee::Event.count } }
-          it { expect { subject }.to_not change { Employee.count } }
-          it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
-
-          it 'should respond with 422' do
-            subject
-
-            expect(response).to have_http_status(422)
+        before do
+          json_payload[:employee][:employee_attributes].delete_if  do |attr|
+            attr[:attribute_name] != first_name_attribute_definition
           end
         end
 
-        context 'for employee attributes' do
-          subject { post :create, missing_attribute_params }
+        it { expect { subject }.to change { Employee::Event.count }.by(1) }
+        it { expect { subject }.to_not change { Employee.count } }
+        it { expect { subject }.to change { Employee::AttributeVersion.count }.by(1) }
 
-          it { expect { subject }.to_not change { Employee::Event.count } }
-          it { expect { subject }.to_not change { Employee.count } }
-          it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
-
-          it 'should respond with 422' do
-            subject
-
-            expect(response).to have_http_status(422)
-          end
+        it 'should respond with success' do
+          expect(subject).to have_http_status(201)
         end
       end
 
-      context 'invalid data given' do
-        context 'for event' do
-          subject { post :create, invalid_event_params }
+      it_behaves_like 'Unprocessable Entity'
 
-          it { expect { subject }.to_not change { Employee::Event.count } }
-          it { expect { subject }.to_not change { Employee.count } }
-          it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
-
-          it 'should respond with 422' do
-            subject
-
-            expect(response).to have_http_status(422)
-          end
-        end
-
-        context 'for employee attributes' do
-          subject { post :create, invalid_attribute_params }
-
-          it { expect { subject }.to_not change { Employee::Event.count } }
-          it { expect { subject }.to_not change { Employee.count } }
-          it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
-
-          it 'should respond with 422' do
-            subject
-
-            expect(response).to have_http_status(422)
-          end
-        end
-      end
-
-      context 'wrong id given' do
+      context 'with wrong id given' do
         context 'for employee' do
-          subject { post :create, invalid_employee_id_params }
-
+          let(:employee_id) { '123' }
           it { expect { subject }.to_not change { Employee::Event.count } }
           it { expect { subject }.to_not change { Employee.count } }
           it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
 
           it 'should respond with 404' do
-            subject
-
-            expect(response).to have_http_status(404)
+            expect(subject).to have_http_status(404)
           end
-        end
-
-        context 'for employee attribute' do
-          subject { post :create, invalid_attribute_id_params }
-
-          it { expect { subject }.to_not change { Employee::Event.count } }
-          it { expect { subject }.to_not change { Employee.count } }
-          it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
-
-          it 'should respond with 404' do
-            subject
-
-            expect(response).to have_http_status(404)
-          end
-        end
-      end
-
-      context 'exitisting attribute send with value other than nil' do
-        subject { post :create, existing_employee_params_json }
-        it { expect { subject }.to_not change { Employee::Event.count } }
-        it { expect { subject }.to_not change { Employee.count } }
-        it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
-
-        it 'should respond with 422' do
-          subject
-
-          expect(response).to have_http_status(422)
         end
       end
     end

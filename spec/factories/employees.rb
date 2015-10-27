@@ -4,11 +4,12 @@ FactoryGirl.define do
 
     trait :with_attributes do
       transient do
+        event { Hash.new }
         employee_attributes { Hash.new }
       end
 
       after(:build) do |employee, evaluator|
-        event = FactoryGirl.build(:employee_event, employee: employee)
+        event = FactoryGirl.build(:employee_event, evaluator.event.merge(employee: employee))
 
         if evaluator.employee_attributes.empty?
           event.employee_attribute_versions << FactoryGirl.build_list(
