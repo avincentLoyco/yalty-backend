@@ -1,6 +1,7 @@
 module API
   module V1
     class PresenceDaysController < ApplicationController
+      include PresenceDayRules
 
       def show
         render_resource(resource)
@@ -8,6 +9,32 @@ module API
 
       def index
         render_resource(resources)
+      end
+
+      def create
+        verified_params(gate_rules) do |attributes|
+          resource = presence_policy.presence_days.new(attributes)
+          if resource.save
+            render_resource(resource, status: :created)
+          else
+            resource_invalid_error(resource)
+          end
+        end
+      end
+
+      def update
+        verified_params(gate_rules) do |attributes|
+          if resource.update(attributes)
+            render_no_content
+          else
+            resource_invalid_error(resource)
+          end
+        end
+      end
+
+      def destroy
+        resource.destroy!
+        render_no_content
       end
 
       private
