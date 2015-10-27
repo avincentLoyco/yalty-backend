@@ -4,7 +4,7 @@ module V1
       {
         name: resource.name
       }
-      .merge(basic)
+        .merge(basic)
     end
   end
 end
