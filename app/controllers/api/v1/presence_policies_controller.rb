@@ -29,7 +29,18 @@ module API
       end
 
       def update
-
+        verified_params(gate_rules) do |attributes|
+          related = related_params(attributes).compact
+          result = transactions do
+            resource.update(attributes) &&
+            assign_related(resource, related)
+          end
+          if result
+            render_no_content
+          else
+            resource_invalid_error(resource)
+          end
+        end
       end
 
       def destroy
@@ -70,8 +81,27 @@ module API
       def assign_related(resource, related_records)
         return true if related_records.empty?
         related_records.each do |key, values|
-          AssignCollection.new(resource, values, key.to_s).call
+          if key == :presence_days
+            assign_presence_days(resource, values)
+          else
+            AssignCollection.new(resource, values, key.to_s).call
+          end
         end
+      end
+
+      def assign_presence_days(resource, values)
+        result = values.map { |value| value[:id] } & valid_presence_days_ids
+        if result.size != values.size
+          raise ActiveRecord::RecordNotFound
+        else
+          PresenceDay.where(id: (resource.presence_day_ids - result)).destroy_all
+          resource.presence_day_ids = result
+        end
+      end
+
+      def valid_presence_days_ids
+        Account.current.presence_policies.map(&:presence_days)
+          .flatten.map { |presence_day| presence_day[:id] }
       end
 
       def resource
