@@ -4,7 +4,7 @@ module API
       include PresencePolicyRules
 
       def show
-        render_resource(resource)
+        render_resource_with_relationships(resource)
       end
 
       def index
@@ -21,7 +21,7 @@ module API
           end
 
           if result
-            render_resource(resource, status: :created)
+            render_resource_with_relationships(resource, status: :created)
           else
             resource_invalid_error(resource)
           end
@@ -110,6 +110,10 @@ module API
 
       def resources
         @resources ||= Account.current.presence_policies
+      end
+
+      def render_resource_with_relationships(resource, response = {})
+        render response.merge(json: resource_representer.new(resource).with_relationships)
       end
 
       def resource_representer
