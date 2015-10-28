@@ -1,5 +1,10 @@
-module EmployeeAttributeVersionRules
-  include AttributeRules
+class EmployeeAttributeVersionRules
+
+  def gate_rules(request)
+    return put_rules     if request.put?
+    return patch_rules   if request.patch?
+    return post_rules    if request.post?
+  end
 
   def patch_rules
     Gate.rules do
@@ -10,7 +15,6 @@ module EmployeeAttributeVersionRules
 
   def post_rules
     Gate.rules do
-      optional :id
       required :attribute_name
       required :value, allow_nil: true
     end

@@ -1,23 +1,21 @@
 class CreateEvent
-  include EmployeeAttributeVersionRules
-  include API::V1::Exceptions
-  attr_reader :employee_params, :attributes_params, :event_params, :employee, :event, :versions
+  attr_reader :employee_params, :attributes_params, :event_params, :employee,
+    :event, :versions
 
-  def initialize(params)
+  def initialize(params, employee_attributes_params)
     @employee          = nil
     @event             = nil
     @versions          = []
     @employee_params   = params[:employee]
-    @attributes_params = params[:employee][:employee_attributes]
+    @attributes_params = employee_attributes_params
     @event_params      = params.tap { |attr| attr.delete(:employee) }
   end
 
   def call
     ActiveRecord::Base.transaction do
-      find_or_build_employee
       build_event
+      find_or_build_employee
       build_versions
-
       event.save
 
       event
@@ -32,22 +30,22 @@ class CreateEvent
     else
       @employee = Account.current.employees.new
     end
+
+    event.employee = @employee
   end
 
   def build_event
-    @event = employee.events.new(event_params)
+    @event = Account.current.employee_events.new(event_params)
   end
 
   def build_versions
     attributes_params.each do |attribute|
-      verify(attribute) do |result|
-        version = build_version(result)
-        version.value = result[:value]
-        @versions << version
-      end
+      version = build_version(attribute)
+      version.value = attribute[:value] if version.attribute_definition_id.present?
+      @versions << version
     end
 
-    event.employee_attribute_versions = @versions
+    event.employee_attribute_versions << versions
   end
 
   def build_version(version)
@@ -57,24 +55,7 @@ class CreateEvent
     )
   end
 
-  def verify(attribute)
-    result = gate_rules('POST').verify(attribute.deep_symbolize_keys)
-    if result.valid? && value_valid?(result.attributes)
-      yield(result.attributes)
-    else
-      fail MissingOrInvalidData.new(set_exception(result)), 'Missing or Invalid Data'
-    end
-  end
-
-  def set_exception(result)
-    result.errors.any? ? result.errors : 'Invalid Value for Attribute'
-  end
-
-  def value_valid?(attributes)
-    return true unless (attributes.key?(:id) && !attributes[:value].nil? )
-  end
-
   def definition_for(attribute)
-    Account.current.employee_attribute_definitions.find_by!(name: attribute[:attribute_name])
+    Account.current.employee_attribute_definitions.find_by(name: attribute[:attribute_name])
   end
 end
