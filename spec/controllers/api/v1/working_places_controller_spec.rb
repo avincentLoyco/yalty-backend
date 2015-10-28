@@ -6,276 +6,314 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
   include_examples 'example_relationships_employees',
     resource_name: 'working_place'
 
-  let!(:working_place) { create(:working_place, account_id: account.id) }
-  let(:working_place_json) do
-    {
-      "type": "working-places",
-      "name": "Nice office"
-    }
-  end
+  let(:first_employee) { create(:employee, account: account) }
+  let(:second_employee) { create(:employee, account: account) }
+  let(:holiday_policy) { create(:holiday_policy, account: account) }
+  let(:presence_policy) { create(:presence_policy, account: account) }
 
-  context 'POST /working_places' do
-    it 'should create working_place for current account' do
-      post :create, working_place_json
-
-      expect(response).to have_http_status(:created)
-      expect(account.working_places.size).to eq(2)
-      expect(account.working_places.map(&:name)).to include working_place_json[:name]
-    end
-
-    it 'should not create working_place when invalid params' do
-      working_place_count = WorkingPlace.count
-      post :create, { "type": "working-places" }
-
-      expect(working_place_count).to eq(WorkingPlace.count)
-      expect(response).to have_http_status(422)
-    end
-  end
-
-  context 'related records assign' do
-    let(:employees) { FactoryGirl.create_list(:employee, 2, account: account) }
-    let(:holiday_policy) { FactoryGirl.create(:holiday_policy, account: account) }
-    let(:valid_json) do
+  context 'POST #create' do
+    let(:name) { 'test' }
+    let(:first_employee_id) { first_employee.id }
+    let(:second_employee_id) { second_employee.id }
+    let(:holiday_policy_id) { holiday_policy.id }
+    let(:presence_policy_id) { presence_policy.id }
+    let(:valid_data_json) do
       {
-        name: "testname",
+        name: name,
+        type: 'working_place',
         employees: [
           {
-            id: employees.first.id,
-            type: "employees"
+            id: first_employee_id,
+            type: 'employee'
           },
           {
-            id: employees.last.id,
-            type: "employees"
-          }
+            id: second_employee_id,
+            type: 'employee',
+          },
         ],
         holiday_policy: {
-          id: holiday_policy.id,
-          type: "holiday_policy"
+          id: holiday_policy_id,
+          type: 'holiday_policy',
+        },
+        presence_policy: {
+          id: presence_policy_id,
+          type: 'presence_policy'
         }
       }
     end
-    let(:invalid_employee_json) do
-      {
-        name: "testname",
-        employees: [
-          {
-            id: employees.first.id,
-            type: "employees"
-          },
-          {
-            id: '12345678-1234-1234-1234-123456789012',
-            type: "employees"
-          }
-        ],
-        holiday_policy: {
-          id: holiday_policy.id,
-          type: "holiday_policy"
-        }
-      }
+    shared_examples 'Invalid Data' do
+      context 'it does not create or update records' do
+        it { expect { subject }.to_not change { WorkingPlace.count } }
+        it { expect { subject }.to_not change { account.reload.working_places.count } }
+        it { expect { subject }.to_not change { holiday_policy.working_places.count } }
+        it { expect { subject }.to_not change { presence_policy.working_places.count } }
+        it { expect { subject }.to_not change { first_employee.reload.working_place_id } }
+        it { expect { subject }.to_not change { second_employee.reload.working_place_id } }
+      end
     end
 
-    let(:invalid_holiday_policy_json) do
-      {
-        name: "testname",
-        employees: [
-          {
-            id: employees.first.id,
-            type: "employees"
-          },
-          {
-            id: employees.last.id,
-            type: "employees"
-          }
-        ],
-        holiday_policy: {
-          id: "12345678-1234-1234-1234-123456789012",
-          type: "holiday_policy"
-        }
-      }
+    subject { post :create, valid_data_json }
+
+    context 'with valid params' do
+      it { expect { subject }.to change { WorkingPlace.count }.by(1) }
+      it { expect { subject }.to change { account.reload.working_places.count }.by(1) }
+      it { expect { subject }.to change { holiday_policy.working_places.count }.by(1) }
+      it { expect { subject }.to change { presence_policy.working_places.count }.by(1) }
+      it { expect { subject }.to change { first_employee.reload.working_place_id } }
+      it { expect { subject }.to change { second_employee.reload.working_place_id } }
+
+      it { is_expected.to have_http_status(201) }
+
+      context 'response' do
+        before { subject }
+
+        it { expect_json_types(name: :string, id: :string, type: :string) }
+      end
     end
 
-    let(:missing_params_json) do
-      {
-        employees: [
-          {
-            id: employees.first.id,
-            type: "employees"
-          },
-          {
-            id: employees.last.id,
-            type: "employees"
-          }
-        ],
-        holiday_policy: {
-          id: holiday_policy.id,
-          type: "holiday_policy"
-        }
-      }
-    end
+    context 'with invalid params' do
+      context 'without all required params' do
+        let(:missing_data_json) { valid_data_json.tap { |json| json.delete(:name) } }
+        subject { post :create, missing_data_json }
 
-    context 'POST #create' do
-      context 'valid params' do
-        subject { post :create, valid_json }
+        it_behaves_like 'Invalid Data'
 
-        it 'creates new working place' do
-          expect { subject }.to change { WorkingPlace.count }.by(1)
-        end
+        it { is_expected.to have_http_status(422) }
 
-        it 'assigns holiday_policy to working place' do
-          expect(holiday_policy.working_places.size).to eq 0
+        context 'response' do
+          before { subject }
 
-          subject
-
-          expect(holiday_policy.reload.working_places.size).to eq 1
-        end
-
-        it 'assigns employees to working place' do
-          expect { subject }.to change { employees.first.reload.working_place_id }
-            .and change { employees.last.reload.working_place_id }
-        end
-
-        it 'respond with success' do
-          subject
-
-          expect(response).to have_http_status(201)
+          it { expect_json(regex('missing')) }
         end
       end
 
-      context 'invalid params' do
-        subject { post :create, invalid_employee_json }
+      context 'with params that are not valid' do
+        let(:name) { '' }
 
-        context 'invalid employee id given' do
-          it 'creates new working place' do
-            expect { subject }.to_not change { WorkingPlace.count }
-          end
+        it_behaves_like 'Invalid Data'
 
-          it 'does not assign holiday_policy to working place' do
-            expect(holiday_policy.working_places.size).to eq 0
+        it { is_expected.to have_http_status(422) }
 
-            subject
+        context 'response' do
+          before { subject }
 
-            expect(holiday_policy.reload.working_places.size).to eq 0
-          end
+          it { expect_json(regex("can't be blank")) }
+        end
+      end
 
-          it 'does not assign employees to working place' do
-            expect { subject }.to_not change { employees.first.reload.working_place_id }
-          end
+      context 'with invalid related records ids' do
+        context 'with invalid employee id' do
+          let(:second_employee_id) { '1' }
 
-          it 'respond with record not found' do
-            subject
+          it_behaves_like 'Invalid Data'
 
-            expect(response).to have_http_status(404)
+          it { is_expected.to have_http_status(404) }
+
+          context 'response' do
+            before { subject }
+
+            it { expect_json(regex("Record Not Found")) }
           end
         end
 
-        context 'invalid holiday_policy id given' do
-          subject { post :create, invalid_holiday_policy_json }
+        context 'with invalid holiday policy id' do
+          let(:holiday_policy_id) { '1' }
 
-          it 'creates new working place' do
-            expect { subject }.to_not change { WorkingPlace.count }
-          end
+          it_behaves_like 'Invalid Data'
 
-          it 'does not assign holiday_policy to working place' do
-            expect(holiday_policy.working_places.size).to eq 0
+          it { is_expected.to have_http_status(404) }
 
-            subject
+          context 'response' do
+            before { subject }
 
-            expect(holiday_policy.reload.working_places.size).to eq 0
-          end
-
-          it 'does not assign employees to working place' do
-            expect { subject }.to_not change { employees.first.reload.working_place_id }
-          end
-
-          it 'respond with record not found' do
-            subject
-
-            expect(response).to have_http_status(404)
+            it { expect_json(regex("Record Not Found")) }
           end
         end
 
-        context 'when invalid working place params given' do
-          subject { post :create, missing_params_json }
+        context 'with invalid presence policy id' do
+          let(:presence_policy_id) { '1' }
 
-          it 'does not create new working place' do
-            expect { subject }.to_not change { WorkingPlace.count }
-          end
+          it_behaves_like 'Invalid Data'
 
-          it 'does not assign holiday_policy to working place' do
-            expect(holiday_policy.working_places.size).to eq 0
+          it { is_expected.to have_http_status(404) }
 
-            subject
+          context 'response' do
+            before { subject }
 
-            expect(holiday_policy.reload.working_places.size).to eq 0
-          end
-
-          it 'does not assign employees to working place' do
-            expect { subject }.to_not change { employees.first.reload.working_place_id }
-          end
-
-          it 'respond with param missing' do
-            subject
-
-            expect(response).to have_http_status(422)
+            it { expect_json(regex("Record Not Found")) }
           end
         end
       end
     end
+  end
 
-    context 'PUT #update' do
-      context 'missing params' do
-        let(:params) {{ id: working_place.id }}
-        subject { put :update, params.merge(missing_params_json) }
+  context 'PUT #update' do
+    context 'valid params' do
+      let(:working_place) { create(:working_place, account: account) }
+      let(:name) { 'test' }
+      let(:id) { working_place.id }
+      let(:first_employee_id) { first_employee.id }
+      let(:second_employee_id) { second_employee.id }
+      let(:holiday_policy_id) { holiday_policy.id }
+      let(:presence_policy_id) { presence_policy.id }
+      let(:valid_data_json) do
+        {
+          id: id,
+          name: name,
+          type: 'working_place',
+          employees: [
+            {
+              id: first_employee_id,
+              type: 'employee'
+            },
+            {
+              id: second_employee_id,
+              type: 'employee',
+            },
+          ],
+          holiday_policy: {
+            id: holiday_policy_id,
+            type: 'holiday_policy',
+          },
+          presence_policy: {
+            id: presence_policy_id,
+            type: 'presence_policy'
+          }
+        }
+      end
 
-        it 'does not update working place' do
-          expect { subject }.to_not change { working_place.reload.name }
+      shared_examples 'Invalid Data' do
+        context 'it does not update and assign records' do
+          it { expect { subject }.to_not change { working_place.reload.name } }
+          it { expect { subject }.to_not change { working_place.reload.employee_ids } }
+          it { expect { subject }.to_not change { working_place.reload.holiday_policy_id } }
+          it { expect { subject }.to_not change { working_place.reload.presence_policy_id } }
+        end
+      end
+
+      subject { put :update, valid_data_json }
+
+      context 'with valid data' do
+        it { expect { subject }.to change { working_place.reload.name } }
+        it { expect { subject }.to change { working_place.reload.employee_ids } }
+        it { expect { subject }.to change { working_place.reload.holiday_policy_id } }
+        it { expect { subject }.to change { working_place.reload.presence_policy_id } }
+
+        it { is_expected.to have_http_status(204) }
+      end
+
+      context 'with invalid data' do
+        context 'without all required params' do
+          let(:missing_data_json) { valid_data_json.tap { |json| json.delete(:name) } }
+          subject { post :create, missing_data_json }
+
+          it_behaves_like 'Invalid Data'
+
+          it { is_expected.to have_http_status(422) }
+
+          context 'response' do
+            before { subject }
+
+            it { expect_json(regex('missing')) }
+          end
         end
 
-        it 'does not assign holiday policy' do
-          expect { subject }.to_not change { working_place.reload.holiday_policy_id }
+        context 'with params that are not valid' do
+          let(:name) { '' }
+
+          it_behaves_like 'Invalid Data'
+
+          it { is_expected.to have_http_status(422) }
+
+          context 'response' do
+            before { subject }
+
+            it { expect_json(regex("can't be blank")) }
+          end
         end
 
-        it 'does not assign employees' do
-          subject
+        context 'with invalid related records ids' do
+          context 'with invalid working place id' do
+            let(:id) { '1' }
 
-          expect(working_place.employees).to eq []
-        end
+            it_behaves_like 'Invalid Data'
 
-        it 'respond with missing params status' do
-          subject
+            it { is_expected.to have_http_status(404) }
 
-          expect(response).to have_http_status 422
+            context 'response' do
+              before { subject }
+
+              it { expect_json(regex("Record Not Found")) }
+            end
+          end
+
+          context 'with invalid employee id' do
+            let(:second_employee_id) { '1' }
+
+            it_behaves_like 'Invalid Data'
+
+            it { is_expected.to have_http_status(404) }
+
+            context 'response' do
+              before { subject }
+
+              it { expect_json(regex("Record Not Found")) }
+            end
+          end
+
+          context 'with invalid holiday policy id' do
+            let(:holiday_policy_id) { '1' }
+
+            it_behaves_like 'Invalid Data'
+
+            it { is_expected.to have_http_status(404) }
+
+            context 'response' do
+              before { subject }
+
+              it { expect_json(regex("Record Not Found")) }
+            end
+          end
+
+          context 'with invalid presence policy id' do
+            let(:presence_policy_id) { '1' }
+
+            it_behaves_like 'Invalid Data'
+
+            it { is_expected.to have_http_status(404) }
+
+            context 'response' do
+              before { subject }
+
+              it { expect_json(regex("Record Not Found")) }
+            end
+          end
         end
       end
     end
   end
 
   context 'DELETE #destroy' do
-    let(:working_place){ create(:working_place, account: account) }
+    let!(:working_place) { create(:working_place, account: account) }
+    subject { delete :destroy, id: working_place.id }
 
     context 'when working place has not assigned employees' do
-      it 'should delete resource' do
-        expect { delete :destroy, id: working_place.id }.to change { WorkingPlace.count }.by(-1)
-      end
-
-      it 'should respond with success' do
-        delete :destroy, id: working_place.id
-
-        expect(response).to have_http_status(:no_content)
-      end
+      it { expect { subject }.to change { WorkingPlace.count }.by(-1) }
+      it { is_expected.to have_http_status(204) }
     end
 
     context 'when working place has employees assigned' do
       let!(:employee) { create(:employee, working_place: working_place) }
 
-      it 'should not delete resource' do
-        expect { delete :destroy, id: working_place.id }.to_not change { WorkingPlace.count }
-      end
+      context 'when working place has employees assigned' do
+        it { expect { subject  }.to_not change { WorkingPlace.count } }
+        it { is_expected.to have_http_status(423) }
 
-      it 'should respond with lock status' do
-        delete :destroy, id: working_place.id
+        context 'response' do
+          before { subject }
 
-        expect(response).to have_http_status(423)
+          it { expect_json(regex('Locked')) }
+        end
       end
     end
   end
