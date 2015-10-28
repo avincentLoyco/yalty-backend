@@ -3,11 +3,17 @@ require 'rails_helper'
 RSpec.describe API::V1::PresencePoliciesController, type: :controller do
   include_context 'shared_context_headers'
 
+  let(:first_employee) { create(:employee, account: account) }
+  let(:second_employee) { create(:employee, account: account) }
+  let(:working_place) { create(:working_place, account: account) }
+  let!(:second_presence_policy) { create(:presence_policy, account: account) }
+  let(:presence_day) { create(:presence_day, presence_policy: second_presence_policy) }
+
   describe 'GET #show' do
     let(:presence_policy) { create(:presence_policy, account: account) }
     subject { get :show, id: presence_policy.id }
 
-    context 'valid data' do
+    context 'with valid data' do
       it { is_expected.to have_http_status(200) }
 
       context 'response body' do
@@ -17,14 +23,14 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
       end
     end
 
-    context 'invalid data' do
-      context 'invalid id' do
+    context 'with invalid data' do
+      context 'with invalid id' do
         subject { get :show, id: '1' }
 
         it { is_expected.to have_http_status(404) }
       end
 
-      context 'not account presence policy' do
+      context 'with not accounts presence policy id' do
         before(:each) do
           user = create(:account_user)
           Account.current = user.account
@@ -39,15 +45,15 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
     subject { get :index }
     let!(:presence_policies) { create_list(:presence_policy, 3, account: account) }
 
-    context 'account presence policy' do
+    context 'with account presence policy' do
       before { subject }
 
-      it { expect_json_sizes(3) }
+      it { expect_json_sizes(4) }
       it { is_expected.to have_http_status(200) }
       it { expect_json_types('*', name: :string, id: :string, type: :string) }
     end
 
-    context 'not account presence policy' do
+    context 'with not account presence policy' do
       before(:each) do
         user = create(:account_user)
         Account.current = user.account
@@ -64,38 +70,56 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
   end
 
   describe 'POST #create' do
-    let(:first_employee) { create(:employee, account: account) }
-    let(:second_employee) { create(:employee, account: account) }
-    let(:working_place) { create(:working_place, account: account) }
-    let!(:second_presence_policy) { create(:presence_policy, account: account) }
-    let(:presence_day) { create(:presence_day, presence_policy: second_presence_policy) }
+    let(:name) { 'test' }
+    let(:first_employee_id) { first_employee.id }
+    let(:second_employee_id) { second_employee.id }
+    let(:working_place_id) { working_place.id }
+    let(:presence_day_id) { presence_day.id }
     let(:valid_data_json) do
       {
-        name: "test",
+        name: name,
         type: "presence_policy",
         employees: [
           {
-            id: first_employee.id,
+            id: first_employee_id,
             type: "employee"
           },
           {
-            id: second_employee.id,
+            id: second_employee_id,
             type: "employee"
           }
         ],
         working_places: [
           {
-            id: working_place.id
+            id: working_place_id
           }
         ],
         presence_days: [
           {
-            id: presence_day.id
+            id: presence_day_id
           }
         ]
       }
     end
-    context 'valid data' do
+
+    shared_examples 'Invalid Id' do
+      context 'with invalid related record id' do
+        it { expect { subject }.to_not change { PresencePolicy.count } }
+        it { expect { subject }.to_not change { first_employee.reload.presence_policy_id } }
+        it { expect { subject }.to_not change { second_employee.reload.presence_policy_id } }
+        it { expect { subject }.to_not change { presence_day.reload.presence_policy_id } }
+        it { expect { subject }.to_not change { working_place.reload.presence_policy_id } }
+
+        context 'response' do
+          before { subject }
+
+          it { is_expected.to have_http_status(404) }
+          it { expect_json(regex("Record Not Found")) }
+        end
+      end
+    end
+
+    context 'with valid data' do
       subject { post :create, valid_data_json }
 
       it { expect { subject }.to change { PresencePolicy.count }.by(1) }
@@ -112,8 +136,8 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
       end
     end
 
-    context 'invalid data' do
-      context 'not all attributes given' do
+    context 'with invalid data' do
+      context 'without all required attributes' do
         let(:missing_data_json) { valid_data_json.tap { |json| json.delete(:name) } }
         subject { post :create, missing_data_json }
 
@@ -127,9 +151,9 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
         end
       end
 
-      context 'data do not pass validation' do
-        let(:presence_policy_json) {{ name: '' }}
-        subject { post :create, presence_policy_json }
+      context 'with data that do not pass validation' do
+        let(:name) { '' }
+        subject { post :create, valid_data_json }
 
         it { expect { subject }.to_not change { PresencePolicy.count } }
         it { expect { subject }.to_not change { working_place.reload.presence_policy_id } }
@@ -142,18 +166,26 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
         end
       end
 
-      context 'wrong assosiated records ids' do
-        before { valid_data_json[:employees].first[:id] = 'test' }
-        subject { post :create, valid_data_json }
+      context 'with wrong assosiated records ids' do
+        context 'with invalid employee id' do
+          let(:first_employee_id) { '1' }
+          subject { post :create, valid_data_json }
 
-        it { expect { subject }.to_not change { PresencePolicy.count } }
-        it { expect { subject }.to_not change { working_place.reload.presence_policy_id } }
+          it_behaves_like 'Invalid Id'
+        end
 
-        context 'response' do
-          before { subject }
+        context 'with invalid working place id' do
+          let(:working_place_id) { '1' }
+          subject { post :create, valid_data_json }
 
-          it { is_expected.to have_http_status(404) }
-          it { expect_json(regex("Record Not Found")) }
+          it_behaves_like 'Invalid Id'
+        end
+
+        context 'with invalid presence day id' do
+          let(:presence_day_id) { '1' }
+          subject { post :create, valid_data_json }
+
+          it_behaves_like 'Invalid Id'
         end
       end
     end
@@ -161,42 +193,60 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
 
   describe '#update' do
     describe 'PUT' do
-      let(:first_employee) { create(:employee, account: account) }
-      let(:second_employee) { create(:employee, account: account) }
-      let(:working_place) { create(:working_place, account: account) }
-      let!(:second_presence_policy) { create(:presence_policy, account: account) }
-      let(:presence_day) { create(:presence_day, presence_policy: second_presence_policy) }
       let(:presence_policy) { create(:presence_policy, account: account) }
       let!(:presence_days) { create_list(:presence_day, 2, presence_policy: presence_policy) }
+
+      let(:id) { presence_policy.id }
+      let(:name) { 'test' }
+      let(:first_employee_id) { first_employee.id }
+      let(:second_employee_id) { second_employee.id }
+      let(:working_place_id) { working_place.id }
+      let(:presence_day_id) { presence_day.id }
       let(:valid_data_json) do
         {
-          id: presence_policy.id,
-          name: "test",
+          id: id,
+          name: name,
           type: "presence_policy",
           employees: [
             {
-              id: first_employee.id,
+              id: first_employee_id,
               type: "employee"
             },
             {
-              id: second_employee.id,
+              id: second_employee_id,
               type: "employee"
             }
           ],
           working_places: [
             {
-              id: working_place.id
+              id: working_place_id
             }
           ],
           presence_days: [
             {
-              id: presence_day.id
+              id: presence_day_id
             }
           ]
         }
       end
 
-      context 'valid data' do
+      shared_examples 'Invalid Id' do
+        context 'with invalid related record id' do
+          it { expect { subject }.to_not change { presence_policy.reload.name } }
+          it { expect { subject }.to_not change { presence_policy.reload.presence_days.count } }
+          it { expect { subject }.to_not change { presence_policy.reload.employees.count } }
+          it { expect { subject }.to_not change { presence_policy.reload.working_places.count } }
+
+          context 'response' do
+            before { subject }
+
+            it { is_expected.to have_http_status(404) }
+            it { expect_json(regex("Record Not Found")) }
+          end
+        end
+      end
+
+      context 'with valid data' do
         subject { put :update, valid_data_json }
 
         it { expect { subject }.to change { presence_policy.reload.presence_days.count }.by(-1) }
@@ -235,17 +285,32 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
 
       context 'invalid data' do
         context 'invalid records ids' do
-          before { valid_data_json[:employees].first[:id] = 'test' }
-          subject { put :update, valid_data_json }
+          context 'invalid presence policy id' do
+            let(:id) { '1' }
+            subject { put :update, valid_data_json }
 
-          it { expect { subject }.to_not change { presence_policy.reload.presence_days.count } }
-          it { expect { subject }.to_not change { presence_policy.reload.employees.count } }
-          it { expect { subject }.to_not change { presence_policy.reload.working_places.count } }
+            it_behaves_like 'Invalid Id'
+          end
 
-          context 'response' do
-            before { subject }
+          context 'with invalid employee id' do
+            let(:first_employee_id) { '1' }
+            subject { put :update, valid_data_json }
 
-            it { is_expected.to have_http_status(404) }
+            it_behaves_like 'Invalid Id'
+          end
+
+          context 'with invalid working place id' do
+            let(:working_place_id) { '1' }
+            subject { put :update, valid_data_json }
+
+            it_behaves_like 'Invalid Id'
+          end
+
+          context 'with invalid presence day id' do
+            let(:presence_day_id) { '1' }
+            subject { put :update, valid_data_json }
+
+            it_behaves_like 'Invalid Id'
           end
         end
 
@@ -266,8 +331,8 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
         end
 
         context 'data do not pass validation' do
-          let(:presence_policy_json) {{ id: presence_policy.id, name: '' }}
-          subject { put :update, presence_policy_json }
+          let(:name) { '' }
+          subject { put :update, valid_data_json }
 
           it { expect { subject }.to_not change { presence_policy.reload.presence_days.count } }
           it { expect { subject }.to_not change { presence_policy.reload.employees.count } }
