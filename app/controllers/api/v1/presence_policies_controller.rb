@@ -84,7 +84,7 @@ module API
           if key == :presence_days
             assign_presence_days(resource, values)
           else
-            AssignCollection.new(resource, values, key.to_s).call
+            assign_collection(resource, values, key.to_s)
           end
         end
       end
