@@ -117,7 +117,7 @@ module API
       end
 
       def resource_representer
-        ::V1::PresencePolicyRepresenter
+        ::Api::V1::PresencePolicyRepresenter
       end
     end
   end

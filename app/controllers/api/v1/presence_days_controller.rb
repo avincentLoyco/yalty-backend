@@ -52,7 +52,7 @@ module API
       end
 
       def resource_representer
-        ::V1::PresenceDayRepresenter
+        ::Api::V1::PresenceDayRepresenter
       end
     end
   end
