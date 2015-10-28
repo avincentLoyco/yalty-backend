@@ -77,6 +77,8 @@ module API
       end
 
       def verify_employee_attributes
+        # TODO temporary solution we are waiting for issue:
+        # https://github.com/monterail/gate/issues/1
         results = []
         errors = []
         nested_gate_rules = EmployeeAttributeVersionRules.new.gate_rules(request)
