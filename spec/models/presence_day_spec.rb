@@ -9,17 +9,34 @@ RSpec.describe PresenceDay, type: :model do
 
   context 'uniqueness validations' do
     let(:presence_day) { create(:presence_day) }
-    let(:duplicate_presence_day) { PresenceDay.new(presence_day.attributes) }
 
-    it 'should validate uniquness of order' do
-      expect { duplicate_presence_day.valid? }
-        .to change { duplicate_presence_day.errors.messages[:order] }
+    context 'for records with the same presence policy' do
+      let(:duplicate_presence_day) { PresenceDay.new(presence_day.attributes) }
+
+      it { expect { duplicate_presence_day.valid? }
+          .to change { duplicate_presence_day.errors.messages[:order] } }
+
+      context 'error messages' do
+        before { duplicate_presence_day.save }
+
+        it { expect(duplicate_presence_day.errors[:order]).to include 'has already been taken' }
+      end
     end
 
-    it 'should respond with already been taken error' do
-      duplicate_presence_day.save
+    context 'for records with different presence policy' do
+      let(:presence_policy) { create(:presence_policy) }
+      let(:second_presence_day) do
+        PresenceDay.new(order: presence_day.order, presence_policy: presence_policy)
+      end
 
-      expect(duplicate_presence_day.errors[:order]).to include 'has already been taken'
+      it { expect { second_presence_day.valid? }
+        .to_not change { second_presence_day.errors.messages[:order] } }
+
+      context 'error messages' do
+        before { second_presence_day.save }
+
+        it { expect(expect(second_presence_day.errors[:order]).to eq([])) }
+      end
     end
   end
 end
