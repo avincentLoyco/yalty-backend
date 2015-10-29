@@ -148,7 +148,7 @@ RSpec.describe API::V1::PresenceDaysController, type: :controller do
     end
   end
 
-  describe 'update' do
+  describe 'PUT #update' do
     let(:presence_day) { create(:presence_day, presence_policy: presence_policy) }
     let(:id) { presence_day.id.to_s }
     let(:order) { '1' }
@@ -164,63 +164,53 @@ RSpec.describe API::V1::PresenceDaysController, type: :controller do
       }
     end
 
-    describe 'PUT' do
-      subject { put :update, params }
+    subject { put :update, params }
 
-      context 'with valid params' do
-        it { expect { subject }.to change { presence_day.reload.order } }
-        it { is_expected.to have_http_status(204) }
-      end
-
-      context 'with invalid params' do
-        context 'with invalid presence day id' do
-          let(:id) { '1' }
-
-          it { expect { subject }.to_not change { presence_day.reload.order } }
-          it { is_expected.to have_http_status(404) }
-        end
-
-        context 'with invalid presence policy id' do
-          let(:presence_policy_id) { '1' }
-
-          it { expect { subject }.to_not change { presence_day.reload.order } }
-          it { is_expected.to have_http_status(404) }
-        end
-
-        context 'without required params' do
-          let(:missing_params) { params.tap { |params| params.delete(:order) } }
-          subject { put :update, missing_params }
-
-          it { expect { subject }.to_not change { presence_day.reload.order } }
-          it { is_expected.to have_http_status(422) }
-
-          context 'response' do
-            before { subject }
-
-            it { expect_json(regex('missing')) }
-          end
-        end
-
-        context 'with data that do not pass validation' do
-          before { PresenceDay.create(params.except(:type, :id)) }
-          it { expect { subject }.to_not change { presence_day.reload.order } }
-          it { is_expected.to have_http_status(422) }
-
-          context 'response' do
-            before { subject }
-
-            it { expect_json(regex('has already been taken')) }
-          end
-        end
-      end
+    context 'with valid params' do
+      it { expect { subject }.to change { presence_day.reload.order } }
+      it { is_expected.to have_http_status(204) }
     end
 
-    describe 'PATCH' do
-      let(:patch_params) { params.except(:order) }
-      subject { patch :update, patch_params }
+    context 'with invalid params' do
+      context 'with invalid presence day id' do
+        let(:id) { '1' }
 
-      it { expect { subject }.to change { presence_day.reload.hours } }
-      it { is_expected.to have_http_status(204) }
+        it { expect { subject }.to_not change { presence_day.reload.order } }
+        it { is_expected.to have_http_status(404) }
+      end
+
+      context 'with invalid presence policy id' do
+        let(:presence_policy_id) { '1' }
+
+        it { expect { subject }.to_not change { presence_day.reload.order } }
+        it { is_expected.to have_http_status(404) }
+      end
+
+      context 'without required params' do
+        let(:missing_params) { params.tap { |params| params.delete(:order) } }
+        subject { put :update, missing_params }
+
+        it { expect { subject }.to_not change { presence_day.reload.order } }
+        it { is_expected.to have_http_status(422) }
+
+        context 'response' do
+          before { subject }
+
+          it { expect_json(regex('missing')) }
+        end
+      end
+
+      context 'with data that do not pass validation' do
+        before { PresenceDay.create(params.except(:type, :id)) }
+        it { expect { subject }.to_not change { presence_day.reload.order } }
+        it { is_expected.to have_http_status(422) }
+
+        context 'response' do
+          before { subject }
+
+          it { expect_json(regex('has already been taken')) }
+        end
+      end
     end
   end
 

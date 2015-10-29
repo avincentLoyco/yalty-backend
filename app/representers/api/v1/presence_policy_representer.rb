@@ -3,7 +3,8 @@ module Api::V1
     def complete
       {
         name: resource.name
-      }.merge(basic)
+      }
+        .merge(basic)
     end
 
     def with_relationships

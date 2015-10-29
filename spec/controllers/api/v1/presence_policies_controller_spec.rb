@@ -191,175 +191,157 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
     end
   end
 
-  describe '#update' do
-    describe 'PUT' do
-      let(:presence_policy) { create(:presence_policy, account: account) }
-      let!(:presence_days) { create_list(:presence_day, 2, presence_policy: presence_policy) }
+  describe 'PUT #update' do
+    let(:presence_policy) { create(:presence_policy, account: account) }
+    let!(:presence_days) { create_list(:presence_day, 2, presence_policy: presence_policy) }
 
-      let(:id) { presence_policy.id }
-      let(:name) { 'test' }
-      let(:first_employee_id) { first_employee.id }
-      let(:second_employee_id) { second_employee.id }
-      let(:working_place_id) { working_place.id }
-      let(:presence_day_id) { presence_day.id }
-      let(:valid_data_json) do
-        {
-          id: id,
-          name: name,
-          type: "presence_policy",
-          employees: [
-            {
-              id: first_employee_id,
-              type: "employee"
-            },
-            {
-              id: second_employee_id,
-              type: "employee"
-            }
-          ],
-          working_places: [
-            {
-              id: working_place_id
-            }
-          ],
-          presence_days: [
-            {
-              id: presence_day_id
-            }
-          ]
-        }
-      end
+    let(:id) { presence_policy.id }
+    let(:name) { 'test' }
+    let(:first_employee_id) { first_employee.id }
+    let(:second_employee_id) { second_employee.id }
+    let(:working_place_id) { working_place.id }
+    let(:presence_day_id) { presence_day.id }
+    let(:valid_data_json) do
+      {
+        id: id,
+        name: name,
+        type: "presence_policy",
+        employees: [
+          {
+            id: first_employee_id,
+            type: "employee"
+          },
+          {
+            id: second_employee_id,
+            type: "employee"
+          }
+        ],
+        working_places: [
+          {
+            id: working_place_id
+          }
+        ],
+        presence_days: [
+          {
+            id: presence_day_id
+          }
+        ]
+      }
+    end
 
-      shared_examples 'Invalid Id' do
-        context 'with invalid related record id' do
-          it { expect { subject }.to_not change { presence_policy.reload.name } }
-          it { expect { subject }.to_not change { presence_policy.reload.presence_days.count } }
-          it { expect { subject }.to_not change { presence_policy.reload.employees.count } }
-          it { expect { subject }.to_not change { presence_policy.reload.working_places.count } }
+    shared_examples 'Invalid Id' do
+      context 'with invalid related record id' do
+        it { expect { subject }.to_not change { presence_policy.reload.name } }
+        it { expect { subject }.to_not change { presence_policy.reload.presence_days.count } }
+        it { expect { subject }.to_not change { presence_policy.reload.employees.count } }
+        it { expect { subject }.to_not change { presence_policy.reload.working_places.count } }
 
-          context 'response' do
-            before { subject }
-
-            it { is_expected.to have_http_status(404) }
-            it { expect_json(regex("Record Not Found")) }
-          end
-        end
-      end
-
-      context 'with valid data' do
-        subject { put :update, valid_data_json }
-
-        it { expect { subject }.to change { presence_policy.reload.presence_days.count }.by(-1) }
-        it { expect { subject }.to change { presence_policy.reload.employees.count }.by(2) }
-        it { expect { subject }.to change { presence_policy.reload.working_places.count }.by(1) }
-        it { expect(presence_policy.presence_days).to eq presence_days }
-
-        context 'it overwrties already assigned records' do
+        context 'response' do
           before { subject }
 
-          it { expect(presence_policy.reload.presence_days).to eq [presence_day] }
+          it { is_expected.to have_http_status(404) }
+          it { expect_json(regex("Record Not Found")) }
         end
+      end
+    end
+
+    context 'with valid data' do
+      subject { put :update, valid_data_json }
+
+      it { expect { subject }.to change { presence_policy.reload.presence_days.count }.by(-1) }
+      it { expect { subject }.to change { presence_policy.reload.employees.count }.by(2) }
+      it { expect { subject }.to change { presence_policy.reload.working_places.count }.by(1) }
+      it { expect(presence_policy.presence_days).to eq presence_days }
+
+      context 'it overwrties already assigned records' do
+        before { subject }
+
+        it { expect(presence_policy.reload.presence_days).to eq [presence_day] }
+      end
+
+      context 'response' do
+        before { subject }
+
+        it { is_expected.to have_http_status(204) }
+      end
+
+      context 'it does not overwrite records when do not send' do
+        let(:policy_params) {{ name: 'test', id: presence_policy.id }}
+        subject { put :update, policy_params }
+
+        it { expect(presence_policy.presence_days.count).to eq(2) }
+        it { expect { subject }.to change { presence_policy.reload.name } }
+        it { expect { subject }.to_not change { presence_policy.reload.employees.count } }
+        it { expect { subject }.to_not change { presence_policy.reload.presence_days.count } }
 
         context 'response' do
           before { subject }
 
           it { is_expected.to have_http_status(204) }
         end
-
-        context 'it does not overwrite records when do not send' do
-          let(:policy_params) {{ name: 'test', id: presence_policy.id }}
-          subject { put :update, policy_params }
-
-          it { expect(presence_policy.presence_days.count).to eq(2) }
-          it { expect { subject }.to change { presence_policy.reload.name } }
-          it { expect { subject }.to_not change { presence_policy.reload.employees.count } }
-          it { expect { subject }.to_not change { presence_policy.reload.presence_days.count } }
-
-          context 'response' do
-            before { subject }
-
-            it { is_expected.to have_http_status(204) }
-          end
-        end
       end
+    end
 
-      context 'invalid data' do
-        context 'invalid records ids' do
-          context 'invalid presence policy id' do
-            let(:id) { '1' }
-            subject { put :update, valid_data_json }
-
-            it_behaves_like 'Invalid Id'
-          end
-
-          context 'with invalid employee id' do
-            let(:first_employee_id) { '1' }
-            subject { put :update, valid_data_json }
-
-            it_behaves_like 'Invalid Id'
-          end
-
-          context 'with invalid working place id' do
-            let(:working_place_id) { '1' }
-            subject { put :update, valid_data_json }
-
-            it_behaves_like 'Invalid Id'
-          end
-
-          context 'with invalid presence day id' do
-            let(:presence_day_id) { '1' }
-            subject { put :update, valid_data_json }
-
-            it_behaves_like 'Invalid Id'
-          end
-        end
-
-        context 'missing data' do
-          let(:missing_data_json) { valid_data_json.tap { |json| json.delete(:name) } }
-          subject { put :update, missing_data_json }
-
-          it { expect { subject }.to_not change { presence_policy.reload.presence_days.count } }
-          it { expect { subject }.to_not change { presence_policy.reload.employees.count } }
-          it { expect { subject }.to_not change { presence_policy.reload.working_places.count } }
-
-          context 'response' do
-            before { subject }
-
-            it { is_expected.to have_http_status(422) }
-            it { expect_json(regex("missing")) }
-          end
-        end
-
-        context 'data do not pass validation' do
-          let(:name) { '' }
+    context 'invalid data' do
+      context 'invalid records ids' do
+        context 'invalid presence policy id' do
+          let(:id) { '1' }
           subject { put :update, valid_data_json }
 
-          it { expect { subject }.to_not change { presence_policy.reload.presence_days.count } }
-          it { expect { subject }.to_not change { presence_policy.reload.employees.count } }
-          it { expect { subject }.to_not change { presence_policy.reload.working_places.count } }
+          it_behaves_like 'Invalid Id'
+        end
 
-          context 'response' do
-            before { subject }
+        context 'with invalid employee id' do
+          let(:first_employee_id) { '1' }
+          subject { put :update, valid_data_json }
 
-            it { is_expected.to have_http_status(422) }
-            it { expect_json(regex("can't be blank")) }
-          end
+          it_behaves_like 'Invalid Id'
+        end
+
+        context 'with invalid working place id' do
+          let(:working_place_id) { '1' }
+          subject { put :update, valid_data_json }
+
+          it_behaves_like 'Invalid Id'
+        end
+
+        context 'with invalid presence day id' do
+          let(:presence_day_id) { '1' }
+          subject { put :update, valid_data_json }
+
+          it_behaves_like 'Invalid Id'
         end
       end
 
-      describe 'PATCH' do
-        let(:json_without_name) { valid_data_json.tap { |json| json.delete(:name) } }
-        subject { patch :update, json_without_name }
+      context 'missing data' do
+        let(:missing_data_json) { valid_data_json.tap { |json| json.delete(:name) } }
+        subject { put :update, missing_data_json }
 
-        it { expect { subject }.to_not change { presence_policy.reload.name } }
-        it { expect { subject }.to change { presence_policy.reload.presence_days.count } }
-        it { expect { subject }.to change { presence_policy.reload.employees.count } }
-        it { expect { subject }.to change { presence_policy.reload.working_places.count } }
+        it { expect { subject }.to_not change { presence_policy.reload.presence_days.count } }
+        it { expect { subject }.to_not change { presence_policy.reload.employees.count } }
+        it { expect { subject }.to_not change { presence_policy.reload.working_places.count } }
 
         context 'response' do
           before { subject }
 
-          it { is_expected.to have_http_status(204) }
+          it { is_expected.to have_http_status(422) }
+          it { expect_json(regex("missing")) }
+        end
+      end
+
+      context 'data do not pass validation' do
+        let(:name) { '' }
+        subject { put :update, valid_data_json }
+
+        it { expect { subject }.to_not change { presence_policy.reload.presence_days.count } }
+        it { expect { subject }.to_not change { presence_policy.reload.employees.count } }
+        it { expect { subject }.to_not change { presence_policy.reload.working_places.count } }
+
+        context 'response' do
+          before { subject }
+
+          it { is_expected.to have_http_status(422) }
+          it { expect_json(regex("can't be blank")) }
         end
       end
     end
