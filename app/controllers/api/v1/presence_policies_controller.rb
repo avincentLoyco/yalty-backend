@@ -16,8 +16,8 @@ module API
           related = related_params(attributes).compact
           resource = Account.current.presence_policies.new(attributes)
           result = transactions do
-            resource.save!
-            assign_related(resource, related)
+            resource.save &&
+              assign_related(resource, related)
           end
 
           if result
@@ -33,7 +33,7 @@ module API
           related = related_params(attributes).compact
           result = transactions do
             resource.update(attributes) &&
-            assign_related(resource, related)
+              assign_related(resource, related)
           end
           if result
             render_no_content
