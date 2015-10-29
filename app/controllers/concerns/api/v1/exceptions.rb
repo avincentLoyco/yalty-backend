@@ -7,6 +7,21 @@ module API
           @data = data
         end
       end
+
+      class InvalidResourcesError < StandardError
+        def initialize(resource, messages)
+          @resource = resource
+          @messages = messages
+        end
+
+        def resource
+          @resource
+        end
+
+        def messages
+          @messages
+        end
+      end
     end
   end
 end

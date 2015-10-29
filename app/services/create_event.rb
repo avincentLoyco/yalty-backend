@@ -1,4 +1,5 @@
 class CreateEvent
+  include API::V1::Exceptions
   attr_reader :employee_params, :attributes_params, :event_params, :employee,
     :event, :versions
 
@@ -16,9 +17,8 @@ class CreateEvent
       build_event
       find_or_build_employee
       build_versions
-      event.save
 
-      event
+      save!
     end
   end
 
@@ -45,7 +45,7 @@ class CreateEvent
       @versions << version
     end
 
-    event.employee_attribute_versions << versions
+    event.employee_attribute_versions = versions
   end
 
   def build_version(version)
@@ -57,5 +57,25 @@ class CreateEvent
 
   def definition_for(attribute)
     Account.current.employee_attribute_definitions.find_by(name: attribute[:attribute_name])
+  end
+
+  def unique_attribute_versions?
+    definition = event.employee_attribute_versions.map(&:attribute_definition_id)
+    definition.size == definition.uniq.size
+  end
+
+  def save!
+    if event.valid? && employee.valid? && unique_attribute_versions?
+      event.save!
+      employee.save!
+
+      event
+    else
+      messages = {}
+      messages = messages.merge(employee_attributes: 'Not unique') if !unique_attribute_versions?
+      messages = messages.merge(event.errors.messages).merge(employee.errors.messages)
+
+      fail InvalidResourcesError.new(event, messages)
+    end
   end
 end

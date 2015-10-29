@@ -1,32 +1,27 @@
 module Api::V1
   class ErrorsRepresenter < BaseRepresenter
-    attr_reader :message
+    attr_reader :resource, :messages
 
-    def initialize(message, resource = nil)
+    def initialize(resource, messages = nil)
       super(resource)
-
-      @message = message
-    end
-
-    def basic(_ = {})
-      {
-        status: 'error',
-        message: message
-      }
+      @messages = messages
     end
 
     def complete
       response = {}
-
-      if resource.is_a?(ActiveRecord::Base)
-        messages = resource.errors.messages
-      elsif resource.is_a?(Gate::Result)
-        messages = resource.errors
-      else
-        messages = []
+      if @messages.blank?
+        if resource.is_a?(ActiveRecord::Base)
+          @messages = resource.errors.messages
+        elsif resource.is_a?(Gate::Result)
+          @messages = resource.errors
+        elsif resource.is_a?(Struct)
+          @messages = resource.errors
+        else
+          @messages = []
+        end
       end
 
-      errors = messages.map do |field, message|
+      errors = @messages.map do |field, message|
         {
           field: field.to_s,
           messages: message,
@@ -35,8 +30,8 @@ module Api::V1
         }
       end
 
-      response[:errors] = errors unless errors.empty?
-      response.merge(basic)
+      response[:errors] = errors
+      response
     end
   end
 end

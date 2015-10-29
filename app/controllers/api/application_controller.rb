@@ -2,9 +2,7 @@ class API::ApplicationController < ActionController::Base
   include API::V1::Exceptions
   protect_from_forgery with: :null_session
   rescue_from ActiveRecord::RecordNotFound, with: :record_not_found_error
-  rescue_from ActiveRecord::RecordInvalid, with: :record_invalid_error
-  rescue_from MissingOrInvalidData, with: :resource_invalid_error
-  rescue_from ActiveRecord::RecordNotUnique, with: :record_invalid_error
+  rescue_from InvalidResourcesError, with: :invalid_resources_error
 
   protected
 
@@ -35,7 +33,7 @@ class API::ApplicationController < ActionController::Base
     if result.valid?
       yield(result.attributes)
     else
-      render json: ::Api::V1::ErrorsRepresenter.new('Resource invalid', result).complete,
+      render json: ::Api::V1::ErrorsRepresenter.new(result).complete,
         status: 422
     end
   end
@@ -63,29 +61,28 @@ class API::ApplicationController < ActionController::Base
   end
 
   def resource_invalid_error(resource)
-    render json: ::Api::V1::ErrorsRepresenter.new('Resource invalid', resource).complete,
+    render json: ::Api::V1::ErrorsRepresenter.new(resource).complete,
       status: 422
   end
 
   def locked_error
-    render json: ::Api::V1::ErrorsRepresenter.new('Locked').complete,
+    render json: ::Api::V1::ErrorsRepresenter.new(nil, resource: 'Locked').complete,
       status: 423
   end
 
-  def method_not_allowed_error
-    render json: ::Api::V1::ErrorsRepresenter.new('Method Not Allowed').complete,
-      status: 405
-  end
-
   def record_not_found_error(exception = nil)
-    resource = exception.record if exception && exception.respond_to?(:record)
+    if exception && exception.respond_to?(:record)
+      resource = exception.record
+    else
+      message = { id: 'Record Not Found' }
+    end
 
-    render json: ::Api::V1::ErrorsRepresenter.new('Record Not Found', resource).complete,
+    render json: ::Api::V1::ErrorsRepresenter.new(resource, message).complete,
       status: 404
   end
 
-  def record_invalid_error(exception)
-    render json: ::Api::V1::ErrorsRepresenter.new(exception.message, exception).complete,
+  def invalid_resources_error(exception)
+    render json: ::Api::V1::ErrorsRepresenter.new(exception.resource, exception.messages).complete,
       status: 422
   end
 end

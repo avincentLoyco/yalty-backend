@@ -13,20 +13,16 @@ module API
       end
 
       def create
-        verified_params(gate_rules) do |attributes, employee_attributes|
-          resource = CreateEvent.new(attributes, employee_attributes).call
+        verified_params(gate_rules) do |event_attributes, employee_attributes|
+          resource = CreateEvent.new(event_attributes, employee_attributes).call
 
-          if resource.persisted?
-            render_resource(resource, status: :created)
-          else
-            resource_invalid_error(resource)
-          end
+          render_resource(resource, status: :created)
         end
       end
 
       def update
-        verified_params(gate_rules) do |attributes, employee_attributes|
-          resource = UpdateEvent.new(attributes, employee_attributes).call
+        verified_params(gate_rules) do |event_attributes, employee_attributes|
+          resource = UpdateEvent.new(event_attributes, employee_attributes).call
           if !resource.errors.any?
             render_no_content
           else
@@ -66,11 +62,11 @@ module API
       end
 
       def merge_errors(base, results_errors)
-        new_result = GateResult.new
+        new_result = GateResult.new(base.attributes, base.errors)
 
         results_errors.each do |result|
-          new_result.attributes = base.attributes.merge(result.attributes)
-          new_result.errors = base.errors.merge(result.errors)
+          new_result.attributes = new_result.attributes.merge(result.attributes)
+          new_result.errors = new_result.errors.merge(result.errors)
         end
 
         new_result
