@@ -15,6 +15,7 @@ module API
         verified_params(gate_rules) do |attributes|
           related = related_params(attributes).compact
           resource = Account.current.presence_policies.new(attributes)
+
           result = transactions do
             resource.save &&
               assign_related(resource, related)
@@ -35,6 +36,7 @@ module API
             resource.update(attributes) &&
               assign_related(resource, related)
           end
+
           if result
             render_no_content
           else
@@ -55,27 +57,15 @@ module API
       private
 
       def related_params(attributes)
-        related_employees(attributes).to_h
-          .merge(related_working_places(attributes).to_h)
-          .merge(related_presence_days(attributes).to_h)
-      end
+        related = {}
 
-      def related_employees(attributes)
-        if attributes[:employees]
-          { employees: attributes.delete(:employees) }
+        attributes.each do |key, value|
+          if attributes[key].kind_of?(Array)
+            related.merge!({key => attributes.delete(key)})
+          end
         end
-      end
 
-      def related_working_places(attributes)
-        if attributes[:working_places]
-          { working_places: attributes.delete(:working_places) }
-        end
-      end
-
-      def related_presence_days(attributes)
-        if attributes[:presence_days]
-          { presence_days: attributes.delete(:presence_days) }
-        end
+        related
       end
 
       def assign_related(resource, related_records)
