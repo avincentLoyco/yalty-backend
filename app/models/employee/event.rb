@@ -9,5 +9,5 @@ class Employee::Event < ActiveRecord::Base
   validates :effective_at, presence: true
   validates :event_type,
     presence: true,
-    inclusion: { in: %w(default hired), allow_nil: true }
+    inclusion: { in: %w(default hired change), allow_nil: true }
 end

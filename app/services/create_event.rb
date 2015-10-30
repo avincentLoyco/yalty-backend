@@ -73,7 +73,9 @@ class CreateEvent
     else
       messages = {}
       messages = messages.merge(employee_attributes: 'Not unique') if !unique_attribute_versions?
-      messages = messages.merge(event.errors.messages).merge(employee.errors.messages)
+      messages = messages
+        .merge(event.errors.messages)
+        .merge(employee.errors.messages)
 
       fail InvalidResourcesError.new(event, messages)
     end

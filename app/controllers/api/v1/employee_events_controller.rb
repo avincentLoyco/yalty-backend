@@ -23,11 +23,8 @@ module API
       def update
         verified_params(gate_rules) do |event_attributes, employee_attributes|
           resource = UpdateEvent.new(event_attributes, employee_attributes).call
-          if !resource.errors.any?
-            render_no_content
-          else
-            resource_invalid_error(resource)
-          end
+
+          render_no_content
         end
       end
 

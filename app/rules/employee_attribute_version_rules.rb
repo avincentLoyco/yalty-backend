@@ -2,15 +2,7 @@ class EmployeeAttributeVersionRules
 
   def gate_rules(request)
     return put_rules     if request.put?
-    return patch_rules   if request.patch?
     return post_rules    if request.post?
-  end
-
-  def patch_rules
-    Gate.rules do
-      optional :value, allow_nil: true
-      required :id
-    end
   end
 
   def post_rules
@@ -22,8 +14,9 @@ class EmployeeAttributeVersionRules
 
   def put_rules
     Gate.rules do
-      required :id
+      optional :id
       required :value, allow_nil: true
+      required :attribute_name
     end
   end
 end

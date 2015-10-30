@@ -1,70 +1,108 @@
 class UpdateEvent
-  include EmployeeAttributeVersionRules
   include API::V1::Exceptions
-  attr_reader :employee_params, :attributes_params, :event_params, :versions, :action
+  attr_reader :employee_params, :attributes_params, :event_params, :versions,
+    :event, :employee
 
-  def initialize(params, action)
+  def initialize(params, employee_attributes_params)
     @versions           = []
-    @action             = action
-    @employee_params    = params[:employee]
-    @attributes_params  = params[:employee].try(:[], :employee_attributes)
+    @employee_params    = params[:employee].tap { |attr| attr.delete(:employee_attributes) }
+    @attributes_params  = employee_attributes_params
     @event_params       = params.tap { |attr| attr.delete(:employee) }
   end
 
   def call
     ActiveRecord::Base.transaction do
-      event = find_and_update_event(event_params)
-      employee = find_employee(employee_params)
-      employee_attributes(attributes_params, event)
-      remove_absent_versions(event)
-      ver = versions.map do |version|
-        version.employee = employee
-        version.save
-        version
-      end
-      event.employee_attribute_versions = ver
-      event.save
-      event
+      find_and_update_event
+      find_employee
+      manage_versions
+
+      save!
     end
   end
 
   private
 
-  def find_employee(attributes)
-    Account.current.employees.find(attributes[:id]) if attributes.try(:[], :id)
+  def find_employee
+    @employee = Account.current.employees.find(employee_params[:id])
   end
 
-  def find_and_update_event(attributes)
-    event = Account.current.employee_events.find(attributes[:id])
-    event.attributes = attributes
-    event
+  def find_and_update_event
+    @event = Account.current.employee_events.find(event_params[:id])
+    @event.attributes = event_params
   end
 
-  def employee_attributes(attributes, event)
-    if attributes
-      attributes.each do |attribute|
-        verify(attribute) do |result|
-          version = event.employee_attribute_versions.find(result[:id])
-          version.value = result[:value]
-          versions.push(version)
-        end
+  def manage_versions
+    attributes_params.each do |attribute|
+      if attribute[:id].present?
+        update_version(attribute)
+      else
+        new_version(attribute)
       end
     end
+    remove_absent_versions
+
+    event.employee_attribute_versions = versions
   end
 
-  def remove_absent_versions(event)
+  def update_version(attribute)
+    version = event.employee_attribute_versions.find(attribute[:id])
+    version.attribute_definition = definition_for(attribute)
+    version.value = attribute[:value]
+    @versions << version
+  end
+
+  def new_version(attribute)
+    version = build_version(attribute)
+    version.value = attribute[:value] if version.attribute_definition_id.present?
+    @versions << version
+  end
+
+  def build_version(version)
+    event.employee_attribute_versions.new(
+      employee: employee,
+      attribute_definition: definition_for(version)
+    )
+  end
+
+  def definition_for(attribute)
+    Account.current.employee_attribute_definitions.find_by(name: attribute[:attribute_name])
+  end
+
+  def unique_attribute_versions?
+    definition = versions.map(&:attribute_definition_id)
+    definition.size == definition.uniq.size
+  end
+
+  def remove_absent_versions
     if event.employee_attribute_versions.size > versions.size
       versions_to_remove = event.employee_attribute_versions - versions
       versions_to_remove.map &:destroy!
     end
   end
 
-  def verify(attribute)
-    result = gate_rules(action).verify(attribute.deep_symbolize_keys)
-    if result.valid?
-      yield(result.attributes)
+  def attribute_version_valid?
+    !event.employee_attribute_versions.map(&:valid?).include?(false)
+  end
+
+  def is_valid?
+    event.valid? && employee.valid? && unique_attribute_versions? &&  attribute_version_valid?
+  end
+
+  def save!
+    if is_valid?
+      event.save!
+      employee.save!
+      event.employee_attribute_versions.each(&:save!)
+
+      event
     else
-      fail MissingOrInvalidData.new(result.errors), 'Missing or Invalid Data'
+      messages = {}
+      messages = messages.merge(employee_attributes: 'Not unique') if !unique_attribute_versions?
+      messages = messages
+        .merge(event.errors.messages)
+        .merge(employee.errors.messages)
+
+      fail InvalidResourcesError.new(event, messages)
     end
   end
 end
