@@ -9,17 +9,11 @@ module API
       end
 
       class InvalidResourcesError < StandardError
+        attr_reader :resource, :messages
+
         def initialize(resource, messages)
           @resource = resource
           @messages = messages
-        end
-
-        def resource
-          @resource
-        end
-
-        def messages
-          @messages
         end
       end
     end

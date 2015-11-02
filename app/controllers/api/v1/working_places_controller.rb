@@ -70,15 +70,12 @@ module API
       end
 
       def employees_params(attributes)
-        if attributes[:employees]
-          { employees: attributes.delete(:employees) }
-        end
+        { employees: attributes.delete(:employees) } if attributes[:employees]
       end
 
       def holiday_policy_params(attributes)
-        if attributes[:holiday_policy]
-          { holiday_policy: attributes.delete(:holiday_policy).try(:[], :id) }
-        end
+        return unless attributes[:holiday_policy]
+        { holiday_policy: attributes.delete(:holiday_policy).try(:[], :id) }
       end
 
       def resources

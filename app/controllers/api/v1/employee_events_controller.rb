@@ -22,7 +22,7 @@ module API
 
       def update
         verified_params(gate_rules) do |event_attributes, employee_attributes|
-          resource = UpdateEvent.new(event_attributes, employee_attributes).call
+          UpdateEvent.new(event_attributes, employee_attributes).call
 
           render_no_content
         end

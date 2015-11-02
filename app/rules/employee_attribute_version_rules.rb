@@ -1,5 +1,4 @@
 class EmployeeAttributeVersionRules
-
   def gate_rules(request)
     return put_rules     if request.put?
     return post_rules    if request.post?

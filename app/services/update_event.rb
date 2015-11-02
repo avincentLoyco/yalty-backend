@@ -74,22 +74,21 @@ class UpdateEvent
   end
 
   def remove_absent_versions
-    if event.employee_attribute_versions.size > versions.size
-      versions_to_remove = event.employee_attribute_versions - versions
-      versions_to_remove.map &:destroy!
-    end
+    return unless event.employee_attribute_versions.size > versions.size
+    versions_to_remove = event.employee_attribute_versions - versions
+    versions_to_remove.map(&:destroy!)
   end
 
   def attribute_version_valid?
     !event.employee_attribute_versions.map(&:valid?).include?(false)
   end
 
-  def is_valid?
-    event.valid? && employee.valid? && unique_attribute_versions? &&  attribute_version_valid?
+  def valid?
+    event.valid? && employee.valid? && unique_attribute_versions? && attribute_version_valid?
   end
 
   def save!
-    if is_valid?
+    if valid?
       event.save!
       employee.save!
       event.employee_attribute_versions.each(&:save!)
@@ -97,7 +96,7 @@ class UpdateEvent
       event
     else
       messages = {}
-      messages = messages.merge(employee_attributes: 'Not unique') if !unique_attribute_versions?
+      messages = messages.merge(employee_attributes: 'Not unique') unless unique_attribute_versions?
       messages = messages
         .merge(event.errors.messages)
         .merge(employee.errors.messages)

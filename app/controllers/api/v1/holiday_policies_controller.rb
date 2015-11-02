@@ -78,21 +78,15 @@ module API
       end
 
       def related_employees(attributes)
-        if attributes[:employees]
-          { employees: attributes.delete(:employees) }
-        end
+        { employees: attributes.delete(:employees) } if attributes[:employees]
       end
 
       def related_working_places(attributes)
-        if attributes[:working_places]
-          { working_places: attributes.delete(:working_places) }
-        end
+        { working_places: attributes.delete(:working_places) } if attributes[:working_places]
       end
 
       def related_holidays(attributes)
-        if attributes[:holidays]
-          { custom_holidays: attributes.delete(:holidays) }
-        end
+        { custom_holidays: attributes.delete(:holidays) } if attributes[:holidays]
       end
 
       def resource

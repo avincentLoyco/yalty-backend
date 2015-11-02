@@ -19,10 +19,8 @@ class HolidayPolicy < ActiveRecord::Base
   before_save :unset_region, unless: :region_required?
   before_validation :downcase, if: :local?
 
-  COUNTRIES_WITHOUT_REGIONS = ['ar', 'at', 'be', 'br', 'cl', 'cr', 'cz', 'dk', 'el', 'fr',
-                               'je', 'gg', 'im', 'hr', 'hu', 'ie', 'is', 'it', 'li', 'lt',
-                               'nl', 'no', 'pl', 'pt', 'ro', 'sk', 'si', 'fi', 'jp', 'ma',
-                               'ph', 'se', 'sg', 've', 'vi', 'za']
+  COUNTRIES_WITHOUT_REGIONS = %w(ar at be br cl cr cz dk el fr je gg im hr hu ie is it li lt nl no
+                                 pl pt ro sk si fi jp ma ph se sg ve vi za)
   HolidayStruct = Struct.new(:date, :name)
 
   def holidays
@@ -36,8 +34,8 @@ class HolidayPolicy < ActiveRecord::Base
   private
 
   def country_holidays
-    from = Time.now.beginning_of_year
-    to = Time.now.end_of_year
+    from = Time.zone.now.beginning_of_year
+    to = Time.zone.now.end_of_year
     Holidays.between(from, to, country_with_region).map do |holiday|
       HolidayStruct.new(holiday[:date], 'Holiday')
     end
