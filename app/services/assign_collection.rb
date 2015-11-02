@@ -9,10 +9,17 @@ class AssignCollection
   end
 
   def call
-    resource.send(collection_ids, ids)
+    assign_records
   end
 
   private
+
+  def assign_records
+    ids.each do |id|
+      related = Account.current.send(collection_name).find(id)
+      resource.send(collection_name).push(related)
+    end
+  end
 
   def ids
     result = collection.map { |item| item[:id] } & valid_ids

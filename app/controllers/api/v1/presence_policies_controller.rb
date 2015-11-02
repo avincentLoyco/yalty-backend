@@ -16,32 +16,24 @@ module API
           related = related_params(attributes).compact
           resource = Account.current.presence_policies.new(attributes)
 
-          result = transactions do
-            resource.save &&
-              assign_related(resource, related)
+          transactions do
+            save!(resource, related)
           end
 
-          if result
-            render_resource_with_relationships(resource, status: :created)
-          else
-            resource_invalid_error(resource)
-          end
+          render_resource_with_relationships(resource, status: :created)
         end
       end
 
       def update
         verified_params(gate_rules) do |attributes|
           related = related_params(attributes).compact
-          result = transactions do
-            resource.update(attributes) &&
-              assign_related(resource, related)
+
+          transactions do
+            resource.attributes = attributes
+            save!(resource, related)
           end
 
-          if result
-            render_no_content
-          else
-            resource_invalid_error(resource)
-          end
+          render_no_content
         end
       end
 
@@ -66,6 +58,33 @@ module API
         end
 
         related
+      end
+
+      def save!(resource, related)
+        assign_related(resource, related)
+
+        unless resource.save && related_errors_messages(resource, related).blank?
+          related_messages = related_errors_messages(resource, related)
+
+          messages = resource.errors.messages.to_h
+          related_messages.each do |message|
+            messages.merge!(message)
+          end
+
+          fail InvalidResourcesError.new(resource, messages)
+        end
+      end
+
+      def related_errors_messages(resource, related)
+        errors = []
+
+        related.keys.each do |relate|
+          resource.send(relate.to_s).each do |record|
+            errors.push(record.errors.messages) if record.errors.any?
+          end
+        end
+
+        errors
       end
 
       def assign_related(resource, related_records)
