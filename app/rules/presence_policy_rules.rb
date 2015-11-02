@@ -6,7 +6,6 @@ module PresencePolicyRules
       required :name, :String
       optional :employees, :Array
       optional :working_places, :Array
-      optional :presence_days, :Array
     end
   end
 
@@ -16,7 +15,6 @@ module PresencePolicyRules
       required :name, :String
       optional :employees, :Array
       optional :working_places, :Array
-      optional :presence_days, :Array
     end
   end
 end

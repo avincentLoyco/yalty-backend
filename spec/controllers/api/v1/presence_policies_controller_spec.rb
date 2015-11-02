@@ -74,7 +74,6 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
     let(:first_employee_id) { first_employee.id }
     let(:second_employee_id) { second_employee.id }
     let(:working_place_id) { working_place.id }
-    let(:presence_day_id) { presence_day.id }
     let(:valid_data_json) do
       {
         name: name,
@@ -93,11 +92,6 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
           {
             id: working_place_id
           }
-        ],
-        presence_days: [
-          {
-            id: presence_day_id
-          }
         ]
       }
     end
@@ -107,7 +101,6 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
         it { expect { subject }.to_not change { PresencePolicy.count } }
         it { expect { subject }.to_not change { first_employee.reload.presence_policy_id } }
         it { expect { subject }.to_not change { second_employee.reload.presence_policy_id } }
-        it { expect { subject }.to_not change { presence_day.reload.presence_policy_id } }
         it { expect { subject }.to_not change { working_place.reload.presence_policy_id } }
 
         context 'response' do
@@ -126,7 +119,6 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
       it { expect { subject }.to change { working_place.reload.presence_policy_id } }
       it { expect { subject }.to change { first_employee.reload.presence_policy_id } }
       it { expect { subject }.to change { second_employee.reload.presence_policy_id } }
-      it { expect { subject }.to change { presence_day.reload.presence_policy_id } }
 
       context 'response' do
         before { subject }
@@ -180,27 +172,18 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
 
           it_behaves_like 'Invalid Id'
         end
-
-        context 'with invalid presence day id' do
-          let(:presence_day_id) { '1' }
-          subject { post :create, valid_data_json }
-
-          it_behaves_like 'Invalid Id'
-        end
       end
     end
   end
 
   describe 'PUT #update' do
     let(:presence_policy) { create(:presence_policy, account: account) }
-    let!(:presence_days) { create_list(:presence_day, 2, presence_policy: presence_policy) }
 
     let(:id) { presence_policy.id }
     let(:name) { 'test' }
     let(:first_employee_id) { first_employee.id }
     let(:second_employee_id) { second_employee.id }
     let(:working_place_id) { working_place.id }
-    let(:presence_day_id) { presence_day.id }
     let(:valid_data_json) do
       {
         id: id,
@@ -220,11 +203,6 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
           {
             id: working_place_id
           }
-        ],
-        presence_days: [
-          {
-            id: presence_day_id
-          }
         ]
       }
     end
@@ -232,7 +210,6 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
     shared_examples 'Invalid Id' do
       context 'with invalid related record id' do
         it { expect { subject }.to_not change { presence_policy.reload.name } }
-        it { expect { subject }.to_not change { presence_policy.reload.presence_days.count } }
         it { expect { subject }.to_not change { presence_policy.reload.employees.count } }
         it { expect { subject }.to_not change { presence_policy.reload.working_places.count } }
 
@@ -248,16 +225,8 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
     context 'with valid data' do
       subject { put :update, valid_data_json }
 
-      it { expect { subject }.to change { presence_policy.reload.presence_days.count }.by(-1) }
       it { expect { subject }.to change { presence_policy.reload.employees.count }.by(2) }
       it { expect { subject }.to change { presence_policy.reload.working_places.count }.by(1) }
-      it { expect(presence_policy.presence_days).to eq presence_days }
-
-      context 'it overwrties already assigned records' do
-        before { subject }
-
-        it { expect(presence_policy.reload.presence_days).to eq [presence_day] }
-      end
 
       context 'response' do
         before { subject }
@@ -269,7 +238,6 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
         let(:policy_params) {{ name: 'test', id: presence_policy.id }}
         subject { put :update, policy_params }
 
-        it { expect(presence_policy.presence_days.count).to eq(2) }
         it { expect { subject }.to change { presence_policy.reload.name } }
         it { expect { subject }.to_not change { presence_policy.reload.employees.count } }
         it { expect { subject }.to_not change { presence_policy.reload.presence_days.count } }
@@ -300,13 +268,6 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
 
         context 'with invalid working place id' do
           let(:working_place_id) { '1' }
-          subject { put :update, valid_data_json }
-
-          it_behaves_like 'Invalid Id'
-        end
-
-        context 'with invalid presence day id' do
-          let(:presence_day_id) { '1' }
           subject { put :update, valid_data_json }
 
           it_behaves_like 'Invalid Id'

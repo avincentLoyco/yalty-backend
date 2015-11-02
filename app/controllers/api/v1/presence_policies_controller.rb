@@ -71,27 +71,8 @@ module API
       def assign_related(resource, related_records)
         return true if related_records.empty?
         related_records.each do |key, values|
-          if key == :presence_days
-            assign_presence_days(resource, values)
-          else
-            assign_collection(resource, values, key.to_s)
-          end
+          assign_collection(resource, values, key.to_s)
         end
-      end
-
-      def assign_presence_days(resource, values)
-        result = values.map { |value| value[:id] } & valid_presence_days_ids
-        if result.size != values.size
-          raise ActiveRecord::RecordNotFound
-        else
-          PresenceDay.where(id: (resource.presence_day_ids - result)).destroy_all
-          resource.presence_day_ids = result
-        end
-      end
-
-      def valid_presence_days_ids
-        Account.current.presence_policies.map(&:presence_days)
-          .flatten.map { |presence_day| presence_day[:id] }
       end
 
       def resource
