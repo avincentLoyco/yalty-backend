@@ -5,6 +5,9 @@ class Employee::AttributeDefinition < ActiveRecord::Base
     inverse_of: :employee_attribute_definitions,
     required: true
 
+  has_many :employee_attributes,
+    class_name: 'Employee::Attribute'
+
   validates :name,
     presence: true,
     uniqueness: { scope: :account_id, case_sensitive: false }

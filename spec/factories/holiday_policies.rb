@@ -4,7 +4,7 @@ FactoryGirl.define do
     name { Faker::Lorem.word }
 
     trait :with_country do
-      country 'ch'
+      country 'pl'
     end
 
     trait :with_region do

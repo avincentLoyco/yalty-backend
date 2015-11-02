@@ -5,67 +5,143 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
 
   let(:account){ create(:account)}
   let(:holiday_policy){ create(:holiday_policy, account: account) }
+  let(:not_user_holiday_policy) { create(:holiday_policy) }
+  let!(:holiday){ create(:holiday, holiday_policy: holiday_policy) }
+
+  let(:valid_params) do
+    {
+      "name": "test",
+      "type": "holidays",
+      "id": holiday.id,
+      "holiday_policy_id": holiday_policy.id,
+      "date": "12.12.2015"
+    }
+  end
+
+  let(:missing_params) do
+    {
+      "id": holiday.id,
+      "name": "test",
+      "holiday_policy_id": holiday_policy.id,
+      "type": "holidays"
+    }
+  end
+
+  let(:invalid_params) do
+    {
+      "name": "",
+      "holiday_policy_id": holiday_policy.id,
+      "type": "holidays",
+      "date": "12.12.2015",
+      "id": holiday.id
+    }
+  end
+
+  let(:valid_params_invalid_holiday_policy) do
+    {
+      "name": "test",
+      "date": "1.1.2015",
+      "holiday_policy_id": "12345678-1234-1234-1234-123456789012",
+      "type": "holidays"
+    }
+  end
+
+  let(:valid_params_not_authorized_holiday_policy) do
+    {
+      "name": "test",
+      "date": "1.1.2015",
+      "holiday_policy_id": not_user_holiday_policy.id,
+      "type": "holidays"
+    }
+  end
+
+  let(:invalid_url_params) do
+    {
+      "name": "test",
+      "type": "holidays",
+      "date": "12.12.2015",
+      "holiday_policy_id": holiday_policy.id,
+      "id": '12345678-abcd-1234-1234-123456789012'
+    }
+  end
 
   describe "GET #show" do
-    let!(:holiday){ create(:holiday, holiday_policy: holiday_policy) }
-
     it 'should respond with success when valid params given' do
-      params = { "id" => holiday.id }
+      params = { id: holiday.id, holiday_policy_id: holiday_policy.id }
       get :show, params
+
       expect(response).to have_http_status(:success)
     end
 
-    it 'should respond with 404 when wrong holiday id' do
-      params = { id: '12345678-1234-1234-1234-123456789012' }
+    it 'should respond with 404 when wrong holiday_policy_id given' do
+      params = { id: holiday.id, holiday_policy_id: '12345678-1234-1234-1234-123456789012' }
       get :show, params
 
-      expect(response.status).to eq 404
+      expect(response).to have_http_status 404
+    end
+
+    it 'should respond with 404 when wrong holiday id' do
+      params = { id: '12345678-1234-1234-1234-123456789012', holiday_policy_id: holiday_policy.id }
+      get :show, params
+
+      expect(response).to have_http_status 404
     end
 
     it 'should respond with 404 when not users holiday given' do
-      holiday_without_holiday_policy = create(:holiday)
-      params = { id: holiday_without_holiday_policy.id }
+      not_user_holiday = create(:holiday)
+      params = { id: not_user_holiday.id, holiday_policy_id: not_user_holiday.holiday_policy_id }
       get :show, params
 
-      expect(response.status).to eq 404
+      expect(response).to have_http_status 404
     end
   end
 
   describe "GET #index" do
-    let!(:holiday_without_holiday_policy) { create(:holiday) }
-    let!(:holidays_with_holiday_policy) do
-      create_list(:holiday, 3, holiday_policy: holiday_policy)
-    end
+    let!(:not_user_holiday) { create(:holiday) }
 
     it 'should return current users holidays' do
-      get :index
+      get :index, holiday_policy_id: holiday_policy.id
 
       expect(response).to have_http_status(:success)
-      expect(response.body).to include holiday_policy.holidays.first.id
-      expect(response.body).to_not include holiday_without_holiday_policy.id
+      expect(response.body).to include holiday.id
+      expect(response.body).to_not include not_user_holiday.id
 
-      data = JSON.parse(response.body)['data']
-      expect(data.size).to eq 3
+      data = JSON.parse(response.body)
+      expect(data.size).to eq 1
+    end
+
+    it 'should return default holidays for country Poland' do
+      holiday_policy = create(:holiday_policy, :with_country, account: account)
+
+      get :index, holiday_policy_id: holiday_policy.id
+      expect(response).to have_http_status(:success)
+      data = JSON.parse(response.body)
+      expect(data.size).to eq 14
+    end
+
+    it 'should return default holidays for country Switzerland and land Zuruch' do
+      holiday_policy = create(:holiday_policy, :with_region, account: account)
+
+      get :index, holiday_policy_id: holiday_policy.id
+      expect(response).to have_http_status(:success)
+      data = JSON.parse(response.body)
+      expect(data.size).to eq 10
+    end
+
+    it 'should return default holidays for country Poland and custom' do
+      holiday_policy = create(:holiday_policy, :with_country, account: account)
+      create(:holiday, holiday_policy: holiday_policy)
+
+      get :index, holiday_policy_id: holiday_policy.id
+      expect(response).to have_http_status(:success)
+      data = JSON.parse(response.body)
+      expect(data.size).to eq 15
     end
   end
 
   describe "POST #create" do
-
     context 'valid data and valid holiday policy id' do
-      let(:valid_params_with_holiday_policy) do
-        {
-          "data": {
-            "attributes": {
-              "name": "test",
-              "date": "1.1.2015",
-              "holiday-policy-id": holiday_policy.id
-            },
-            "type": "holidays"
-          }
-        }
-      end
-
-      subject { post :create, valid_params_with_holiday_policy }
+      subject { post :create, valid_params }
 
       it 'should create record when valid holiday_policy_id and data given' do
         expect { subject }.to change { Holiday.count }.by(1)
@@ -79,19 +155,6 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
     end
 
     context 'invalid holiday_policy_id and valid data given' do
-      let(:valid_params_invalid_holiday_policy) do
-        {
-          "data": {
-            "attributes": {
-              "name": "test",
-              "date": "1.1.2015",
-              "holiday-policy-id": "12345678-1234-1234-1234-123456789012"
-            },
-            "type": "holidays"
-          }
-        }
-      end
-
       subject { post :create, valid_params_invalid_holiday_policy }
 
       it 'should not create record when invalid holiday_policy_id and valid data given' do
@@ -101,55 +164,26 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
       it 'shoudl respond with 404 when invalid holiday_policy_id given' do
         subject
 
-        expect(response.status).to eq 404
+        expect(response).to have_http_status 404
       end
     end
 
     context 'valid data, user not authorized' do
-      let(:second_account) { create(:account) }
-      let(:holiday_policy_without_holiday) do
-        create(:holiday_policy, account: second_account)
-      end
-      let(:valid_params_not_authorized_holiday_policy) do
-        {
-          "data": {
-            "attributes": {
-              "name": "test",
-              "date": "1.1.2015",
-              "holiday-policy-id": holiday_policy_without_holiday.id
-            },
-            "type": "holidays"
-          }
-        }
-      end
-
       subject { post :create, valid_params_not_authorized_holiday_policy }
 
       it 'should not create record when user is not authorized' do
         expect { subject }.to_not change { Holiday.count }
       end
 
-      it 'should respond with 403' do
+      it 'should respond with 404' do
         subject
 
-        expect(response.status).to eq 403
+        expect(response).to have_http_status 404
       end
     end
 
     context 'invalid data, valid holiday policy id' do
-      let(:invalid_params_valid_holiday_policy) do
-        {
-          "data": {
-            "attributes": {
-              "date": "9.9.1993",
-              "holiday-policy-id": holiday_policy.id
-            },
-            "type": "holidays"
-          }
-        }
-      end
-
-      subject { post :create, invalid_params_valid_holiday_policy }
+      subject { post :create, invalid_params }
 
       it 'should not create record when valid holiday_policy_id and invalid data given' do
         expect { subject }.to_not change { Holiday.count }
@@ -158,49 +192,28 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
       it 'should respond with 422 when invalid data given' do
         subject
 
-        expect(response.status).to eq 422
+        expect(response).to have_http_status 422
+      end
+    end
+
+    context 'missing params' do
+      subject { post :create, missing_params }
+
+      it 'should not create record when valid holiday_policy_id and invalid data given' do
+        expect { subject }.to_not change { Holiday.count }
+      end
+
+      it 'should respond with 422 when invalid data given' do
+        subject
+
+        expect(response).to have_http_status 422
+        expect(response.body).to include("missing")
       end
     end
   end
 
   describe "PUT #update" do
     let!(:holiday){ create(:holiday, holiday_policy: holiday_policy) }
-
-    let(:valid_params) do
-      {
-        "data": {
-          "attributes": {
-            "name": "test"
-          },
-          "type": "holidays",
-          "id": holiday.id
-        }
-      }
-    end
-
-    let(:invalid_params) do
-      {
-        "data": {
-          "attributes": {
-            "name": ""
-          },
-          "type": "holidays",
-          "id": holiday.id
-        }
-      }
-    end
-
-    let(:invalid_url_params) do
-      {
-        "data": {
-          "attributes": {
-            "name": "test"
-          },
-          "type": "holidays",
-          "id": '12345678-abcd-1234-1234-123456789012'
-        }
-      }
-    end
 
     context 'valid params valid holiday id' do
       subject { put :update, valid_params.merge(id: holiday.id) }
@@ -217,7 +230,7 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
     end
 
     context 'invalid holiday id' do
-      subject { put :update, invalid_url_params.merge(id: '12345678-abcd-1234-1234-123456789012') }
+      subject { put :update, invalid_url_params }
 
       it 'expect subject to not change holiday' do
         expect { subject }.to_not change { holiday.reload.name }
@@ -226,7 +239,7 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
       it 'expect response to be success' do
         subject
 
-        expect(response.status).to eq 404
+        expect(response).to have_http_status 404
       end
     end
 
@@ -237,10 +250,25 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
         expect { subject }.to_not change { holiday.reload.name }
       end
 
-      it 'expect response to be success' do
+      it 'expect response to have status 422' do
         subject
 
-        expect(response.status).to eq 422
+        expect(response).to have_http_status 422
+      end
+    end
+
+    context 'missing params' do
+      subject { put :update, missing_params }
+
+      it 'should not create record when valid holiday_policy_id and invalid data given' do
+        expect { subject }.to_not change { Holiday.count }
+      end
+
+      it 'should respond with 422 when invalid data given' do
+        subject
+
+        expect(response).to have_http_status 422
+        expect(response.body).to include("missing")
       end
     end
   end
@@ -249,8 +277,8 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
     subject { delete :destroy, params }
 
     context 'when valid id' do
-      let!(:holiday){ create(:holiday, holiday_policy: holiday_policy) }
-      let(:params) {{ id: holiday.id }}
+      let!(:holiday) { create(:holiday, holiday_policy: holiday_policy) }
+      let(:params) {{ id: holiday.id, holiday_policy_id: holiday_policy.id }}
 
       it 'should delete holiday' do
         expect{ subject }.to change { Holiday.count }.by(-1)
@@ -259,13 +287,13 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
       it 'should have response status 204' do
         subject
 
-        expect(response.status).to eq 204
+        expect(response).to have_http_status 204
       end
     end
 
     context 'when user do not have access or not exist' do
-      let!(:holiday_without_policy){ create(:holiday) }
-      let(:params) {{ id: holiday_without_policy.id }}
+      let!(:not_user_holiday){ create(:holiday) }
+      let(:params) {{ id: not_user_holiday.id, holiday_policy_id: not_user_holiday.holiday_policy_id }}
 
       it 'should not delete holiday' do
         expect{ subject }.to_not change { Holiday.count }
@@ -274,7 +302,7 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
       it 'should have response status 404' do
         subject
 
-        expect(response.status).to eq 404
+        expect(response).to have_http_status 404
       end
     end
   end

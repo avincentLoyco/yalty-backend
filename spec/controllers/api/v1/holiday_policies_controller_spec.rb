@@ -9,157 +9,362 @@ RSpec.describe API::V1::HolidayPoliciesController, type: :controller do
   include_examples 'example_relationships_working_places',
     resource_name: 'holiday_policy'
 
-  describe '/holiday-policies/:holiday_policy_id/relationships/holidays' do
-    let(:holiday_policy) { create(:holiday_policy, account: account) }
-    let(:second_holiday_policy) { create(:holiday_policy, account: account) }
-    let(:holiday) { create(:holiday, holiday_policy: holiday_policy) }
-    let(:first_holiday) { create(:holiday, holiday_policy: second_holiday_policy) }
-    let(:second_holiday) { create(:holiday) }
-    let(:params) {{ holiday_policy_id: holiday_policy.id, relationship: "holidays" }}
+  describe 'POST #create' do
+    context 'invalid data' do
+      subject { post :create, params }
 
-    context 'DELETE #destroy_relationship' do
-      it 'return 403 when holiday delete from holiday policy' do
-        delete :destroy_relationship, params.merge(keys: holiday.id)
+      context 'data does not pass validation' do
+        let(:params) {{ name: 'test', region: 'ds' }}
 
-        expect(response).to have_http_status(403)
-      end
-    end
+        it 'should not create new holiday policy' do
+          expect { subject }.to_not change { HolidayPolicy.count }
+        end
 
-    context 'GET #show_relationship' do
-      it 'list all holiday policy holidays' do
-        holiday_policy.holidays.push([first_holiday, second_holiday])
-        holiday_policy.save
-
-        get :show_relationship, params
-
-        expect(response).to have_http_status(:success)
-        expect(response.body).to include first_holiday.id
-        expect(response.body).to include second_holiday.id
-      end
-    end
-
-    context 'POST #create_relationship' do
-      let(:first_holiday_json) do
-        {
-          "data": [
-            { "type": "holidays",
-              "id": first_holiday.id }
-          ]
-        }
+        it 'should respond wth 422' do
+          subject
+          expect(response).to have_http_status(422)
+          expect(response.body).to include "can't be blank"
+        end
       end
 
-      let(:second_holiday_json) do
-        {
-          "data": [
-            { "type": "holidays",
-              "id": second_holiday.id }
-          ]
-        }
-      end
+      context 'not all required attributes send' do
+        let(:holiday_policy) { create(:holiday_policy, account: account) }
+        let(:params) {{ id: holiday_policy.id }}
 
-      let(:invalid_holidays_json) do
-        {
-          "data": [
-            { "type": "holidays",
-              "id": '12345678-1234-1234-1234-123456789012' }
-          ]
-        }
-      end
-
-      it 'assigns holiday to holiday_policy' do
-        expect {
-          post :create_relationship, params.merge(first_holiday_json)
-        }.to change { holiday_policy.reload.holidays.size }.by(1)
-      end
-
-      it 'changes holiday holiday_policy id' do
-        expect {
-          post :create_relationship, params.merge(first_holiday_json)
-        }.to change { first_holiday.reload.holiday_policy_id }
-      end
-
-      it 'returns status 400 if relation to holidays already exists' do
-        holiday_policy.holidays.push(first_holiday)
-        holiday_policy.save
-        post :create_relationship, params.merge(first_holiday_json)
-
-        expect(response).to have_http_status(400)
-        expect(response.body).to include "Relation exists"
-      end
-
-      it 'returns bad request when wrong holiday id given' do
-        post :create_relationship, params.merge(invalid_holidays_json)
-
-        expect(response).to have_http_status(404)
-        expect(response.body).to include "Record not found"
-      end
-
-      it 'returns bad request when user want to assign not his holiday' do
-        post :create_relationship, params.merge(second_holiday_json)
-
-        expect(response).to have_http_status(404)
-        expect(response.body).to include "Record not found"
+        it 'should respond with 422' do
+          subject
+          expect(response).to have_http_status(422)
+          expect(response.body).to include "missing"
+        end
       end
     end
   end
 
-  describe '/employee/:employee_id/holiday-policy' do
-    let(:holiday_policy) { create(:holiday_policy) }
-    let(:subject) do
-      get :get_related_resource, employee_id: employee.id,
-                                 relationship: "holiday_policy",
-                                 source: "api/v1/employees"
+  describe 'PUT #update' do
+    subject { put :create, params }
+    let(:holiday_policy) { create(:holiday_policy, account: account) }
+
+    context 'invalid data' do
+      context 'data does not pass validation' do
+        let(:params) {{ name: 'test', region: 'ds', id: holiday_policy.id }}
+
+        it 'should not change holiday_policy name' do
+          expect { subject }.to_not change { holiday_policy.reload.name }
+        end
+
+        it 'should respond wth 422' do
+          subject
+          expect(response).to have_http_status(422)
+          expect(response.body).to include "can't be blank"
+        end
+      end
+
+      context 'not all required attributes send' do
+        let(:params) {{ id: holiday_policy.id }}
+
+        it 'should respond with 422' do
+          subject
+          expect(response).to have_http_status(422)
+          expect(response.body).to include "missing"
+        end
+      end
+    end
+  end
+
+  context 'holidays assign' do
+    let(:holiday_policy) { create(:holiday_policy, account: account) }
+    let(:second_holiday_policy) { create(:holiday_policy, account: account) }
+    let(:holiday) { create(:holiday, holiday_policy: holiday_policy) }
+
+    let(:first_holiday) { create(:holiday, holiday_policy: second_holiday_policy) }
+    let(:second_holiday) { create(:holiday) }
+    let(:third_holiday) { create(:holiday, holiday_policy: second_holiday_policy) }
+
+    let(:first_holiday_json) do
+      {
+        holidays: [
+          { "type": "holidays",
+            "id": first_holiday.id }
+        ]
+      }
     end
 
-    context 'when employee has his holiday policy' do
-      let(:employee) { create(:employee, holiday_policy: holiday_policy, account: account) }
+    let(:second_holiday_json) do
+      {
+        holidays: [
+          { "type": "holidays",
+            "id": second_holiday.id }
+        ]
+      }
+    end
 
-      it 'should return holiday policy' do
-        subject
+    let(:both_holiday_json) do
+      {
+        holidays: [
+          { "type": "holidays",
+            "id": first_holiday.id },
+          { "type": "holidays",
+            "id": third_holiday.id }
+        ]
+      }
+    end
 
-        expect(response.body).to include holiday_policy.id
+    let(:invalid_holidays_json) do
+      {
+        holidays: [
+          { "type": "holidays",
+            "id": '12345678-1234-1234-1234-123456789012' }
+        ]
+      }
+    end
+
+    context 'PATCH #update' do
+      let(:params) {{ id: holiday_policy.id }}
+
+      it 'assigns holiday to holiday_policy' do
+        expect {
+          patch :update, params.merge(first_holiday_json)
+        }.to change { holiday_policy.reload.custom_holidays.size }.by(1)
+      end
+
+      it 'allows for more than one holiday assign' do
+        expect {
+          patch :update, params.merge(both_holiday_json)
+        }.to change { holiday_policy.reload.custom_holidays.size }.by(2)
+      end
+
+      it 'respond with success' do
+        patch :update, params.merge(both_holiday_json)
+
+        expect(response).to have_http_status(204)
+      end
+
+      it 'unnassign record which is not send' do
+        holiday_policy.custom_holidays.push(first_holiday, third_holiday)
+        expect(holiday_policy.custom_holidays.count).to eq(2)
+
+        patch :update, params.merge(first_holiday_json)
+        expect(holiday_policy.custom_holidays.count).to eq(1)
+      end
+
+      it 'delete record which is unnasigned' do
+        holiday_policy.custom_holidays.push(first_holiday, third_holiday)
+        expect(holiday_policy.custom_holidays.count).to eq(2)
+
+        expect {
+          patch :update, params.merge(first_holiday_json)
+        }.to change { Holiday.count }.by(-1)
+      end
+
+      it 'returns bad request when wrong holiday id given' do
+        patch :update, params.merge(invalid_holidays_json)
+
+        expect(response).to have_http_status(404)
+        expect(response.body).to include "Record Not Found"
+      end
+
+      it 'returns bad request when user want to assign not his holiday' do
+        patch :update, params.merge(second_holiday_json)
+
+        expect(response).to have_http_status(404)
+        expect(response.body).to include "Record Not Found"
       end
     end
 
-    context 'when employee do not have holiday policy but his working place has' do
-      let(:working_place) { create(:working_place, holiday_policy: holiday_policy) }
-      let(:employee) { create(:employee, working_place: working_place, account: account) }
+    context 'POST #create' do
+      let(:params) { attributes_for(:holiday_policy) }
 
-      it 'should return holiday policy' do
-        subject
+      it 'assigns holiday to holiday_policy' do
+        expect {
+          post :create, params.merge(first_holiday_json)
+        }.to change { first_holiday.reload.holiday_policy_id }
+      end
 
-        expect(employee.holiday_policy_id).to be nil
-        expect(response.body).to include holiday_policy.id
+      it 'allows for more than one holiday assign' do
+        expect {
+          post :create, params.merge(both_holiday_json)
+        }.to change { third_holiday.reload.holiday_policy_id }
+      end
+
+      it 'respond with success' do
+        post :create, params.merge(both_holiday_json)
+
+        expect(response).to have_http_status(201)
+      end
+
+      it 'returns bad request when wrong holiday id given' do
+        post :create, params.merge(invalid_holidays_json)
+
+        expect(response).to have_http_status(404)
+        expect(response.body).to include "Record Not Found"
+      end
+
+      it 'returns bad request when user want to assign not his holiday' do
+        post :create, params.merge(second_holiday_json)
+
+        expect(response).to have_http_status(404)
+        expect(response.body).to include "Record Not Found"
+      end
+    end
+  end
+
+  context 'multiple records assign' do
+    let(:second_holiday_policy) { create(:holiday_policy, account: account) }
+
+    let(:employees) { create_list(:employee, 2, account: account) }
+    let(:working_places) { create_list(:working_place, 2, account: account) }
+    let(:holidays) { create_list(:holiday, 2, holiday_policy: second_holiday_policy) }
+    let(:holiday_policy_params) { attributes_for(:holiday_policy) }
+
+    let(:valid_json) do
+      {
+        employees: [
+          {
+            id: employees.first.id,
+            type: "employees"
+          },
+          {
+            id: employees.last.id,
+            type: "employees"
+          }
+        ],
+        working_places: [
+          {
+            id: working_places.first.id,
+            type: "working_places"
+          },
+          {
+            id: working_places.last.id,
+            type: "working_places"
+          }
+        ],
+        holidays: [
+          {
+            id: holidays.first.id,
+            type: "holidays"
+          },
+          {
+            id: holidays.last.id,
+            type: "holidays"
+          }
+        ]
+      }
+    end
+
+    let(:invalid_json) do
+      {
+        working_places: [
+          {
+            id: working_places.first.id,
+            type: "working_places"
+          },
+          {
+            id: working_places.last.id,
+            type: "working_places"
+          }
+        ],
+        employees: [
+          {
+            id: '12345678-1234-1234-1234-123456789012',
+            type: "employees"
+          },
+          {
+            id: employees.last.id,
+            type: "employees"
+          }
+        ],
+        holidays: [
+          {
+            id: holidays.first.id,
+            type: "holidays"
+          },
+          {
+            id: '12345678-1234-1234-1234-123456789012',
+            type: "holidays"
+          }
+        ]
+      }
+    end
+
+    context 'POST #create' do
+      context 'valid params' do
+        subject { post :create, holiday_policy_params.merge(valid_json) }
+        it 'should assign employees' do
+          expect { subject }.to change { employees.first.reload.holiday_policy_id }
+        end
+
+        it 'should assign working places' do
+          expect { subject }.to change { working_places.first.reload.holiday_policy_id }
+        end
+
+        it 'should assign holidays' do
+          expect { subject }.to change { holidays.first.reload.holiday_policy_id }
+        end
+
+        it 'should respond with success' do
+          subject
+
+          expect(response).to have_http_status(201)
+        end
       end
     end
 
-    context 'when employee and his policy does not have holiday policy assigned' do
-      let(:working_place) { create(:working_place) }
-      let(:employee) { create(:employee, working_place: working_place, account: account) }
+    context 'PUTCH #update' do
+      let(:holiday_policy) { create(:holiday_policy, account: account) }
 
-      it 'should return holiday policy' do
-        Account.current.holiday_policy_id = holiday_policy.id
-        subject
+      context 'valid params' do
+        let(:params) {{ id: holiday_policy.id }}
 
-        expect(employee.holiday_policy_id).to be nil
-        expect(working_place.holiday_policy_id).to be nil
-        expect(response.body).to include holiday_policy.id
+         it 'should assign employees' do
+          expect {
+            patch :update, params.merge(valid_json)
+          }.to change { holiday_policy.reload.employees.count }.by(2)
+        end
+
+        it 'should assign working places' do
+          expect {
+            patch :update, params.merge(valid_json)
+          }.to change { holiday_policy.reload.working_places.count }.by(2)
+        end
+
+        it 'should assign holidays' do
+          expect {
+            patch :update, params.merge(valid_json)
+          }.to change { holiday_policy.reload.holidays.count }.by(2)
+        end
+
+        it 'should respond with success' do
+          patch :update, params.merge(valid_json)
+
+          expect(response).to have_http_status(204)
+        end
       end
-    end
+      context 'invalid params' do
+        let(:params) {{ id: holiday_policy.id }}
 
-    context 'when holiday policy not defined in employee, working place and account' do
-      let(:working_place) { create(:working_place) }
-      let(:employee) { create(:employee, working_place: working_place, account: account) }
+        it 'should assign employees' do
+          expect {
+            patch :update, params.merge(invalid_json)
+          }.to_not change { holiday_policy.reload.employees.count }
+        end
 
-      it 'should return empty response' do
-        subject
+        it 'should assign working places' do
+          expect {
+            patch :update, params.merge(invalid_json)
+          }.to_not change { holiday_policy.reload.working_places.count }
+        end
 
-        expect(employee.holiday_policy_id).to be nil
-        expect(working_place.holiday_policy_id).to be nil
-        expect(account.holiday_policy_id).to be nil
+        it 'should assign holidays' do
+          expect {
+            patch :update, params.merge(invalid_json)
+          }.to_not change { holiday_policy.reload.holidays.count }
+        end
 
-        expect(response.body).to_not include holiday_policy.id
-        expect(response).to have_http_status(200)
+        it 'should respond with success' do
+          patch :update, params.merge(invalid_json)
+
+          expect(response).to have_http_status(404)
+        end
       end
     end
   end

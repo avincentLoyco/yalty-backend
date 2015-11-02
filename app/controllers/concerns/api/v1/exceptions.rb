@@ -1,17 +1,19 @@
 module API
   module V1
     module Exceptions
-      class Forbidden < StandardError
+      class MissingOrInvalidData < StandardError
         def initialize(data)
           super
           @data = data
         end
       end
 
-      class ForbiddenAction < StandardError
-        def initialize(data)
-          super
-          @data = data
+      class InvalidResourcesError < StandardError
+        attr_reader :resource, :messages
+
+        def initialize(resource, messages)
+          @resource = resource
+          @messages = messages
         end
       end
     end

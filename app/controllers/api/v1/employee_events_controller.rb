@@ -1,40 +1,90 @@
 module API
   module V1
-    class EmployeeEventsController < JSONAPI::ResourceController
-      include API::V1::EmployeeManagement
+    class EmployeeEventsController < ApplicationController
+      include EmployeeEventRules
+      GateResult = Struct.new(:attributes, :errors)
 
-      skip_before_action :setup_request, only: [:create]
+      def show
+        render_resource(resource)
+      end
+
+      def index
+        render_resource(resources)
+      end
 
       def create
-        setup_params
-        load_employee(employee_data)
-        build_employee_event(employee_event_data)
-        build_employee_attributes(employee_attribute_data)
-        save_event
+        verified_params(gate_rules) do |event_attributes, employee_attributes|
+          resource = CreateEvent.new(event_attributes, employee_attributes).call
 
-        render status: :no_content, nothing: true
-      rescue => e
-        handle_exceptions(e)
+          render_resource(resource, status: :created)
+        end
+      end
+
+      def update
+        verified_params(gate_rules) do |event_attributes, employee_attributes|
+          UpdateEvent.new(event_attributes, employee_attributes).call
+
+          render_no_content
+        end
       end
 
       private
 
-      def employee_data
-        employee_event_data
-          .require(:relationships)
-          .require(:employee)
-          .require(:data)
+      def resource
+        @resource ||= Account.current.employee_events.find(params[:id])
       end
 
-      def employee_event_data
-        params.require(:data)
+      def resources
+        @resources ||= employee.events
       end
 
-      def employee_attribute_data
-        employee_event_data
-          .require(:relationships)
-          .require(:employee_attributes)
-          .require(:data)
+      def employee
+        Account.current.employees.find(params[:employee_id])
+      end
+
+      def resource_representer
+        ::Api::V1::EmployeeEventRepresenter
+      end
+
+      def verified_params(rules)
+        event_result = rules.verify(params)
+        attributes_results, attributes_errors = verify_employee_attributes
+
+        if event_result.valid? && attributes_errors.blank?
+          yield(event_result.attributes, attributes_results)
+        else
+          result_errors = merge_errors(event_result, attributes_errors)
+          resource_invalid_error(result_errors)
+        end
+      end
+
+      def merge_errors(base, results_errors)
+        new_result = GateResult.new(base.attributes, base.errors)
+
+        results_errors.each do |result|
+          new_result.attributes = new_result.attributes.merge(result.attributes)
+          new_result.errors = new_result.errors.merge(result.errors)
+        end
+
+        new_result
+      end
+
+      def verify_employee_attributes
+        # TODO temporary solution we are waiting for issue:
+        # https://github.com/monterail/gate/issues/1
+        results = []
+        errors = []
+        nested_gate_rules = EmployeeAttributeVersionRules.new.gate_rules(request)
+
+        params[:employee][:employee_attributes].each do |employee_attribute|
+          result = nested_gate_rules.verify(employee_attribute)
+          if result.valid?
+            results << result.attributes
+          else
+            errors << result
+          end
+        end
+        [results, errors]
       end
     end
   end

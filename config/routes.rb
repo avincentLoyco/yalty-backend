@@ -2,26 +2,13 @@ Rails.application.routes.draw do
   # API
   namespace :api, path: 'api', constraints: { subdomain: /^api/ } do
     namespace :v1 do
-      jsonapi_resources :employees do
-        jsonapi_relationships
-        jsonapi_related_resource :holiday_policy
-      end
-      jsonapi_resources :employee_attributes
-      jsonapi_resources :employee_events
-      jsonapi_resources :employee_attribute_definitions
-      jsonapi_resources :working_places do
-        jsonapi_relationships
-      end
-      jsonapi_resource :settings, only: [:show, :update] do
-        collection do
-          put :'assign-holiday-policy'
-        end
-      end
-      jsonapi_resources :holiday_policies do
-        jsonapi_relationships
-      end
-
-      jsonapi_resources :holidays
+      resources :working_places, except: [:edit, :new]
+      resources :holiday_policies, except: [:edit, :new]
+      resources :holidays, except: [:edit, :new]
+      resource :settings, only: [:show, :update]
+      resources :employee_attribute_definitions
+      resources :employees, only: [:index, :show]
+      resources :employee_events, except: [:destroy]
     end
   end
 

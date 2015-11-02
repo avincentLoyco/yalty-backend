@@ -62,6 +62,753 @@ Ability to update current account settings
 
 + Response 204
 
+
+
+
+
+
+## Employee Attribute Definitions Collection [/api/v1/employee_attribute_definitions]
+
+### GET List of all employee attributes definitions [GET]
+
+Get a list of all account's Employee Attribute Definitions
+
++ Request (application/json)
+
++ Response 200 (application/json)
+
+        [
+            {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "name": "firstname",
+                "label": "test",
+                "attribute_type": "String",
+                "type": "employee/attribute_definition",
+                "system": "true"
+            },
+            {
+                "id": "87654321-1234-1234-1234-123456789012",
+                "name": "lastname",
+                "label": "test",
+                "attribute_type": "String",
+                "type": "employee/attribute_definition",
+                "system": "true"
+            },
+        ]
+
+### POST Create a new employee attribute definition [POST]
+
+Create a new employee attribute definition
+By default account_id is equal Account.current.id
+
++ Attributes
+  + name: lastname (string, required)
+  + label: test label (string)
+  + attribute_type: String (string, required)
+  + system: True (boolean, required)
+
++ Request (application/json)
+
+        {
+            "name": "lastname",
+            "system": "true",
+            "label": "test",
+            "attribute_type": "String"
+        }
+
++ Response 201 (application/json)
+
+        {
+
+            "id": "87654321-1234-1234-1234-123456789012",
+            "name": "lastname",
+            "label": "test",
+            "attribute_type": "String",
+            "type": "employee/attribute_definition",
+            "system": "true"
+        }
+
+## Employee Attribute Definition [/api/v1/employee_attribute_definitions/{employee_attribute_definition_id}]
+
++ Parameters
+  + employee_attribute_definition_id: 12345678-1234-1234-123456789012 (required, string) - ID is in uuid format
+
+### GET Employee Attribute Definition Details [GET]
+
++ Request (application/json)
+
++ Response 200 (application/json)
+
+        {
+            "id": "12345678-1234-1234-1234-123456789012",
+            "name": "firstname",
+            "label": "test",
+            "attribute_type": "String",
+            "type": "employee/attribute_definition",
+            "system": "true"
+        }
+
+### PUT Update Employee Attribute Definition [PUT]
+
++ Attributes
+  + id: 1 (string, required)
+  + name: lastname (string, required)
+  + label: test label (string)
+  + attribute_type: String (string, required)
+  + system: True (boolean, required)
+
++ Request (application/json)
+
+        {
+            "label": "test",
+            "system": "true",
+            "type": "String",
+            "name": "firstname"
+        }
+
++ Response 204 (application/json)
+
+### PATCH Update Employee Attribute Definition [PATCH]
+
++ Attributes
+  + id: 1 (string, required)
+  + name: lastname (string)
+  + label: test label (string)
+  + attribute_type: String (string)
+  + system: True (boolean)
+
++ Request (application/json)
+
+        {
+            "label": "test"
+        }
+
++ Response 204 (application/json)
+
+### DELETE destroy Employee Attribute Definiiton [DELETE]
+
++ Request (application/json)
+
++ Response 204
+
+
+
+
+
+## Holiday Policies Collection [/api/v1/holiday_policies]
+
+### GET List of all account's holiday policies [GET]
+Get a list of all available for account holiday policies
+
++ Request (application/json)
+
++ Response 200 (application/json)
+        [
+            {
+                "name": "test",
+                "country": "pl",
+                "region": null,
+                "id": "12345678-1234-1234-1234-123456789012",
+                "type": "holiday_policy"
+            },
+            {
+                "name": "test",
+                "country": "ch",
+                "region": "zh",
+                "id": "87654321-1234-1234-1234-123456789012",
+                "type": "holiday_policy"
+            }
+        ]
+
+### POST Create a holiday policy [POST]
+
+Create a new holiday_policy
+By default account_id is equal Account.current.id
+
++ Attributes
+  + name: test (string, required)
+  + country: ch (string)
+  + region: zh (string)
+  + employees: [employees: {"id": "1"}] (array)
+  + working_places: [working_places: {"id": "1"}] (array)
+  + holidays: [holidays: {"id": "1"}] (array)
+
++ Request (application/json)
+
+        {
+             "name" : "test",
+             "country": "ch",
+             "region": "zh",
+             "type": "holiday_policy",
+             "employees" : [
+                 {
+                     "id": "12345678-1234-1234-1234-123456789012",
+                     "type": "employee"
+                 },
+                 {
+                     "id": "87654321-1234-1234-1234-123456789012",
+                     "type": "employee"
+                 }
+              ],
+              "working_places" : [
+                  {
+                      "id": "12345678-1234-1234-1234-123456789012"
+                  }
+              ],
+              "holidays": [
+                  {
+                      "id": "12345678-1234-1234-1234-123456789012"
+                  }
+              ]
+        }
+
++ Response 201 (application/json)
+
+        {
+            "id": "12345678-1234-1234-1234-123456789012",
+            "name": "test"
+            "country": "ch",
+            "region": "zh",
+            "type": "holiday_policy"
+        }
+
+## Holiday Policy [/api/v1/holiday_policies/{holiday_policy_id}]
+
++ Parameters
+    + holiday_policy_id: 12345678-1234-1234-123456789012 (required, string) - ID of the Holiday Policy is an uuid
+
+### GET Get Holiday Policy Details [GET]
+
++ Request (application/json)
+
++ Response 200 (application/json)
+
+        {
+            "id": "12345678-1234-1234-1234-123456789012",
+            "name": "test",
+            "country": "ch",
+            "region": "zh",
+            "type": "holiday_policy"
+        }
+
+### PUT Update Holiday Policy [PUT]
+
++ Attributes
+  + id: 1 (string, required)
+  + name: test (string, required)
+  + country: ch (string)
+  + region: zh (string)
+  + employees: [employees: {"id": "1"}] (array)
+  + working_places: [working_places: {"id": "1"}] (array)
+  + holidays: [holidays: {"id": "1"}] (array)
+
++ Request (application/json)
+
+        {
+            "name": "Poland",
+            "country" : "pl"
+        }
+
++ Response 204 (application/json)
+
+
+### PATCH Update Holiday Policy [PATCH]
+
++ Attributes
+  + id: 1 (string, required)
+  + name: test (string)
+  + country: ch (string)
+  + region: zh (string)
+  + employees: [employees: {"id": "1"}] (array)
+  + working_places: [working_places: {"id": "1"}] (array)
+  + holidays: [holidays: {"id": "1"}] (array)
+
++ Request (application/json)
+
+        {
+            "country" : "pl",
+            "employees" : [
+                 {
+                     "id": "12345678-1234-1234-1234-123456789012",
+                     "type": "employee"
+                 },
+                 {
+                     "id": "87654321-1234-1234-1234-123456789012",
+                     "type": "employee"
+                 }
+            ]
+        }
+
++ Response 204 (application/json)
+
+### DELETE
+
++ Request (application/json)
+
++ Response 204
+
+
+
+
+## Holiday Collection [/api/v1/holidays?holiday_policy_id={holiday_policy_id}]
+
++ Parameters
+   + holiday_policy_id: 12345678-1234-1234-123456789012 (required, string) - ID is in uuid format
+
+### GET List of all holiday_policy holidays [GET]
+
+Get a list of holidays which belongs to particular holiday_policy
+
++ Request (application/json)
+
++ Response 200 (application/json)
+
+        [
+            {
+              "date": "01/01",
+              "id": "87654321-1234-1234-1234-123456789012",
+              "type": "holiday"
+            },
+            {
+              "date": "01/01",
+              "id": "12345678-1234-1234-1234-123456789012",
+              "type": "holiday"
+            }
+        ]
+
+### POST Create a holiday [POST /api/v1/holidays]
+
+Create a new holiday
+
++ Attributes
+  + name: holiday (string, required)
+  + date: 1 (string, required)
+  + holiday_policy_id: 11 (string, required)
+
++ Request (application/json)
+
+        {
+            "name": "holiday",
+            "date": "01.01.2013",
+            "holiday_policy_id": "12345678-1234-1234-1234-123456789012"
+        }
+
++ Response 201 (application/json)
+
+        {
+            "id": "12345678-1234-1234-1234-123456789012",
+            "name": "holiday",
+            "type": "holiday"
+        }
+
+## Holiday [/api/v1/holidays/{holiday_id}]
+
++ Parameters
+    + holiday_id: 12345678-1234-1234-123456789012 (required, string) - ID of the Holiday is an uuid
+
+### GET Get Holiday Details [GET /api/v1/holidays/{holiday_id}?holiday_policy_id={holiday_policy_id}]
+
++ Parameters
+   + holiday_policy_id: 12345678-1234-1234-123456789012 (required, string) - ID is in uuid format
+   + holiday_id: 12345678-1234-1234-123456789012 (required, string) - ID of the Holiday is an uuid
+
++ Request (application/json)
+
++ Response 200 (application/json)
+
+        {
+            "id": "12345678-1234-1234-1234-123456789012",
+            "name": "holiday",
+            "type": "holiday",
+            "date": "01/01"
+        }
+
+### PUT Update Holiday [PUT]
+
++ Attributes
+  + id: 1 (string, required)
+  + name: holiday (string, required)
+  + date: 1 (string, required)
+  + holiday_policy_id: 11 (string, required)
+
++ Request (application/json)
+
+        {
+            "name": "holiday",
+            "date" : "01.01.2015",
+            "holiday_policy_id": "12345678-1234-1234-1234-123456789012"
+        }
+
++ Response 204 (application/json)
+
+
+### PATCH Update Holiday [PATCH]
+
++ Attributes
+  + id: 1 (string, required)
+  + name: holiday (string)
+  + date: 1 (string)
+  + holiday_policy_id: 11 (string, required)
+
++ Request (application/json)
+
+        {
+            "name": "holiday",
+            "date" : "01.01",
+            "holiday_policy_id": "12345678-1234-1234-1234-123456789012"
+        }
+
++ Response 204 (application/json)
+
+### DELETE holiday [DELETE]
+
++ Attributes
+  + holiday_policy_id: 1 (string, required)
+
++ Request (application/json)
+
++ Response 204
+
+
+
+
+
+
+
+## PresencePolicy Collection [/api/v1/presence_policies]
+
+## GET List of all PresencePolicies [GET]
+
+Get a list of presence_policies which belongs to current account
+
++ Request (application/json)
+
++ Response 200 (application/json)
+
+        [
+            {
+              "name": "test",
+              "id": "87654321-1234-1234-1234-123456789012",
+              "type": "presence_policy",
+              "presence_days": [
+                {
+                  "name": "test",
+                  "id": "87654321-1234-1234-1234-123456789012",
+                  "hours": "7.50",
+                  "type": "presence_day"
+                },
+                {
+                  "name": "test2",
+                  "id": "12345678-1234-1234-1234-123456789012",
+                  "hours": "8.00",
+                  "type": "presence_day"
+                }
+              ]
+            },
+            {
+              "name": "test2",
+              "id": "12345678-1234-1234-1234-123456789012",
+              "type": "presence_policy",
+              "presence_days": [
+                {
+                  "name": "test",
+                  "id": "87654321-1234-1234-1234-123456789012",
+                  "hours": "7.50",
+                  "type": "presence_day"
+                },
+                {
+                  "name": "test2",
+                  "id": "12345678-1234-1234-1234-123456789012",
+                  "hours": "8.00",
+                  "type": "presence_day"
+                }
+              ]
+            }
+        ]
+
+### POST Create a PresencePolicy [POST]
+
+Create a new Policy of Presence
+By default account_id is equal Account.current.id
+
++ Attributes
+  + name: test (string, required)
+  + employees: [employees: {"id": "1"}] (array)
+  + working_places: [working_places: {"id": "1"}] (array)
+  + presence_days: [days: {"id": "1"}] (array)
+
++ Request (application/json)
+
+        {
+             "name" : "test",
+             "type": "presence_policy",
+             "employees" : [
+                 {
+                     "id": "12345678-1234-1234-1234-123456789012",
+                     "type": "employee"
+                 },
+                 {
+                     "id": "87654321-1234-1234-1234-123456789012",
+                     "type": "employee"
+                 }
+              ],
+              "working_places" : [
+                  {
+                      "id": "12345678-1234-1234-1234-123456789012"
+                  }
+              ],
+              "presence_days": [
+                  {
+                      "id": "12345678-1234-1234-1234-123456789012"
+                  }
+              ]
+        }
+
++ Response 201 (application/json)
+
+        {
+            "id": "12345678-1234-1234-1234-123456789012",
+            "name": "test",
+            "type": "presence_policy",
+            "presence_days": [
+              {
+                "name": "test",
+                "id": "87654321-1234-1234-1234-123456789012",
+                "hours": "7.50"
+                "type": "presence_day"
+              },
+              {
+                "name": "test2",
+                "id": "12345678-1234-1234-1234-123456789012",
+                "hours": "8.00"
+                "type": "presence_day"
+              }
+            ]
+        }
+
+
+
+
+## PresencePolicy [/api/v1/presence_policies/{presence_policy_id}]
+
++ Parameters
+    + presence_policy_id: 12345678-1234-1234-123456789012 (required, string) - ID is an uuid
+
+### GET Get PresencePolicy [GET]
+
++ Request (application/json)
+
++ Response 200 (application/json)
+
+        {
+            "id": "12345678-1234-1234-1234-123456789012",
+            "name": "test",
+            "type": "presence_policy",
+            "presence_days": [
+              {
+                "name": "test",
+                "id": "87654321-1234-1234-1234-123456789012",
+                "hours": "7.50",
+                "type": "presence_day"
+              },
+              {
+                "name": "test2",
+                "id": "12345678-1234-1234-1234-123456789012",
+                "hours": "8.00",
+                "type": "presence_day"
+              }
+            ]
+        }
+
+### PUT Update PresencePolicy [PUT]
+
++ Attributes
+  + id: 1 (string, required)
+  + name: presence name (string, required)
+  + employees: [employees: {"id": "1"}] (array)
+  + working_places: [working_places: {"id": "1"}] (array)
+  + presence_days: [presence_days: {"id": "1"}] (array)
+
++ Request (application/json)
+
+        {
+            "type": "presence_policy",
+            "name": "presence name"
+        }
+
++ Response 204 (application/json)
+
+
+### PATCH Update PresencePolicy [PATCH]
+
++ Attributes
+  + id: 1 (string, required)
+  + name: presence name (string)
+  + employees: [employees: {"id": "1"}] (array)
+  + working_places: [working_places: {"id": "1"}] (array)
+  + presence_days: [presence_days: {"id": "1"}] (array)
+
++ Request (application/json)
+
+        {
+            "name": "presence name"
+        }
+
++ Response 204 (application/json)
+
+### DELETE presence policy [DELETE]
+
++ Request (application/json)
+
++ Response 204
+
+
+
+
+
+
+
+
+## PresenceDays Collection [/api/v1/presence_policies?presence_policy_id={presence_policy_id}]
+
++ Parameters
+   + presence_policy_id: 12345678-1234-1234-123456789012 (required, string) - ID is in uuid format
+
+## GET List of all PresenceDays [GET]
+
+Get a list of presence days which belongs to account's presence policy
+
++ Request (application/json)
+
++ Response 200 (application/json)
+
+        [
+            {
+              "order": "1",
+              "id": "87654321-1234-1234-1234-123456789012",
+              "hours": "7.50"
+              "type": "presence_day"
+            },
+            {
+              "order": "2",
+              "id": "12345678-1234-1234-1234-123456789012",
+              "hours": "8.00"
+              "type": "presence_day"
+            }
+        ]
+
+### POST Create a PresenceDay [POST]
+
+Create a new presence day
+
++ Attributes
+  + order: 1 (number, required)
+  + presence_policy_id: 11 (string, required)
+  + hours: 8 (number, required)
+
++ Request (application/json)
+
+        {
+             "order" : "1",
+             "type": "presence_day",
+             "hours: "8.00",
+             "presence_policy_id": "12345678-1234-1234-1234-123456789012"
+        }
+
+
++ Response 201 (application/json)
+
+        {
+            "id": "12345678-1234-1234-1234-123456789012",
+            "order": "1",
+            "hours": "8.00",
+            "type": "presence_day"
+        }
+
+
+
+
+
+
+## PresenceDay [/api/v1/presence_days/{presence_day_id}]
+
++ Parameters
+    + presence_day_id: 12345678-1234-1234-123456789012 (required, string) - ID is an uuid
+
+### GET PresenceDay Details [GET /api/v1/presence_days/{presence_day_id}?presence_policy_id={presence_policy_id}]
+
++ Parameters
+   + presence_policy_id: 12345678-1234-1234-123456789012 (required, string) - ID is in uuid format
+   + presence_day_id: 12345678-1234-1234-123456789012 (required, string) - ID of the Holiday is an uuid
+
++ Request (application/json)
+
++ Response 200 (application/json)
+
+         {
+            "id": "12345678-1234-1234-1234-123456789012",
+            "order": "1",
+            "hours": "8.00",
+            "type": "presence_day"
+        }
+
+### PUT Update PresenceDay [PUT]
+
++ Attributes
+  + id: 1 (string, required)
+  + order: 1 (number, required)
+  + presence_policy_id: 11 (string, required)
+  + hours: 8 (number, required)
+
++ Request (application/json)
+
+        {
+            "id": "12345678-1234-1234-1234-123456789012",
+            "order": "1",
+            "hours": "8.00",
+            "type": "presence_day",
+            "presence_policy_id": "12345678-1234-1234-1234-123456789012"
+        }
+
++ Response 204 (application/json)
+
+
+### PATCH Update PresenceDay [PATCH]
+
++ Attributes
+  + id: 1 (string, required)
+  + order: 1 (number)
+  + presence_policy_id: 11 (string, required)
+  + hours: 8 (number)
+
++ Request (application/json)
+
+        {
+            "id": "12345678-1234-1234-1234-123456789012",
+            "order": "1",
+            "type": "presence_day",
+            "presence_policy_id": "12345678-1234-1234-1234-123456789012"
+        }
+
++ Response 204 (application/json)
+
+### DELETE PresenceDay [DELETE]
+
++ Attributes
+  + presence_policy_id: 1 (string, required)
+
++ Request (application/json)
+
++ Response 204
+
+
+
+
+
+
+
+
+
 ## Working Places Collection [/api/v1/working_places]
 
 ### GET List all user's working places [GET]
@@ -90,7 +837,9 @@ Get a list of all available for user working places
 Create a new working place
 By default account_id is equal Account.current.id
 
-+ Attributes (Working Place Base)
++ Attributes
+  + name: Test (string, required)
+  + type: working_place (string)
 
 + Request (application/json)
 
@@ -182,11 +931,11 @@ By default account_id is equal Account.current.id
 
 + Response 200 (application/json)
 
-    {
-        "id": "12345678-1234-1234-1234-123456789012",
-        "name": "New name",
-        "type": "working_place"
-    }
+        {
+            "id": "12345678-1234-1234-1234-123456789012",
+            "name": "New name",
+            "type": "working_place"
+        }
 
 ### DELETE Delete working place [DELETE]
 
@@ -210,9 +959,283 @@ By default account_id is equal Account.current.id
 
 + Response 204 (application/json)
 
-# Data Structures
 
-## Working Place Base (object)
 
-+ name: Test (string, required)
-+ type: working_place (string)
+
+## Employees [/api/v1/employees]
+
+### GET List all employees with attributes [GET]
+
+Get a list of all employees
+
++ Request (application/json)
+
++ Response 200 (application/json)
+
+        [
+            {
+              "id": "12345678-1234-1234-1234-123456789012",
+              "type": "employee",
+              "employee_attributes": [
+                {
+                  "id": "12345678-1234-1234-1234-123456789012",
+                  "type": "employee_attribute",
+                  "value": "ABC",
+                  "attribute_name": "lastname"
+                },
+                {
+                  "id": "12345678-1234-1234-1234-123456789013",
+                  "type": "employee_attribute",
+                  "value": "Asd",
+                  "attribute_name": "firstname"
+                }
+              ]
+            },
+            {
+              "id": "87654321-1234-1234-1234-123456789012",
+              "type": "employee",
+              "employee_attributes": [
+                {
+                  "id": "12345678-1234-1234-1234-123456789012",
+                  "type": "employee_attribute",
+                  "value": "ABC",
+                  "attribute_name": "firstname"
+                }
+              ]
+            }
+        ]
+
+### GET Employee details [GET /api/v1/employees/{employee_id}]
+
++ Parameters
+  + employee_id: 12 (required, string) - ID is in uuid format
+
++ Request (application/json)
+
+        {
+          "id": "12345678-1234-1234-1234-123456789012"
+        }
+
++ Response 200 (application/json)
+
+        {
+          "id": "12345678-1234-1234-1234-123456789012",
+          "type": "employee",
+          "employee_attributes": [
+            {
+              "id": "12345678-1234-1234-1234-123456789012",
+              "type": "employee_attribute",
+              "value": "ABC",
+              "attribute_name": "firstname"
+            },
+            {
+              "id": "12345678-1234-1234-1234-123456789013",
+              "type": "employee_attribute",
+              "value": "Asd",
+              "attribute_name": "lastname"
+            }
+          ]
+        }
+
+
+
+## Employee events [/api/v1/employee_events]
+
+### GET Employee events [GET /api/v1/employee_events?employee_id={employee_id}]
+
++ Request (application/json)
+
+        {
+          "employee_id": "12345678-1234-1234-1234-123456789012"
+        }
+
++ Response 200 (application/json)
+
+        [
+          {
+            "id": "12345678-1234-1234-1234-123456789013",
+            "type": "employee_event",
+            "effective_at": "2015.02.02",
+            "comment": "Random",
+            "event_type": "hired",
+            "employee":
+            {
+              "id": "123",
+              "type": "employee",
+              "employee_attributes": [
+                {
+                  "id": "12345678-1234-1234-1234-123456789012",
+                  "type": "employee_attribute",
+                  "value": "ABC",
+                  "attribute_name": "lastname"
+                },
+                {
+                  "id": "12345678-1234-1234-1234-123456789012",
+                  "type": "employee_attribute",
+                  "value": "Dsa",
+                  "attribute_name": "firstname"
+                }
+              ]
+            }
+          }
+        ]
+
+### GET Employee event [GET /api/v1/employee_events/{employee_event_id}]
+
++ Request (application/json)
+
+        {
+          "employee_event_id": "12345678-1234-1234-1234-123456789012"
+        }
+
++ Response 200 (application/json)
+
+        {
+          "id": "12345678-1234-1234-1234-123456789013",
+          "type": "employee_event",
+          "effective_at": "2015.02.02",
+          "comment": "Random",
+          "event_type": "hired",
+          "employee":
+          {
+            "id": "123",
+            "type": "employee",
+            "employee_attributes": [
+              {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "type": "employee_attribute",
+                "value": "ABC",
+                "attribute_name": "lastname"
+              },
+              {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "type": "employee_attribute",
+                "value": "Dsa",
+                "attribute_name": "firstname"
+              }
+            ]
+          }
+        }
+
+
+### POST Employee event [POST /api/v1/employee_events]
+
++ Request (application/json)
+
+        {
+          "type": "employee_event",
+          "effective_at": "2015.02.02",
+          "comment": "Random",
+          "event_type": "hired",
+          "employee":
+          {
+            "type": "employee",
+            "employee_attributes": [
+              {
+                "type": "employee_attribute",
+                "value": "ABC",
+                "attribute_name": "lastname"
+              },
+              {
+                "type": "employee_attribute",
+                "value": "Dsa",
+                "attribute_name": "firstname"
+              }
+            ]
+          }
+        }
+
++ Response 201 (application/json)
+
+        {
+          "id": "12345678-1234-1234-1234-123456789013",
+          "type": "employee_event",
+          "effective_at": "2015.02.02",
+          "comment": "Random",
+          "event_type": "hired",
+          "employee":
+          {
+            "id": "123",
+            "type": "employee",
+            "employee_attributes": [
+              {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "type": "employee_attribute",
+                "value": "ABC",
+                "attribute_name": "lastname"
+              },
+              {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "type": "employee_attribute",
+                "value": "Dsa",
+                "attribute_name": "firstname"
+              }
+            ]
+          }
+        }
+
+### PUT Employee event [PUT /api/v1/employee_events/{employee_event_id}]
+
++ Request (application/json)
+
+        {
+          "id": "12345678-1234-1234-1234-123456789013",
+          "type": "employee_event",
+          "effective_at": "2015.02.02",
+          "comment": "Random",
+          "event_type": "hired",
+          "employee":
+          {
+            "id": "123",
+            "type": "employee",
+            "employee_attributes": [
+              {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "type": "employee_attribute",
+                "value": "ABC",
+                "attribute_name": "lastname"
+              },
+              {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "type": "employee_attribute",
+                "value": "Dsa",
+                "attribute_name": "firstname"
+              }
+            ]
+          }
+        }
+
++ Response 204
+
+### PATCH Employee event [PATCH /api/v1/employee_events/{employee_event_id}]
+
++ Request (application/json)
+
+        {
+          "id": "12345678-1234-1234-1234-123456789013",
+          "type": "employee_event",
+          "effective_at": "2015.02.02",
+          "comment": "Random",
+          "event_type": "hired",
+          "employee":
+          {
+            "id": "123",
+            "type": "employee",
+            "employee_attributes": [
+              {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "type": "employee_attribute",
+                "value": "ABC",
+                "attribute_name": "lastname"
+              },
+              {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "type": "employee_attribute",
+                "value": "Dsa",
+                "attribute_name": "firstname"
+              }
+            ]
+          }
+        }
+
++ Response 204

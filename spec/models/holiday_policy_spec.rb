@@ -4,7 +4,7 @@ RSpec.describe HolidayPolicy, type: :model do
   it { is_expected.to have_db_column(:name) }
   it { is_expected.to have_db_column(:country) }
   it { is_expected.to have_db_column(:region) }
-  it { is_expected.to have_many(:holidays) }
+  it { is_expected.to have_many(:custom_holidays) }
   it { is_expected.to validate_presence_of(:name) }
   it { is_expected.to validate_presence_of(:account_id) }
 
@@ -17,6 +17,7 @@ RSpec.describe HolidayPolicy, type: :model do
         holiday_policy = HolidayPolicy.new(params)
 
         expect(holiday_policy.valid?).to eq false
+        expect(holiday_policy.errors.messages[:country]).to include "can't be blank"
       end
     end
 
@@ -55,17 +56,33 @@ RSpec.describe HolidayPolicy, type: :model do
 
     context 'region inclusion' do
       it 'should be valid when valid region code send capitalized' do
-        params = { name: 'test', country: 'pl', region: 'ds', account: account }
+        params = { name: 'test', country: 'ch', region: 'ZH', account: account }
         holiday_policy = HolidayPolicy.new(params)
 
         expect(holiday_policy.valid?).to eq true
       end
 
       it 'should be valid when valid region code send downcased' do
-        params = { name: 'test', country: 'pl', region: 'DS', account: account }
+        params = { name: 'test', country: 'ch', region: 'zh', account: account }
         holiday_policy = HolidayPolicy.new(params)
 
         expect(holiday_policy.valid?).to eq true
+      end
+
+      it 'shudl be saved when country need it regions' do
+        params = { name: 'test', country: 'ch', region: 'zh', account: account }
+        holiday_policy = HolidayPolicy.new(params)
+        holiday_policy.save!
+
+        expect(holiday_policy.region).to eq 'zh'
+      end
+
+      it 'should not be saved when country does not need regions' do
+        params = { name: 'test', country: 'pl', region: 'ds', account: account }
+        holiday_policy = HolidayPolicy.new(params)
+        holiday_policy.save!
+
+        expect(holiday_policy.region).to eq nil
       end
 
       it 'should not be valid when country code not send' do
