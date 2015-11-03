@@ -30,7 +30,7 @@ module API
 
       def update
         verified_params(gate_rules) do |attributes|
-          related = related_params(attributes).compact
+          related = related_params(attributes)
           result = transactions do
             resource.update(attributes) &&
               assign_related(resource, related)
@@ -62,13 +62,18 @@ module API
       end
 
       def assign_holidays(resource, values)
-        result = values.map { |holiday| holiday[:id] } & valid_holiday_ids
-        if result.size != values.size
+        result = set_result(values)
+        if result.size != values.to_a.size
           fail ActiveRecord::RecordNotFound
         else
           Holiday.where(id: (resource.custom_holiday_ids - result)).destroy_all
           resource.custom_holiday_ids = result
         end
+      end
+
+      def set_result(values)
+        return [] unless values.present?
+        values.map { |holiday| holiday[:id] } & valid_holiday_ids
       end
 
       def related_params(attributes)
@@ -78,15 +83,15 @@ module API
       end
 
       def related_employees(attributes)
-        { employees: attributes.delete(:employees) } if attributes[:employees]
+        { employees: attributes.delete(:employees) } if attributes.key?(:employees)
       end
 
       def related_working_places(attributes)
-        { working_places: attributes.delete(:working_places) } if attributes[:working_places]
+        { working_places: attributes.delete(:working_places) } if attributes.key?(:working_places)
       end
 
       def related_holidays(attributes)
-        { custom_holidays: attributes.delete(:holidays) } if attributes[:holidays]
+        { custom_holidays: attributes.delete(:holidays) } if attributes.key?(:holidays)
       end
 
       def resource

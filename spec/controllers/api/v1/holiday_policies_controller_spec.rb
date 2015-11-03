@@ -10,9 +10,32 @@ RSpec.describe API::V1::HolidayPoliciesController, type: :controller do
     resource_name: 'holiday_policy'
 
   describe 'POST #create' do
-    context 'invalid data' do
-      subject { post :create, params }
+    subject { post :create, params }
 
+    context 'valid data with empty arrays' do
+      context 'empty array of holidays' do
+        let(:params) {{ name: 'ab', holidays: [] }}
+
+        it { expect { subject }.to change { HolidayPolicy.count }.by(1) }
+        it { is_expected.to have_http_status(201) }
+      end
+
+      context 'empty array of working places' do
+        let(:params) {{ name: 'ab', working_places: [] }}
+
+        it { expect { subject }.to change { HolidayPolicy.count }.by(1) }
+        it { is_expected.to have_http_status(201) }
+      end
+
+      context 'empty array of employees' do
+        let(:params) {{ name: 'ab', employees: [] }}
+
+        it { expect { subject }.to change { HolidayPolicy.count }.by(1) }
+        it { is_expected.to have_http_status(201) }
+      end
+    end
+
+    context 'invalid data' do
       context 'data does not pass validation' do
         let(:params) {{ name: 'test', region: 'ds' }}
 
@@ -41,8 +64,46 @@ RSpec.describe API::V1::HolidayPoliciesController, type: :controller do
   end
 
   describe 'PUT #update' do
-    subject { put :create, params }
-    let(:holiday_policy) { create(:holiday_policy, account: account) }
+    subject { put :update, params }
+
+    let!(:holiday_policy) { create(:holiday_policy, account: account) }
+    let(:params) do
+      {
+        id: holiday_policy.id,
+        name: 'test',
+        employees: [],
+        working_places: [],
+        holidays: []
+      }
+    end
+
+    context 'with empty array send' do
+      context 'with empty array of employees' do
+        let!(:employees) do
+          create_list(:employee, 2, account: account, holiday_policy: holiday_policy)
+        end
+
+        it { expect { subject }.to change { holiday_policy.reload.employees.count }.from(2).to(0) }
+        it { is_expected.to have_http_status 204 }
+      end
+
+      context 'with empty array of holidays' do
+        let!(:holidays) { create_list(:holiday, 2, holiday_policy: holiday_policy ) }
+
+        it { expect { subject }.to change { holiday_policy.reload.holidays.count }.from(2).to(0) }
+        it { is_expected.to have_http_status 204 }
+      end
+
+      context 'with empty array of working_places' do
+        let!(:working_places) do
+          create_list(:working_place, 2, account: account, holiday_policy: holiday_policy)
+        end
+
+        it { expect { subject }.to change { holiday_policy.reload.working_places.count }
+          .from(2).to(0) }
+        it { is_expected.to have_http_status 204 }
+      end
+    end
 
     context 'invalid data' do
       context 'data does not pass validation' do
