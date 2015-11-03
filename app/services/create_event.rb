@@ -9,7 +9,7 @@ class CreateEvent
     @versions          = []
     @employee_params   = params[:employee]
     @attributes_params = employee_attributes_params
-    @event_params      = params.tap { |attr| attr.delete(:employee) }
+    @event_params      = build_event_params(params)
   end
 
   def call
@@ -23,6 +23,10 @@ class CreateEvent
   end
 
   private
+
+  def build_event_params(params)
+    params.tap { |attr| attr.delete(:employee) && attr.delete(:employee_attributes) }
+  end
 
   def find_or_build_employee
     if employee_params.key?(:id)

@@ -9,8 +9,8 @@ module EmployeeEventRules
       optional :comment
       optional :employee, :Hash do
         optional :id, :String
-        required :employee_attributes, :Array
       end
+      optional :employee_attributes, :Array
     end
   end
 
@@ -21,8 +21,8 @@ module EmployeeEventRules
       optional :comment
       required :employee, :Hash do
         optional :id, :String
-        required :employee_attributes, :Array
       end
+      required :employee_attributes, :Array
     end
   end
 
@@ -34,8 +34,8 @@ module EmployeeEventRules
       optional :comment
       required :employee, :Hash do
         required :id, :String
-        required :employee_attributes, :Array
       end
+      required :employee_attributes, :Array
     end
   end
 end
