@@ -13,7 +13,7 @@ module API
 
       def create
         verified_params(gate_rules) do |attributes|
-          resource = holiday_policy.custom_holidays.new(attributes)
+          resource = holiday_policy.custom_holidays.new(holiday_attributes(attributes))
           if resource.save
             render_resource(resource, status: :created)
           else
@@ -24,7 +24,7 @@ module API
 
       def update
         verified_params(gate_rules) do |attributes|
-          if resource.update(attributes)
+          if resource.update(holiday_attributes(attributes))
             render_no_content
           else
             resource_invalid_error(resource)
@@ -39,6 +39,10 @@ module API
 
       private
 
+      def holiday_attributes(attributes)
+        attributes.tap { |attr| attr.delete(:holiday_policy) }
+      end
+
       def resource
         @resource ||= resources.find(params[:id])
       end
@@ -48,7 +52,7 @@ module API
       end
 
       def holiday_policy
-        @holiday_policy ||= Account.current.holiday_policies.find(params[:holiday_policy_id])
+        @holiday_policy ||= Account.current.holiday_policies.find(params[:holiday_policy][:id])
       end
 
       def resource_representer

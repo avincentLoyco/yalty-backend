@@ -13,8 +13,10 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
       "name": "test",
       "type": "holidays",
       "id": holiday.id,
-      "holiday_policy_id": holiday_policy.id,
-      "date": "12.12.2015"
+      "date": "12.12.2015",
+      "holiday_policy": {
+        "id": holiday_policy.id
+      }
     }
   end
 
@@ -22,7 +24,9 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
     {
       "id": holiday.id,
       "name": "test",
-      "holiday_policy_id": holiday_policy.id,
+      "holiday_policy": {
+        "id": holiday_policy.id
+      },
       "type": "holidays"
     }
   end
@@ -30,7 +34,9 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
   let(:invalid_params) do
     {
       "name": "",
-      "holiday_policy_id": holiday_policy.id,
+      "holiday_policy": {
+        "id": holiday_policy.id
+      },
       "type": "holidays",
       "date": "12.12.2015",
       "id": holiday.id
@@ -39,9 +45,12 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
 
   let(:valid_params_invalid_holiday_policy) do
     {
+      "id": holiday.id,
       "name": "test",
       "date": "1.1.2015",
-      "holiday_policy_id": "12345678-1234-1234-1234-123456789012",
+      "holiday_policy": {
+        "id": "12345678-1234-1234-1234-123456789012"
+      },
       "type": "holidays"
     }
   end
@@ -50,7 +59,9 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
     {
       "name": "test",
       "date": "1.1.2015",
-      "holiday_policy_id": not_user_holiday_policy.id,
+      "holiday_policy": {
+        "id": not_user_holiday_policy.id
+      },
       "type": "holidays"
     }
   end
@@ -60,36 +71,35 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
       "name": "test",
       "type": "holidays",
       "date": "12.12.2015",
-      "holiday_policy_id": holiday_policy.id,
+      "holiday_policy": {
+        "id": holiday_policy.id
+      },
       "id": '12345678-abcd-1234-1234-123456789012'
     }
   end
 
   describe "GET #show" do
     it 'should respond with success when valid params given' do
-      params = { id: holiday.id, holiday_policy_id: holiday_policy.id }
-      get :show, params
+      get :show, valid_params
 
       expect(response).to have_http_status(:success)
     end
 
     it 'should respond with 404 when wrong holiday_policy_id given' do
-      params = { id: holiday.id, holiday_policy_id: '12345678-1234-1234-1234-123456789012' }
-      get :show, params
+      get :show, valid_params_invalid_holiday_policy
 
       expect(response).to have_http_status 404
     end
 
     it 'should respond with 404 when wrong holiday id' do
-      params = { id: '12345678-1234-1234-1234-123456789012', holiday_policy_id: holiday_policy.id }
-      get :show, params
+      get :show, invalid_url_params
 
       expect(response).to have_http_status 404
     end
 
     it 'should respond with 404 when not users holiday given' do
       not_user_holiday = create(:holiday)
-      params = { id: not_user_holiday.id, holiday_policy_id: not_user_holiday.holiday_policy_id }
+      params = { id: not_user_holiday.id, holiday_policy: { id: not_user_holiday.holiday_policy_id }}
       get :show, params
 
       expect(response).to have_http_status 404
@@ -100,7 +110,7 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
     let!(:not_user_holiday) { create(:holiday) }
 
     it 'should return current users holidays' do
-      get :index, holiday_policy_id: holiday_policy.id
+      get :index, holiday_policy: { id: holiday_policy.id }
 
       expect(response).to have_http_status(:success)
       expect(response.body).to include holiday.id
@@ -113,7 +123,7 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
     it 'should return default holidays for country Poland' do
       holiday_policy = create(:holiday_policy, :with_country, account: account)
 
-      get :index, holiday_policy_id: holiday_policy.id
+      get :index, holiday_policy: { id: holiday_policy.id }
       expect(response).to have_http_status(:success)
       data = JSON.parse(response.body)
       expect(data.size).to eq 14
@@ -122,7 +132,7 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
     it 'should return default holidays for country Switzerland and land Zuruch' do
       holiday_policy = create(:holiday_policy, :with_region, account: account)
 
-      get :index, holiday_policy_id: holiday_policy.id
+      get :index, holiday_policy: { id: holiday_policy.id }
       expect(response).to have_http_status(:success)
       data = JSON.parse(response.body)
       expect(data.size).to eq 10
@@ -132,7 +142,7 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
       holiday_policy = create(:holiday_policy, :with_country, account: account)
       create(:holiday, holiday_policy: holiday_policy)
 
-      get :index, holiday_policy_id: holiday_policy.id
+      get :index, holiday_policy: { id: holiday_policy.id }
       expect(response).to have_http_status(:success)
       data = JSON.parse(response.body)
       expect(data.size).to eq 15
@@ -278,7 +288,7 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
 
     context 'when valid id' do
       let!(:holiday) { create(:holiday, holiday_policy: holiday_policy) }
-      let(:params) {{ id: holiday.id, holiday_policy_id: holiday_policy.id }}
+      let(:params) {{ id: holiday.id, holiday_policy: { id: holiday_policy.id }}}
 
       it 'should delete holiday' do
         expect{ subject }.to change { Holiday.count }.by(-1)
@@ -293,7 +303,9 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
 
     context 'when user do not have access or not exist' do
       let!(:not_user_holiday){ create(:holiday) }
-      let(:params) {{ id: not_user_holiday.id, holiday_policy_id: not_user_holiday.holiday_policy_id }}
+      let(:params) do
+        { id: not_user_holiday.id, holiday_policy: { id: not_user_holiday.holiday_policy_id }}
+      end
 
       it 'should not delete holiday' do
         expect{ subject }.to_not change { Holiday.count }
