@@ -77,21 +77,14 @@ module API
       end
 
       def related_params(attributes)
-        related_employees(attributes).to_h
-          .merge(related_working_places(attributes).to_h)
-          .merge(related_holidays(attributes).to_h)
-      end
-
-      def related_employees(attributes)
-        { employees: attributes.delete(:employees) } if attributes.key?(:employees)
-      end
-
-      def related_working_places(attributes)
-        { working_places: attributes.delete(:working_places) } if attributes.key?(:working_places)
-      end
-
-      def related_holidays(attributes)
-        { custom_holidays: attributes.delete(:holidays) } if attributes.key?(:holidays)
+        related = {}
+        employees = attributes.delete(:employees).to_a if attributes.key?(:employees)
+        working_places = attributes.delete(:working_places).to_a if attributes.key?(:working_places)
+        custom_holidays = attributes.delete(:holidays).to_a if attributes.key?(:holidays)
+        related = related.merge(employees: employees) if employees
+        related = related.merge(working_places: working_places) if working_places
+        related = related.merge(custom_holidays: custom_holidays) if custom_holidays
+        related
       end
 
       def resource
