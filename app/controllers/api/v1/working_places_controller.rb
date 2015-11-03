@@ -65,17 +65,12 @@ module API
       end
 
       def related_params(attributes)
-        holiday_policy_params(attributes).to_h
-          .merge(employees_params(attributes).to_h)
-      end
-
-      def employees_params(attributes)
-        { employees: attributes.delete(:employees) } if attributes[:employees]
-      end
-
-      def holiday_policy_params(attributes)
-        return unless attributes[:holiday_policy]
-        { holiday_policy: attributes.delete(:holiday_policy).try(:[], :id) }
+        related = {}
+        employees = attributes.delete(:employees)
+        holiday_policy = attributes.delete(:holiday_policy).try(:[], :id)
+        related = related.merge({ employees: employees }) if employees
+        related = related.merge({ holiday_policy: holiday_policy }) if holiday_policy
+        related
       end
 
       def resources
