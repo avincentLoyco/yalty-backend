@@ -7,6 +7,16 @@ module Api::V1
         region: resource.region
       }
         .merge(basic)
+        .merge(relationships)
+    end
+
+    def relationships
+      holidays = resource.holidays.map do |holiday|
+        HolidayRepresenter.new(holiday).basic
+      end
+      {
+        holidays: holidays
+      }
     end
   end
 end

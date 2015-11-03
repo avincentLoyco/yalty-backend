@@ -13,7 +13,7 @@ module Api::V1
           type: resource_type
         }
       else
-        {}
+        nil
       end
     end
 
