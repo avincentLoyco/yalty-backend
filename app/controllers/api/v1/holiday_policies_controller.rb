@@ -78,13 +78,22 @@ module API
 
       def related_params(attributes)
         related = {}
-        employees = attributes.delete(:employees).to_a if attributes.key?(:employees)
-        working_places = attributes.delete(:working_places).to_a if attributes.key?(:working_places)
-        custom_holidays = attributes.delete(:holidays).to_a if attributes.key?(:holidays)
+        attributes = converted_attributes(attributes)
+        employees = attributes.delete(:employees)
+        working_places = attributes.delete(:working_places)
+        custom_holidays = attributes.delete(:holidays)
         related = related.merge(employees: employees) if employees
         related = related.merge(working_places: working_places) if working_places
         related = related.merge(custom_holidays: custom_holidays) if custom_holidays
         related
+      end
+
+      def converted_attributes(attributes)
+        attributes.each do |key, value|
+          if value == nil
+            attributes[key] = []
+          end
+        end
       end
 
       def resource
