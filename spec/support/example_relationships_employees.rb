@@ -107,12 +107,12 @@ RSpec.shared_examples 'example_relationships_employees' do |settings|
       end
     end
 
-    context 'patch #update' do
+    context 'PUT #update' do
       let(:params) { resource_params.merge({ id: resource.id }) }
 
       it 'assigns employee to working place when new id given' do
         expect {
-          patch :update, params.merge(first_employee_json)
+          put :update, params.merge(first_employee_json)
         }.to change { resource.reload.employees.size }.from(0).to(1)
 
         expect(response).to have_http_status(:no_content)
@@ -124,7 +124,7 @@ RSpec.shared_examples 'example_relationships_employees' do |settings|
 
         expect(resource.employees.count).to eq(2)
         expect {
-          patch :update, params.merge(second_employee_json)
+          put :update, params.merge(second_employee_json)
         }.to change { resource.employees.count }.from(2).to(1)
 
         expect(response).to have_http_status(:no_content)
@@ -136,7 +136,7 @@ RSpec.shared_examples 'example_relationships_employees' do |settings|
 
         expect(resource.employees.count).to eq(2)
         expect {
-          patch :update, params.merge(empty_employee_array_json)
+          put :update, params.merge(empty_employee_array_json)
         }.to change { resource.reload.employees.size }.from(2).to(0)
 
         expect(response).to have_http_status(:no_content)
@@ -147,7 +147,7 @@ RSpec.shared_examples 'example_relationships_employees' do |settings|
         resource.save
 
         expect(resource.employees.count).to eq(2)
-        patch :update, params.merge(without_employee_json)
+        put :update, params.merge(without_employee_json)
 
         expect(resource.reload[resource_param]).to eq('test')
         expect(resource.reload.employees.count).to eq (2)
@@ -157,7 +157,7 @@ RSpec.shared_examples 'example_relationships_employees' do |settings|
 
       it 'allows for adding few employees at time when new ids given' do
         expect {
-          patch :update, params.merge(both_employees_json)
+          put :update, params.merge(both_employees_json)
         }.to change { resource.reload.employees.size }.from(0).to(2)
 
         expect(response).to have_http_status(:no_content)
@@ -168,7 +168,7 @@ RSpec.shared_examples 'example_relationships_employees' do |settings|
         resource.save
 
         expect(resource.employees.count).to eq(1)
-        patch :update, params.merge(first_employee_json)
+        put :update, params.merge(first_employee_json)
 
         expect(response).to have_http_status(204)
         expect(resource.employees.count).to eq(1)
@@ -176,14 +176,14 @@ RSpec.shared_examples 'example_relationships_employees' do |settings|
 
       it 'returns bad request when wrong working place id given' do
         params = resource_params.merge({ id: '12345678-1234-1234-1234-123456789012' })
-        patch :update, params.merge(first_employee_json)
+        put :update, params.merge(first_employee_json)
 
         expect(response).to have_http_status(404)
         expect(response.body).to include "Record Not Found"
       end
 
       it 'returns bad request when wrong employee id given' do
-        patch :update, params.merge(invalid_employees_json)
+        put :update, params.merge(invalid_employees_json)
 
         expect(response).to have_http_status(404)
         expect(response.body).to include "Record Not Found"
