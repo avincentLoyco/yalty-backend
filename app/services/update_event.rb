@@ -7,7 +7,7 @@ class UpdateEvent
     @versions           = []
     @employee_params    = params[:employee].tap { |attr| attr.delete(:employee_attributes) }
     @attributes_params  = employee_attributes_params
-    @event_params       = params.tap { |attr| attr.delete(:employee) }
+    @event_params       = build_event_params(params)
   end
 
   def call
@@ -21,6 +21,10 @@ class UpdateEvent
   end
 
   private
+
+  def build_event_params(params)
+    params.tap { |attr| attr.delete(:employee) && attr.delete(:employee_attributes) }
+  end
 
   def find_employee
     @employee = Account.current.employees.find(employee_params[:id])

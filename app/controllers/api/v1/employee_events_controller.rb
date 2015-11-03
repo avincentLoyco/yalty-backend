@@ -76,7 +76,7 @@ module API
         errors = []
         nested_gate_rules = EmployeeAttributeVersionRules.new.gate_rules(request)
 
-        params[:employee][:employee_attributes].each do |employee_attribute|
+        params[:employee_attributes].each do |employee_attribute|
           result = nested_gate_rules.verify(employee_attribute)
           if result.valid?
             results << result.attributes

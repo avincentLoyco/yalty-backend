@@ -44,8 +44,8 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
   shared_examples 'Unprocessable Entity on create' do
     context 'with two attributes with same name' do
       before do
-        attr = json_payload[:employee][:employee_attributes].first
-        json_payload[:employee][:employee_attributes] << attr
+        attr = json_payload[:employee_attributes].first
+        json_payload[:employee_attributes] << attr
       end
 
       it { expect { subject }.to_not change { Employee::Event.count } }
@@ -74,7 +74,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
       context 'for employee attributes' do
         before do
-          json_payload[:employee][:employee_attributes].first.delete(:attribute_name)
+          json_payload[:employee_attributes].first.delete(:attribute_name)
         end
 
         it { expect { subject }.to_not change { Employee::Event.count } }
@@ -132,19 +132,19 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           event_type: "hired",
           employee: {
             type: 'employee',
-            employee_attributes: [
-              {
-                type: "employee_attribute",
-                attribute_name: first_name_attribute_definition,
-                value: first_name
-              },
-              {
-                type: "employee_attribute",
-                attribute_name: last_name_attribute_definition,
-                value: last_name
-              }
-            ]
-          }
+          },
+          employee_attributes: [
+            {
+              type: "employee_attribute",
+              attribute_name: first_name_attribute_definition,
+              value: first_name
+            },
+            {
+              type: "employee_attribute",
+              attribute_name: last_name_attribute_definition,
+              value: last_name
+            }
+          ]
         }
       end
 
@@ -179,7 +179,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       it 'should contain employee attributes' do
         expect(subject).to have_http_status(:success)
 
-        expect_json_keys('employee.employee_attributes.0',
+        expect_json_keys('employee_attributes.0',
                          [:value, :attribute_name, :id, :type]
                         )
       end
@@ -197,19 +197,19 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           employee: {
             id: employee_id,
             type: 'employee',
-            employee_attributes: [
-              {
-                type: "employee_attribute",
-                attribute_name: first_name_attribute_definition,
-                value: first_name
-              },
-              {
-                type: "employee_attribute",
-                attribute_name: last_name_attribute_definition,
-                value: last_name
-              }
-            ]
-          }
+          },
+          employee_attributes: [
+            {
+              type: "employee_attribute",
+              attribute_name: first_name_attribute_definition,
+              value: first_name
+            },
+            {
+              type: "employee_attribute",
+              attribute_name: last_name_attribute_definition,
+              value: last_name
+            }
+          ]
         }
       end
 
@@ -238,7 +238,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
       context 'without content for attributes' do
         before do
-          json_payload[:employee][:employee_attributes] = []
+          json_payload[:employee_attributes] = []
         end
 
         it { expect { subject }.to change { Employee::Event.count }.by(1) }
@@ -254,7 +254,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         let(:first_name) { nil }
 
         before do
-          json_payload[:employee][:employee_attributes].delete_if  do |attr|
+          json_payload[:employee_attributes].delete_if  do |attr|
             attr[:attribute_name] != first_name_attribute_definition
           end
         end
@@ -319,8 +319,8 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
     context 'with two attributes with same name' do
       before do
-        attr = json_payload[:employee][:employee_attributes].first
-        json_payload[:employee][:employee_attributes] << attr
+        attr = json_payload[:employee_attributes].first
+        json_payload[:employee_attributes] << attr
       end
 
       it { expect { subject }.to_not change { Employee::Event.count } }
@@ -406,21 +406,21 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         employee: {
           id: employee_id,
           type: 'employee',
-          employee_attributes: [
-            {
-              id: first_name_attribute_id,
-              type: "employee_attribute",
-              attribute_name: first_name_attribute_definition,
-              value: first_name
-            },
-            {
-              id: last_name_attribute_id,
-              type: "employee_attribute",
-              attribute_name: last_name_attribute_definition,
-              value: last_name
-            }
-          ]
-        }
+        },
+        employee_attributes: [
+          {
+            id: first_name_attribute_id,
+            type: "employee_attribute",
+            attribute_name: first_name_attribute_definition,
+            value: first_name
+          },
+          {
+            id: last_name_attribute_id,
+            type: "employee_attribute",
+            attribute_name: last_name_attribute_definition,
+            value: last_name
+          }
+        ]
       }
     end
 
@@ -448,7 +448,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
     context 'without an attribute than be removed' do
       before do
-        json_payload[:employee][:employee_attributes].delete_if do |attr|
+        json_payload[:employee_attributes].delete_if do |attr|
           attr[:attribute_name] == last_name_attribute_definition
         end
       end
@@ -471,7 +471,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         employee.reload
         event.reload
 
-        json_payload[:employee][:employee_attributes].each do |attr|
+        json_payload[:employee_attributes].each do |attr|
           if attr[:attribute_name] == last_name_attribute_definition
             attr.delete(:id)
           end
@@ -534,7 +534,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
       context 'for employee attribute name' do
         before do
-          attr_json = json_payload[:employee][:employee_attributes].find do |attr|
+          attr_json = json_payload[:employee_attributes].find do |attr|
             attr[:attribute_name] == first_name_attribute_definition
           end
 
@@ -554,7 +554,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
       context 'for employee attribute value' do
         before do
-          attr_json = json_payload[:employee][:employee_attributes].find do |attr|
+          attr_json = json_payload[:employee_attributes].find do |attr|
             attr[:attribute_name] == first_name_attribute_definition
           end
 
@@ -644,7 +644,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       end
       subject
 
-      expect_json_keys('employee.employee_attributes.0', [:value, :attribute_name, :id, :type])
+      expect_json_keys('employee_attributes.0', [:value, :attribute_name, :id, :type])
     end
 
     it 'should respond with 404 when not user event' do

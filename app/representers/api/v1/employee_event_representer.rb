@@ -13,17 +13,15 @@ module Api::V1
     def relationship
       employee = EmployeeRepresenter.new(resource.employee).basic
       {
-        employee: employee.merge(attribute_versions)
+        employee: employee,
+        employee_attributes: attribute_versions
       }
     end
 
     def attribute_versions
-      response = resource.employee_attribute_versions.map do |attribute|
+      resource.employee_attribute_versions.map do |attribute|
         EmployeeAttributeVersionRepresenter.new(attribute).complete
       end
-      {
-        employee_attributes: response
-      }
     end
   end
 end
