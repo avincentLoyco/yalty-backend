@@ -9,8 +9,10 @@ Rails.application.routes.draw do
       resources :holidays, except: [:edit, :new, :index]
       resource :settings, only: [:show, :update]
       resources :employee_attribute_definitions
-      resources :employees, only: [:index, :show]
-      resources :employee_events, except: [:destroy]
+      resources :employees, only: [:index, :show] do
+        resources :employee_events, only: :index
+      end
+      resources :employee_events, only: [:show, :create, :update]
     end
   end
 
