@@ -83,10 +83,9 @@ module API
           { working_places: attributes.delete(:working_places) } if attributes.key?(:working_places)
         custom_holidays =
           { custom_holidays: attributes.delete(:holidays) } if attributes.key?(:holidays)
-        related = related.merge(employees.to_h)
-        related = related.merge(working_places.to_h)
-        related = related.merge(custom_holidays.to_h)
-        related
+        related.merge(employees.to_h)
+          .merge(working_places.to_h)
+          .merge(custom_holidays.to_h)
       end
 
       def resource
