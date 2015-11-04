@@ -3,7 +3,7 @@ class AssignCollection
 
   def initialize(resource, collection, collection_name)
     @resource         = resource
-    @collection       = collection
+    @collection       = collection.to_a
     @collection_name  = collection_name
     @collection_ids   = collection_name.singularize + '_ids='
   end

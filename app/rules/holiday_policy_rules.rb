@@ -7,9 +7,9 @@ module HolidayPolicyRules
       optional :name, :String
       optional :region, :String
       optional :country, :String
-      optional :employees, :Array
-      optional :working_places, :Array
-      optional :holidays, :Array
+      optional :employees, :Array, allow_nil: true
+      optional :working_places, :Array, allow_nil: true
+      optional :holidays, :Array, allow_nil: true
     end
   end
 
@@ -18,9 +18,9 @@ module HolidayPolicyRules
       required :name, :String
       optional :region, :String
       optional :country, :String
-      optional :employees, :Array
-      optional :working_places, :Array
-      optional :holidays, :Array
+      optional :employees, :Array, allow_nil: true
+      optional :working_places, :Array, allow_nil: true
+      optional :holidays, :Array, allow_nil: true
     end
   end
 
@@ -30,9 +30,9 @@ module HolidayPolicyRules
       required :name, :String
       optional :region, :String
       optional :country, :String
-      optional :employees, :Array
-      optional :working_places, :Array
-      optional :holidays, :Array
+      optional :employees, :Array, allow_nil: true
+      optional :working_places, :Array, allow_nil: true
+      optional :holidays, :Array, allow_nil: true
     end
   end
 end

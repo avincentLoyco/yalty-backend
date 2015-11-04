@@ -30,7 +30,7 @@ module API
 
       def update
         verified_params(gate_rules) do |attributes|
-          related = related_params(attributes).compact
+          related = related_params(attributes)
           result = transactions do
             resource.update(attributes) &&
               assign_related(resource, related)
@@ -62,31 +62,30 @@ module API
       end
 
       def assign_holidays(resource, values)
-        result = values.map { |holiday| holiday[:id] } & valid_holiday_ids
-        if result.size != values.size
+        result = values.to_a.map { |holiday| holiday[:id] } & valid_holiday_ids
+        if result.size != values.to_a.size
           fail ActiveRecord::RecordNotFound
         else
-          Holiday.where(id: (resource.custom_holiday_ids - result)).destroy_all
+          remove_holidays(resource, result)
           resource.custom_holiday_ids = result
         end
       end
 
+      def remove_holidays(resource, result)
+        Holiday.where(id: (resource.custom_holiday_ids - result)).destroy_all
+      end
+
       def related_params(attributes)
-        related_employees(attributes).to_h
-          .merge(related_working_places(attributes).to_h)
-          .merge(related_holidays(attributes).to_h)
-      end
-
-      def related_employees(attributes)
-        { employees: attributes.delete(:employees) } if attributes[:employees]
-      end
-
-      def related_working_places(attributes)
-        { working_places: attributes.delete(:working_places) } if attributes[:working_places]
-      end
-
-      def related_holidays(attributes)
-        { custom_holidays: attributes.delete(:holidays) } if attributes[:holidays]
+        related = {}
+        employees =
+          { employees: attributes.delete(:employees) } if attributes.key?(:employees)
+        working_places =
+          { working_places: attributes.delete(:working_places) } if attributes.key?(:working_places)
+        custom_holidays =
+          { custom_holidays: attributes.delete(:holidays) } if attributes.key?(:holidays)
+        related.merge(employees.to_h)
+          .merge(working_places.to_h)
+          .merge(custom_holidays.to_h)
       end
 
       def resource
@@ -102,7 +101,7 @@ module API
       end
 
       def valid_holiday_ids
-        Account.current.holiday_policies
+        Account.current.holiday_policies.includes(:custom_holidays)
           .map(&:custom_holidays).flatten.map { |holiday| holiday[:id] }
       end
     end
