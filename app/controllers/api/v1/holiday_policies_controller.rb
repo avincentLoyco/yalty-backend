@@ -66,16 +66,23 @@ module API
         if result.size != values.to_a.size
           fail ActiveRecord::RecordNotFound
         else
-          Holiday.where(id: (resource.custom_holiday_ids - result)).destroy_all
+          remove_holidays(resource, result)
           resource.custom_holiday_ids = result
         end
       end
 
+      def remove_holidays(resource, result)
+        Holiday.where(id: (resource.custom_holiday_ids - result)).destroy_all
+      end
+
       def related_params(attributes)
         related = {}
-        employees = { employees: attributes.delete(:employees) } if attributes.key?(:employees)
-        working_places = { working_places: attributes.delete(:working_places) } if attributes.key?(:working_places)
-        custom_holidays = { custom_holidays: attributes.delete(:holidays) } if attributes.key?(:holidays)
+        employees =
+          { employees: attributes.delete(:employees) } if attributes.key?(:employees)
+        working_places =
+          { working_places: attributes.delete(:working_places) } if attributes.key?(:working_places)
+        custom_holidays =
+          { custom_holidays: attributes.delete(:holidays) } if attributes.key?(:holidays)
         related = related.merge(employees.to_h)
         related = related.merge(working_places.to_h)
         related = related.merge(custom_holidays.to_h)
@@ -95,7 +102,7 @@ module API
       end
 
       def valid_holiday_ids
-        Account.current.holiday_policies
+        Account.current.holiday_policies.includes(:custom_holidays)
           .map(&:custom_holidays).flatten.map { |holiday| holiday[:id] }
       end
     end
