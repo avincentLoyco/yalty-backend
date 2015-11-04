@@ -61,30 +61,12 @@ module API
       end
 
       def save!(resource, related)
-        assign_related(resource, related)
-
-        unless resource.save && related_errors_messages(resource, related).blank?
-          related_messages = related_errors_messages(resource, related)
-
-          messages = resource.errors.messages.to_h
-          related_messages.each do |message|
-            messages.merge!(message)
-          end
-
-          fail InvalidResourcesError.new(resource, messages)
+        if resource.valid?
+          resource.save!
+          assign_related(resource, related)
+        else
+          fail InvalidResourcesError.new(resource, resource.errors.messages)
         end
-      end
-
-      def related_errors_messages(resource, related)
-        errors = []
-
-        related.keys.each do |relate|
-          resource.send(relate.to_s).each do |record|
-            errors.push(record.errors.messages) if record.errors.any?
-          end
-        end
-
-        errors
       end
 
       def assign_related(resource, related_records)
