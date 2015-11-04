@@ -44,7 +44,7 @@ module API
       end
 
       def resource
-        @resource ||= resources.find(params[:id])
+        @resource ||= Holiday.where(id: valid_holiday_ids).find(params[:id])
       end
 
       def resources
@@ -52,11 +52,20 @@ module API
       end
 
       def holiday_policy
-        @holiday_policy ||= Account.current.holiday_policies.find(params[:holiday_policy][:id])
+        @holiday_policy ||= Account.current.holiday_policies.find(holiday_policy_params)
       end
 
       def resource_representer
         ::Api::V1::HolidayRepresenter
+      end
+
+      def valid_holiday_ids
+        Account.current.holiday_policies.includes(:custom_holidays)
+          .map(&:custom_holidays).flatten.map { |holiday| holiday[:id] }
+      end
+
+      def holiday_policy_params
+        params[:holiday_policy_id] ? params[:holiday_policy_id] : params[:holiday_policy][:id]
       end
     end
   end

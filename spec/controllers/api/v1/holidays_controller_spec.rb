@@ -85,12 +85,6 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
       expect(response).to have_http_status(:success)
     end
 
-    it 'should respond with 404 when wrong holiday_policy_id given' do
-      get :show, valid_params_invalid_holiday_policy
-
-      expect(response).to have_http_status 404
-    end
-
     it 'should respond with 404 when wrong holiday id' do
       get :show, invalid_url_params
 
@@ -110,7 +104,7 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
     let!(:not_user_holiday) { create(:holiday) }
 
     it 'should return current users holidays' do
-      get :index, holiday_policy: { id: holiday_policy.id }
+      get :index, holiday_policy_id: holiday_policy.id
 
       expect(response).to have_http_status(:success)
       expect(response.body).to include holiday.id
@@ -123,7 +117,7 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
     it 'should return default holidays for country Poland' do
       holiday_policy = create(:holiday_policy, :with_country, account: account)
 
-      get :index, holiday_policy: { id: holiday_policy.id }
+      get :index, holiday_policy_id: holiday_policy.id
       expect(response).to have_http_status(:success)
       data = JSON.parse(response.body)
       expect(data.size).to eq 14
@@ -132,7 +126,7 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
     it 'should return default holidays for country Switzerland and land Zuruch' do
       holiday_policy = create(:holiday_policy, :with_region, account: account)
 
-      get :index, holiday_policy: { id: holiday_policy.id }
+      get :index, holiday_policy_id: holiday_policy.id
       expect(response).to have_http_status(:success)
       data = JSON.parse(response.body)
       expect(data.size).to eq 10
@@ -140,9 +134,9 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
 
     it 'should return default holidays for country Poland and custom' do
       holiday_policy = create(:holiday_policy, :with_country, account: account)
-      create(:holiday, holiday_policy: holiday_policy)
+      create(:holiday, holiday_policy_id: holiday_policy.id)
 
-      get :index, holiday_policy: { id: holiday_policy.id }
+      get :index, holiday_policy_id: holiday_policy.id
       expect(response).to have_http_status(:success)
       data = JSON.parse(response.body)
       expect(data.size).to eq 15
