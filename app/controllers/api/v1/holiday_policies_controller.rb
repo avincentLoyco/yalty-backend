@@ -62,18 +62,13 @@ module API
       end
 
       def assign_holidays(resource, values)
-        result = set_result(values)
-        if result.size != values.to_a.size
+        result = values.map { |holiday| holiday[:id] } & valid_holiday_ids
+        if result.size != values.size
           fail ActiveRecord::RecordNotFound
         else
           Holiday.where(id: (resource.custom_holiday_ids - result)).destroy_all
           resource.custom_holiday_ids = result
         end
-      end
-
-      def set_result(values)
-        return [] unless values.present?
-        values.map { |holiday| holiday[:id] } & valid_holiday_ids
       end
 
       def related_params(attributes)

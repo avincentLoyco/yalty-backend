@@ -15,17 +15,12 @@ class AssignCollection
   private
 
   def ids
-    result = set_result
-    if result.size != collection.to_a.size
+    result = collection.map { |item| item[:id] } & valid_ids
+    if result.size != collection.size
       fail ActiveRecord::RecordNotFound
     else
       result
     end
-  end
-
-  def set_result
-    return [] unless collection.present?
-    collection.map { |item| item[:id] } & valid_ids
   end
 
   def valid_ids
