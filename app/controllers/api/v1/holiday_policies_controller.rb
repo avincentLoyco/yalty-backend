@@ -62,8 +62,8 @@ module API
       end
 
       def assign_holidays(resource, values)
-        result = values.map { |holiday| holiday[:id] } & valid_holiday_ids
-        if result.size != values.size
+        result = values.to_a.map { |holiday| holiday[:id] } & valid_holiday_ids
+        if result.size != values.to_a.size
           fail ActiveRecord::RecordNotFound
         else
           Holiday.where(id: (resource.custom_holiday_ids - result)).destroy_all
@@ -73,22 +73,13 @@ module API
 
       def related_params(attributes)
         related = {}
-        attributes = converted_attributes(attributes)
-        employees = attributes.delete(:employees)
-        working_places = attributes.delete(:working_places)
-        custom_holidays = attributes.delete(:holidays)
-        related = related.merge(employees: employees) if employees
-        related = related.merge(working_places: working_places) if working_places
-        related = related.merge(custom_holidays: custom_holidays) if custom_holidays
+        employees = { employees: attributes.delete(:employees) } if attributes.key?(:employees)
+        working_places = { working_places: attributes.delete(:working_places) } if attributes.key?(:working_places)
+        custom_holidays = { custom_holidays: attributes.delete(:holidays) } if attributes.key?(:holidays)
+        related = related.merge(employees.to_h)
+        related = related.merge(working_places.to_h)
+        related = related.merge(custom_holidays.to_h)
         related
-      end
-
-      def converted_attributes(attributes)
-        attributes.each do |key, value|
-          if value == nil
-            attributes[key] = []
-          end
-        end
       end
 
       def resource
