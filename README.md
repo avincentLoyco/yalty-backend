@@ -161,17 +161,24 @@ Add git remotes:
 ```bash
 git remote add review git@scalingo.com:yalty-api-server-review.git
 git remote add staging git@scalingo.com:yalty-api-server-staging.git
+git remote add production git@scalingo.com:yalty-api-server-production.git
 ```
 
-For review, push current branch to review environment:
+For review, checkout branch to deploy and run deploy task:
 
 ```bash
-git push review HEAD:master
+git checkout <branch>
+rake deploy:review
 ```
 
-or push master to staging enviroment:
+or deploy master to staging:
 ```bash
-git push review master:master
+rake deploy:staging
+```
+
+or deploy stable to production:
+```bash
+rake deploy:production
 ```
 
 Known issues
