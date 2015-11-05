@@ -26,7 +26,7 @@ module API
 
       def update
         verified_params(gate_rules) do |attributes|
-          related = related_params(attributes).compact
+          related = related_params(attributes)
 
           transactions do
             resource.attributes = attributes
@@ -52,7 +52,7 @@ module API
         related = {}
 
         attributes.each do |key, value|
-          if attributes[key].kind_of?(Array)
+          if attributes[key].kind_of?(Array) || attributes[key] == nil
             related.merge!({key => attributes.delete(key)})
           end
         end

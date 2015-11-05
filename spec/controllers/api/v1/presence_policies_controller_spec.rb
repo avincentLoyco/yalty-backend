@@ -248,6 +248,27 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
           it { is_expected.to have_http_status(204) }
         end
       end
+
+      context 'it unassign records when empty array send' do
+        let(:params) {{ name: 'test', employees: [], working_places: [], id: presence_policy.id }}
+        subject { put :update, params }
+
+        context 'with empty employee array' do
+          let!(:employees) do
+            create_list(:employee, 2, account: account, presence_policy: presence_policy)
+          end
+
+          it { expect { subject }.to change { presence_policy.reload.employees.count }.by(-2) }
+        end
+
+        context 'with empty working places array' do
+          let!(:working_places) do
+            create_list(:working_place, 2, account: account, presence_policy: presence_policy)
+          end
+
+          it { expect { subject }.to change { presence_policy.reload.working_places.count }.by(-2) }
+        end
+      end
     end
 
     context 'invalid data' do
