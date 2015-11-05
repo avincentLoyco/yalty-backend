@@ -14,6 +14,7 @@ class AssignMember
   private
 
   def member
+    return nil unless member_id
     Account.current.send(member_name.pluralize).find(member_id)
   end
 end

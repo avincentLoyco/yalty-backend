@@ -13,4 +13,6 @@ RSpec.describe Employee, type: :model do
   it { is_expected.to have_many(:employee_attributes).inverse_of(:employee) }
 
   it { is_expected.to have_many(:events).inverse_of(:employee) }
+  it { is_expected.to belong_to(:presence_policy) }
+  it { is_expected.to belong_to(:holiday_policy) }
 end

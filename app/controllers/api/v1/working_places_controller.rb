@@ -56,8 +56,8 @@ module API
       def assign_related(related_records)
         return true if related_records.empty?
         related_records.each do |key, value|
-          if key == :holiday_policy
-            assign_member(resource, value, key.to_s)
+          if members.include?(key)
+            assign_member(resource, value.try(:[], :id), key.to_s)
           else
             assign_collection(resource, value, key.to_s)
           end
@@ -66,11 +66,26 @@ module API
 
       def related_params(attributes)
         related = {}
-        employees = attributes.delete(:employees)
-        holiday_policy = attributes.delete(:holiday_policy).try(:[], :id)
-        related = related.merge({ employees: employees }) if employees
-        related = related.merge({ holiday_policy: holiday_policy }) if holiday_policy
-        related
+
+        if attributes.key?(:employees)
+          employees = { employees: attributes.delete(:employees) }
+        end
+
+        if attributes.key?(:holiday_policy)
+          holiday_policy = { holiday_policy: attributes.delete(:holiday_policy) }
+        end
+
+        if attributes.key?(:presence_policy)
+          presence_policy = { presence_policy: attributes.delete(:presence_policy) }
+        end
+
+        related.merge(employees.to_h)
+          .merge(holiday_policy.to_h)
+          .merge(presence_policy.to_h)
+      end
+
+      def members
+        %i(presence_policy holiday_policy)
       end
 
       def resources

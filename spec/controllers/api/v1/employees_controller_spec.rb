@@ -12,77 +12,126 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
   }
 
   context 'GET #show' do
-    context 'valid data' do
-      let(:employee) { create(:employee, :with_attributes, account: account) }
-      subject { get :show, id: employee.id }
+    let(:employee) { create(:employee, :with_attributes, account: account) }
+    subject { get :show, id: employee.id }
 
-      it 'should have type and id' do
-        subject
+    context 'with valid data' do
+      it { is_expected.to have_http_status(200) }
 
-        expect_json_types(id: :string, type: :string, employee_attributes: :array)
-      end
+      context 'response' do
+        before { subject }
 
-      it 'should have employee_attributes' do
-        subject
-
-        expect_json_keys('employee_attributes.*', [:id, :type, :value, :attribute_name])
-      end
-
-      it 'should respond with success' do
-        subject
-
-        expect(response).to have_http_status(200)
+        it { expect_json_keys('employee_attributes.*', [:id, :type, :value, :attribute_name]) }
+        it { expect_json_types(id: :string, type: :string, employee_attributes: :array) }
       end
     end
 
-    context 'invalid data' do
-      it 'should respond with 404 when invalid id given' do
-        get :show, id: '12345678-1234-1234-1234-123456789012'
+    context 'with invalid data' do
+      context 'with invalid employee id' do
+        subject { get :show, id: '1' }
 
-        expect(response).to have_http_status(404)
+        it { is_expected.to have_http_status(404) }
       end
 
-      it 'should repsond with 404 when not user employee id given' do
-        not_account_employee = create(:employee)
-        get :show, id: not_account_employee.id
+      context 'with not account employee' do
+        before(:each) do
+          user = create(:account_user)
+          Account.current = user.account
+        end
 
-        expect(response).to have_http_status(404)
+        it { is_expected.to have_http_status(404) }
       end
     end
   end
 
   context 'GET #index' do
-    before(:each) do
-      create_list(:employee, 3, :with_attributes, account: account)
+    let!(:employees) { create_list(:employee, 3, account: account) }
+    subject { get :index }
+
+    it { is_expected.to have_http_status(200) }
+
+    context 'response' do
+      before { subject }
+
+      it { expect_json_sizes(3) }
+      it { expect_json_types('*', id: :string, type: :string, employee_attributes: :array) }
     end
 
-    it 'should respond with success' do
-      get :index
+    context 'should not be visible in context of other account' do
+      before(:each) do
+        user = create(:account_user)
+        Account.current = user.account
+      end
 
-      expect(response).to have_http_status(:success)
-      expect_json_sizes(3)
+      it { is_expected.to have_http_status(200) }
+
+      context 'response' do
+        before { subject }
+
+        it { expect_json_sizes(0) }
+      end
+    end
+  end
+
+  context 'PUT #update' do
+    let(:employee) { create(:employee, account: account) }
+    let(:presence_policy) { create(:presence_policy, account: account) }
+    let(:holiday_policy) { create(:holiday_policy, account: account) }
+    let(:id) { employee.id }
+    let(:holiday_policy_id) { holiday_policy.id }
+    let(:presence_policy_id) { presence_policy.id }
+    let(:valid_params_json) do
+      {
+        id: id,
+        type: 'employee',
+        presence_policy: {
+          id: presence_policy_id,
+          type: 'presence_policy'
+        },
+        holiday_policy: {
+          id: holiday_policy_id,
+          type: 'holiday_policy'
+        }
+      }
+    end
+    subject { put :update, valid_params_json }
+
+    context 'with valid data' do
+      it { expect { subject }.to change { employee.reload.holiday_policy_id } }
+      it { expect { subject }.to change { employee.reload.presence_policy_id } }
+
+      it { is_expected.to have_http_status(204) }
     end
 
-    it 'should have id, type and employee attributes' do
-      get :index
+    context 'with invalid data' do
+      context 'invalid records ids' do
+        context 'invalid presence policy id' do
+          let(:presence_policy_id) { '1' }
 
-      expect_json_types('*', id: :string, type: :string, employee_attributes: :array)
-    end
+          it { expect { subject }.to_not change { employee.reload.holiday_policy_id } }
+          it { expect { subject }.to_not change { employee.reload.presence_policy_id } }
 
-    it 'should have employee attributes' do
-      get :index
+          it { is_expected.to have_http_status(404) }
+        end
 
-      expect_json_keys('*.employee_attributes.0', [:attribute_name, :type, :id, :value])
-    end
+        context 'invalid holiday policy id' do
+          let(:holiday_policy_id) { '1' }
 
-    it 'should not be visible in context of other account' do
-      user = create(:account_user)
-      Account.current = user.account
+          it { expect { subject }.to_not change { employee.reload.holiday_policy_id } }
+          it { expect { subject }.to_not change { employee.reload.presence_policy_id } }
 
-      get :index
+          it { is_expected.to have_http_status(404) }
+        end
 
-      expect(response).to have_http_status(:success)
-      expect_json_sizes(0)
+        context 'invalid employee id' do
+          let(:id) { '1' }
+
+          it { expect { subject }.to_not change { employee.reload.holiday_policy_id } }
+          it { expect { subject }.to_not change { employee.reload.presence_policy_id } }
+
+          it { is_expected.to have_http_status(404) }
+        end
+      end
     end
   end
 end

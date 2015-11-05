@@ -205,7 +205,8 @@ CREATE TABLE employees (
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
     working_place_id uuid,
-    holiday_policy_id uuid
+    holiday_policy_id uuid,
+    presence_policy_id uuid
 );
 
 
@@ -346,6 +347,33 @@ ALTER SEQUENCE oauth_applications_id_seq OWNED BY oauth_applications.id;
 
 
 --
+-- Name: presence_days; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE presence_days (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    "order" integer,
+    presence_policy_id uuid NOT NULL,
+    hours numeric,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL
+);
+
+
+--
+-- Name: presence_policies; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE presence_policies (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    account_id integer NOT NULL,
+    name character varying,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL
+);
+
+
+--
 -- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -364,7 +392,8 @@ CREATE TABLE working_places (
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
-    holiday_policy_id uuid
+    holiday_policy_id uuid,
+    presence_policy_id uuid
 );
 
 
@@ -489,6 +518,22 @@ ALTER TABLE ONLY oauth_access_tokens
 
 ALTER TABLE ONLY oauth_applications
     ADD CONSTRAINT oauth_applications_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: presence_days_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY presence_days
+    ADD CONSTRAINT presence_days_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: presence_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY presence_policies
+    ADD CONSTRAINT presence_policies_pkey PRIMARY KEY (id);
 
 
 --
@@ -640,6 +685,20 @@ CREATE UNIQUE INDEX index_oauth_applications_on_uid ON oauth_applications USING 
 
 
 --
+-- Name: index_presence_days_on_presence_policy_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE INDEX index_presence_days_on_presence_policy_id ON presence_days USING btree (presence_policy_id);
+
+
+--
+-- Name: index_presence_policies_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE INDEX index_presence_policies_on_account_id ON presence_policies USING btree (account_id);
+
+
+--
 -- Name: index_working_places_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -662,6 +721,22 @@ ALTER TABLE ONLY working_places
 
 
 --
+-- Name: fk_rails_61ac11da2b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY account_users
+    ADD CONSTRAINT fk_rails_61ac11da2b FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE;
+
+
+--
+-- Name: fk_rails_7b41ba85db; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY employees
+    ADD CONSTRAINT fk_rails_7b41ba85db FOREIGN KEY (presence_policy_id) REFERENCES presence_policies(id);
+
+
+--
 -- Name: fk_rails_836004d785; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -678,6 +753,22 @@ ALTER TABLE ONLY holidays
 
 
 --
+-- Name: fk_rails_95b0b0db67; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY presence_policies
+    ADD CONSTRAINT fk_rails_95b0b0db67 FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE;
+
+
+--
+-- Name: fk_rails_aa0d38825b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY working_places
+    ADD CONSTRAINT fk_rails_aa0d38825b FOREIGN KEY (presence_policy_id) REFERENCES presence_policies(id);
+
+
+--
 -- Name: fk_rails_ae92552259; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -686,19 +777,19 @@ ALTER TABLE ONLY holiday_policies
 
 
 --
--- Name: fk_rails_c96445f213; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY account_users
-    ADD CONSTRAINT fk_rails_c96445f213 FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE;
-
-
---
 -- Name: fk_rails_d55a0137c3; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY employees
     ADD CONSTRAINT fk_rails_d55a0137c3 FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE;
+
+
+--
+-- Name: fk_rails_e31d8e8b9d; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY presence_days
+    ADD CONSTRAINT fk_rails_e31d8e8b9d FOREIGN KEY (presence_policy_id) REFERENCES presence_policies(id) ON DELETE CASCADE;
 
 
 --
@@ -771,5 +862,19 @@ INSERT INTO schema_migrations (version) VALUES ('20150928150447');
 
 INSERT INTO schema_migrations (version) VALUES ('20150928151520');
 
+INSERT INTO schema_migrations (version) VALUES ('20151023110907');
+
+INSERT INTO schema_migrations (version) VALUES ('20151023112104');
+
+INSERT INTO schema_migrations (version) VALUES ('20151023113241');
+
+INSERT INTO schema_migrations (version) VALUES ('20151023122337');
+
 INSERT INTO schema_migrations (version) VALUES ('20151026085745');
+
+INSERT INTO schema_migrations (version) VALUES ('20151101202320');
+
+INSERT INTO schema_migrations (version) VALUES ('20151101202612');
+
+INSERT INTO schema_migrations (version) VALUES ('20151101204258');
 
