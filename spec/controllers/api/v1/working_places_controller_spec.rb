@@ -202,6 +202,26 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
         it { is_expected.to have_http_status(204) }
       end
 
+      context 'with empty employees array send' do
+        let!(:employees) do
+          create_list(:employee, 2, account: account, working_place: working_place)
+        end
+        subject { put :update, valid_data_json.merge(employees: []) }
+
+        it { is_expected.to have_http_status(204) }
+        it { expect { subject }.to change { working_place.reload.employees.count }.by(-2) }
+      end
+
+      context 'with holiday_policy null send' do
+        let!(:holiday_policy) do
+          create(:holiday_policy, account: account, working_places: [working_place])
+        end
+        subject { put :update, valid_data_json.merge(holiday_policy: nil) }
+
+        it { is_expected.to have_http_status(204) }
+        it { expect { subject }.to change { working_place.reload.holiday_policy_id }.to(nil) }
+      end
+
       context 'with invalid data' do
         context 'without all required params' do
           let(:missing_data_json) { valid_data_json.tap { |json| json.delete(:name) } }
