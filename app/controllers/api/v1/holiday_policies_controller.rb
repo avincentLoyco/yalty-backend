@@ -53,26 +53,8 @@ module API
       def assign_related(resource, related_records)
         return true if related_records.empty?
         related_records.each do |key, values|
-          if key == :custom_holidays
-            assign_holidays(resource, values)
-          else
-            AssignCollection.new(resource, values, key.to_s).call
-          end
+          AssignCollection.new(resource, values, key.to_s).call
         end
-      end
-
-      def assign_holidays(resource, values)
-        result = values.to_a.map { |holiday| holiday[:id] } & valid_holiday_ids
-        if result.size != values.to_a.size
-          fail ActiveRecord::RecordNotFound
-        else
-          remove_holidays(resource, result)
-          resource.custom_holiday_ids = result
-        end
-      end
-
-      def remove_holidays(resource, result)
-        Holiday.where(id: (resource.custom_holiday_ids - result)).destroy_all
       end
 
       def related_params(attributes)
@@ -81,11 +63,8 @@ module API
           { employees: attributes.delete(:employees) } if attributes.key?(:employees)
         working_places =
           { working_places: attributes.delete(:working_places) } if attributes.key?(:working_places)
-        custom_holidays =
-          { custom_holidays: attributes.delete(:holidays) } if attributes.key?(:holidays)
         related.merge(employees.to_h)
           .merge(working_places.to_h)
-          .merge(custom_holidays.to_h)
       end
 
       def resource
@@ -98,11 +77,6 @@ module API
 
       def resource_representer
         ::Api::V1::HolidayPolicyRepresenter
-      end
-
-      def valid_holiday_ids
-        Account.current.holiday_policies.includes(:custom_holidays)
-          .map(&:custom_holidays).flatten.map { |holiday| holiday[:id] }
       end
     end
   end
