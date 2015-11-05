@@ -79,6 +79,6 @@ module Yalty
 
   # list of reserved subdomains (not valid for account subdomin)
   def reserved_subdomains
-    @reserved_subdomains ||= %w(www staging) + ENV['RESERVED_SUBDOMAINS'].to_s.split(' ')
+    @reserved_subdomains ||= %w(www staging review) + ENV['RESERVED_SUBDOMAINS'].to_s.split(' ')
   end
 end
