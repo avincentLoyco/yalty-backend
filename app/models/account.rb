@@ -31,6 +31,7 @@ class Account < ActiveRecord::Base
   has_many :employee_attribute_versions, through: :employees
   has_many :holiday_policies
   has_many :presence_policies
+  has_many :custom_holidays, through: :holiday_policies
 
   before_validation :generate_subdomain, on: :create
   after_create :update_default_attribute_definitions!

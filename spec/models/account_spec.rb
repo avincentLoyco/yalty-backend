@@ -78,6 +78,8 @@ RSpec.describe Account, type: :model do
 
   it { is_expected.to have_many(:working_places) }
 
+  it { is_expected.to have_many(:custom_holidays).through(:holiday_policies) }
+
   it { is_expected.to have_many(:users).class_name('Account::User').inverse_of(:account) }
 
   it { is_expected.to have_many(:employees).inverse_of(:account) }
