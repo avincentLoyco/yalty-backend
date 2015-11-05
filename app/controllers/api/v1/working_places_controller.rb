@@ -66,13 +66,19 @@ module API
 
       def related_params(attributes)
         related = {}
-        employees =
-          { employees: attributes.delete(:employees) } if attributes.key?(:employees)
-        holiday_policy =
-          { holiday_policy: attributes.delete(:holiday_policy) } if attributes.key?(:holiday_policy)
-        presence_policy =
-          { presence_policy: attributes.delete(:presence_policy) } if attributes
-              .key?(:presence_policy)
+
+        if attributes.key?(:employees)
+          employees = { employees: attributes.delete(:employees) }
+        end
+
+        if attributes.key?(:holiday_policy)
+          holiday_policy = { holiday_policy: attributes.delete(:holiday_policy) }
+        end
+
+        if attributes.key?(:presence_policy)
+          presence_policy = { presence_policy: attributes.delete(:presence_policy) }
+        end
+
         related.merge(employees.to_h)
           .merge(holiday_policy.to_h)
           .merge(presence_policy.to_h)
