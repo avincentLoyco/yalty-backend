@@ -9,8 +9,9 @@ class Employee::AttributeVersion < ActiveRecord::Base
     required: true
   has_one :account, through: :employee
 
-  validates :order, uniqueness: { scope: [:event, :attribute_definition] }
-  validates :order, presence: true,
+  validates :order,
+    uniqueness: { scope: [:event, :attribute_definition] },
+    presence: true,
     if: "attribute_definition.present? && attribute_definition.multiple?"
 
   def effective_at
