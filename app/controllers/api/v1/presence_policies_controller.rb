@@ -51,9 +51,9 @@ module API
       def related_params(attributes)
         related = {}
 
-        attributes.each do |key, value|
-          if attributes[key].kind_of?(Array) || attributes[key] == nil
-            related.merge!({key => attributes.delete(key)})
+        attributes.each do |key, _value|
+          if attributes[key].is_a?(Array) || attributes[key].nil?
+            related.merge!(key => attributes.delete(key))
           end
         end
 

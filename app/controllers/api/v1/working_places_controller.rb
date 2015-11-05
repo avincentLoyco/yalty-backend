@@ -72,7 +72,7 @@ module API
           { holiday_policy: attributes.delete(:holiday_policy) } if attributes.key?(:holiday_policy)
         presence_policy =
           { presence_policy: attributes.delete(:presence_policy) } if attributes
-            .key?(:presence_policy)
+              .key?(:presence_policy)
         related.merge(employees.to_h)
           .merge(holiday_policy.to_h)
           .merge(presence_policy.to_h)

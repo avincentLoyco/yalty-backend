@@ -13,7 +13,7 @@ module API
 
       def update
         verified_params(gate_rules) do |attributes|
-          related = related_params(attributes).compact
+          related = related_params(attributes)
           result = transactions do
             assign_related(related)
           end
@@ -28,26 +28,20 @@ module API
       private
 
       def related_params(attributes)
-        holiday_policy_params(attributes).to_h
-          .merge(presence_policy_params(attributes).to_h)
-      end
-
-      def presence_policy_params(attributes)
-        if attributes[:presence_policy]
-          { presence_policy: attributes.delete(:presence_policy).try(:[], :id) }
-        end
-      end
-
-      def holiday_policy_params(attributes)
-        if attributes[:holiday_policy]
-          { holiday_policy: attributes.delete(:holiday_policy).try(:[], :id) }
-        end
+        related = {}
+        holiday_policy =
+          { holiday_policy: attributes.delete(:holiday_policy) } if attributes.key?(:holiday_policy)
+        presence_policy =
+          { presence_policy: attributes.delete(:presence_policy) } if attributes
+              .key?(:presence_policy)
+        related.merge(holiday_policy.to_h)
+          .merge(presence_policy.to_h)
       end
 
       def assign_related(related_records)
         return true if related_records.empty?
         related_records.each do |key, value|
-          assign_member(resource, value, key.to_s)
+          assign_member(resource, value.try(:[], :id), key.to_s)
         end
       end
 
