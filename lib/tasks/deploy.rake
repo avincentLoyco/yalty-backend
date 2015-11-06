@@ -32,9 +32,7 @@ namespace :deploy do
     end
     print "go\n"
 
-    unless system "git push #{options.git_args} #{options.remote} #{options.branch}:master"
-      raise 'failing to deploy'
-    end
+    system "git push #{options.git_args} #{options.remote} #{options.branch}:master" || fail
   end
 
   def announce_deployment(options)
@@ -43,14 +41,14 @@ namespace :deploy do
   end
 
   def migrate_on(options)
-    system "#{options.scalingo_cmd} run \"rake db:migrate\"" || raise('failing to migrate database')
-    system "#{options.scalingo_cmd} restart" || puts('failing to restart')
+    system "#{options.scalingo_cmd} run \"rake db:migrate\"" || fail
+    system "#{options.scalingo_cmd} restart"
   end
 
   # tasks
-  ['production', 'staging', 'review'].each do |target_env|
+  %w(production staging review).each do |target_env|
     desc "Deploy to #{target_env} environment"
-    task target_env => [:environment] do |task|
+    task target_env => [:environment] do
       options = options_for(target_env)
       deploy_to(options)
       migrate_on(options)
