@@ -9,233 +9,198 @@ RSpec.describe API::V1::HolidayPoliciesController, type: :controller do
   include_examples 'example_relationships_working_places',
     resource_name: 'holiday_policy'
 
+  let(:employee) { create(:employee, account: account) }
+  let(:working_place) { create(:working_place, account: account) }
+  let(:employee_id) { employee.id }
+  let(:working_place_id) { working_place.id }
+
+  let(:employees) {
+    [
+      {
+        id: employee_id,
+        type: "employees"
+      }
+    ]
+  }
+  let(:working_places) {
+    [
+      {
+        id: working_place_id,
+        type: "working_places"
+      }
+    ]
+  }
+
   describe 'POST #create' do
+    let(:name) { 'test name' }
+    let(:country) { 'pl' }
+    let(:region) { '' }
+    let(:params) do
+      {
+        name: name,
+        country: country,
+        region: region,
+        working_places: working_places,
+        employees: employees
+      }
+    end
+
     subject { post :create, params }
 
-    context 'valid data with empty arrays' do
-      context 'empty array of working places' do
-        let(:params) {{ name: 'ab', working_places: [] }}
+    context 'with valid data' do
+      it { expect { subject }.to change { HolidayPolicy.count }.by(1) }
 
-        it { expect { subject }.to change { HolidayPolicy.count }.by(1) }
-        it { is_expected.to have_http_status(201) }
+      it { is_expected.to have_http_status(201) }
+
+      context 'response body' do
+        before { subject }
+
+        it { expect_json_keys(:name, :country, :region, :id) }
       end
 
-      context 'empty array of employees' do
-        let(:params) {{ name: 'ab', employees: [] }}
+      context 'records assign' do
+        context 'with present ids' do
+          it { expect { subject }.to change { working_place.reload.holiday_policy_id } }
+          it { expect { subject }.to change { employee.reload.holiday_policy_id } }
+        end
 
-        it { expect { subject }.to change { HolidayPolicy.count }.by(1) }
-        it { is_expected.to have_http_status(201) }
+        context 'with empty arrays' do
+          let(:working_places) { [] }
+          let(:employees) { [] }
+
+          it { is_expected.to have_http_status(201) }
+        end
       end
     end
 
-    context 'invalid data' do
-      context 'data does not pass validation' do
-        let(:params) {{ name: 'test', region: 'ds' }}
+    context 'with invalid data' do
+      context 'with data that do not pass validation' do
+        let!(:country) { 'aa' }
 
-        it 'should not create new holiday policy' do
-          expect { subject }.to_not change { HolidayPolicy.count }
-        end
-
-        it 'should respond wth 422' do
-          subject
-          expect(response).to have_http_status(422)
-          expect(response.body).to include "can't be blank"
-        end
+        it { expect { subject }.to_not change { HolidayPolicy.count } }
+        it { is_expected.to have_http_status(422) }
       end
 
-      context 'not all required attributes send' do
-        let(:holiday_policy) { create(:holiday_policy, account: account) }
-        let(:params) {{ id: holiday_policy.id }}
+      context 'with attributes missing' do
+        let(:missing_params) { params.tap { |param| param.delete(:name) } }
+        subject { post :create, missing_params }
 
-        it 'should respond with 422' do
-          subject
-          expect(response).to have_http_status(422)
-          expect(response.body).to include "missing"
-        end
+        it { expect { subject }.to_not change { HolidayPolicy.count } }
+        it { is_expected.to have_http_status(422) }
+      end
+
+      context 'with invalid employee id' do
+        let(:employee_id) { '12' }
+
+        it { expect { subject }.to_not change { HolidayPolicy.count } }
+        it { expect { subject }.to_not change { working_place.reload.holiday_policy_id } }
+        it { expect { subject }.to_not change { employee.reload.holiday_policy_id } }
+
+        it { is_expected.to have_http_status(404) }
+      end
+
+      context 'with invalid working place id' do
+        let(:working_place_id) { '12' }
+
+        it { expect { subject }.to_not change { HolidayPolicy.count } }
+        it { expect { subject }.to_not change { working_place.reload.holiday_policy_id } }
+        it { expect { subject }.to_not change { employee.reload.holiday_policy_id } }
+
+        it { is_expected.to have_http_status(404) }
       end
     end
   end
 
   describe 'PUT #update' do
-    subject { put :update, params }
-
-    let!(:holiday_policy) { create(:holiday_policy, account: account) }
+    let(:holiday_policy) { create(:holiday_policy, account: account) }
+    let(:id) { holiday_policy.id }
+    let(:name) { 'test name' }
+    let(:country) { 'pl' }
+    let(:region) { '' }
     let(:params) do
       {
-        id: holiday_policy.id,
-        name: 'test',
-        employees: [],
-        working_places: []
+        id: id,
+        name: name,
+        country: country,
+        region: region,
+        working_places: working_places,
+        employees: employees
       }
     end
 
-    context 'with empty array send' do
-      context 'with empty array of employees' do
-        let!(:employees) do
-          create_list(:employee, 2, account: account, holiday_policy: holiday_policy)
-        end
+    subject { put :update, params }
 
-        it { expect { subject }.to change { holiday_policy.reload.employees.count }.from(2).to(0) }
-        it { is_expected.to have_http_status 204 }
-      end
-
-      context 'with empty array of working_places' do
-        let!(:working_places) do
-          create_list(:working_place, 2, account: account, holiday_policy: holiday_policy)
-        end
-
-        it { expect { subject }.to change { holiday_policy.reload.working_places.count }
-          .from(2).to(0) }
-        it { is_expected.to have_http_status 204 }
-      end
+    shared_examples 'Invalid Data' do
+      it { expect { subject }.to_not change { holiday_policy.reload.name } }
+      it { expect { subject }.to_not change { holiday_policy.reload.employees.count } }
+      it { expect { subject }.to_not change { holiday_policy.reload.working_places.count } }
     end
 
-    context 'invalid data' do
-      context 'data does not pass validation' do
-        let(:params) {{ name: 'test', region: 'ds', id: holiday_policy.id }}
+    context 'with valid data' do
+      it { expect { subject }.to change { holiday_policy.reload.name } }
+      it { expect { subject }.to change { holiday_policy.reload.employees.count }.by(1) }
+      it { expect { subject }.to change { holiday_policy.reload.working_places.count }.by(1) }
 
-        it 'should not change holiday_policy name' do
-          expect { subject }.to_not change { holiday_policy.reload.name }
+      it { is_expected.to have_http_status(204) }
+
+      context 'records unassign' do
+        context 'with empty employee array' do
+          before { holiday_policy.employees.push(employee) }
+          let!(:employees) { [] }
+
+          it { expect { subject }.to change { holiday_policy.reload.employees.count }.by(-1) }
         end
 
-        it 'should respond wth 422' do
-          subject
-          expect(response).to have_http_status(422)
-          expect(response.body).to include "can't be blank"
-        end
-      end
+        context 'with empty working place array' do
+          before { holiday_policy.working_places.push(working_place) }
+          let!(:working_places) { [] }
 
-      context 'not all required attributes send' do
-        let(:params) {{ id: holiday_policy.id }}
-
-        it 'should respond with 422' do
-          subject
-          expect(response).to have_http_status(422)
-          expect(response.body).to include "missing"
-        end
-      end
-    end
-  end
-
-  context 'multiple records assign' do
-    let(:second_holiday_policy) { create(:holiday_policy, account: account) }
-
-    let(:employees) { create_list(:employee, 2, account: account) }
-    let(:working_places) { create_list(:working_place, 2, account: account) }
-    let(:holiday_policy_params) { attributes_for(:holiday_policy) }
-
-    let(:valid_json) do
-      {
-        employees: [
-          {
-            id: employees.first.id,
-            type: "employees"
-          },
-          {
-            id: employees.last.id,
-            type: "employees"
-          }
-        ],
-        working_places: [
-          {
-            id: working_places.first.id,
-            type: "working_places"
-          },
-          {
-            id: working_places.last.id,
-            type: "working_places"
-          }
-        ]
-      }
-    end
-
-    let(:invalid_json) do
-      {
-        working_places: [
-          {
-            id: working_places.first.id,
-            type: "working_places"
-          },
-          {
-            id: working_places.last.id,
-            type: "working_places"
-          }
-        ],
-        employees: [
-          {
-            id: '12345678-1234-1234-1234-123456789012',
-            type: "employees"
-          },
-          {
-            id: employees.last.id,
-            type: "employees"
-          }
-        ]
-      }
-    end
-
-    context 'POST #create' do
-      context 'valid params' do
-        subject { post :create, holiday_policy_params.merge(valid_json) }
-        it 'should assign employees' do
-          expect { subject }.to change { employees.first.reload.holiday_policy_id }
-        end
-
-        it 'should assign working places' do
-          expect { subject }.to change { working_places.first.reload.holiday_policy_id }
-        end
-
-        it 'should respond with success' do
-          subject
-
-          expect(response).to have_http_status(201)
+          it { expect { subject }.to change { holiday_policy.reload.working_places.count }.by(-1) }
         end
       end
     end
 
-    context 'PUTCH #update' do
-      let(:holiday_policy) { create(:holiday_policy, account: account) }
+    context 'with invalid data' do
+      context 'with data that do not pass validation' do
+        let(:name) { '' }
 
-      context 'valid params' do
-        let(:params) {{ id: holiday_policy.id }}
+        it_behaves_like 'Invalid Data'
 
-         it 'should assign employees' do
-          expect {
-            patch :update, params.merge(valid_json)
-          }.to change { holiday_policy.reload.employees.count }.by(2)
-        end
-
-        it 'should assign working places' do
-          expect {
-            patch :update, params.merge(valid_json)
-          }.to change { holiday_policy.reload.working_places.count }.by(2)
-        end
-
-        it 'should respond with success' do
-          patch :update, params.merge(valid_json)
-
-          expect(response).to have_http_status(204)
-        end
+        it { is_expected.to have_http_status(422) }
       end
-      context 'invalid params' do
-        let(:params) {{ id: holiday_policy.id }}
 
-        it 'should not assign employees' do
-          expect {
-            patch :update, params.merge(invalid_json)
-          }.to_not change { holiday_policy.reload.employees.count }
+      context 'with invalid holiday policy id' do
+        let(:id) { '1' }
+
+        it_behaves_like 'Invalid Data'
+
+        it { is_expected.to have_http_status(404) }
+      end
+
+      context 'with missing data' do
+        let(:missing_params_json) { params.tap { |param| param.delete(:name) } }
+        subject { put :update, missing_params_json }
+
+        it_behaves_like 'Invalid Data'
+
+        it { is_expected.to have_http_status(422) }
+      end
+
+      context 'with invalid related records ids' do
+        context 'with invalid working place id' do
+          let(:working_place_id) { '1' }
+
+          it_behaves_like 'Invalid Data'
+
+          it { is_expected.to have_http_status(404) }
         end
 
-        it 'should not assign working places' do
-          expect {
-            patch :update, params.merge(invalid_json)
-          }.to_not change { holiday_policy.reload.working_places.count }
-        end
+        context 'with invalid employee id' do
+          let(:employee_id) { '1' }
 
-        it 'should respond with success' do
-          patch :update, params.merge(invalid_json)
+          it_behaves_like 'Invalid Data'
 
-          expect(response).to have_http_status(404)
+          it { is_expected.to have_http_status(404) }
         end
       end
     end

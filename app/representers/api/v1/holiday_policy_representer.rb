@@ -12,7 +12,7 @@ module Api::V1
 
     def relationships
       holidays = resource.holidays.map do |holiday|
-        HolidayRepresenter.new(holiday).basic
+        HolidayRepresenter.new(holiday).complete
       end
       {
         holidays: holidays
