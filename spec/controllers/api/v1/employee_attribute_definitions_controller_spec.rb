@@ -8,143 +8,187 @@ RSpec.describe API::V1::EmployeeAttributeDefinitionsController, type: :controlle
       create_list(:employee_attribute_definition, 3, account: account)
     end
 
-    it 'should respond with success' do
-      get :index
+    subject { get :index }
 
-      expect(response).to have_http_status(:success)
-      data = JSON.parse(response.body)
-      expect(data.size).to eq(5)
+    it { is_expected.to have_http_status(200) }
+
+    context 'response body' do
+      before { subject }
+
+      it { expect_json_sizes(5) }
     end
 
-    it 'should not be visible in context of other account' do
-      user = create(:account_user)
-      Account.current = user.account
+    context 'response body when other account logged in' do
+      let(:new_user) { create(:account_user) }
+      before(:each) do
+        Account.current = new_user.account
+      end
 
-      get :index
+      it { is_expected.to have_http_status(200) }
 
-      expect(response).to have_http_status(:success)
-      data = JSON.parse(response.body)
-      expect(data.size).to eq(2)
-    end
-  end
+      context 'response body' do
+        before { subject }
 
-  context 'GET #show' do
-    let(:attribute) { create(:employee_attribute_definition, account: account)}
-
-    it 'should response with success' do
-      get :show, { id: attribute.id }
-
-      expect(response).to have_http_status(:success)
-      data = JSON.parse(response.body)
-      expect(data['id']).to eq(attribute.id)
+        it { expect_json_sizes(2) }
+      end
     end
   end
 
-  context 'DELETE #destroy' do
-    let!(:attribute) { create(:employee_attribute_definition, account: account)}
+  describe 'GET #show' do
+    let(:attribute) { create(:employee_attribute_definition, account: account) }
+    let(:id) { attribute.id }
+    subject { get :show, id: id }
 
-    it 'should delete proper resources' do
-      delete :destroy, id: attribute.id
+    context 'with valid data' do
+      it { is_expected.to have_http_status(200) }
 
-      expect(response).to have_http_status(:success)
+      context 'response body' do
+        before { subject }
+
+        it { expect_json(
+            label: attribute.label,
+            name: attribute.name,
+            system: attribute.system,
+            id: attribute.id
+          )
+        }
+      end
     end
 
-    it 'should change resource number' do
-      expect { delete :destroy, id: attribute.id }
-        .to change { Employee::AttributeDefinition.count }.by(-1)
-    end
+    context 'with invalid data' do
+      context 'with invalid id' do
+        let(:id) { '12' }
 
-    it 'should not delete system resource' do
-      attribute.update(system: true)
-      delete :destroy, id: attribute.id
+        it { is_expected.to have_http_status(404) }
+      end
 
-      expect(response).to have_http_status(423)
-    end
+      context 'with id that belongs to other user' do
+        let(:attribute) { create(:employee_attribute_definition) }
 
-    it 'should not be routable without id' do
-      expect(:delete => "/api/v1/employee_attribute_definitions").not_to be_routable
+        it { is_expected.to have_http_status(404) }
+      end
     end
   end
 
-  context 'POST #create' do
+  describe 'POST #create' do
+    let(:name) { 'test' }
+    let(:attribute_type) { 'String' }
     let(:params) do
       {
-        name: Faker::Lorem.word,
-        label: Faker::Lorem.word,
-        attribute_type: 'String',
-        system: false,
+        name: name,
+        label: 'test',
+        attribute_type: attribute_type,
+        system: 'true'
       }
     end
 
-    it 'should respond with success' do
-      post :create, params
+    subject { post :create, params }
 
-      expect(response).to have_http_status(:success)
+    context 'with valid data' do
+      it { expect { subject }.to change { Employee::AttributeDefinition.count }.by(1) }
+      it { is_expected.to have_http_status(200) }
+
+      context 'response body' do
+        before { subject }
+
+        it { expect_json_keys(:name, :system, :type, :id, :attribute_type) }
+      end
     end
 
-    it 'should create new resource' do
-      post :create, params
+    context 'with invalid data' do
+      context 'with data that do not pass validation' do
+        let(:attribute_type) { 'testtype' }
 
-      data = JSON.parse response.body
-      expect(response).to have_http_status(:success)
-      expect(data['name']).to eq params[:name]
+        it { expect { subject }.to_not change { Employee::AttributeDefinition.count } }
+        it { is_expected.to have_http_status(422) }
+      end
+
+      context 'with missing data' do
+        let(:missing_params_json) { params.tap { |param| param.delete(:attribute_type) } }
+        subject { post :create, missing_params_json }
+
+        it { expect { subject }.to_not change { Employee::AttributeDefinition.count } }
+        it { is_expected.to have_http_status(422) }
+      end
     end
   end
 
-  context 'PUT #update' do
-    let!(:attribute) { create(:employee_attribute_definition, account: account)}
+  describe 'PUT #update' do
+    let(:attribute) { create(:employee_attribute_definition, account: account) }
+    let(:name) { 'test' }
+    let(:id) { attribute.id }
+    let(:attribute_type) { 'String' }
     let(:params) do
       {
-        name: Faker::Lorem.word,
-        label: Faker::Lorem.word,
-        attribute_type: 'String',
-        system: false,
-        id: attribute.id,
+        id: id,
+        name: name,
+        label: 'test',
+        attribute_type: attribute_type,
+        system: 'true'
       }
     end
 
-    it 'should update attribute definition' do
-      put :update, params
-      expect(response).to have_http_status(:success)
-      expect(attribute.reload.name).to eq(params[:name])
+    subject { put :update, params }
+
+    context 'with valid data' do
+      it { expect { subject }.to change { attribute.reload.name } }
+      it { is_expected.to have_http_status(204) }
+    end
+
+    context 'with invalid data' do
+      context 'with invalid id' do
+        let(:id) { '12' }
+
+        it { expect { subject }.to_not change { attribute.reload.name } }
+        it { is_expected.to have_http_status(404) }
+      end
+
+      context 'with data that do not pass validation' do
+        let(:attribute_type) { 'testtype' }
+
+        it { expect { subject }.to_not change { attribute.reload.name } }
+        it { is_expected.to have_http_status(422) }
+      end
+
+      context 'with missing params' do
+        let(:missing_params_json) { params.tap { |param| param.delete(:attribute_type) } }
+        subject { put :update, missing_params_json }
+
+        it { expect { subject }.to_not change { attribute.reload.name } }
+        it { is_expected.to have_http_status(422) }
+      end
     end
   end
 
-  context 'Gate #rules' do
-    let!(:attribute) { create(:employee_attribute_definition, account: account)}
-    let(:invalid_post) do
-      {
-        label: Faker::Lorem.word,
-      }
-    end
-    let(:invalid_put) do
-      {
-        id: attribute.id,
-        label: Faker::Lorem.word,
-        attribute_type: 'String',
-        system: false,
-      }
-    end
-    let(:valid_patch) do
-      {
-        id: attribute.id,
-        name: Faker::Lorem.word,
-      }
+  describe 'DELETE #destroy' do
+    let!(:attribute) { create(:employee_attribute_definition, account: account) }
+    let(:id) { attribute.id }
+
+    subject { delete :destroy, id: id }
+
+    context 'with valid data' do
+      it { expect { subject }.to change { Employee::AttributeDefinition.count }.by(-1) }
+      it { is_expected.to have_http_status(204) }
     end
 
-    it 'not valid post params' do
-      post :create, invalid_post
-      expect(response).to have_http_status(422)
-    end
+    context 'with invalid data' do
+      context 'with invalid id' do
+        let(:id) { '1' }
 
-    it 'not valid put params' do
-      put :update, invalid_put
-      expect(response).to have_http_status(422)
-    end
+        it { expect { subject }.to_not change { Employee::AttributeDefinition.count } }
+        it { is_expected.to have_http_status(404) }
+      end
 
-    it 'valid patch params' do
-      patch :update, valid_patch
-      expect(response).to have_http_status(204)
+      context 'with system resource id' do
+        before { attribute.update(system: true) }
+
+        it { expect { subject }.to_not change { Employee::AttributeDefinition.count } }
+        it { is_expected.to have_http_status(423) }
+      end
+
+      context 'without id' do
+        it { expect(delete: "/api/v1/employee_attribute_definitions").not_to be_routable }
+      end
     end
   end
 end
