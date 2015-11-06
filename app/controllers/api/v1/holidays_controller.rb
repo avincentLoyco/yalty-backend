@@ -24,7 +24,7 @@ module API
 
       def update
         verified_params(gate_rules) do |attributes|
-          if resource.update(holiday_attributes(attributes))
+          if resource.update(attributes)
             render_no_content
           else
             resource_invalid_error(resource)
