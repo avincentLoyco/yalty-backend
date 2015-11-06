@@ -1,18 +1,15 @@
 namespace :deploy do
+  DeployOptions = Struct.new(:scalingo_cmd, :branch, :remote, :ref, :user, :git_args)
+
   def options_for(target_env)
-    options = Struct.new(:target_env, :scalingo_cmd, :branch, :remote, :ref, :user, :git_args).new
+    options = DeployOptions.new(remote: target_env)
 
-    options.target_env = target_env
-
-    if target_env == 'production'
-      options.remote = 'production'
+    if options.remote == 'production'
       options.branch = 'stable'
-    elsif target_env == 'staging'
-      options.remote = 'staging'
+    elsif options.remote == 'staging'
       options.branch = 'master'
     else
       options.branch = `git rev-parse --abbrev-ref HEAD`.chomp
-      options.remote = target_env
       options.git_args = '--force'
     end
 
