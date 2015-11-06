@@ -70,6 +70,18 @@ module Yalty
 
     # Do not swallow errors in after_commit/after_rollback callbacks.
     config.active_record.raise_in_transactional_callbacks = true
+
+    # SMTP configuration
+    config.action_mailer.delivery_method = :test
+    config.action_mailer.smtp_settings = {
+      address:              ENV['SMTP_ADDRESS'],
+      port:                 ENV['SMTP_PORT'],
+      domain:               'yalty.io',
+      user_name:            ENV['SMTP_USERNAME'],
+      password:             ENV['SMTP_PASSWORD'],
+      authentication:       'plain',
+      enable_starttls_auto: true
+    }
   end
 
   #
@@ -79,6 +91,6 @@ module Yalty
 
   # list of reserved subdomains (not valid for account subdomin)
   def reserved_subdomains
-    @reserved_subdomains ||= %w(www staging) + ENV['RESERVED_SUBDOMAINS'].to_s.split(' ')
+    @reserved_subdomains ||= %w(www staging review) + ENV['RESERVED_SUBDOMAINS'].to_s.split(' ')
   end
 end

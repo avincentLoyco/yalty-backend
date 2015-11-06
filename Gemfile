@@ -13,6 +13,7 @@ gem 'scenic',             '~> 0.3.0'
 gem 'countries',          '~> 1.1.0'
 gem 'holidays',           '~> 2.2.0'
 gem 'gate',               '~> 0.3.0'
+gem 'newrelic_rpm',       '~> 3.14.0'
 
 # Production environment dependencies
 group :production, :staging, :review do
