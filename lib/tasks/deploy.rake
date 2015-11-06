@@ -2,7 +2,8 @@ namespace :deploy do
   DeployOptions = Struct.new(:scalingo_cmd, :branch, :remote, :ref, :user, :git_args)
 
   def options_for(target_env)
-    options = DeployOptions.new(remote: target_env)
+    options = DeployOptions.new
+    options.remote = target_env
 
     if options.remote == 'production'
       options.branch = 'stable'
