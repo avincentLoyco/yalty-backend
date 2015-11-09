@@ -5,310 +5,346 @@ RSpec.describe API::V1::HolidaysController, type: :controller do
 
   let(:account){ create(:account)}
   let(:holiday_policy){ create(:holiday_policy, account: account) }
-  let(:not_user_holiday_policy) { create(:holiday_policy) }
   let!(:holiday){ create(:holiday, holiday_policy: holiday_policy) }
 
-  let(:valid_params) do
-    {
-      "name": "test",
-      "type": "holidays",
-      "id": holiday.id,
-      "date": "12.12.2015",
-      "holiday_policy": {
-        "id": holiday_policy.id
-      }
-    }
-  end
-
-  let(:missing_params) do
-    {
-      "id": holiday.id,
-      "name": "test",
-      "holiday_policy": {
-        "id": holiday_policy.id
-      },
-      "type": "holidays"
-    }
-  end
-
-  let(:invalid_params) do
-    {
-      "name": "",
-      "holiday_policy": {
-        "id": holiday_policy.id
-      },
-      "type": "holidays",
-      "date": "12.12.2015",
-      "id": holiday.id
-    }
-  end
-
-  let(:valid_params_invalid_holiday_policy) do
-    {
-      "id": holiday.id,
-      "name": "test",
-      "date": "1.1.2015",
-      "holiday_policy": {
-        "id": "12345678-1234-1234-1234-123456789012"
-      },
-      "type": "holidays"
-    }
-  end
-
-  let(:valid_params_not_authorized_holiday_policy) do
-    {
-      "name": "test",
-      "date": "1.1.2015",
-      "holiday_policy": {
-        "id": not_user_holiday_policy.id
-      },
-      "type": "holidays"
-    }
-  end
-
-  let(:invalid_url_params) do
-    {
-      "name": "test",
-      "type": "holidays",
-      "date": "12.12.2015",
-      "holiday_policy": {
-        "id": holiday_policy.id
-      },
-      "id": '12345678-abcd-1234-1234-123456789012'
-    }
-  end
-
   describe "GET #show" do
-    it 'should respond with success when valid params given' do
-      get :show, valid_params
+    subject { get :show, id: id }
 
-      expect(response).to have_http_status(:success)
+    context 'with valid data' do
+      let(:id) { holiday.id }
+
+      it { is_expected.to have_http_status(200) }
+
+      context 'response body' do
+        before { subject }
+
+        it { expect_json_types(id: :string, type: :string, date: :string, name: :string) }
+      end
     end
 
-    it 'should respond with 404 when wrong holiday id' do
-      get :show, invalid_url_params
+    context 'invalid data' do
+      context 'with invalid id' do
+        let(:id) { '12' }
 
-      expect(response).to have_http_status 404
-    end
+        it { is_expected.to have_http_status(404) }
+      end
 
-    it 'should respond with 404 when not users holiday given' do
-      not_user_holiday = create(:holiday)
-      params = { id: not_user_holiday.id, holiday_policy: { id: not_user_holiday.holiday_policy_id }}
-      get :show, params
+      context 'with holiday that not belong to user' do
+        let(:holiday) { create(:holiday) }
+        let(:id) { holiday.id }
 
-      expect(response).to have_http_status 404
+        it { is_expected.to have_http_status(404) }
+      end
     end
   end
 
   describe "GET #index" do
-    let!(:not_user_holiday) { create(:holiday) }
+    let(:holiday_policy_id) { holiday_policy.id }
+    subject { get :index, holiday_policy_id: holiday_policy_id }
 
-    it 'should return current users holidays' do
-      get :index, holiday_policy_id: holiday_policy.id
+    context 'with valid data' do
+      it { is_expected.to have_http_status(200) }
 
-      expect(response).to have_http_status(:success)
-      expect(response.body).to include holiday.id
-      expect(response.body).to_not include not_user_holiday.id
+      context 'custom holidays response' do
+        before { subject }
 
-      data = JSON.parse(response.body)
-      expect(data.size).to eq 1
-    end
-
-    it 'should return default holidays for country Poland' do
-      holiday_policy = create(:holiday_policy, :with_country, account: account)
-
-      get :index, holiday_policy_id: holiday_policy.id
-      expect(response).to have_http_status(:success)
-      data = JSON.parse(response.body)
-      expect(data.size).to eq 14
-    end
-
-    it 'should return default holidays for country Switzerland and land Zuruch' do
-      holiday_policy = create(:holiday_policy, :with_region, account: account)
-
-      get :index, holiday_policy_id: holiday_policy.id
-      expect(response).to have_http_status(:success)
-      data = JSON.parse(response.body)
-      expect(data.size).to eq 10
-    end
-
-    it 'should return default holidays for country Poland and custom' do
-      holiday_policy = create(:holiday_policy, :with_country, account: account)
-      create(:holiday, holiday_policy_id: holiday_policy.id)
-
-      get :index, holiday_policy_id: holiday_policy.id
-      expect(response).to have_http_status(:success)
-      data = JSON.parse(response.body)
-      expect(data.size).to eq 15
-    end
-  end
-
-  describe "POST #create" do
-    context 'valid data and valid holiday policy id' do
-      subject { post :create, valid_params }
-
-      it 'should create record when valid holiday_policy_id and data given' do
-        expect { subject }.to change { Holiday.count }.by(1)
+        it { expect_json_types('0', id: :string, type: :string, date: :string, name: :string) }
+        it { expect_json_sizes(1) }
       end
 
-      it 'should respond with success when valid data given' do
-        subject
+      context 'default holidays response' do
+        context 'for country Poland' do
+          let!(:country_holiday_policy) { create(:holiday_policy, :with_country, account: account) }
+          let(:holiday_policy_id) { country_holiday_policy.id }
 
-        expect(response).to have_http_status(:success)
+          it { is_expected.to have_http_status(200) }
+
+          context 'response' do
+            before { subject }
+
+            it { expect_json_sizes(14) }
+          end
+        end
+
+        context 'for country Switzerland and land Zurich' do
+          let(:region_holiday_policy) { create(:holiday_policy, :with_region, account: account) }
+          let(:holiday_policy_id) { region_holiday_policy.id }
+
+          it { is_expected.to have_http_status(200) }
+
+          context 'response' do
+            before { subject }
+
+            it { expect_json_sizes(10) }
+          end
+        end
+
+        context 'for country Poland and custom users holidays' do
+          let(:holiday_policy) { create(:holiday_policy, :with_country, account: account) }
+          let(:holiday_policy_id) { holiday_policy.id }
+
+          it { is_expected.to have_http_status(200) }
+
+          context 'response' do
+            before { subject }
+
+            it { expect_json_sizes(15) }
+          end
+        end
       end
     end
 
-    context 'invalid holiday_policy_id and valid data given' do
-      subject { post :create, valid_params_invalid_holiday_policy }
+    context 'with invalid data' do
+      context 'invalid holiday policy id' do
+        let(:holiday_policy_id) { '12' }
 
-      it 'should not create record when invalid holiday_policy_id and valid data given' do
-        expect { subject }.to_not change { Holiday.count }
+        it { is_expected.to have_http_status(404) }
       end
 
-      it 'shoudl respond with 404 when invalid holiday_policy_id given' do
-        subject
+      context 'not user holiday policy' do
+        let(:holiday_policy) { create(:holiday_policy) }
+        let(:holiday_policy_id) { holiday_policy.id }
 
-        expect(response).to have_http_status 404
-      end
-    end
-
-    context 'valid data, user not authorized' do
-      subject { post :create, valid_params_not_authorized_holiday_policy }
-
-      it 'should not create record when user is not authorized' do
-        expect { subject }.to_not change { Holiday.count }
-      end
-
-      it 'should respond with 404' do
-        subject
-
-        expect(response).to have_http_status 404
-      end
-    end
-
-    context 'invalid data, valid holiday policy id' do
-      subject { post :create, invalid_params }
-
-      it 'should not create record when valid holiday_policy_id and invalid data given' do
-        expect { subject }.to_not change { Holiday.count }
-      end
-
-      it 'should respond with 422 when invalid data given' do
-        subject
-
-        expect(response).to have_http_status 422
-      end
-    end
-
-    context 'missing params' do
-      subject { post :create, missing_params }
-
-      it 'should not create record when valid holiday_policy_id and invalid data given' do
-        expect { subject }.to_not change { Holiday.count }
-      end
-
-      it 'should respond with 422 when invalid data given' do
-        subject
-
-        expect(response).to have_http_status 422
-        expect(response.body).to include("missing")
+        it { is_expected.to have_http_status(404) }
       end
     end
   end
+
+  describe 'POST #create' do
+    let(:name) { 'test' }
+    let(:date) { Date.new }
+    let(:holiday_policy_id) { holiday_policy.id }
+    let(:valid_params_json) do
+      {
+        name: name,
+        type: 'holiday',
+        date: date,
+        holiday_policy: {
+          id: holiday_policy_id
+        }
+      }
+    end
+    subject { post :create, valid_params_json }
+
+    context 'with valid data' do
+      it { expect { subject }.to change { Holiday.count }.by(1) }
+      it { expect { subject }.to change { holiday_policy.reload.holidays.count }.by(1) }
+
+      it { is_expected.to have_http_status(201) }
+
+      context 'response body' do
+        before { subject }
+
+        it { expect_json(name: name, type: 'holiday', date: date.strftime('%d/%m')) }
+      end
+    end
+
+    context 'with invalid data' do
+      context 'with invalid holiday policy id' do
+        let(:holiday_policy_id) { '1' }
+
+        it { expect { subject }.to_not change { Holiday.count } }
+        it { expect { subject }.to_not change { holiday_policy.reload.holidays.count } }
+
+        it { is_expected.to have_http_status(404) }
+
+        context 'response body' do
+          before { subject }
+
+          it { expect_json(
+            errors: [
+              { field: 'id', messages: 'Record Not Found', status: 'invalid', type: 'nil_class' }
+            ]
+          )}
+        end
+      end
+
+      context 'with holiday policy that not belong to account' do
+        let(:not_user_holiday_policy) { create(:holiday_policy) }
+        let(:holiday_policy_id) { not_user_holiday_policy.id }
+
+        it { expect { subject }.to_not change { Holiday.count } }
+        it { expect { subject }.to_not change { holiday_policy.reload.holidays.count } }
+
+        it { is_expected.to have_http_status(404) }
+
+        context 'response body' do
+          before { subject }
+
+          it { expect_json(
+            errors: [
+              { field: 'id', messages: 'Record Not Found', status: 'invalid', type: 'nil_class' }
+            ]
+          )}
+        end
+      end
+
+      context 'with data that do not pass validation' do
+        let(:name) { '' }
+
+        it { expect { subject }.to_not change { Holiday.count } }
+        it { expect { subject }.to_not change { holiday_policy.reload.holidays.count } }
+
+        it { is_expected.to have_http_status(422) }
+
+        context 'response body' do
+          before { subject }
+
+          it { expect_json(
+            errors: [
+              { field: 'name', messages: ["can't be blank"], status: 'invalid', type: 'holiday' }
+            ]
+          )}
+        end
+      end
+
+      context 'with missing data' do
+        let(:invalid_params_json) { valid_params_json.tap { |attr| attr.delete(:date) } }
+        subject { post :create, invalid_params_json }
+
+        it { expect { subject }.to_not change { Holiday.count } }
+        it { expect { subject }.to_not change { holiday_policy.reload.holidays.count } }
+
+        it { is_expected.to have_http_status(422) }
+
+        context 'response body' do
+          before { subject }
+
+          it { expect_json(
+            errors: [
+              { field: 'date', messages: 'missing', status: 'invalid', type: 'gate_result' }
+            ]
+          )}
+        end
+      end
+    end
+  end
+
 
   describe "PUT #update" do
-    let!(:holiday){ create(:holiday, holiday_policy: holiday_policy) }
-
-    context 'valid params valid holiday id' do
-      subject { put :update, valid_params.merge(id: holiday.id) }
-
-      it 'expect subject to change holiday' do
-        expect { subject }.to change { holiday.reload.name }
-      end
-
-      it 'expect response to be success' do
-        subject
-
-        expect(response).to have_http_status(:success)
-      end
+    let(:name) { 'test' }
+    let(:date) { Date.new }
+    let(:id) { holiday.id }
+    let(:valid_params_json) do
+      {
+        id: id,
+        name: name,
+        type: 'holiday',
+        date: date
+      }
     end
 
-    context 'invalid holiday id' do
-      subject { put :update, invalid_url_params }
+    subject { put :update, valid_params_json }
 
-      it 'expect subject to not change holiday' do
-        expect { subject }.to_not change { holiday.reload.name }
-      end
-
-      it 'expect response to be success' do
-        subject
-
-        expect(response).to have_http_status 404
-      end
+    shared_examples 'Invalid Data' do
+      it { expect { subject }.to_not change { holiday.reload.name } }
+      it { expect { subject }.to_not change { holiday.reload.date } }
+      it { expect { subject }.to_not change { holiday.reload.holiday_policy } }
     end
 
-    context 'invalid params' do
-      subject { put :update, invalid_params.merge(id: holiday.id) }
+    context 'with valid params' do
+      it { expect { subject }.to change { holiday.reload.name } }
+      it { expect { subject }.to change { holiday.reload.date } }
+      it { expect { subject }.to_not change { holiday.reload.holiday_policy } }
 
-      it 'expect subject to not change holiday' do
-        expect { subject }.to_not change { holiday.reload.name }
-      end
-
-      it 'expect response to have status 422' do
-        subject
-
-        expect(response).to have_http_status 422
-      end
+      it { is_expected.to have_http_status(204) }
     end
 
-    context 'missing params' do
-      subject { put :update, missing_params }
+    context 'with invalid params' do
+      context 'with invalid id' do
+        let(:id) { '12' }
 
-      it 'should not create record when valid holiday_policy_id and invalid data given' do
-        expect { subject }.to_not change { Holiday.count }
+        it_behaves_like 'Invalid Data'
+
+        context 'response body' do
+          before { subject }
+
+          it { expect_json(
+            errors: [
+              { field: 'id', messages: 'Record Not Found', status: 'invalid', type: 'nil_class' }
+            ]
+          )}
+        end
       end
 
-      it 'should respond with 422 when invalid data given' do
-        subject
+      context 'with id that belongs to other account holiday' do
+        let(:not_user_holiday) { create(:holiday) }
+        let(:id) { not_user_holiday.id }
 
-        expect(response).to have_http_status 422
-        expect(response.body).to include("missing")
+        it_behaves_like 'Invalid Data'
+
+        context 'response body' do
+          before { subject }
+
+          it { expect_json(
+            errors: [
+              { field: 'id', messages: 'Record Not Found', status: 'invalid', type: 'nil_class' }
+            ]
+          )}
+        end
+      end
+
+      context 'with data that do not pass validation' do
+        let(:name) { '' }
+
+        it_behaves_like 'Invalid Data'
+
+        context 'response body' do
+          before { subject }
+
+          it { expect_json(
+            errors: [
+              { field: 'name', messages: ["can't be blank"], status: 'invalid', type: 'holiday' }
+            ]
+          )}
+        end
+      end
+
+      context 'with missing data' do
+        let(:invalid_params_json) { valid_params_json.tap { |attr| attr.delete(:date) } }
+        subject { put :update, invalid_params_json }
+
+        it_behaves_like 'Invalid Data'
+
+        context 'response body' do
+          before { subject }
+
+          it { expect_json(
+            errors: [
+              { field: 'date', messages: 'missing', status: 'invalid', type: 'gate_result' }
+            ]
+          )}
+        end
       end
     end
   end
 
   describe 'DELETE #destroy' do
-    subject { delete :destroy, params }
+    let(:id) { holiday.id }
+    subject { delete :destroy, id: id }
 
-    context 'when valid id' do
-      let!(:holiday) { create(:holiday, holiday_policy: holiday_policy) }
-      let(:params) {{ id: holiday.id, holiday_policy: { id: holiday_policy.id }}}
+    context 'with valid data' do
+      it { expect { subject }.to change { Holiday.count }.by(-1) }
 
-      it 'should delete holiday' do
-        expect{ subject }.to change { Holiday.count }.by(-1)
-      end
-
-      it 'should have response status 204' do
-        subject
-
-        expect(response).to have_http_status 204
-      end
+      it { is_expected.to have_http_status(204) }
     end
 
-    context 'when user do not have access or not exist' do
-      let!(:not_user_holiday){ create(:holiday) }
-      let(:params) do
-        { id: not_user_holiday.id, holiday_policy: { id: not_user_holiday.holiday_policy_id }}
+    context 'with invalid data' do
+      context 'with invalid id' do
+        let(:id) { '12' }
+
+        it { expect { subject }.to_not change { Holiday.count } }
+
+        it { is_expected.to have_http_status(404) }
       end
 
-      it 'should not delete holiday' do
-        expect{ subject }.to_not change { Holiday.count }
-      end
+      context 'with id that not belongs to other account holidays' do
+        let!(:not_user_holiday) { create(:holiday) }
+        let(:id) { not_user_holiday.id }
 
-      it 'should have response status 404' do
-        subject
+        it { expect { subject }.to_not change { Holiday.count } }
 
-        expect(response).to have_http_status 404
+        it { is_expected.to have_http_status(404) }
       end
     end
   end

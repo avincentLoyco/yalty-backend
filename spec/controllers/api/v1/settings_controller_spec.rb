@@ -3,115 +3,123 @@ require 'rails_helper'
 RSpec.describe API::V1::SettingsController, type: :controller do
   include_context 'shared_context_headers'
 
-  let(:settings_json) do
-    {
-      "type": "settings",
-      "company_name": "My Company",
-      "subdomain": "my-company-946",
-      "timezone": "Europe/Madrid",
-      "default_locale": "en"
-    }
-  end
+  describe 'GET #show' do
+    subject { get :show }
 
-  context 'GET #show' do
-    it 'should response with success' do
-      get :show
+    it { is_expected.to have_http_status(200) }
 
-      expect(response).to have_http_status(:success)
-    end
+    context 'response body' do
+      before { subject }
 
-    it 'should return only current account' do
-      get :show
-
-      data = JSON.parse(response.body)
-      expect(data['subdomain']).to eq(account.subdomain)
-    end
-  end
-
-  context 'PUT #update' do
-    it "should update" do
-      put :update, settings_json
-      expect(response).to have_http_status(:success)
-    end
-
-    it "should not update when timezone is not valid" do
-      settings_json[:timezone] = 'abc'
-
-      put :update, settings_json
-      expect(response).to have_http_status(422)
-    end
-
-    it 'should not update when there is no params' do
-      put :update, {}
-      expect(response).to have_http_status(422)
-    end
-
-    it 'should allow to set Zurich timezone' do
-      zurich_timezone = "Europe/Zurich"
-      settings_json[:timezone] = zurich_timezone
-
-      put :update, settings_json
-
-      expect(response).to have_http_status(:success)
-      expect(account.reload.timezone).to eq(zurich_timezone)
-    end
-  end
-
-  context 'POST #create' do
-    it 'should not be routable' do
-      expect(:post => "/api/v1/settings").not_to be_routable
-    end
-  end
-
-  context 'DELETE #delete' do
-    it 'should not be routable' do
-      expect(:delete => "/api/v1/settings/#{account.id}").not_to be_routable
-    end
-  end
-
-  context 'PATCH assign holiday policy' do
-    let(:holiday_policy) { create(:holiday_policy, account: account) }
-
-    it 'should assign holiday policy' do
-      params = {
-        holiday_policy: { 'id': holiday_policy.id } ,
-        type: 'settings'
+      it { expect_json(
+          subdomain: account.subdomain,
+          company_name: account.company_name,
+          default_locale: account.default_locale,
+          id: account.id,
+          type: 'account',
+          timezone: account.timezone
+        )
       }
+    end
+  end
 
-      patch :update, params
-      expect(response).to have_http_status(:success)
-      expect(account.reload.holiday_policy).to eq(holiday_policy)
+  describe 'PUT #update' do
+    let(:holiday_policy) { create(:holiday_policy, account: account) }
+    let(:holiday_policy_id) { holiday_policy.id }
+    let(:company_name) { 'My Company' }
+    let(:timezone) { 'Europe/Madrid' }
+    let(:holiday_policy_json) do
+      {
+        id: holiday_policy_id
+      }
     end
 
-    it 'should not change assigned policy' do
-      params = { holiday_policy: {} }
-
-      patch :update, params
-      expect(response).to have_http_status(422)
+    let(:settings_json) do
+      {
+        type: 'settings',
+        company_name: company_name,
+        subdomain: 'my-company-946',
+        timezone: timezone,
+        default_locale: 'en',
+        holiday_policy: holiday_policy_json
+      }
     end
 
-    it 'should return record not found' do
-      params = { holiday_policy: { 'id': '' } }
+    subject { put :update, settings_json }
 
-      patch :update, params
-      expect(response).to have_http_status(404)
+    context 'with valid data' do
+      it { expect { subject }.to change { account.reload.company_name } }
+      it { expect { subject }.to change { account.reload.holiday_policy_id } }
+
+      it { is_expected.to have_http_status(204) }
+
+      context 'with zurich timezone' do
+        let(:timezone) { 'Europe/Zurich' }
+
+        it { expect { subject }.to change { account.reload.timezone }.to('Europe/Zurich') }
+
+        it { is_expected.to have_http_status(204) }
+      end
+
+      context 'with nil with holiday policy' do
+        before { account.update(holiday_policy_id: holiday_policy.id) }
+        let(:holiday_policy_json) { nil }
+
+        it { expect { subject }.to change { account.reload.holiday_policy_id }.to(nil) }
+
+        it { is_expected.to have_http_status(204) }
+      end
     end
 
-    it 'should return record not found' do
-      params = { holiday_policy: { 'id': 'abc' } }
+    context 'with invalid data' do
+      context 'with invalid timezone' do
+        let(:timezone) { 'abc' }
 
-      patch :update, params
-      expect(response).to have_http_status(404)
-    end
+        it { expect { subject }.to_not change { account.reload.company_name } }
+        it { expect { subject }.to_not change { account.reload.holiday_policy_id } }
 
-    it 'should unassign holiday policy from account' do
-      account.update(holiday_policy: holiday_policy)
+        it { is_expected.to have_http_status(422) }
+      end
 
-      params = { holiday_policy: nil }
+      context 'with missing params' do
+        let(:missing_params_json) { settings_json.tap { |attr| attr.delete(:company_name) } }
+        subject { put :update, missing_params_json }
 
-      patch :update, params
-      expect(response).to have_http_status(204)
-      expect(account.reload.holiday_policy).to eq(nil)
+        it { expect { subject }.to_not change { account.reload.company_name } }
+        it { expect { subject }.to_not change { account.reload.holiday_policy_id } }
+
+        it { is_expected.to have_http_status(422) }
+      end
+
+      context 'holiday policy' do
+        context 'with holiday policy that do not belong to account' do
+          let(:other_account_policy) { create(:holiday_policy) }
+          let(:holiday_policy_id) { other_account_policy.id }
+
+          it { expect { subject }.to_not change { account.reload.company_name } }
+          it { expect { subject }.to_not change { account.reload.holiday_policy_id } }
+
+          it { is_expected.to have_http_status(404) }
+        end
+
+        context 'with empty holiday policy' do
+          let(:holiday_policy_json) { {} }
+
+          it { is_expected.to have_http_status(422) }
+        end
+
+        context 'with invalid holdiay policy id' do
+          let(:holiday_policy_id) { '12' }
+
+          it { is_expected.to have_http_status(404) }
+        end
+
+        context 'with empty holiday policy id' do
+          let(:holiday_policy_id) { '' }
+
+          it { is_expected.to have_http_status(404) }
+        end
+      end
     end
   end
 end
