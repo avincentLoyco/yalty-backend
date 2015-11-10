@@ -496,10 +496,10 @@ ALTER TABLE ONLY working_places
 
 
 --
--- Name: employee_attribute_versions_uniqueness; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: employee_attribute_versions_uniqueness_partial; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
-CREATE UNIQUE INDEX employee_attribute_versions_uniqueness ON employee_attribute_versions USING btree (attribute_definition_id, employee_id, employee_event_id);
+CREATE UNIQUE INDEX employee_attribute_versions_uniqueness_partial ON employee_attribute_versions USING btree (attribute_definition_id, employee_id, employee_event_id) WHERE (multiple = false);
 
 
 --
