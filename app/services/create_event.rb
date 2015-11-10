@@ -73,9 +73,7 @@ class CreateEvent
 
   def unique_attribute_versions?
     definition = event.employee_attribute_versions.map do |version|
-      if !version.multiple
-        version.attribute_definition_id
-      end
+      version.attribute_definition_id unless version.multiple
     end.compact
 
     definition.size == definition.uniq.size
