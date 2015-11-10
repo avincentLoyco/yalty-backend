@@ -40,6 +40,25 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     end
   end
   let(:last_name_attribute_id) { last_name_attribute.id }
+  let(:first_pet_name) { 'Pluto' }
+  let(:second_pet_name) { 'Scooby Doo' }
+  let!(:multiple_attribute_definition) do
+    create(:employee_attribute_definition, :pet_multiple, account: Account.current)
+  end
+  let(:pet_multiple_attribute) do
+    [
+      {
+        type: "employee_attribute",
+        attribute_name: multiple_attribute_definition.name,
+        value: first_pet_name
+      },
+      {
+        type: "employee_attribute",
+        attribute_name: multiple_attribute_definition.name,
+        value: second_pet_name
+      }
+    ]
+  end
 
   shared_examples 'Unprocessable Entity on create' do
     context 'with two attributes with same name' do
@@ -182,6 +201,14 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         expect_json_keys('employee_attributes.0',
                          [:value, :attribute_name, :id, :type]
                         )
+      end
+
+      it 'should create event with multiple pet attributes' do
+        json_payload[:employee_attributes] = json_payload[:employee_attributes] +
+          pet_multiple_attribute
+
+        expect(subject).to have_http_status(201)
+        expect(Employee::AttributeVersion.count).to eq(6)
       end
 
       it_behaves_like 'Unprocessable Entity on create'
@@ -570,6 +597,53 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         it 'should respond with 422' do
           expect(subject).to have_http_status(422)
         end
+      end
+    end
+
+    context 'with new multiple attributes' do
+      it 'should update event and create multiple pet attributes' do
+        json_payload[:employee_attributes] = json_payload[:employee_attributes] +
+          pet_multiple_attribute
+
+        expect(subject).to have_http_status(204)
+        expect(Employee::AttributeVersion.count).to eq(4)
+        expect(
+          employee.reload.employee_attribute_versions.map(&:value)
+        ).to include(
+          pet_multiple_attribute.first[:value], pet_multiple_attribute.last[:value]
+        )
+      end
+
+      it 'should update multiple attributes' do
+        av = employee.employee_attribute_versions.new(
+          attribute_definition: multiple_attribute_definition,
+          employee_event_id: event_id,
+          multiple: true
+        )
+        av.value = "ABC"
+        av.save!
+
+        av = employee.employee_attribute_versions.new(
+          attribute_definition: multiple_attribute_definition,
+          employee_event_id: event_id,
+          multiple: true
+        )
+        av.value = "CDE"
+        av.save!
+
+        multiple = employee.employee_attribute_versions.where(multiple: true)
+        first_pet = pet_multiple_attribute.first.merge(id: multiple.first.id)
+        last_pet = pet_multiple_attribute.last.merge(id: multiple.last.id)
+
+        json_payload[:employee_attributes] = json_payload[:employee_attributes] +
+          [first_pet, last_pet]
+
+        expect(subject).to have_http_status(204)
+        expect(
+          employee.reload.employee_attribute_versions.map(&:value)
+        ).to include(
+          first_pet[:value], last_pet[:value]
+        )
       end
     end
   end

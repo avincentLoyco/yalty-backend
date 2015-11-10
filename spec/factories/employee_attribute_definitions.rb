@@ -9,5 +9,10 @@ FactoryGirl.define do
     trait :multiple do
       multiple true
     end
+
+    trait :pet_multiple do
+      multiple true
+      name 'pet'
+    end
   end
 end
