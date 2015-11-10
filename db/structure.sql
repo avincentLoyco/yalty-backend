@@ -117,7 +117,8 @@ CREATE TABLE employee_attribute_versions (
     attribute_definition_id uuid,
     employee_event_id uuid,
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
-    "order" integer
+    "order" integer,
+    multiple boolean DEFAULT false NOT NULL
 );
 
 
@@ -873,6 +874,10 @@ INSERT INTO schema_migrations (version) VALUES ('20151101204258');
 INSERT INTO schema_migrations (version) VALUES ('20151104121414');
 
 INSERT INTO schema_migrations (version) VALUES ('20151106145302');
+
+INSERT INTO schema_migrations (version) VALUES ('20151109122432');
+
+INSERT INTO schema_migrations (version) VALUES ('20151109122557');
 
 INSERT INTO schema_migrations (version) VALUES ('20151110141901');
 

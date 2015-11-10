@@ -57,7 +57,10 @@ class UpdateEvent
 
   def new_version(attribute)
     version = build_version(attribute)
-    version.value = attribute[:value] if version.attribute_definition_id.present?
+    if version.attribute_definition_id.present?
+      version.value = attribute[:value]
+      version.multiple = version.attribute_definition.multiple
+    end
     @versions << version
   end
 
@@ -73,7 +76,11 @@ class UpdateEvent
   end
 
   def unique_attribute_versions?
-    definition = versions.map(&:attribute_definition_id)
+    definition = versions.map do |version|
+      if !version.multiple
+        version.attribute_definition_id
+      end
+    end.compact
     definition.size == definition.uniq.size
   end
 
