@@ -618,7 +618,8 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         av = employee.employee_attribute_versions.new(
           attribute_definition: multiple_attribute_definition,
           employee_event_id: event_id,
-          multiple: true
+          multiple: true,
+          order: 1
         )
         av.value = "ABC"
         av.save!
@@ -626,7 +627,8 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         av = employee.employee_attribute_versions.new(
           attribute_definition: multiple_attribute_definition,
           employee_event_id: event_id,
-          multiple: true
+          multiple: true,
+          order: 2
         )
         av.value = "CDE"
         av.save!

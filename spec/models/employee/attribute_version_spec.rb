@@ -27,7 +27,9 @@ RSpec.describe Employee::AttributeVersion, type: :model do
 
   context 'order presence validation' do
     let(:definition) { create(:employee_attribute_definition, multiple: true) }
-    subject { build(:employee_attribute, attribute_definition: definition, order: nil) }
+    subject {
+      build(:employee_attribute, attribute_definition: definition, order: nil, multiple: true)
+    }
 
     it { is_expected.to validate_presence_of(:order) }
     it { expect(subject.valid?).to eq false }

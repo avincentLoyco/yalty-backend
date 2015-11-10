@@ -13,10 +13,7 @@ class Employee::AttributeVersion < ActiveRecord::Base
     uniqueness: { allow_nil: true, scope: [:employee, :event] },
     if: "!multiple?"
 
-  # validates :order,
-  #   uniqueness: { scope: [:event, :attribute_definition] },
-  #   presence: true,
-  #   if: "multiple?"
+  validates :order, presence: true, if: "multiple?"
 
   def effective_at
     event.try(:effective_at)
