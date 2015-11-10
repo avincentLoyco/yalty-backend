@@ -1,6 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe API::V1::HolidaysController, type: :controller do
+  include_examples 'example_authorization',
+    resource_name: 'holiday_policy'
   include_context 'shared_context_headers'
 
   let(:account){ create(:account)}

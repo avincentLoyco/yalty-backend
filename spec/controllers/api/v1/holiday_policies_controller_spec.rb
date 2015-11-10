@@ -1,13 +1,15 @@
 require 'rails_helper'
 
 RSpec.describe API::V1::HolidayPoliciesController, type: :controller do
-  include_context 'shared_context_headers'
+  include_examples 'example_authorization',
+    resource_name: 'holiday_policy'
   include_examples 'example_crud_resources',
     resource_name: 'holiday_policy'
   include_examples 'example_relationships_employees',
     resource_name: 'holiday_policy'
   include_examples 'example_relationships_working_places',
     resource_name: 'holiday_policy'
+  include_context 'shared_context_headers'
 
   let(:employee) { create(:employee, account: account) }
   let(:working_place) { create(:working_place, account: account) }
