@@ -43,16 +43,12 @@ class CreateEvent
   end
 
   def build_versions
-    order = 0
     attributes_params.each do |attribute|
+
       version = build_version(attribute)
       if version.attribute_definition_id.present?
         version.value = attribute[:value]
         version.multiple = version.attribute_definition.multiple
-      end
-      if version.multiple?
-        order += 1
-        version.order = order
       end
       @versions << version
     end
@@ -63,7 +59,8 @@ class CreateEvent
   def build_version(version)
     event.employee_attribute_versions.new(
       employee: employee,
-      attribute_definition: definition_for(version)
+      attribute_definition: definition_for(version),
+      order: version[:order]
     )
   end
 

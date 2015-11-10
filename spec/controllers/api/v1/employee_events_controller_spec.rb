@@ -50,12 +50,14 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       {
         type: "employee_attribute",
         attribute_name: multiple_attribute_definition.name,
-        value: first_pet_name
+        value: first_pet_name,
+        order: 1
       },
       {
         type: "employee_attribute",
         attribute_name: multiple_attribute_definition.name,
-        value: second_pet_name
+        value: second_pet_name,
+        order: 2
       }
     ]
   end

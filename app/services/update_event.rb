@@ -44,25 +44,15 @@ class UpdateEvent
       end
     end
     remove_absent_versions
-    set_order
 
     event.employee_attribute_versions = versions
-  end
-
-  def set_order
-    order = 0
-    versions.map do |version|
-      if version.multiple?
-        order += 1
-        version.order = order
-      end
-    end
   end
 
   def update_version(attribute)
     version = event.employee_attribute_versions.find(attribute[:id])
     version.attribute_definition = definition_for(attribute)
     version.value = attribute[:value]
+    version.order = attribute[:order]
     @versions << version
   end
 
@@ -78,7 +68,8 @@ class UpdateEvent
   def build_version(version)
     event.employee_attribute_versions.new(
       employee: employee,
-      attribute_definition: definition_for(version)
+      attribute_definition: definition_for(version),
+      order: version[:order]
     )
   end
 
