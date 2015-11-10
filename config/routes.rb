@@ -1,6 +1,6 @@
 Rails.application.routes.draw do
   # API
-  namespace :api, path: 'api', constraints: { subdomain: /^api/ } do
+  namespace :api, path: '', constraints: { subdomain: /^api/ } do
     namespace :v1 do
       resources :working_places, except: [:edit, :new]
       resources :holiday_policies, except: [:edit, :new] do
