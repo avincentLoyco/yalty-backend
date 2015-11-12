@@ -24,4 +24,5 @@ RSpec.describe Employee::AttributeDefinition, type: :model do
 
   it { is_expected.to belong_to(:account).inverse_of(:employee_attribute_definitions) }
   it { is_expected.to validate_presence_of(:account) }
+  it { is_expected.to have_db_column(:account_id).of_type(:uuid) }
 end

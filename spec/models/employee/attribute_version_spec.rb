@@ -5,7 +5,7 @@ RSpec.describe Employee::AttributeVersion, type: :model do
 
   it { is_expected.to have_db_column(:data) }
 
-  it { is_expected.to have_db_column(:employee_id) }
+  it { is_expected.to have_db_column(:employee_id).of_type(:uuid) }
   it { is_expected.to have_db_index(:employee_id) }
   it { is_expected.to belong_to(:employee).inverse_of(:employee_attribute_versions) }
   it { is_expected.to validate_presence_of(:employee) }
