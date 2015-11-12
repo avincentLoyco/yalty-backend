@@ -3,6 +3,7 @@ require 'rails_helper'
 RSpec.describe Account, type: :model do
   subject { build(:account) }
 
+  it { is_expected.to have_db_column(:id).of_type(:uuid) }
   it { is_expected.to have_db_column(:subdomain).with_options(null: false) }
   it { is_expected.to have_db_index(:subdomain).unique(true) }
   it { is_expected.to validate_presence_of(:subdomain).on(:update) }

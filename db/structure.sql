@@ -62,32 +62,13 @@ SET default_with_oids = false;
 --
 
 CREATE TABLE account_users (
-    id integer NOT NULL,
     email character varying NOT NULL,
     password_digest character varying NOT NULL,
-    account_id integer NOT NULL,
+    account_id uuid NOT NULL,
     created_at timestamp without time zone NOT NULL,
-    updated_at timestamp without time zone NOT NULL
+    updated_at timestamp without time zone NOT NULL,
+    id uuid DEFAULT uuid_generate_v4() NOT NULL
 );
-
-
---
--- Name: account_users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE account_users_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: account_users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE account_users_id_seq OWNED BY account_users.id;
 
 
 --
@@ -95,34 +76,15 @@ ALTER SEQUENCE account_users_id_seq OWNED BY account_users.id;
 --
 
 CREATE TABLE accounts (
-    id integer NOT NULL,
     subdomain character varying NOT NULL,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
     company_name character varying,
     default_locale character varying DEFAULT 'en'::character varying,
     timezone character varying,
-    holiday_policy_id uuid
+    holiday_policy_id uuid,
+    id uuid DEFAULT uuid_generate_v4() NOT NULL
 );
-
-
---
--- Name: accounts_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE accounts_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: accounts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE accounts_id_seq OWNED BY accounts.id;
 
 
 --
@@ -135,7 +97,7 @@ CREATE TABLE employee_attribute_definitions (
     system boolean DEFAULT false NOT NULL,
     attribute_type character varying NOT NULL,
     validation hstore,
-    account_id integer NOT NULL,
+    account_id uuid NOT NULL,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
     id uuid DEFAULT uuid_generate_v4() NOT NULL
@@ -201,7 +163,7 @@ CREATE VIEW employee_attributes AS
 
 CREATE TABLE employees (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
-    account_id integer,
+    account_id uuid,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
     working_place_id uuid,
@@ -221,7 +183,7 @@ CREATE TABLE holiday_policies (
     region character varying,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
-    account_id integer
+    account_id uuid
 );
 
 
@@ -245,7 +207,7 @@ CREATE TABLE holidays (
 
 CREATE TABLE oauth_access_grants (
     id integer NOT NULL,
-    resource_owner_id integer NOT NULL,
+    resource_owner_id uuid NOT NULL,
     application_id integer NOT NULL,
     token character varying NOT NULL,
     expires_in integer NOT NULL,
@@ -281,7 +243,7 @@ ALTER SEQUENCE oauth_access_grants_id_seq OWNED BY oauth_access_grants.id;
 
 CREATE TABLE oauth_access_tokens (
     id integer NOT NULL,
-    resource_owner_id integer,
+    resource_owner_id uuid,
     application_id integer,
     token character varying NOT NULL,
     refresh_token character varying,
@@ -366,7 +328,7 @@ CREATE TABLE presence_days (
 
 CREATE TABLE presence_policies (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
-    account_id integer NOT NULL,
+    account_id uuid NOT NULL,
     name character varying,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL
@@ -388,27 +350,13 @@ CREATE TABLE schema_migrations (
 
 CREATE TABLE working_places (
     name character varying NOT NULL,
-    account_id integer,
+    account_id uuid,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
     holiday_policy_id uuid,
     presence_policy_id uuid
 );
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY account_users ALTER COLUMN id SET DEFAULT nextval('account_users_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY accounts ALTER COLUMN id SET DEFAULT nextval('accounts_id_seq'::regclass);
 
 
 --
@@ -721,11 +669,35 @@ ALTER TABLE ONLY working_places
 
 
 --
--- Name: fk_rails_61ac11da2b; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: fk_rails_1d20586b4f; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY account_users
-    ADD CONSTRAINT fk_rails_61ac11da2b FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE;
+ALTER TABLE ONLY employee_attribute_versions
+    ADD CONSTRAINT fk_rails_1d20586b4f FOREIGN KEY (attribute_definition_id) REFERENCES employee_attribute_definitions(id);
+
+
+--
+-- Name: fk_rails_330c32d8d9; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY oauth_access_grants
+    ADD CONSTRAINT fk_rails_330c32d8d9 FOREIGN KEY (resource_owner_id) REFERENCES account_users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: fk_rails_5a8fc35128; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY employee_events
+    ADD CONSTRAINT fk_rails_5a8fc35128 FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE;
+
+
+--
+-- Name: fk_rails_6e495897f4; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY employee_attribute_versions
+    ADD CONSTRAINT fk_rails_6e495897f4 FOREIGN KEY (employee_event_id) REFERENCES employee_events(id) ON DELETE CASCADE;
 
 
 --
@@ -773,7 +745,15 @@ ALTER TABLE ONLY working_places
 --
 
 ALTER TABLE ONLY holiday_policies
-    ADD CONSTRAINT fk_rails_ae92552259 FOREIGN KEY (account_id) REFERENCES accounts(id);
+    ADD CONSTRAINT fk_rails_ae92552259 FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE;
+
+
+--
+-- Name: fk_rails_c96445f213; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY account_users
+    ADD CONSTRAINT fk_rails_c96445f213 FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE;
 
 
 --
@@ -790,6 +770,14 @@ ALTER TABLE ONLY employees
 
 ALTER TABLE ONLY presence_days
     ADD CONSTRAINT fk_rails_e31d8e8b9d FOREIGN KEY (presence_policy_id) REFERENCES presence_policies(id) ON DELETE CASCADE;
+
+
+--
+-- Name: fk_rails_ee63f25419; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY oauth_access_tokens
+    ADD CONSTRAINT fk_rails_ee63f25419 FOREIGN KEY (resource_owner_id) REFERENCES account_users(id) ON DELETE CASCADE;
 
 
 --
@@ -877,4 +865,16 @@ INSERT INTO schema_migrations (version) VALUES ('20151101202320');
 INSERT INTO schema_migrations (version) VALUES ('20151101202612');
 
 INSERT INTO schema_migrations (version) VALUES ('20151101204258');
+
+INSERT INTO schema_migrations (version) VALUES ('20151106145302');
+
+INSERT INTO schema_migrations (version) VALUES ('20151110141901');
+
+INSERT INTO schema_migrations (version) VALUES ('20151110144636');
+
+INSERT INTO schema_migrations (version) VALUES ('20151112084642');
+
+INSERT INTO schema_migrations (version) VALUES ('20151112093944');
+
+INSERT INTO schema_migrations (version) VALUES ('20151112101159');
 

@@ -3,7 +3,7 @@ require 'rails_helper'
 RSpec.describe Employee::Event, type: :model do
   subject! { build(:employee_event) }
 
-  it { is_expected.to have_db_column(:employee_id) }
+  it { is_expected.to have_db_column(:employee_id).of_type(:uuid) }
   it { is_expected.to have_db_index(:employee_id) }
   it { is_expected.to belong_to(:employee).inverse_of(:events) }
   it { is_expected.to validate_presence_of(:employee) }

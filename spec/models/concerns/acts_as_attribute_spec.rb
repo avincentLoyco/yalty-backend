@@ -80,9 +80,10 @@ RSpec.describe ActsAsAttribute do
   end
 
   it 'should validate presence of attribute definition' do
-    Employee::AttributeDefinition.delete_all
+    subject.attribute_definition = nil
 
-    is_expected.to validate_presence_of(:attribute_definition)
+    expect { subject.valid? }.to change { subject.errors.messages[:attribute_definition] }
+      .to(["can't be blank"])
   end
 
   it 'should be associeted with attribute definition record' do
