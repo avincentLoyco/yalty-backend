@@ -6,14 +6,14 @@ class CurrentAccountMiddleware
   def call(env)
     @request = ActionDispatch::Request.new(env)
 
-    set_current_account(env)
+    find_current_account(env)
 
     @app.call(env)
   end
 
   private
 
-  def set_current_account(env)
+  def find_current_account(env)
     Account.current = Account::User.current ? account_from_user : account_from_subdomain(env)
   end
 

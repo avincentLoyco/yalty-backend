@@ -6,7 +6,7 @@ class CurrentUserMiddleware
   def call(env)
     @request = ActionDispatch::Request.new(env)
 
-    set_current_account_user
+    find_current_account_user
     check_token(env)
   end
 
@@ -16,7 +16,7 @@ class CurrentUserMiddleware
     end
   end
 
-  def set_current_account_user
+  def find_current_account_user
     if access_token.blank?
       Account::User.current = nil
     else
@@ -25,8 +25,8 @@ class CurrentUserMiddleware
   end
 
   def check_token(env)
-    if Account::User.current.nil? && env["HTTP_AUTHORIZATION"].present?
-      [401, {"Content-Type" => "application/json"}, ['{"error": "User not authorized"}']]
+    if Account::User.current.nil? && env['HTTP_AUTHORIZATION'].present?
+      [401, { 'Content-Type' => 'application/json' }, ['{"error": "User not authorized"}']]
     else
       @app.call(env)
     end
