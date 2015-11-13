@@ -1,6 +1,8 @@
 class API::ApplicationController < ActionController::Base
   include API::V1::Exceptions
   protect_from_forgery with: :null_session
+  before_action :authenticate!
+
   rescue_from ActiveRecord::RecordNotFound, with: :record_not_found_error
   rescue_from InvalidResourcesError, with: :invalid_resources_error
 
@@ -19,6 +21,12 @@ class API::ApplicationController < ActionController::Base
   end
 
   private
+
+  def authenticate!
+    return unless Account.current.nil? || Account::User.current.nil?
+    render json:
+      ::Api::V1::ErrorsRepresenter.new(nil, message: 'User unauthorized').complete, status: 401
+  end
 
   def assign_collection(resource, collection, collection_name)
     AssignCollection.new(resource, collection, collection_name).call

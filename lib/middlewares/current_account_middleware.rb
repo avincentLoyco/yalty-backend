@@ -6,35 +6,26 @@ class CurrentAccountMiddleware
   def call(env)
     @request = ActionDispatch::Request.new(env)
 
-    set_current_account_user
-    set_current_account
+    find_current_account(env)
 
     @app.call(env)
   end
 
   private
 
-  def access_token
-    RequestStore.fetch(:access_token) do
-      Doorkeeper.authenticate(@request)
-    end
+  def find_current_account(env)
+    Account.current = Account::User.current ? account_from_user : account_from_subdomain(env)
   end
 
-  def set_current_account_user
-    if access_token.nil?
-      Account::User.current = nil
-    else
-      Account::User.current = Account::User.where(id: access_token.resource_owner_id).first
-    end
+  def account_from_user
+    Account.joins(:users).where(account_users: { id: Account::User.current.id }).first
   end
 
-  def set_current_account
-    if Account::User.current.nil?
-      Account.current = nil
-    else
-      Account.current = Account.joins(:users)
-        .where(account_users: { id: Account::User.current.id })
-        .first
-    end
+  def account_from_subdomain(env)
+    Account.where(subdomain: account_subdomain(env)).first
+  end
+
+  def account_subdomain(env)
+    env['HTTP_YALTY_ACCOUNT_SUBDOMAIN']
   end
 end

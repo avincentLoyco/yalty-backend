@@ -1,6 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe API::V1::WorkingPlacesController, type: :controller do
+  include_examples 'example_authorization',
+    resource_name: 'working_place'
   include_examples 'example_crud_resources',
     resource_name: 'working_place'
   include_examples 'example_relationships_employees',
