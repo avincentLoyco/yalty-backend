@@ -59,26 +59,6 @@ RSpec.describe ActsAsAttribute do
     subject.value
   end
 
-  it 'should validate uniqueness of attribute_definition' do
-    subject.save!
-
-    attr = FakeActsAsAttribute.new(
-      employee: subject.employee,
-      attribute_name: subject.attribute_name,
-      event: employee.events.first
-    )
-
-    expect(attr).to_not be_valid
-  end
-
-  it 'should validate uniqueness of attribute_definition scoped to employee' do
-    subject.save!
-
-    attr = build(:employee_attribute, attribute_name: subject.attribute_name, employee: employee)
-
-    expect(attr).to be_valid
-  end
-
   it 'should validate presence of attribute definition' do
     subject.attribute_definition = nil
 

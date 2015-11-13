@@ -52,19 +52,24 @@ class UpdateEvent
     version = event.employee_attribute_versions.find(attribute[:id])
     version.attribute_definition = definition_for(attribute)
     version.value = attribute[:value]
+    version.order = attribute[:order]
     @versions << version
   end
 
   def new_version(attribute)
     version = build_version(attribute)
-    version.value = attribute[:value] if version.attribute_definition_id.present?
+    if version.attribute_definition_id.present?
+      version.value = attribute[:value]
+      version.multiple = version.attribute_definition.multiple
+    end
     @versions << version
   end
 
   def build_version(version)
     event.employee_attribute_versions.new(
       employee: employee,
-      attribute_definition: definition_for(version)
+      attribute_definition: definition_for(version),
+      order: version[:order]
     )
   end
 
@@ -73,7 +78,9 @@ class UpdateEvent
   end
 
   def unique_attribute_versions?
-    definition = versions.map(&:attribute_definition_id)
+    definition = versions.map do |version|
+      version.attribute_definition_id unless version.multiple
+    end.compact
     definition.size == definition.uniq.size
   end
 

@@ -22,6 +22,9 @@ RSpec.describe Employee::AttributeDefinition, type: :model do
 
   it { is_expected.to have_db_column(:validation) }
 
+  it { is_expected.to have_db_column(:multiple).with_options(default: false, null: false) }
+  it { is_expected.to_not allow_value(nil).for(:multiple) }
+
   it { is_expected.to belong_to(:account).inverse_of(:employee_attribute_definitions) }
   it { is_expected.to validate_presence_of(:account) }
   it { is_expected.to have_db_column(:account_id).of_type(:uuid) }

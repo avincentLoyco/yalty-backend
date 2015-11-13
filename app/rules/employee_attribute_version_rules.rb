@@ -8,6 +8,7 @@ class EmployeeAttributeVersionRules
     Gate.rules do
       required :attribute_name
       required :value, allow_nil: true
+      optional :order
     end
   end
 
@@ -16,6 +17,7 @@ class EmployeeAttributeVersionRules
       optional :id
       required :value, allow_nil: true
       required :attribute_name
+      optional :order
     end
   end
 end

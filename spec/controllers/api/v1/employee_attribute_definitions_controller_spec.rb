@@ -111,6 +111,26 @@ RSpec.describe API::V1::EmployeeAttributeDefinitionsController, type: :controlle
         it { is_expected.to have_http_status(422) }
       end
     end
+
+    context '#multiple attribute definition' do
+      let(:params) do
+        {
+          name: Faker::Lorem.word,
+          label: Faker::Lorem.word,
+          attribute_type: 'String',
+          system: false,
+          multiple: true,
+        }
+      end
+
+      it 'should create new resource' do
+        post :create, params
+
+        data = JSON.parse response.body
+        expect(response).to have_http_status(:success)
+        expect(data['multiple']).to eq params[:multiple]
+      end
+    end
   end
 
   describe 'PUT #update' do
@@ -118,6 +138,9 @@ RSpec.describe API::V1::EmployeeAttributeDefinitionsController, type: :controlle
     let(:name) { 'test' }
     let(:id) { attribute.id }
     let(:attribute_type) { 'String' }
+    let!(:multiple_attribute) do
+      create(:employee_attribute_definition, :multiple, account: account)
+    end
     let(:params) do
       {
         id: id,
@@ -133,6 +156,33 @@ RSpec.describe API::V1::EmployeeAttributeDefinitionsController, type: :controlle
     context 'with valid data' do
       it { expect { subject }.to change { attribute.reload.name } }
       it { is_expected.to have_http_status(204) }
+
+      it 'should not change multiple status in standard attribute' do
+        multiple_params = params.merge(multiple: true)
+
+        put :update, multiple_params
+
+        expect(response).to have_http_status(:success)
+        expect(attribute.reload.multiple).to eq(false)
+      end
+
+      it 'should not change multiple status in multiple_attribute' do
+        multiple_params = params.merge(multiple: false).merge(id: multiple_attribute.id)
+
+        put :update, multiple_params
+
+        expect(response).to have_http_status(:success)
+        expect(multiple_attribute.reload.multiple).to eq(true)
+      end
+
+      it 'should allow to update other multiple attribute definition params' do
+        multiple_params = params.merge(id: multiple_attribute.id)
+
+        put :update, multiple_params
+
+        expect(response).to have_http_status(:success)
+        expect(multiple_attribute.reload.name).to eq(params[:name])
+      end
     end
 
     context 'with invalid data' do

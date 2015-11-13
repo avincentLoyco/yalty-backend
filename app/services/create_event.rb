@@ -44,8 +44,12 @@ class CreateEvent
 
   def build_versions
     attributes_params.each do |attribute|
+
       version = build_version(attribute)
-      version.value = attribute[:value] if version.attribute_definition_id.present?
+      if version.attribute_definition_id.present?
+        version.value = attribute[:value]
+        version.multiple = version.attribute_definition.multiple
+      end
       @versions << version
     end
 
@@ -55,7 +59,8 @@ class CreateEvent
   def build_version(version)
     event.employee_attribute_versions.new(
       employee: employee,
-      attribute_definition: definition_for(version)
+      attribute_definition: definition_for(version),
+      order: version[:order]
     )
   end
 
@@ -64,7 +69,10 @@ class CreateEvent
   end
 
   def unique_attribute_versions?
-    definition = event.employee_attribute_versions.map(&:attribute_definition_id)
+    definition = event.employee_attribute_versions.map do |version|
+      version.attribute_definition_id unless version.multiple
+    end.compact
+
     definition.size == definition.uniq.size
   end
 

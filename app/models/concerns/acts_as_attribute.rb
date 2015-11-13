@@ -5,14 +5,13 @@ module ActsAsAttribute
 
   included do
     belongs_to :attribute_definition,
-      ->(_attr) { readonly },
+      -> { readonly },
       class_name: 'Employee::AttributeDefinition',
       required: true
 
     serialize :data, AttributeSerializer
 
-    validates :attribute_definition_id,
-      uniqueness: { allow_nil: true, scope: [:employee, :event] }
+    validates :attribute_definition_id, presence: true
 
     after_initialize :setup_attribute_definition
   end

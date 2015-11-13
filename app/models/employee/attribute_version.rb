@@ -9,6 +9,12 @@ class Employee::AttributeVersion < ActiveRecord::Base
     required: true
   has_one :account, through: :employee
 
+  validates :attribute_definition_id,
+    uniqueness: { allow_nil: true, scope: [:employee, :event] },
+    if: '!multiple?'
+
+  validates :order, presence: true, if: 'multiple?'
+
   def effective_at
     event.try(:effective_at)
   end
