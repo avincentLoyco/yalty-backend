@@ -1,6 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe API::V1::PresenceDaysController, type: :controller do
+  include_examples 'example_authorization',
+    resource_name: 'presence_day'
   include_context 'shared_context_headers'
 
   let(:presence_policy) { create(:presence_policy, account: account) }

@@ -1,6 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe API::V1::EmployeesController, type: :controller do
+  include_examples 'example_authorization',
+    resource_name: 'employee'
   include_context 'shared_context_headers'
 
   let(:attribute_definition) {

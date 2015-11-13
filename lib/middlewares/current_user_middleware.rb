@@ -17,7 +17,7 @@ class CurrentUserMiddleware
   end
 
   def set_current_account_user
-    if access_token.nil?
+    if access_token.blank?
       Account::User.current = nil
     else
       Account::User.current = Account::User.where(id: access_token.resource_owner_id).first

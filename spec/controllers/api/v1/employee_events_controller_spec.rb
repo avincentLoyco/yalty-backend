@@ -1,6 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe API::V1::EmployeeEventsController, type: :controller do
+  include_examples 'example_authorization',
+    resource_name: 'employee_event'
   include_context 'shared_context_headers'
 
   let(:user) { create(:account_user) }

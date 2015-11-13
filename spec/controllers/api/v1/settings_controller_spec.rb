@@ -1,6 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe API::V1::SettingsController, type: :controller do
+  include_examples 'example_authorization',
+    resource_name: 'account'
   include_context 'shared_context_headers'
 
   describe 'GET #show' do

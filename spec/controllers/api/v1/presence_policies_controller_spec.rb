@@ -1,6 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe API::V1::PresencePoliciesController, type: :controller do
+  include_examples 'example_authorization',
+    resource_name: 'presence_policy'
   include_context 'shared_context_headers'
 
   let(:first_employee) { create(:employee, account: account) }
