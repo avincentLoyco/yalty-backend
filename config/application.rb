@@ -42,8 +42,10 @@ module Yalty
       g.fixture_replacement :factory_girl, dir: 'spec/factories'
     end
 
+    # Set current user
+    config.middleware.insert_after('Rack::ETag', 'CurrentUserMiddleware')
     # Set current account
-   config.middleware.use 'CurrentAccountMiddleware'
+    config.middleware.insert_after('CurrentUserMiddleware', 'CurrentAccountMiddleware')
 
     # CORS configuration
     config.middleware.insert_before 0, 'Rack::Cors', debug: !Rails.env.production?, logger: (-> { Rails.logger }) do
