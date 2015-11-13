@@ -2,50 +2,59 @@ require 'rails_helper'
 
 RSpec.describe CurrentAccountMiddleware do
   let(:account_user) { create(:account_user) }
-  let(:token) { create(:account_user_token, resource_owner_id: account_user.id).token }
+  let(:account_subdomain) { account_user.account.subdomain }
   let(:env) { Rack::MockRequest.env_for('https://api.yalty.io', {
-    'HTTP_AUTHORIZATION' => "Bearer #{token}"
+    'HTTP_YALTY_ACCOUNT_SUBDOMAIN' => "#{account_subdomain}"
   })}
   let(:app) { ->(env) { [200, env, ['']] }}
   let(:middleware) { CurrentAccountMiddleware.new(app) }
 
-  after do
+  before do
     RequestStore.clear!
   end
 
-  it 'should call app when is called' do
-    expect(app).to receive(:call).with(env).and_call_original
+  context 'when Account::User set' do
+    before { Account::User.current = account_user }
+    before { middleware.call(env) }
 
-    middleware.call(env)
+    it { expect(Account.current).to eql(account_user.account) }
+    it { expect(Account::User.current).to eql(account_user) }
   end
 
-  it 'should set current account according to subdomain' do
-    middleware.call(env)
+  context 'when Account::User not set' do
+    context 'when YALTY_ACCOUNT_SUBDOMAIN header send' do
+      context 'and subdomain valid' do
+        before { middleware.call(env) }
 
-    expect(Account.current).to eql(account_user.account)
-  end
+        it { expect(Account.current).to eql(account_user.account) }
+        it { expect(Account::User.current).to eql(nil) }
+      end
 
-  it 'should not set current account if authentication header is not present' do
-    env.delete('HTTP_AUTHORIZATION')
+      context 'and subdomain invalid' do
+        let(:account_subdomain) { 'test' }
 
-    expect {
-      middleware.call(env)
-    }.to_not raise_error
+        before { middleware.call(env) }
 
-    expect(Account.current).to be_nil
-  end
+        it { expect(Account.current).to eql(nil) }
+        it { expect(Account::User.current).to eql(nil) }
+      end
 
-  it 'should not use access token from previous request' do
-    middleware.call(env)
-    expect(Account.current).to_not be_nil
+      context 'and subdomain empty' do
+        before { env['HTTP_YALTY_ACCOUNT_SUBDOMAIN'] = nil }
+        before { middleware.call(env) }
 
-    RequestStore.clear!
-    env.delete('HTTP_AUTHORIZATION')
+        it { expect(Account.current).to eql(nil) }
+        it { expect(Account::User.current).to eql(nil) }
+      end
+    end
 
-    expect {
-      middleware.call(env)
-    }.to_not raise_error
+    context 'when YALTY_ACCOUNT_SUBDOMAIN header not send' do
+      before { env.delete('HTTP_YALTY_ACCOUNT_SUBDOMAIN') }
+      before { middleware.call(env) }
 
-    expect(Account.current).to be_nil
+      it { expect(Account.current).to eql(nil) }
+      it { expect(Account::User.current).to eql(nil) }
+    end
   end
 end
+
