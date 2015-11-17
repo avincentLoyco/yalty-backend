@@ -238,9 +238,6 @@ RSpec.describe API::V1::EmployeeAttributeDefinitionsController, type: :controlle
         it { is_expected.to have_http_status(423) }
       end
 
-      context 'without id' do
-        it { expect(delete: "/api/v1/employee_attribute_definitions").not_to be_routable }
-      end
     end
   end
 end
