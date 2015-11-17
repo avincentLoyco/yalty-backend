@@ -42,8 +42,10 @@ module Yalty
       g.fixture_replacement :factory_girl, dir: 'spec/factories'
     end
 
+    # Support Maintenance Mode Middleware
+    config.middleware.use('MaintenanceModeMiddleware')
     # Set current user
-    config.middleware.insert_after('Rack::ETag', 'CurrentUserMiddleware')
+    config.middleware.insert_after('MaintenanceModeMiddleware', 'CurrentUserMiddleware')
     # Set current account
     config.middleware.insert_after('CurrentUserMiddleware', 'CurrentAccountMiddleware')
 

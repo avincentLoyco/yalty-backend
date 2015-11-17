@@ -6,8 +6,8 @@ RSpec.shared_context 'shared_context_headers', :a => :b do
     Account::User.current = user
     Account.current = account
     @request.headers.merge!(
-      'CONTENT-TYPE' => 'application/vnd.api+json',
-      'ACCEPT' => 'application/vnd.api+json'
+      'CONTENT-TYPE' => 'application/json',
+      'ACCEPT' => 'application/json'
     )
   end
 end
