@@ -10,10 +10,6 @@ class ApplicationController < ActionController::Base
   rescue_from ActiveRecord::RecordNotFound, with: :record_not_found_error
   rescue_from InvalidResourcesError, with: :invalid_resources_error
 
-  def routing_error
-    raise ActionController::RoutingError.new(params[:path])
-  end
-
   private
 
   def render_no_content
