@@ -10,7 +10,7 @@ module Api::V1
 
     def relationships
       {
-        employee_attributes: employee_attributes_json,
+        employee_attributes: employee_attributes_json
       }
     end
 
@@ -28,7 +28,7 @@ module Api::V1
 
     def hire_status
       hire_event = resource.events.where(event_type: 'hired').last.try(:effective_at)
-      hire_event <= DateTime.now if hire_event
+      hire_event <= Time.zone.now if hire_event
     end
   end
 end

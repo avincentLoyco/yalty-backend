@@ -63,14 +63,14 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
       let!(:future_employee) { create(:employee, account: account) }
       let!(:attribute) { create(:employee_attribute, event: event, employee: future_employee) }
       let!(:event) do
-        create(:employee_event, employee: future_employee, effective_at: date, event_type: "hired")
+        create(:employee_event, employee: future_employee, effective_at: date, event_type: 'hired')
       end
       let(:employee_body) do
         JSON.parse(response.body).select { |record| record['id'] == future_employee.id }.first
       end
 
       context 'employee with past effective_at date' do
-        let(:date) { DateTime.now - 1.month }
+        let(:date) { Time.zone.now - 1.month }
 
         it { is_expected.to have_http_status(200) }
 
@@ -90,7 +90,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
       end
 
       context 'employee with future effective at date' do
-        let(:date) { DateTime.now + 1.month }
+        let(:date) { Time.zone.now + 1.month }
 
         it { is_expected.to have_http_status(200) }
 
@@ -101,7 +101,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
               'attribute_name' => attribute.attribute_definition.name,
               'value' => attribute.data.value,
               'id' => attribute.id,
-              'type' => 'employee_attribute'
+              'type' => 'employee_attribute_version'
             )
           }
           it { expect(employee_body['id']).to eql(future_employee.id) }
