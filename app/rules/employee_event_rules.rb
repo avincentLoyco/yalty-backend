@@ -22,7 +22,7 @@ module EmployeeEventRules
       required :employee, :Hash do
         optional :id, :String
       end
-      required :employee_attributes, :Array
+      required :employee_attributes, :Array, allow_nil: true
     end
   end
 
@@ -35,7 +35,7 @@ module EmployeeEventRules
       required :employee, :Hash do
         required :id, :String
       end
-      required :employee_attributes, :Array
+      required :employee_attributes, :Array, allow_nil: true
     end
   end
 end

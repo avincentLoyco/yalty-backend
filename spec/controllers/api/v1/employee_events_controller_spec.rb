@@ -135,6 +135,18 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         end
       end
     end
+
+    context 'with json without employee attributes' do
+      before do
+        json_payload.delete(:employee_attributes)
+      end
+
+      it { expect { subject }.to_not change { Employee::Event.count } }
+      it { expect { subject }.to_not change { Employee.count } }
+      it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
+
+      it { is_expected.to have_http_status(422) }
+    end
   end
 
   describe 'POST #create' do
@@ -213,6 +225,13 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
         expect(subject).to have_http_status(201)
         expect(Employee::AttributeVersion.count).to eq(6)
+      end
+
+      it 'should create event when empty array send' do
+        json_payload[:employee_attributes] = nil
+
+        expect { subject }.to change { Employee::Event.count }
+        expect(subject).to have_http_status(201)
       end
 
       it_behaves_like 'Unprocessable Entity on create'
