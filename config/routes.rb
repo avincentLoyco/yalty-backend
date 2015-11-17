@@ -29,4 +29,7 @@ Rails.application.routes.draw do
       end
     end
   end
+
+  # Catch all invalid routings
+  match "*path", :to => "errors#routing_error", via: :all
 end

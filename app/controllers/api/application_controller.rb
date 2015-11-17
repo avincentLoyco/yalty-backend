@@ -1,10 +1,5 @@
-class API::ApplicationController < ActionController::Base
-  include API::V1::Exceptions
-  protect_from_forgery with: :null_session
+class API::ApplicationController < ApplicationController
   before_action :authenticate!
-
-  rescue_from ActiveRecord::RecordNotFound, with: :record_not_found_error
-  rescue_from InvalidResourcesError, with: :invalid_resources_error
 
   protected
 
@@ -62,35 +57,5 @@ class API::ApplicationController < ActionController::Base
     end
 
     render options.merge(json: response)
-  end
-
-  def render_no_content
-    head 204
-  end
-
-  def resource_invalid_error(resource)
-    render json:
-      ::Api::V1::ErrorsRepresenter.new(resource).complete, status: 422
-  end
-
-  def locked_error
-    render json:
-      ::Api::V1::ErrorsRepresenter.new(nil, resource: 'Locked').complete, status: 423
-  end
-
-  def record_not_found_error(exception = nil)
-    if exception && exception.respond_to?(:record)
-      resource = exception.record
-    else
-      message = { id: 'Record Not Found' }
-    end
-
-    render json:
-      ::Api::V1::ErrorsRepresenter.new(resource, message).complete, status: 404
-  end
-
-  def invalid_resources_error(exception)
-    render json:
-      ::Api::V1::ErrorsRepresenter.new(exception.resource, exception.messages).complete, status: 422
   end
 end
