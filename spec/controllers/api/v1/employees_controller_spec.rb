@@ -47,7 +47,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
   end
 
   context 'GET #index' do
-    let!(:employees) { create_list(:employee, 3, account: account) }
+    let!(:employees) { create_list(:employee, 3, :with_attributes, account: account) }
     subject { get :index }
 
     it { is_expected.to have_http_status(200) }
@@ -57,6 +57,57 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
 
       it { expect_json_sizes(3) }
       it { expect_json_types('*', id: :string, type: :string, employee_attributes: :array) }
+    end
+
+    context 'effective at date' do
+      let!(:future_employee) { create(:employee, account: account) }
+      let!(:attribute) { create(:employee_attribute, event: event, employee: future_employee) }
+      let!(:event) do
+        create(:employee_event, employee: future_employee, effective_at: date, event_type: "hired")
+      end
+      let(:employee_body) do
+        JSON.parse(response.body).select { |record| record['id'] == future_employee.id }.first
+      end
+
+      context 'employee with past effective_at date' do
+        let(:date) { DateTime.now - 1.month }
+
+        it { is_expected.to have_http_status(200) }
+
+        context 'response body' do
+          before { subject }
+
+          it { expect(employee_body['employee_attributes'].first).to eql(
+              'attribute_name' => attribute.attribute_definition.name,
+              'value' => attribute.data.value,
+              'id' => attribute.id,
+              'type' => 'employee_attribute'
+            )
+          }
+          it { expect(employee_body['id']).to eql(future_employee.id) }
+          it { expect(employee_body['already_hired']).to eql true }
+        end
+      end
+
+      context 'employee with future effective at date' do
+        let(:date) { DateTime.now + 1.month }
+
+        it { is_expected.to have_http_status(200) }
+
+        context 'response body' do
+          before { subject }
+
+          it { expect(employee_body['employee_attributes'].first).to eql(
+              'attribute_name' => attribute.attribute_definition.name,
+              'value' => attribute.data.value,
+              'id' => attribute.id,
+              'type' => 'employee_attribute'
+            )
+          }
+          it { expect(employee_body['id']).to eql(future_employee.id) }
+          it { expect(employee_body['already_hired']).to eql false }
+        end
+      end
     end
 
     context 'should not be visible in context of other account' do
