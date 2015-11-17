@@ -4,7 +4,6 @@ class MaintenanceModeMiddleware
   end
 
   def call(env)
-    @request = ActionDispatch::Request.new(env)
     if ENV['YALTY_MAINTENANCE_MODE'] == 'true'
       [503, { 'Content-Type' => 'application/json' }, ['{"error": "Maintenance mode"}']]
     else
