@@ -1,10 +1,29 @@
-task generate_token: [:environment] do
-  puts 'Yalty Registration Keys:'
-  puts ''
+namespace :token do
+  task generate: [:environment] do
+    STDOUT.puts "Number of registration keys for generation: (by default 10)"
+    input = STDIN.gets.chomp
 
-  10.times do
-    registration_key = Account::RegistrationKey.create()
+    if input == '' || integer?(input)
+      create_tokens(input)
+    else
+      puts 'Invalid input'
+    end
+  end
 
-    puts registration_key.token
+  def create_tokens(input)
+    puts 'Yalty Registration Keys:'
+    puts ''
+
+    input = 10 if input == ''
+
+    input.to_i.times do
+      registration_key = Account::RegistrationKey.create()
+
+      puts registration_key.token
+    end
+  end
+
+  def integer?(input)
+    input.match(/^(\d)+$/)
   end
 end
