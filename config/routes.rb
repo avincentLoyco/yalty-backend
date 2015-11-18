@@ -7,7 +7,11 @@ Rails.application.routes.draw do
         resources :holidays, only: :index
       end
       resources :holidays, except: [:edit, :new, :index]
-      resource :settings, only: [:show, :update]
+      resource :settings, only: [:show, :update] do
+        collection do
+          get :public_show
+        end
+      end
       resources :employee_attribute_definitions
       resources :employees, only: [:index, :show, :update] do
         resources :employee_events, only: :index
