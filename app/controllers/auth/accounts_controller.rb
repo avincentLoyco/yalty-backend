@@ -33,12 +33,20 @@ class Auth::AccountsController < Doorkeeper::ApplicationController
     @strategy ||= server.authorization_request(pre_auth.response_type)
   end
 
+  def registration_key
+    Account::RegistrationKey.unused.find_by!(token: registration_key_params[:token])
+  end
+
   def account_params
-    params.require(:account).permit(:company_name)
+    params.require(:account).permit(:company_name, registration_key: [:token])
   end
 
   def user_params
     params.require(:user).permit(:email, :password)
+  end
+
+  def registration_key_params
+    params.require(:registration_key).permit(:token)
   end
 
   def redirect_uri_with_subdomain(redirect_uri)
@@ -59,8 +67,11 @@ class Auth::AccountsController < Doorkeeper::ApplicationController
 
   def create_account
     ActiveRecord::Base.transaction do
-      account = Account.create!(account_params)
-      @current_resource_owner = account.users.create!(user_params)
+      if registration_key
+        account = Account.create!(account_params)
+        registration_key.update!(account: account)
+        @current_resource_owner = account.users.create!(user_params)
+      end
     end
   end
 end
