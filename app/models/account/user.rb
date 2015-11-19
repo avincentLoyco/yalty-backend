@@ -2,6 +2,7 @@ class Account::User < ActiveRecord::Base
   has_secure_password
 
   validates :email, presence: true
+  validates :email, format: { with: /\b[A-Z0-9._%a-z\-]+@(?:[A-Z0-9a-z\-]+\.)+[A-Za-z]{2,4}\z/ }
   validates :password, length: { in: 8..74 }, if: ->() { !password.nil? }
 
   belongs_to :account, inverse_of: :users, required: true

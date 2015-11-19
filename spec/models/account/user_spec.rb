@@ -4,7 +4,12 @@ RSpec.describe Account::User, type: :model do
   it { is_expected.to have_db_column(:id).of_type(:uuid) }
   it { is_expected.to have_db_column(:email).with_options(null: false) }
   it { is_expected.to have_db_index([:email, :account_id]).unique(true) }
+
   it { is_expected.to validate_presence_of(:email) }
+  it { is_expected.to allow_value('test@test.com').for(:email) }
+  it { is_expected.to_not allow_value('testtest.com').for(:email) }
+  it { is_expected.to_not allow_value('testtestcom').for(:email) }
+  it { is_expected.to_not allow_value('test@testcom').for(:email) }
 
   it { is_expected.to have_db_column(:password_digest).with_options(null: false) }
   it { is_expected.to validate_presence_of(:password) }
