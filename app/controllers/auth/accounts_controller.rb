@@ -33,7 +33,7 @@ class Auth::AccountsController < Doorkeeper::ApplicationController
     @strategy ||= server.authorization_request(pre_auth.response_type)
   end
 
-  def registration_key
+  def account_registration_key
     Account::RegistrationKey.unused.find_by!(token: registration_key_params[:token])
   end
 
@@ -67,11 +67,10 @@ class Auth::AccountsController < Doorkeeper::ApplicationController
 
   def create_account
     ActiveRecord::Base.transaction do
-      if registration_key
-        account = Account.create!(account_params)
-        registration_key.update!(account: account)
-        @current_resource_owner = account.users.create!(user_params)
-      end
+      registration_key = account_registration_key
+      account = Account.create!(account_params)
+      registration_key.update!(account: account)
+      @current_resource_owner = account.users.create!(user_params)
     end
   end
 end
