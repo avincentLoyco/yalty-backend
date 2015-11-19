@@ -38,6 +38,12 @@ RSpec.describe Auth::AccountsController, type: :controller do
       it { expect { subject }.to change { registration_key.reload.account } }
 
       it { is_expected.to have_http_status(:found) }
+
+      it 'should send email with credentials' do
+        expect do
+          post :create, params
+        end.to change(ActionMailer::Base.deliveries, :count)
+      end
     end
 
     context 'with invalid params' do
