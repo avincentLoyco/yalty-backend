@@ -2,15 +2,15 @@ module API
   module V1
     class SettingsController < API::ApplicationController
       include SettingsRules
-      before_action :subdomain_access!, only: :public_show
-      skip_action_callback :authenticate!, only: :public_show
+      before_action :subdomain_access!, only: :show
+      skip_action_callback :authenticate!, only: :show
 
       def show
-        render_resource(resource)
-      end
-
-      def public_show
-        render json: resource_representer.new(resource).public_data
+        if Account::User.current.present?
+          render_resource(resource)
+        else
+          render json: resource_representer.new(resource).public_data
+        end
       end
 
       def update

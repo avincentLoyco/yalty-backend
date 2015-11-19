@@ -25,13 +25,13 @@ RSpec.describe API::V1::SettingsController, type: :controller do
     end
   end
 
-  describe 'GET #public_show' do
+  describe 'without user GET #show' do
     before(:each) do
       Account::User.current = nil
     end
 
     it 'should return company name and locale when is account' do
-      get :public_show
+      get :show
       data = JSON.parse(response.body)
       expect(response).to have_http_status(200)
       expect(data).to include('company_name')
@@ -44,7 +44,7 @@ RSpec.describe API::V1::SettingsController, type: :controller do
     it 'should return 401 when account is not present' do
       Account.current = nil
 
-      get :public_show
+      get :show
       expect(response).to have_http_status(401)
     end
   end
