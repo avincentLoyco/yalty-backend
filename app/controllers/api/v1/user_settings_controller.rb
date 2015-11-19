@@ -10,7 +10,7 @@ module API
 
       def update
         verified_params(gate_rules) do |attributes|
-          check_old_password(attributes[:password]) if attributes[:password]
+          check_old_password(attributes[:password_params]) if attributes[:password_params]
           params = prepare_attributes(attributes)
           if resource.update(params)
             render_no_content
@@ -28,7 +28,7 @@ module API
       end
 
       def prepare_attributes(attributes)
-        attributes.merge(attributes.delete(:password).to_h)
+        attributes.merge(attributes.delete(:password_params).to_h)
       end
 
       def resource

@@ -25,7 +25,7 @@ RSpec.describe API::V1::UserSettingsController, type: :controller do
     let(:params) do
       {
         email: email,
-        password: {
+        password_params: {
           old_password: old_password,
           password: password,
           password_confirmation: password_confirmation
@@ -38,7 +38,7 @@ RSpec.describe API::V1::UserSettingsController, type: :controller do
 
     context 'with valid params' do
       context 'when password not send' do
-        before { params.tap { |param| param.delete(:password) } }
+        before { params.tap { |param| param.delete(:password_params) } }
 
         it { expect { subject }.to change { user.reload.email } }
         it { expect { subject }.to_not change { user.reload.password_digest } }
@@ -97,7 +97,7 @@ RSpec.describe API::V1::UserSettingsController, type: :controller do
         end
 
         context 'when password params are missing' do
-          before { params[:password].tap { |param| param.delete(:old_password) } }
+          before { params[:password_params].tap { |param| param.delete(:old_password) } }
 
           it_behaves_like 'Missing or Invalid Params'
         end
