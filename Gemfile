@@ -54,4 +54,5 @@ group :development do
   gem 'binding_of_caller'
   gem 'web-console', '~> 2.0'
   gem 'apiaryio'
+  gem 'letter_opener', '~> 1.4.1'
 end
