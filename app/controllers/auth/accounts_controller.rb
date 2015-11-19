@@ -38,7 +38,7 @@ class Auth::AccountsController < Doorkeeper::ApplicationController
   end
 
   def account_params
-    params.require(:account).permit(:company_name, registration_key: [:token])
+    params.require(:account).permit(:company_name)
   end
 
   def user_params

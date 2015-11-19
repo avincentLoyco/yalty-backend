@@ -4,7 +4,7 @@ class Account::RegistrationKey < ActiveRecord::Base
   validates :token, presence: true, uniqueness: true
   before_validation :generate_token, on: :create
 
-  scope :unused, -> { where('account_id IS NULL') }
+  scope :unused, -> { where(account_id: nil) }
 
   private
 
