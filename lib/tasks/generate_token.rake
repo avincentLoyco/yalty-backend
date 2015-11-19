@@ -1,5 +1,5 @@
-namespace :token do
-  task generate: [:environment] do
+namespace :generate do
+  task registration_key_token: [:environment] do
     STDOUT.puts "Number of registration keys for generation: (by default 10)"
     input = STDIN.gets.chomp
 

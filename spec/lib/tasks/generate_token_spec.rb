@@ -1,7 +1,7 @@
 require 'rails_helper'
 require 'rake'
 
-RSpec.describe 'token:generate', type: :rake do
+RSpec.describe 'generate:registration_key_token', type: :rake do
   before(:each) do
     allow_any_instance_of(IO).to receive(:puts) { '' }
   end
@@ -18,13 +18,19 @@ RSpec.describe 'token:generate', type: :rake do
     it { expect { subject.execute }.to change { Account::RegistrationKey.count }.by(10) }
   end
 
-  context 'it return error when decimal number given' do
+  context 'it does not create tokens when decimal number given' do
     before { expect(STDIN).to receive(:gets).and_return('1.2') }
 
     it { expect { subject.execute }.to_not change { Account::RegistrationKey.count } }
   end
 
-  context 'it returns error when invalid number given' do
+  context 'it does not create tokens when negative number given' do
+    before { expect(STDIN).to receive(:gets).and_return('-1') }
+
+    it { expect { subject.execute }.to_not change { Account::RegistrationKey.count } }
+  end
+
+  context 'it does not create tokens when invalid number given' do
     before { expect(STDIN).to receive(:gets).and_return('abc') }
 
     it { expect { subject.execute }.to_not change { Account::RegistrationKey.count } }
