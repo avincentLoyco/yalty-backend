@@ -18,10 +18,10 @@ RSpec.describe 'generate:registration_key_token', type: :rake do
     it { expect { subject.execute }.to change { Account::RegistrationKey.count }.by(10) }
   end
 
-  context 'it does not create tokens when decimal number given' do
+  context 'it creates tokens when decimal number given' do
     before { expect(STDIN).to receive(:gets).and_return('1.2') }
 
-    it { expect { subject.execute }.to_not change { Account::RegistrationKey.count } }
+    it { expect { subject.execute }.to change { Account::RegistrationKey.count }.by(1) }
   end
 
   context 'it does not create tokens when negative number given' do
