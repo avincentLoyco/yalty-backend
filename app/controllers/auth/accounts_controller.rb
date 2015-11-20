@@ -19,9 +19,10 @@ class Auth::AccountsController < Doorkeeper::ApplicationController
 
   def list
     users = Account::User.includes(:account).where(email: user_email)
+
     if users.present?
-      accounts_subdomain = users.map { |user| user.account.subdomain }
-      UserMailer.accounts_list(user_email, accounts_subdomain).deliver_now
+      accounts_subdomains = users.map { |user| user.account.subdomain }
+      UserMailer.accounts_list(user_email, accounts_subdomains).deliver_later
       head 204
     else
       message = { email: 'Record Not Found' }

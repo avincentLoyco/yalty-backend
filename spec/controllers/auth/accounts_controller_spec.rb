@@ -102,10 +102,17 @@ RSpec.describe Auth::AccountsController, type: :controller do
 
       it 'should return account' do
         user = create(:account_user, email: email)
-
         get :list, email: email
+
         expect(response).to have_http_status(204)
-        expect(response).to change(ActionMailer::Base.deliveries, :count)
+      end
+
+      it 'should send email' do
+        user = create(:account_user, email: email)
+
+        expect do
+          get :list, email: email
+        end.to change(ActionMailer::Base.deliveries, :count)
       end
     end
   end

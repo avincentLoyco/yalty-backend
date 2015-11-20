@@ -8,11 +8,16 @@ class UserMailer < ApplicationMailer
 
       Please remember to change your password!
     "
-    mail(
-      to:           user.email,
-      subject:      'Your credentials',
-      body:         body,
-      content_type: 'text/plain'
-    )
+
+    send_mail(user.email, 'Your credentials', body)
+  end
+
+  def accounts_list(email, accounts_subdomains)
+    body = "
+      You have access to accounts:
+      #{accounts_subdomains.join(', ')}
+    "
+
+    send_mail(email, 'Your accounts', body)
   end
 end
