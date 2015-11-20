@@ -16,6 +16,8 @@ RSpec.describe Account::User, type: :model do
   it { is_expected.to validate_confirmation_of(:password) }
   it { is_expected.to validate_length_of(:password).is_at_least(8).is_at_most(74) }
 
+  it { is_expected.to have_db_column(:reset_password_token).of_type(:string) }
+
   it 'should validate length of password only when is updated' do
     user = create(:account_user)
     user = Account::User.find(user.id)
