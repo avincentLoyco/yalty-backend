@@ -28,6 +28,8 @@ Rails.application.routes.draw do
         post 'accounts',       to: 'auth/accounts#create'
         get  'accounts/token', to: 'auth/accounts/tokens#create'
         get  'accounts/list',  to: 'auth/accounts#list'
+        post 'users/password', to: 'auth/users#reset_password'
+        put  'users/password', to: 'auth/users#new_password'
       end
     end
   end
