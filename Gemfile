@@ -35,6 +35,7 @@ group :development, :test do
   gem 'temping'
   gem 'guard-rspec'
   gem 'database_cleaner'
+  gem 'fantaskspec'
 
   # debug
   gem 'pry-rails'

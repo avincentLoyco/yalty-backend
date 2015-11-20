@@ -10,57 +10,78 @@ RSpec.describe Auth::AccountsController, type: :controller do
   end
 
   describe 'POST #create' do
-    let(:params) { Hash(account: { company_name: 'The Company' }, user: { email: 'test@test.com', password: '12345678' }) }
-
-    it 'should create account' do
-      expect do
-        post :create, params
-      end.to change(Account, :count).by(1)
-
-      expect(response).to have_http_status(:found)
+    let(:registration_key) { create(:registration_key) }
+    let(:token) { registration_key.token }
+    let(:params) do
+      {
+        account:
+          {
+            company_name: 'The Company'
+          },
+        user:
+          {
+            email: 'test@test.com',
+            password: '12345678'
+          },
+        registration_key:
+          {
+            token: token
+          }
+      }
     end
 
-    it 'should create user' do
-      expect do
-        post :create, params
-      end.to change(Account::User, :count).by(1)
+    subject { post :create, params }
 
-      expect(response).to have_http_status(:found)
+    context 'with valid params' do
+      it { expect { subject }.to change(Account, :count).by(1)  }
+      it { expect { subject }.to change(Account::User, :count).by(1)  }
+      it { expect { subject }.to change { registration_key.reload.account } }
+
+      it { is_expected.to have_http_status(:found) }
+    end
+
+    context 'with invalid params' do
+      context 'when token not send' do
+        before { params.tap { |param| param.delete(:registration_key) } }
+
+        it { expect { subject }.to raise_exception(ActionController::ParameterMissing) }
+      end
+
+      context 'when token used' do
+        let(:used_key) { create(:registration_key, :with_account) }
+        let(:token) { used_key }
+
+        it { expect { subject }.to raise_exception(ActiveRecord::RecordNotFound) }
+      end
+
+      context 'when token invalid' do
+        let(:token) { 'abc' }
+
+        it { expect { subject }.to raise_exception(ActiveRecord::RecordNotFound) }
+      end
     end
 
     context 'ACCEPT: application/json' do
       let(:params) { super().merge({format: 'json'}) }
 
-      it 'should contain code' do
-        post :create, params
+      context 'response' do
+        before { subject }
 
-        expect(response).to have_http_status(:created)
-        expect_json_keys(:code)
+        it { expect(response).to have_http_status(:created) }
+        it { expect_json_keys(:code) }
+        it { expect_json_keys(:redirect_uri) }
+        it { expect_json(redirect_uri: regex(%r{^http://.+\.yalty.test/setup})) }
       end
-
-      it 'should contain redirect_uri' do
-        post :create, params
-
-        expect(response).to have_http_status(:created)
-        expect_json_keys(:redirect_uri)
-        expect_json(redirect_uri: regex(%r{^http://.+\.yalty.test/setup}))
-      end
-
     end
 
     context 'ACCEPT: */*' do
       let(:params) { super().merge({format: nil}) }
 
-      it 'should be redirected' do
-        post :create, params
+      context 'response' do
+        before { subject }
 
-        expect(response).to be_redirect
-      end
-
-      it 'should be redirected to client redirect uri' do
-        post :create, params
-
-        expect(response.location).to match(%r{^http://.+\.yalty.test/setup})
+        it { expect(response).to be_redirect }
+        it { expect(response.location).to match(%r{^http://.+\.yalty.test/setup}) }
       end
     end
   end
