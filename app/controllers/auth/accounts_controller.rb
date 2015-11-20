@@ -72,5 +72,15 @@ class Auth::AccountsController < Doorkeeper::ApplicationController
       registration_key.update!(account: account)
       @current_resource_owner = account.users.create!(user_params)
     end
+    send_user_credentials(user_params[:password])
+  end
+
+  def send_user_credentials(password)
+    user_id = current_resource_owner.id
+    UserMailer.credentials(
+      user_id,
+      password,
+      redirect_uri_with_subdomain(authorization.redirect_uri)
+    ).deliver_later
   end
 end
