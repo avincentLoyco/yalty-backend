@@ -44,4 +44,13 @@ RSpec.describe Account::User, type: :model do
 
     expect(Account::User.current).to eql(user)
   end
+
+  it 'should validate reset password token uniqueness' do
+    first_user = build(:account_user, :with_reset_password_token)
+    second_user = first_user.dup
+
+    first_user.save!
+
+    expect { second_user.save }.to change { second_user.errors.messages[:reset_password_token] }
+  end
 end
