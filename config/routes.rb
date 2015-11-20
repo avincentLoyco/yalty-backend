@@ -15,6 +15,7 @@ Rails.application.routes.draw do
       resources :employee_events, only: [:show, :create, :update]
       resources :presence_policies, except: [:edit, :new]
       resources :presence_days, except: [:edit, :new]
+      resource :user_settings, only: [:show, :update]
     end
   end
 
