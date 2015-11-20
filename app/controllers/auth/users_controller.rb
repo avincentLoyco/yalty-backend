@@ -8,7 +8,7 @@ class Auth::UsersController < ApplicationController
       user = resource_from_email(attributes[:email])
       user.generate_reset_password_token
       if user.save
-        # send_reset_password_token(user)
+        send_reset_password_token(user)
         render_no_content
       else
         resource_invalid_error(resource)
@@ -38,10 +38,10 @@ class Auth::UsersController < ApplicationController
   end
 
   def send_reset_password_token(user)
-    UserMailer.reset_password_token(
+    UserMailer.reset_password(
       user.id,
       user.reset_password_token
-    ).deliver_now
+    ).deliver_later
   end
 
   def authenticate_account!

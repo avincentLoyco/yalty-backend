@@ -20,4 +20,19 @@ class UserMailer < ApplicationMailer
 
     send_mail(email, 'Your accounts', body)
   end
+
+  def reset_password(user_id, reset_password_token)
+    user = Account::User.find(user_id)
+
+    body = "
+      Your reset_password_token: #{reset_password_token}
+    "
+
+    mail(
+      to:           user.email,
+      subject:      'Your reset password token',
+      body:         body,
+      content_type: 'text/plain'
+    )
+  end
 end

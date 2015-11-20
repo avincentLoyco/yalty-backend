@@ -10,9 +10,8 @@ RSpec.describe Auth::UsersController, type: :controller do
     let(:email) { user.email }
 
     context 'with valid params' do
-
       it { expect { subject }.to change { user.reload.reset_password_token } }
-      xit { expect { subject }.to change { ActionMailer::Base.deliveries.count }.by(1) }
+      it { expect { subject }.to change { ActionMailer::Base.deliveries.count }.by(1) }
 
       it { is_expected.to have_http_status(204) }
     end
@@ -22,7 +21,7 @@ RSpec.describe Auth::UsersController, type: :controller do
         let(:email) { 'abc' }
 
         it { expect { subject }.to_not change { user.reload.reset_password_token } }
-        xit { expect { subject }.to_not change { ActionMailer::Base.deliveries.count } }
+        it { expect { subject }.to_not change { ActionMailer::Base.deliveries.count } }
 
         it { is_expected.to have_http_status(404) }
       end
@@ -31,7 +30,7 @@ RSpec.describe Auth::UsersController, type: :controller do
         subject { post :reset_password }
 
         it { expect { subject }.to_not change { user.reload.reset_password_token } }
-        xit { expect { subject }.to_not change { ActionMailer::Base.deliveries.count } }
+        it { expect { subject }.to_not change { ActionMailer::Base.deliveries.count } }
 
         it { is_expected.to have_http_status(422) }
       end
@@ -40,7 +39,7 @@ RSpec.describe Auth::UsersController, type: :controller do
         before { Account.current = nil }
 
         it { expect { subject }.to_not change { user.reload.reset_password_token } }
-        xit { expect { subject }.to_not change { ActionMailer::Base.deliveries.count } }
+        it { expect { subject }.to_not change { ActionMailer::Base.deliveries.count } }
 
         it { is_expected.to have_http_status(401) }
       end
