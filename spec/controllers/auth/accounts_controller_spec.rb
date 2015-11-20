@@ -90,5 +90,23 @@ RSpec.describe Auth::AccountsController, type: :controller do
         it { expect(response.location).to match(%r{^http://.+\.yalty.test/setup}) }
       end
     end
+
+    context 'GET #list' do
+      let(:email) { 'test@test.com'}
+
+      it 'should return error 404 when we do not have user' do
+        get :list, email: email
+
+        expect(response).to have_http_status(404)
+      end
+
+      it 'should return account' do
+        user = create(:account_user, email: email)
+
+        get :list, email: email
+        expect(response).to have_http_status(204)
+        expect(response).to change(ActionMailer::Base.deliveries, :count)
+      end
+    end
   end
 end

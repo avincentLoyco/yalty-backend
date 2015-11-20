@@ -17,6 +17,19 @@ class Auth::AccountsController < Doorkeeper::ApplicationController
     end
   end
 
+  def list
+    users = Account::User.includes(:account).where(email: user_email)
+    if users.present?
+      accounts_subdomain = users.map { |user| user.account.subdomain }
+      UserMailer.accounts_list(user_email, accounts_subdomain).deliver_now
+      head 204
+    else
+      message = { email: 'Record Not Found' }
+      render json:
+        ::Api::V1::ErrorsRepresenter.new(nil, message).complete, status: 404
+    end
+  end
+
   private
 
   attr_reader :current_resource_owner
@@ -47,6 +60,10 @@ class Auth::AccountsController < Doorkeeper::ApplicationController
 
   def registration_key_params
     params.require(:registration_key).permit(:token)
+  end
+
+  def user_email
+    params.require(:email)
   end
 
   def redirect_uri_with_subdomain(redirect_uri)
