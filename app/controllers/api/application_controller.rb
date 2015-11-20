@@ -24,10 +24,9 @@ class API::ApplicationController < ApplicationController
   end
 
   def subdomain_access!
-    if Account.current.blank?
-      render json:
-        ::Api::V1::ErrorsRepresenter.new(nil, message: 'User unauthorized').complete, status: 401
-    end
+    return unless Account.current.nil?
+    render json:
+      ::Api::V1::ErrorsRepresenter.new(nil, message: 'User unauthorized').complete, status: 401
   end
 
   def assign_collection(resource, collection, collection_name)
