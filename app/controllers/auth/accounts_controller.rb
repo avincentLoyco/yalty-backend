@@ -81,6 +81,6 @@ class Auth::AccountsController < Doorkeeper::ApplicationController
       user_id,
       password,
       redirect_uri_with_subdomain(authorization.redirect_uri)
-    ).deliver_now
+    ).deliver_later
   end
 end
