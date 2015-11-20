@@ -25,6 +25,30 @@ RSpec.describe API::V1::SettingsController, type: :controller do
     end
   end
 
+  describe 'without user GET #show' do
+    before(:each) do
+      Account::User.current = nil
+    end
+
+    it 'should return company name and locale when is account' do
+      get :show
+      data = JSON.parse(response.body)
+      expect(response).to have_http_status(200)
+      expect(data).to include('company_name')
+      expect(data).to include('default_locale')
+      expect(data).to_not include('subdomain')
+      expect(data).to_not include('id')
+      expect(data['company_name']).to eq(Account.current.company_name)
+    end
+
+    it 'should return 401 when account is not present' do
+      Account.current = nil
+
+      get :show
+      expect(response).to have_http_status(401)
+    end
+  end
+
   describe 'PUT #update' do
     let(:holiday_policy) { create(:holiday_policy, account: account) }
     let(:holiday_policy_id) { holiday_policy.id }

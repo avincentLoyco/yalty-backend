@@ -11,6 +11,13 @@ module Api::V1
         .merge(relationships)
     end
 
+    def public_data
+      {
+        company_name:      resource.company_name,
+        default_locale:    resource.default_locale
+      }
+    end
+
     def relationships
       holiday_policy = HolidayPolicyRepresenter.new(resource.holiday_policy).basic
       {
