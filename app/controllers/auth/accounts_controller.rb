@@ -17,6 +17,17 @@ class Auth::AccountsController < Doorkeeper::ApplicationController
     end
   end
 
+  def list
+    users = Account::User.includes(:account).where(email: user_email)
+
+    if users.present?
+      accounts_subdomains = users.map { |user| user.account.subdomain }
+      UserMailer.accounts_list(user_email, accounts_subdomains).deliver_later
+    end
+
+    head 204
+  end
+
   private
 
   attr_reader :current_resource_owner
@@ -49,6 +60,10 @@ class Auth::AccountsController < Doorkeeper::ApplicationController
     params.require(:registration_key).permit(:token)
   end
 
+  def user_email
+    params.require(:email)
+  end
+
   def redirect_uri_with_subdomain(redirect_uri)
     uri = URI(redirect_uri)
     uri.host.prepend("#{current_resource_owner.account.subdomain}.")
@@ -77,10 +92,11 @@ class Auth::AccountsController < Doorkeeper::ApplicationController
 
   def send_user_credentials(password)
     user_id = current_resource_owner.id
+    subdomain = @current_resource_owner.account.subdomain
     UserMailer.credentials(
       user_id,
       password,
-      redirect_uri_with_subdomain(authorization.redirect_uri)
+      subdomain + '.' + ENV['YALTY_BASE_URL']
     ).deliver_later
   end
 end
