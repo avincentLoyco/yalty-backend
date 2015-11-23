@@ -109,7 +109,7 @@ RSpec.describe API::V1::SettingsController, type: :controller do
 
           it { expect { subject }.to change { Account.current.reload.subdomain } }
 
-          it { is_expected. to have_http_status(200) }
+          it { is_expected. to have_http_status(301) }
         end
       end
     end

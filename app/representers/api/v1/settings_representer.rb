@@ -24,11 +24,5 @@ module Api::V1
         holiday_policy: holiday_policy
       }
     end
-
-    def subdomain
-      {
-        subdomain: resource.subdomain
-      }
-    end
   end
 end

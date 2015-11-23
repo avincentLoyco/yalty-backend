@@ -51,9 +51,14 @@ module API
         ::Api::V1::SettingsRepresenter
       end
 
+      def redirect_url
+        ''
+      end
+
       def render_response(subdomain_change)
         render_no_content && return unless subdomain_change
-        render json: resource_representer.new(resource).subdomain
+        response.headers['Location'] = redirect_url
+        head 301
       end
     end
   end
