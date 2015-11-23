@@ -37,10 +37,14 @@ class Auth::UsersController < ApplicationController
     @resource ||= Account::User.find_by!(reset_password_token: token)
   end
 
+  def url_with_subdomain_and_token(user)
+    Account.current.subdomain
+  end
+
   def send_reset_password_token(user)
     UserMailer.reset_password(
       user.id,
-      user.reset_password_token
+      url_with_subdomain_and_token(user)
     ).deliver_later
   end
 
