@@ -25,7 +25,7 @@ class UserMailer < ApplicationMailer
     user = Account::User.find(user_id)
 
     body = "
-      You can reset your password at this url:
+      You can change your password at this url:
 
       #{url}
     "

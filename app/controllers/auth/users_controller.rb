@@ -34,11 +34,12 @@ class Auth::UsersController < ApplicationController
   end
 
   def resource_from_token(token)
-    @resource ||= Account::User.find_by!(reset_password_token: token)
+    @resource ||= Account.current.users.find_by!(reset_password_token: token)
   end
 
   def url_with_subdomain_and_token(user)
-    Account.current.subdomain
+    Account.current.subdomain + '.' + ENV['YALTY_BASE_URL'] + '/password/reset_password_token='\
+    + user.reset_password_token
   end
 
   def send_reset_password_token(user)

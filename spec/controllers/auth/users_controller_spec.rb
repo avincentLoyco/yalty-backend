@@ -2,10 +2,9 @@ require 'rails_helper'
 
 RSpec.describe Auth::UsersController, type: :controller do
   let(:user) { create(:account_user, :with_reset_password_token) }
+  before { Account.current = user.account }
 
   describe 'POST #reset_password' do
-    before { Account.current = user.account }
-
     subject { post :reset_password, email: email }
     let(:email) { user.email }
 
