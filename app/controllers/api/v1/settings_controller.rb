@@ -20,8 +20,11 @@ module API
             assign_holiday_policy(holiday_policy)
           end
 
-          if resource.update(attributes)
-            render_no_content
+          resource.attributes = attributes
+          subdomain_change = resource.subdomain_changed?
+
+          if resource.save
+            render_response(subdomain_change)
           else
             resource_invalid_error(resource)
           end
@@ -46,6 +49,11 @@ module API
 
       def resource_representer
         ::Api::V1::SettingsRepresenter
+      end
+
+      def render_response(subdomain_change)
+        render_no_content && return unless subdomain_change
+        render json: resource_representer.new(resource).subdomain
       end
     end
   end
