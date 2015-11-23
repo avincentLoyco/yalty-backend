@@ -94,10 +94,10 @@ RSpec.describe Auth::AccountsController, type: :controller do
     context 'GET #list' do
       let(:email) { 'test@test.com'}
 
-      it 'should return error 404 when we do not have user' do
+      it 'should return 204 when we do not have user' do
         get :list, email: email
 
-        expect(response).to have_http_status(404)
+        expect(response).to have_http_status(204)
       end
 
       it 'should return account' do

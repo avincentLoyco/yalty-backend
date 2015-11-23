@@ -23,12 +23,9 @@ class Auth::AccountsController < Doorkeeper::ApplicationController
     if users.present?
       accounts_subdomains = users.map { |user| user.account.subdomain }
       UserMailer.accounts_list(user_email, accounts_subdomains).deliver_later
-      head 204
-    else
-      message = { email: 'Record Not Found' }
-      render json:
-        ::Api::V1::ErrorsRepresenter.new(nil, message).complete, status: 404
     end
+
+    head 204
   end
 
   private
@@ -95,10 +92,11 @@ class Auth::AccountsController < Doorkeeper::ApplicationController
 
   def send_user_credentials(password)
     user_id = current_resource_owner.id
+    subdomain = @current_resource_owner.account.subdomain
     UserMailer.credentials(
       user_id,
       password,
-      redirect_uri_with_subdomain(authorization.redirect_uri)
+      subdomain + '.' + ENV['YALTY_BASE_URL']
     ).deliver_later
   end
 end
