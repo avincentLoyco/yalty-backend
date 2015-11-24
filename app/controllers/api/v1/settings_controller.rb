@@ -36,7 +36,7 @@ module API
       private
 
       def current_resource_owner
-        current_resource_owner ||= user
+        user
       end
 
       def assign_holiday_policy(holiday_policy)
