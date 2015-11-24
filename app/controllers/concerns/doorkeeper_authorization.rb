@@ -1,4 +1,10 @@
 module DoorkeeperAuthorization
+  def redirect_uri_with_subdomain(redirect_uri)
+    uri = URI(redirect_uri)
+    uri.host.prepend("#{current_resource_owner.account.subdomain}.")
+    uri.to_s
+  end
+
   def client
     @client ||= Doorkeeper::OAuth::Client.find(ENV['YALTY_OAUTH_ID'])
   end

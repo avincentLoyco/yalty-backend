@@ -61,17 +61,9 @@ module API
         ::Api::V1::SettingsRepresenter
       end
 
-      def code
-        authorization.auth.token.token
-      end
-
-      def redirect_url
-        resource.subdomain + '.' + ENV['YALTY_BASE_URL'] + '/setup?code=' + code
-      end
-
       def render_response_or_redirect(subdomain_change)
         render_no_content && return unless subdomain_change
-        response.headers['Location'] = redirect_url
+        response.headers['Location'] = redirect_uri_with_subdomain(authorization.redirect_uri)
         head 301
       end
     end

@@ -53,12 +53,6 @@ class Auth::AccountsController < Doorkeeper::ApplicationController
     params.require(:email)
   end
 
-  def redirect_uri_with_subdomain(redirect_uri)
-    uri = URI(redirect_uri)
-    uri.host.prepend("#{current_resource_owner.account.subdomain}.")
-    uri.to_s
-  end
-
   def create_account
     ActiveRecord::Base.transaction do
       registration_key = account_registration_key
