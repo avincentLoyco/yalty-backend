@@ -30,11 +30,6 @@ class UserMailer < ApplicationMailer
       #{url}
     "
 
-    mail(
-      to:           user.email,
-      subject:      'Your reset password token',
-      body:         body,
-      content_type: 'text/plain'
-    )
+    send_mail(user.email, 'Your reset password token', body)
   end
 end
