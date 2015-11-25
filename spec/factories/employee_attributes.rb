@@ -2,6 +2,7 @@ FactoryGirl.define do
   factory :employee_attribute_version, aliases: [:employee_attribute], class: 'Employee::AttributeVersion' do
     employee
     account { employee.account }
+    order Faker::Number.number(4)
     event { FactoryGirl.build(:employee_event, employee: employee) }
 
     transient do

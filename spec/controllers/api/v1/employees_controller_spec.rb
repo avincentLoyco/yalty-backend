@@ -26,6 +26,68 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
         it { expect_json_keys('employee_attributes.*', [:id, :type, :value, :attribute_name]) }
         it { expect_json_types(id: :string, type: :string, employee_attributes: :array) }
       end
+
+      context 'when employee has multiple attributes' do
+        let!(:definition) { create(:employee_attribute_definition, multiple: true) }
+        let!(:new_employee) { create(:employee, account: account) }
+        let!(:employee_attribute_versions) do
+          create_list(:employee_attribute, 2,
+            employee: new_employee,
+            employee_event_id: employee_event.id,
+            attribute_definition_id: definition.id,
+            multiple: true
+          )
+        end
+
+        subject { get :show, id: new_employee.id }
+
+        context 'when employee is not effective at' do
+          let!(:employee_event) do
+            create(:employee_event,
+              employee: new_employee,
+              effective_at: Time.now + 1.week,
+              event_type: 'hired'
+            )
+          end
+
+          it { expect(new_employee.employee_attribute_versions.count).to eq (2) }
+          it { expect(new_employee.employee_attributes.count).to eq(0) }
+          it { expect(new_employee.events.count).to eql(1) }
+          it { expect(new_employee.events.first.effective_at).to be >= Time.now }
+
+          it { is_expected.to have_http_status(200) }
+
+          context 'response body' do
+            before { subject }
+
+            it { expect_json_sizes(employee_attributes: 2) }
+            it { expect_json('employee_attributes.0', type: 'employee_attribute_version') }
+          end
+        end
+
+        context 'when employee event is effective at' do
+          let!(:employee_event) do
+            create(:employee_event,
+              employee: new_employee,
+              effective_at: Time.now - 1.week,
+              event_type: 'hired'
+            )
+          end
+
+          it { expect(new_employee.employee_attribute_versions.count).to eq (2) }
+          it { expect(new_employee.employee_attributes.count).to eq(2) }
+          it { expect(new_employee.events.count).to eql(1) }
+
+          it { is_expected.to have_http_status(200) }
+
+          context 'response body' do
+            before { subject }
+
+            it { expect_json_sizes(employee_attributes: 2) }
+            it { expect_json('employee_attributes.0', type: 'employee_attribute') }
+          end
+        end
+      end
     end
 
     context 'with invalid data' do
