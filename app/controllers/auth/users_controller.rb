@@ -38,8 +38,8 @@ class Auth::UsersController < ApplicationController
   end
 
   def url_with_subdomain_and_token(user)
-    Account.current.subdomain + '.' + ENV['YALTY_BASE_URL'] + '/password?reset_password_token='\
-    + user.reset_password_token
+    str = Account.current.subdomain + '.' + ENV['YALTY_BASE_URL']
+    str + '/password?reset_password_token=' + user.reset_password_token
   end
 
   def send_reset_password_token(user)
@@ -50,9 +50,8 @@ class Auth::UsersController < ApplicationController
   end
 
   def authenticate_account!
-    if Account.current.blank?
-      render json:
-        ::Api::V1::ErrorsRepresenter.new(nil, message: 'Account unauthorized').complete, status: 401
-    end
+    return unless Account.current.blank?
+    render json:
+      ::Api::V1::ErrorsRepresenter.new(nil, message: 'Account unauthorized').complete, status: 401
   end
 end
