@@ -9,6 +9,7 @@ class ApplicationController < ActionController::Base
   rescue_from StandardError, with: :render_500_error
   rescue_from ActionController::RoutingError, with: :bad_request_error
   rescue_from ActiveRecord::RecordNotFound, with: :record_not_found_error
+  rescue_from EventTypeNotFoundError, with: :event_type_not_found
   rescue_from InvalidPasswordError, with: :invalid_password_error
   rescue_from InvalidResourcesError, with: :invalid_resources_error
 
@@ -59,5 +60,10 @@ class ApplicationController < ActionController::Base
   def invalid_password_error(exception)
     render json:
       ::Api::V1::ErrorsRepresenter.new(exception.resource, exception.message).complete, status: 403
+  end
+
+  def event_type_not_found(exception)
+    render json:
+      ::Api::V1::ErrorsRepresenter.new(exception.resource, exception.message).complete, status: 404
   end
 end
