@@ -60,9 +60,9 @@ class Account < ActiveRecord::Base
     Attribute::Currency.attribute_type => %w(
       annual_salary hourly_salary representation_fees
     ),
-    Attribute::Boolean.attribute_type => %w(spouse_is_working child_is_student),
     Attribute::Address.attribute_type => %w(address),
-    Attribute::Person.attribute_type => %w(spouse child)
+    Attribute::Child.attribute_type => %w(child),
+    Attribute::Person.attribute_type => %w(spouse)
   }
 
   DEFAULT_ATTRIBUTE_DEFINITIONS = Account::DEFAULT_ATTRIBUTES.map do |type, names|
