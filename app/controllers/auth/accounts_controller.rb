@@ -23,7 +23,7 @@ class Auth::AccountsController < Doorkeeper::ApplicationController
 
     if users.present?
       accounts_subdomains = users.map { |user| user.account.subdomain }
-      UserMailer.accounts_list(user_email, accounts_subdomains).deliver_later
+      Resque.enqueue(UserMailerAccountsListJob, user_email, accounts_subdomains)
     end
 
     head 204
@@ -66,10 +66,11 @@ class Auth::AccountsController < Doorkeeper::ApplicationController
   def send_user_credentials(password)
     user_id = current_resource_owner.id
     subdomain = @current_resource_owner.account.subdomain
-    UserMailer.credentials(
+    Resque.enqueue(
+      UserMailerCredentialsJob,
       user_id,
       password,
       subdomain + '.' + ENV['YALTY_BASE_URL']
-    ).deliver_later
+    )
   end
 end

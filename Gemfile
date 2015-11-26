@@ -14,6 +14,7 @@ gem 'countries',          '~> 1.1.0'
 gem 'holidays',           '~> 2.2.0'
 gem 'gate',               '~> 0.3.0'
 gem 'newrelic_rpm',       '~> 3.14.0'
+gem 'resque',             '~> 1.25.2'
 
 # Production environment dependencies
 group :production, :staging, :review do
@@ -36,6 +37,7 @@ group :development, :test do
   gem 'guard-rspec'
   gem 'database_cleaner'
   gem 'fantaskspec'
+  gem 'resque_spec', '~> 0.17.0'
 
   # debug
   gem 'pry-rails'
