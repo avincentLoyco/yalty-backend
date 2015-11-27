@@ -45,10 +45,31 @@ class Account < ActiveRecord::Base
     RequestStore.read(:current_account)
   end
 
-  DEFAULT_ATTRIBUTE_DEFINITIONS = [
-    { name: 'firstname', type: Attribute::String.attribute_type },
-    { name: 'lastname',  type: Attribute::String.attribute_type }
-  ].freeze
+  DEFAULT_ATTRIBUTES = {
+    Attribute::String.attribute_type => %w(
+      firstname lastname avs_number gender nationality language personal_email
+      personal_phone professional_email professional_mobile emergency_lastname
+      emergency_firstname emergency_phone permit_type tax_source_code bank_name
+      account_owner_name iban clearing_number job_title contract_type department
+      cost_center manager civil_status spouse_working_region
+    ),
+    Attribute::Date.attribute_type => %w(
+      birthdate permit_expiry start_date exit_date civil_status_date
+    ),
+    Attribute::Number.attribute_type => %w(occupation_rate monthly_payments),
+    Attribute::Currency.attribute_type => %w(
+      annual_salary hourly_salary representation_fees
+    ),
+    Attribute::Address.attribute_type => %w(address),
+    Attribute::Child.attribute_type => %w(child),
+    Attribute::Person.attribute_type => %w(spouse)
+  }
+
+  DEFAULT_ATTRIBUTE_DEFINITIONS = Account::DEFAULT_ATTRIBUTES.map do |type, names|
+    names.map do |name|
+      { name: name, type: type }
+    end
+  end.flatten.freeze
 
   # Add defaults attribute definiitons
   #

@@ -5,6 +5,8 @@ RSpec.describe API::V1::EmployeeAttributeDefinitionsController, type: :controlle
     resource_name: 'employee_attribute_definition'
   include_context 'shared_context_headers'
 
+  let(:default_attribute_definition_count) { Account::DEFAULT_ATTRIBUTE_DEFINITIONS.count}
+
   context 'GET #index' do
     before(:each) do
       create_list(:employee_attribute_definition, 3, account: account)
@@ -17,7 +19,7 @@ RSpec.describe API::V1::EmployeeAttributeDefinitionsController, type: :controlle
     context 'response body' do
       before { subject }
 
-      it { expect_json_sizes(5) }
+      it { expect_json_sizes(default_attribute_definition_count + 3) }
     end
 
     context 'response body when other account logged in' do
@@ -31,7 +33,7 @@ RSpec.describe API::V1::EmployeeAttributeDefinitionsController, type: :controlle
       context 'response body' do
         before { subject }
 
-        it { expect_json_sizes(2) }
+        it { expect_json_sizes(default_attribute_definition_count) }
       end
     end
   end
