@@ -138,6 +138,16 @@ DELETE for removing employee from working place
 http://api.lvh.me:3000/api/v1/working-places/WORKING_PLACE_ID/relationships/employees/EMPLOYEE_ID
 ```
 
+Generating Account::RegistrationKey Tokens
+------------------------------------------
+
+```
+rake generate:registration_key_token
+```
+
+By default task generates 10 keys.
+
+
 Running tests
 -------------
 

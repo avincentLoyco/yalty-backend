@@ -2,6 +2,8 @@ module API
   module V1
     class SettingsController < API::ApplicationController
       include SettingsRules
+      include DoorkeeperAuthorization
+      include Doorkeeper::Helpers::Controller
       before_action :subdomain_access!, only: :show
       skip_action_callback :authenticate!, only: :show
 
@@ -20,8 +22,11 @@ module API
             assign_holiday_policy(holiday_policy)
           end
 
-          if resource.update(attributes)
-            render_no_content
+          resource.attributes = attributes
+          subdomain_change = resource.subdomain_changed?
+
+          if resource.save
+            render_response_or_redirect(subdomain_change)
           else
             resource_invalid_error(resource)
           end
@@ -29,6 +34,10 @@ module API
       end
 
       private
+
+      def current_resource_owner
+        user
+      end
 
       def assign_holiday_policy(holiday_policy)
         if holiday_policy.present?
@@ -44,8 +53,18 @@ module API
         Account.current
       end
 
+      def user
+        Account::User.current
+      end
+
       def resource_representer
         ::Api::V1::SettingsRepresenter
+      end
+
+      def render_response_or_redirect(subdomain_change)
+        render_no_content && return unless subdomain_change
+        response.headers['Location'] = redirect_uri_with_subdomain(authorization.redirect_uri)
+        head 301
       end
     end
   end

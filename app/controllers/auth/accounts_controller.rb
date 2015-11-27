@@ -1,5 +1,6 @@
 class Auth::AccountsController < Doorkeeper::ApplicationController
   protect_from_forgery with: :null_session
+  include DoorkeeperAuthorization
 
   before_action :create_account, only: [:create]
 
@@ -32,18 +33,6 @@ class Auth::AccountsController < Doorkeeper::ApplicationController
 
   attr_reader :current_resource_owner
 
-  def client
-    @client ||= Doorkeeper::OAuth::Client.find(ENV['YALTY_OAUTH_ID'])
-  end
-
-  def authorization
-    @authorization ||= strategy.request.authorize
-  end
-
-  def strategy
-    @strategy ||= server.authorization_request(pre_auth.response_type)
-  end
-
   def account_registration_key
     Account::RegistrationKey.unused.find_by!(token: registration_key_params[:token])
   end
@@ -62,22 +51,6 @@ class Auth::AccountsController < Doorkeeper::ApplicationController
 
   def user_email
     params.require(:email)
-  end
-
-  def redirect_uri_with_subdomain(redirect_uri)
-    uri = URI(redirect_uri)
-    uri.host.prepend("#{current_resource_owner.account.subdomain}.")
-    uri.to_s
-  end
-
-  def pre_auth
-    @pre_auth ||= Doorkeeper::OAuth::PreAuthorization.new(
-      Doorkeeper.configuration,
-      client,
-      response_type: 'code',
-      redirect_uri: client.redirect_uri,
-      scope: client.scopes.to_s
-    )
   end
 
   def create_account

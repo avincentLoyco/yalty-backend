@@ -54,6 +54,7 @@ RSpec.describe API::V1::SettingsController, type: :controller do
     let(:holiday_policy_id) { holiday_policy.id }
     let(:company_name) { 'My Company' }
     let(:timezone) { 'Europe/Madrid' }
+    let(:subdomain) { Account.current.subdomain }
     let(:holiday_policy_json) do
       {
         id: holiday_policy_id
@@ -64,7 +65,7 @@ RSpec.describe API::V1::SettingsController, type: :controller do
       {
         type: 'settings',
         company_name: company_name,
-        subdomain: 'my-company-946',
+        subdomain: subdomain,
         timezone: timezone,
         default_locale: 'en',
         holiday_policy: holiday_policy_json
@@ -94,6 +95,34 @@ RSpec.describe API::V1::SettingsController, type: :controller do
         it { expect { subject }.to change { account.reload.holiday_policy_id }.to(nil) }
 
         it { is_expected.to have_http_status(204) }
+      end
+
+      context 'subdomain' do
+        context 'when subdomain does not change' do
+          it { expect { subject }.to_not change { Account.current.reload.subdomain } }
+
+          it { is_expected. to have_http_status(204) }
+        end
+
+        context 'when subdomain change' do
+          let(:redirect_uri) { 'http://yalty.test/setup'}
+          let(:client) { FactoryGirl.create(:oauth_client, redirect_uri: redirect_uri) }
+          let(:subdomain) { 'new-subdomain' }
+
+          before(:each) do
+            ENV['YALTY_OAUTH_ID'] = client.uid
+            ENV['YALTY_OAUTH_SECRET'] = client.secret
+          end
+
+          it { expect { subject }.to change { Account.current.reload.subdomain } }
+          it { is_expected. to have_http_status(301) }
+
+          context 'response' do
+            before { subject }
+
+            it { expect(response.location).to match("http://#{subdomain}.yalty.test/setup") }
+          end
+        end
       end
     end
 
