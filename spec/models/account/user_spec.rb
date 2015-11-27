@@ -16,6 +16,8 @@ RSpec.describe Account::User, type: :model do
   it { is_expected.to validate_confirmation_of(:password) }
   it { is_expected.to validate_length_of(:password).is_at_least(8).is_at_most(74) }
 
+  it { is_expected.to have_db_column(:reset_password_token).of_type(:string) }
+
   it 'should validate length of password only when is updated' do
     user = create(:account_user)
     user = Account::User.find(user.id)
@@ -41,5 +43,14 @@ RSpec.describe Account::User, type: :model do
     Account::User.current = user
 
     expect(Account::User.current).to eql(user)
+  end
+
+  it 'should validate reset password token uniqueness' do
+    first_user = build(:account_user, :with_reset_password_token)
+    second_user = first_user.dup
+
+    first_user.save!
+
+    expect { second_user.save }.to change { second_user.errors.messages[:reset_password_token] }
   end
 end

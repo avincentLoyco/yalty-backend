@@ -4,6 +4,7 @@ class Account::User < ActiveRecord::Base
   validates :email, presence: true
   validates :email, format: { with: /\b[A-Z0-9._%a-z\-]+@(?:[A-Z0-9a-z\-]+\.)+[A-Za-z]{2,4}\z/ }
   validates :password, length: { in: 8..74 }, if: ->() { !password.nil? }
+  validates :reset_password_token, uniqueness: true, allow_nil: true
 
   belongs_to :account, inverse_of: :users, required: true
 
@@ -25,5 +26,9 @@ class Account::User < ActiveRecord::Base
       Doorkeeper.configuration.access_token_expires_in,
       true
     ).token
+  end
+
+  def generate_reset_password_token
+    self.reset_password_token = SecureRandom.urlsafe_base64(16)
   end
 end
