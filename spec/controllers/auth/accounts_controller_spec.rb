@@ -40,10 +40,9 @@ RSpec.describe Auth::AccountsController, type: :controller do
       it { is_expected.to have_http_status(:found) }
 
       it 'should send email with credentials' do
-        ResqueSpec.reset!
-        post :create, params
-
-        expect(UserMailerCredentialsJob).to have_queue_size_of(1)
+        expect do
+          post :create, params
+        end.to change(ActionMailer::Base.deliveries, :count)
       end
     end
 
@@ -95,25 +94,20 @@ RSpec.describe Auth::AccountsController, type: :controller do
     context 'GET #list' do
       let(:email) { 'test@test.com'}
 
-      it 'should return 204 when we do not have user' do
-        get :list, email: email
-
-        expect(response).to have_http_status(204)
-      end
-
-      it 'should return account' do
-        user = create(:account_user, email: email)
-        get :list, email: email
+      it 'should return 204 when we do not have user and not send email' do
+        expect do
+          get :list, email: email
+        end.to_not change(ActionMailer::Base.deliveries, :count)
 
         expect(response).to have_http_status(204)
       end
 
       it 'should send email' do
-        ResqueSpec.reset!
         user = create(:account_user, email: email)
-        get :list, email: email
-
-        expect(UserMailerAccountsListJob).to have_queue_size_of(1)
+        expect do
+          get :list, email: email
+        end.to change(ActionMailer::Base.deliveries, :count)
+        expect(response).to have_http_status(204)
       end
     end
   end
