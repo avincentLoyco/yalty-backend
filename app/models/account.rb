@@ -15,7 +15,7 @@ class Account < ActiveRecord::Base
   validates :timezone,
     inclusion: { in: SUPPORTED_TIMEZONES },
     if: -> { timezone.present? }
-  validates :default_locale, inclusion: { in: %w(de en) }
+  validates :default_locale, inclusion: { in: %w(de en fr) }
 
   # It is assigned to account holiday_policy as default
   belongs_to :holiday_policy, inverse_of: :assigned_account
