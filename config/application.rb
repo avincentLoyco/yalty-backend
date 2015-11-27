@@ -86,6 +86,9 @@ module Yalty
       authentication:       'plain',
       enable_starttls_auto: true
     }
+
+    # Active Job adapter
+    config.active_job.queue_adapter = :resque
   end
 
   #
