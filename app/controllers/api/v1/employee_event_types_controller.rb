@@ -1,7 +1,7 @@
 module API
   module V1
     class EmployeeEventTypesController < API::ApplicationController
-      before_action :check_event_type, only: :show
+      before_action :check_event_type!, only: :show
 
       def show
         event_type_attributes = event_attributes[event_type.to_sym]
@@ -26,10 +26,9 @@ module API
         ::Api::V1::EmployeeEventTypeRepresenter
       end
 
-      def check_event_type
-        unless Employee::Event.event_types.include?(event_type)
-          fail EventTypeNotFoundError.new(event_type, message: 'Event Type Not Found')
-        end
+      def check_event_type!
+        return if Employee::Event.event_types.include?(event_type)
+        fail EventTypeNotFoundError.new(event_type, message: 'Event Type Not Found')
       end
 
       def event_attributes
