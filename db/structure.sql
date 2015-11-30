@@ -156,7 +156,7 @@ CREATE TABLE employee_events (
 --
 
 CREATE VIEW employee_attributes AS
- SELECT DISTINCT ON (employee_attribute_versions.employee_id, employee_attribute_versions.attribute_definition_id) employee_attribute_versions.id,
+ SELECT DISTINCT ON (employee_attribute_versions.employee_id, employee_attribute_versions.attribute_definition_id, employee_attribute_versions."order") employee_attribute_versions.id,
     employee_attribute_versions.data,
     employee_events.effective_at,
     employee_attribute_definitions.name AS attribute_name,
@@ -171,7 +171,7 @@ CREATE VIEW employee_attributes AS
      JOIN employee_events ON ((employee_attribute_versions.employee_event_id = employee_events.id)))
      JOIN employee_attribute_definitions ON ((employee_attribute_versions.attribute_definition_id = employee_attribute_definitions.id)))
   WHERE (employee_events.effective_at <= now())
-  ORDER BY employee_attribute_versions.employee_id, employee_attribute_versions.attribute_definition_id, employee_events.effective_at DESC;
+  ORDER BY employee_attribute_versions.employee_id, employee_attribute_versions.attribute_definition_id, employee_attribute_versions."order", employee_events.effective_at DESC;
 
 
 --
@@ -921,3 +921,5 @@ INSERT INTO schema_migrations (version) VALUES ('20151112101159');
 INSERT INTO schema_migrations (version) VALUES ('20151117123029');
 
 INSERT INTO schema_migrations (version) VALUES ('20151119150657');
+
+INSERT INTO schema_migrations (version) VALUES ('20151130152501');
