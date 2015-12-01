@@ -4,14 +4,16 @@ module Attribute
 
     attribute :attribute_type
 
-    def self.inherited(klass)
-      super
+    # def self.inherited(klass)
+    #   super
 
-      attribute_types << klass.attribute_type
-    end
+    #   attribute_types << klass.attribute_type
+    # end
 
     def self.attribute_types
-      @attribute_types ||= []
+      @attribute_types ||= Attribute::Base.descendants.map do |descendant|
+        descendant.to_s.demodulize
+      end
     end
 
     def self.attribute_type

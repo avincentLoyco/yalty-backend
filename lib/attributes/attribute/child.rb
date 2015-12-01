@@ -1,7 +1,5 @@
 module Attribute
-  class Child < Attribute::Base
-    inherited Attribute::Person
-
+  class Child < Person
     attribute :mother_is_working, Boolean
     attribute :is_student, Boolean
   end
