@@ -120,7 +120,7 @@ RSpec.describe API::V1::SettingsController, type: :controller do
           context 'response' do
             before { subject }
 
-            it { expect(response.location).to match("http://#{subdomain}.yalty.test/setup") }
+            it { expect_json(redirect_uri: regex("^http://#{subdomain}.yalty.test/setup")) }
           end
         end
       end
