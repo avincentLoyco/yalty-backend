@@ -1,10 +1,59 @@
-class Auth::AccountsController < Doorkeeper::ApplicationController
+class Auth::AccountsController < ApplicationController
   protect_from_forgery with: :null_session
   include DoorkeeperAuthorization
-
-  before_action :create_account, only: [:create]
+  include AccountRules
 
   def create
+    verified_params(gate_rules) do |attributes|
+      account, user = build_account_and_user(attributes)
+
+      ActiveRecord::Base.transaction do
+        save!(account, user)
+      end
+
+      send_user_credentials(attributes[:user][:password])
+      render_response
+    end
+  end
+
+  def list
+    verified_params(get_rules) do |attributes|
+      users = Account::User.includes(:account).where(email: attributes[:email])
+
+      if users.present?
+        accounts_subdomains = users.map { |user| user.account.subdomain }
+        UserMailer.accounts_list(attributes[:email], accounts_subdomains).deliver_later
+      end
+
+      render_no_content
+    end
+  end
+
+  private
+
+  attr_reader :current_resource_owner
+
+  def build_account_and_user(attributes)
+    account = Account.new(attributes[:account])
+    user = account.users.new(attributes[:user])
+    account.registration_key = account_registration_key(attributes[:registration_key])
+    [account, user]
+  end
+
+  def save!(account, user)
+    if account.valid? && user.valid? && account.registration_key.valid?
+      account.save!
+      @current_resource_owner = user
+    else
+      messages = account.errors.messages
+        .merge(user.errors.messages)
+        .merge(account.try(:registration_key).errors.messages)
+
+      fail InvalidResourcesError.new(account, messages)
+    end
+  end
+
+  def render_response
     respond_to do |format|
       format.json do
         render status: 201, json: {
@@ -18,58 +67,17 @@ class Auth::AccountsController < Doorkeeper::ApplicationController
     end
   end
 
-  def list
-    users = Account::User.includes(:account).where(email: user_email)
-
-    if users.present?
-      accounts_subdomains = users.map { |user| user.account.subdomain }
-      UserMailer.accounts_list(user_email, accounts_subdomains).deliver_later
-    end
-
-    head 204
-  end
-
-  private
-
-  attr_reader :current_resource_owner
-
-  def account_registration_key
-    Account::RegistrationKey.unused.find_by!(token: registration_key_params[:token])
-  end
-
-  def account_params
-    params.require(:account).permit(:company_name)
-  end
-
-  def user_params
-    params.require(:user).permit(:email, :password)
-  end
-
-  def registration_key_params
-    params.require(:registration_key).permit(:token)
-  end
-
-  def user_email
-    params.require(:email)
-  end
-
-  def create_account
-    ActiveRecord::Base.transaction do
-      registration_key = account_registration_key
-      account = Account.create!(account_params)
-      registration_key.update!(account: account)
-      @current_resource_owner = account.users.create!(user_params)
-    end
-    send_user_credentials(user_params[:password])
-  end
-
   def send_user_credentials(password)
     user_id = current_resource_owner.id
-    subdomain = @current_resource_owner.account.subdomain
+    subdomain = current_resource_owner.account.subdomain
     UserMailer.credentials(
       user_id,
       password,
       subdomain + '.' + ENV['YALTY_BASE_URL']
     ).deliver_later
+  end
+
+  def account_registration_key(token)
+    Account::RegistrationKey.unused.find_by!(token)
   end
 end

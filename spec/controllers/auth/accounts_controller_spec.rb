@@ -47,23 +47,48 @@ RSpec.describe Auth::AccountsController, type: :controller do
     end
 
     context 'with invalid params' do
-      context 'when token not send' do
-        before { params.tap { |param| param.delete(:registration_key) } }
-
-        it { expect { subject }.to raise_exception(ActionController::ParameterMissing) }
-      end
-
       context 'when token used' do
-        let(:used_key) { create(:registration_key, :with_account) }
-        let(:token) { used_key }
+        let!(:used_key) { create(:registration_key, :with_account) }
+        let!(:token) { used_key.token }
 
-        it { expect { subject }.to raise_exception(ActiveRecord::RecordNotFound) }
+        it { is_expected.to have_http_status(404) }
+        it { expect { subject }.to_not change { Account.count } }
+        it { expect { subject }.to_not change { Account::User.count } }
       end
 
       context 'when token invalid' do
         let(:token) { 'abc' }
 
-        it { expect { subject }.to raise_exception(ActiveRecord::RecordNotFound) }
+        it { is_expected.to have_http_status(404) }
+        it { expect { subject }.to_not change { Account.count } }
+        it { expect { subject }.to_not change { Account::User.count } }
+      end
+
+      context 'when params are missing' do
+        shared_examples 'Missing param' do
+          it { expect { subject }.to_not change { Account.count } }
+          it { expect { subject }.to_not change { Account::User.count } }
+
+          it { is_expected.to have_http_status(422) }
+        end
+
+        context 'when token not send' do
+          before { params.tap { |param| param.delete(:registration_key) } }
+
+          it_behaves_like 'Missing param'
+        end
+
+        context 'when user params not send' do
+          before { params.tap { |param| param.delete(:user) } }
+
+          it_behaves_like 'Missing param'
+        end
+
+        context 'when account params not send' do
+          before { params.tap { |param| param.delete(:account) } }
+
+          it_behaves_like 'Missing param'
+        end
       end
     end
 
@@ -92,22 +117,26 @@ RSpec.describe Auth::AccountsController, type: :controller do
     end
 
     context 'GET #list' do
+      subject { get :list, email: email }
       let(:email) { 'test@test.com'}
 
-      it 'should return 204 when we do not have user and not send email' do
-        expect do
-          get :list, email: email
-        end.to_not change(ActionMailer::Base.deliveries, :count)
-
-        expect(response).to have_http_status(204)
+      context 'when user with given email does not exist' do
+        it { expect { subject }.to_not change(ActionMailer::Base.deliveries, :count) }
+        it { is_expected.to have_http_status(204) }
       end
 
-      it 'should send email' do
-        user = create(:account_user, email: email)
-        expect do
-          get :list, email: email
-        end.to change(ActionMailer::Base.deliveries, :count)
-        expect(response).to have_http_status(204)
+      context 'when user with email exist' do
+        let!(:user) { create(:account_user, email: email) }
+
+        it { expect { subject }.to change(ActionMailer::Base.deliveries, :count) }
+        it { is_expected.to have_http_status(204) }
+      end
+
+      context 'when email is missing' do
+        subject { get :list }
+
+        it { expect { subject }.to_not change(ActionMailer::Base.deliveries, :count) }
+        it { is_expected.to have_http_status(422) }
       end
     end
   end
