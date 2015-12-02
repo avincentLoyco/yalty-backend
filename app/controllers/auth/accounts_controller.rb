@@ -33,10 +33,10 @@ class Auth::AccountsController < ApplicationController
 
   attr_reader :current_resource_owner
 
-  def build_account_and_user(attributes)
-    account = Account.new(attributes[:account])
-    user = account.users.new(attributes[:user])
-    account.registration_key = account_registration_key(attributes[:registration_key])
+  def build_account_and_user(params)
+    account = Account.new(params[:account])
+    user = account.users.new(params[:user])
+    account.registration_key = Account::RegistrationKey.unused.find_by!(params[:registration_key])
     [account, user]
   end
 
@@ -75,9 +75,5 @@ class Auth::AccountsController < ApplicationController
       password,
       subdomain + '.' + ENV['YALTY_BASE_URL']
     ).deliver_later
-  end
-
-  def account_registration_key(token)
-    Account::RegistrationKey.unused.find_by!(token)
   end
 end
