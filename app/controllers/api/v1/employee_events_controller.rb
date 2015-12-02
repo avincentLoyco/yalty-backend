@@ -72,7 +72,7 @@ module API
       def verify_employee_attributes
         # TODO temporary solution we are waiting for issue:
         # https://github.com/monterail/gate/issues/1
-        return [[],[]] unless params[:employee_attributes]
+        return [[], []] unless params[:employee_attributes]
 
         results = []
         errors = []
