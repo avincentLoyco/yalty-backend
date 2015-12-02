@@ -135,18 +135,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         end
       end
     end
-
-    context 'with json without employee attributes' do
-      before do
-        json_payload.delete(:employee_attributes)
-      end
-
-      it { expect { subject }.to_not change { Employee::Event.count } }
-      it { expect { subject }.to_not change { Employee.count } }
-      it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
-
-      it { is_expected.to have_http_status(422) }
-    end
   end
 
   describe 'POST #create' do
@@ -231,6 +219,13 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         json_payload[:employee_attributes] = nil
 
         expect { subject }.to change { Employee::Event.count }
+        expect(subject).to have_http_status(201)
+      end
+
+      it 'should create event when employee attributes not send' do
+        json_payload.delete(:employee_attributes)
+
+        expect { subject }.to change { Employee.count }.by(1)
         expect(subject).to have_http_status(201)
       end
 
@@ -493,6 +488,26 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
       it 'should respond with success' do
         expect(subject).to have_http_status(204)
+      end
+    end
+
+    context 'without employee attributes' do
+      context 'when not send' do
+        before { json_payload[:employee_attributes] = nil }
+
+        it { expect { subject }.to change { event.reload.comment }.to('change comment') }
+        it { expect { subject }.to change { event.reload.effective_at }.to(effective_at) }
+
+        it { is_expected.to have_http_status(204) }
+      end
+
+      context 'when empty array send' do
+        before { json_payload.delete(:employee_attributes) }
+
+        it { expect { subject }.to change { event.reload.comment }.to('change comment') }
+        it { expect { subject }.to change { event.reload.effective_at }.to(effective_at) }
+
+        it { is_expected.to have_http_status(204) }
       end
     end
 
