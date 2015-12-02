@@ -90,7 +90,7 @@ def load_or_create_account
 end
 
 def load_or_create_user(account)
-  email = `git config user.email`
+  email = `git config user.email`.strip
   email = 'test@example.com' if email.blank?
 
   user = account.users.where(email: email).first
