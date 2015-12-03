@@ -3,7 +3,6 @@ module API
     class SettingsController < API::ApplicationController
       include SettingsRules
       include DoorkeeperAuthorization
-      include Doorkeeper::Helpers::Controller
       before_action :subdomain_access!, only: :show
       skip_action_callback :authenticate!, only: :show
 
