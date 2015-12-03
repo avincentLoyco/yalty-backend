@@ -63,8 +63,8 @@ module API
 
       def render_response_or_redirect(subdomain_change)
         render_no_content && return unless subdomain_change
-        response.headers['Location'] = redirect_uri_with_subdomain(authorization.redirect_uri)
-        head 301
+        render json:
+          { redirect_uri: redirect_uri_with_subdomain(authorization.redirect_uri) }, status: 301
       end
     end
   end
