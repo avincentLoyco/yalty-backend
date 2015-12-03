@@ -81,7 +81,7 @@ class Account < ActiveRecord::Base
   # Create all required Employee::AttributeDefinition for
   # the account
   def update_default_attribute_definitions!
-    DEFAULT_ATTRIBUTE_DEFINITIONS.each do |attr|
+    default_attribute_definition.each do |attr|
       definition = employee_attribute_definitions.where(name: attr[:name]).first
 
       if definition.nil?
@@ -100,6 +100,14 @@ class Account < ActiveRecord::Base
   # Add defaults TimeOffCategories
   def update_default_time_off_categories!
     TimeOffCategory.update_default_account_categories(self)
+  end
+
+  def default_attribute_definition
+    if Rails.env.test?
+      DEFAULT_ATTRIBUTE_DEFINITIONS.first(2)
+    else
+      DEFAULT_ATTRIBUTE_DEFINITIONS
+    end
   end
 
   private
