@@ -32,7 +32,7 @@ class CreateEvent
     if employee_params.key?(:id)
       @employee = Account.current.employees.find(employee_params[:id])
     else
-      @employee = Account.current.employees.new
+      @employee = Account.current.employees.new(employee_params)
     end
 
     event.employee = @employee

@@ -1,6 +1,7 @@
 FactoryGirl.define do
   factory :employee do
     account
+    working_place { create(:working_place, account: account) }
 
     trait :with_attributes do
       transient do

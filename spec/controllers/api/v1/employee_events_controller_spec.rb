@@ -168,6 +168,8 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     let(:first_name) { 'Walter' }
     let(:last_name) { 'Smith' }
 
+    let(:working_place) { create(:working_place, account: Account.current) }
+
     context 'a new employee' do
       let(:json_payload) do
         {
@@ -177,6 +179,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           event_type: "hired",
           employee: {
             type: 'employee',
+            working_place_id: working_place.id
           },
           employee_attributes: [
             {
