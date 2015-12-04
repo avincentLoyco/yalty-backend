@@ -21,7 +21,7 @@ class Employee::Event < ActiveRecord::Base
     child_birth: %w(tax_source_code child),
     child_death: %w(tax_source_code),
     child_studies: %w(child_is_student)
-  }
+  }.with_indifferent_access
 
   belongs_to :employee, inverse_of: :events, required: true
   has_one :account, through: :employee
@@ -34,8 +34,31 @@ class Employee::Event < ActiveRecord::Base
   validates :event_type,
     presence: true,
     inclusion: { in: proc { Employee::Event.event_types }, allow_nil: true }
+  validate :attributes_presence, if: Proc.new { |event| event.event_attributes.size > 0 }
 
   def self.event_types
     Employee::Event::EVENT_ATTRIBUTES.keys.map(&:to_s)
+  end
+
+  def event_attributes
+    Employee::Event::EVENT_ATTRIBUTES[event_type]
+  end
+
+  def attributes_presence
+    required = event_attributes & Employee::AttributeDefinition.required(Account.current)
+    defined = attributes_defined_in_event + already_defined_attributes
+    missing = required - defined
+    return if missing.empty?
+    errors.add :employee_attribute_versions, "missing params: #{ missing.join(', ') }"
+  end
+
+  def attributes_defined_in_event
+    self.employee_attribute_versions.map { |version| version.attribute_definition.name }
+  end
+
+  def already_defined_attributes
+    self.employee.employee_attribute_versions.map do |version|
+      version.attribute_definition.name
+    end
   end
 end

@@ -53,6 +53,14 @@ class Account < ActiveRecord::Base
   end
 
   DEFAULT_ATTRIBUTES = {
+    Attribute::String.attribute_type => { lastname: { presence: true },
+                                          firstname: { presence: true },
+                                          gender: {}, nationality: {} }
+  }
+
+  MULTIPLE_ATTRIBUTES = %w(child spouse)
+
+  DEFAULT_ATTRIBUTES = {
     Attribute::String.attribute_type => %w(
       firstname lastname avs_number gender nationality language personal_email
       personal_phone professional_email professional_mobile emergency_lastname
@@ -72,11 +80,9 @@ class Account < ActiveRecord::Base
     Attribute::Person.attribute_type => %w(spouse)
   }
 
-  MULTIPLE_ATTRIBUTES = %w(child spouse)
-
-  DEFAULT_ATTRIBUTE_DEFINITIONS = Account::DEFAULT_ATTRIBUTES.map do |type, names|
-    names.map do |name|
-      { name: name, type: type }
+  DEFAULT_ATTRIBUTE_DEFINITIONS = Account::DEFAULT_ATTRIBUTES.map do |type, attributes|
+    attributes.map do |name, validation|
+      { name: name, type: type, validation: validation }
     end
   end.flatten.freeze
 
@@ -94,6 +100,7 @@ class Account < ActiveRecord::Base
           attribute_type: attr[:type],
           system: true,
           multiple: MULTIPLE_ATTRIBUTES.include?(attr[:name])
+          validation: attr[:validation]
         )
       end
 

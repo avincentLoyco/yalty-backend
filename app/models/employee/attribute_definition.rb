@@ -16,4 +16,8 @@ class Employee::AttributeDefinition < ActiveRecord::Base
   validates :attribute_type,
     presence: true,
     inclusion: { in: ->(_) { Attribute::Base.attribute_types } }
+
+  scope :required, -> (account_id) {
+    where("(validation -> 'presence' = 'true') AND (account_id = ?)", account_id).pluck(:name)
+  }
 end
