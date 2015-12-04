@@ -4,13 +4,13 @@ namespace :deploy do
   def options_for(target_env)
     options = DeployOptions.new
     options.remote = target_env
+    options.branch = `git rev-parse --abbrev-ref HEAD`.chomp
 
-    if options.remote == 'production'
-      options.branch = 'stable'
-    elsif options.remote == 'staging'
-      options.branch = 'master'
-    else
-      options.branch = `git rev-parse --abbrev-ref HEAD`.chomp
+    if options.remote == 'production' && !%w(stable).include?(options.branch)
+      fail "branch '#{options.branch}' can't be deploy to '#{options.remote}' environment"
+    elsif options.remote == 'staging' && !%w(master release).include?(options.branch)
+      fail "branch '#{options.branch}' can't be deploy to '#{options.remote}' environment"
+    elsif options.remote == 'review'
       options.git_args = '--force'
     end
 
