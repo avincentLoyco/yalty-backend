@@ -54,7 +54,10 @@ class Account < ActiveRecord::Base
 
   ATTR_VALIDATIONS = {
     lastname: { presence: true },
-    firstname: { presence: true }
+    firstname: { presence: true },
+    start_date: { presence: true },
+    contract_type: { presence: true },
+    occupation_rate: { presence: true }
   }.with_indifferent_access
 
   MULTIPLE_ATTRIBUTES = %w(child spouse)
