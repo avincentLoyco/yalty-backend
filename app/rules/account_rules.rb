@@ -7,7 +7,7 @@ module AccountRules
         required :company_name
       end
       required :user do
-        required :password
+        optional :password, :String, allow_nil: true
         required :email
       end
       required :registration_key do

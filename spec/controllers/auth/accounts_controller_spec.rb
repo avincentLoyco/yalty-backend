@@ -12,16 +12,18 @@ RSpec.describe Auth::AccountsController, type: :controller do
   describe 'POST #create' do
     let(:registration_key) { create(:registration_key) }
     let(:token) { registration_key.token }
+    let(:password) { '12345678' }
+    let(:company_name) { 'The Company' }
     let(:params) do
       {
         account:
           {
-            company_name: 'The Company'
+            company_name: company_name
           },
         user:
           {
             email: 'test@test.com',
-            password: '12345678'
+            password: password
           },
         registration_key:
           {
@@ -43,6 +45,20 @@ RSpec.describe Auth::AccountsController, type: :controller do
         expect do
           post :create, params
         end.to change(ActionMailer::Base.deliveries, :count)
+      end
+
+      context 'should create account when user has no password' do
+        let(:password) { '' }
+        let(:registration_key) { create(:registration_key) }
+        let(:token) { registration_key.token }
+        let(:company_name) { 'New Company' }
+
+
+        it { expect { subject }.to change(Account, :count).by(1)  }
+        it { expect { subject }.to change(Account::User, :count).by(1)  }
+        it { expect { subject }.to change { registration_key.reload.account } }
+
+        it { is_expected.to have_http_status(:found) }
       end
     end
 
