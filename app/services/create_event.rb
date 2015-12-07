@@ -90,8 +90,17 @@ class CreateEvent
       messages = messages
         .merge(event.errors.messages)
         .merge(employee.errors.messages)
+        .merge(attribute_versions_errors)
 
       fail InvalidResourcesError.new(event, messages)
     end
+  end
+
+  def attribute_versions_errors
+    errors = event.employee_attribute_versions.map do |attr|
+      return {} unless attr.attribute_definition
+      { attr.attribute_definition.name => attr.data.errors.messages.values }
+    end
+    errors.reduce({}, :merge).delete_if { |key, value| value.empty? }
   end
 end
