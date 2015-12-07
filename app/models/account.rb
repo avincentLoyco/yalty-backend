@@ -52,11 +52,10 @@ class Account < ActiveRecord::Base
     RequestStore.read(:current_account)
   end
 
-  DEFAULT_ATTRIBUTES = {
-    Attribute::String.attribute_type => { lastname: { presence: true },
-                                          firstname: { presence: true },
-                                          gender: {}, nationality: {} }
-  }
+  ATTR_VALIDATIONS = {
+    lastname: { presence: true },
+    firstname: { presence: true }
+  }.with_indifferent_access
 
   MULTIPLE_ATTRIBUTES = %w(child spouse)
 
@@ -81,8 +80,8 @@ class Account < ActiveRecord::Base
   }
 
   DEFAULT_ATTRIBUTE_DEFINITIONS = Account::DEFAULT_ATTRIBUTES.map do |type, attributes|
-    attributes.map do |name, validation|
-      { name: name, type: type, validation: validation }
+    attributes.map do |name|
+      { name: name, type: type, validation: ATTR_VALIDATIONS[name] }
     end
   end.flatten.freeze
 

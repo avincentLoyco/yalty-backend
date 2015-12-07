@@ -836,7 +836,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
   end
 
   context 'GET #show' do
-    let(:employee_event) { create(:employee_event, employee: employee) }
+    let(:employee_event) { create(:employee_event, employee: employee ) }
     subject { get :show, id: employee_event.id }
 
     it 'should respond with success' do
@@ -858,7 +858,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     end
 
     it 'should have employee attributes' do
-      employee.employee_attribute_versions.each do |version|
+      employee.events.first.employee_attribute_versions.each do |version|
         version.update!(employee_event_id: employee_event.id)
       end
       subject

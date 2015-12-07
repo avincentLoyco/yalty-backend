@@ -34,7 +34,7 @@ class Employee::Event < ActiveRecord::Base
   validates :event_type,
     presence: true,
     inclusion: { in: proc { Employee::Event.event_types }, allow_nil: true }
-  validate :attributes_presence, if: Proc.new { |event| event.event_attributes.size > 0 }
+  validate :attributes_presence, if: [:event_attributes, :employee]
 
   def self.event_types
     Employee::Event::EVENT_ATTRIBUTES.keys.map(&:to_s)
@@ -53,7 +53,7 @@ class Employee::Event < ActiveRecord::Base
   end
 
   def attributes_defined_in_event
-    self.employee_attribute_versions.map { |version| version.attribute_definition.name }
+    self.employee_attribute_versions.map { |version| version.attribute_definition.try(:name) }
   end
 
   def already_defined_attributes
