@@ -1,6 +1,7 @@
 module Attribute
   class Base
     include Virtus.model(coerce: false)
+    include ActiveModel::Validations
 
     attribute :attribute_type
 
