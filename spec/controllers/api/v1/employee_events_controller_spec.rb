@@ -653,6 +653,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
         it { expect { subject }.to_not change { event.reload.comment } }
         it { expect { subject }.to_not change { last_name_attribute.reload.value } }
+
         it { is_expected.to have_http_status(422) }
 
         context 'response body' do
@@ -908,7 +909,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
   end
 
   context 'GET #show' do
-    let(:employee_event) { create(:employee_event, employee: employee ) }
+    let(:employee_event) { create(:employee_event, employee: employee) }
     subject { get :show, id: employee_event.id }
 
     it 'should respond with success' do
