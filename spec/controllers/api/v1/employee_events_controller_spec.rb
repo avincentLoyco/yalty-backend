@@ -277,6 +277,42 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         json_payload[:employee][:working_place_id] = nil
 
         expect(subject).to have_http_status(422)
+
+      context 'attributes validations' do
+        before do
+          Account.current.employee_attribute_definitions
+            .where(name: 'lastname').first.update!(validation: { presence: true })
+        end
+
+        context 'when required param is missing' do
+          before { json_payload.delete(:employee_attributes) }
+
+          it { expect { subject }.to_not change { Employee::Event.count } }
+          it { expect { subject }.to_not change { Employee.count } }
+
+          it { is_expected.to have_http_status(422) }
+
+          context 'response body' do
+            before { subject }
+
+            it { expect(response.body).to include('["missing params: lastname"]') }
+          end
+        end
+
+        context 'when required param value is set to nil' do
+          let(:last_name) { nil }
+
+          it { expect { subject }.to_not change { Employee::Event.count } }
+          it { expect { subject }.to_not change { Employee.count } }
+
+          it { is_expected.to have_http_status(422) }
+
+          context 'response body' do
+            before { subject }
+
+            it { expect(response.body).to include("can't be blank") }
+          end
+        end
       end
 
       it_behaves_like 'Unprocessable Entity on create'
@@ -603,6 +639,42 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         it { expect { subject }.to change { event.reload.effective_at }.to(effective_at) }
 
         it { is_expected.to have_http_status(204) }
+      end
+    end
+
+    context 'attributes validations' do
+      before do
+        Account.current.employee_attribute_definitions
+          .where(name: 'lastname').first.update!(validation: { presence: true })
+      end
+
+      context 'when required param is missing' do
+        before { json_payload.delete(:employee_attributes) }
+
+        it { expect { subject }.to_not change { event.reload.comment } }
+        it { expect { subject }.to_not change { last_name_attribute.reload.value } }
+        it { is_expected.to have_http_status(422) }
+
+        context 'response body' do
+          before { subject }
+
+          it { expect(response.body).to include('["missing params: lastname"]') }
+        end
+      end
+
+      context 'when required param value is set to nil' do
+        let(:last_name) { nil }
+
+        it { expect { subject }.to_not change { event.reload.comment } }
+        it { expect { subject }.to_not change { last_name_attribute.reload.value } }
+
+        it { is_expected.to have_http_status(422) }
+
+        context 'response body' do
+          before { subject }
+
+          it { expect(response.body).to include("can't be blank") }
+        end
       end
     end
 
