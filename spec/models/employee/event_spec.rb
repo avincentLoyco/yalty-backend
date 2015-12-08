@@ -26,4 +26,26 @@ RSpec.describe Employee::Event, type: :model do
         }
       )
   end
+
+  context '#attributes_presence validation' do
+    before { allow(Account).to receive(:current) { subject.account } }
+
+    context 'when event contain required attributes' do
+      subject { build(:employee_event, event_type: 'hired') }
+
+      it { expect(subject.valid?).to eq false }
+      it { expect { subject.valid? }.to change {
+        subject.errors.messages[:employee_attribute_versions] }
+      }
+    end
+
+    context 'when event do not have required attributes' do
+      subject { build(:employee_event, event_type: 'change') }
+
+      it { expect(subject.valid?).to eq true }
+      it { expect { subject.valid? }.to_not change {
+        subject.errors.messages[:employee_attribute_versions] }
+      }
+    end
+  end
 end
