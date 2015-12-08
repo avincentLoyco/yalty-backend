@@ -284,6 +284,13 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
             .where(name: 'lastname').first.update!(validation: { presence: true })
         end
 
+        context 'when all params and values are given' do
+          it { expect { subject }.to change { Employee::Event.count } }
+          it { expect { subject }.to change { Employee.count } }
+
+          it { is_expected.to have_http_status(201) }
+        end
+
         context 'when required param is missing' do
           before { json_payload.delete(:employee_attributes) }
 
@@ -646,6 +653,13 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       before do
         Account.current.employee_attribute_definitions
           .where(name: 'lastname').first.update!(validation: { presence: true })
+      end
+
+      context 'when all params and values are given' do
+        it { expect { subject }.to change { event.reload.comment } }
+        it { expect { subject }.to change { last_name_attribute.reload.value } }
+
+        it { is_expected.to have_http_status(204) }
       end
 
       context 'when required param is missing' do
