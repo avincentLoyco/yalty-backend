@@ -33,6 +33,7 @@ class Account < ActiveRecord::Base
   has_many :presence_policies
   has_many :custom_holidays, through: :holiday_policies
   has_one :registration_key, class_name: 'Account::RegistrationKey'
+  has_many :time_off_categories
 
   before_validation :generate_subdomain, on: :create
   after_create :update_default_attribute_definitions!
