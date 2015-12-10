@@ -76,6 +76,22 @@ RSpec.describe Account, type: :model do
     end
   end
 
+  context 'default time off categories' do
+    it 'should create default time off categories' do
+      account = build(:account)
+
+      expect { account.save }.to change { TimeOffCategory.count }
+    end
+
+    it 'should not create default time off categories when alreadye exist' do
+      account = create(:account)
+
+      expect {
+        account.update_default_time_off_categories!
+      }.to_not change { TimeOffCategory.count }
+    end
+  end
+
   it { is_expected.to have_db_column(:company_name) }
   it { is_expected.to validate_presence_of(:company_name) }
 

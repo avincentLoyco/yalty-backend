@@ -37,6 +37,7 @@ class Account < ActiveRecord::Base
 
   before_validation :generate_subdomain, on: :create
   after_create :update_default_attribute_definitions!
+  after_create :update_default_time_off_categories!
 
   def self.current=(account)
     RequestStore.write(:current_account, account)
@@ -45,6 +46,8 @@ class Account < ActiveRecord::Base
   def self.current
     RequestStore.read(:current_account)
   end
+
+  DEFAULT_TIME_OFF_CATEGORIES = %w(sickness)
 
   DEFAULT_ATTRIBUTES = {
     Attribute::String.attribute_type => %w(
@@ -92,6 +95,22 @@ class Account < ActiveRecord::Base
       end
 
       definition.save
+    end
+  end
+
+  # Add defaults TimeOffCategories
+  def update_default_time_off_categories!
+    Account::DEFAULT_TIME_OFF_CATEGORIES.each do |category|
+      time_off_category = time_off_categories.where(name: category).first
+
+      if time_off_category.nil?
+        time_off_category = time_off_categories.build(
+          name: category,
+          system: true
+        )
+      end
+
+      time_off_category.save
     end
   end
 
