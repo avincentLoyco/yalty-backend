@@ -377,6 +377,21 @@ CREATE TABLE time_off_categories (
 
 
 --
+-- Name: time_offs; Type: TABLE; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE TABLE time_offs (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    end_time timestamp without time zone NOT NULL,
+    start_time timestamp without time zone NOT NULL,
+    time_off_category_id uuid NOT NULL,
+    employee_id uuid NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL
+);
+
+
+--
 -- Name: working_places; Type: TABLE; Schema: public; Owner: -; Tablespace:
 --
 
@@ -530,6 +545,14 @@ ALTER TABLE ONLY presence_policies
 
 ALTER TABLE ONLY time_off_categories
     ADD CONSTRAINT time_off_categories_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: time_offs_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
+--
+
+ALTER TABLE ONLY time_offs
+    ADD CONSTRAINT time_offs_pkey PRIMARY KEY (id);
 
 
 --
@@ -709,6 +732,20 @@ CREATE INDEX index_time_off_categories_on_account_id ON time_off_categories USIN
 
 
 --
+-- Name: index_time_offs_on_employee_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE INDEX index_time_offs_on_employee_id ON time_offs USING btree (employee_id);
+
+
+--
+-- Name: index_time_offs_on_time_off_category_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE INDEX index_time_offs_on_time_off_category_id ON time_offs USING btree (time_off_category_id);
+
+
+--
 -- Name: index_working_places_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
@@ -752,6 +789,14 @@ ALTER TABLE ONLY oauth_access_grants
 
 ALTER TABLE ONLY time_off_categories
     ADD CONSTRAINT fk_rails_4ce8347ccb FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE;
+
+
+--
+-- Name: fk_rails_5092c7896c; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY time_offs
+    ADD CONSTRAINT fk_rails_5092c7896c FOREIGN KEY (time_off_category_id) REFERENCES time_off_categories(id);
 
 
 --
@@ -848,6 +893,14 @@ ALTER TABLE ONLY presence_days
 
 ALTER TABLE ONLY oauth_access_tokens
     ADD CONSTRAINT fk_rails_ee63f25419 FOREIGN KEY (resource_owner_id) REFERENCES account_users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: fk_rails_f5cbfdb8ce; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY time_offs
+    ADD CONSTRAINT fk_rails_f5cbfdb8ce FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE;
 
 
 --
@@ -963,6 +1016,8 @@ INSERT INTO schema_migrations (version) VALUES ('20151119150657');
 INSERT INTO schema_migrations (version) VALUES ('20151130152501');
 
 INSERT INTO schema_migrations (version) VALUES ('20151209122309');
+
+INSERT INTO schema_migrations (version) VALUES ('20151209162652');
 
 INSERT INTO schema_migrations (version) VALUES ('20151221114106');
 
