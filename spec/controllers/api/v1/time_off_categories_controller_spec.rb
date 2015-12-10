@@ -1,6 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
+  include_examples 'example_authorization',
+    resource_name: 'time_off_category'
   include_context 'shared_context_headers'
 
   describe 'GET #index' do
@@ -142,6 +144,49 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
 
         it { expect { subject }.to_not change { time_off_category.reload.name  } }
         it { is_expected.to have_http_status(422) }
+      end
+
+      context 'with not editable resource' do
+        let(:system_time_off_category) { create(:time_off_category, :system) }
+        let(:id) { system_time_off_category.id }
+
+        it { expect { subject }.to_not change { time_off_category.reload.name  } }
+        it { is_expected.to have_http_status(404) }
+      end
+    end
+  end
+
+  describe 'DELETE #destroy' do
+    let!(:time_off_category) { create(:time_off_category, account: account) }
+    let(:id) { time_off_category.id }
+    subject { delete :destroy, id: id }
+
+    context 'with valid params' do
+      it { expect { subject }.to change { TimeOffCategory.count }.by(-1) }
+      it { is_expected.to have_http_status(204) }
+    end
+
+    context 'with invalid params' do
+      context 'with invalid id' do
+        let(:id) { 'abc' }
+
+        it { expect { subject }.to_not change { TimeOffCategory.count } }
+        it { is_expected.to have_http_status(404) }
+      end
+
+      context 'when time off category has time offs assigned' do
+        let!(:time_off) { create(:time_off, time_off_category_id: time_off_category.id) }
+
+        it { expect { subject }.to_not change { TimeOffCategory.count } }
+        it { is_expected.to have_http_status(423) }
+      end
+
+      context 'with not editable resource' do
+        let(:system_time_off_category) { create(:time_off_category, :system) }
+        let(:id) { system_time_off_category.id }
+
+        it { expect { subject }.to_not change { time_off_category.reload.name  } }
+        it { is_expected.to have_http_status(404) }
       end
     end
   end

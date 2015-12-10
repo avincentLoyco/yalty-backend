@@ -3,4 +3,6 @@ class TimeOffCategory < ActiveRecord::Base
   has_many :time_offs
 
   validates :account, :name, presence: true
+
+  scope :editable, -> { where(system: false) }
 end

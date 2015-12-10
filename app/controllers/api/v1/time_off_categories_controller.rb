@@ -25,7 +25,7 @@ module API
 
       def update
         verified_params(gate_rules) do |attributes|
-          if resource.update(attributes)
+          if editable_resource.update(attributes)
             render_no_content
           else
             resource_invalid_error(resource)
@@ -33,10 +33,23 @@ module API
         end
       end
 
+      def destroy
+        if editable_resource.time_offs.empty?
+          editable_resource.destroy!
+          render_no_content
+        else
+          locked_error
+        end
+      end
+
       private
 
       def resource
         @resource ||= resources.find(params[:id])
+      end
+
+      def editable_resource
+        @editable_resource ||= resources.editable.find(params[:id])
       end
 
       def resources
