@@ -64,4 +64,85 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
       end
     end
   end
+
+  describe 'POST #create' do
+    let(:name) { 'testname' }
+    let(:params) do
+      {
+        system: false,
+        name: name
+      }
+    end
+    subject { post :create, params }
+
+    context 'with valid params' do
+      it { expect { subject }.to change { TimeOffCategory.count }.by(1) }
+
+      it { is_expected.to have_http_status(200) }
+
+      context 'response body' do
+        before { subject }
+
+        it { expect_json_keys(:id, :type, :system, :name) }
+      end
+    end
+
+    context 'with invalid params' do
+      context 'with missing params' do
+        before { params.delete(:name) }
+
+        it { expect { subject }.to_not change { TimeOffCategory.count } }
+        it { is_expected.to have_http_status(422) }
+      end
+
+      context 'with params that do not pass validation' do
+        let(:name) { '' }
+
+        it { expect { subject }.to_not change { TimeOffCategory.count } }
+        it { is_expected.to have_http_status(422) }
+      end
+    end
+  end
+
+  describe 'PUT #update' do
+    subject { put :update, params }
+    let(:time_off_category) { create(:time_off_category, account: account) }
+    let(:name) { 'abc' }
+    let(:id) { time_off_category.id }
+    let(:params) do
+      {
+        id: id,
+        name: name,
+        system: 'false'
+      }
+    end
+
+    context 'with valid data' do
+      it { expect { subject }.to change { time_off_category.reload.name } }
+      it { is_expected.to have_http_status(204) }
+    end
+
+    context 'with invalid data' do
+      context 'with invalid id' do
+        let(:id) { 'abc' }
+
+        it { expect { subject }.to_not change { time_off_category.reload.name  } }
+        it { is_expected.to have_http_status(404) }
+      end
+
+      context 'with missing params' do
+        before { params.delete(:name) }
+
+        it { expect { subject }.to_not change { time_off_category.reload.name  } }
+        it { is_expected.to have_http_status(422) }
+      end
+
+      context 'with params that do not pass validation' do
+        let(:name) { '' }
+
+        it { expect { subject }.to_not change { time_off_category.reload.name  } }
+        it { is_expected.to have_http_status(422) }
+      end
+    end
+  end
 end
