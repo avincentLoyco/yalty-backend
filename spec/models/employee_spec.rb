@@ -9,6 +9,7 @@ RSpec.describe Employee, type: :model do
   it { is_expected.to belong_to(:working_place) }
 
   it { is_expected.to have_many(:employee_attribute_versions).inverse_of(:employee) }
+  it { is_expected.to have_many(:time_offs) }
 
   it { is_expected.to have_many(:employee_attributes).inverse_of(:employee) }
 
