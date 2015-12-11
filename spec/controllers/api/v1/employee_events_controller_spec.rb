@@ -277,6 +277,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         json_payload[:employee][:working_place_id] = nil
 
         expect(subject).to have_http_status(422)
+      end
 
       context 'attributes validations' do
         before do

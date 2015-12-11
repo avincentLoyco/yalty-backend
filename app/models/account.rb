@@ -101,7 +101,7 @@ class Account < ActiveRecord::Base
           name: attr[:name],
           attribute_type: attr[:type],
           system: true,
-          multiple: MULTIPLE_ATTRIBUTES.include?(attr[:name])
+          multiple: MULTIPLE_ATTRIBUTES.include?(attr[:name]),
           validation: attr[:validation]
         )
       end

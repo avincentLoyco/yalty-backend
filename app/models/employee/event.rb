@@ -45,19 +45,19 @@ class Employee::Event < ActiveRecord::Base
   end
 
   def attributes_presence
-    required = event_attributes & Employee::AttributeDefinition.required(Account.current)
+    required = event_attributes & Employee::AttributeDefinition.required
     defined = attributes_defined_in_event + already_defined_attributes
     missing = required - defined
     return if missing.empty?
-    errors.add :employee_attribute_versions, "missing params: #{ missing.join(', ') }"
+    errors.add :employee_attribute_versions, "missing params: #{missing.join(', ')}"
   end
 
   def attributes_defined_in_event
-    self.employee_attribute_versions.map { |version| version.attribute_definition.try(:name) }
+    employee_attribute_versions.map { |version| version.attribute_definition.try(:name) }
   end
 
   def already_defined_attributes
-    self.employee.employee_attribute_versions.map do |version|
+    employee.employee_attribute_versions.map do |version|
       version.attribute_definition.name
     end
   end

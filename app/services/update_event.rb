@@ -124,6 +124,6 @@ class UpdateEvent
       return {} unless attr.attribute_definition
       { attr.attribute_definition.name => attr.data.errors.messages.values }
     end
-    errors.reduce({}, :merge).delete_if { |key, value| value.empty? }
+    errors.reduce({}, :merge).delete_if { |_key, value| value.empty? }
   end
 end
