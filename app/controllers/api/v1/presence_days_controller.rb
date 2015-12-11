@@ -13,7 +13,7 @@ module API
 
       def create
         verified_params(gate_rules) do |attributes|
-          resource = presence_policy.presence_days.new(attributes)
+          resource = presence_policy.presence_days.new(presence_day_params(attributes))
           if resource.save
             render_resource(resource, status: :created)
           else
@@ -40,7 +40,7 @@ module API
       private
 
       def resource
-        @resource ||= resources.find(params[:id])
+        @resource ||= Account.current.presence_days.find(params[:id])
       end
 
       def resources
@@ -48,7 +48,15 @@ module API
       end
 
       def presence_policy
-        Account.current.presence_policies.find(params[:presence_policy_id])
+        @presence_policy ||= Account.current.presence_policies.find(presence_policy_params)
+      end
+
+      def presence_day_params(attributes)
+        attributes.tap { |attr| attr.delete(:presence_policy) }
+      end
+
+      def presence_policy_params
+        params[:presence_policy_id] ? params[:presence_policy_id] : params[:presence_policy][:id]
       end
 
       def resource_representer
