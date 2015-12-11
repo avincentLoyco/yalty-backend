@@ -21,9 +21,11 @@ class Employee::AttributeVersion < ActiveRecord::Base
   end
 
   def value_presence
-    return unless self.attribute_definition.try(:validation).try(:[], "presence")
-    data.valid?
-    return unless data.errors.any?
+    return unless validation_present? && !data.valid?
     errors.add :data, "#{data.errors.messages}"
+  end
+
+  def validation_present?
+    attribute_definition.try(:validation).try(:[], 'presence')
   end
 end
