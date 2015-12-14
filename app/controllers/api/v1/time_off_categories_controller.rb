@@ -16,7 +16,7 @@ module API
           resource = Account.current.time_off_categories.new(attributes)
 
           if resource.save
-            render_resource(resource)
+            render_resource(resource, status: :created)
           else
             resource_invalid_error(resource)
           end

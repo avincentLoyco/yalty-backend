@@ -41,7 +41,7 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
       context 'response body' do
         before { subject }
 
-        it { expect_json_keys(:id, :type, :system, :name) }
+        it { expect_json_keys([:id, :type, :system, :name]) }
         it { expect_json(
           id: category.id,
           type: 'time_off_category',
@@ -52,13 +52,13 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
     end
 
     context 'with invalid id' do
-      context 'time of with given id does not exist' do
+      context 'time off with given id does not exist' do
         let(:id) { 'abc' }
 
         it { is_expected.to have_http_status(404) }
       end
 
-      context 'time of category belongs to other account' do
+      context 'time off category belongs to other account' do
         before { Account.current = create(:account) }
         let(:id) { category.id }
 
@@ -80,12 +80,12 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
     context 'with valid params' do
       it { expect { subject }.to change { TimeOffCategory.count }.by(1) }
 
-      it { is_expected.to have_http_status(200) }
+      it { is_expected.to have_http_status(201) }
 
       context 'response body' do
         before { subject }
 
-        it { expect_json_keys(:id, :type, :system, :name) }
+        it { expect_json_keys([:id, :type, :system, :name]) }
       end
     end
 
