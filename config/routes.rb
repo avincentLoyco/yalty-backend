@@ -21,6 +21,7 @@ Rails.application.routes.draw do
       resource :user_settings, only: [:show, :update]
       resources :employee_event_types, only: [:index]
       resources :time_off_categories, only: [:show, :index, :create, :update, :destroy]
+      resources :time_offs, except: [:edit, :new]
 
       get '/employee_event_types/:employee_event_type', to: "employee_event_types#show"
     end
