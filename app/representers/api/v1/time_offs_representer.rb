@@ -6,6 +6,22 @@ module Api::V1
         end_time: resource.end_time
       }
         .merge(basic)
+        .merge(relationships)
+    end
+
+    def relationships
+      {
+        employee: employee_json,
+        time_off_category: time_off_category_json
+      }
+    end
+
+    def employee_json
+      EmployeeRepresenter.new(resource.employee).basic
+    end
+
+    def time_off_category_json
+      TimeOffCategoryRepresenter.new(resource.time_off_category).basic
     end
   end
 end
