@@ -5,14 +5,14 @@ class EmployeeAttributeVersionRules
   end
 
   def post_rules
-    values = nested_values
+    # values = nested_values
     Gate.rules do
       required :attribute_name
-      required :value, allow_nil: true do
-        values.flatten.each do |value|
-          optional value
-        end
-      end
+      required :value, :Any, allow_nil: true #do
+      #   values.flatten.each do |value|
+      #     optional value
+      #   end
+      # end
       optional :order
     end
   end
@@ -20,17 +20,17 @@ class EmployeeAttributeVersionRules
   def put_rules
     Gate.rules do
       optional :id
-      required :value, allow_nil: true
+      required :value, :Any, allow_nil: true
       required :attribute_name
       optional :order
     end
   end
 
-  def nested_values
-    %w(Address Child Person).map do |type|
-      "Attribute::#{type}".constantize.new.attributes.tap do |attr|
-        attr.delete(:attribute_type)
-      end.keys
-    end
-  end
+  # def nested_values
+  #   %w(Address Child Person).map do |type|
+  #     "Attribute::#{type}".constantize.new.attributes.tap do |attr|
+  #       attr.delete(:attribute_type)
+  #     end.keys
+  #   end
+  # end
 end
