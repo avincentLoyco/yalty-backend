@@ -23,4 +23,25 @@ RSpec.describe TimeOffCategory, type: :model do
     it { expect(TimeOffCategory.editable).to include(editable_category) }
     it { expect(TimeOffCategory.editable).to_not include(system_category) }
   end
+
+  context 'uniqueness validation' do
+    let(:category) { build(:time_off_category) }
+    let(:duplicate_category) { category.dup }
+
+    before { category.save }
+
+    context 'with the same account' do
+      it { expect(duplicate_category.valid?).to eq false }
+      it { expect { duplicate_category.valid? }
+        .to change { duplicate_category.errors.messages.count }.by(1) }
+    end
+
+    context 'with other accounts' do
+      let(:same_name_category) { build(:time_off_category, name: category.name) }
+
+      it { expect(same_name_category.valid?).to eq true }
+      it { expect { same_name_category.valid? }
+        .to_not change { same_name_category.errors.messages } }
+    end
+  end
 end

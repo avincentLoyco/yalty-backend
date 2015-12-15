@@ -48,8 +48,6 @@ class Account < ActiveRecord::Base
     RequestStore.read(:current_account)
   end
 
-  DEFAULT_TIME_OFF_CATEGORIES = %w(sickness)
-
   DEFAULT_ATTRIBUTES = {
     Attribute::String.attribute_type => %w(
       firstname lastname avs_number gender nationality language personal_email
@@ -101,18 +99,7 @@ class Account < ActiveRecord::Base
 
   # Add defaults TimeOffCategories
   def update_default_time_off_categories!
-    Account::DEFAULT_TIME_OFF_CATEGORIES.each do |category|
-      time_off_category = time_off_categories.where(name: category).first
-
-      if time_off_category.nil?
-        time_off_category = time_off_categories.build(
-          name: category,
-          system: true
-        )
-      end
-
-      time_off_category.save
-    end
+    TimeOffCategory.update_default_account_categories(self)
   end
 
   private
