@@ -15,11 +15,13 @@ gem 'holidays',           '~> 2.2.0'
 gem 'gate',               '~> 0.4.0'
 gem 'newrelic_rpm',       '~> 3.14.0'
 gem 'resque',             '~> 1.25.2'
+gem 'resque-web',         '~> 0.0.7',   require: 'resque_web'
 
 # Production environment dependencies
 group :production, :staging, :review do
-  gem 'rails_12factor',   '~> 0.0.3'
   gem 'puma',             '~> 2.13.4'
+  gem 'rails_12factor',   '~> 0.0.3'
+  gem 'therubyracer',     '~> 0.12.2'
 end
 
 # Development environment dependencies (also needed by test environement)

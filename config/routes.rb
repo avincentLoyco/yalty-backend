@@ -37,6 +37,11 @@ Rails.application.routes.draw do
     end
   end
 
+  # ADMIN
+  constraints subdomain: /^admin/ do
+    mount ResqueWeb::Engine => '/resque'
+  end
+
   # Catch all invalid routings
   match "*path", :to => "errors#routing_error", via: :all
 end
