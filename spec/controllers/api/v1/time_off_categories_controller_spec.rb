@@ -71,14 +71,15 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
     let(:name) { 'testname' }
     let(:params) do
       {
-        system: false,
-        name: name
+        name: name,
+        system: true
       }
     end
     subject { post :create, params }
 
     context 'with valid params' do
-      it { expect { subject }.to change { TimeOffCategory.count }.by(1) }
+      it { expect { subject }.to change { TimeOffCategory.where(system: false).count }.by(1) }
+      it { expect { subject }.to_not change { TimeOffCategory.where(system: true).count } }
 
       it { is_expected.to have_http_status(201) }
 
@@ -115,13 +116,19 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
       {
         id: id,
         name: name,
-        system: 'false'
+        system: 'true'
       }
     end
 
     context 'with valid data' do
       it { expect { subject }.to change { time_off_category.reload.name } }
       it { is_expected.to have_http_status(204) }
+
+      context 'it should not change system field even when set to true' do
+        before { subject }
+
+        it { expect(time_off_category.reload.system).to eq false }
+      end
     end
 
     context 'with invalid data' do
