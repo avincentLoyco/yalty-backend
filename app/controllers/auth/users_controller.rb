@@ -38,7 +38,7 @@ class Auth::UsersController < ApplicationController
   end
 
   def url_with_subdomain_and_token(user)
-    str = Account.current.subdomain + '.' + ENV['YALTY_BASE_URL']
+    str = Account.current.subdomain + '.' + ENV['YALTY_APP_DOMAIN']
     str + '/password?reset_password_token=' + user.reset_password_token
   end
 
