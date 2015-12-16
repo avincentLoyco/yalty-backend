@@ -1,4 +1,7 @@
 Rails.application.routes.draw do
+  # ping
+  get 'ping', to: lambda {|env| [200, {'Content-Type' => 'text/plain'}, ['PONG']] }
+
   # API
   namespace :api, path: '', constraints: { subdomain: /^api/ } do
     namespace :v1 do
