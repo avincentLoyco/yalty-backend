@@ -22,21 +22,22 @@ class VerifyEmployeeAttributeValues
   private
 
   def verify_value_type
-    return if included_in_allowed?
+    return if value_allowed?
     errors.merge!({ value: 'Invalid type' })
   end
 
   def verify_nested_params
-    return unless value.is_a?(Hash)
+    return unless value.is_a?(Hash) && attribute_class_defined?
     result = gate_rules(type).verify(value)
     errors.merge!(result.errors) unless result.valid?
   end
 
-  def included_in_allowed?
-    allowed_value_types.map { |allowed| value.is_a?(allowed) }.any?
+  def value_allowed?
+    attribute_class_defined? && value.is_a?(Hash) || value.is_a?(NilClass) ||
+      !attribute_class_defined? && value.is_a?(String)
   end
 
-  def allowed_value_types
-    [Hash, String, NilClass]
+  def attribute_class_defined?
+    Object.const_defined?("Attribute::#{type.gsub(/[^0-9A-Za-z]/, '').classify}")
   end
 end
