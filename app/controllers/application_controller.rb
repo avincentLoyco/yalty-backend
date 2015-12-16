@@ -40,8 +40,8 @@ class ApplicationController < ActionController::Base
       ::Api::V1::ErrorsRepresenter.new(resource, message).complete, status: 404
   end
 
-  def render_500_error(exception)
-    NewRelic::Agent.notice_error(exception)
+  def render_500_error(exception = nil)
+    NewRelic::Agent.notice_error(exception) if exception
     resource = { resource: 'internal_server_error' }
     render json:
       ::Api::V1::ErrorsRepresenter.new(nil, resource).complete, status: 500
