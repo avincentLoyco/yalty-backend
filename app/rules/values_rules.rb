@@ -3,7 +3,7 @@ module ValuesRules
     allowed_attributes = "Attribute::#{attribute_name.classify}".constantize.new.attributes.keys
     Gate.rules do
       allowed_attributes.each do |attribute|
-        optional attribute
+        optional attribute, allow_nil: true
       end
     end
   end
