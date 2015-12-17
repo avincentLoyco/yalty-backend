@@ -38,6 +38,6 @@ class VerifyEmployeeAttributeValues
   end
 
   def attribute_class_defined?
-    Object.const_defined?("Attribute::#{type.gsub(/[^0-9A-Za-z]/, '').classify}")
+    Object.const_defined?("Attribute::#{type.gsub(/[^0-9A-Za-z]/, '').classify}") if type
   end
 end

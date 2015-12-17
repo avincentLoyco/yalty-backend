@@ -71,6 +71,30 @@ RSpec.describe VerifyEmployeeAttributeValues, type: :service do
   end
 
   context 'when attribute value is not valid' do
+    context 'hash send for attribute which require string' do
+      let(:value) {{ name: 'test' }}
+      let(:attribute_name) { 'lastname' }
+
+      it { expect(subject.valid?).to eq false }
+      it 'should return error' do
+        subject.valid?
+
+        expect(subject.errors[:value]).to eq('Invalid type')
+      end
+    end
+
+    context 'string send for atrribute which is nested' do
+      let(:value) { 'test' }
+      let(:attribute_name) { 'address' }
+
+      it { expect(subject.valid?).to eq false }
+      it 'should return error' do
+        subject.valid?
+
+        expect(subject.errors[:value]).to eq('Invalid type')
+      end
+    end
+
     context 'value is in invalid type' do
       let(:value) { ['a'] }
 
