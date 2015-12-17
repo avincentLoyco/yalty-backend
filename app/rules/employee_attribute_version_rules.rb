@@ -7,7 +7,7 @@ class EmployeeAttributeVersionRules
   def post_rules
     Gate.rules do
       required :attribute_name
-      required :value, :Any, allow_nil: true #do
+      required :value, :Any, allow_nil: true
       optional :order
     end
   end
