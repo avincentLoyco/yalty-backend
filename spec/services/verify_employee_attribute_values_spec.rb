@@ -1,8 +1,9 @@
 require 'rails_helper'
 
 RSpec.describe VerifyEmployeeAttributeValues, type: :service do
+  before { Account.current = create(:account) }
   subject { VerifyEmployeeAttributeValues.new(params) }
-  let(:attribute_name) { 'surname' }
+  let(:attribute_name) { 'lastname' }
   let(:params) do
     {
       attribute_name: attribute_name,
@@ -73,7 +74,6 @@ RSpec.describe VerifyEmployeeAttributeValues, type: :service do
   context 'when attribute value is not valid' do
     context 'hash send for attribute which require string' do
       let(:value) {{ name: 'test' }}
-      let(:attribute_name) { 'lastname' }
 
       it { expect(subject.valid?).to eq false }
       it 'should return error' do
@@ -115,7 +115,7 @@ RSpec.describe VerifyEmployeeAttributeValues, type: :service do
 
       before do
         allow_any_instance_of(ValuesRules).to receive(:gate_rules)
-          .with('address').and_return(gate_rules)
+          .with('Address').and_return(gate_rules)
       end
 
       let(:attribute_name) { 'address' }
