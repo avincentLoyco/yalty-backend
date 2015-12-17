@@ -6,5 +6,9 @@ module Attribute
     attribute :city, String
     attribute :region, String
     attribute :country, String
+
+    def self.ruby_type
+      'Hash'
+    end
   end
 end

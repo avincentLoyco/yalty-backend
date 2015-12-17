@@ -4,5 +4,9 @@ module Attribute
     attribute :firstname, String
     attribute :birthdate, DateTime
     attribute :gender, String
+
+    def self.ruby_type
+      'Hash'
+    end
   end
 end
