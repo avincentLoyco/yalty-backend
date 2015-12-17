@@ -56,7 +56,7 @@ class VerifyEmployeeAttributeValues
   end
 
   def class_type?
-    value.is_a?(ruby_type.safe_constantize)
+    value.is_a?(ruby_type.safe_constantize) unless ruby_type == 'Boolean'
   end
 
   def nil?

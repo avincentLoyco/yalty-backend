@@ -12,7 +12,7 @@ RSpec.describe VerifyEmployeeAttributeValues, type: :service do
   end
 
   context 'when attribute value is valid' do
-    context 'value is a string' do
+    context 'attribute type and value are strings' do
       let(:value) { 'test' }
 
       it { expect(subject.valid?).to eq true }
@@ -23,7 +23,7 @@ RSpec.describe VerifyEmployeeAttributeValues, type: :service do
       end
     end
 
-    context 'value is a hash' do
+    context 'attribute type and value are hashes' do
       let(:attribute_name) { 'address' }
       let(:value) {{ city: 'Warsaw', country: 'Poland' }}
 
@@ -35,7 +35,48 @@ RSpec.describe VerifyEmployeeAttributeValues, type: :service do
       end
     end
 
-    context 'value is a nil' do
+    context 'attribute type and value are decimals' do
+      let(:attribute_name) { 'monthly_payments' }
+      let(:value) { Faker::Number.decimal(2) }
+
+      it { expect(subject.valid?).to eq true }
+      it 'should not return error' do
+        subject.valid?
+
+        expect(subject.errors.blank?).to eq true
+      end
+    end
+
+    context 'attribute type and value are booleans' do
+      let(:attribute_definition) do
+        create(:employee_attribute_definition,
+          account: Account.current,
+          attribute_type: 'Boolean')
+      end
+      let(:attribute_name) { attribute_definition.name }
+      let(:value) { 'false' }
+
+      it { expect(subject.valid?).to eq true }
+      it 'should not return error' do
+        subject.valid?
+
+        expect(subject.errors.blank?).to eq true
+      end
+    end
+
+    context 'attribute type and value are dates' do
+      let(:attribute_name) { 'birthdate' }
+      let(:value) { Faker::Date.backward(14) }
+
+      it { expect(subject.valid?).to eq true }
+      it 'should not return error' do
+        subject.valid?
+
+        expect(subject.errors.blank?).to eq true
+      end
+    end
+
+    context 'nil value send' do
       let(:value) { nil }
 
       it { expect(subject.valid?).to eq true }

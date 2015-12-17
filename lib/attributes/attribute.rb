@@ -3,4 +3,5 @@ module Attribute
 
   autoload :Line, 'attribute/line'
   autoload :String, 'attribute/string'
+  autoload :Boolean, 'attribute/boolean'
 end
