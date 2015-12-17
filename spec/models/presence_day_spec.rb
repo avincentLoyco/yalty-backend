@@ -4,6 +4,7 @@ RSpec.describe PresenceDay, type: :model do
   it { is_expected.to have_db_column(:hours) }
   it { is_expected.to have_db_column(:order) }
   it { is_expected.to belong_to(:presence_policy) }
+  it { is_expected.to have_many(:time_entries) }
   it { is_expected.to validate_presence_of(:order) }
   it { is_expected.to validate_presence_of(:presence_policy_id) }
 
