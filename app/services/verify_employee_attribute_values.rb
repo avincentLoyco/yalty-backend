@@ -29,8 +29,11 @@ class VerifyEmployeeAttributeValues
   end
 
   def value_allowed?
-    attribute_class_defined? && value.is_a?(Hash) || value.is_a?(NilClass) ||
-      !attribute_class_defined? && value.is_a?(String)
+    if attribute_class_defined?
+      value.is_a?(Hash) || value.is_a?(NilClass)
+    else
+      value.is_a?(String) || value.is_a?(NilClass)
+    end
   end
 
   def attribute_class_defined?
