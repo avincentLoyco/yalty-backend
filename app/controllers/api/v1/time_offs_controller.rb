@@ -13,7 +13,7 @@ module API
 
       def create
         verified_params(gate_rules) do |attributes|
-          resource = time_off_category.time_offs.new(time_off_attributes(attributes))
+          resource = resources.new(time_off_attributes(attributes))
           if resource.save
             render_resource(resource, status: :created)
           else
