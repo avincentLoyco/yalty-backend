@@ -6,7 +6,7 @@ class VerifyEmployeeAttributeValues
   attr_reader :value, :errors, :type, :ruby_type
 
   def initialize(employee_attribute)
-    @value = employee_attribute.select { |k, v| k.to_s == "value" }
+    @value = employee_attribute.select { |k, _v| k.to_s == 'value' }
     @type = attribute_type(employee_attribute[:attribute_name])
     @errors = {}
   end
@@ -32,7 +32,7 @@ class VerifyEmployeeAttributeValues
 
   def verify_rules
     rules = type_rules
-    return errors.merge!({ value: 'Invalid type' }) unless rules.class == Gate::Guard
+    return errors.merge!(value: 'Invalid type') unless rules.class == Gate::Guard
     rules.verify(value)
   end
 
