@@ -3,6 +3,11 @@ require 'rails_helper'
 RSpec.describe VerifyEmployeeAttributeValues, type: :service do
   before { Account.current = create(:account) }
   subject { VerifyEmployeeAttributeValues.new(params) }
+  let(:boolean_attribute_definition) do
+    create(:employee_attribute_definition,
+      account: Account.current,
+      attribute_type: 'Boolean')
+  end
   let(:attribute_name) { 'lastname' }
   let(:params) do
     {
@@ -48,12 +53,7 @@ RSpec.describe VerifyEmployeeAttributeValues, type: :service do
     end
 
     context 'attribute type and value are booleans' do
-      let(:attribute_definition) do
-        create(:employee_attribute_definition,
-          account: Account.current,
-          attribute_type: 'Boolean')
-      end
-      let(:attribute_name) { attribute_definition.name }
+      let(:attribute_name) { boolean_attribute_definition.name }
       let(:value) { 'false' }
 
       it { expect(subject.valid?).to eq true }
@@ -113,7 +113,7 @@ RSpec.describe VerifyEmployeeAttributeValues, type: :service do
   end
 
   context 'when attribute value is not valid' do
-    context 'hash send for attribute which require string' do
+    context 'hash instead of string' do
       let(:value) {{ name: 'test' }}
 
       it { expect(subject.valid?).to eq false }
@@ -124,7 +124,7 @@ RSpec.describe VerifyEmployeeAttributeValues, type: :service do
       end
     end
 
-    context 'string send for atrribute which is nested' do
+    context 'string instead of hash send' do
       let(:value) { 'test' }
       let(:attribute_name) { 'address' }
 
@@ -136,11 +136,35 @@ RSpec.describe VerifyEmployeeAttributeValues, type: :service do
       end
     end
 
-    context 'value is in invalid type' do
+    context 'array instead of string send' do
       let(:value) { ['a'] }
 
       it { expect(subject.valid?).to eq false }
       it 'should return error' do
+        subject.valid?
+
+        expect(subject.errors[:value]).to eq(:coercion_error)
+      end
+    end
+
+    context 'word intead of decimals send' do
+      let(:value) { 'test' }
+      let(:attribute_name) { 'monthly_payments' }
+
+      it { expect(subject.valid?).to eq false }
+      it 'should return error' do
+        subject.valid?
+
+        expect(subject.errors[:value]).to eq(:coercion_error)
+      end
+    end
+
+    context 'word instead of boolean send' do
+      let(:attribute_name) { boolean_attribute_definition.name }
+      let(:value) { 'test' }
+
+      it { expect(subject.valid?).to eq false }
+      it 'should not return error' do
         subject.valid?
 
         expect(subject.errors[:value]).to eq(:coercion_error)

@@ -1,7 +1,7 @@
 module Attributes
   module AddressRules
     def address_rules
-      return unless value[:value].is_a?(Hash) || value[:value].is_a?(NilClass)
+      return unless value[:value].is_a?(Hash)
       Gate.rules do
         required :value, allow_nil: true do
           optional :street, :String
