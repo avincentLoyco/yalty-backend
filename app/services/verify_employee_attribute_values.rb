@@ -1,5 +1,8 @@
 class VerifyEmployeeAttributeValues
-  include Attributes::PersonRules
+  include Attributes::PersonRules, Attributes::StringRules, Attributes::NumberRules,
+    Attributes::AddressRules, Attributes::BooleanRules, Attributes::ChildRules,
+    Attributes::CurrencyRules, Attributes::DateRules, Attributes::LineRules
+
   attr_reader :value, :errors, :type, :ruby_type
 
   def initialize(employee_attribute)
@@ -9,7 +12,7 @@ class VerifyEmployeeAttributeValues
   end
 
   def valid?
-    return true unless type
+    return true unless type && value.present?
     verify_value
 
     errors.blank?
@@ -18,13 +21,19 @@ class VerifyEmployeeAttributeValues
   private
 
   def verify_value
-    result = type_rules.verify(value)
-    return if result.valid?
+    result = verify_rules
+    return unless result.try(:errors)
     errors.merge!(result.errors)
   end
 
   def type_rules
     send("#{type.downcase}_rules")
+  end
+
+  def verify_rules
+    rules = type_rules
+    return errors.merge!({ value: 'Invalid type' }) unless rules.class == Gate::Guard
+    rules.verify(value)
   end
 
   def attribute_type(name)

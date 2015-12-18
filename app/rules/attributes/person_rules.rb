@@ -1,8 +1,9 @@
 module Attributes
   module PersonRules
     def person_rules
+      return unless value[:value].is_a?(Hash) || value.is_a?(NilClass)
       Gate.rules do
-        required :value do
+        required :value, allow_nil: true do
           optional :lastname
           optional :firstname
           optional :gender

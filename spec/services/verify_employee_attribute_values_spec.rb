@@ -66,7 +66,7 @@ RSpec.describe VerifyEmployeeAttributeValues, type: :service do
 
     context 'attribute type and value are dates' do
       let(:attribute_name) { 'birthdate' }
-      let(:value) { Faker::Date.backward(14) }
+      let(:value) { Faker::Date.backward(14).to_s }
 
       it { expect(subject.valid?).to eq true }
       it 'should not return error' do
@@ -120,7 +120,7 @@ RSpec.describe VerifyEmployeeAttributeValues, type: :service do
       it 'should return error' do
         subject.valid?
 
-        expect(subject.errors[:value]).to eq('Invalid type')
+        expect(subject.errors[:value]).to eq(:coercion_error)
       end
     end
 
@@ -143,7 +143,7 @@ RSpec.describe VerifyEmployeeAttributeValues, type: :service do
       it 'should return error' do
         subject.valid?
 
-        expect(subject.errors[:value]).to eq('Invalid type')
+        expect(subject.errors[:value]).to eq(:coercion_error)
       end
     end
 
@@ -155,8 +155,8 @@ RSpec.describe VerifyEmployeeAttributeValues, type: :service do
       end
 
       before do
-        allow_any_instance_of(ValuesRules).to receive(:gate_rules)
-          .with('Address').and_return(gate_rules)
+        allow_any_instance_of(Attributes::AddressRules).to receive(:address_rules)
+          .and_return(gate_rules)
       end
 
       let(:attribute_name) { 'address' }
