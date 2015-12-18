@@ -7,7 +7,7 @@ class EmployeeAttributeVersionRules
   def post_rules
     Gate.rules do
       required :attribute_name
-      required :value, allow_nil: true
+      required :value, :Any, allow_nil: true
       optional :order
     end
   end
@@ -15,7 +15,7 @@ class EmployeeAttributeVersionRules
   def put_rules
     Gate.rules do
       optional :id
-      required :value, allow_nil: true
+      required :value, :Any, allow_nil: true
       required :attribute_name
       optional :order
     end

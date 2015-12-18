@@ -103,7 +103,7 @@ GEM
       rspec (~> 3.0)
     ffi (1.9.10)
     formatador (0.2.5)
-    gate (0.3.0)
+    gate (0.4.0)
       axiom-types (~> 0.1)
       coercible (~> 1.0)
     globalid (0.3.6)
@@ -322,7 +322,7 @@ DEPENDENCIES
   factory_girl_rails
   faker
   fantaskspec
-  gate (~> 0.3.0)
+  gate (~> 0.4.0)
   guard-rspec
   holidays (~> 2.2.0)
   letter_opener (~> 1.4.1)

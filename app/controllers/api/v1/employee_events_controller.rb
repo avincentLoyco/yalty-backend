@@ -60,12 +60,10 @@ module API
 
       def merge_errors(base, results_errors)
         new_result = GateResult.new(base.attributes, base.errors)
-
         results_errors.each do |result|
-          new_result.attributes = new_result.attributes.merge(result.attributes)
+          new_result.attributes = new_result.attributes.merge(result.try(:attributes) || {})
           new_result.errors = new_result.errors.merge(result.errors)
         end
-
         new_result
       end
 
@@ -76,14 +74,16 @@ module API
 
         results = []
         errors = []
-        nested_gate_rules = EmployeeAttributeVersionRules.new.gate_rules(request)
 
+        nested_gate_rules = EmployeeAttributeVersionRules.new.gate_rules(request)
         params[:employee_attributes].each do |employee_attribute|
-          result = nested_gate_rules.verify(employee_attribute)
-          if result.valid?
-            results << result.attributes
+          attribute_result = nested_gate_rules.verify(employee_attribute)
+          value_result = VerifyEmployeeAttributeValues.new(employee_attribute)
+          if attribute_result.valid? && value_result.valid?
+            results << attribute_result.attributes
           else
-            errors << result
+            errors << attribute_result
+            errors << value_result
           end
         end
         [results, errors]

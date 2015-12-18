@@ -6,7 +6,13 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
   include_context 'shared_context_headers'
 
   let(:user) { create(:account_user) }
-
+  let!(:employee_eattribute_definition) do
+    create(:employee_attribute_definition,
+      account: Account.current,
+      name: 'address',
+      attribute_type: 'Address'
+    )
+  end
   let!(:employee) do
     create(:employee, :with_attributes,
       account: account,
@@ -134,6 +140,22 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           expect(subject).to have_http_status(422)
         end
       end
+
+      context 'when invalid value type send' do
+        let(:last_name) { ['test'] }
+
+        it { expect { subject }.to_not change { Employee::Event.count } }
+        it { expect { subject }.to_not change { Employee.count } }
+        it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
+
+        it { is_expected.to have_http_status(422) }
+
+        context 'response body' do
+          before { subject }
+
+          it { expect(response.body).to include 'coercion_error'}
+        end
+      end
     end
   end
 
@@ -227,6 +249,19 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
         expect { subject }.to change { Employee.count }.by(1)
         expect(subject).to have_http_status(201)
+      end
+
+      context 'json payload for nested value' do
+        let(:employee_attributes) {{ attribute_name: attribute_definition, value: value }}
+        let(:attribute_definition) { 'address' }
+        let(:value) {{ city: 'Wroclaw', country: 'Poland' }}
+        before { json_payload[:employee_attributes] = [employee_attributes] }
+
+        it { expect { subject }.to change { Employee::Event.count }.by(1) }
+        it { expect { subject }.to change { Employee.count }.by(1) }
+        it { expect { subject }.to change { Employee::AttributeVersion.count }.by(1) }
+
+        it { is_expected.to have_http_status(201) }
       end
 
       it_behaves_like 'Unprocessable Entity on create'
@@ -390,6 +425,22 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
       it 'should respond with 422' do
         expect(subject).to have_http_status(422)
+      end
+    end
+
+    context 'when invalid value type send' do
+      let(:last_name) { ['test'] }
+
+      it { expect { subject }.to_not change { Employee::Event.count } }
+      it { expect { subject }.to_not change { Employee.count } }
+      it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
+
+      it { is_expected.to have_http_status(422) }
+
+      context 'response body' do
+        before { subject }
+
+        it { expect(response.body).to include 'coercion_error'}
       end
     end
 

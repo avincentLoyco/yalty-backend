@@ -14,14 +14,6 @@ RSpec.describe Attribute::Base do
   describe '.attribute_types' do
     subject { Attribute::Base }
 
-    before(:all) do
-      class Attribute::Fake < Attribute::Base; end
-    end
-
-    after(:all) do
-      Attribute.send(:remove_const, :Fake)
-    end
-
     it 'should respond' do
       is_expected.to respond_to(:attribute_types)
     end
@@ -31,7 +23,7 @@ RSpec.describe Attribute::Base do
     end
 
     it 'should include inherited models' do
-      expect(subject.attribute_types).to include('Fake')
+      expect(subject.attribute_types).to include('Child')
     end
   end
 end
