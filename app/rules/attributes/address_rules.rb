@@ -4,12 +4,12 @@ module Attributes
       return unless value[:value].is_a?(Hash)
       Gate.rules do
         required :value, allow_nil: true do
-          optional :street, :String
-          optional :streetno, :String
-          optional :postalcode, :String
-          optional :city, :String
-          optional :region, :String
-          optional :country, :String
+          optional :street, :String, allow_nil: true
+          optional :streetno, :String, allow_nil: true
+          optional :postalcode, :String, allow_nil: true
+          optional :city, :String, allow_nil: true
+          optional :region, :String, allow_nil: true
+          optional :country, :String, allow_nil: true
         end
       end
     end

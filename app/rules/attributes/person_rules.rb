@@ -4,10 +4,10 @@ module Attributes
       return unless value[:value].is_a?(Hash)
       Gate.rules do
         required :value, allow_nil: true do
-          optional :lastname
-          optional :firstname
-          optional :gender
-          optional :birthdate
+          optional :lastname, allow_nil: true
+          optional :firstname, allow_nil: true
+          optional :gender, allow_nil: true
+          optional :birthdate, allow_nil: true
         end
       end
     end
