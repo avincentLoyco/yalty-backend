@@ -65,6 +65,8 @@ class Account < ActiveRecord::Base
     Attribute::Person.attribute_type => %w(spouse)
   }
 
+  MULTIPLE_ATTRIBUTES = %w(child spouse)
+
   DEFAULT_ATTRIBUTE_DEFINITIONS = Account::DEFAULT_ATTRIBUTES.map do |type, names|
     names.map do |name|
       { name: name, type: type }
@@ -83,7 +85,8 @@ class Account < ActiveRecord::Base
         definition = employee_attribute_definitions.build(
           name: attr[:name],
           attribute_type: attr[:type],
-          system: true
+          system: true,
+          multiple: MULTIPLE_ATTRIBUTES.include?(attr[:name])
         )
       end
 
