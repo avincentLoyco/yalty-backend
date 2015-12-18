@@ -13,7 +13,7 @@ module API
 
       def create
         verified_params(gate_rules) do |attributes|
-          resource = presence_day.time_entries.new(time_entry_params(attributes))
+          resource = resources.new(time_entry_params(attributes))
           if resource.save
             render_resource(resource, status: :created)
           else
@@ -63,7 +63,7 @@ module API
       def account_time_entrys_ids
         Account.current.presence_days.map do |day|
           day.time_entries.map { |time_entry| time_entry.id }.flatten
-        end
+        end.flatten
       end
 
       def resource_representer
