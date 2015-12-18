@@ -17,15 +17,5 @@ module Attribute
     def attribute_type
       self.class.attribute_type
     end
-
-    def self.ruby_types
-      @ruby_types ||= Attribute::Base.descendants.map do |descendant|
-        { descendant.name => descendant.ruby_type.constantize }
-      end
-    end
-
-    def self.ruby_type
-      'String'
-    end
   end
 end
