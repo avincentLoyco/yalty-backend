@@ -225,7 +225,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         expect(subject).to have_http_status(:success)
 
         expect_json_keys('employee_attributes.0',
-                         [:value, :attribute_name, :id, :type]
+                         [:value, :attribute_name, :id, :type, :order]
                         )
       end
 
@@ -809,7 +809,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       end
       subject
 
-      expect_json_keys('employee_attributes.0', [:value, :attribute_name, :id, :type])
+      expect_json_keys('employee_attributes.0', [:value, :attribute_name, :id, :type, :order])
     end
 
     it 'should respond with 404 when not user event' do
