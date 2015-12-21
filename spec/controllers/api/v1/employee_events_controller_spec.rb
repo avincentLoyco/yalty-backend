@@ -363,6 +363,35 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           end
         end
       end
+
+      context 'with multiple and system attribute definition' do
+        let!(:multiple_system_definition) do
+          create(:employee_attribute_definition, :multiple, :system, account: Account.current)
+        end
+        let(:system_multiple_attribute) do
+          [
+            {
+              type: "employee_attribute",
+              attribute_name: multiple_system_definition.name,
+              value: first_pet_name,
+              order: 1
+            },
+            {
+              type: "employee_attribute",
+              attribute_name: multiple_system_definition.name,
+              value: second_pet_name,
+              order: 2
+            }
+          ]
+        end
+        it 'should create event with multiple pet attributes' do
+          json_payload[:employee_attributes] = json_payload[:employee_attributes] +
+            system_multiple_attribute
+
+          expect(subject).to have_http_status(201)
+          expect(Employee::AttributeVersion.count).to eq(6)
+        end
+      end
     end
   end
 

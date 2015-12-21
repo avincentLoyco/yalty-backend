@@ -14,5 +14,9 @@ FactoryGirl.define do
       multiple true
       name 'pet'
     end
+
+    trait :system do
+      system true
+    end
   end
 end
