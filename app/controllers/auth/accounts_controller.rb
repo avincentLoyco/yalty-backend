@@ -39,7 +39,7 @@ class Auth::AccountsController < ApplicationController
 
   def build_account_and_user(params)
     account = Account.new(params[:account])
-    user = account.users.new(params[:user])
+    user = account.users.new(params[:user].merge(account_manager: true))
     account.registration_key = Account::RegistrationKey.unused.find_by!(params[:registration_key])
     [account, user]
   end
