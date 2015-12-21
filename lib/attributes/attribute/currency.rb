@@ -1,5 +1,6 @@
 module Attribute
   class Currency < Attribute::Base
-    attribute :currency, String
+    attribute :amount, BigDecimal
+    attribute :isocode, String
   end
 end
