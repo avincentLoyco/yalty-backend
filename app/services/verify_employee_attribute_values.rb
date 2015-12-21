@@ -3,7 +3,7 @@ class VerifyEmployeeAttributeValues
     Attributes::AddressRules, Attributes::BooleanRules, Attributes::ChildRules,
     Attributes::CurrencyRules, Attributes::DateRules, Attributes::LineRules
 
-  attr_reader :value, :errors, :type, :ruby_type
+  attr_reader :value, :errors, :type
 
   def initialize(employee_attribute)
     @value = employee_attribute.select { |k, _v| k.to_s == 'value' }
