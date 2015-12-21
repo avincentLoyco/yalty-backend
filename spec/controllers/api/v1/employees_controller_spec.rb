@@ -23,7 +23,8 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
       context 'response' do
         before { subject }
 
-        it { expect_json_keys('employee_attributes.*', [:id, :type, :value, :attribute_name]) }
+        it { expect_json_keys('employee_attributes.*',
+          [:id, :type, :value, :attribute_name, :order]) }
         it { expect_json_types(id: :string, type: :string, employee_attributes: :array) }
       end
 
@@ -118,7 +119,9 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
       before { subject }
 
       it { expect_json_sizes(3) }
-      it { expect_json_types('*', id: :string, type: :string, employee_attributes: :array) }
+      it { expect_json_types(
+        '*', id: :string, type: :string, employee_attributes: :array)
+      }
     end
 
     context 'effective at date' do
@@ -143,7 +146,8 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
               'attribute_name' => attribute.attribute_definition.name,
               'value' => attribute.data.value,
               'id' => attribute.id,
-              'type' => 'employee_attribute'
+              'type' => 'employee_attribute',
+              'order' => attribute.order
             )
           }
           it { expect(employee_body['id']).to eql(future_employee.id) }
@@ -163,7 +167,8 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
               'attribute_name' => attribute.attribute_definition.name,
               'value' => attribute.data.value,
               'id' => attribute.id,
-              'type' => 'employee_attribute_version'
+              'type' => 'employee_attribute_version',
+              'order' => attribute.order
             )
           }
           it { expect(employee_body['id']).to eql(future_employee.id) }

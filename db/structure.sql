@@ -166,7 +166,8 @@ CREATE VIEW employee_attributes AS
     employee_attribute_versions.employee_event_id,
     employee_attribute_versions.attribute_definition_id,
     employee_attribute_versions.created_at,
-    employee_attribute_versions.updated_at
+    employee_attribute_versions.updated_at,
+    employee_attribute_versions.order
    FROM ((employee_attribute_versions
      JOIN employee_events ON ((employee_attribute_versions.employee_event_id = employee_events.id)))
      JOIN employee_attribute_definitions ON ((employee_attribute_versions.attribute_definition_id = employee_attribute_definitions.id)))
@@ -923,3 +924,6 @@ INSERT INTO schema_migrations (version) VALUES ('20151117123029');
 INSERT INTO schema_migrations (version) VALUES ('20151119150657');
 
 INSERT INTO schema_migrations (version) VALUES ('20151130152501');
+
+INSERT INTO schema_migrations (version) VALUES ('20151221114106');
+
