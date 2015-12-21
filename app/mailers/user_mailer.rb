@@ -15,7 +15,7 @@ class UserMailer < ApplicationMailer
   def accounts_list(email, accounts_subdomains)
     body = "
       You have access to accounts:
-      #{accounts_subdomains.join(".#{ENV['YALTY_BASE_URL']}, ")}
+      #{accounts_subdomains.join(".#{ENV['YALTY_APP_DOMAIN']}, ")}
     "
 
     send_mail(email, 'Your accounts', body)

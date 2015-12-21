@@ -6,9 +6,9 @@ namespace :deploy do
     options.remote = target_env
     options.branch = `git rev-parse --abbrev-ref HEAD`.chomp
 
-    if options.remote == 'production' && !%w(stable).include?(options.branch)
+    if options.remote == 'production' && options.branch != 'stable'
       fail "branch '#{options.branch}' can't be deploy to '#{options.remote}' environment"
-    elsif options.remote == 'staging' && !%w(master release).include?(options.branch)
+    elsif options.remote == 'staging' && options.branch !~ %r{^(master)|(release/[0-9\.]+)$}
       fail "branch '#{options.branch}' can't be deploy to '#{options.remote}' environment"
     elsif options.remote == 'review'
       options.git_args = '--force'

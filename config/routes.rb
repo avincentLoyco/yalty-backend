@@ -1,4 +1,7 @@
 Rails.application.routes.draw do
+  # ping
+  get 'ping', to: lambda {|env| [200, {'Content-Type' => 'text/plain'}, ['PONG']] }
+
   # API
   namespace :api, path: '', constraints: { subdomain: /^api/ } do
     namespace :v1 do
@@ -35,6 +38,11 @@ Rails.application.routes.draw do
         put  'users/password', to: 'auth/users#new_password'
       end
     end
+  end
+
+  # ADMIN
+  constraints subdomain: /^admin/ do
+    mount ResqueWeb::Engine => '/resque'
   end
 
   # Catch all invalid routings

@@ -77,7 +77,7 @@ class Auth::AccountsController < ApplicationController
     UserMailer.credentials(
       user_id,
       password,
-      subdomain + '.' + ENV['YALTY_BASE_URL']
+      subdomain + '.' + ENV['YALTY_APP_DOMAIN']
     ).deliver_later
   end
 end
