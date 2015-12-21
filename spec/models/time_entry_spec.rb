@@ -21,17 +21,17 @@ RSpec.describe TimeEntry, type: :model do
 
   context 'custom validations' do
     context '#end_time_after_start_time' do
-      subject { build(:time_entry, end_time: end_time)  }
+      subject { build(:time_entry, start_time: '14:00', end_time: end_time) }
 
       context 'when valid data' do
-        let(:end_time) { Time.now + 4.hours }
+        let(:end_time) { '16:00' }
 
         it { expect(subject.valid?).to eq true }
         it { expect { subject.valid? }.to_not change { subject.errors.messages } }
       end
 
       context 'when invalid data' do
-        let(:end_time) { Time.now - 4.hours }
+        let(:end_time) { '12:00' }
 
         it { expect(subject.valid?).to eq false }
         it { expect { subject.valid? }.to change { subject.errors.messages[:end_time] } }
@@ -51,7 +51,8 @@ RSpec.describe TimeEntry, type: :model do
         before { time_entry.save! }
 
         it { expect(new_time_entry.valid?).to eq true }
-        it { expect { new_time_entry.valid? }.to_not change { new_time_entry.errors.messages.count } }
+        it { expect { new_time_entry.valid? }
+          .to_not change { new_time_entry.errors.messages.count } }
       end
 
       context 'when time_entrys overlap' do

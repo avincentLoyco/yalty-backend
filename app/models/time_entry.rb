@@ -15,9 +15,10 @@ class TimeEntry < ActiveRecord::Base
   end
 
   def time_entry_not_reserved
-    presence_day.try(:time_entries).each do |time_entry|
-      return unless start_time_covered?(time_entry)
-      errors.add(:start_time, 'time_entries can not overlap')
+    presence_day.try(:time_entries).select(&:persisted?).each do |time_entry|
+      if start_time_covered?(time_entry)
+        errors.add(:start_time, 'time_entries can not overlap')
+      end
     end
   end
 
