@@ -326,6 +326,7 @@ GEM
     tilt (2.0.1)
     timers (4.0.4)
       hitimes
+    tod (2.0.2)
     twitter-bootstrap-rails (3.2.2)
       actionpack (>= 3.1)
       execjs (>= 2.2.2, >= 2.2)
@@ -392,6 +393,7 @@ DEPENDENCIES
   spring-commands-rspec
   temping
   therubyracer (~> 0.12.2)
+  tod (~> 2.0.2)
   virtus (~> 1.0.5)
   web-console (~> 2.0)
 

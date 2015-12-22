@@ -16,6 +16,7 @@ gem 'gate',               '~> 0.4.1'
 gem 'newrelic_rpm',       '~> 3.14.0'
 gem 'resque',             '~> 1.25.2'
 gem 'resque-web',         '~> 0.0.7',   require: 'resque_web'
+gem 'tod',                '~> 2.0.2'
 
 # Production environment dependencies
 group :production, :staging, :review do
