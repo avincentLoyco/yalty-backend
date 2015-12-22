@@ -9,6 +9,7 @@ class Account::User < ActiveRecord::Base
   validates :reset_password_token, uniqueness: true, allow_nil: true
 
   belongs_to :account, inverse_of: :users, required: true
+  has_one :employee, inverse_of: :employee
 
   def self.current=(user)
     RequestStore.write(:current_account_user, user)
