@@ -1,14 +1,17 @@
 class TimeEntry < ActiveRecord::Base
   belongs_to :presence_day
 
-  validates :start_time, :end_time, :presence_day_id, presence: true
+  validates :start_time, :end_time, :presence_day, presence: true
   validate :time_order, :time_entry_not_reserved, if: :times_parsable?
   validate :start_time_format, :end_time_format
 
   before_validation :convert_time_to_hours, if: :times_parsable?
 
   def end_time_after_start_time?
-    end_time > start_time || end_time == '00:00:00'
+    end_time = Tod::TimeOfDay.parse(self.end_time)
+    start_time = Tod::TimeOfDay.parse(self.start_time)
+
+    end_time > start_time || end_time.to_s == '00:00:00'
   end
 
   def times_parsable?

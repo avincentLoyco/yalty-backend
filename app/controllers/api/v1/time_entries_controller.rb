@@ -13,12 +13,8 @@ module API
 
       def create
         verified_params(gate_rules) do |attributes|
-          resource = resources.new(time_entry_params(attributes))
-          if resource.save
-            render_resource(resource, status: :created)
-          else
-            resource_invalid_error(resource)
-          end
+          resources = ManageTimeEntry.new(time_entry_params(attributes), presence_day).call
+          render_resource(resources, status: :created)
         end
       end
 

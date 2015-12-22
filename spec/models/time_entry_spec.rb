@@ -10,7 +10,7 @@ RSpec.describe TimeEntry, type: :model do
 
   it { is_expected.to validate_presence_of(:start_time) }
   it { is_expected.to validate_presence_of(:end_time) }
-  it { is_expected.to validate_presence_of(:presence_day_id) }
+  it { is_expected.to validate_presence_of(:presence_day) }
 
   context 'before validation calback' do
     subject { TimeEntry.new(start_time: '14:00', end_time: '16:00') }
