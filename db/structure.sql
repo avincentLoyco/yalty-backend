@@ -397,8 +397,8 @@ CREATE TABLE time_offs (
 
 CREATE TABLE time_entries (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
-    start_time time without time zone NOT NULL,
-    end_time time without time zone NOT NULL,
+    start_time character varying NOT NULL,
+    end_time character varying NOT NULL,
     presence_day_id uuid NOT NULL,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL
@@ -1155,3 +1155,5 @@ INSERT INTO schema_migrations (version) VALUES ('20151209122309');
 INSERT INTO schema_migrations (version) VALUES ('20151209162652');
 
 INSERT INTO schema_migrations (version) VALUES ('20151214144417');
+
+INSERT INTO schema_migrations (version) VALUES ('20151222101912');
