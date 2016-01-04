@@ -15,7 +15,7 @@ class TimeEntry < ActiveRecord::Base
   end
 
   def times_parsable?
-    start_time_parsable? && end_time_parsable?
+    start_time_parsable? && end_time_parsable? && !destroyed?
   end
 
   def times_parsable_and_day_present?

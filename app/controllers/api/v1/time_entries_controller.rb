@@ -26,7 +26,10 @@ module API
       end
 
       def destroy
-        resource.destroy!
+        transactions do
+          resource.destroy!
+          resource.related_entry.try(:destroy)
+        end
         render_no_content
       end
 

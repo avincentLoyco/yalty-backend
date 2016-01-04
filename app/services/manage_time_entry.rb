@@ -33,7 +33,7 @@ class ManageTimeEntry
   end
 
   def update_time_entry_and_manage_related
-    related_time_entry.try(:destroy) unless parsable_and_longer_than_day?
+    return related_time_entry.destroy! unless parsable_and_longer_than_day?
     related_entry_params, related_presence_day = related_time_entry_params
     @related_time_entry = related_presence_day.time_entries.new unless related_time_entry.present?
     related_time_entry.attributes = related_entry_params
@@ -83,7 +83,6 @@ class ManageTimeEntry
       messages = messages
         .merge(time_entry.errors.messages)
         .merge(related_time_entry_error_messages)
-
       fail InvalidResourcesError.new(time_entry, messages)
     end
   end
