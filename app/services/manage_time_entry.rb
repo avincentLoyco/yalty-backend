@@ -19,7 +19,7 @@ class ManageTimeEntry
   end
 
   def time_entry_valid_and_longer_than_day?
-    !time_entry.end_time_after_start_time? && time_entry.times_parsable?
+    time_entry.times_parsable? && !time_entry.end_time_after_start_time?
   end
 
   def build_time_entry(presence_day, params)
@@ -32,10 +32,10 @@ class ManageTimeEntry
     update_first_time_entry_end_time
   end
 
-  def new_entry_minutes
+  def new_entry_seconds
     parsed_time = Tod::TimeOfDay.parse(time_entry.end_time)
     Tod::Shift.new(Tod::TimeOfDay.new(00, 00),
-      Tod::TimeOfDay.new(parsed_time.hour, parsed_time.minute)).duration / 60
+      Tod::TimeOfDay.new(parsed_time.hour, parsed_time.minute)).duration
   end
 
   def update_first_time_entry_end_time
@@ -43,19 +43,15 @@ class ManageTimeEntry
   end
 
   def new_time_entry_params
-    params = { start_time: '00:00', end_time: Tod::TimeOfDay.new(00,00,00) + new_entry_minutes }
+    params = { start_time: '00:00', end_time: Tod::TimeOfDay.new(00,00,00) + new_entry_seconds }
     presence_day = next_presence_day
     [params, presence_day]
   end
 
   def next_presence_day
-    next_presence_day = PresenceDay.where(order: presence_day.order + 1).first
-    return next_presence_day unless next_presence_day.blank?
-    build_new_presence_day
-  end
-
-  def build_new_presence_day
-    PresenceDay.new(presence_policy: presence_day.presence_policy, order: presence_day.order + 1)
+    PresenceDay.where(order: presence_day.order + 1).first_or_initialize do |day|
+      day.presence_policy = presence_day.presence_policy
+    end
   end
 
   def new_time_entry_and_day_valid?
