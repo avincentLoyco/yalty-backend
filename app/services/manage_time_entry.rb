@@ -1,34 +1,42 @@
 class ManageTimeEntry
   include API::V1::Exceptions
-  attr_reader :params, :presence_day, :time_entry, :new_time_entry
+  attr_reader :params, :presence_day, :time_entry, :related_time_entry
 
   def initialize(params, presence_day)
     @params = params
     @presence_day = presence_day
     @time_entry = nil
-    @new_time_entry = nil
+    @related_time_entry = nil
   end
 
   def call
     ActiveRecord::Base.transaction do
-      @time_entry = build_time_entry(presence_day, params)
-      update_time_entry_and_build_new if time_entry_valid_and_longer_than_day?
+      @time_entry = find_or_initialize_time_entry
+      @related_time_entry = time_entry.related_entry
+      time_entry.attributes = params
+      update_time_entry_and_manage_related if longer_than_day_or_has_related?
 
       save!
     end
   end
 
-  def time_entry_valid_and_longer_than_day?
+  def parsable_and_longer_than_day?
     time_entry.times_parsable? && !time_entry.end_time_after_start_time?
   end
 
-  def build_time_entry(presence_day, params)
-    presence_day.time_entries.new(params)
+  def longer_than_day_or_has_related?
+    parsable_and_longer_than_day? || related_time_entry.present?
   end
 
-  def update_time_entry_and_build_new
-    new_entry_params, new_presence_day = new_time_entry_params
-    @new_time_entry = build_time_entry(new_presence_day, new_entry_params)
+  def find_or_initialize_time_entry
+    presence_day.time_entries.where(id: params[:id]).first_or_initialize
+  end
+
+  def update_time_entry_and_manage_related
+    related_time_entry.try(:destroy) unless parsable_and_longer_than_day?
+    related_entry_params, related_presence_day = related_time_entry_params
+    @related_time_entry = related_presence_day.time_entries.new unless related_time_entry.present?
+    related_time_entry.attributes = related_entry_params
     update_first_time_entry_end_time
   end
 
@@ -42,7 +50,7 @@ class ManageTimeEntry
     time_entry.end_time = '00:00'
   end
 
-  def new_time_entry_params
+  def related_time_entry_params
     params = { start_time: '00:00', end_time: Tod::TimeOfDay.new(00,00,00) + new_entry_seconds }
     presence_day = next_presence_day
     [params, presence_day]
@@ -54,29 +62,29 @@ class ManageTimeEntry
     end
   end
 
-  def new_time_entry_and_day_valid?
-    return true unless new_time_entry
-    new_time_entry.valid? && new_time_entry.presence_day.valid?
+  def related_time_entry_and_day_valid?
+    return true unless related_time_entry
+    related_time_entry.valid? && related_time_entry.presence_day.valid?
+  end
+
+  def related_time_entry_error_messages
+    return {} unless related_time_entry
+    related_time_entry.errors.messages.merge(related_time_entry.presence_day.errors.messages)
   end
 
   def save!
-    if time_entry.valid? && new_time_entry_and_day_valid?
+    if time_entry.valid? && related_time_entry_and_day_valid?
       time_entry.save!
-      new_time_entry.try(:save!)
+      related_time_entry.try(:save!)
 
-      new_time_entry ? [time_entry, new_time_entry] : time_entry
+      related_time_entry ? [time_entry, related_time_entry] : time_entry
     else
       messages = {}
       messages = messages
         .merge(time_entry.errors.messages)
-        .merge(new_time_entry_error_messages)
+        .merge(related_time_entry_error_messages)
 
       fail InvalidResourcesError.new(time_entry, messages)
     end
-  end
-
-  def new_time_entry_error_messages
-    return {} unless new_time_entry
-    new_time_entry.errors.messages.merge(new_time_entry.presence_day.errors.messages)
   end
 end

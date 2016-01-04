@@ -20,11 +20,8 @@ module API
 
       def update
         verified_params(gate_rules) do |attributes|
-          if resource.update(attributes)
-            render_no_content
-          else
-            resource_invalid_error(resource)
-          end
+          ManageTimeEntry.new(time_entry_params(attributes), resource.presence_day).call
+          render_no_content
         end
       end
 
@@ -36,7 +33,7 @@ module API
       private
 
       def resource
-        @resource ||= TimeEntry.where(id: account_time_entrys_ids).find(params[:id])
+        @resource ||= TimeEntry.where(id: account_time_entries_ids).find(params[:id])
       end
 
       def resources
@@ -56,7 +53,7 @@ module API
         attributes.tap { |attr| attr.delete(:presence_day) }
       end
 
-      def account_time_entrys_ids
+      def account_time_entries_ids
         Account.current.presence_days.map do |day|
           day.time_entries.map { |time_entry| time_entry.id }.flatten
         end.flatten
