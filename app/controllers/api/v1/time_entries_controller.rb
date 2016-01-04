@@ -20,7 +20,7 @@ module API
 
       def update
         verified_params(gate_rules) do |attributes|
-          ManageTimeEntry.new(time_entry_params(attributes), resource.presence_day).call
+          ManageTimeEntry.new(attributes, resource.presence_day).call
           render_no_content
         end
       end

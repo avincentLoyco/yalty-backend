@@ -5,14 +5,12 @@ class ManageTimeEntry
   def initialize(params, presence_day)
     @params = params
     @presence_day = presence_day
-    @time_entry = nil
-    @related_time_entry = nil
+    @time_entry = find_or_initialize_time_entry
+    @related_time_entry = time_entry.related_entry
   end
 
   def call
     ActiveRecord::Base.transaction do
-      @time_entry = find_or_initialize_time_entry
-      @related_time_entry = time_entry.related_entry
       time_entry.attributes = params
       update_time_entry_and_manage_related if longer_than_day_or_has_related?
 
@@ -20,51 +18,48 @@ class ManageTimeEntry
     end
   end
 
-  def parsable_and_longer_than_day?
-    time_entry.times_parsable? && !time_entry.end_time_after_start_time?
-  end
-
-  def longer_than_day_or_has_related?
-    parsable_and_longer_than_day? || related_time_entry.present?
-  end
-
   def find_or_initialize_time_entry
     presence_day.time_entries.where(id: params[:id]).first_or_initialize
   end
 
   def update_time_entry_and_manage_related
-    return related_time_entry.destroy! unless parsable_and_longer_than_day?
+    return related_time_entry.destroy! if time_entry.end_time_after_start_time?
+    build_or_update_related_time_entry
+    time_entry.end_time = '00:00:00'
+  end
+
+  def build_or_update_related_time_entry
     related_entry_params, related_presence_day = related_time_entry_params
     @related_time_entry = related_presence_day.time_entries.new unless related_time_entry.present?
     related_time_entry.attributes = related_entry_params
-    update_first_time_entry_end_time
   end
 
-  def new_entry_seconds
+  def related_entry_seconds
     parsed_time = Tod::TimeOfDay.parse(time_entry.end_time)
     Tod::Shift.new(Tod::TimeOfDay.new(00, 00),
       Tod::TimeOfDay.new(parsed_time.hour, parsed_time.minute)).duration
   end
 
-  def update_first_time_entry_end_time
-    time_entry.end_time = '00:00'
-  end
-
   def related_time_entry_params
-    params = { start_time: '00:00', end_time: Tod::TimeOfDay.new(00,00,00) + new_entry_seconds }
-    presence_day = next_presence_day
+    params = { start_time: '00:00', end_time: Tod::TimeOfDay.new(00,00,00) + related_entry_seconds }
+    presence_day = related_presence_day
     [params, presence_day]
   end
 
-  def next_presence_day
+  def related_presence_day
     PresenceDay.where(order: presence_day.order + 1).first_or_initialize do |day|
       day.presence_policy = presence_day.presence_policy
     end
   end
 
+  def longer_than_day_or_has_related?
+    related_time_entry.present? ||
+      (time_entry.times_parsable? && !time_entry.end_time_after_start_time?)
+  end
+
   def related_time_entry_and_day_valid?
-    return true unless related_time_entry
-    related_time_entry.valid? && related_time_entry.presence_day.valid?
+    related_time_entry.blank? ||
+      (related_time_entry.valid? && related_time_entry.presence_day.valid?)
   end
 
   def related_time_entry_error_messages
