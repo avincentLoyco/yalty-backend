@@ -33,9 +33,12 @@ class Account < ActiveRecord::Base
   has_many :presence_policies
   has_many :custom_holidays, through: :holiday_policies
   has_one :registration_key, class_name: 'Account::RegistrationKey'
+  has_many :time_off_categories
+  has_many :time_offs, through: :time_off_categories
 
   before_validation :generate_subdomain, on: :create
   after_create :update_default_attribute_definitions!
+  after_create :update_default_time_off_categories!
 
   def self.current=(account)
     RequestStore.write(:current_account, account)
@@ -92,6 +95,11 @@ class Account < ActiveRecord::Base
 
       definition.save
     end
+  end
+
+  # Add defaults TimeOffCategories
+  def update_default_time_off_categories!
+    TimeOffCategory.update_default_account_categories(self)
   end
 
   private

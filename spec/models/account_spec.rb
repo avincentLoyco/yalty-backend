@@ -16,6 +16,7 @@ RSpec.describe Account, type: :model do
   it { is_expected.to have_many(:employee_events).through(:employees) }
   it { is_expected.to have_many(:employee_attribute_versions).through(:employees) }
   it { is_expected.to have_many(:presence_policies) }
+  it { is_expected.to have_many(:time_off_categories) }
   it { is_expected.to have_one(:registration_key) }
 
   context 'generate subdomain from company name on create' do
@@ -72,6 +73,22 @@ RSpec.describe Account, type: :model do
         account.update_default_attribute_definitions!
       }.to_not change(Employee::AttributeDefinition, :count)
 
+    end
+  end
+
+  context 'default time off categories' do
+    it 'should create default time off categories' do
+      account = build(:account)
+
+      expect { account.save }.to change { TimeOffCategory.count }
+    end
+
+    it 'should not create default time off categories when alreadye exist' do
+      account = create(:account)
+
+      expect {
+        account.update_default_time_off_categories!
+      }.to_not change { TimeOffCategory.count }
     end
   end
 

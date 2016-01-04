@@ -20,6 +20,10 @@ Rails.application.routes.draw do
       resources :presence_days, except: [:edit, :new]
       resource :user_settings, only: [:show, :update]
       resources :employee_event_types, only: [:index]
+      resources :time_off_categories, except: [:edit, :new] do
+        resources :time_offs, only: :index
+      end
+      resources :time_offs, except: [:edit, :new, :index]
 
       get '/employee_event_types/:employee_event_type', to: "employee_event_types#show"
     end
