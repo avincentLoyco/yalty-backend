@@ -19,7 +19,6 @@ Rails.application.routes.draw do
       resources :presence_policies, except: [:edit, :new] do
         resources :presence_days, only: :index
       end
-      resources :presence_days, except: [:edit, :new, :index]
       resources :presence_days, except: [:edit, :new, :index] do
         resources :time_entries, only: :index
       end

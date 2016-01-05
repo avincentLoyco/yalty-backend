@@ -3,7 +3,7 @@ module Api::V1
     def complete
       {
         order: resource.order,
-        hours: resource.hours
+        minutes: resource.minutes
       }
         .merge(basic)
     end

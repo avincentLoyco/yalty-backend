@@ -334,9 +334,9 @@ CREATE TABLE presence_days (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
     "order" integer,
     presence_policy_id uuid NOT NULL,
-    hours numeric,
     created_at timestamp without time zone NOT NULL,
-    updated_at timestamp without time zone NOT NULL
+    updated_at timestamp without time zone NOT NULL,
+    minutes integer
 );
 
 
@@ -1148,12 +1148,10 @@ INSERT INTO schema_migrations (version) VALUES ('20151209122309');
 
 INSERT INTO schema_migrations (version) VALUES ('20151209162652');
 
-INSERT INTO schema_migrations (version) VALUES ('20151221114106');
-
-INSERT INTO schema_migrations (version) VALUES ('20151209122309');
-
-INSERT INTO schema_migrations (version) VALUES ('20151209162652');
-
 INSERT INTO schema_migrations (version) VALUES ('20151214144417');
 
+INSERT INTO schema_migrations (version) VALUES ('20151221114106');
+
 INSERT INTO schema_migrations (version) VALUES ('20151222101912');
+
+INSERT INTO schema_migrations (version) VALUES ('20160105092534');
