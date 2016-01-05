@@ -3,7 +3,7 @@ class Employee < ActiveRecord::Base
   belongs_to :working_place, inverse_of: :employees
   belongs_to :holiday_policy
   belongs_to :presence_policy
-  belongs_to :user, class_name: 'Account::User', inverse_of: :user
+  belongs_to :user, class_name: 'Account::User'
   has_many :employee_attribute_versions,
     class_name: 'Employee::AttributeVersion',
     inverse_of: :employee
