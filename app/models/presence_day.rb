@@ -5,4 +5,6 @@ class PresenceDay < ActiveRecord::Base
   validates :order, presence: true, uniqueness: { scope: :presence_policy_id }
   validates :minutes, numericality: { less_than_or_equal_to: 1440, allow_nil: true }
   validates :presence_policy_id, presence: true
+
+  scope :related, -> (policy_id, order) { find_by(presence_policy_id: policy_id, order: order + 1) }
 end

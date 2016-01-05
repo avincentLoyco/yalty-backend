@@ -7,9 +7,14 @@ class TimeEntry < ActiveRecord::Base
 
   before_validation :convert_time_to_hours, if: :times_parsable?
 
+  scope :start_at_midnight, -> { find_by(start_time: '00:00:00') }
+
+  TOD = Tod::TimeOfDay
+  TODS = Tod::Shift
+
   def end_time_after_start_time?
-    end_time = Tod::TimeOfDay.parse(self.end_time)
-    start_time = Tod::TimeOfDay.parse(self.start_time)
+    end_time = TOD.parse(self.end_time)
+    start_time = TOD.parse(self.start_time)
 
     end_time > start_time || end_time.to_s == '00:00:00'
   end
@@ -18,17 +23,36 @@ class TimeEntry < ActiveRecord::Base
     start_time_parsable? && end_time_parsable? && !destroyed?
   end
 
+  def related_entry
+    return unless end_time == '00:00:00'
+    PresenceDay.related(presence_day.presence_policy, presence_day.order)
+      .try(:time_entries).try(:start_at_midnight)
+  end
+
+  private
+
+  def start_time_parsable?
+    TOD.parsable?(start_time)
+  end
+
+  def end_time_parsable?
+    TOD.parsable?(end_time)
+  end
+
   def times_parsable_and_day_present?
     times_parsable? && presence_day.present?
   end
 
-  def related_entry
-    return unless end_time == '00:00:00'
-    PresenceDay.where(order: presence_day.order + 1, presence_policy: presence_day.presence_policy)
-      .first.time_entries.where(start_time: '00:00:00').first
+  def start_time_covered?(time_entry)
+    new_entry = TODS.new(TOD.parse(start_time), TOD.parse(end_time), true)
+    old_entry = TODS.new(TOD.parse(time_entry[:start_time]), TOD.parse(time_entry[:end_time]), true)
+    new_entry.overlaps?(old_entry)
   end
 
-  private
+  def convert_time_to_hours
+    self[:start_time] = TOD.parse(start_time)
+    self[:end_time] = TOD.parse(end_time)
+  end
 
   def time_entry_not_reserved
     presence_day.time_entries.where.not(id: id).select(&:persisted?).each do |entry|
@@ -36,16 +60,6 @@ class TimeEntry < ActiveRecord::Base
         errors.add(:start_time, 'time_entries can not overlap')
       end
     end
-  end
-
-  def start_time_covered?(time_entry)
-    (start_time..end_time).cover?(time_entry[:start_time]) ||
-      (time_entry[:start_time]..time_entry[:end_time]).cover?(start_time)
-  end
-
-  def convert_time_to_hours
-    self[:start_time] = Tod::TimeOfDay.parse(start_time)
-    self[:end_time] = Tod::TimeOfDay.parse(end_time)
   end
 
   def start_time_format
@@ -58,13 +72,5 @@ class TimeEntry < ActiveRecord::Base
 
   def time_order
     errors.add(:end_time, 'Must be after start time') unless end_time_after_start_time?
-  end
-
-  def start_time_parsable?
-    Tod::TimeOfDay.parsable?(start_time)
-  end
-
-  def end_time_parsable?
-    Tod::TimeOfDay.parsable?(end_time)
   end
 end

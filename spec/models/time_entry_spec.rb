@@ -39,7 +39,6 @@ RSpec.describe TimeEntry, type: :model do
       it 'should contain error message' do
         subject.valid?
 
-
         expect(subject.errors.messages[:end_time])
           .to include('Invalid format: Time format required.')
       end
@@ -80,7 +79,7 @@ RSpec.describe TimeEntry, type: :model do
           TimeEntry.new(
             presence_day: time_entry.presence_day,
             start_time: '18:00',
-            end_time: '20:00' )
+            end_time: '20:00')
         end
         before { time_entry.save! }
 
@@ -96,7 +95,35 @@ RSpec.describe TimeEntry, type: :model do
         it { expect(duplicate_time_entry.valid?).to eq false }
         it { expect { duplicate_time_entry.valid? }
           .to change { duplicate_time_entry.errors.messages.count }.by(1) }
+
+        it 'should contain error message' do
+          subject.valid?
+
+          expect { duplicate_time_entry.errors.messages[:start_time]
+            .to include('time_entries can not overlap') }
+        end
       end
+    end
+  end
+
+  context 'related entry' do
+    let(:time_entry) { create(:time_entry, end_time: '00:00') }
+    subject { time_entry.related_entry }
+
+    context 'when entry does not have related entry' do
+      it { expect(subject).to eq(nil) }
+      it { expect { subject }.to_not raise_error }
+    end
+
+    context 'when entry has related entry' do
+      let(:day) { time_entry.presence_day }
+      let(:related_day) do
+        create(:presence_day, presence_policy: day.presence_policy, order: day.order + 1)
+      end
+      let!(:related_entry) { create(:time_entry, presence_day: related_day, start_time: '00:00') }
+
+      it { expect(subject).to eq(related_entry) }
+      it { expect { subject }.to_not raise_error }
     end
   end
 end
