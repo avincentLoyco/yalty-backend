@@ -13,6 +13,7 @@ class ManageTimeEntry
     ActiveRecord::Base.transaction do
       time_entry.attributes = params
       update_time_entry_and_manage_related if longer_than_day_or_has_related?
+      UpdatePresenceDayMinutes.new([presence_day, related_time_entry.try(:presence_day)]).call
 
       save!
     end
@@ -68,7 +69,7 @@ class ManageTimeEntry
   end
 
   def save!
-    if time_entry.valid? && related_time_entry_and_day_valid?
+    if time_entry.valid? && time_entry.presence_day.valid? && related_time_entry_and_day_valid?
       time_entry.save!
       related_time_entry.try(:save!)
 
@@ -77,6 +78,7 @@ class ManageTimeEntry
       messages = {}
       messages = messages
         .merge(time_entry.errors.messages)
+        .merge(time_entry.presence_day.errors.messages)
         .merge(related_time_entry_error_messages)
       fail InvalidResourcesError.new(time_entry, messages)
     end

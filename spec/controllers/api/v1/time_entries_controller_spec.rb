@@ -166,7 +166,7 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
   end
 
   describe 'DELETE #destroy' do
-    let(:related_day) do
+    let!(:related_day) do
       create(:presence_day, presence_policy: presence_policy, order: presence_day.order + 1)
     end
     let!(:related_time_entry) do
@@ -178,6 +178,7 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
     context 'with valid data' do
       context 'without related entry' do
         it { expect { subject }.to change { TimeEntry.count }.by(-1) }
+        it { expect { subject }.to change { presence_day.reload.minutes }.to(0) }
         it { is_expected.to have_http_status(204) }
       end
 
@@ -185,6 +186,7 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
         before { time_entry.update!(end_time: '00:00') }
 
         it { expect { subject }.to change { TimeEntry.count }.by(-2) }
+        it { expect { subject }.to change { related_day.reload.minutes }.to(0) }
         it { is_expected.to have_http_status(204) }
       end
     end

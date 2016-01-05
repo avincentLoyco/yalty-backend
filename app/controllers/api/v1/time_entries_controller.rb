@@ -28,12 +28,17 @@ module API
       def destroy
         transactions do
           resource.destroy!
-          resource.related_entry.try(:destroy)
+          related_entry.try(:destroy)
+          update_presence_days_minutes
         end
         render_no_content
       end
 
       private
+
+      def related_entry
+        @related_entry ||= resource.related_entry
+      end
 
       def resource
         @resource ||= TimeEntry.where(id: account_time_entries_ids).find(params[:id])
@@ -60,6 +65,13 @@ module API
         Account.current.presence_days.map do |day|
           day.time_entries.map { |time_entry| time_entry.id }.flatten
         end.flatten
+      end
+
+      def update_presence_days_minutes
+        results = UpdatePresenceDayMinutes.new(
+          [resource.presence_day, related_entry.try(:presence_day)]).call
+        messages = results.map { |result| result.errors.messages }.reduce({}, :merge)
+        fail InvalidResourcesError.new(resource, messages) unless messages.empty?
       end
 
       def resource_representer
