@@ -12,7 +12,13 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
   let(:presence_day) { create(:presence_day, presence_policy: second_presence_policy) }
 
   describe 'GET #show' do
-    let(:presence_policy) { create(:presence_policy, account: account) }
+    let(:presence_policy) do
+      create(:presence_policy,
+        account: account,
+        working_places: [working_place],
+        employees: [first_employee, second_employee]
+      )
+    end
     subject { get :show, id: presence_policy.id }
 
     context 'with valid data' do
@@ -22,6 +28,9 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
         before { subject }
 
         it { expect_json(id: presence_policy.id, name: presence_policy.name) }
+        it { expect(response.body).to include(
+          first_employee.id, second_employee.id, working_place.id
+        )}
       end
     end
 
@@ -47,12 +56,20 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
     subject { get :index }
     let!(:presence_policies) { create_list(:presence_policy, 3, account: account) }
 
+    before do
+      presence_policies.first.employees << [first_employee, second_employee]
+      presence_policies.first.working_places << [working_place]
+    end
+
     context 'with account presence policy' do
       before { subject }
 
       it { expect_json_sizes(4) }
       it { is_expected.to have_http_status(200) }
       it { expect_json_types('*', name: :string, id: :string, type: :string) }
+      it { expect(response.body).to include(
+        first_employee.id, second_employee.id, working_place.id
+      )}
     end
 
     context 'with not account presence policy' do
