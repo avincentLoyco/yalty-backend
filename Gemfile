@@ -22,6 +22,7 @@ group :production, :staging, :review do
   gem 'puma',             '~> 2.13.4'
   gem 'rails_12factor',   '~> 0.0.3'
   gem 'therubyracer',     '~> 0.12.2'
+  gem 'intercom',         '~> 3.3.0'
 end
 
 # Development environment dependencies (also needed by test environement)
