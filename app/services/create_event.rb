@@ -31,8 +31,10 @@ class CreateEvent
   def find_or_build_employee
     if employee_params.key?(:id)
       @employee = Account.current.employees.find(employee_params[:id])
+      working_place_id = employee_params[:working_place_id]
+      @employee.working_place_id = working_place_id if working_place_id.present?
     else
-      @employee = Account.current.employees.new
+      @employee = Account.current.employees.new(employee_params)
     end
 
     event.employee = @employee

@@ -168,6 +168,8 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     let(:first_name) { 'Walter' }
     let(:last_name) { 'Smith' }
 
+    let(:working_place) { create(:working_place, account: Account.current) }
+
     context 'a new employee' do
       let(:json_payload) do
         {
@@ -177,6 +179,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           event_type: "hired",
           employee: {
             type: 'employee',
+            working_place_id: working_place.id
           },
           employee_attributes: [
             {
@@ -262,6 +265,18 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         it { expect { subject }.to change { Employee::AttributeVersion.count }.by(1) }
 
         it { is_expected.to have_http_status(201) }
+      end
+
+      it 'should not create event when invalid working_place' do
+        json_payload[:employee][:working_place_id] = 'abc'
+
+        expect(subject).to have_http_status(422)
+      end
+
+      it 'should not create event when working_place is nil' do
+        json_payload[:employee][:working_place_id] = nil
+
+        expect(subject).to have_http_status(422)
       end
 
       it_behaves_like 'Unprocessable Entity on create'
@@ -764,6 +779,16 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         ).to include(
           first_pet[:value], last_pet[:value]
         )
+      end
+    end
+
+    context 'reassign working_place' do
+      it 'should reassign employee working_place to new one' do
+        working_place = create(:working_place, account: Account.current)
+        json_payload[:employee][:working_place_id] = working_place.id
+
+        expect(subject).to have_http_status(204)
+        expect(Employee.find(employee_id).reload.working_place).to eq(working_place)
       end
     end
   end

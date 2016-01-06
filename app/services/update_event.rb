@@ -28,6 +28,8 @@ class UpdateEvent
 
   def find_employee
     @employee = Account.current.employees.find(employee_params[:id])
+    working_place_id = employee_params[:working_place_id]
+    @employee.working_place_id = working_place_id if working_place_id.present?
   end
 
   def find_and_update_event

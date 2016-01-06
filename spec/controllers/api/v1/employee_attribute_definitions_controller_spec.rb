@@ -5,7 +5,7 @@ RSpec.describe API::V1::EmployeeAttributeDefinitionsController, type: :controlle
     resource_name: 'employee_attribute_definition'
   include_context 'shared_context_headers'
 
-  let(:default_attribute_definition_count) { Account::DEFAULT_ATTRIBUTE_DEFINITIONS.count}
+  let(:default_attribute_definition_count) { Account.new.default_attribute_definition.count }
 
   context 'GET #index' do
     before(:each) do

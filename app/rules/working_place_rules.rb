@@ -4,7 +4,6 @@ module WorkingPlaceRules
   def post_rules
     Gate.rules do
       required :name, :String
-      optional :employees, :Array, allow_nil: true
       optional :holiday_policy, allow_nil: true do
         required :id
       end
@@ -18,7 +17,6 @@ module WorkingPlaceRules
     Gate.rules do
       required :id, :String
       required :name, :String
-      optional :employees, :Array, allow_nil: true
       optional :holiday_policy, allow_nil: true do
         required :id
       end

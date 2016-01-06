@@ -8,6 +8,17 @@ RSpec.describe VerifyEmployeeAttributeValues, type: :service do
       account: Account.current,
       attribute_type: 'Boolean')
   end
+  let(:address_definition) do
+    create(:employee_attribute_definition,
+      account: Account.current,
+      attribute_type: 'Address')
+  end
+  let(:monthly_payments_definition) do
+    create(:employee_attribute_definition,
+      name: 'monthly_payments',
+      account: Account.current,
+      attribute_type: 'Number')
+  end
   let(:attribute_name) { 'lastname' }
   let(:params) do
     {
@@ -29,7 +40,7 @@ RSpec.describe VerifyEmployeeAttributeValues, type: :service do
     end
 
     context 'attribute type and value are hashes' do
-      let(:attribute_name) { 'address' }
+      let(:attribute_name) { address_definition.name }
       let(:value) {{ city: 'Warsaw', country: 'Poland' }}
 
       it { expect(subject.valid?).to eq true }
@@ -126,7 +137,7 @@ RSpec.describe VerifyEmployeeAttributeValues, type: :service do
 
     context 'string instead of hash send' do
       let(:value) { 'test' }
-      let(:attribute_name) { 'address' }
+      let(:attribute_name) { address_definition.name }
 
       it { expect(subject.valid?).to eq false }
       it 'should return error' do
@@ -149,7 +160,7 @@ RSpec.describe VerifyEmployeeAttributeValues, type: :service do
 
     context 'word intead of decimals send' do
       let(:value) { 'test' }
-      let(:attribute_name) { 'monthly_payments' }
+      let(:attribute_name) { monthly_payments_definition.name }
 
       it { expect(subject.valid?).to eq false }
       it 'should return error' do
@@ -183,7 +194,7 @@ RSpec.describe VerifyEmployeeAttributeValues, type: :service do
           .and_return(gate_rules)
       end
 
-      let(:attribute_name) { 'address' }
+      let(:attribute_name) { address_definition.name }
       let(:value) {{ city: 'Warsaw', country: 'Poland' }}
 
       it { expect(subject.valid?).to eq false }
