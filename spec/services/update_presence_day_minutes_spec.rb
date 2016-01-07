@@ -39,10 +39,10 @@ RSpec.describe UpdatePresenceDayMinutes, type: :service do
       create(:presence_day, presence_policy: presence_policy, order: presence_day.order + 1)
     end
     let!(:related_entry) do
-      create(:time_entry, start_time: '00:00', end_time: '10:00', presence_day: related_day)
+      create(:time_entry, start_time: '00:00', end_time: '10:04', presence_day: related_day)
     end
 
     it { expect { subject }.to change { presence_day.reload.minutes }.from(nil).to(720) }
-    it { expect { subject }.to change { related_day.reload.minutes }.from(nil).to(600) }
+    it { expect { subject }.to change { related_day.reload.minutes }.from(nil).to(604) }
   end
 end

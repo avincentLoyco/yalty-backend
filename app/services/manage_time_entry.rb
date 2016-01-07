@@ -54,8 +54,8 @@ class ManageTimeEntry
   end
 
   def longer_than_day_or_has_related?
-    related_time_entry.present? ||
-      (time_entry.times_parsable? && !time_entry.end_time_after_start_time?)
+    time_entry.times_parsable? &&
+      (related_time_entry.present? || !time_entry.end_time_after_start_time?)
   end
 
   def related_time_entry_and_day_valid?
