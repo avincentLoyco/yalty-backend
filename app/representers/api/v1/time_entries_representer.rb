@@ -3,7 +3,7 @@ module Api::V1
     def complete
       {
         start_time: resource.start_time,
-        end_time: resource.end_time,
+        end_time: resource.end_time
       }
         .merge(basic)
         .merge(relationships)

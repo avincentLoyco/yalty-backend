@@ -16,7 +16,7 @@ class UpdatePresenceDayMinutes
   def time_entries_duration(presence_day)
     return 0 unless presence_day.time_entries.present?
     presence_day.time_entries.map do |time_entry|
-      return unless time_entry.times_parsable?
+      return nil unless time_entry.times_parsable?
       Tod::Shift.new(
         Tod::TimeOfDay.parse(time_entry.start_time),
         Tod::TimeOfDay.parse(time_entry.end_time)

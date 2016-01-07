@@ -63,7 +63,7 @@ module API
 
       def account_time_entries_ids
         Account.current.presence_days.map do |day|
-          day.time_entries.map { |time_entry| time_entry.id }.flatten
+          day.time_entries.map(&:id).flatten
         end.flatten
       end
 

@@ -42,8 +42,11 @@ class ManageTimeEntry
   end
 
   def related_time_entry_params
-    params = { start_time: '00:00', end_time: Tod::TimeOfDay.new(00,00,00) + related_entry_seconds }
     presence_day = related_presence_day
+    params = {
+      start_time: '00:00',
+      end_time: Tod::TimeOfDay.new(00, 00, 00) + related_entry_seconds
+    }
     [params, presence_day]
   end
 
