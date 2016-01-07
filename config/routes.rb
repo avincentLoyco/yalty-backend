@@ -28,7 +28,7 @@ Rails.application.routes.draw do
         resources :time_offs, only: :index
       end
       resources :time_offs, except: [:edit, :new, :index]
-      resources :time_entries, except: [:edit, :new]
+      resources :time_entries, except: [:edit, :new, :index]
 
       get '/employee_event_types/:employee_event_type', to: "employee_event_types#show"
     end

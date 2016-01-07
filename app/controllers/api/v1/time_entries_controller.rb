@@ -1,6 +1,6 @@
 module API
   module V1
-    class TimeEntriesController < ApplicationController
+    class TimeEntriesController < API::ApplicationController
       include TimeEntriesRules
 
       def show
@@ -53,7 +53,7 @@ module API
       end
 
       def presence_day_params
-        return params[:presence_day][:id] unless params[:presence_day_id]
+        return params[:presence_day].try(:[], :id) unless params[:presence_day_id]
         params[:presence_day_id]
       end
 
