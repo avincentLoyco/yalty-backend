@@ -21,8 +21,9 @@ Set ACCOUNT_SUBDOMAIN to choose the account where to load sample data.
 take yalty:load_sample_data [ACCOUNT_SUBDOMAIN=my-company]
   DESC
   task load_sample_data: [:environment] do
-    account = load_or_create_account
-    user    = load_or_create_user(account)
+    account       = load_or_create_account
+    working_place = load_or_create_working_place(account)
+    user          = load_or_create_user(account)
 
     # create or update employees
     [
@@ -40,7 +41,7 @@ take yalty:load_sample_data [ACCOUNT_SUBDOMAIN=my-company]
       ActiveRecord::Base.transaction do
         uuid = data.delete(:uuid)
         employee = account.employees.where(id: uuid).first
-        employee = account.employees.create!(id: uuid) if employee.nil?
+        employee = account.employees.create!(id: uuid, working_place: working_place) if employee.nil?
 
         if employee.events.empty?
           event = employee.events.create!(
@@ -87,6 +88,11 @@ def load_or_create_account
   end
 
   account
+end
+
+def load_or_create_working_place(account)
+  working_place = account.working_places.first
+  working_place || account.working_places.create!(name: 'Working Place')
 end
 
 def load_or_create_user(account)
