@@ -2,7 +2,8 @@ class TimeEntry < ActiveRecord::Base
   belongs_to :presence_day
 
   validates :start_time, :end_time, :presence_day, presence: true
-  validate :time_order, :time_entry_not_reserved, if: :times_parsable_and_day_present?
+  validate :time_order, :time_entry_not_reserved, :not_related_when_last,
+    if: :times_parsable_and_day_present?
   validate :start_time_format, :end_time_format
 
   before_validation :convert_time_to_hours, if: :times_parsable?
@@ -11,6 +12,10 @@ class TimeEntry < ActiveRecord::Base
 
   TOD = Tod::TimeOfDay
   TODS = Tod::Shift
+
+  def last_day?
+    presence_day.order == presence_day.presence_policy.presence_days.pluck(:order).max
+  end
 
   def end_time_after_start_time?
     end_time = TOD.parse(self.end_time)
@@ -52,6 +57,11 @@ class TimeEntry < ActiveRecord::Base
   def convert_time_to_hours
     self[:start_time] = TOD.parse(start_time)
     self[:end_time] = TOD.parse(end_time)
+  end
+
+  def not_related_when_last
+    return unless !end_time_after_start_time? && last_day?
+    errors.add(:end_time, 'Last presence policy entry must finish at or before 00:00')
   end
 
   def time_entry_not_reserved

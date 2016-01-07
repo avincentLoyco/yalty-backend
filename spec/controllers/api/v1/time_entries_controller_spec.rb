@@ -8,6 +8,9 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
   let(:presence_policy) { create(:presence_policy, account: account) }
   let(:presence_day) { create(:presence_day, presence_policy: presence_policy) }
   let!(:time_entry) { create(:time_entry, presence_day: presence_day) }
+  let!(:last_policy_day) do
+    create(:presence_day, order: presence_day.order + 2, presence_policy: presence_policy)
+  end
 
   describe 'GET #show' do
     subject { get :show, id: id }
@@ -158,6 +161,23 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
             it { expect(response.body).to include 'Invalid format: Time format required.' }
           end
         end
+
+        context 'when related day is last from policy' do
+          before { last_policy_day.destroy! }
+          let(:end_time) { '2:00' }
+
+          it { expect { subject }.to_not change { TimeEntry.count } }
+          it { expect { subject }.to_not change { PresenceDay.count } }
+          it { expect { subject }.to_not change { presence_day.reload.minutes } }
+          it { is_expected.to have_http_status(422) }
+
+          context 'response body' do
+            before { subject }
+
+            it { expect(response.body)
+              .to include('Last presence policy entry must finish at or before 00:00') }
+          end
+        end
       end
 
       context 'when params are missing' do
@@ -294,6 +314,23 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
             it { expect { subject }.to_not change { related_day.reload.minutes } }
 
             it { is_expected.to have_http_status(422) }
+          end
+
+          context 'when related day is last from policy' do
+            before { last_policy_day.destroy! }
+            let(:end_time) { '2:00' }
+
+            it { expect { subject }.to_not change { TimeEntry.count } }
+            it { expect { subject }.to_not change { PresenceDay.count } }
+            it { expect { subject }.to_not change { presence_day.reload.minutes } }
+            it { is_expected.to have_http_status(422) }
+
+            context 'response body' do
+              before { subject }
+
+              it { expect(response.body)
+                .to include('Last presence policy entry must finish at or before 00:00') }
+            end
           end
         end
       end

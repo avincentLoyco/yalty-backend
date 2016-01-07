@@ -12,7 +12,7 @@ class ManageTimeEntry
   def call
     ActiveRecord::Base.transaction do
       time_entry.attributes = params
-      update_time_entry_and_manage_related if longer_than_day_or_has_related?
+      update_time_entry_and_manage_related if may_have_related?
       UpdatePresenceDayMinutes.new([presence_day, related_time_entry.try(:presence_day)]).call
 
       save!
@@ -56,8 +56,8 @@ class ManageTimeEntry
     end
   end
 
-  def longer_than_day_or_has_related?
-    time_entry.times_parsable? &&
+  def may_have_related?
+    time_entry.times_parsable? && !time_entry.last_day? &&
       (related_time_entry.present? || !time_entry.end_time_after_start_time?)
   end
 

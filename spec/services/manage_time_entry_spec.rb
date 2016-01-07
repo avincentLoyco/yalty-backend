@@ -6,6 +6,7 @@ RSpec.describe ManageTimeEntry, type: :service do
   let(:account) { create(:account) }
   let(:presence_policy) { create(:presence_policy, account: account) }
   let!(:presence_day) { create(:presence_day, order: 1, presence_policy: presence_policy) }
+  let!(:last_presence_day) { create(:presence_day, order: 3, presence_policy: presence_policy) }
   let(:end_time) { '23:00:00' }
 
   context 'with valid params' do
@@ -103,6 +104,13 @@ RSpec.describe ManageTimeEntry, type: :service do
     context 'presence day data does not pass validation' do
       before { params[:end_time] =  '2:00' }
       before { allow_any_instance_of(PresenceDay).to receive(:valid?) { false } }
+
+      it { expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
+    end
+
+    context 'time entry in new day added for last presence day' do
+      before { last_presence_day.destroy! }
+      let(:end_time) { '2:00' }
 
       it { expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
     end
