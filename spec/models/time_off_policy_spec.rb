@@ -14,4 +14,23 @@ RSpec.describe TimeOffPolicy, type: :model do
   it { is_expected.to validate_presence_of(:start_time) }
   it { is_expected.to validate_presence_of(:time_off_category) }
   it { is_expected.to validate_inclusion_of(:type).in_array(%w(counter balance)) }
+  it { is_expected.to validate_numericality_of(:amount).is_greater_than_or_equal_to(0) }
+
+  context 'end time validation' do
+    subject { build(:time_off_policy, end_time: end_time)  }
+
+    context 'when valid data' do
+      let(:end_time) { Time.now + 1.month }
+
+      it { expect(subject.valid?).to eq true }
+      it { expect { subject.valid? }.to_not change { subject.errors.messages } }
+    end
+
+    context 'when invalid data' do
+      let(:end_time) { Time.now - 1.month }
+
+      it { expect(subject.valid?).to eq false }
+      it { expect { subject.valid? }.to change { subject.errors.messages[:end_time] } }
+    end
+  end
 end
