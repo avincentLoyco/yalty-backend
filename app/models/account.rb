@@ -1,4 +1,6 @@
 class Account < ActiveRecord::Base
+  include ActsAsIntercomData
+
   SUPPORTED_TIMEZONES = ActiveSupport::TimeZone.all
     .map { |tz| tz.tzinfo.name } + ['Europe/Zurich']
 
@@ -109,6 +111,25 @@ class Account < ActiveRecord::Base
     else
       DEFAULT_ATTRIBUTE_DEFINITIONS
     end
+  end
+
+  def intercom_type
+    :companies
+  end
+
+  def intercom_attributes
+    %w(id created_at company_name subdomain)
+  end
+
+  def intercom_data
+    {
+      company_id: id,
+      name: company_name,
+      remote_created_at: created_at,
+      custom_attributes: {
+        subdomain: subdomain
+      }
+    }
   end
 
   private
