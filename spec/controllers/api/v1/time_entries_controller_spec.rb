@@ -72,7 +72,6 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
   end
 
   describe 'POST #create' do
-    before { UpdatePresenceDayMinutes.new([presence_day]).call }
     subject { post :create, params }
     let(:presence_day_id) { presence_day.id }
     let(:start_time) { '20:00' }

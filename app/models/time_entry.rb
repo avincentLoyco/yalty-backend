@@ -9,9 +9,14 @@ class TimeEntry < ActiveRecord::Base
   before_validation :convert_time_to_hours, if: :times_parsable?
 
   scope :start_at_midnight, -> { find_by(start_time: '00:00:00') }
+  after_save :update_presence_day_minutes
 
   TOD = Tod::TimeOfDay
   TODS = Tod::Shift
+
+  def duration
+    TODS.new(TOD.parse(start_time), TOD.parse(end_time)).duration / 60
+  end
 
   def last_day?
     presence_day.order == presence_day.presence_policy.presence_days.pluck(:order).max
@@ -35,6 +40,10 @@ class TimeEntry < ActiveRecord::Base
   end
 
   private
+
+  def update_presence_day_minutes
+    presence_day.update_minutes!
+  end
 
   def start_time_parsable?
     TOD.parsable?(start_time)

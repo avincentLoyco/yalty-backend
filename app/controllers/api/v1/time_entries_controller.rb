@@ -29,7 +29,8 @@ module API
         transactions do
           resource.destroy!
           related_entry.try(:destroy)
-          update_presence_days_minutes
+          resource.presence_day.update_minutes!
+          related_entry.presence_day.update_minutes! if related_entry
         end
         render_no_content
       end
@@ -65,13 +66,6 @@ module API
         Account.current.presence_days.map do |day|
           day.time_entries.map(&:id).flatten
         end.flatten
-      end
-
-      def update_presence_days_minutes
-        results = UpdatePresenceDayMinutes.new(
-          [resource.presence_day, related_entry.try(:presence_day)]).call
-        messages = results.map { |result| result.errors.messages }.reduce({}, :merge)
-        fail InvalidResourcesError.new(resource, messages) unless messages.empty?
       end
 
       def resource_representer
