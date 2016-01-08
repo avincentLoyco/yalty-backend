@@ -882,7 +882,11 @@ CREATE INDEX index_presence_policies_on_account_id ON presence_policies USING bt
 
 
 --
+<<<<<<< HEAD
 -- Name: index_time_entries_on_presence_day_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+=======
+-- Name: index_time_entries_on_presence_day_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+>>>>>>> [YWA-157] Add Employee::Balance, TimeOffPolicy models and their relations
 --
 
 CREATE INDEX index_time_entries_on_presence_day_id ON time_entries USING btree (presence_day_id);
