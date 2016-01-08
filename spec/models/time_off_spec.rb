@@ -13,6 +13,7 @@ RSpec.describe TimeOff, type: :model do
 
   it { is_expected.to belong_to(:employee) }
   it { is_expected.to belong_to(:time_off_category) }
+  it { is_expected.to have_many(:employee_balances) }
 
   it { is_expected.to validate_presence_of(:start_time) }
   it { is_expected.to validate_presence_of(:end_time) }

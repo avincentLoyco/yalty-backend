@@ -177,6 +177,34 @@ CREATE VIEW employee_attributes AS
 
 
 --
+-- Name: employee_balances; Type: TABLE; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE TABLE employee_balances (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    balance integer DEFAULT 0,
+    amount integer DEFAULT 0,
+    time_off_id uuid,
+    employee_id uuid NOT NULL,
+    time_off_category_id uuid NOT NULL,
+    time_off_policy_id uuid,
+    created_at timestamp without time zone,
+    updated_at timestamp without time zone
+);
+
+
+--
+-- Name: employee_time_off_policies; Type: TABLE; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE TABLE employee_time_off_policies (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    employee_id uuid NOT NULL,
+    time_off_policy_id uuid NOT NULL
+);
+
+
+--
 -- Name: employees; Type: TABLE; Schema: public; Owner: -; Tablespace:
 --
 
@@ -408,6 +436,25 @@ CREATE TABLE time_off_categories (
 
 
 --
+-- Name: time_off_policies; Type: TABLE; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE TABLE time_off_policies (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    start_day integer NOT NULL,
+    end_day integer NOT NULL,
+    start_month integer NOT NULL,
+    end_month integer NOT NULL,
+    amount integer DEFAULT 0 NOT NULL,
+    years_to_effect integer DEFAULT 0 NOT NULL,
+    policy_type character varying NOT NULL,
+    time_off_category_id uuid NOT NULL,
+    created_at timestamp without time zone,
+    updated_at timestamp without time zone
+);
+
+
+--
 -- Name: time_offs; Type: TABLE; Schema: public; Owner: -; Tablespace:
 --
 
@@ -419,6 +466,17 @@ CREATE TABLE time_offs (
     employee_id uuid NOT NULL,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL
+);
+
+
+--
+-- Name: working_place_time_off_policies; Type: TABLE; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE TABLE working_place_time_off_policies (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    working_place_id uuid NOT NULL,
+    time_off_policy_id uuid NOT NULL
 );
 
 
@@ -499,11 +557,27 @@ ALTER TABLE ONLY employee_attribute_versions
 
 
 --
+-- Name: employee_balances_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
+--
+
+ALTER TABLE ONLY employee_balances
+    ADD CONSTRAINT employee_balances_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: employee_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY employee_events
     ADD CONSTRAINT employee_events_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: employee_time_off_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
+--
+
+ALTER TABLE ONLY employee_time_off_policies
+    ADD CONSTRAINT employee_time_off_policies_pkey PRIMARY KEY (id);
 
 
 --
@@ -595,11 +669,27 @@ ALTER TABLE ONLY time_off_categories
 
 
 --
+-- Name: time_off_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
+--
+
+ALTER TABLE ONLY time_off_policies
+    ADD CONSTRAINT time_off_policies_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: time_offs_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY time_offs
     ADD CONSTRAINT time_offs_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: working_place_time_off_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
+--
+
+ALTER TABLE ONLY working_place_time_off_policies
+    ADD CONSTRAINT working_place_time_off_policies_pkey PRIMARY KEY (id);
 
 
 --
@@ -681,10 +771,52 @@ CREATE INDEX index_employee_attribute_versions_on_employee_id ON employee_attrib
 
 
 --
+-- Name: index_employee_balances_on_employee_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE INDEX index_employee_balances_on_employee_id ON employee_balances USING btree (employee_id);
+
+
+--
+-- Name: index_employee_balances_on_time_off_category_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE INDEX index_employee_balances_on_time_off_category_id ON employee_balances USING btree (time_off_category_id);
+
+
+--
+-- Name: index_employee_balances_on_time_off_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE INDEX index_employee_balances_on_time_off_id ON employee_balances USING btree (time_off_id);
+
+
+--
+-- Name: index_employee_balances_on_time_off_policy_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE INDEX index_employee_balances_on_time_off_policy_id ON employee_balances USING btree (time_off_policy_id);
+
+
+--
 -- Name: index_employee_events_on_employee_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
 CREATE INDEX index_employee_events_on_employee_id ON employee_events USING btree (employee_id);
+
+
+--
+-- Name: index_employee_time_off_policies_on_employee_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE INDEX index_employee_time_off_policies_on_employee_id ON employee_time_off_policies USING btree (employee_id);
+
+
+--
+-- Name: index_employee_time_off_policies_on_time_off_policy_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE INDEX index_employee_time_off_policies_on_time_off_policy_id ON employee_time_off_policies USING btree (time_off_policy_id);
 
 
 --
@@ -793,6 +925,13 @@ CREATE INDEX index_time_off_categories_on_account_id ON time_off_categories USIN
 
 
 --
+-- Name: index_time_off_policies_on_time_off_category_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE INDEX index_time_off_policies_on_time_off_category_id ON time_off_policies USING btree (time_off_category_id);
+
+
+--
 -- Name: index_time_offs_on_employee_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
@@ -807,6 +946,20 @@ CREATE INDEX index_time_offs_on_time_off_category_id ON time_offs USING btree (t
 
 
 --
+-- Name: index_working_place_time_off_policies_on_time_off_policy_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE INDEX index_working_place_time_off_policies_on_time_off_policy_id ON working_place_time_off_policies USING btree (time_off_policy_id);
+
+
+--
+-- Name: index_working_place_time_off_policies_on_working_place_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE INDEX index_working_place_time_off_policies_on_working_place_id ON working_place_time_off_policies USING btree (working_place_id);
+
+
+--
 -- Name: index_working_places_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
@@ -818,6 +971,22 @@ CREATE INDEX index_working_places_on_account_id ON working_places USING btree (a
 --
 
 CREATE UNIQUE INDEX unique_schema_migrations ON schema_migrations USING btree (version);
+
+
+--
+-- Name: fk_rails_06c847ea6d; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY employee_time_off_policies
+    ADD CONSTRAINT fk_rails_06c847ea6d FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE;
+
+
+--
+-- Name: fk_rails_09864faa3a; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY working_place_time_off_policies
+    ADD CONSTRAINT fk_rails_09864faa3a FOREIGN KEY (working_place_id) REFERENCES working_places(id) ON DELETE CASCADE;
 
 
 --
@@ -850,6 +1019,14 @@ ALTER TABLE ONLY employee_attribute_versions
 
 ALTER TABLE ONLY oauth_access_grants
     ADD CONSTRAINT fk_rails_330c32d8d9 FOREIGN KEY (resource_owner_id) REFERENCES account_users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: fk_rails_489b112f2d; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY employee_balances
+    ADD CONSTRAINT fk_rails_489b112f2d FOREIGN KEY (time_off_id) REFERENCES time_offs(id);
 
 
 --
@@ -901,6 +1078,14 @@ ALTER TABLE ONLY employee_attribute_definitions
 
 
 --
+-- Name: fk_rails_878bdb42b2; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY employee_balances
+    ADD CONSTRAINT fk_rails_878bdb42b2 FOREIGN KEY (time_off_category_id) REFERENCES time_off_categories(id);
+
+
+--
 -- Name: fk_rails_8df7ccdc3f; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -925,11 +1110,43 @@ ALTER TABLE ONLY working_places
 
 
 --
+-- Name: fk_rails_aa3331fb5e; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY working_place_time_off_policies
+    ADD CONSTRAINT fk_rails_aa3331fb5e FOREIGN KEY (time_off_policy_id) REFERENCES time_off_policies(id) ON DELETE CASCADE;
+
+
+--
 -- Name: fk_rails_ae92552259; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY holiday_policies
     ADD CONSTRAINT fk_rails_ae92552259 FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE;
+
+
+--
+-- Name: fk_rails_b0c50133fb; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY employee_balances
+    ADD CONSTRAINT fk_rails_b0c50133fb FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE;
+
+
+--
+-- Name: fk_rails_b31bf8c36e; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY employee_balances
+    ADD CONSTRAINT fk_rails_b31bf8c36e FOREIGN KEY (time_off_policy_id) REFERENCES time_off_policies(id);
+
+
+--
+-- Name: fk_rails_be9ada4c17; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY employee_time_off_policies
+    ADD CONSTRAINT fk_rails_be9ada4c17 FOREIGN KEY (time_off_policy_id) REFERENCES time_off_policies(id) ON DELETE CASCADE;
 
 
 --
@@ -946,6 +1163,14 @@ ALTER TABLE ONLY account_users
 
 ALTER TABLE ONLY employees
     ADD CONSTRAINT fk_rails_d55a0137c3 FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE;
+
+
+--
+-- Name: fk_rails_d8df29117a; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY time_off_policies
+    ADD CONSTRAINT fk_rails_d8df29117a FOREIGN KEY (time_off_category_id) REFERENCES time_off_categories(id) ON DELETE CASCADE;
 
 
 --
@@ -1101,5 +1326,17 @@ INSERT INTO schema_migrations (version) VALUES ('20151222121052');
 INSERT INTO schema_migrations (version) VALUES ('20151222101912');
 
 INSERT INTO schema_migrations (version) VALUES ('20160105092534');
+
+INSERT INTO schema_migrations (version) VALUES ('20160108093551');
+
+INSERT INTO schema_migrations (version) VALUES ('20160108110841');
+
+INSERT INTO schema_migrations (version) VALUES ('20160108112741');
+
+INSERT INTO schema_migrations (version) VALUES ('20160113111200');
+
+INSERT INTO schema_migrations (version) VALUES ('20160113133430');
+
+INSERT INTO schema_migrations (version) VALUES ('20160115120801');
 
 INSERT INTO schema_migrations (version) VALUES ('20160119110649');
