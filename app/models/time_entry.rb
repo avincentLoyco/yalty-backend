@@ -9,7 +9,7 @@ class TimeEntry < ActiveRecord::Base
   before_validation :convert_time_to_hours, if: :times_parsable?
 
   scope :start_at_midnight, -> { find_by(start_time: '00:00:00') }
-  after_save :update_presence_day_minutes
+  after_save :update_presence_day_minutes!
 
   TOD = Tod::TimeOfDay
   TODS = Tod::Shift
@@ -41,7 +41,7 @@ class TimeEntry < ActiveRecord::Base
 
   private
 
-  def update_presence_day_minutes
+  def update_presence_day_minutes!
     presence_day.update_minutes!
   end
 
