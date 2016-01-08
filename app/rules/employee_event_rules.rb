@@ -1,19 +1,6 @@
 module EmployeeEventRules
   include BaseRules
 
-  def patch_rules
-    Gate.rules do
-      required :id
-      optional :effective_at
-      optional :event_type
-      optional :comment
-      optional :employee, :Hash do
-        optional :id, :String
-      end
-      optional :employee_attributes, :Array
-    end
-  end
-
   def post_rules
     Gate.rules do
       required :effective_at
@@ -21,6 +8,7 @@ module EmployeeEventRules
       optional :comment
       required :employee, :Hash do
         optional :id, :String
+        optional :working_place_id, :String
       end
       optional :employee_attributes, :Array, allow_nil: true
     end
@@ -34,6 +22,7 @@ module EmployeeEventRules
       optional :comment
       required :employee, :Hash do
         required :id, :String
+        optional :working_place_id, :String
       end
       optional :employee_attributes, :Array, allow_nil: true
     end

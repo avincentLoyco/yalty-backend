@@ -1,4 +1,6 @@
 class Account::User < ActiveRecord::Base
+  include ActsAsIntercomData
+
   has_secure_password
 
   validates :email, presence: true
@@ -30,5 +32,24 @@ class Account::User < ActiveRecord::Base
 
   def generate_reset_password_token
     self.reset_password_token = SecureRandom.urlsafe_base64(16)
+  end
+
+  def intercom_type
+    :users
+  end
+
+  def intercom_attributes
+    %w(id created_at email)
+  end
+
+  def intercom_data
+    {
+      user_id: id,
+      email: email,
+      signed_up_at: created_at,
+      companies: [{
+        company_id: account.id
+      }]
+    }
   end
 end

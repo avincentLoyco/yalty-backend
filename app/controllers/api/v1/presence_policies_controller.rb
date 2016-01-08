@@ -8,7 +8,8 @@ module API
       end
 
       def index
-        render_resource(resources)
+        response = resources.map { |item| resource_representer.new(item).with_relationships }
+        render json: response
       end
 
       def create

@@ -10,4 +10,7 @@ class Employee < ActiveRecord::Base
     class_name: 'Employee::Attribute',
     inverse_of: :employee
   has_many :events, class_name: 'Employee::Event', inverse_of: :employee
+  has_many :time_offs
+
+  validates :working_place_id, presence: true
 end

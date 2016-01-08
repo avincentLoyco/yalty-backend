@@ -30,12 +30,6 @@ RSpec.describe API::V1::PresenceDaysController, type: :controller do
         it { is_expected.to have_http_status(404) }
       end
 
-      context 'with invalid presence policy id' do
-        let(:params) {{ id: presence_day.id, presence_policy_id: '1' }}
-
-        it { is_expected.to have_http_status(404) }
-      end
-
       context 'with not users presence day' do
         let(:params) {{ id: presence_day.id, presence_policy_id: presence_policy.id }}
         before(:each) do
@@ -82,7 +76,10 @@ RSpec.describe API::V1::PresenceDaysController, type: :controller do
     let(:presence_policy_id) { presence_policy.id.to_s }
     let(:params) do
       {
-        presence_policy_id: presence_policy_id,
+        presence_policy: {
+          id: presence_policy_id,
+          type: 'presence_policy'
+        },
         order: order,
         hours: hours,
         type: 'presence_day'
@@ -135,7 +132,7 @@ RSpec.describe API::V1::PresenceDaysController, type: :controller do
       end
 
       context 'with data that do not pass validation' do
-        before { PresenceDay.create(params.except(:type)) }
+        before { presence_policy.presence_days.create(params.except(:type, :presence_policy)) }
 
         it { is_expected.to have_http_status(422) }
         it { expect { subject }.to_not change { PresenceDay.count } }
@@ -159,7 +156,6 @@ RSpec.describe API::V1::PresenceDaysController, type: :controller do
     let(:params) do
       {
         id: id,
-        presence_policy_id: presence_policy_id,
         order: order,
         hours: hours,
         type: 'presence_day'
@@ -181,13 +177,6 @@ RSpec.describe API::V1::PresenceDaysController, type: :controller do
         it { is_expected.to have_http_status(404) }
       end
 
-      context 'with invalid presence policy id' do
-        let(:presence_policy_id) { '1' }
-
-        it { expect { subject }.to_not change { presence_day.reload.order } }
-        it { is_expected.to have_http_status(404) }
-      end
-
       context 'without required params' do
         let(:missing_params) { params.tap { |params| params.delete(:order) } }
         subject { put :update, missing_params }
@@ -203,7 +192,8 @@ RSpec.describe API::V1::PresenceDaysController, type: :controller do
       end
 
       context 'with data that do not pass validation' do
-        before { PresenceDay.create(params.except(:type, :id)) }
+        before { presence_policy.presence_days.create(params.except(:type, :id)) }
+
         it { expect { subject }.to_not change { presence_day.reload.order } }
         it { is_expected.to have_http_status(422) }
 

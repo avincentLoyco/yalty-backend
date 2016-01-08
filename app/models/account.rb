@@ -1,4 +1,6 @@
 class Account < ActiveRecord::Base
+  include ActsAsIntercomData
+
   SUPPORTED_TIMEZONES = ActiveSupport::TimeZone.all
     .map { |tz| tz.tzinfo.name } + ['Europe/Zurich']
 
@@ -32,10 +34,14 @@ class Account < ActiveRecord::Base
   has_many :holiday_policies
   has_many :presence_policies
   has_many :custom_holidays, through: :holiday_policies
+  has_many :presence_days, through: :presence_policies
   has_one :registration_key, class_name: 'Account::RegistrationKey'
+  has_many :time_off_categories
+  has_many :time_offs, through: :time_off_categories
 
   before_validation :generate_subdomain, on: :create
   after_create :update_default_attribute_definitions!
+  after_create :update_default_time_off_categories!
 
   def self.current=(account)
     RequestStore.write(:current_account, account)
@@ -78,7 +84,7 @@ class Account < ActiveRecord::Base
   # Create all required Employee::AttributeDefinition for
   # the account
   def update_default_attribute_definitions!
-    DEFAULT_ATTRIBUTE_DEFINITIONS.each do |attr|
+    default_attribute_definition.each do |attr|
       definition = employee_attribute_definitions.where(name: attr[:name]).first
 
       if definition.nil?
@@ -92,6 +98,38 @@ class Account < ActiveRecord::Base
 
       definition.save
     end
+  end
+
+  # Add defaults TimeOffCategories
+  def update_default_time_off_categories!
+    TimeOffCategory.update_default_account_categories(self)
+  end
+
+  def default_attribute_definition
+    if Rails.env.test?
+      DEFAULT_ATTRIBUTE_DEFINITIONS.first(2)
+    else
+      DEFAULT_ATTRIBUTE_DEFINITIONS
+    end
+  end
+
+  def intercom_type
+    :companies
+  end
+
+  def intercom_attributes
+    %w(id created_at company_name subdomain)
+  end
+
+  def intercom_data
+    {
+      company_id: id,
+      name: company_name,
+      remote_created_at: created_at,
+      custom_attributes: {
+        subdomain: subdomain
+      }
+    }
   end
 
   private
