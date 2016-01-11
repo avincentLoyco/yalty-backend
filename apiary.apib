@@ -350,7 +350,7 @@ By default account_id is equal Account.current.id
 
 
 
-## Holiday Collection [/api/v1/holidays?holiday_policy_id={holiday_policy_id}]
+## Holiday Collection [/api/v1/holiday_policies/{holiday_policy_id}/holidays]
 
 + Parameters
    + holiday_policy_id: 12345678-1234-1234-123456789012 (required, string) - ID is in uuid format
@@ -383,14 +383,17 @@ Create a new holiday
 + Attributes
   + name: holiday (string, required)
   + date: 1 (string, required)
-  + holiday_policy_id: 11 (string, required)
+  + holiday_policy
+    + id: 11 (string, required)
 
 + Request (application/json)
 
         {
             "name": "holiday",
             "date": "01.01.2013",
-            "holiday_policy_id": "12345678-1234-1234-1234-123456789012"
+            "holiday_policy": {
+              "id": "12345678-1234-1234-1234-123456789012"
+            }
         }
 
 + Response 201 (application/json)
@@ -406,10 +409,9 @@ Create a new holiday
 + Parameters
     + holiday_id: 12345678-1234-1234-123456789012 (required, string) - ID of the Holiday is an uuid
 
-### GET Get Holiday Details [GET /api/v1/holidays/{holiday_id}?holiday_policy_id={holiday_policy_id}]
+### GET Get Holiday Details [GET /api/v1/holidays/{holiday_id}]
 
 + Parameters
-   + holiday_policy_id: 12345678-1234-1234-123456789012 (required, string) - ID is in uuid format
    + holiday_id: 12345678-1234-1234-123456789012 (required, string) - ID of the Holiday is an uuid
 
 + Request (application/json)
@@ -429,14 +431,12 @@ Create a new holiday
   + id: 1 (string, required)
   + name: holiday (string, required)
   + date: 1 (string, required)
-  + holiday_policy_id: 11 (string, required)
 
 + Request (application/json)
 
         {
             "name": "holiday",
-            "date" : "01.01.2015",
-            "holiday_policy_id": "12345678-1234-1234-1234-123456789012"
+            "date" : "01.01.2015"
         }
 
 + Response 204 (application/json)
@@ -669,7 +669,7 @@ By default account_id is equal Account.current.id
 
 
 
-## PresenceDays Collection [/api/v1/presence_policies?presence_policy_id={presence_policy_id}]
+## PresenceDays Collection [/api/v1/presence_policies/{presence_policy_id}/presence_days]
 
 + Parameters
    + presence_policy_id: 12345678-1234-1234-123456789012 (required, string) - ID is in uuid format
@@ -686,13 +686,13 @@ Get a list of presence days which belongs to account's presence policy
             {
               "order": "1",
               "id": "87654321-1234-1234-1234-123456789012",
-              "hours": "7.50"
+              "minutes": "750"
               "type": "presence_day"
             },
             {
               "order": "2",
               "id": "12345678-1234-1234-1234-123456789012",
-              "hours": "8.00"
+              "minutes": "800"
               "type": "presence_day"
             }
         ]
@@ -703,16 +703,19 @@ Create a new presence day
 
 + Attributes
   + order: 1 (number, required)
-  + presence_policy_id: 11 (string, required)
+  + presence_policy: (required)
+    + id: 11 (string, required)
   + hours: 8 (number, required)
 
 + Request (application/json)
 
         {
-             "order" : "1",
-             "type": "presence_day",
-             "hours: "8.00",
-             "presence_policy_id": "12345678-1234-1234-1234-123456789012"
+            "order" : "1",
+            "type": "presence_day",
+            "hours: "8.00",
+            "presence_policy": {
+              "id": "12345678-1234-1234-1234-123456789012"
+            }
         }
 
 
@@ -735,10 +738,9 @@ Create a new presence day
 + Parameters
     + presence_day_id: 12345678-1234-1234-123456789012 (required, string) - ID is an uuid
 
-### GET PresenceDay Details [GET /api/v1/presence_days/{presence_day_id}?presence_policy_id={presence_policy_id}]
+### GET PresenceDay Details [GET /api/v1/presence_days/{presence_day_id}]
 
 + Parameters
-   + presence_policy_id: 12345678-1234-1234-123456789012 (required, string) - ID is in uuid format
    + presence_day_id: 12345678-1234-1234-123456789012 (required, string) - ID of the Holiday is an uuid
 
 + Request (application/json)
@@ -757,7 +759,6 @@ Create a new presence day
 + Attributes
   + id: 1 (string, required)
   + order: 1 (number, required)
-  + presence_policy_id: 11 (string, required)
   + hours: 8 (number, required)
 
 + Request (application/json)
@@ -767,7 +768,6 @@ Create a new presence day
             "order": "1",
             "hours": "8.00",
             "type": "presence_day",
-            "presence_policy_id": "12345678-1234-1234-1234-123456789012"
         }
 
 + Response 204 (application/json)
@@ -1514,7 +1514,7 @@ Create new time off policy. Policy may have two types: counter of balance, if ty
         }
 
 
-## Time off Policy [/api/v1/time_off_policies/{time_off_policy_id}]
+## Time Off Policy [/api/v1/time_off_policies/{time_off_policy_id}]
 
 ### GET Time Off Policy [GET]
 
