@@ -1248,9 +1248,30 @@ Get a list of all employees
 
 ## Employee Balances Collection [/api/v1/employee_balances]
 
-### GET Employee balances [GET /api/v1/employees/:employee_id/employee_balances?time_off_category_id={time_off_category_id}]
+### GET Employee balances without time_off_category_id param [GET /api/v1/employees/:employee_id/employee_balances]
 
-Get a list of employee balances, when time_off_category_id given, get a list of employee's balances in this category
+Get a list of balances in every category
+
++ Request (application/json)
+
+        {
+          "employee_id": "12345678-1234-1234-1234-123456789012",
+        }
+
++ Response 200 (application/json)
+
+        [
+          "first_time_off_category_name": {
+            "balance": "1440"
+          },
+          "second_time_of_category_name": {
+            "balance" "1222"
+          }
+        ]
+
+### Get Employee balances with time_off_category_id param [GET /api/v1/employees/:employee_id/employee_balances?time_off_category_id={time_off_category_id}]
+
+Get a history of employee balances in category
 
 + Request (application/json)
 
@@ -1271,7 +1292,7 @@ Get a list of employee balances, when time_off_category_id given, get a list of 
           {
             "id": "87654321-1234-1234-1234-123456789013",
             "type": "employee_balance",
-            "balance": "2880",
+            "balance": "1440",
             "amount": "1440"
           }
         ]
@@ -1289,12 +1310,6 @@ Create new employee balance, balance field is actual employee balance, amount is
   + time_off_category (required)
     + type: time_off_category (string)
     + id: 222 (string, required) - time off category id
-  + time_off
-    + type: time_off (string)
-    + id: 333 (string, required) - time off id
-  + time_off_policy
-    + type: time_off_policy
-    + id: 444 (string, required) - time off policy
 
 + Request (application/json)
 
@@ -1309,20 +1324,12 @@ Create new employee balance, balance field is actual employee balance, amount is
           "time_off_category": {
             "type": "employee",
             "id": "12345678-1234-1234-1234-123456789012"
-          },
-          "time_off": {
-            "type": "time_off",
-            "id": "12345678-1234-4444-1234-123456789012"
-          },
-          "time_off_policy": {
-            "type": "time_off_policy",
-            "id": "12345678-1234-0000-1234-123456789012"
           }
         }
 
 + Response 201 (application/json)
 
-         {
+        {
           "id": "12345678-1234-1234-1234-123456789013",
           "type": "employee_balance",
           "balance": "2880",
@@ -1334,14 +1341,6 @@ Create new employee balance, balance field is actual employee balance, amount is
           "time_off_category": {
             "type": "employee",
             "id": "12345678-1234-1234-1234-123456789012"
-          },
-          "time_off": {
-            "type": "time_off",
-            "id": "12345678-1234-4444-1234-123456789012"
-          },
-          "time_off_policy": {
-            "type": "time_off_policy",
-            "id": "12345678-1234-0000-1234-123456789012"
           }
         }
 
@@ -1399,12 +1398,6 @@ Update employee Balance
   + time_off_category (required)
     + type: time_off_category (string)
     + id: 222 (string, required) - time off category id
-  + time_off
-    + type: time_off (string)
-    + id: 333 (string, required) - time off id
-  + time_off_policy
-    + type: time_off_policy
-    + id: 444 (string, required) - time off policy
 
 + Request (application/json)
 
@@ -1418,14 +1411,6 @@ Update employee Balance
           "time_off_category": {
             "type": "employee",
             "id": "12345678-1234-1234-1234-123456789012"
-          },
-           "time_off": {
-            "type": "time_off",
-            "id": "12345678-1234-4444-1234-123456789012"
-          },
-          "time_off_policy": {
-            "type": "time_off_policy",
-            "id": "12345678-1234-0000-1234-123456789012"
           }
         }
 
