@@ -59,7 +59,7 @@ RSpec.describe API::V1::UsersController, type: :controller do
       end
 
       context 'should send email notification' do
-        it { expect { subject }.to_not change(ActionMailer::Base.deliveries, :count) }
+        it { expect { subject }.to change { ActionMailer::Base.deliveries.count }.by(1) }
       end
     end
 
@@ -73,6 +73,13 @@ RSpec.describe API::V1::UsersController, type: :controller do
 
       context 'with invalid employee id' do
         let(:employee_id) { 1234 }
+
+        it { expect { subject }.to_not change {  Account::User.count } }
+        it { is_expected.to have_http_status(404) }
+      end
+
+      context 'with empty employee id' do
+        let(:employee_id) { nil }
 
         it { expect { subject }.to_not change {  Account::User.count } }
         it { is_expected.to have_http_status(422) }
