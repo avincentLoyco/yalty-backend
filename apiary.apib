@@ -716,12 +716,23 @@ By default account_id is equal Account.current.id
 + Attributes
   + name: Test (string, required)
   + type: working_place (string)
+  + [time_off_policies: {"id": "1"}] (array)
 
 + Request (application/json)
 
         {
             "name": "Office",
-            "type": "working_place"
+            "type": "working_place",
+            "time_off_policies": [
+              {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "type": "time_off_policy"
+              },
+              {
+                "id": "12345678-1234-4444-1234-123456789012",
+                "type": "time_off_policy"
+              }
+            ]
         }
 
 + Response 201 (application/json)
@@ -729,7 +740,17 @@ By default account_id is equal Account.current.id
         {
             "id": "12345678-1234-1234-1234-123456789012",
             "name": "test-working-place",
-            "type": "working_place"
+            "type": "working_place",
+            "time_off_policies": [
+              {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "type": "time_off_policy"
+              },
+              {
+                "id": "12345678-1234-4444-1234-123456789012",
+                "type": "time_off_policy"
+              }
+            ]
         }
 
 ## Working Place [/api/v1/working_places/{working_place_id}]
@@ -746,7 +767,17 @@ By default account_id is equal Account.current.id
         {
             "id": "12345678-1234-1234-1234-123456789012",
             "name": "test-working-place",
-            "type": "working_place"
+            "type": "working_place",
+            "time_off_policies": [
+              {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "type": "time_off_policy"
+              },
+              {
+                "id": "12345678-1234-4444-1234-123456789012",
+                "type": "time_off_policy"
+              }
+            ]
         }
 
 ### GET Get Working Place Details with holiday policy [GET /api/v1/working_places/{working_place_id}?embed=holiday_policy]
@@ -802,16 +833,20 @@ By default account_id is equal Account.current.id
 
         {
             "name": 'Smaple name',
-            "type": "working_place"
+            "type": "working_place",
+            "time_off_policies": [
+              {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "type": "time_off_policy"
+              },
+              {
+                "id": "12345678-1234-4444-1234-123456789012",
+                "type": "time_off_policy"
+              }
+            ]
         }
 
-+ Response 200 (application/json)
-
-        {
-            "id": "12345678-1234-1234-1234-123456789012",
-            "name": "New name",
-            "type": "working_place"
-        }
++ Response 204
 
 ### DELETE Delete working place [DELETE]
 
@@ -894,8 +929,54 @@ Get a list of all employees
               "value": "Asd",
               "attribute_name": "lastname"
             }
+          ],
+          "time_off_policies": [
+              {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "type": "time_off_policy"
+              },
+              {
+                "id": "12345678-1234-4444-1234-123456789012",
+                "type": "time_off_policy"
+              }
           ]
         }
+
+### PUT Employee [PUT /api/v1/employees/{employee_id}]
+
++ Parameters
+  + employee_id: 12 (required, string) - ID is in uuid format
+  + holiday_policy
+    + id: 12 (required, string)
+  + presence_policy
+    + id: 13 (required, string)
+  + time_off_policies: {"id": "1"} (array)
+
++ Request (application/json)
+
+        {
+            "holiday_policy': {
+              "id": "12345",
+              "type": "holiday_policy"
+            },
+            "presence_policy": {
+              "id": "12345",
+              "type": "holiday_policy"
+            },
+            "time_off_policies": [
+              {
+                "id": "123",
+                "type": "time_off_policy"
+              },
+              {
+                "id": "654",
+                "type": "time_off_policy"
+              }
+            ]
+        }
+
++ Response 204
+
 
 
 
@@ -1310,6 +1391,8 @@ Create new time off policy. Policy may have two types: counter of balance, if ty
   + time_off_category (required)
     + type: time_off_category (string)
     + id: 11 (string, required)
+  + [employees: {"id": "1"}] (array)
+  + [working_places: {"id": "1"}] (array)
 
 + Request (application/json)
 
@@ -1322,6 +1405,22 @@ Create new time off policy. Policy may have two types: counter of balance, if ty
           "time_off_category": {
             "type": "time_off_category",
             "id": "12345678-1234-1234-1234-123456789012"
+          },
+          "employees" : [
+             {
+                 "id": "12345678-1234-1234-1234-123456789012",
+                 "type": "employee"
+             },
+             {
+                 "id": "87654321-1234-1234-1234-123456789012",
+                 "type": "employee"
+             }
+          ],
+          "working_places" : [
+              {
+                  "id": "12345678-1234-1234-1234-123456789012"
+              }
+          ]
         }
 
 
@@ -1365,13 +1464,37 @@ Show time off policy
           "time_off_category": {
             "type": "time_off_category",
             "id": "12345678-1234-1234-1234-123456789012"
-          }
+          },
+          "employees" : [
+             {
+                 "id": "12345678-1234-1234-1234-123456789012",
+                 "type": "employee"
+             },
+             {
+                 "id": "87654321-1234-1234-1234-123456789012",
+                 "type": "employee"
+             }
+          ],
+          "working_places" : [
+              {
+                  "id": "12345678-1234-1234-1234-123456789012"
+              }
+          ]
         }
 
 
 ### PUT Time off Policy [PUT]
 
 Update time off policy
+
++ Attributes
+  + type: time_off_policy (string)
+  + amount: 1440 (string)
+  + policy_type: balance (string, required)
+  + end_time: 01.01.2015 (string, required)
+  + start_time: 01.01.2014 (string, required)
+  + [employees: {"id": "1"}] (array)
+  + [working_places: {"id": "1"}] (array)
 
 + Request (application/json)
 
@@ -1385,7 +1508,22 @@ Update time off policy
           "time_off_category": {
             "type": "time_off_category",
             "id": "12345678-1234-1234-1234-123456789012"
-          }
+          },
+          "employees" : [
+             {
+                 "id": "12345678-1234-1234-1234-123456789012",
+                 "type": "employee"
+             },
+             {
+                 "id": "87654321-1234-1234-1234-123456789012",
+                 "type": "employee"
+             }
+          ],
+          "working_places" : [
+              {
+                  "id": "12345678-1234-1234-1234-123456789012"
+              }
+          ]
         }
 
 
