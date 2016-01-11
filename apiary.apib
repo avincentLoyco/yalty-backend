@@ -1239,3 +1239,171 @@ Get a list of all employees
         }
 
 + Response 204
+
+
+
+
+
+
+
+## Employee Balances Collection [/api/v1/employee_balances]
+
+### GET Employee balances [GET /api/v1/employees/:employee_id/employee_balances?time_off_category_id={time_off_category_id}]
+
+Get a list of employee balances, when time_off_category_id given, get a list of employee's balances in this category
+
++ Request (application/json)
+
+        {
+          "employee_id": "12345678-1234-1234-1234-123456789012",
+          "time_off_category_id": "12345678-4321-1234-1234-123456789012"
+        }
+
++ Response 200 (application/json)
+
+        [
+          {
+            "id": "12345678-1234-1234-1234-123456789013",
+            "type": "employee_balance",
+            "balance": "2880",
+            "amount": "1440"
+          },
+          {
+            "id": "87654321-1234-1234-1234-123456789013",
+            "type": "employee_balance",
+            "balance": "2880",
+            "amount": "1440"
+          }
+        ]
+
+### POST Employee balance [POST /api/v1/employee_balances]
+
+Create new employee balance, balance field is actual employee balance, amount is in minutes.
+Time off category and employee are required.
+Optional, EmployeeBalance may belong to time_off_policy and time_off.
+
++ Request (application/json)
+
+
+        {
+          "type": "employee_balance",
+          "amount": "1440",
+          "employee": {
+            "type": "employee",
+            "id": "12345678-1234-1234-1234-123456789012"
+          },
+          "time_off_category": {
+            "type": "employee",
+            "id": "12345678-1234-1234-1234-123456789012"
+          },
+          "time_off": {
+            "type": "time_off",
+            "id": "12345678-1234-4444-1234-123456789012"
+          },
+          "time_off_policy": {
+            "type": "time_off_policy",
+            "id": "12345678-1234-0000-1234-123456789012"
+          }
+        }
+
++ Response 201 (application/json)
+
+         {
+          "id": "12345678-1234-1234-1234-123456789013",
+          "type": "employee_balance",
+          "balance": "2880",
+          "amount": "1440",
+          "employee": {
+            "type": "employee",
+            "id": "12345678-1234-1234-1234-123456789012"
+          },
+          "time_off_category": {
+            "type": "employee",
+            "id": "12345678-1234-1234-1234-123456789012"
+          },
+          "time_off": {
+            "type": "time_off",
+            "id": "12345678-1234-4444-1234-123456789012"
+          },
+          "time_off_policy": {
+            "type": "time_off_policy",
+            "id": "12345678-1234-0000-1234-123456789012"
+          }
+        }
+
+
+## Employee Balance [/api/v1/employee_balances/{employee_balance_id}]
+
+### GET Employee balance [GET]
+
+Show employee balance
+
++ Request (application/json)
+
+        {
+          "employee_balance_id": "12345678-1234-1234-1234-123456789012"
+        }
+
++ Response 200 (application/json)
+
+        {
+          "id": "12345678-1234-1234-1234-123456789013",
+          "type": "employee_balance",
+          "balance": "2880",
+          "amount": "1440",
+          "employee": {
+            "type": "employee",
+            "id": "12345678-1234-1234-1234-123456789012"
+          },
+          "time_off_category": {
+            "type": "employee",
+            "id": "12345678-1234-1234-1234-123456789012"
+          },
+           "time_off": {
+            "type": "time_off",
+            "id": "12345678-1234-4444-1234-123456789012"
+          },
+          "time_off_policy": {
+            "type": "time_off_policy",
+            "id": "12345678-1234-0000-1234-123456789012"
+          }
+        }
+
+
+### PUT Employee balance [PUT]
+
+Update employee Balance
+
++ Request (application/json)
+
+        {
+          "type": "employee_balance",
+          "amount": "1460",
+          "employee": {
+            "type": "employee",
+            "id": "12345678-1234-1234-1234-123456789012"
+          },
+          "time_off_category": {
+            "type": "employee",
+            "id": "12345678-1234-1234-1234-123456789012"
+          },
+           "time_off": {
+            "type": "time_off",
+            "id": "12345678-1234-4444-1234-123456789012"
+          },
+          "time_off_policy": {
+            "type": "time_off_policy",
+            "id": "12345678-1234-0000-1234-123456789012"
+          }
+        }
+
++ Response 204
+
+### DELETE Delete employee balance [DELETE]
+
+Delete employee balance
+
++ Request (application/json)
+
++ Response 204
+
