@@ -1279,8 +1279,22 @@ Get a list of employee balances, when time_off_category_id given, get a list of 
 ### POST Employee balance [POST /api/v1/employee_balances]
 
 Create new employee balance, balance field is actual employee balance, amount is in minutes.
-Time off category and employee are required.
-Optional, EmployeeBalance may belong to time_off_policy and time_off.
+
++ Attributes
+  + type: employee_balance (string)
+  + amount: 1440 (string)
+  + employee (required)
+    + type: employee (string)
+    + id: 111 (string, required) - employee id
+  + time_off_category (required)
+    + type: time_off_category (string)
+    + id: 222 (string, required) - time off category id
+  + time_off
+    + type: time_off (string)
+    + id: 333 (string, required) - time off id
+  + time_off_policy
+    + type: time_off_policy
+    + id: 444 (string, required) - time off policy
 
 + Request (application/json)
 
@@ -1374,6 +1388,24 @@ Show employee balance
 
 Update employee Balance
 
+
++ Attributes
+  + id: 11 (string, required)
+  + type: employee_balance (string)
+  + amount: 1440 (string)
+  + employee (required)
+    + type: employee (string)
+    + id: 111 (string, required) - employee id
+  + time_off_category (required)
+    + type: time_off_category (string)
+    + id: 222 (string, required) - time off category id
+  + time_off
+    + type: time_off (string)
+    + id: 333 (string, required) - time off id
+  + time_off_policy
+    + type: time_off_policy
+    + id: 444 (string, required) - time off policy
+
 + Request (application/json)
 
         {
@@ -1406,4 +1438,153 @@ Delete employee balance
 + Request (application/json)
 
 + Response 204
+
+
+
+
+
+
+## Time Off Policies Collection [/api/v1/time_off_policies]
+
+### GET time off policies by category [GET /api/v1/time_off_categories/:time_off_category_id/time_off_policies]
+
+Get a list of time off policies in given category
+
++ Request (application/json)
+
+        {
+          "time_off_category": "12345678-1234-1234-1234-123456789012"
+        }
+
++ Response 200 (application/json)
+
+        [
+          {
+            "id": "12345678-1234-1234-1234-123456789013",
+            "type": "time_off_policy",
+            "start_time": "01.01.2015"
+            "end_time": "1.04.2016",
+            "amount": "28800",
+            "policy_type": "balance",
+            "time_off_category": {
+              "type": "time_off_category",
+              "id": "12345678-1234-1234-1234-123456789012"
+            }
+          },
+          {
+            "id": "87654321-1234-1234-1234-123456789013",
+            "type": "time_off_policy",
+            "start_time": "01.01.2015",
+            "end_time": "1.04.2016",
+            "amount": "",
+            "policy_type": "counter",
+            "time_off_category": {
+              "type": "time_off_category",
+              "id": "12345678-1234-1234-1234-123456789012"
+            }
+          }
+        ]
+
+### POST Time off Policy [POST /api/v1/time_off_policies]
+
+Create new time off policy. Policy may have two types: counter of balance, if type counter amount should not be send.
+
++ Attributes
+  + type: time_off_policy (string)
+  + amount: 1440 (string)
+  + policy_type: balance (string, required)
+  + end_time: 01.01.2015 (string, required)
+  + start_time: 01.01.2014 (string, required)
+  + time_off_category (required)
+    + type: time_off_category (string)
+    + id: 11 (string, required)
+
++ Request (application/json)
+
+        {
+          "type": "time_off_policy",
+          "start_time": "01.01.2015"
+          "end_time": "1.04.2016",
+          "amount": "1440",
+          "policy_type": "balance"
+          "time_off_category": {
+            "type": "time_off_category",
+            "id": "12345678-1234-1234-1234-123456789012"
+        }
+
+
++ Response 201 (application/json)
+
+         {
+          "id": "12345678-1234-1234-1234-123456789013",
+          "type": "time_off_policy",
+          "start_time": "01.01.2015"
+          "end_time": "1.04.2016",
+          "amount": "1440",
+          "policy_type": "balance",
+          "time_off_category": {
+            "type": "time_off_category",
+            "id": "12345678-1234-1234-1234-123456789012"
+          }
+        }
+
+
+## Time off Policy [/api/v1/time_off_policies/{time_off_policy_id}]
+
+### GET Time Off Policy [GET]
+
+Show time off policy
+
++ Request (application/json)
+
+        {
+          "time_off_policy_id": "12345678-1234-1234-1234-123456789012"
+        }
+
++ Response 200 (application/json)
+
+        {
+          "id": "12345678-1234-1234-1234-123456789013",
+          "type": "time_off_policy",
+          "start_time": "01.01.2015"
+          "end_time": "1.04.2016",
+          "amount": "1440",
+          "policy_type": "balance",
+          "time_off_category": {
+            "type": "time_off_category",
+            "id": "12345678-1234-1234-1234-123456789012"
+          }
+        }
+
+
+### PUT Time off Policy [PUT]
+
+Update time off policy
+
++ Request (application/json)
+
+        {
+          "id": "12345678-1234-1234-1234-123456789013",
+          "type": "time_off_policy",
+          "start_time": "01.01.2015"
+          "end_time": "1.04.2016",
+          "amount": "1440",
+          "policy_type": "balance",
+          "time_off_category": {
+            "type": "time_off_category",
+            "id": "12345678-1234-1234-1234-123456789012"
+          }
+        }
+
+
++ Response 204
+
+### DELETE Delete Time Off Policy [DELETE]
+
++ Request (application/json)
+
++ Response 204
+
+
+
 
