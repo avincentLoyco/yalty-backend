@@ -4,10 +4,10 @@ FactoryGirl.define do
     amount { Faker::Number.number(4) }
     start_time Time.now
     end_time Time.now + 1.month
-    type 'balance'
+    policy_type 'balance'
 
     trait :as_counter do
-      type 'counter'
+      policy_type 'counter'
     end
   end
 end

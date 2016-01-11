@@ -4,7 +4,7 @@ class CreateTimeOffPolicy < ActiveRecord::Migration
       t.date :start_time, null: false
       t.date :end_time, null: false
       t.integer :amount
-      t.string :type, null: false
+      t.string :policy_type, null: false
       t.uuid :time_off_category_id, null: false
     end
     add_foreign_key :time_off_policies, :time_off_categories, on_delete: :cascade, column: :time_off_category_id
