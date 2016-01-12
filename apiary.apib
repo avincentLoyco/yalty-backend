@@ -151,6 +151,11 @@ By default account_id is equal Account.current.id
 
 + Response 204 (application/json)
 
+### DELETE destroy Employee Attribute Definiiton [DELETE]
+
++ Request (application/json)
+
++ Response 204
 
 
 
@@ -672,6 +677,153 @@ Create a new presence day
 
 + Attributes
   + presence_policy_id: 1 (string, required)
+
++ Request (application/json)
+
++ Response 204
+
+
+
+
+
+
+
+## Time Entry
+
+
+## Time Entry Collection [/api/v1/time_entries]
+
+### GET Time Entries [GET /api/v1/presence_days/{presence_day_id}/time_entries]
+
+Get list of time entries
+
++ Request (application/json)
+
+        {
+          "time_entry_id": "f6d72193-ba17-44be-835a-77b4b80c395b"
+        }
+
++ Response 200 (application/json)
+
+        [
+          {
+            "start_time": "12:00",
+            "end_time": "14:00",
+            "id": "1b1f9c6b-6740-4296-81cc-7fc316db3190",
+            "type": "time_entry",
+            "presence_day": {
+              "id": "92ebd78d-15f1-464b-a93d-b0ba36fdbea0",
+              "type": "presence_day"
+            }
+          },
+          {
+            "start_time": "15:00",
+            "end_time": "17:00",
+            "id": "1b1f9c6b-6740-4296-81cc-7fc316db3000",
+            "type": "time_entry",
+            "presence_day": {
+              "id": "92ebd78d-15f1-464b-a93d-b0ba36fdbea0",
+              "type": "presence_day"
+            }
+          }
+        ]
+
+### POST Time entry [POST]
+
+Create new time entry, when end time is smaller than start_time it creates two time entries.
+For example for start_time: "12:00", end_time: "10:00" it creates two time entries.
+First one: start_time: "12:00", end_time: "00:00", and the second one: start_time: "00:00", and end_time: "10:00"
+
++ Attributes
+  + type: time_entry(string)
+  + end_time: test(string, required)
+  + start_time: test(string, required)
+  + presence_day (required)
+    + id: 11 (string, required)
+
++ Request (application/json)
+
+        {
+          "type": "time_entry",
+          "start_time": "12:00"
+          "end_time": "14:00",
+          "presence_day": {
+            "id": "92ebd78d-15f1-464b-a93d-b0ba36fdbea0",
+            "type": "presence_day"
+          }
+        }
+
++ Response 201 (application/json)
+
+        {
+          "type": "time_entry",
+          "start_time": "12:00"
+          "end_time": "14:00",
+          "id": "92ebd78d-aaaa-464b-a93d-b0ba36fdbea0",
+          "presence_day": {
+            "id": "92ebd78d-15f1-464b-a93d-b0ba36fdbea0",
+            "type": "presence_day"
+          }
+        }
+
+## Time Entry [/api/v1/time_entries/{time_entry_id}]
+
+### GET Time Entry [GET]
+
+Show Time Entry
+
++ Request (application/json)
+
+        {
+          "time_entry_id": "1b6de77e-c9cf-453e-951d-6e6dd6cea1f7"
+        }
+
++ Response 200 (application/json)
+
+        {
+          "type": "time_entry",
+          "start_time": "12:00"
+          "end_time": "14:00",
+          "id": "1b6de77e-c9cf-453e-951d-6e6dd6cea1f7",
+          "presence_day": {
+            "id": "92ebd78d-15f1-464b-a93d-b0ba36fdbea0",
+            "type": "presence_day"
+          }
+        }
+
+
+### PUT Time Entry [PUT]
+
+Update Time Entry.
+When date changes from one day to two (end time before start_time) it creates time entry.
+When date changes from two days to one (end time after start time) it removes related time entry.
+
++ Attributes
+  + type: time_entry(string)
+  + end_time: test(string, required)
+  + id: 11(string, required)
+  + start_time: test(string, required)
+  + presence_day (required)
+    + id: 11 (string, required)
+
++ Request (application/json)
+
+        {
+          "type": "time_entry",
+          "start_time": "12:00"
+          "end_time": "14:00",
+          "id": "1b6de77e-c9cf-453e-951d-6e6dd6cea1f7",
+          "presence_day": {
+            "id": "92ebd78d-15f1-464b-a93d-b0ba36fdbea0",
+            "type": "presence_day"
+          }
+        }
+
++ Response 204
+
+### DELETE Delete Time Entry [DELETE]
+
+Delete time entry (or two if related time entry was created)
 
 + Request (application/json)
 
@@ -1270,9 +1422,9 @@ Delete time off category
 ## Time Off
 
 
-## Time Off Collection [/api/v1/time_offs/{time_off_category_id}/time_offs]
+## Time Off Collection [/api/v1/time_offs]
 
-### GET Time Offs [GET]
+### GET Time Offs [GET /api/v1/time_offs/{time_off_category_id}/time_offs]
 
 Get a list of time offs
 
