@@ -1154,6 +1154,281 @@ Get a list of all employees
 
 
 
+
+
+
+## Time Off Category
+
+
+## Time Off Categories Collection [/api/v1/time_off_categories]
+
+### GET Time Off Categories [GET]
+
+Get a list of time off categories
+
++ Request (application/json)
+
++ Response 200 (application/json)
+
+        [
+          {
+            "name": "example name",
+            "system": "false",
+            "id": "12345678-1234-1234-1234-123456789012",
+            "type": "time_off_category"
+          },
+          {
+            "name": "test name",
+            "system": "true",
+            "id": "12345678-1234-4444-1234-123456789012",
+            "type": "time_off_category"
+          }
+        ]
+
+### POST Time off Category [POST]
+
+Create new time off category, every category created by user, by default has system: false
+Default time off category for every account is sickness.
+
++ Attributes
+  + name: test(string, required)
+  + type: time_off_category(string)
+
++ Request (application/json)
+
+        {
+          "name": "test",
+          "type": "time_off_category"
+        }
+
++ Response 201 (application/json)
+
+        {
+          "name": "test",
+          "system": false,
+          "id": "5921da5e-759e-4902-bd75-bca42e5457f6",
+          "type": "time_off_category"
+        }
+
+
+## Time Off Category [/api/v1/time_off_categories/{time_off_category_id}]
+
+### GET Time off Category [GET]
+
+Show Time Off Category
+
++ Request (application/json)
+
+        {
+          "time_off_category_id": "12345678-1234-1234-1234-123456789012"
+        }
+
++ Response 200 (application/json)
+
+        {
+          "id": "12345678-1234-1234-1234-123456789012",
+          "name": "test",
+          "system": false,
+          "type": "time_off_category"
+        }
+
+
+### PUT Time Off Category [PUT]
+
+Update Time Off Category
+
++ Attributes
+  + id: 11 (string, required)
+  + name: test (string, required)
+  + type: time_off_category(string)
+
++ Request (application/json)
+
+        {
+          "name": "test",
+          "id": "11",
+          "type": "time_off_category"
+        }
+
++ Response 204
+
+### DELETE Delete Time Off Category [DELETE]
+
+Delete time off category
+
++ Request (application/json)
+
++ Response 204
+
+
+
+
+
+
+
+
+## Time Off
+
+
+## Time Off Collection [/api/v1/time_offs/{time_off_category_id}/time_offs]
+
+### GET Time Offs [GET]
+
+Get a list of time offs
+
++ Request (application/json)
+
+        {
+          "time_off_category_id": "f6d72193-ba17-44be-835a-77b4b80c395b"
+        }
+
++ Response 200 (application/json)
+
+        [
+          {
+            "start_time": "2015-12-14T09:43:34.744Z",
+            "end_time": "2015-12-21T09:43:34.744Z",
+            "id": "1b1f9c6b-6740-4296-81cc-7fc316db3190",
+            "type": "time_off",
+            "employee": {
+              "id": "92ebd78d-15f1-464b-a93d-b0ba36fdbea0",
+              "type": "employee"
+            },
+            "time_off_category": {
+              "id": "f6d72193-ba17-44be-835a-77b4b80c395b",
+              "type": "time_off_category"
+            }
+          },
+          {
+            "start_time": "2015-11-14T12:00:18.000Z",
+            "end_time": "2015-12-14T12:00:18.000Z",
+            "id": "f3b3989c-dee0-4ed9-8e49-8e3b0d6db587",
+            "type": "time_off",
+            "employee": {
+              "id": "92ebd78d-15f1-464b-a93d-b0ba36fdbea0",
+              "type": "employee"
+            },
+            "time_off_category": {
+              "id": "f6d72193-ba17-44be-835a-77b4b80c395b",
+              "type": "time_off_category"
+            }
+          }
+        ]
+
+### POST Time off [POST]
+
+Create new time off
+
++ Attributes
+  + type: time_off(string)
+  + end_time: test(string, required)
+  + start_time: test(string, required)
+  + time_off_category (required)
+    + id: 11 (string, required)
+  + employee (required)
+    + id: 22 (string, required)
+
++ Request (application/json)
+
+        {
+          "type": "time_off",
+          "employee": {
+            "id": "92ebd78d-15f1-464b-a93d-b0ba36fdbea0",
+            "type": "employee"
+          },
+          "time_off_category": {
+            "id": "f6d72193-ba17-44be-835a-77b4b80c395b",
+            "type": "time_off_category"
+          },
+          "end_time": "12.12.2015",
+          "start_time": "11.12.2015"
+        }
+
++ Response 201 (application/json)
+
+        {
+          "start_time": "2015-12-11T00:00:00.000Z",
+          "end_time": "2015-12-12T00:00:00.000Z",
+          "id": "1b6de77e-c9cf-453e-951d-6e6dd6cea1f7",
+          "type": "time_off",
+          "employee": {
+            "id": "92ebd78d-15f1-464b-a93d-b0ba36fdbea0",
+            "type": "employee"
+          },
+          "time_off_category": {
+            "id": "f6d72193-ba17-44be-835a-77b4b80c395b",
+            "type": "time_off_category"
+          }
+        }
+
+
+## Time Off [/api/v1/time_offs/{time_off_id}]
+
+### GET Time off [GET]
+
+Show Time Off
+
++ Request (application/json)
+
+        {
+          "time_off_id": "1b6de77e-c9cf-453e-951d-6e6dd6cea1f7"
+        }
+
++ Response 200 (application/json)
+
+        {
+          "start_time": "2015-12-11T00:00:00.000Z",
+          "end_time": "2015-12-12T00:00:00.000Z",
+          "id": "1b6de77e-c9cf-453e-951d-6e6dd6cea1f7",
+          "type": "time_off",
+          "employee": {
+            "id": "92ebd78d-15f1-464b-a93d-b0ba36fdbea0",
+            "type": "employee"
+          },
+          "time_off_category": {
+            "id": "f6d72193-ba17-44be-835a-77b4b80c395b",
+            "type": "time_off_category"
+          }
+        }
+
+
+### PUT Time Off [PUT]
+
+Update Time Off
+
++ Attributes
+  + type: time_off(string)
+  + end_time: test(string, required)
+  + start_time: test(string, required)
+
++ Request (application/json)
+
+        {
+          "type": "time_off",
+          "end_time": "12.12.2015",
+          "start_time": "11.12.2015"
+        }
+
++ Response 204
+
+### DELETE Delete Time Off [DELETE]
+
+Delete time off
+
++ Request (application/json)
+
++ Response 204
+
+
+
+
+
+
+
+
+
+
+
 ## Employee Balances Collection [/api/v1/employee_balances]
 
 ### GET Employee balances without time_off_category_id param [GET /api/v1/employees/:employee_id/employee_balances]
