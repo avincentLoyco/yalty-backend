@@ -336,7 +336,11 @@ CREATE TABLE presence_days (
     presence_policy_id uuid NOT NULL,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
+<<<<<<< Updated upstream
     minutes integer
+=======
+    minutes integer DEFAULT 0
+>>>>>>> Stashed changes
 );
 
 
@@ -1064,4 +1068,8 @@ INSERT INTO schema_migrations (version) VALUES ('20151221114106');
 
 INSERT INTO schema_migrations (version) VALUES ('20151222101912');
 
+<<<<<<< Updated upstream
 INSERT INTO schema_migrations (version) VALUES ('20160105092534');
+=======
+INSERT INTO schema_migrations (version) VALUES ('20160113145704');
+>>>>>>> Stashed changes

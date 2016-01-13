@@ -7,7 +7,6 @@ RSpec.describe PresenceDay, type: :model do
   it { is_expected.to have_many(:time_entries) }
   it { is_expected.to validate_presence_of(:order) }
   it { is_expected.to validate_presence_of(:presence_policy_id) }
-  it { is_expected.to validate_numericality_of(:minutes).is_less_than_or_equal_to(1440) }
 
   context 'uniqueness validations' do
     let(:presence_day) { create(:presence_day) }

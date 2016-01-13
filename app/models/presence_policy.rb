@@ -5,4 +5,8 @@ class PresencePolicy < ActiveRecord::Base
   belongs_to :account
 
   validates :account_id, :name, presence: true
+
+  def last_day_order
+    presence_days.pluck(:order).max
+  end
 end

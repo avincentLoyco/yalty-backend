@@ -72,7 +72,6 @@ RSpec.describe API::V1::PresenceDaysController, type: :controller do
   describe 'POST #create' do
     subject { post :create, params }
     let(:order) { '1' }
-    let(:hours) { '16.00' }
     let(:presence_policy_id) { presence_policy.id.to_s }
     let(:params) do
       {

@@ -1,6 +1,6 @@
 module API
   module V1
-    class TimeEntriesController < API::ApplicationController
+    class TimeEntriesController < ApplicationController
       include TimeEntriesRules
 
       def show
@@ -13,36 +13,34 @@ module API
 
       def create
         verified_params(gate_rules) do |attributes|
-          resources = ManageTimeEntry.new(time_entry_params(attributes), presence_day).call
-          render_resource(resources, status: :created)
+          resource = resources.new(time_entry_params(attributes))
+          if resource.save
+            render_resource(resource, status: :created)
+          else
+            resource_invalid_error(resource)
+          end
         end
       end
 
       def update
         verified_params(gate_rules) do |attributes|
-          ManageTimeEntry.new(attributes, resource.presence_day).call
-          render_no_content
+          if resource.update(attributes)
+            render_no_content
+          else
+            resource_invalid_error(resource)
+          end
         end
       end
 
       def destroy
-        transactions do
-          resource.destroy!
-          related_entry.try(:destroy)
-          resource.presence_day.update_minutes!
-          related_entry.presence_day.update_minutes! if related_entry
-        end
+        resource.destroy!
         render_no_content
       end
 
       private
 
-      def related_entry
-        @related_entry ||= resource.related_entry
-      end
-
       def resource
-        @resource ||= TimeEntry.where(id: account_time_entries_ids).find(params[:id])
+        @resource ||= Account.current.time_entries.find(params[:id])
       end
 
       def resources
@@ -50,22 +48,16 @@ module API
       end
 
       def presence_day
-        @presence_day ||= Account.current.presence_days.find(presence_day_params)
+        @presence_day ||= Account.current.presence_days.find(presence_day_id)
       end
 
-      def presence_day_params
+      def presence_day_id
         return params[:presence_day].try(:[], :id) unless params[:presence_day_id]
         params[:presence_day_id]
       end
 
       def time_entry_params(attributes)
         attributes.tap { |attr| attr.delete(:presence_day) }
-      end
-
-      def account_time_entries_ids
-        Account.current.presence_days.map do |day|
-          day.time_entries.map(&:id).flatten
-        end.flatten
       end
 
       def resource_representer

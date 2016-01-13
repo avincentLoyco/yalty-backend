@@ -10,7 +10,7 @@ RSpec.describe TimeEntry, type: :model do
 
   it { is_expected.to validate_presence_of(:start_time) }
   it { is_expected.to validate_presence_of(:end_time) }
-  it { is_expected.to validate_presence_of(:presence_day) }
+  it { is_expected.to validate_presence_of(:presence_day_id) }
 
   context 'before validation calback' do
     subject { TimeEntry.new(start_time: '14:00', end_time: '16:00') }
@@ -41,33 +41,6 @@ RSpec.describe TimeEntry, type: :model do
 
         expect(subject.errors.messages[:end_time])
           .to include('Invalid format: Time format required.')
-      end
-    end
-
-    context '#time_order' do
-      subject { build(:time_entry, start_time: '14:00', end_time: end_time) }
-
-      context 'when valid data' do
-        context 'end time different than 00:00:00' do
-          let(:end_time) { '16:00' }
-
-          it { expect(subject.valid?).to eq true }
-          it { expect { subject.valid? }.to_not change { subject.errors.messages } }
-        end
-
-        context 'end time eq 00:00:00' do
-          let(:end_time) { '00:00' }
-
-          it { expect(subject.valid?).to eq true }
-          it { expect { subject.valid? }.to_not change { subject.errors.messages } }
-        end
-      end
-
-      context 'when invalid data' do
-        let(:end_time) { '12:00' }
-
-        it { expect(subject.valid?).to eq false }
-        it { expect { subject.valid? }.to change { subject.errors.messages[:end_time] } }
       end
     end
 
@@ -103,27 +76,6 @@ RSpec.describe TimeEntry, type: :model do
             .to include('time_entries can not overlap') }
         end
       end
-    end
-  end
-
-  context 'related entry' do
-    let(:time_entry) { create(:time_entry, end_time: '00:00') }
-    subject { time_entry.related_entry }
-
-    context 'when entry does not have related entry' do
-      it { expect(subject).to eq(nil) }
-      it { expect { subject }.to_not raise_error }
-    end
-
-    context 'when entry has related entry' do
-      let(:day) { time_entry.presence_day }
-      let(:related_day) do
-        create(:presence_day, presence_policy: day.presence_policy, order: day.order + 1)
-      end
-      let!(:related_entry) { create(:time_entry, presence_day: related_day, start_time: '00:00') }
-
-      it { expect(subject).to eq(related_entry) }
-      it { expect { subject }.to_not raise_error }
     end
   end
 end

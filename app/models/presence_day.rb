@@ -3,22 +3,32 @@ class PresenceDay < ActiveRecord::Base
   has_many :time_entries
 
   validates :order, presence: true, uniqueness: { scope: :presence_policy_id }
-  validates :minutes, numericality: { less_than_or_equal_to: 1440, allow_nil: true }
   validates :presence_policy_id, presence: true
-
-  scope :related, -> (policy_id, order) { find_by(presence_policy_id: policy_id, order: order + 1) }
 
   def update_minutes!
     update!(minutes: calculated_day_minutes)
   end
 
-  private
-
   def calculated_day_minutes
     return 0 unless time_entries.present?
-    time_entries.map do |time_entry|
-      return nil unless time_entry.times_parsable?
-      time_entry.duration
-    end.sum
+    time_entries.map(&:duration).sum
+  end
+
+  def next_day
+    next_day_order = order == presence_policy.last_day_order ? 1 : order + 1
+    presence_policy.presence_days.where(order: order + 1).first
+  end
+
+  def previous_day
+    previous_day_order = order == 1 ? presence_policy.last_day_order : order - 1
+    presence_policy.presence_days.find_by(order: previous_day_order)
+  end
+
+  def last_day_entry
+    time_entries.find_by(start_time: time_entries.pluck(:start_time).max)
+  end
+
+  def first_day_entry
+    time_entries.find_by(start_time: time_entries.pluck(:start_time).min)
   end
 end
