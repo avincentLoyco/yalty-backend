@@ -15,6 +15,5 @@ module Api::V1
 
       Api::V1::EmployeeRepresenter.new(resource.employee).basic
     end
-
   end
 end

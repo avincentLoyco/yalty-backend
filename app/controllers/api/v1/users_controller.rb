@@ -1,6 +1,8 @@
 module API
   module V1
     class UsersController < ApplicationController
+      load_and_authorize_resource class: 'Account::User', except: :create
+
       include UserRules
 
       def index
@@ -23,6 +25,8 @@ module API
           end
 
           resource = Account.current.users.new(attributes)
+          authorize! :create, resource
+
           if resource.save
             employee.update!(account_user_id: resource.id) if employee
             send_user_credentials(resource, attributes[:password])

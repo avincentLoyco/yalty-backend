@@ -1,6 +1,7 @@
 module API
   module V1
     class HolidayPoliciesController < ApplicationController
+      load_and_authorize_resource except: :create
       include HolidayPolicyRules
 
       def show
@@ -15,6 +16,8 @@ module API
         verified_params(gate_rules) do |attributes|
           related = related_params(attributes).compact
           resource = Account.current.holiday_policies.new(attributes)
+          authorize! :create, resource
+
           result = transactions do
             resource.save &&
               assign_related(resource, related)

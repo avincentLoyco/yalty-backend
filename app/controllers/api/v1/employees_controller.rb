@@ -1,6 +1,7 @@
 module API
   module V1
     class EmployeesController < ApplicationController
+      load_and_authorize_resource
       include EmployeeRules
 
       def show

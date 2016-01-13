@@ -380,6 +380,20 @@ CREATE TABLE time_entries (
 
 
 --
+-- Name: time_entries; Type: TABLE; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE TABLE time_entries (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    start_time time without time zone NOT NULL,
+    end_time time without time zone NOT NULL,
+    presence_day_id uuid NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL
+);
+
+
+--
 -- Name: time_off_categories; Type: TABLE; Schema: public; Owner: -; Tablespace:
 --
 
@@ -403,16 +417,6 @@ CREATE TABLE time_offs (
     start_time timestamp without time zone NOT NULL,
     time_off_category_id uuid NOT NULL,
     employee_id uuid NOT NULL,
-
---
--- Name: time_entries; Type: TABLE; Schema: public; Owner: -; Tablespace:
---
-
-CREATE TABLE time_entries (
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
-    start_time time without time zone NOT NULL,
-    end_time time without time zone NOT NULL,
-    presence_day_id uuid NOT NULL,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL
 );
@@ -575,6 +579,14 @@ ALTER TABLE ONLY time_entries
 
 
 --
+-- Name: time_entries_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
+--
+
+ALTER TABLE ONLY time_entries
+    ADD CONSTRAINT time_entries_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: time_off_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
@@ -588,14 +600,6 @@ ALTER TABLE ONLY time_off_categories
 
 ALTER TABLE ONLY time_offs
     ADD CONSTRAINT time_offs_pkey PRIMARY KEY (id);
-
-
---
--- Name: time_entries_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
---
-
-ALTER TABLE ONLY time_entries
-    ADD CONSTRAINT time_entries_pkey PRIMARY KEY (id);
 
 
 --
@@ -775,6 +779,13 @@ CREATE INDEX index_time_entries_on_presence_day_id ON time_entries USING btree (
 
 
 --
+-- Name: index_time_entries_on_presence_day_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE INDEX index_time_entries_on_presence_day_id ON time_entries USING btree (presence_day_id);
+
+
+--
 -- Name: index_time_off_categories_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
@@ -793,13 +804,6 @@ CREATE INDEX index_time_offs_on_employee_id ON time_offs USING btree (employee_i
 --
 
 CREATE INDEX index_time_offs_on_time_off_category_id ON time_offs USING btree (time_off_category_id);
-
-
---
--- Name: index_time_entries_on_presence_day_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
---
-
-CREATE INDEX index_time_entries_on_presence_day_id ON time_entries USING btree (presence_day_id);
 
 
 --

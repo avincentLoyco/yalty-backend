@@ -1,6 +1,7 @@
 module API
   module V1
     class PresencePoliciesController < ApplicationController
+      load_and_authorize_resource except: :create
       include PresencePolicyRules
 
       def show
@@ -16,6 +17,7 @@ module API
         verified_params(gate_rules) do |attributes|
           related = related_params(attributes).compact
           resource = Account.current.presence_policies.new(attributes)
+          authorize! :create, resource
 
           transactions do
             save!(resource, related)
