@@ -1,6 +1,7 @@
 class TimeOffPolicy < ActiveRecord::Base
   belongs_to :time_off_category
   has_many :employee_balances, class_name: 'Employee::Balance'
+  has_many :employee_time_off_policies
 
   validates :start_time, :end_time, :policy_type, :time_off_category, presence: true
   validates :policy_type, inclusion: { in: %w(counter balance) }

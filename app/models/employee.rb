@@ -13,6 +13,7 @@ class Employee < ActiveRecord::Base
   has_many :events, class_name: 'Employee::Event', inverse_of: :employee
   has_many :time_offs
   has_many :employee_balances, class_name: 'Employee::Balance'
+  has_many :employee_time_off_policies
 
   validates :working_place_id, presence: true
 end
