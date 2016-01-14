@@ -12,6 +12,7 @@ Rails.application.routes.draw do
       resources :employee_attribute_definitions
       resources :employees, only: [:index, :show, :update] do
         resources :employee_events, only: :index
+        resources :employee_balances, only: :index
       end
       resources :employee_events, only: [:show, :create, :update]
       resources :presence_policies, except: [:edit, :new] do
@@ -30,6 +31,7 @@ Rails.application.routes.draw do
       resources :time_entries, except: [:edit, :new, :index]
       resources :time_off_policies, except: [:edit, :new]
       resources :users
+      resources :employee_balances, except: [:edit, :new]
 
       get '/employee_event_types/:employee_event_type', to: "employee_event_types#show"
     end

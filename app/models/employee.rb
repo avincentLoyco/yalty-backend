@@ -16,4 +16,10 @@ class Employee < ActiveRecord::Base
   has_many :employee_time_off_policies
   has_many :time_off_policies, through: :employee_time_off_policies
   validates :working_place_id, presence: true
+
+  def active_policy(category_id)
+    employee_policy = employee_time_off_policies.find_by(id: category_id)
+    return employee_policy if employee_policy
+    working_place.working_place_time_off_policies.find_by(id: category_id)
+  end
 end
