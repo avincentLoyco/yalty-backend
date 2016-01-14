@@ -9,11 +9,6 @@ class PresenceDay < ActiveRecord::Base
     update!(minutes: calculated_day_minutes)
   end
 
-  def calculated_day_minutes
-    return 0 unless time_entries.present?
-    time_entries.map(&:duration).sum
-  end
-
   def next_day
     next_day_order = order == presence_policy.last_day_order ? 1 : order + 1
     presence_policy.presence_days.where(order: next_day_order).first
@@ -30,5 +25,12 @@ class PresenceDay < ActiveRecord::Base
 
   def first_day_entry
     time_entries.find_by(start_time: time_entries.pluck(:start_time).min)
+  end
+
+  private
+
+  def calculated_day_minutes
+    return 0 unless time_entries.present?
+    reload.time_entries.map(&:duration).sum
   end
 end

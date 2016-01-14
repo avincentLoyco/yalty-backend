@@ -2,7 +2,7 @@ class TimeEntry < ActiveRecord::Base
   belongs_to :presence_day
 
   validates :start_time, :end_time, :presence_day_id, presence: true
-  validate :time_entry_not_reserved, if: :times_parsable? && :presence_day
+  validate :time_entry_not_reserved, if: [:times_parsable?, "presence_day.present?"]
   validate :start_time_format, :end_time_format
 
   before_validation :convert_time_to_hours, if: :times_parsable?
@@ -15,30 +15,27 @@ class TimeEntry < ActiveRecord::Base
     TODS.new(start_time_tod, end_time_tod).duration / 60
   end
 
-  def tod_shift
-    TODS.new(start_time_tod, end_time_tod, true)
-  end
-
   def ends_next_day?
     start_time_tod > end_time_tod
   end
 
+  def tod_shift
+    TODS.new(start_time_tod, end_time_tod, true)
+  end
+
   private
 
-  def times_parsable?
-    start_time_parsable? && end_time_parsable?
+  def update_presence_day_minutes!
+    presence_day.update_minutes!
   end
 
-  def start_time_tod
-    TOD.parse(start_time)
-  end
-
-  def end_time_tod
-    TOD.parse(end_time)
+  def convert_time_to_hours
+    self.start_time = start_time_tod
+    self.end_time = end_time_tod
   end
 
   def day_entries_overlap?
-    presence_day.try(:time_entries).to_a.select(&:persisted?).map do |time_entry|
+    (presence_day.try(:time_entries).to_a.select(&:persisted?) - [self]).map do |time_entry|
       tod_shift.overlaps?(time_entry.tod_shift)
     end.any?
   end
@@ -60,6 +57,10 @@ class TimeEntry < ActiveRecord::Base
     presence_day.next_day.try(:first_day_entry)
   end
 
+  def times_parsable?
+    start_time_parsable? && end_time_parsable?
+  end
+
   def start_time_parsable?
     TOD.parsable?(start_time)
   end
@@ -68,13 +69,12 @@ class TimeEntry < ActiveRecord::Base
     TOD.parsable?(end_time)
   end
 
-  def update_presence_day_minutes!
-    presence_day.update_minutes!
+  def start_time_tod
+    TOD.parse(start_time)
   end
 
-  def convert_time_to_hours
-    self.start_time = start_time_tod
-    self.end_time = end_time_tod
+  def end_time_tod
+    TOD.parse(end_time)
   end
 
   def time_entry_not_reserved
