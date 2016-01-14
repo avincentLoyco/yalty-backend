@@ -12,42 +12,44 @@ class TimeEntry < ActiveRecord::Base
   TODS = Tod::Shift
 
   def duration
-    TODS.new(TOD.parse(start_time), TOD.parse(end_time)).duration / 60
+    TODS.new(start_time_tod, end_time_tod).duration / 60
   end
+
+  def tod_shift
+    TODS.new(start_time_tod, end_time_tod, true)
+  end
+
+  def ends_next_day?
+    start_time_tod > end_time_tod
+  end
+
+  private
 
   def times_parsable?
     start_time_parsable? && end_time_parsable?
   end
 
-  def related_entry
-    return unless end_time == '00:00:00'
-    PresenceDay.related(presence_day.presence_policy, presence_day.order)
-      .try(:time_entries).try(:start_at_midnight)
+  def start_time_tod
+    TOD.parse(start_time)
   end
 
-  private
-
-  def time_entry_not_reserved
-    return unless related_entries_overlap? || day_entries_overlap?
-    errors.add(:start_time, 'time_entries can not overlap')
+  def end_time_tod
+    TOD.parse(end_time)
   end
 
   def day_entries_overlap?
     presence_day.try(:time_entries).to_a.select(&:persisted?).map do |time_entry|
-      entry_covered?(time_entry)
+      tod_shift.overlaps?(time_entry.tod_shift)
     end.any?
   end
 
-  def related_entries_overlap?
-    entry_covered?(previous_entry) || entry_covered?(next_entry)
+  def overlaps_with_next?
+    next_entry && ends_next_day? && split_entry(tod_shift).overlaps?(next_entry.tod_shift)
   end
 
-  def entry_covered?(time_entry)
-    return unless time_entry
-    new_entry = TODS.new(TOD.parse(start_time), TOD.parse(end_time))
-    existing_entry = TODS.new(TOD.parse(time_entry[:start_time]), TOD.parse(time_entry[:end_time]))
-
-    new_entry.overlaps?(existing_entry)
+  def overlaps_with_previous?
+    previous_entry.try(:ends_next_day?) &&
+      split_entry(previous_entry.tod_shift).overlaps?(tod_shift)
   end
 
   def previous_entry
@@ -56,24 +58,6 @@ class TimeEntry < ActiveRecord::Base
 
   def next_entry
     presence_day.next_day.try(:first_day_entry)
-  end
-
-  def convert_time_to_hours
-    self[:start_time] = TOD.parse(start_time)
-    self[:end_time] = TOD.parse(end_time)
-  end
-
-  def not_related_when_last
-    return unless !end_time_after_start_time? && last_day?
-    errors.add(:end_time, 'Last presence policy entry must finish at or before 00:00')
-  end
-
-  def start_time_format
-    errors.add(:start_time, 'Invalid format: Time format required.') unless start_time_parsable?
-  end
-
-  def end_time_format
-    errors.add(:end_time, 'Invalid format: Time format required.') unless end_time_parsable?
   end
 
   def start_time_parsable?
@@ -86,5 +70,31 @@ class TimeEntry < ActiveRecord::Base
 
   def update_presence_day_minutes!
     presence_day.update_minutes!
+  end
+
+  def convert_time_to_hours
+    self.start_time = start_time_tod
+    self.end_time = end_time_tod
+  end
+
+  def time_entry_not_reserved
+    return unless overlaps_with_previous? || day_entries_overlap? || overlaps_with_next?
+    errors.add(:start_time, 'time_entries can not overlap')
+  end
+
+  def start_time_format
+    errors.add(:start_time, 'Invalid format: Time format required.') unless start_time_parsable?
+  end
+
+  def end_time_format
+    errors.add(:end_time, 'Invalid format: Time format required.') unless end_time_parsable?
+  end
+
+  def split_entry(entry)
+    if entry.beginning > entry.ending
+      TODS.new(TOD.new(0), entry.ending, true)
+    else
+      entry
+    end
   end
 end

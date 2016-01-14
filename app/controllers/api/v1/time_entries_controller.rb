@@ -1,6 +1,6 @@
 module API
   module V1
-    class TimeEntriesController < ApplicationController
+    class TimeEntriesController < API::ApplicationController
       include TimeEntriesRules
 
       def show
@@ -33,7 +33,10 @@ module API
       end
 
       def destroy
-        resource.destroy!
+        transactions do
+          resource.destroy!
+          resource.presence_day.update_minutes!
+        end
         render_no_content
       end
 

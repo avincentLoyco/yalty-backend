@@ -16,7 +16,7 @@ class PresenceDay < ActiveRecord::Base
 
   def next_day
     next_day_order = order == presence_policy.last_day_order ? 1 : order + 1
-    presence_policy.presence_days.where(order: order + 1).first
+    presence_policy.presence_days.where(order: next_day_order).first
   end
 
   def previous_day

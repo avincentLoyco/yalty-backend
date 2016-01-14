@@ -45,35 +45,122 @@ RSpec.describe TimeEntry, type: :model do
     end
 
     context '#time_entry_not_reserved' do
-      let(:time_entry) { build(:time_entry) }
-
-      context 'when time_entrys do not overlap' do
-        let(:new_time_entry) do
-          TimeEntry.new(
-            presence_day: time_entry.presence_day,
-            start_time: '18:00',
-            end_time: '20:00')
-        end
-        before { time_entry.save! }
-
-        it { expect(new_time_entry.valid?).to eq true }
-        it { expect { new_time_entry.valid? }
-          .to_not change { new_time_entry.errors.messages.count } }
+      let(:policy) { create(:presence_policy) }
+      let(:first_day) { create(:presence_day, order: 1, presence_policy: policy) }
+      let(:second_day) { create(:presence_day, order: 2, presence_policy: policy) }
+      let!(:time_entry) do
+        create(:time_entry, presence_day: day, start_time: '4:00', end_time: '2:00')
+      end
+      subject do
+        build(:time_entry, presence_day: sub_day, start_time: sub_start, end_time: sub_end)
       end
 
-      context 'when time_entrys overlap' do
-        let(:duplicate_time_entry) { time_entry.dup }
-        before { time_entry.save! }
+      before(:each) do
+        first_day.reload
+        second_day.reload
+      end
 
-        it { expect(duplicate_time_entry.valid?).to eq false }
-        it { expect { duplicate_time_entry.valid? }
-          .to change { duplicate_time_entry.errors.messages.count }.by(1) }
+      shared_examples 'Time Entries Do Not Overlap' do
+        it { expect(subject.valid?).to eq true }
+        it { expect { subject.valid? }
+          .to_not change { subject.errors.messages.count } }
+      end
 
-        it 'should contain error message' do
-          subject.valid?
+      shared_examples 'Time Entries Overlap' do
+        it { expect(subject.valid?).to eq false }
+        it { expect { subject.valid? }
+          .to change { subject.errors.messages.count }.by(1) }
 
-          expect { duplicate_time_entry.errors.messages[:start_time]
+        context 'response body' do
+          before { subject.valid? }
+
+          it { expect(subject.errors.messages[:start_time])
             .to include('time_entries can not overlap') }
+        end
+      end
+
+      context 'when time entry do not overlap' do
+        let(:sub_start) { '2:30' }
+        let(:sub_end) { '10:00' }
+
+        context 'with current day entry' do
+          context 'and different hours' do
+            let(:day) { first_day }
+            let(:sub_day) { first_day }
+            let(:sub_end) { '3:30' }
+
+            it_behaves_like 'Time Entries Do Not Overlap'
+          end
+
+          context 'and end hours overlap' do
+            let(:day) { first_day }
+            let(:sub_day) { first_day }
+            let(:sub_end) { '4:00' }
+
+            it_behaves_like 'Time Entries Do Not Overlap'
+          end
+        end
+
+        context 'with previous day entry' do
+          let(:day) { first_day }
+          let(:sub_day) { second_day }
+
+          it_behaves_like 'Time Entries Do Not Overlap'
+        end
+
+        context 'with next day entry' do
+          let(:day) { second_day }
+          let(:sub_day) { first_day }
+
+          it_behaves_like 'Time Entries Do Not Overlap'
+        end
+      end
+
+      context 'when time entry overlap' do
+        let(:sub_start) { '00:00' }
+        let(:sub_end) { '6:00' }
+
+        context 'with current day entry' do
+          let(:day) { first_day }
+          let(:sub_day) { first_day }
+          let(:sub_end) { '6:00' }
+
+          it_behaves_like 'Time Entries Overlap'
+        end
+
+        context 'with previous day entry' do
+          context 'and new entry day order is 1' do
+            let(:sub_day) { first_day }
+            let(:day) { second_day }
+
+            it_behaves_like 'Time Entries Overlap'
+          end
+
+          context 'and new entry order not 1' do
+            let(:sub_day) { second_day }
+            let(:day) { first_day }
+
+            it_behaves_like 'Time Entries Overlap'
+          end
+        end
+
+        context 'with next day entry' do
+          let(:sub_start) { '15:00' }
+          let(:sub_end) { '5:00' }
+
+          context 'and new entry order is last in policy' do
+            let(:sub_day) { second_day }
+            let(:day) { first_day }
+
+            it_behaves_like 'Time Entries Overlap'
+          end
+
+          context 'and new entry order is not last in policy' do
+            let(:sub_day) { first_day }
+            let(:day) { second_day }
+
+            it_behaves_like 'Time Entries Overlap'
+          end
         end
       end
     end

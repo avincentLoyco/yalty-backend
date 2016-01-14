@@ -6,7 +6,8 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
   include_context 'shared_context_headers'
 
   let(:presence_policy) { create(:presence_policy, account: account) }
-  let(:presence_day) { create(:presence_day, presence_policy: presence_policy) }
+  let!(:presence_day) { create(:presence_day, presence_policy: presence_policy, order: 1) }
+  let!(:next_presence_day) { create(:presence_day, presence_policy: presence_policy, order: 2) }
   let!(:time_entry) { create(:time_entry, presence_day: presence_day) }
 
   describe 'GET #show' do
@@ -19,7 +20,7 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
       context 'response body' do
         before { subject }
 
-        it { expect_json_keys(:id, :type, :end_time, :start_time) }
+        it { expect_json_keys(:id, :type, :end_time, :start_time, :presence_day) }
         it { expect(response.body).to include time_entry.id }
       end
     end
@@ -79,13 +80,16 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
     end
 
     context 'with valid params' do
+      before { presence_day.reload.update_minutes! }
       it { expect { subject }.to change { TimeEntry.count }.by(1) }
+      it { expect { subject }.to change { presence_day.reload.time_entries.count }.by(1) }
+      it { expect { subject }.to change { presence_day.reload.minutes }.by(120) }
       it { is_expected.to have_http_status(201) }
 
       context 'response body' do
         before { subject }
 
-        it { expect_json_keys(:id, :type, :start_time, :end_time) }
+        it { expect_json_keys(:id, :type, :start_time, :end_time, :presence_day) }
       end
     end
 
@@ -97,20 +101,34 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
         it { is_expected.to have_http_status(404) }
       end
 
-      context 'when data do not pass validation' do
-        before do
-          TimeEntry.create(start_time: start_time, end_time: end_time, presence_day: presence_day)
-        end
-
-        it { expect { subject }.to_not change { TimeEntry.count } }
-        it { is_expected.to have_http_status(422) }
-      end
-
       context 'when params are missing' do
         before { params.delete(:start_time) }
 
         it { expect { subject }.to_not change { TimeEntry.count } }
         it { is_expected.to have_http_status(422) }
+      end
+
+      context 'when data do not pass validation' do
+        let(:start_time) { '00:00' }
+        let(:end_time) { '12:00' }
+
+        before do
+          TimeEntry.create(
+            start_time: '22:00', end_time: '2:00', presence_day: next_presence_day
+          )
+        end
+
+        it { expect { subject }.to_not change { TimeEntry.count } }
+        it { expect { subject }.to_not change { presence_day.reload.time_entries.count } }
+        it { expect { subject }.to_not change { presence_day.reload.minutes } }
+
+        it { is_expected.to have_http_status(422) }
+
+        context 'response body' do
+          before { subject }
+
+          it { expect(response.body).to include 'time_entries can not overlap' }
+        end
       end
     end
   end
