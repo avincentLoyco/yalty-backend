@@ -11,12 +11,29 @@ module Api::V1
     end
 
     def relationships
-      holidays = resource.holidays.map do |holiday|
+      {
+        holidays: holidays_json,
+        working_places: working_places_json,
+        employees: employees_json
+      }
+    end
+
+    def holidays_json
+      resource.holidays.map do |holiday|
         HolidayRepresenter.new(holiday).complete
       end
-      {
-        holidays: holidays
-      }
+    end
+
+    def working_places_json
+      resource.working_places.map do |working_place|
+        WorkingPlaceRepresenter.new(working_place).basic
+      end
+    end
+
+    def employees_json
+      resource.employees.map do |employee|
+        EmployeeRepresenter.new(employee).basic
+      end
     end
   end
 end
