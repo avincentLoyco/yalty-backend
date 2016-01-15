@@ -13,31 +13,40 @@ module API
 
       def create
         verified_params(gate_rules) do |attributes|
-          employee = find_employee(attributes)
-          category = find_category(attributes)
-          resource = CreateEmployeeBalance.new(category, employee, nil, attributes).call
-          render_resource(resource)
+          category, employee, policy, params = balance_params(attributes)
+          resource = CreateEmployeeBalance.new(category, employee, policy, params).call
+          render_resource(resource, status: :created)
         end
       end
 
       def update
         verified_params(gate_rules) do |attributes|
-          CreateEmployeeBalance.new(resource.category, resource.employee, resource.policy, attributes)
+          category, employee, policy, params = balance_params(attributes)
+          resource = CreateEmployeeBalance.new(category, employee, policy, params).call
           render_no_content
         end
       end
 
       def destroy
         resource.destroy!
+        render_no_content
       end
 
       private
 
-      def find_employee(attributes)
+      def balance_params(attributes)
+        if request.put?
+          [resource.time_off_category, resource.employee, resource.time_off_policy, attributes]
+        else
+          [category(attributes), employee(attributes), nil, attributes]
+        end
+      end
+
+      def employee(attributes)
         Account.current.employees.find(attributes.delete(:employee)[:id])
       end
 
-      def find_category(attributes)
+      def category(attributes)
         Account.current.time_off_categories.find(attributes.delete(:time_off_category)[:id])
       end
 
@@ -46,9 +55,9 @@ module API
       end
 
       def resources
-        @resources ||= params[:time_off_category_id] ?
-          employee_balances.where(time_off_category_id: params[:time_off_category_id]).first :
-            employee_balances
+        @resources ||= !params[:time_off_category_id] ? employee_balances :
+          employee_balances.where(time_off_category:
+            TimeOffCategory.find(params[:time_off_category_id]))
       end
 
       def employee_balances

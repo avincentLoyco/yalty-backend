@@ -15,6 +15,7 @@ module EmployeeBalanceRules
 
   def put_rules
     Gate.rules do
+      required :id
       required :amount, :Integer
     end
   end

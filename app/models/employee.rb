@@ -17,9 +17,21 @@ class Employee < ActiveRecord::Base
   has_many :time_off_policies, through: :employee_time_off_policies
   validates :working_place_id, presence: true
 
-  def active_policy(category_id)
-    employee_policy = employee_time_off_policies.find_by(id: category_id)
+  def active_policy_in_category(category_id)
+    employee_policy = time_off_policy_in_category(category_id)
     return employee_policy if employee_policy
-    working_place.working_place_time_off_policies.find_by(id: category_id)
+    working_place.time_off_policy_in_category(category_id)
+  end
+
+  def last_balance_in_category(category_id)
+    employee_balances.find_by(created_at: employee_balances.pluck(:created_at).max,
+      time_off_category_id: category_id).try(:balance)
+  end
+
+  private
+
+  def time_off_policy_in_category(category_id)
+    employee_time_off_policies.joins(:time_off_policy)
+      .find_by(time_off_policies: { time_off_category_id: category_id }).try(:time_off_policy)
   end
 end

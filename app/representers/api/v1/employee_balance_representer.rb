@@ -12,7 +12,8 @@ module Api::V1
     def relationship
       {
         employee: employee_json,
-        time_off_category: time_off_category_json
+        time_off_category: time_off_category_json,
+        time_off_policy: time_off_policy_json
       }
     end
 
@@ -22,6 +23,10 @@ module Api::V1
 
     def time_off_category_json
       TimeOffCategoryRepresenter.new(resource.time_off_category).basic
+    end
+
+    def time_off_policy_json
+      TimeOffPolicyRepresenter.new(resource.time_off_policy).basic
     end
   end
 end
