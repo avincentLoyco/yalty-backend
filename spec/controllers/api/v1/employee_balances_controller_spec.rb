@@ -122,7 +122,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
 
       context 'balance when employee balances for employee already exist' do
         before do
-          allow_any_instance_of(Employee).to receive(:last_balance_in_category) { 200 }
+          allow_any_instance_of(Employee).to receive(:last_balance_in_category) { employee_balance }
           subject
         end
 
@@ -198,7 +198,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
 
     context 'with valid params' do
       it { expect { subject }.to change { employee_balance.reload.amount }.from(100).to(200) }
-      it { expect { subject }.to change { employee_balance.reload.balance }.by(200) }
+      it { expect { subject }.to change { employee_balance.reload.balance }.by(100) }
       it { expect { subject }.to_not change { employee_balance.reload.time_off_policy } }
 
       it { is_expected.to have_http_status(204) }
