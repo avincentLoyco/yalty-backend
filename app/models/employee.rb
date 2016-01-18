@@ -25,7 +25,7 @@ class Employee < ActiveRecord::Base
 
   def last_balance_in_category(category_id)
     employee_balances.find_by(created_at: employee_balances.pluck(:created_at).max,
-      time_off_category_id: category_id).try(:balance)
+      time_off_category_id: category_id)
   end
 
   private
