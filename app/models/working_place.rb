@@ -4,6 +4,7 @@ class WorkingPlace < ActiveRecord::Base
   belongs_to :presence_policy
   has_many :employees, inverse_of: :working_place
   has_many :working_place_time_off_policies
+  has_many :time_off_policies, through: :working_place_time_off_policies
 
   validates :name, :account_id, presence: true
 end

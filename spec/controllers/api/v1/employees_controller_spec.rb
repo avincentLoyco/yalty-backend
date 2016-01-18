@@ -271,7 +271,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
           it { expect { subject }.to_not change {
             employee.reload.employee_time_off_policies.count } }
 
-          it { is_expected.to have_http_status(500) }
+          it { is_expected.to have_http_status(404) }
         end
       end
     end

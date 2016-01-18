@@ -6,16 +6,14 @@ RSpec.describe AssignJoinTableCollection, type: :service do
   describe "#call" do
     context "with valid attributes" do
       context " and models that have a join table" do
-        let(:employee_time_off_policie) do
+        let(:employee_time_off_policy) do
           create(:employee_time_off_policy, employee: employee)
         end
 
         context "updates the collection association of the resource" do
-          let(:time_off_policies_id_hash) do
-            create_list(:time_off_policy, 2).map{ |t| { id: t.id} }
-          end
+          let(:time_off_policies_id_hash) { create_list(:time_off_policy, 2).map{ |t| { id: t.id} } }
 
-          before {employee_time_off_policie}
+          before {employee_time_off_policy}
 
           it "when it is given an non empty array" do
             expect {
@@ -36,9 +34,9 @@ RSpec.describe AssignJoinTableCollection, type: :service do
       end
 
       context " and models that do not have a join table" do
-        let(:time_offs_id_hash) { create_list(:time_off, 2).map{ |t| { id: t.id} } }
+        let(:holidays_id_hash) { create_list(:holiday, 2).map{ |t| { id: t.id} } }
         it "raises an error" do
-          expect{described_class.new(employee, time_offs_id_hash, "time_offs").call}.
+          expect{described_class.new(employee, holidays_id_hash, "holidays").call}.
             to raise_error(ActiveRecord::RecordNotFound)
         end
       end
@@ -49,7 +47,7 @@ RSpec.describe AssignJoinTableCollection, type: :service do
 
       it "when there is a wrong collection_name" do
         expect{ described_class.new(employee, [], "wrong_attributes").call }.
-          to raise_error(ActiveRecord::RecordNotFound)
+          to raise_error(NameError)
       end
 
       it "when there is a wrong collection" do
