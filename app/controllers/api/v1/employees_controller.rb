@@ -59,7 +59,11 @@ module API
       end
 
       def resource_representer
-        ::Api::V1::EmployeeRepresenter
+        if current_user.account_manager
+          ::Api::V1::EmployeeRepresenter
+        else
+          ::Api::V1::PublicEmployeeRepresenter
+        end
       end
     end
   end
