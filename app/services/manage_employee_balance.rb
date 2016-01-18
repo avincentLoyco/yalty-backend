@@ -12,7 +12,7 @@ class ManageEmployeeBalance
 
   def call
     ActiveRecord::Base.transaction do
-      find_time_off_policy if (time_off_policy.blank? && related_present?)
+      find_time_off_policy if time_off_policy.blank? && related_present?
       find_or_build_employee_balance
       update_balance_attributes
 

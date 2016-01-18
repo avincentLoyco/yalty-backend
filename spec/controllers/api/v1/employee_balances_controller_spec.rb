@@ -48,7 +48,22 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
 
     context 'with valid data' do
       context 'only when employee id given' do
-        it { is_expected.to have_http_status(200) }
+        context 'and employee does not have balances' do
+          before { subject }
+
+          it { expect_json([]) }
+          it { is_expected.to have_http_status(200) }
+        end
+
+        context 'and employee has balances' do
+          let!(:employee_balance) { create(:employee_balance, employee: employee, amount: 200) }
+          before { subject }
+
+          it { is_expected.to have_http_status(200) }
+          it { expect(response.body).to include(
+            employee_balance.time_off_category.name, employee_balance.amount.to_s)
+          }
+        end
       end
 
       context 'when employee id and category id given' do

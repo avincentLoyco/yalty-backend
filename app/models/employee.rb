@@ -15,6 +15,8 @@ class Employee < ActiveRecord::Base
   has_many :employee_balances, class_name: 'Employee::Balance'
   has_many :employee_time_off_policies
   has_many :time_off_policies, through: :employee_time_off_policies
+  has_many :time_off_categories, through: :employee_balances
+
   validates :working_place_id, presence: true
 
   def active_policy_in_category(category_id)
@@ -24,8 +26,11 @@ class Employee < ActiveRecord::Base
   end
 
   def last_balance_in_category(category_id)
-    employee_balances.find_by(created_at: employee_balances.pluck(:created_at).max,
-      time_off_category_id: category_id)
+    employee_balances.where(time_off_category_id: category_id).order('created_at').last
+  end
+
+  def unique_balances_categories
+    time_off_categories.distinct
   end
 
   private

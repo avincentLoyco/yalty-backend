@@ -17,6 +17,13 @@ module Api::V1
       }
     end
 
+    def balances_sum
+      return [] if resource.blank?
+      resource.first.employee.unique_balances_categories.map do |category|
+        CategoryBalanceRepresenter.new(resource.first.employee, category).basic
+      end
+    end
+
     def employee_json
       EmployeeRepresenter.new(resource.employee).basic
     end

@@ -8,7 +8,11 @@ module API
       end
 
       def index
-        render_resource(resources)
+        if params[:time_off_cateogry_id]
+          render_resource(resources)
+        else
+          render json: ::Api::V1::EmployeeBalanceRepresenter.new(resources).balances_sum
+        end
       end
 
       def create
