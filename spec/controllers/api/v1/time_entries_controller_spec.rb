@@ -20,8 +20,9 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
       context 'response body' do
         before { subject }
 
-        it { expect_json_keys(:id, :type, :end_time, :start_time, :presence_day) }
-        it { expect(response.body).to include time_entry.id }
+        it { expect_json_keys(:id, :type, :end_time, :start_time, :presence_day, :duration) }
+        it { expect_json(duration: 60) }
+        it { expect_json(id: time_entry.id) }
       end
     end
 
@@ -55,7 +56,7 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
       it { expect(response.body).to_not include(other_user_entry.id) }
     end
 
-    context 'other accoun presence day' do
+    context 'other account presence day' do
       before { Account.current = create(:account) }
 
       it { is_expected.to have_http_status(404) }
@@ -89,7 +90,8 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
       context 'response body' do
         before { subject }
 
-        it { expect_json_keys(:id, :type, :start_time, :end_time, :presence_day) }
+        it { expect_json_keys(:id, :type, :start_time, :end_time, :presence_day, :duration) }
+        it { expect_json(duration: 120) }
       end
     end
 
@@ -155,6 +157,7 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
     context 'with valid params' do
       it { expect { subject }.to change { time_entry.reload.start_time } }
       it { expect { subject }.to change { presence_day.reload.minutes } }
+      it { expect { subject }.to change { time_entry.reload.duration }.to(120) }
       it { is_expected.to have_http_status(204) }
     end
 
@@ -164,6 +167,8 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
 
         it { expect { subject }.to_not change { time_entry.reload.start_time } }
         it { expect { subject }.to_not change { presence_day.reload.minutes } }
+        it { expect { subject }.to_not change { time_entry.reload.duration } }
+
         it { is_expected.to have_http_status(404) }
       end
 
@@ -174,6 +179,8 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
 
         it { expect { subject }.to_not change { time_entry.reload.start_time } }
         it { expect { subject }.to_not change { presence_day.reload.minutes } }
+        it { expect { subject }.to_not change { time_entry.reload.duration } }
+
         it { is_expected.to have_http_status(422) }
       end
 
@@ -182,6 +189,7 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
 
         it { expect { subject }.to_not change { time_entry.reload.start_time } }
         it { expect { subject }.to_not change { presence_day.reload.minutes } }
+        it { expect { subject }.to_not change { time_entry.reload.duration } }
         it { is_expected.to have_http_status(422) }
       end
     end

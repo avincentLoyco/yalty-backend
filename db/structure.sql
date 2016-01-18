@@ -372,7 +372,8 @@ CREATE TABLE time_entries (
     end_time character varying NOT NULL,
     presence_day_id uuid NOT NULL,
     created_at timestamp without time zone NOT NULL,
-    updated_at timestamp without time zone NOT NULL
+    updated_at timestamp without time zone NOT NULL,
+    duration integer DEFAULT 0 NOT NULL
 );
 
 
@@ -1065,3 +1066,6 @@ INSERT INTO schema_migrations (version) VALUES ('20151221114106');
 INSERT INTO schema_migrations (version) VALUES ('20151222101912');
 
 INSERT INTO schema_migrations (version) VALUES ('20160105092534');
+
+INSERT INTO schema_migrations (version) VALUES ('20160119110649');
+

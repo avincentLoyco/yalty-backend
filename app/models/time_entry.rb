@@ -1,19 +1,15 @@
 class TimeEntry < ActiveRecord::Base
   belongs_to :presence_day
 
-  validates :start_time, :end_time, :presence_day_id, presence: true
-  validate :time_entry_not_reserved, if: [:times_parsable?, "presence_day.present?"]
+  validates :start_time, :end_time, :presence_day_id, :duration, presence: true
+  validate :time_entry_not_reserved, if: [:times_parsable?, 'presence_day.present?']
   validate :start_time_format, :end_time_format
 
-  before_validation :convert_time_to_hours, if: :times_parsable?
+  before_validation :convert_time_to_hours, :calculate_duration, if: :times_parsable?
   after_save :update_presence_day_minutes!
 
   TOD = Tod::TimeOfDay
   TODS = Tod::Shift
-
-  def duration
-    TODS.new(start_time_tod, end_time_tod).duration / 60
-  end
 
   def ends_next_day?
     start_time_tod > end_time_tod
@@ -32,6 +28,10 @@ class TimeEntry < ActiveRecord::Base
   def convert_time_to_hours
     self.start_time = start_time_tod
     self.end_time = end_time_tod
+  end
+
+  def calculate_duration
+    self.duration = TODS.new(start_time_tod, end_time_tod).duration / 60
   end
 
   def day_entries_overlap?

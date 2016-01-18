@@ -5,18 +5,21 @@ RSpec.describe TimeEntry, type: :model do
   it { is_expected.to have_db_column(:end_time).of_type(:string) }
   it { is_expected.to have_db_column(:id).of_type(:uuid) }
   it { is_expected.to have_db_column(:presence_day_id).of_type(:uuid) }
+  it { is_expected.to have_db_column(:duration).of_type(:integer) }
 
   it { is_expected.to belong_to(:presence_day) }
 
   it { is_expected.to validate_presence_of(:start_time) }
   it { is_expected.to validate_presence_of(:end_time) }
   it { is_expected.to validate_presence_of(:presence_day_id) }
+  it { is_expected.to validate_presence_of(:duration) }
 
   context 'before validation calback' do
     subject { TimeEntry.new(start_time: '14:00', end_time: '16:00') }
 
     it { expect { subject.valid? }.to change { subject.start_time }.to('14:00:00') }
     it { expect { subject.valid? }.to change { subject.end_time }.to('16:00:00') }
+    it { expect { subject.valid? }.to change { subject.duration }.from(0).to(120) }
   end
 
   context 'custom validations' do
