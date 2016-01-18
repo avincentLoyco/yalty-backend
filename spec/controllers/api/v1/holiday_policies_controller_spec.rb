@@ -57,7 +57,9 @@ RSpec.describe API::V1::HolidayPoliciesController, type: :controller do
       context 'response body' do
         before { subject }
 
-        it { expect_json_keys(:name, :country, :region, :id) }
+        it { expect_json_keys(
+          [:name, :country, :region, :id, :working_places, :employees, :type, :holidays]
+        )}
       end
 
       context 'records assign' do
