@@ -1,4 +1,4 @@
-class CreateEmployeeBalance
+class ManageEmployeeBalance
   include API::V1::Exceptions
   attr_reader :category, :employee, :params, :employee_balance, :time_off_policy
 
@@ -12,27 +12,31 @@ class CreateEmployeeBalance
 
   def call
     ActiveRecord::Base.transaction do
+      find_time_off_policy if (time_off_policy.blank? && related_present?)
       find_or_build_employee_balance
-      find_time_off_policy unless time_off_policy
-      update_balance_attributes if time_off_policy
+      update_balance_attributes
 
       save!
     end
   end
 
-  def find_or_build_employee_balance
-    @employee_balance = employee.employee_balances
-      .where(id: params[:id], time_off_category: category).first_or_initialize
+  def related_present?
+    employee.present? && category.present?
   end
 
   def find_time_off_policy
     @time_off_policy = employee.active_policy_in_category(category.id)
   end
 
+  def find_or_build_employee_balance
+    @employee_balance = Employee::Balance.where(
+      id: params[:id], time_off_category: category, employee: employee).first_or_initialize
+  end
+
   def update_balance_attributes
-    employee_balance.tap do |e|
-      e.amount = params[:amount]
-      e.time_off_policy = time_off_policy
+    employee_balance.tap do |balance|
+      balance.amount = params[:amount]
+      balance.time_off_policy = time_off_policy
     end
   end
 
@@ -41,8 +45,7 @@ class CreateEmployeeBalance
       employee_balance.save!
       employee_balance
     else
-      messages = {}
-      messages = messages.merge(employee_balance.errors.messages)
+      messages = employee_balance.errors.messages
 
       fail InvalidResourcesError.new(employee_balance, messages)
     end
