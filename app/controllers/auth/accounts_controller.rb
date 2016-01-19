@@ -5,10 +5,6 @@ class Auth::AccountsController < ApplicationController
 
   def create
     verified_params(gate_rules) do |attributes|
-      unless attributes[:user][:password].present?
-        attributes[:user][:password] = SecureRandom.urlsafe_base64(16)
-      end
-
       account, user = build_account_and_user(attributes)
 
       ActiveRecord::Base.transaction do

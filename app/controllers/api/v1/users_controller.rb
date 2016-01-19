@@ -17,18 +17,13 @@ module API
         verified_params(gate_rules) do |attributes|
           if attributes.key?(:employee)
             employee_id = attributes.delete(:employee)[:id]
-            employee = Account.current.employees.find(employee_id)
-          end
-
-          unless attributes[:password].present?
-            attributes[:password] = SecureRandom.urlsafe_base64(16)
+            attributes[:employee] = Account.current.employees.find(employee_id)
           end
 
           resource = Account.current.users.new(attributes)
           authorize! :create, resource
 
           if resource.save
-            employee.update!(account_user_id: resource.id) if employee
             send_user_credentials(resource, attributes[:password])
             render_resource(resource, status: :created)
           else
