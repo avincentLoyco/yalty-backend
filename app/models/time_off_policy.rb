@@ -6,13 +6,5 @@ class TimeOffPolicy < ActiveRecord::Base
 
   validates :start_time, :end_time, :policy_type, :time_off_category, presence: true
   validates :policy_type, inclusion: { in: %w(counter balance) }
-  validates :amount, numericality: { greater_than_or_equal_to: 0 }
-  validate :end_time_after_start_time
-
-  private
-
-  def end_time_after_start_time
-    return unless start_time && end_time
-    errors.add(:end_time, 'Must be after start time') if start_time > end_time
-  end
+  validates :years_to_effect, numericality: { greater_than_or_equal_to: 0 }
 end
