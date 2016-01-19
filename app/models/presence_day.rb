@@ -31,6 +31,6 @@ class PresenceDay < ActiveRecord::Base
 
   def calculated_day_minutes
     return 0 unless time_entries.present?
-    reload.time_entries.map(&:duration).sum
+    time_entries.sum(:duration)
   end
 end
