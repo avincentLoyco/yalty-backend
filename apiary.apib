@@ -1758,6 +1758,47 @@ Delete employee balance
 
 ## Time Off Policies Collection [/api/v1/time_off_policies]
 
+### Get time off policies [GET]
+
+Get a list of time off policies
+
++ Request (application/json)
+
++ Response 200 (application/json)
+
+        [
+          {
+            "id": "12345678-1234-1234-1234-123456789013",
+            "type": "time_off_policy",
+            "start_day": "1",
+            "end_day": "1",
+            "start_month": "1",
+            "end_month": "4"
+            "years_to_effect": "1",
+            "amount": "28800",
+            "policy_type": "balance",
+            "time_off_category": {
+              "type": "time_off_category",
+              "id": "12345678-1234-1234-1234-123456789012"
+            }
+          },
+          {
+            "id": "87654321-1234-1234-1234-123456789013",
+            "type": "time_off_policy",
+            "start_day": "1",
+            "end_day": "1",
+            "start_month": "1",
+            "end_month": "10",
+            "years_to_effect": 0,
+            "amount": "0",
+            "policy_type": "counter",
+            "time_off_category": {
+              "type": "time_off_category",
+              "id": "12345678-1234-1234-1234-123456789012"
+            }
+          }
+        ]
+
 ### GET time off policies by category [GET /api/v1/time_off_categories/:time_off_category_id/time_off_policies]
 
 Get a list of time off policies in given category
@@ -1774,8 +1815,10 @@ Get a list of time off policies in given category
           {
             "id": "12345678-1234-1234-1234-123456789013",
             "type": "time_off_policy",
-            "start_time": "01.01"
-            "end_time": "1.04",
+            "start_day": "1",
+            "end_day": "1",
+            "start_month": "1",
+            "end_month": "4"
             "years_to_effect": "1",
             "amount": "28800",
             "policy_type": "balance",
@@ -1787,8 +1830,10 @@ Get a list of time off policies in given category
           {
             "id": "87654321-1234-1234-1234-123456789013",
             "type": "time_off_policy",
-            "start_time": "01.01",
-            "end_time": "1.10",
+            "start_day": "1",
+            "end_day": "1",
+            "start_month": "1",
+            "end_month": "10",
             "years_to_effect": 0,
             "amount": "",
             "policy_type": "counter",
@@ -1807,8 +1852,10 @@ Create new time off policy. Policy may have two types: counter of balance, if ty
   + type: time_off_policy (string)
   + amount: 1440 (string)
   + policy_type: balance (string, required)
-  + end_time: 01.01 (string, required)
-  + start_time: 01.01 (string, required)
+  + start_day: 1(number, required)
+  + end_day: 1(number, required)
+  + start_month: 1(number, required)
+  + end_month: 10(number, required)
   + years_to_effect: 1 (string, required)
   + time_off_category (required)
     + type: time_off_category (string)
@@ -1820,8 +1867,10 @@ Create new time off policy. Policy may have two types: counter of balance, if ty
 
         {
           "type": "time_off_policy",
-          "start_time": "01.01"
-          "end_time": "1.04",
+          "start_day": "1",
+          "end_day": "1",
+          "start_month": "1",
+          "end_month": "10",
           "amount": "1440",
           "years_to_effect": "1",
           "policy_type": "balance"
@@ -1852,8 +1901,10 @@ Create new time off policy. Policy may have two types: counter of balance, if ty
          {
           "id": "12345678-1234-1234-1234-123456789013",
           "type": "time_off_policy",
-          "start_time": "01.01"
-          "end_time": "1.04",
+          "start_day": "1",
+          "end_day": "1",
+          "start_month": "1",
+          "end_month": "10",
           "amount": "1440",
           "years_to_effect": "1",
           "policy_type": "balance",
@@ -1881,8 +1932,10 @@ Show time off policy
         {
           "id": "12345678-1234-1234-1234-123456789013",
           "type": "time_off_policy",
-          "start_time": "01.01"
-          "end_time": "1.04",
+          "start_day": "1",
+          "end_day": "1",
+          "start_month": "1",
+          "end_month": "10",
           "amount": "1440",
           "policy_type": "balance",
           "years_to_effect": "1",
@@ -1916,8 +1969,10 @@ Update time off policy
   + type: time_off_policy (string)
   + amount: 1440 (string)
   + policy_type: balance (string, required)
-  + end_time: 01.01 (string, required)
-  + start_time: 01.01 (string, required)
+  + start_day: 1(number, required)
+  + end_day: 1(number, required)
+  + start_month: 1(number, required)
+  + end_month: 10(number, required)
   + years_to_effect: 1(string, required)
   + [employees: {"id": "1"}] (array)
   + [working_places: {"id": "1"}] (array)
@@ -1927,8 +1982,10 @@ Update time off policy
         {
           "id": "12345678-1234-1234-1234-123456789013",
           "type": "time_off_policy",
-          "start_time": "01.01"
-          "end_time": "1.04",
+          "start_day": "1",
+          "end_day": "1",
+          "start_month": "1",
+          "end_month": "10",
           "years_to_effect": "1",
           "amount": "1440",
           "policy_type": "balance",
