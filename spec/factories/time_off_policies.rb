@@ -2,8 +2,10 @@ FactoryGirl.define do
   factory :time_off_policy do
     time_off_category
     amount { Faker::Number.number(4) }
-    start_time '01.01'
-    end_time '01.04'
+    start_day Time.now.day
+    start_month Time.now.month
+    end_day (Time.now + 1.month).day
+    end_month (Time.now + 1.month).month
     policy_type 'balance'
     years_to_effect 0
 

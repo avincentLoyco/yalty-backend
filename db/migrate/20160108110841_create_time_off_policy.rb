@@ -1,8 +1,10 @@
 class CreateTimeOffPolicy < ActiveRecord::Migration
   def up
     create_table :time_off_policies, id: :uuid do |t|
-      t.string :start_time, null: false
-      t.string :end_time, null: false
+      t.integer :start_day, null: false
+      t.integer :end_day, null: false
+      t.integer :start_month, null: false
+      t.integer :end_month, null: false
       t.integer :amount, null: false, default: 0
       t.integer :years_to_effect, null: false, default: 0
       t.string :policy_type, null: false
