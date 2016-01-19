@@ -15,7 +15,7 @@ module API
 
       def create
         verified_params(gate_rules) do |attributes|
-          set_related_employee(attributes)
+          load_related_employee(attributes)
 
           @resource = Account.current.users.new(attributes)
 
@@ -31,7 +31,7 @@ module API
 
       def update
         verified_params(gate_rules) do |attributes|
-          set_related_employee(attributes)
+          load_related_employee(attributes)
 
           authorize! :update, attributes[:employee] if attributes[:employee]
           authorize! :update, resource
@@ -62,8 +62,8 @@ module API
         ::Api::V1::UserRepresenter
       end
 
-      def set_related_employee(attributes)
-        return nil unless attributes.key?(:employee)
+      def load_related_employee(attributes)
+        return unless attributes.key?(:employee)
 
         employee_id = attributes.delete(:employee)[:id]
         attributes[:employee] = Account.current.employees.find(employee_id)
