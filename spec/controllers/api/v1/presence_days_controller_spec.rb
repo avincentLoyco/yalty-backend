@@ -19,7 +19,7 @@ RSpec.describe API::V1::PresenceDaysController, type: :controller do
       context 'response body' do
         before { subject }
 
-        it { expect_json_keys([:order, :id, :hours]) }
+        it { expect_json_keys([:order, :id, :minutes]) }
       end
     end
 
@@ -72,7 +72,6 @@ RSpec.describe API::V1::PresenceDaysController, type: :controller do
   describe 'POST #create' do
     subject { post :create, params }
     let(:order) { '1' }
-    let(:hours) { '16.00' }
     let(:presence_policy_id) { presence_policy.id.to_s }
     let(:params) do
       {
@@ -81,7 +80,6 @@ RSpec.describe API::V1::PresenceDaysController, type: :controller do
           type: 'presence_policy'
         },
         order: order,
-        hours: hours,
         type: 'presence_day'
       }
     end
@@ -94,7 +92,7 @@ RSpec.describe API::V1::PresenceDaysController, type: :controller do
       context 'response' do
         before { subject }
 
-        it { expect_json_keys([:id, :type, :order, :hours]) }
+        it { expect_json_keys([:id, :type, :order, :minutes]) }
       end
     end
 
@@ -151,13 +149,11 @@ RSpec.describe API::V1::PresenceDaysController, type: :controller do
     let(:presence_day) { create(:presence_day, presence_policy: presence_policy) }
     let(:id) { presence_day.id.to_s }
     let(:order) { '1' }
-    let(:hours) { '16.00' }
     let(:presence_policy_id) { presence_policy.id.to_s }
     let(:params) do
       {
         id: id,
         order: order,
-        hours: hours,
         type: 'presence_day'
       }
     end

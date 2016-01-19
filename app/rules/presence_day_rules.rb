@@ -4,7 +4,6 @@ module PresenceDayRules
   def post_rules
     Gate.rules do
       required :order, :Integer
-      optional :hours, :Decimal
       required :presence_policy, :Hash do
         required :id
       end
@@ -15,7 +14,6 @@ module PresenceDayRules
     Gate.rules do
       required :id, :String
       required :order, :Integer
-      optional :hours, :Decimal
     end
   end
 end

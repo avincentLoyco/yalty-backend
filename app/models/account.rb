@@ -38,6 +38,7 @@ class Account < ActiveRecord::Base
   has_one :registration_key, class_name: 'Account::RegistrationKey'
   has_many :time_off_categories
   has_many :time_offs, through: :time_off_categories
+  has_many :time_entries, through: :presence_days
 
   before_validation :generate_subdomain, on: :create
   after_create :update_default_attribute_definitions!

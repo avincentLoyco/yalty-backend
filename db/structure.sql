@@ -334,9 +334,9 @@ CREATE TABLE presence_days (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
     "order" integer,
     presence_policy_id uuid NOT NULL,
-    hours numeric,
     created_at timestamp without time zone NOT NULL,
-    updated_at timestamp without time zone NOT NULL
+    updated_at timestamp without time zone NOT NULL,
+    minutes integer
 );
 
 
@@ -359,6 +359,21 @@ CREATE TABLE presence_policies (
 
 CREATE TABLE schema_migrations (
     version character varying NOT NULL
+);
+
+
+--
+-- Name: time_entries; Type: TABLE; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE TABLE time_entries (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    start_time character varying NOT NULL,
+    end_time character varying NOT NULL,
+    presence_day_id uuid NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL,
+    duration integer DEFAULT 0 NOT NULL
 );
 
 
@@ -537,6 +552,14 @@ ALTER TABLE ONLY presence_days
 
 ALTER TABLE ONLY presence_policies
     ADD CONSTRAINT presence_policies_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: time_entries_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
+--
+
+ALTER TABLE ONLY time_entries
+    ADD CONSTRAINT time_entries_pkey PRIMARY KEY (id);
 
 
 --
@@ -725,6 +748,13 @@ CREATE INDEX index_presence_policies_on_account_id ON presence_policies USING bt
 
 
 --
+-- Name: index_time_entries_on_presence_day_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE INDEX index_time_entries_on_presence_day_id ON time_entries USING btree (presence_day_id);
+
+
+--
 -- Name: index_time_off_categories_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
@@ -757,6 +787,14 @@ CREATE INDEX index_working_places_on_account_id ON working_places USING btree (a
 --
 
 CREATE UNIQUE INDEX unique_schema_migrations ON schema_migrations USING btree (version);
+
+
+--
+-- Name: fk_rails_0c64f4ddd5; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY time_entries
+    ADD CONSTRAINT fk_rails_0c64f4ddd5 FOREIGN KEY (presence_day_id) REFERENCES presence_days(id) ON DELETE CASCADE;
 
 
 --
@@ -1021,4 +1059,13 @@ INSERT INTO schema_migrations (version) VALUES ('20151209122309');
 
 INSERT INTO schema_migrations (version) VALUES ('20151209162652');
 
+INSERT INTO schema_migrations (version) VALUES ('20151214144417');
+
 INSERT INTO schema_migrations (version) VALUES ('20151221114106');
+
+INSERT INTO schema_migrations (version) VALUES ('20151222101912');
+
+INSERT INTO schema_migrations (version) VALUES ('20160105092534');
+
+INSERT INTO schema_migrations (version) VALUES ('20160119110649');
+
