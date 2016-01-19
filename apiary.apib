@@ -730,9 +730,7 @@ Get list of time entries
 
 ### POST Time entry [POST]
 
-Create new time entry, when end time is smaller than start_time it creates two time entries.
-For example for start_time: "12:00", end_time: "10:00" it creates two time entries.
-First one: start_time: "12:00", end_time: "00:00", and the second one: start_time: "00:00", and end_time: "10:00"
+Create new Time Entry
 
 + Attributes
   + type: time_entry(string)
@@ -746,7 +744,7 @@ First one: start_time: "12:00", end_time: "00:00", and the second one: start_tim
         {
           "type": "time_entry",
           "start_time": "12:00"
-          "end_time": "14:00",
+          "end_time": "02:00",
           "presence_day": {
             "id": "92ebd78d-15f1-464b-a93d-b0ba36fdbea0",
             "type": "presence_day"
@@ -758,7 +756,7 @@ First one: start_time: "12:00", end_time: "00:00", and the second one: start_tim
         {
           "type": "time_entry",
           "start_time": "12:00"
-          "end_time": "14:00",
+          "end_time": "02:00",
           "id": "92ebd78d-aaaa-464b-a93d-b0ba36fdbea0",
           "presence_day": {
             "id": "92ebd78d-15f1-464b-a93d-b0ba36fdbea0",
@@ -795,8 +793,6 @@ Show Time Entry
 ### PUT Time Entry [PUT]
 
 Update Time Entry.
-When date changes from one day to two (end time before start_time) it creates time entry.
-When date changes from two days to one (end time after start time) it removes related time entry.
 
 + Attributes
   + type: time_entry(string)
@@ -810,8 +806,8 @@ When date changes from two days to one (end time after start time) it removes re
 
         {
           "type": "time_entry",
-          "start_time": "12:00"
-          "end_time": "14:00",
+          "start_time": "22:00"
+          "end_time": "02:00",
           "id": "1b6de77e-c9cf-453e-951d-6e6dd6cea1f7",
           "presence_day": {
             "id": "92ebd78d-15f1-464b-a93d-b0ba36fdbea0",
@@ -1778,8 +1774,9 @@ Get a list of time off policies in given category
           {
             "id": "12345678-1234-1234-1234-123456789013",
             "type": "time_off_policy",
-            "start_time": "01.01.2015"
-            "end_time": "1.04.2016",
+            "start_time": "01.01"
+            "end_time": "1.04",
+            "years_to_effect": "1",
             "amount": "28800",
             "policy_type": "balance",
             "time_off_category": {
@@ -1790,8 +1787,9 @@ Get a list of time off policies in given category
           {
             "id": "87654321-1234-1234-1234-123456789013",
             "type": "time_off_policy",
-            "start_time": "01.01.2015",
-            "end_time": "1.04.2016",
+            "start_time": "01.01",
+            "end_time": "1.10",
+            "years_to_effect": 0,
             "amount": "",
             "policy_type": "counter",
             "time_off_category": {
@@ -1809,8 +1807,9 @@ Create new time off policy. Policy may have two types: counter of balance, if ty
   + type: time_off_policy (string)
   + amount: 1440 (string)
   + policy_type: balance (string, required)
-  + end_time: 01.01.2015 (string, required)
-  + start_time: 01.01.2014 (string, required)
+  + end_time: 01.01 (string, required)
+  + start_time: 01.01 (string, required)
+  + years_to_effect: 1 (string, required)
   + time_off_category (required)
     + type: time_off_category (string)
     + id: 11 (string, required)
@@ -1821,9 +1820,10 @@ Create new time off policy. Policy may have two types: counter of balance, if ty
 
         {
           "type": "time_off_policy",
-          "start_time": "01.01.2015"
-          "end_time": "1.04.2016",
+          "start_time": "01.01"
+          "end_time": "1.04",
           "amount": "1440",
+          "years_to_effect": "1",
           "policy_type": "balance"
           "time_off_category": {
             "type": "time_off_category",
@@ -1852,9 +1852,10 @@ Create new time off policy. Policy may have two types: counter of balance, if ty
          {
           "id": "12345678-1234-1234-1234-123456789013",
           "type": "time_off_policy",
-          "start_time": "01.01.2015"
-          "end_time": "1.04.2016",
+          "start_time": "01.01"
+          "end_time": "1.04",
           "amount": "1440",
+          "years_to_effect": "1",
           "policy_type": "balance",
           "time_off_category": {
             "type": "time_off_category",
@@ -1880,10 +1881,11 @@ Show time off policy
         {
           "id": "12345678-1234-1234-1234-123456789013",
           "type": "time_off_policy",
-          "start_time": "01.01.2015"
-          "end_time": "1.04.2016",
+          "start_time": "01.01"
+          "end_time": "1.04",
           "amount": "1440",
           "policy_type": "balance",
+          "years_to_effect": "1",
           "time_off_category": {
             "type": "time_off_category",
             "id": "12345678-1234-1234-1234-123456789012"
@@ -1914,8 +1916,9 @@ Update time off policy
   + type: time_off_policy (string)
   + amount: 1440 (string)
   + policy_type: balance (string, required)
-  + end_time: 01.01.2015 (string, required)
-  + start_time: 01.01.2014 (string, required)
+  + end_time: 01.01 (string, required)
+  + start_time: 01.01 (string, required)
+  + years_to_effect: 1(string, required)
   + [employees: {"id": "1"}] (array)
   + [working_places: {"id": "1"}] (array)
 
@@ -1924,8 +1927,9 @@ Update time off policy
         {
           "id": "12345678-1234-1234-1234-123456789013",
           "type": "time_off_policy",
-          "start_time": "01.01.2015"
-          "end_time": "1.04.2016",
+          "start_time": "01.01"
+          "end_time": "1.04",
+          "years_to_effect": "1",
           "amount": "1440",
           "policy_type": "balance",
           "time_off_category": {
