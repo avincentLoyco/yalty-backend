@@ -1,6 +1,7 @@
 module API
   module V1
     class TimeOffCategoriesController < ApplicationController
+      load_and_authorize_resource except: :create
       include TimeOffCategoriesRules
 
       def show
@@ -14,6 +15,7 @@ module API
       def create
         verified_params(gate_rules) do |attributes|
           resource = Account.current.time_off_categories.new(attributes)
+          authorize! :create, resource
 
           if resource.save
             render_resource(resource, status: :created)

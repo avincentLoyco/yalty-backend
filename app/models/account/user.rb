@@ -9,6 +9,9 @@ class Account::User < ActiveRecord::Base
   validates :reset_password_token, uniqueness: true, allow_nil: true
 
   belongs_to :account, inverse_of: :users, required: true
+  has_one :employee, foreign_key: :account_user_id
+
+  before_validation :generate_password, on: :create
 
   def self.current=(user)
     RequestStore.write(:current_account_user, user)
@@ -32,6 +35,10 @@ class Account::User < ActiveRecord::Base
 
   def generate_reset_password_token
     self.reset_password_token = SecureRandom.urlsafe_base64(16)
+  end
+
+  def generate_password
+    self.password ||= SecureRandom.urlsafe_base64(12)
   end
 
   def intercom_type

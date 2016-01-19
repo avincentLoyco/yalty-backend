@@ -1,6 +1,7 @@
 module API
   module V1
     class HolidaysController < ApplicationController
+      load_and_authorize_resource except: :create
       include HolidayRules
 
       def show
@@ -14,6 +15,8 @@ module API
       def create
         verified_params(gate_rules) do |attributes|
           resource = holiday_policy.custom_holidays.new(holiday_attributes(attributes))
+          authorize! :create, resource
+
           if resource.save
             render_resource(resource, status: :created)
           else

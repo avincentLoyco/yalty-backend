@@ -1,6 +1,10 @@
 class API::ApplicationController < ApplicationController
   before_action :authenticate!
 
+  def current_user
+    @current_user ||= Account::User.current
+  end
+
   protected
 
   def resources

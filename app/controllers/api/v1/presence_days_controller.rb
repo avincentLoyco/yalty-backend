@@ -1,6 +1,7 @@
 module API
   module V1
     class PresenceDaysController < ApplicationController
+      load_and_authorize_resource except: :create
       include PresenceDayRules
 
       def show
@@ -14,6 +15,8 @@ module API
       def create
         verified_params(gate_rules) do |attributes|
           resource = presence_policy.presence_days.new(presence_day_params(attributes))
+          authorize! :create, resource
+
           if resource.save
             render_resource(resource, status: :created)
           else
