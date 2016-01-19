@@ -15,14 +15,11 @@ module API
 
       def create
         verified_params(gate_rules) do |attributes|
-          if attributes.key?(:employee)
-            employee_id = attributes.delete(:employee)[:id]
-            attributes[:employee] = Account.current.employees.find(employee_id)
-          end
+          set_related_employee(attributes)
 
-          resource = Account.current.users.new(attributes)
+          @resource = Account.current.users.new(attributes)
+
           authorize! :create, resource
-
           if resource.save
             send_user_credentials(resource, attributes[:password])
             render_resource(resource, status: :created)
@@ -34,13 +31,9 @@ module API
 
       def update
         verified_params(gate_rules) do |attributes|
-          if attributes.key?(:employee)
-            employee_id = attributes.delete(:employee)[:id]
-            employee = Account.current.employees.find(employee_id)
-          end
+          set_related_employee(attributes)
 
           if resource.update(attributes)
-            employee.update!(account_user_id: resource.id) if employee
             render_no_content
           else
             resource_invalid_error(resource)
@@ -65,6 +58,13 @@ module API
 
       def resource_representer
         ::Api::V1::UserRepresenter
+      end
+
+      def set_related_employee(attributes)
+        return nil unless attributes.key?(:employee)
+
+        employee_id = attributes.delete(:employee)[:id]
+        attributes[:employee] = Account.current.employees.find(employee_id)
       end
 
       def send_user_credentials(user, password)
