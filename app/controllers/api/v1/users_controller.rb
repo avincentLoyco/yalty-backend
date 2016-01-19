@@ -33,6 +33,8 @@ module API
         verified_params(gate_rules) do |attributes|
           set_related_employee(attributes)
 
+          authorize! :update, attributes[:employee] if attributes[:employee]
+          authorize! :update, resource
           if resource.update(attributes)
             render_no_content
           else
