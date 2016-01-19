@@ -18,8 +18,8 @@ class AssignJoinTableCollection
 
   def remove_from_resource_collection
     resource.send(collection_name)
-            .where.not(id: collection)
-            .destroy_all
+      .where.not(id: collection)
+      .destroy_all
   end
 
   def add_to_resource_collection
@@ -34,7 +34,7 @@ class AssignJoinTableCollection
   end
 
   def raise_fail
-    message = "Join table for #{resource.class.to_s} and #{collection_model_name} does not exists"
+    message = "Join table for #{resource.class} and #{collection_model_name} does not exists"
     fail ActiveRecord::RecordNotFound, message
   end
 end
