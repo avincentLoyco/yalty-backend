@@ -52,6 +52,16 @@ class Account < ActiveRecord::Base
     RequestStore.read(:current_account)
   end
 
+  ATTR_VALIDATIONS = {
+    lastname: { presence: true },
+    firstname: { presence: true },
+    start_date: { presence: true },
+    contract_type: { presence: true },
+    occupation_rate: { presence: true }
+  }.with_indifferent_access
+
+  MULTIPLE_ATTRIBUTES = %w(child spouse)
+
   DEFAULT_ATTRIBUTES = {
     Attribute::String.attribute_type => %w(
       firstname lastname avs_number gender nationality language personal_email
@@ -72,11 +82,9 @@ class Account < ActiveRecord::Base
     Attribute::Person.attribute_type => %w(spouse)
   }
 
-  MULTIPLE_ATTRIBUTES = %w(child spouse)
-
-  DEFAULT_ATTRIBUTE_DEFINITIONS = Account::DEFAULT_ATTRIBUTES.map do |type, names|
-    names.map do |name|
-      { name: name, type: type }
+  DEFAULT_ATTRIBUTE_DEFINITIONS = Account::DEFAULT_ATTRIBUTES.map do |type, attributes|
+    attributes.map do |name|
+      { name: name, type: type, validation: ATTR_VALIDATIONS[name] }
     end
   end.flatten.freeze
 
@@ -93,7 +101,8 @@ class Account < ActiveRecord::Base
           name: attr[:name],
           attribute_type: attr[:type],
           system: true,
-          multiple: MULTIPLE_ATTRIBUTES.include?(attr[:name])
+          multiple: MULTIPLE_ATTRIBUTES.include?(attr[:name]),
+          validation: attr[:validation]
         )
       end
 

@@ -18,5 +18,9 @@ FactoryGirl.define do
     trait :system do
       system true
     end
+
+    trait :required do
+      validation { { presence: true } }
+    end
   end
 end
