@@ -1577,7 +1577,7 @@ Delete time off
 
 ### GET Employee balances without time_off_category_id param [GET /api/v1/employees/:employee_id/employee_balances]
 
-Get a list of balances in every category
+Get a list of last balances in every category
 
 + Request (application/json)
 
@@ -1588,12 +1588,23 @@ Get a list of balances in every category
 + Response 200 (application/json)
 
         [
-          "first_time_off_category_name": {
-            "balance": "1440"
-          },
-          "second_time_of_category_name": {
-            "balance" "1222"
-          }
+          {
+            "id": "1234",
+            "type": "employee_balance",
+            "balance": "12345",
+            "amount": "-100",
+            "time_off_category": {
+                "type": "time_off_category",
+                "id": "11"
+            },
+            "id": "14",
+            "type": "employee_balance",
+            "balance": "12345",
+            "amount": "200",
+            "time_off_category": {
+                "type": "time_off_category",
+                "id": "22"
+            }
         ]
 
 ### Get Employee balances with time_off_category_id param [GET /api/v1/employees/:employee_id/employee_balances?time_off_category_id={time_off_category_id}]
@@ -1776,7 +1787,7 @@ Get a list of time off policies
             "end_month": "4"
             "years_to_effect": "1",
             "amount": "28800",
-            "policy_type": "balance",
+            "policy_type": "balancer",
             "time_off_category": {
               "type": "time_off_category",
               "id": "12345678-1234-1234-1234-123456789012"
@@ -1821,7 +1832,7 @@ Get a list of time off policies in given category
             "end_month": "4"
             "years_to_effect": "1",
             "amount": "28800",
-            "policy_type": "balance",
+            "policy_type": "balancer",
             "time_off_category": {
               "type": "time_off_category",
               "id": "12345678-1234-1234-1234-123456789012"
@@ -1851,7 +1862,7 @@ Create new time off policy. Policy may have two types: counter of balance, if ty
 + Attributes
   + type: time_off_policy (string)
   + amount: 1440 (string)
-  + policy_type: balance (string, required)
+  + policy_type: balancer (string, required)
   + start_day: 1(number, required)
   + end_day: 1(number, required)
   + start_month: 1(number, required)
@@ -1873,7 +1884,7 @@ Create new time off policy. Policy may have two types: counter of balance, if ty
           "end_month": "10",
           "amount": "1440",
           "years_to_effect": "1",
-          "policy_type": "balance"
+          "policy_type": "balancer"
           "time_off_category": {
             "type": "time_off_category",
             "id": "12345678-1234-1234-1234-123456789012"
@@ -1907,7 +1918,7 @@ Create new time off policy. Policy may have two types: counter of balance, if ty
           "end_month": "10",
           "amount": "1440",
           "years_to_effect": "1",
-          "policy_type": "balance",
+          "policy_type": "balancer",
           "time_off_category": {
             "type": "time_off_category",
             "id": "12345678-1234-1234-1234-123456789012"
@@ -1937,7 +1948,7 @@ Show time off policy
           "start_month": "1",
           "end_month": "10",
           "amount": "1440",
-          "policy_type": "balance",
+          "policy_type": "balancer",
           "years_to_effect": "1",
           "time_off_category": {
             "type": "time_off_category",
@@ -1968,7 +1979,7 @@ Update time off policy
 + Attributes
   + type: time_off_policy (string)
   + amount: 1440 (string)
-  + policy_type: balance (string, required)
+  + policy_type: balancer (string, required)
   + start_day: 1(number, required)
   + end_day: 1(number, required)
   + start_month: 1(number, required)
@@ -1988,7 +1999,7 @@ Update time off policy
           "end_month": "10",
           "years_to_effect": "1",
           "amount": "1440",
-          "policy_type": "balance",
+          "policy_type": "balancer",
           "time_off_category": {
             "type": "time_off_category",
             "id": "12345678-1234-1234-1234-123456789012"
