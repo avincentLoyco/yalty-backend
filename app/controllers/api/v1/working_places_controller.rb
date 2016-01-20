@@ -20,15 +20,9 @@ module API
           authorize! :create, resource
 
           result = transactions do
-            resource.save &&
-              assign_related(related) &&
-              assign_related_joins_collection(related_joins_collection)
+            resource.save && assign_all(related, related_joins_collection)
           end
-          if result
-            render_resource(resource, status: :created)
-          else
-            resource_invalid_error(resource)
-          end
+          result ? render_resource(resource, status: :created) : resource_invalid_error(resource)
         end
       end
 
@@ -37,15 +31,9 @@ module API
           related = related_params(attributes)
           related_joins_collection = related_joins_collection_params(attributes)
           result = transactions do
-            resource.update(attributes) &&
-              assign_related(related) &&
-              assign_related_joins_collection(related_joins_collection)
+            resource.update(attributes) && assign_all(related, related_joins_collection)
           end
-          if result
-            render_no_content
-          else
-            resource_invalid_error(resource)
-          end
+          result ? render_no_content : resource_invalid_error(resource)
         end
       end
 
@@ -59,6 +47,10 @@ module API
       end
 
       private
+
+      def assign_all(related, related_joins_collection)
+        assign_related(related) && assign_related_joins_collection(related_joins_collection)
+      end
 
       def assign_related(related_records)
         return true if related_records.empty?
