@@ -264,7 +264,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
         end
 
         context 'invalid time off policy id' do
-          let(:time_off_policy_id) { ['1'] }
+          let(:time_off_policy_id) { '1' }
 
           it { expect { subject }.to_not change { employee.reload.holiday_policy_id } }
           it { expect { subject }.to_not change { employee.reload.presence_policy_id } }

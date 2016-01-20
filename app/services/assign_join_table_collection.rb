@@ -23,9 +23,15 @@ class AssignJoinTableCollection
   end
 
   def add_to_resource_collection
-    to_be_assigned.each do |member_id|
-      resource.send(collection_name) << collection_model_name.find(member_id)
+    fetch_collection(to_be_assigned).each do |member|
+      resource.send(collection_name) << member
     end
+  end
+
+  def fetch_collection(collection_of_ids)
+    collection = collection_model_name.where(id: collection_of_ids)
+    raise_fail unless collection.size == collection_of_ids.size
+    collection
   end
 
   def to_be_assigned
