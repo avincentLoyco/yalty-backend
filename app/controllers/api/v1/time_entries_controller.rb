@@ -1,6 +1,7 @@
 module API
   module V1
     class TimeEntriesController < API::ApplicationController
+      authorize_resource except: :create
       include TimeEntriesRules
 
       def show
@@ -14,6 +15,8 @@ module API
       def create
         verified_params(gate_rules) do |attributes|
           resource = resources.new(time_entry_params(attributes))
+          authorize! :create, resource
+
           if resource.save
             render_resource(resource, status: :created)
           else

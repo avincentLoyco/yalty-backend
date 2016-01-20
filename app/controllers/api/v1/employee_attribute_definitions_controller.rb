@@ -1,7 +1,7 @@
 module API
   module V1
     class EmployeeAttributeDefinitionsController < API::ApplicationController
-      load_and_authorize_resource class: 'Employee::AttributeDefinition', except: :create
+      authorize_resource class: 'Employee::AttributeDefinition', except: :create
       include EmployeeAttributeDefinitionRules
 
       def index
