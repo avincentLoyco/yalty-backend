@@ -14,18 +14,8 @@ class Employee::AttributeVersion < ActiveRecord::Base
     if: '!multiple?'
 
   validates :order, presence: true, if: 'multiple?'
-  validate :value_presence
 
   def effective_at
     event.try(:effective_at)
-  end
-
-  def value_presence
-    return unless validation_present? && !data.valid?
-    errors.add :data, "#{data.errors.messages}"
-  end
-
-  def validation_present?
-    attribute_definition.try(:validation).try(:[], 'presence')
   end
 end
