@@ -3,6 +3,7 @@ class TimeOffCategory < ActiveRecord::Base
 
   belongs_to :account
   has_many :time_offs
+  has_many :employee_balances, class_name: 'Employee::Balance'
 
   validates :account, :name, presence: true
   validates :name, uniqueness: { scope: :account }

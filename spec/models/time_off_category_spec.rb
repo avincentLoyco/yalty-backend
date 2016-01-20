@@ -12,6 +12,7 @@ RSpec.describe TimeOffCategory, type: :model do
   it { is_expected.to validate_presence_of(:name) }
 
   it { is_expected.to belong_to(:account) }
+  it { is_expected.to have_many(:employee_balances) }
 
   it { expect(TimeOffCategory.new.system).to eq false }
 
