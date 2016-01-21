@@ -1,7 +1,7 @@
 module API
   module V1
     class UsersController < ApplicationController
-      load_and_authorize_resource class: 'Account::User', except: :create
+      authorize_resource class: 'Account::User', except: :create
 
       include UserRules
 

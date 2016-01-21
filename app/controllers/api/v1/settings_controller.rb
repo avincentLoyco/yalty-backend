@@ -5,7 +5,7 @@ module API
       include DoorkeeperAuthorization
       before_action :subdomain_access!, only: :show
       skip_action_callback :authenticate!, only: :show
-      load_and_authorize_resource class: 'Account::User', only: :update
+      authorize_resource class: 'Account::User', only: :update
 
       def show
         if Account::User.current.present?
