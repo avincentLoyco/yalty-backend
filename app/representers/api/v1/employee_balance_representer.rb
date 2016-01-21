@@ -20,7 +20,9 @@ module Api::V1
     def balances_sum
       return [] if resource.blank?
       resource.first.employee.unique_balances_categories.map do |category|
-        CategoryBalanceRepresenter.new(resource.first.employee, category).basic
+        EmployeeBalanceRepresenter.new(
+          resource.first.employee.last_balance_in_category(category.id)).complete
+            .merge(time_off_category: TimeOffCategoryRepresenter.new(category).basic)
       end
     end
 

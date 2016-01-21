@@ -60,9 +60,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
           before { subject }
 
           it { is_expected.to have_http_status(200) }
-          it { expect(response.body).to include(
-            employee_balance.time_off_category.name, employee_balance.amount.to_s)
-          }
+          it { expect(response.body).to include(employee_balance.amount.to_s) }
         end
       end
 
