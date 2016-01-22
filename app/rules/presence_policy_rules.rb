@@ -6,6 +6,7 @@ module PresencePolicyRules
       required :name, :String
       optional :employees, :Array, allow_nil: true
       optional :working_places, :Array, allow_nil: true
+      optional :presence_days, :Array, allow_nil: true
     end
   end
 
