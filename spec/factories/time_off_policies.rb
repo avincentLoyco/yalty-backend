@@ -8,6 +8,7 @@ FactoryGirl.define do
     end_month (Time.now + 1.month).month
     policy_type 'balance'
     years_to_effect 0
+    years_passed 0
 
     trait :as_counter do
       policy_type 'counter'

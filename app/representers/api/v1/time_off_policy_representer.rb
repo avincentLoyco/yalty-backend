@@ -9,6 +9,7 @@ module Api::V1
         amount: resource.amount,
         policy_type: resource.policy_type,
         years_to_effect: resource.years_to_effect,
+        years_passed: resource.years_passed,
       }
         .merge(basic)
         .merge(relationships)
