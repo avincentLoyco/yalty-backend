@@ -214,7 +214,10 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
           type: 'holiday_policy'
         },
         time_off_policies: [
-          { id: time_off_policy_id }
+          {
+            id: time_off_policy_id,
+            type: 'time_off_policy'
+          }
         ]
       }
     end
