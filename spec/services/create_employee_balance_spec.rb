@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe ManageEmployeeBalance, type: :service do
+RSpec.describe CreateEmployeeBalance, type: :service do
   before { Account.current = create(:account) }
   let(:employee) { create(:employee, account: Account.current) }
   let(:category) { create(:time_off_category, account: Account.current) }
@@ -14,7 +14,7 @@ RSpec.describe ManageEmployeeBalance, type: :service do
   context 'with valid params' do
     context 'when employee balance do not exist' do
       let(:params) {{ amount: 100 }}
-      subject { ManageEmployeeBalance.new(category, employee, nil, params).call }
+      subject { CreateEmployeeBalance.new(category, employee, nil, params).call }
 
       it { expect { subject }.to change { Employee::Balance.count }.by(1) }
       it { expect { subject }.to change { employee.reload.employee_balances.count }.by(1) }
@@ -25,7 +25,7 @@ RSpec.describe ManageEmployeeBalance, type: :service do
     end
 
     context 'when employee balance already exist' do
-      subject { ManageEmployeeBalance.new(category, employee, nil, params).call }
+      subject { CreateEmployeeBalance.new(category, employee, nil, params).call }
       let(:params) {{ amount: 100, id: balance.id }}
       let!(:balance) do
         create(:employee_balance,
@@ -45,18 +45,18 @@ RSpec.describe ManageEmployeeBalance, type: :service do
   end
 
   context 'with invalid params' do
-    subject { ManageEmployeeBalance.new(category, employee, nil, params).call }
+    subject { CreateEmployeeBalance.new(category, employee, nil, params).call }
     let(:params) {{ amount: 100 }}
 
     context 'when params are missing' do
       context 'employee is missing' do
-        subject { ManageEmployeeBalance.new(category, nil, nil, params).call }
+        subject { CreateEmployeeBalance.new(category, nil, nil, params).call }
 
         it { expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
       end
 
       context 'category is missing' do
-        subject { ManageEmployeeBalance.new(nil, employee, nil, params).call }
+        subject { CreateEmployeeBalance.new(nil, employee, nil, params).call }
 
         it { expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
       end

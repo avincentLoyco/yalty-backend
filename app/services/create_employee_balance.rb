@@ -1,4 +1,4 @@
-class ManageEmployeeBalance
+class CreateEmployeeBalance
   include API::V1::Exceptions
   attr_reader :category, :employee, :params, :employee_balance, :time_off_policy
 

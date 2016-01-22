@@ -18,7 +18,7 @@ module API
       def create
         verified_params(gate_rules) do |attributes|
           category, employee, policy, params = balance_params(attributes)
-          resource = ManageEmployeeBalance.new(category, employee, policy, params).call
+          resource = CreateEmployeeBalance.new(category, employee, policy, params).call
           render_resource(resource, status: :created)
         end
       end
@@ -26,7 +26,7 @@ module API
       def update
         verified_params(gate_rules) do |attributes|
           category, employee, policy, params = balance_params(attributes)
-          resource = ManageEmployeeBalance.new(category, employee, policy, params).call
+          resource = CreateEmployeeBalance.new(category, employee, policy, params).call
           render_no_content
         end
       end
