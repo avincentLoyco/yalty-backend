@@ -11,7 +11,7 @@ class CreateCompletePresencePolicy
       params.each do |presence_day_params|
         time_entries_params = presence_day_params.delete(:time_entries)
 
-        presence_day = presence_policie.presence_days.new(presence_day_params)
+        presence_day = presence_policie.presence_days.new(presence_day_params.permit(:minutes, :order))
         if presence_day.valid?
           presence_day.save!
         else
@@ -19,7 +19,7 @@ class CreateCompletePresencePolicy
         end
 
         time_entries_params.each do |time_entry_params|
-          time_entry = presence_day.time_entries.new(time_entry_params)
+          time_entry = presence_day.time_entries.new(time_entry_params.permit(:start_time, :end_time))
           if time_entry.valid?
             time_entry.save!
           else
