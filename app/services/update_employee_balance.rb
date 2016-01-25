@@ -1,4 +1,5 @@
 class UpdateEmployeeBalance
+  include API::V1::Exceptions
   attr_reader :employee_balance, :time_off, :amount
 
   def initialize(employee_balance, amount = nil)
