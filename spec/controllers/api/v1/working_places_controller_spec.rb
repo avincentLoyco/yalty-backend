@@ -27,10 +27,12 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
           id: presence_policy_id,
           type: 'presence_policy'
         },
-        {
-          id: time_off_policy_id,
-          type: 'time_off_policy'
-        }
+        time_off_policies: [
+          {
+            id: time_off_policy_id,
+            type: 'time_off_policy'
+          }
+        ]
       }
     end
     shared_examples 'Invalid Data' do
