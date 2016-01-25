@@ -17,16 +17,18 @@ module API
 
       def create
         verified_params(gate_rules) do |attributes|
-          category, employee, policy, params = balance_params(attributes)
-          resource = CreateEmployeeBalance.new(category, employee, policy, params).call
-          render_resource(resource, status: :created)
+          category, employee, account, amount =
+            category_id(attributes), employee_id(attributes), Account.current.id, params[:amount]
+          CreateBalanceJob.perform_later(category, employee, account, amount)
+          render_no_content
         end
       end
 
       def update
         verified_params(gate_rules) do |attributes|
-          category, employee, policy, params = balance_params(attributes)
-          resource = CreateEmployeeBalance.new(category, employee, policy, params).call
+          amount, employee_balances_ids = params[:amount], find_employees_balances_ids(attributes)
+          update_balances_status(employee_balances_ids)
+          UpdateBalanceJob.perform_later(amount, employee_balances_ids)
           render_no_content
         end
       end
@@ -38,20 +40,12 @@ module API
 
       private
 
-      def balance_params(attributes)
-        if request.put?
-          [resource.time_off_category, resource.employee, resource.time_off_policy, attributes]
-        else
-          [category(attributes), employee(attributes), nil, attributes]
-        end
+      def employee_id(attributes)
+        attributes.delete(:employee)[:id]
       end
 
-      def employee(attributes)
-        Account.current.employees.find(attributes.delete(:employee)[:id])
-      end
-
-      def category(attributes)
-        Account.current.time_off_categories.find(attributes.delete(:time_off_category)[:id])
+      def category_id(attributes)
+        attributes.delete(:time_off_category)[:id]
       end
 
       def resource
@@ -71,6 +65,15 @@ module API
 
       def resource_representer
         ::Api::V1::EmployeeBalanceRepresenter
+      end
+
+      def find_employees_balances_ids(attributes)
+        return [resource.id] if resource.last_in_category?
+        resource.later_balances_ids
+      end
+
+      def update_balances_status(ids)
+        Employee::Balance.where(id: ids).update_all(beeing_processed: true)
       end
     end
   end
