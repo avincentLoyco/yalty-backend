@@ -203,7 +203,8 @@ CREATE TABLE employee_balances (
     time_off_category_id uuid NOT NULL,
     time_off_policy_id uuid,
     created_at timestamp without time zone,
-    updated_at timestamp without time zone
+    updated_at timestamp without time zone,
+    beeing_processed boolean DEFAULT false
 );
 
 
@@ -467,7 +468,8 @@ CREATE TABLE time_offs (
     time_off_category_id uuid NOT NULL,
     employee_id uuid NOT NULL,
     created_at timestamp without time zone NOT NULL,
-    updated_at timestamp without time zone NOT NULL
+    updated_at timestamp without time zone NOT NULL,
+    beeing_processed boolean DEFAULT false
 );
 
 
@@ -1361,3 +1363,7 @@ INSERT INTO schema_migrations (version) VALUES ('20160218120538');
 INSERT INTO schema_migrations (version) VALUES ('20160219094523');
 
 INSERT INTO schema_migrations (version) VALUES ('20160219112404');
+
+INSERT INTO schema_migrations (version) VALUES ('20160122142845');
+
+INSERT INTO schema_migrations (version) VALUES ('20160125090608');
