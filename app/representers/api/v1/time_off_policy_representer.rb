@@ -9,7 +9,7 @@ module Api::V1
         amount: resource.amount,
         policy_type: resource.policy_type,
         years_to_effect: resource.years_to_effect,
-        years_passed: resource.years_passed,
+        years_passed: resource.years_passed
       }
         .merge(basic)
         .merge(relationships)
@@ -19,7 +19,7 @@ module Api::V1
       {
         time_off_category: time_off_category_json,
         employees: employees_json,
-        working_places: working_places_json,
+        working_places: working_places_json
       }
     end
 

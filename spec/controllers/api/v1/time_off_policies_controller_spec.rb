@@ -13,29 +13,62 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
     let!(:time_off_policies) do
       create_list(:time_off_policy, 3, time_off_category: time_off_category)
     end
-    subject { get :index }
 
-    it { is_expected.to have_http_status(200) }
+    context "without params" do
+      subject { get :index }
 
-    it 'should return current account time off policies' do
-      subject
+      it { is_expected.to have_http_status(200) }
 
-      TimeOffPolicy.joins(:time_off_category)
-        .where(time_off_categories: { account_id: account.id } )
-        .each do |policy|
-          expect(response.body).to include policy[:id]
-        end
+      it 'should return current account time off policies' do
+        subject
+
+        TimeOffPolicy.joins(:time_off_category)
+          .where(time_off_categories: { account_id: account.id } )
+          .each do |policy|
+            expect(response.body).to include policy[:id]
+          end
+      end
+
+      it 'should not be visible in context of other account' do
+        Account.current = create(:account)
+        subject
+
+        TimeOffPolicy.joins(:time_off_category)
+          .where(time_off_categories: { account_id: account.id } )
+          .each do |policy|
+            expect(response.body).to_not include policy[:id]
+          end
+      end
     end
 
-    it 'should not be visible in context of other account' do
-      Account.current = create(:account)
-      subject
+    context "with params" do
+      let(:time_off_category_id) { time_off_category.id }
+      let(:params) { { time_off_category_id: time_off_category_id } }
+      let(:another_time_off_category) { create(:time_off_category, account: account) }
+      let(:another_policy) do
+        create(:time_off_policy, time_off_category: another_time_off_category)
+      end
 
-      TimeOffPolicy.joins(:time_off_category)
-        .where(time_off_categories: { account_id: account.id } )
-        .each do |policy|
-          expect(response.body).to_not include policy[:id]
+      subject { get :index, params}
+
+      context 'and when time_off_category_id belongs to other accout' do
+        let(:time_off_category_id) { create(:time_off_category).id }
+
+        it { is_expected.to have_http_status(404) }
+      end
+
+      it 'should return current account time off policies for the given category' do
+
+        another_policy
+        subject
+
+        time_off_category.time_off_policies.each do |policy|
+            expect(response.body).to include policy[:id]
         end
+        another_time_off_category.time_off_policies.each do |policy|
+            expect(response.body).to_not include policy[:id]
+        end
+      end
     end
   end
 
@@ -72,7 +105,7 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
     end
 
     context 'with invalid id' do
-      context 'time off with given id does not exist' do
+      context 'time off policy with given id does not exist' do
         let(:id) { 'abc' }
 
         it { is_expected.to have_http_status(404) }
@@ -148,10 +181,27 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
           )
         end
       end
+
+      context 'without obligatory params' do
+        before do
+          params.delete(:amount)
+          params.delete(:working_places)
+          params.delete(:employees)
+        end
+
+        it { expect { subject }.to change { TimeOffPolicy.count }.by(1) }
+        it { is_expected.to have_http_status(201) }
+      end
+
+      context 'and when time_off_category_id belongs to other accout' do
+        let(:time_off_category_id) { create(:time_off_category).id }
+
+        it { is_expected.to have_http_status(404) }
+      end
     end
 
     context 'with invalid params' do
-      context 'with missing params' do
+      context 'with missing obligatory params' do
         before { params.delete(:start_day) }
 
         it { expect { subject }.to_not change { TimeOffPolicy.count } }
@@ -209,10 +259,21 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
       it { expect { subject }.to change { policy.reload.start_day } }
       it { is_expected.to have_http_status(204) }
 
-      context 'it should not change years_to_effect field even when set to true' do
-        before { subject }
+      context 'without obligatory params' do
+        before do
+          params.delete(:amount)
+          params.delete(:working_places)
+          params.delete(:employees)
+        end
 
-        it { expect(policy.reload.years_to_effect).to eq policy.years_to_effect }
+        it { expect { subject }.to change { policy.reload.start_day } }
+        it { is_expected.to have_http_status(204) }
+      end
+
+      context 'and when time_off_category_id belongs to other accout' do
+        let(:time_off_category_id) { create(:time_off_category).id }
+
+        it { is_expected.to have_http_status(404) }
       end
     end
 
@@ -224,7 +285,7 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
         it { is_expected.to have_http_status(404) }
       end
 
-      context 'with missing params' do
+      context 'with missing obligatory params' do
         before { params.delete(:start_day) }
 
         it { expect { subject }.to_not change { policy.reload.start_day  } }
