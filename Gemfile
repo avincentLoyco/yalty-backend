@@ -32,7 +32,17 @@ group :development, :test do
   gem 'dotenv-rails'
   gem 'codeclimate-test-reporter', require: false
 
-  # tests
+  # debug
+  gem 'pry-rails'
+  gem 'pry-byebug'
+  gem 'byebug'
+
+  # spring
+  gem 'spring'
+  gem 'spring-commands-rspec'
+end
+
+group :test do
   gem 'rspec-rails'
   gem 'shoulda-matchers'
   gem 'factory_girl_rails'
@@ -42,16 +52,8 @@ group :development, :test do
   gem 'guard-rspec'
   gem 'database_cleaner'
   gem 'fantaskspec'
-  gem 'resque_spec', '~> 0.17.0', require: false
-
-  # debug
-  gem 'pry-rails'
-  gem 'pry-byebug'
-  gem 'byebug'
-
-  # spring
-  gem 'spring'
-  gem 'spring-commands-rspec'
+  gem 'fakeredis', '~> 0.5.0'
+  gem 'resque_spec', '~> 0.17.0'
 end
 
 # Development environment dependencies (only)

@@ -1,4 +1,5 @@
 require 'rails_helper'
+require 'fakeredis/rspec'
 
 RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
   include_examples 'example_authorization',

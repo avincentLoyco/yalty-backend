@@ -42,7 +42,6 @@ class CreateEmployeeBalance
   def save!
     if employee_balance.valid?
       employee_balance.save!
-      employee_balance
     else
       messages = employee_balance.errors.messages
 

@@ -21,9 +21,6 @@ RSpec.describe CreateEmployeeBalance, type: :service do
     it { expect { subject }.to change { employee.reload.employee_balances.count }.by(1) }
     it { expect { subject }.to change { policy.reload.employee_balances.count }.by(1) }
     it { expect { subject }.to change { category.reload.employee_balances.count }.by(1) }
-
-    it { expect(subject[:balance]).to eq 100 }
-    it { expect(subject[:amount]).to eq 100 }
   end
 
   context 'with invalid params' do

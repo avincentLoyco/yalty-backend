@@ -106,7 +106,9 @@ GEM
       railties (>= 3.0.0)
     faker (1.6.1)
       i18n (~> 0.5)
-    fantaskspec (0.9.10)
+    fakeredis (0.5.0)
+      redis (~> 3.0)
+    fantaskspec (0.9.9)
       rake (~> 10.0)
       rspec (~> 3.0)
     ffi (1.9.10)
@@ -366,6 +368,7 @@ DEPENDENCIES
   dotenv-rails
   factory_girl_rails
   faker
+  fakeredis (~> 0.5.0)
   fantaskspec
   gate (~> 0.4.1)
   guard-rspec
