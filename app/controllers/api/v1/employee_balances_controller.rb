@@ -19,6 +19,7 @@ module API
         verified_params(gate_rules) do |attributes|
           category, employee, account, amount =
             category_id(attributes), employee_id(attributes), Account.current.id, params[:amount]
+
           CreateBalanceJob.perform_later(category, employee, account, amount)
           render_no_content
         end
@@ -26,15 +27,20 @@ module API
 
       def update
         verified_params(gate_rules) do |attributes|
-          amount, employee_balances_ids = params[:amount], find_employees_balances_ids(attributes)
-          update_balances_status(employee_balances_ids)
-          UpdateBalanceJob.perform_later(amount, employee_balances_ids)
+          amount, balances_ids = params[:amount], balances_to_update
+          update_balances_processed_flag(balances_ids)
+
+          UpdateBalanceJob.perform_later(balances_ids, amount) unless balances_ids.blank?
           render_no_content
         end
       end
 
       def destroy
+        balances_ids = balances_to_update - [resource.id]
+        update_balances_processed_flag(balances_ids)
+
         resource.destroy!
+        UpdateBalanceJob.perform_later(balances_ids) unless balances_ids.blank?
         render_no_content
       end
 
@@ -63,17 +69,17 @@ module API
           .find(params[:employee_id]).employee_balances
       end
 
-      def resource_representer
-        ::Api::V1::EmployeeBalanceRepresenter
-      end
-
-      def find_employees_balances_ids(attributes)
+      def balances_to_update
         return [resource.id] if resource.last_in_category?
         resource.later_balances_ids
       end
 
-      def update_balances_status(ids)
+      def update_balances_processed_flag(ids)
         Employee::Balance.where(id: ids).update_all(beeing_processed: true)
+      end
+
+      def resource_representer
+        ::Api::V1::EmployeeBalanceRepresenter
       end
     end
   end
