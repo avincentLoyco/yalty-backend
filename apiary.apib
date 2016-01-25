@@ -44,23 +44,6 @@ Ability to update current account settings
 
 + Response 204
 
-### PATCH Assign holiday policy to account as default policy [PATCH]
-
-+ Attributes
-  + holiday_policy:
-    + id: 1ab (string) - Id holiday policy
-    + type: holiday_policy (string)
-
-+ Request (application/json)
-
-        {
-            "holiday_policy": {
-                "id": "12345678-1234-1234-1234-123456789012",
-                "type": "holiday_policy"
-            }
-        }
-
-+ Response 204
 
 
 
@@ -168,28 +151,12 @@ By default account_id is equal Account.current.id
 
 + Response 204 (application/json)
 
-### PATCH Update Employee Attribute Definition [PATCH]
-
-+ Attributes
-  + id: 1 (string, required)
-  + name: lastname (string)
-  + label: test label (string)
-  + attribute_type: String (string)
-  + system: True (boolean)
-
-+ Request (application/json)
-
-        {
-            "label": "test"
-        }
-
-+ Response 204 (application/json)
-
 ### DELETE destroy Employee Attribute Definiiton [DELETE]
 
 + Request (application/json)
 
 + Response 204
+
 
 
 
@@ -311,36 +278,6 @@ By default account_id is equal Account.current.id
 
 + Response 204 (application/json)
 
-
-### PATCH Update Holiday Policy [PATCH]
-
-+ Attributes
-  + id: 1 (string, required)
-  + name: test (string)
-  + country: ch (string)
-  + region: zh (string)
-  + employees: [employees: {"id": "1"}] (array)
-  + working_places: [working_places: {"id": "1"}] (array)
-  + holidays: [holidays: {"id": "1"}] (array)
-
-+ Request (application/json)
-
-        {
-            "country" : "pl",
-            "employees" : [
-                 {
-                     "id": "12345678-1234-1234-1234-123456789012",
-                     "type": "employee"
-                 },
-                 {
-                     "id": "87654321-1234-1234-1234-123456789012",
-                     "type": "employee"
-                 }
-            ]
-        }
-
-+ Response 204 (application/json)
-
 ### DELETE
 
 + Request (application/json)
@@ -350,7 +287,7 @@ By default account_id is equal Account.current.id
 
 
 
-## Holiday Collection [/api/v1/holidays?holiday_policy_id={holiday_policy_id}]
+## Holiday Collection [/api/v1/holiday_policies/{holiday_policy_id}/holidays]
 
 + Parameters
    + holiday_policy_id: 12345678-1234-1234-123456789012 (required, string) - ID is in uuid format
@@ -383,14 +320,17 @@ Create a new holiday
 + Attributes
   + name: holiday (string, required)
   + date: 1 (string, required)
-  + holiday_policy_id: 11 (string, required)
+  + holiday_policy
+    + id: 11 (string, required)
 
 + Request (application/json)
 
         {
             "name": "holiday",
             "date": "01.01.2013",
-            "holiday_policy_id": "12345678-1234-1234-1234-123456789012"
+            "holiday_policy": {
+              "id": "12345678-1234-1234-1234-123456789012"
+            }
         }
 
 + Response 201 (application/json)
@@ -406,10 +346,9 @@ Create a new holiday
 + Parameters
     + holiday_id: 12345678-1234-1234-123456789012 (required, string) - ID of the Holiday is an uuid
 
-### GET Get Holiday Details [GET /api/v1/holidays/{holiday_id}?holiday_policy_id={holiday_policy_id}]
+### GET Get Holiday Details [GET /api/v1/holidays/{holiday_id}]
 
 + Parameters
-   + holiday_policy_id: 12345678-1234-1234-123456789012 (required, string) - ID is in uuid format
    + holiday_id: 12345678-1234-1234-123456789012 (required, string) - ID of the Holiday is an uuid
 
 + Request (application/json)
@@ -429,33 +368,12 @@ Create a new holiday
   + id: 1 (string, required)
   + name: holiday (string, required)
   + date: 1 (string, required)
-  + holiday_policy_id: 11 (string, required)
 
 + Request (application/json)
 
         {
             "name": "holiday",
-            "date" : "01.01.2015",
-            "holiday_policy_id": "12345678-1234-1234-1234-123456789012"
-        }
-
-+ Response 204 (application/json)
-
-
-### PATCH Update Holiday [PATCH]
-
-+ Attributes
-  + id: 1 (string, required)
-  + name: holiday (string)
-  + date: 1 (string)
-  + holiday_policy_id: 11 (string, required)
-
-+ Request (application/json)
-
-        {
-            "name": "holiday",
-            "date" : "01.01",
-            "holiday_policy_id": "12345678-1234-1234-1234-123456789012"
+            "date" : "01.01.2015"
         }
 
 + Response 204 (application/json)
@@ -638,24 +556,6 @@ By default account_id is equal Account.current.id
 
 + Response 204 (application/json)
 
-
-### PATCH Update PresencePolicy [PATCH]
-
-+ Attributes
-  + id: 1 (string, required)
-  + name: presence name (string)
-  + employees: [employees: {"id": "1"}] (array)
-  + working_places: [working_places: {"id": "1"}] (array)
-  + presence_days: [presence_days: {"id": "1"}] (array)
-
-+ Request (application/json)
-
-        {
-            "name": "presence name"
-        }
-
-+ Response 204 (application/json)
-
 ### DELETE presence policy [DELETE]
 
 + Request (application/json)
@@ -669,7 +569,7 @@ By default account_id is equal Account.current.id
 
 
 
-## PresenceDays Collection [/api/v1/presence_policies?presence_policy_id={presence_policy_id}]
+## PresenceDays Collection [/api/v1/presence_policies/{presence_policy_id}/presence_days]
 
 + Parameters
    + presence_policy_id: 12345678-1234-1234-123456789012 (required, string) - ID is in uuid format
@@ -686,13 +586,13 @@ Get a list of presence days which belongs to account's presence policy
             {
               "order": "1",
               "id": "87654321-1234-1234-1234-123456789012",
-              "hours": "7.50"
+              "minutes": "750"
               "type": "presence_day"
             },
             {
               "order": "2",
               "id": "12345678-1234-1234-1234-123456789012",
-              "hours": "8.00"
+              "minutes": "800"
               "type": "presence_day"
             }
         ]
@@ -703,16 +603,19 @@ Create a new presence day
 
 + Attributes
   + order: 1 (number, required)
-  + presence_policy_id: 11 (string, required)
+  + presence_policy: (required)
+    + id: 11 (string, required)
   + hours: 8 (number, required)
 
 + Request (application/json)
 
         {
-             "order" : "1",
-             "type": "presence_day",
-             "hours: "8.00",
-             "presence_policy_id": "12345678-1234-1234-1234-123456789012"
+            "order" : "1",
+            "type": "presence_day",
+            "hours: "8.00",
+            "presence_policy": {
+              "id": "12345678-1234-1234-1234-123456789012"
+            }
         }
 
 
@@ -735,10 +638,9 @@ Create a new presence day
 + Parameters
     + presence_day_id: 12345678-1234-1234-123456789012 (required, string) - ID is an uuid
 
-### GET PresenceDay Details [GET /api/v1/presence_days/{presence_day_id}?presence_policy_id={presence_policy_id}]
+### GET PresenceDay Details [GET /api/v1/presence_days/{presence_day_id}]
 
 + Parameters
-   + presence_policy_id: 12345678-1234-1234-123456789012 (required, string) - ID is in uuid format
    + presence_day_id: 12345678-1234-1234-123456789012 (required, string) - ID of the Holiday is an uuid
 
 + Request (application/json)
@@ -757,7 +659,6 @@ Create a new presence day
 + Attributes
   + id: 1 (string, required)
   + order: 1 (number, required)
-  + presence_policy_id: 11 (string, required)
   + hours: 8 (number, required)
 
 + Request (application/json)
@@ -767,35 +668,158 @@ Create a new presence day
             "order": "1",
             "hours": "8.00",
             "type": "presence_day",
-            "presence_policy_id": "12345678-1234-1234-1234-123456789012"
         }
 
 + Response 204 (application/json)
 
-
-### PATCH Update PresenceDay [PATCH]
-
-+ Attributes
-  + id: 1 (string, required)
-  + order: 1 (number)
-  + presence_policy_id: 11 (string, required)
-  + hours: 8 (number)
-
-+ Request (application/json)
-
-        {
-            "id": "12345678-1234-1234-1234-123456789012",
-            "order": "1",
-            "type": "presence_day",
-            "presence_policy_id": "12345678-1234-1234-1234-123456789012"
-        }
-
-+ Response 204 (application/json)
 
 ### DELETE PresenceDay [DELETE]
 
 + Attributes
   + presence_policy_id: 1 (string, required)
+
++ Request (application/json)
+
++ Response 204
+
+
+
+
+
+
+
+## Time Entry
+
+
+## Time Entry Collection [/api/v1/time_entries]
+
+### GET Time Entries [GET /api/v1/presence_days/{presence_day_id}/time_entries]
+
+Get list of time entries
+
++ Request (application/json)
+
+        {
+          "time_entry_id": "f6d72193-ba17-44be-835a-77b4b80c395b"
+        }
+
++ Response 200 (application/json)
+
+        [
+          {
+            "start_time": "12:00",
+            "end_time": "14:00",
+            "id": "1b1f9c6b-6740-4296-81cc-7fc316db3190",
+            "type": "time_entry",
+            "presence_day": {
+              "id": "92ebd78d-15f1-464b-a93d-b0ba36fdbea0",
+              "type": "presence_day"
+            }
+          },
+          {
+            "start_time": "15:00",
+            "end_time": "17:00",
+            "id": "1b1f9c6b-6740-4296-81cc-7fc316db3000",
+            "type": "time_entry",
+            "presence_day": {
+              "id": "92ebd78d-15f1-464b-a93d-b0ba36fdbea0",
+              "type": "presence_day"
+            }
+          }
+        ]
+
+### POST Time entry [POST]
+
+Create new Time Entry
+
++ Attributes
+  + type: time_entry(string)
+  + end_time: test(string, required)
+  + start_time: test(string, required)
+  + presence_day (required)
+    + id: 11 (string, required)
+
++ Request (application/json)
+
+        {
+          "type": "time_entry",
+          "start_time": "12:00"
+          "end_time": "02:00",
+          "presence_day": {
+            "id": "92ebd78d-15f1-464b-a93d-b0ba36fdbea0",
+            "type": "presence_day"
+          }
+        }
+
++ Response 201 (application/json)
+
+        {
+          "type": "time_entry",
+          "start_time": "12:00"
+          "end_time": "02:00",
+          "id": "92ebd78d-aaaa-464b-a93d-b0ba36fdbea0",
+          "presence_day": {
+            "id": "92ebd78d-15f1-464b-a93d-b0ba36fdbea0",
+            "type": "presence_day"
+          }
+        }
+
+## Time Entry [/api/v1/time_entries/{time_entry_id}]
+
+### GET Time Entry [GET]
+
+Show Time Entry
+
++ Request (application/json)
+
+        {
+          "time_entry_id": "1b6de77e-c9cf-453e-951d-6e6dd6cea1f7"
+        }
+
++ Response 200 (application/json)
+
+        {
+          "type": "time_entry",
+          "start_time": "12:00"
+          "end_time": "14:00",
+          "id": "1b6de77e-c9cf-453e-951d-6e6dd6cea1f7",
+          "presence_day": {
+            "id": "92ebd78d-15f1-464b-a93d-b0ba36fdbea0",
+            "type": "presence_day"
+          }
+        }
+
+
+### PUT Time Entry [PUT]
+
+Update Time Entry.
+
++ Attributes
+  + type: time_entry(string)
+  + end_time: test(string, required)
+  + id: 11(string, required)
+  + start_time: test(string, required)
+  + presence_day (required)
+    + id: 11 (string, required)
+
++ Request (application/json)
+
+        {
+          "type": "time_entry",
+          "start_time": "22:00"
+          "end_time": "02:00",
+          "id": "1b6de77e-c9cf-453e-951d-6e6dd6cea1f7",
+          "presence_day": {
+            "id": "92ebd78d-15f1-464b-a93d-b0ba36fdbea0",
+            "type": "presence_day"
+          }
+        }
+
++ Response 204
+
+### DELETE Delete Time Entry [DELETE]
+
+Delete time entry (or two if related time entry was created)
 
 + Request (application/json)
 
@@ -840,12 +864,23 @@ By default account_id is equal Account.current.id
 + Attributes
   + name: Test (string, required)
   + type: working_place (string)
+  + [time_off_policies: {"id": "1"}] (array)
 
 + Request (application/json)
 
         {
             "name": "Office",
-            "type": "working_place"
+            "type": "working_place",
+            "time_off_policies": [
+              {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "type": "time_off_policy"
+              },
+              {
+                "id": "12345678-1234-4444-1234-123456789012",
+                "type": "time_off_policy"
+              }
+            ]
         }
 
 + Response 201 (application/json)
@@ -853,7 +888,17 @@ By default account_id is equal Account.current.id
         {
             "id": "12345678-1234-1234-1234-123456789012",
             "name": "test-working-place",
-            "type": "working_place"
+            "type": "working_place",
+            "time_off_policies": [
+              {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "type": "time_off_policy"
+              },
+              {
+                "id": "12345678-1234-4444-1234-123456789012",
+                "type": "time_off_policy"
+              }
+            ]
         }
 
 ## Working Place [/api/v1/working_places/{working_place_id}]
@@ -870,7 +915,17 @@ By default account_id is equal Account.current.id
         {
             "id": "12345678-1234-1234-1234-123456789012",
             "name": "test-working-place",
-            "type": "working_place"
+            "type": "working_place",
+            "time_off_policies": [
+              {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "type": "time_off_policy"
+              },
+              {
+                "id": "12345678-1234-4444-1234-123456789012",
+                "type": "time_off_policy"
+              }
+            ]
         }
 
 ### GET Get Working Place Details with holiday policy [GET /api/v1/working_places/{working_place_id}?embed=holiday_policy]
@@ -926,38 +981,26 @@ By default account_id is equal Account.current.id
 
         {
             "name": 'Smaple name',
-            "type": "working_place"
+            "type": "working_place",
+            "time_off_policies": [
+              {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "type": "time_off_policy"
+              },
+              {
+                "id": "12345678-1234-4444-1234-123456789012",
+                "type": "time_off_policy"
+              }
+            ]
         }
 
-+ Response 200 (application/json)
-
-        {
-            "id": "12345678-1234-1234-1234-123456789012",
-            "name": "New name",
-            "type": "working_place"
-        }
++ Response 204
 
 ### DELETE Delete working place [DELETE]
 
 + Request (application/json)
 
 + Response 204
-
-### PATCH Assign employees to working place [PATCH /api/v1/working_places/{working_place_id}]
-
-+ Attributes
-    + employees:
-
-+ Request (application/json)
-
-        {
-            "employees": [
-                { "id": "123", "type": "employee"},
-                { "id": "1234", "type": "employee"}
-            ]
-        }
-
-+ Response 204 (application/json)
 
 
 
@@ -1034,8 +1077,54 @@ Get a list of all employees
               "value": "Asd",
               "attribute_name": "lastname"
             }
+          ],
+          "time_off_policies": [
+              {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "type": "time_off_policy"
+              },
+              {
+                "id": "12345678-1234-4444-1234-123456789012",
+                "type": "time_off_policy"
+              }
           ]
         }
+
+### PUT Employee [PUT /api/v1/employees/{employee_id}]
+
++ Parameters
+  + employee_id: 12 (required, string) - ID is in uuid format
+  + holiday_policy
+    + id: 12 (required, string)
+  + presence_policy
+    + id: 13 (required, string)
+  + time_off_policies: {"id": "1"} (array)
+
++ Request (application/json)
+
+        {
+            "holiday_policy': {
+              "id": "12345",
+              "type": "holiday_policy"
+            },
+            "presence_policy": {
+              "id": "12345",
+              "type": "holiday_policy"
+            },
+            "time_off_policies": [
+              {
+                "id": "123",
+                "type": "time_off_policy"
+              },
+              {
+                "id": "654",
+                "type": "time_off_policy"
+              }
+            ]
+        }
+
++ Response 204
+
 
 
 
@@ -1058,25 +1147,24 @@ Get a list of all employees
             "effective_at": "2015.02.02",
             "comment": "Random",
             "event_type": "hired",
-            "employee":
-            {
+            "employee": {
               "id": "123",
               "type": "employee",
-              "employee_attributes": [
-                {
-                  "id": "12345678-1234-1234-1234-123456789012",
-                  "type": "employee_attribute",
-                  "value": "ABC",
-                  "attribute_name": "lastname"
-                },
-                {
-                  "id": "12345678-1234-1234-1234-123456789012",
-                  "type": "employee_attribute",
-                  "value": "Dsa",
-                  "attribute_name": "firstname"
-                }
-              ]
-            }
+            },
+            "employee_attributes": [
+              {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "type": "employee_attribute",
+                "value": "ABC",
+                "attribute_name": "lastname"
+              },
+              {
+                "id": "12345678-1234-1234-1234-123456789012",
+                "type": "employee_attribute",
+                "value": "Dsa",
+                "attribute_name": "firstname"
+              }
+            ]
           }
         ]
 
@@ -1096,25 +1184,24 @@ Get a list of all employees
           "effective_at": "2015.02.02",
           "comment": "Random",
           "event_type": "hired",
-          "employee":
-          {
+          "employee": {
             "id": "123",
             "type": "employee",
-            "employee_attributes": [
-              {
-                "id": "12345678-1234-1234-1234-123456789012",
-                "type": "employee_attribute",
-                "value": "ABC",
-                "attribute_name": "lastname"
-              },
-              {
-                "id": "12345678-1234-1234-1234-123456789012",
-                "type": "employee_attribute",
-                "value": "Dsa",
-                "attribute_name": "firstname"
-              }
-            ]
-          }
+          },
+          "employee_attributes": [
+            {
+              "id": "12345678-1234-1234-1234-123456789012",
+              "type": "employee_attribute",
+              "value": "ABC",
+              "attribute_name": "lastname"
+            },
+            {
+              "id": "12345678-1234-1234-1234-123456789012",
+              "type": "employee_attribute",
+              "value": "Dsa",
+              "attribute_name": "firstname"
+            }
+          ]
         }
 
 
@@ -1130,19 +1217,19 @@ Get a list of all employees
           "employee":
           {
             "type": "employee",
-            "employee_attributes": [
-              {
-                "type": "employee_attribute",
-                "value": "ABC",
-                "attribute_name": "lastname"
-              },
-              {
-                "type": "employee_attribute",
-                "value": "Dsa",
-                "attribute_name": "firstname"
-              }
-            ]
-          }
+          },
+          "employee_attributes": [
+            {
+              "type": "employee_attribute",
+              "value": "ABC",
+              "attribute_name": "lastname"
+            },
+            {
+              "type": "employee_attribute",
+              "value": "Dsa",
+              "attribute_name": "firstname"
+            }
+          ]
         }
 
 + Response 201 (application/json)
@@ -1153,25 +1240,24 @@ Get a list of all employees
           "effective_at": "2015.02.02",
           "comment": "Random",
           "event_type": "hired",
-          "employee":
-          {
+          "employee": {
             "id": "123",
             "type": "employee",
-            "employee_attributes": [
-              {
-                "id": "12345678-1234-1234-1234-123456789012",
-                "type": "employee_attribute",
-                "value": "ABC",
-                "attribute_name": "lastname"
-              },
-              {
-                "id": "12345678-1234-1234-1234-123456789012",
-                "type": "employee_attribute",
-                "value": "Dsa",
-                "attribute_name": "firstname"
-              }
-            ]
-          }
+          },
+          "employee_attributes": [
+            {
+              "id": "12345678-1234-1234-1234-123456789012",
+              "type": "employee_attribute",
+              "value": "ABC",
+              "attribute_name": "lastname"
+            },
+            {
+              "id": "12345678-1234-1234-1234-123456789012",
+              "type": "employee_attribute",
+              "value": "Dsa",
+              "attribute_name": "firstname"
+            }
+          ]
         }
 
 ### PUT Employee event [PUT /api/v1/employee_events/{employee_event_id}]
@@ -1184,58 +1270,766 @@ Get a list of all employees
           "effective_at": "2015.02.02",
           "comment": "Random",
           "event_type": "hired",
-          "employee":
-          {
+          "employee": {
             "id": "123",
             "type": "employee",
-            "employee_attributes": [
-              {
-                "id": "12345678-1234-1234-1234-123456789012",
-                "type": "employee_attribute",
-                "value": "ABC",
-                "attribute_name": "lastname"
-              },
-              {
-                "id": "12345678-1234-1234-1234-123456789012",
-                "type": "employee_attribute",
-                "value": "Dsa",
-                "attribute_name": "firstname"
-              }
-            ]
+          },
+          "employee_attributes": [
+            {
+              "id": "12345678-1234-1234-1234-123456789012",
+              "type": "employee_attribute",
+              "value": "ABC",
+              "attribute_name": "lastname"
+            },
+            {
+              "id": "12345678-1234-1234-1234-123456789012",
+              "type": "employee_attribute",
+              "value": "Dsa",
+              "attribute_name": "firstname"
+            }
+          ]
+        }
+
++ Response 204
+
+
+
+
+
+
+
+
+
+
+## Time Off Category
+
+
+## Time Off Categories Collection [/api/v1/time_off_categories]
+
+### GET Time Off Categories [GET]
+
+Get a list of time off categories
+
++ Request (application/json)
+
++ Response 200 (application/json)
+
+        [
+          {
+            "name": "example name",
+            "system": "false",
+            "id": "12345678-1234-1234-1234-123456789012",
+            "type": "time_off_category"
+          },
+          {
+            "name": "test name",
+            "system": "true",
+            "id": "12345678-1234-4444-1234-123456789012",
+            "type": "time_off_category"
+          }
+        ]
+
+### POST Time off Category [POST]
+
+Create new time off category, every category created by user, by default has system: false
+Default time off category for every account is sickness.
+
++ Attributes
+  + name: test(string, required)
+  + type: time_off_category(string)
+
++ Request (application/json)
+
+        {
+          "name": "test",
+          "type": "time_off_category"
+        }
+
++ Response 201 (application/json)
+
+        {
+          "name": "test",
+          "system": false,
+          "id": "5921da5e-759e-4902-bd75-bca42e5457f6",
+          "type": "time_off_category"
+        }
+
+
+## Time Off Category [/api/v1/time_off_categories/{time_off_category_id}]
+
+### GET Time off Category [GET]
+
+Show Time Off Category
+
++ Request (application/json)
+
+        {
+          "time_off_category_id": "12345678-1234-1234-1234-123456789012"
+        }
+
++ Response 200 (application/json)
+
+        {
+          "id": "12345678-1234-1234-1234-123456789012",
+          "name": "test",
+          "system": false,
+          "type": "time_off_category"
+        }
+
+
+### PUT Time Off Category [PUT]
+
+Update Time Off Category
+
++ Attributes
+  + id: 11 (string, required)
+  + name: test (string, required)
+  + type: time_off_category(string)
+
++ Request (application/json)
+
+        {
+          "name": "test",
+          "id": "11",
+          "type": "time_off_category"
+        }
+
++ Response 204
+
+### DELETE Delete Time Off Category [DELETE]
+
+Delete time off category
+
++ Request (application/json)
+
++ Response 204
+
+
+
+
+
+
+
+
+## Time Off
+
+
+## Time Off Collection [/api/v1/time_offs]
+
+### GET Time Offs [GET /api/v1/time_offs/{time_off_category_id}/time_offs]
+
+Get a list of time offs
+
++ Request (application/json)
+
+        {
+          "time_off_category_id": "f6d72193-ba17-44be-835a-77b4b80c395b"
+        }
+
++ Response 200 (application/json)
+
+        [
+          {
+            "start_time": "2015-12-14T09:43:34.744Z",
+            "end_time": "2015-12-21T09:43:34.744Z",
+            "id": "1b1f9c6b-6740-4296-81cc-7fc316db3190",
+            "type": "time_off",
+            "employee": {
+              "id": "92ebd78d-15f1-464b-a93d-b0ba36fdbea0",
+              "type": "employee"
+            },
+            "time_off_category": {
+              "id": "f6d72193-ba17-44be-835a-77b4b80c395b",
+              "type": "time_off_category"
+            }
+          },
+          {
+            "start_time": "2015-11-14T12:00:18.000Z",
+            "end_time": "2015-12-14T12:00:18.000Z",
+            "id": "f3b3989c-dee0-4ed9-8e49-8e3b0d6db587",
+            "type": "time_off",
+            "employee": {
+              "id": "92ebd78d-15f1-464b-a93d-b0ba36fdbea0",
+              "type": "employee"
+            },
+            "time_off_category": {
+              "id": "f6d72193-ba17-44be-835a-77b4b80c395b",
+              "type": "time_off_category"
+            }
+          }
+        ]
+
+### POST Time off [POST]
+
+Create new time off
+
++ Attributes
+  + type: time_off(string)
+  + end_time: test(string, required)
+  + start_time: test(string, required)
+  + time_off_category (required)
+    + id: 11 (string, required)
+  + employee (required)
+    + id: 22 (string, required)
+
++ Request (application/json)
+
+        {
+          "type": "time_off",
+          "employee": {
+            "id": "92ebd78d-15f1-464b-a93d-b0ba36fdbea0",
+            "type": "employee"
+          },
+          "time_off_category": {
+            "id": "f6d72193-ba17-44be-835a-77b4b80c395b",
+            "type": "time_off_category"
+          },
+          "end_time": "12.12.2015",
+          "start_time": "11.12.2015"
+        }
+
++ Response 201 (application/json)
+
+        {
+          "start_time": "2015-12-11T00:00:00.000Z",
+          "end_time": "2015-12-12T00:00:00.000Z",
+          "id": "1b6de77e-c9cf-453e-951d-6e6dd6cea1f7",
+          "type": "time_off",
+          "employee": {
+            "id": "92ebd78d-15f1-464b-a93d-b0ba36fdbea0",
+            "type": "employee"
+          },
+          "time_off_category": {
+            "id": "f6d72193-ba17-44be-835a-77b4b80c395b",
+            "type": "time_off_category"
+          }
+        }
+
+
+## Time Off [/api/v1/time_offs/{time_off_id}]
+
+### GET Time off [GET]
+
+Show Time Off
+
++ Request (application/json)
+
+        {
+          "time_off_id": "1b6de77e-c9cf-453e-951d-6e6dd6cea1f7"
+        }
+
++ Response 200 (application/json)
+
+        {
+          "start_time": "2015-12-11T00:00:00.000Z",
+          "end_time": "2015-12-12T00:00:00.000Z",
+          "id": "1b6de77e-c9cf-453e-951d-6e6dd6cea1f7",
+          "type": "time_off",
+          "employee": {
+            "id": "92ebd78d-15f1-464b-a93d-b0ba36fdbea0",
+            "type": "employee"
+          },
+          "time_off_category": {
+            "id": "f6d72193-ba17-44be-835a-77b4b80c395b",
+            "type": "time_off_category"
+          }
+        }
+
+
+### PUT Time Off [PUT]
+
+Update Time Off
+
++ Attributes
+  + type: time_off(string)
+  + end_time: test(string, required)
+  + start_time: test(string, required)
+
++ Request (application/json)
+
+        {
+          "type": "time_off",
+          "end_time": "12.12.2015",
+          "start_time": "11.12.2015"
+        }
+
++ Response 204
+
+### DELETE Delete Time Off [DELETE]
+
+Delete time off
+
++ Request (application/json)
+
++ Response 204
+
+
+
+
+
+
+
+
+
+
+
+## Employee Balances Collection [/api/v1/employee_balances]
+
+### GET Employee balances without time_off_category_id param [GET /api/v1/employees/:employee_id/employee_balances]
+
+Get a list of last balances in every category
+
++ Request (application/json)
+
+        {
+          "employee_id": "12345678-1234-1234-1234-123456789012",
+        }
+
++ Response 200 (application/json)
+
+        [
+          {
+            "id": "1234",
+            "type": "employee_balance",
+            "balance": "12345",
+            "amount": "-100",
+            "time_off_category": {
+                "type": "time_off_category",
+                "id": "11"
+            },
+            "id": "14",
+            "type": "employee_balance",
+            "balance": "12345",
+            "amount": "200",
+            "time_off_category": {
+                "type": "time_off_category",
+                "id": "22"
+            }
+        ]
+
+### Get Employee balances with time_off_category_id param [GET /api/v1/employees/:employee_id/employee_balances?time_off_category_id={time_off_category_id}]
+
+Get a history of employee balances in category
+
++ Request (application/json)
+
+        {
+          "employee_id": "12345678-1234-1234-1234-123456789012",
+          "time_off_category_id": "12345678-4321-1234-1234-123456789012"
+        }
+
++ Response 200 (application/json)
+
+        [
+          {
+            "id": "12345678-1234-1234-1234-123456789013",
+            "type": "employee_balance",
+            "balance": "2880",
+            "amount": "1440"
+          },
+          {
+            "id": "87654321-1234-1234-1234-123456789013",
+            "type": "employee_balance",
+            "balance": "1440",
+            "amount": "1440"
+          }
+        ]
+
+### POST Employee balance [POST /api/v1/employee_balances]
+
+Create new employee balance, balance field is actual employee balance, amount is in minutes.
+
++ Attributes
+  + type: employee_balance (string)
+  + amount: 1440 (string)
+  + employee (required)
+    + type: employee (string)
+    + id: 111 (string, required) - employee id
+  + time_off_category (required)
+    + type: time_off_category (string)
+    + id: 222 (string, required) - time off category id
+
++ Request (application/json)
+
+
+        {
+          "type": "employee_balance",
+          "amount": "1440",
+          "employee": {
+            "type": "employee",
+            "id": "12345678-1234-1234-1234-123456789012"
+          },
+          "time_off_category": {
+            "type": "employee",
+            "id": "12345678-1234-1234-1234-123456789012"
+          }
+        }
+
++ Response 201 (application/json)
+
+        {
+          "id": "12345678-1234-1234-1234-123456789013",
+          "type": "employee_balance",
+          "balance": "2880",
+          "amount": "1440",
+          "employee": {
+            "type": "employee",
+            "id": "12345678-1234-1234-1234-123456789012"
+          },
+          "time_off_category": {
+            "type": "employee",
+            "id": "12345678-1234-1234-1234-123456789012"
+          }
+        }
+
+
+## Employee Balance [/api/v1/employee_balances/{employee_balance_id}]
+
+### GET Employee balance [GET]
+
+Show employee balance
+
++ Request (application/json)
+
+        {
+          "employee_balance_id": "12345678-1234-1234-1234-123456789012"
+        }
+
++ Response 200 (application/json)
+
+        {
+          "id": "12345678-1234-1234-1234-123456789013",
+          "type": "employee_balance",
+          "balance": "2880",
+          "amount": "1440",
+          "employee": {
+            "type": "employee",
+            "id": "12345678-1234-1234-1234-123456789012"
+          },
+          "time_off_category": {
+            "type": "employee",
+            "id": "12345678-1234-1234-1234-123456789012"
+          },
+           "time_off": {
+            "type": "time_off",
+            "id": "12345678-1234-4444-1234-123456789012"
+          },
+          "time_off_policy": {
+            "type": "time_off_policy",
+            "id": "12345678-1234-0000-1234-123456789012"
+          }
+        }
+
+
+### PUT Employee balance [PUT]
+
+Update employee Balance
+
+
++ Attributes
+  + id: 11 (string, required)
+  + type: employee_balance (string)
+  + amount: 1440 (string)
+  + employee (required)
+    + type: employee (string)
+    + id: 111 (string, required) - employee id
+  + time_off_category (required)
+    + type: time_off_category (string)
+    + id: 222 (string, required) - time off category id
+
++ Request (application/json)
+
+        {
+          "type": "employee_balance",
+          "amount": "1460",
+          "employee": {
+            "type": "employee",
+            "id": "12345678-1234-1234-1234-123456789012"
+          },
+          "time_off_category": {
+            "type": "employee",
+            "id": "12345678-1234-1234-1234-123456789012"
           }
         }
 
 + Response 204
 
-### PATCH Employee event [PATCH /api/v1/employee_events/{employee_event_id}]
+### DELETE Delete employee balance [DELETE]
+
+Delete employee balance
+
++ Request (application/json)
+
++ Response 204
+
+
+
+
+
+
+## Time Off Policies Collection [/api/v1/time_off_policies]
+
+### Get time off policies [GET]
+
+Get a list of time off policies
+
++ Request (application/json)
+
++ Response 200 (application/json)
+
+        [
+          {
+            "id": "12345678-1234-1234-1234-123456789013",
+            "type": "time_off_policy",
+            "start_day": "1",
+            "end_day": "1",
+            "start_month": "1",
+            "end_month": "4"
+            "years_to_effect": "1",
+            "amount": "28800",
+            "policy_type": "balancer",
+            "time_off_category": {
+              "type": "time_off_category",
+              "id": "12345678-1234-1234-1234-123456789012"
+            }
+          },
+          {
+            "id": "87654321-1234-1234-1234-123456789013",
+            "type": "time_off_policy",
+            "start_day": "1",
+            "end_day": "1",
+            "start_month": "1",
+            "end_month": "10",
+            "years_to_effect": 0,
+            "amount": "0",
+            "policy_type": "counter",
+            "time_off_category": {
+              "type": "time_off_category",
+              "id": "12345678-1234-1234-1234-123456789012"
+            }
+          }
+        ]
+
+### GET time off policies by category [GET /api/v1/time_off_categories/:time_off_category_id/time_off_policies]
+
+Get a list of time off policies in given category
+
++ Request (application/json)
+
+        {
+          "time_off_category": "12345678-1234-1234-1234-123456789012"
+        }
+
++ Response 200 (application/json)
+
+        [
+          {
+            "id": "12345678-1234-1234-1234-123456789013",
+            "type": "time_off_policy",
+            "start_day": "1",
+            "end_day": "1",
+            "start_month": "1",
+            "end_month": "4"
+            "years_to_effect": "1",
+            "amount": "28800",
+            "policy_type": "balancer",
+            "time_off_category": {
+              "type": "time_off_category",
+              "id": "12345678-1234-1234-1234-123456789012"
+            }
+          },
+          {
+            "id": "87654321-1234-1234-1234-123456789013",
+            "type": "time_off_policy",
+            "start_day": "1",
+            "end_day": "1",
+            "start_month": "1",
+            "end_month": "10",
+            "years_to_effect": 0,
+            "amount": "",
+            "policy_type": "counter",
+            "time_off_category": {
+              "type": "time_off_category",
+              "id": "12345678-1234-1234-1234-123456789012"
+            }
+          }
+        ]
+
+### POST Time off Policy [POST /api/v1/time_off_policies]
+
+Create new time off policy. Policy may have two types: counter of balance, if type counter amount should not be send.
+
++ Attributes
+  + type: time_off_policy (string)
+  + amount: 1440 (string)
+  + policy_type: balancer (string, required)
+  + start_day: 1(number, required)
+  + end_day: 1(number, required)
+  + start_month: 1(number, required)
+  + end_month: 10(number, required)
+  + years_to_effect: 1 (string, required)
+  + time_off_category (required)
+    + type: time_off_category (string)
+    + id: 11 (string, required)
+  + [employees: {"id": "1"}] (array)
+  + [working_places: {"id": "1"}] (array)
+
++ Request (application/json)
+
+        {
+          "type": "time_off_policy",
+          "start_day": "1",
+          "end_day": "1",
+          "start_month": "1",
+          "end_month": "10",
+          "amount": "1440",
+          "years_to_effect": "1",
+          "policy_type": "balancer"
+          "time_off_category": {
+            "type": "time_off_category",
+            "id": "12345678-1234-1234-1234-123456789012"
+          },
+          "employees" : [
+             {
+                 "id": "12345678-1234-1234-1234-123456789012",
+                 "type": "employee"
+             },
+             {
+                 "id": "87654321-1234-1234-1234-123456789012",
+                 "type": "employee"
+             }
+          ],
+          "working_places" : [
+              {
+                  "id": "12345678-1234-1234-1234-123456789012"
+              }
+          ]
+        }
+
+
++ Response 201 (application/json)
+
+         {
+          "id": "12345678-1234-1234-1234-123456789013",
+          "type": "time_off_policy",
+          "start_day": "1",
+          "end_day": "1",
+          "start_month": "1",
+          "end_month": "10",
+          "amount": "1440",
+          "years_to_effect": "1",
+          "policy_type": "balancer",
+          "time_off_category": {
+            "type": "time_off_category",
+            "id": "12345678-1234-1234-1234-123456789012"
+          }
+        }
+
+
+## Time Off Policy [/api/v1/time_off_policies/{time_off_policy_id}]
+
+### GET Time Off Policy [GET]
+
+Show time off policy
+
++ Request (application/json)
+
+        {
+          "time_off_policy_id": "12345678-1234-1234-1234-123456789012"
+        }
+
++ Response 200 (application/json)
+
+        {
+          "id": "12345678-1234-1234-1234-123456789013",
+          "type": "time_off_policy",
+          "start_day": "1",
+          "end_day": "1",
+          "start_month": "1",
+          "end_month": "10",
+          "amount": "1440",
+          "policy_type": "balancer",
+          "years_to_effect": "1",
+          "time_off_category": {
+            "type": "time_off_category",
+            "id": "12345678-1234-1234-1234-123456789012"
+          },
+          "employees" : [
+             {
+                 "id": "12345678-1234-1234-1234-123456789012",
+                 "type": "employee"
+             },
+             {
+                 "id": "87654321-1234-1234-1234-123456789012",
+                 "type": "employee"
+             }
+          ],
+          "working_places" : [
+              {
+                  "id": "12345678-1234-1234-1234-123456789012"
+              }
+          ]
+        }
+
+
+### PUT Time off Policy [PUT]
+
+Update time off policy
+
++ Attributes
+  + type: time_off_policy (string)
+  + amount: 1440 (string)
+  + policy_type: balancer (string, required)
+  + start_day: 1(number, required)
+  + end_day: 1(number, required)
+  + start_month: 1(number, required)
+  + end_month: 10(number, required)
+  + years_to_effect: 1(string, required)
+  + [employees: {"id": "1"}] (array)
+  + [working_places: {"id": "1"}] (array)
 
 + Request (application/json)
 
         {
           "id": "12345678-1234-1234-1234-123456789013",
-          "type": "employee_event",
-          "effective_at": "2015.02.02",
-          "comment": "Random",
-          "event_type": "hired",
-          "employee":
-          {
-            "id": "123",
-            "type": "employee",
-            "employee_attributes": [
+          "type": "time_off_policy",
+          "start_day": "1",
+          "end_day": "1",
+          "start_month": "1",
+          "end_month": "10",
+          "years_to_effect": "1",
+          "amount": "1440",
+          "policy_type": "balancer",
+          "time_off_category": {
+            "type": "time_off_category",
+            "id": "12345678-1234-1234-1234-123456789012"
+          },
+          "employees" : [
+             {
+                 "id": "12345678-1234-1234-1234-123456789012",
+                 "type": "employee"
+             },
+             {
+                 "id": "87654321-1234-1234-1234-123456789012",
+                 "type": "employee"
+             }
+          ],
+          "working_places" : [
               {
-                "id": "12345678-1234-1234-1234-123456789012",
-                "type": "employee_attribute",
-                "value": "ABC",
-                "attribute_name": "lastname"
-              },
-              {
-                "id": "12345678-1234-1234-1234-123456789012",
-                "type": "employee_attribute",
-                "value": "Dsa",
-                "attribute_name": "firstname"
+                  "id": "12345678-1234-1234-1234-123456789012"
               }
-            ]
-          }
+          ]
         }
 
+
 + Response 204
+
+### DELETE Delete Time Off Policy [DELETE]
+
++ Request (application/json)
+
++ Response 204
+
+
+
+
