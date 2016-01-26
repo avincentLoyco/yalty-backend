@@ -105,12 +105,16 @@ List of available routes and their http methods may be obtained by:
 rake routes
 ```
 
+#### User permitions
+
+We use for permitions gem called: [CanCanCan](https://github.com/CanCanCommunity/cancancan)
+
 #### Examples (with lvh.me usage)
 
 Required headers:
 ```
-Content-Type:    application/vnd.api+json
-Accept:          application/vnd.api+json
+Content-Type:    application/json
+Accept:          application/json
 Authorization:   Bearer YOUR_ACCESS_TOKEN
 ```
 

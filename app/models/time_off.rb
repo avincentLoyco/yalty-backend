@@ -1,6 +1,7 @@
 class TimeOff < ActiveRecord::Base
   belongs_to :employee
   belongs_to :time_off_category
+  has_many :employee_balances, class_name: 'Employee::Balance'
 
   validates :employee_id, :time_off_category_id, :start_time, :end_time, presence: true
   validate :end_time_after_start_time

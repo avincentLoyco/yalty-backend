@@ -35,4 +35,26 @@ RSpec.describe Employee::AttributeVersion, type: :model do
     it { expect(subject.valid?).to eq false }
     it { expect { subject.valid? }.to change { subject.errors.messages[:order] } }
   end
+
+  context '#value_presence validation' do
+    subject { build(:employee_attribute_version, attribute_definition: attribute_definition ) }
+
+    context 'when attribute is required' do
+      let!(:attribute_definition) do
+        create(:employee_attribute_definition, :required, attribute_type: "String")
+      end
+
+      it { expect(subject.valid?).to eq false }
+      it { expect { subject.valid? }.to change { subject.data.errors.messages[:string] } }
+    end
+
+    context 'when attribute is not required' do
+      let!(:attribute_definition) do
+        create(:employee_attribute_definition, attribute_type: "String")
+      end
+
+      it { expect(subject.valid?).to eq true }
+      it { expect { subject.valid? }.to_not change { subject.data.errors.messages[:string] } }
+    end
+  end
 end

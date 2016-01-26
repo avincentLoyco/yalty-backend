@@ -10,6 +10,12 @@ AllCops:
 Rails/FindBy:
   Enabled: false
 
+Metrics/AbcSize:
+  Max: 18
+
+Metrics/ClassLength:
+  enabled: false
+
 Metrics/LineLength:
   Max: 100
 

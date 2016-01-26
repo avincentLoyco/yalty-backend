@@ -1,6 +1,7 @@
 module API
   module V1
     class UserSettingsController < ApplicationController
+      authorize_resource class: 'Account::User'
       include UserSettingsRules
       include Exceptions
 

@@ -38,6 +38,7 @@ class Account < ActiveRecord::Base
   has_one :registration_key, class_name: 'Account::RegistrationKey'
   has_many :time_off_categories
   has_many :time_offs, through: :time_off_categories
+  has_many :time_entries, through: :presence_days
 
   before_validation :generate_subdomain, on: :create
   after_create :update_default_attribute_definitions!
@@ -50,6 +51,16 @@ class Account < ActiveRecord::Base
   def self.current
     RequestStore.read(:current_account)
   end
+
+  ATTR_VALIDATIONS = {
+    lastname: { presence: true },
+    firstname: { presence: true },
+    start_date: { presence: true },
+    contract_type: { presence: true },
+    occupation_rate: { presence: true }
+  }.with_indifferent_access
+
+  MULTIPLE_ATTRIBUTES = %w(child spouse)
 
   DEFAULT_ATTRIBUTES = {
     Attribute::String.attribute_type => %w(
@@ -71,11 +82,9 @@ class Account < ActiveRecord::Base
     Attribute::Person.attribute_type => %w(spouse)
   }
 
-  MULTIPLE_ATTRIBUTES = %w(child spouse)
-
-  DEFAULT_ATTRIBUTE_DEFINITIONS = Account::DEFAULT_ATTRIBUTES.map do |type, names|
-    names.map do |name|
-      { name: name, type: type }
+  DEFAULT_ATTRIBUTE_DEFINITIONS = Account::DEFAULT_ATTRIBUTES.map do |type, attributes|
+    attributes.map do |name|
+      { name: name, type: type, validation: ATTR_VALIDATIONS[name] }
     end
   end.flatten.freeze
 
@@ -92,7 +101,8 @@ class Account < ActiveRecord::Base
           name: attr[:name],
           attribute_type: attr[:type],
           system: true,
-          multiple: MULTIPLE_ATTRIBUTES.include?(attr[:name])
+          multiple: MULTIPLE_ATTRIBUTES.include?(attr[:name]),
+          validation: attr[:validation]
         )
       end
 

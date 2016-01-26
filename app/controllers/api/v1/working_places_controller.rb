@@ -1,6 +1,7 @@
 module API
   module V1
     class WorkingPlacesController < ApplicationController
+      authorize_resource except: :create
       include WorkingPlaceRules
 
       def index
@@ -15,6 +16,8 @@ module API
         verified_params(gate_rules) do |attributes|
           related = related_params(attributes)
           @resource = Account.current.working_places.new(attributes)
+          authorize! :create, resource
+
           result = transactions do
             resource.save &&
               assign_related(related)

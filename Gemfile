@@ -16,13 +16,15 @@ gem 'gate',               '~> 0.4.1'
 gem 'newrelic_rpm',       '~> 3.14.0'
 gem 'resque',             '~> 1.25.2'
 gem 'resque-web',         '~> 0.0.7',   require: 'resque_web'
+gem 'tod',                '~> 2.0.2'
+gem 'cancancan',          '~> 1.13.1'
+gem 'intercom',           '~> 3.3.0'
 
 # Production environment dependencies
 group :production, :staging, :review do
   gem 'puma',             '~> 2.13.4'
   gem 'rails_12factor',   '~> 0.0.3'
   gem 'therubyracer',     '~> 0.12.2'
-  gem 'intercom',         '~> 3.3.0'
 end
 
 # Development environment dependencies (also needed by test environement)

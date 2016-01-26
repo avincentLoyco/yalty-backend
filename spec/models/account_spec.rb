@@ -92,6 +92,27 @@ RSpec.describe Account, type: :model do
     end
   end
 
+  context 'validations for default attribute definitions' do
+    let(:account) { create(:account) }
+
+    it 'should add presence: true validation for attributes in ATTR_VALIDATIONS' do
+      required = account.employee_attribute_definitions.where(name: Account::ATTR_VALIDATIONS.keys)
+
+      required.each do |attr|
+        expect(attr.validation).to eq({ 'presence' => 'true' })
+      end
+    end
+
+    it 'should not add validation for other attributes' do
+      not_required = account.employee_attribute_definitions
+                        .where.not(name: Account::ATTR_VALIDATIONS.keys)
+
+      not_required.each do |attr|
+        expect(attr.validation).to eq(nil)
+      end
+    end
+  end
+
   it { is_expected.to have_db_column(:company_name) }
   it { is_expected.to validate_presence_of(:company_name) }
 

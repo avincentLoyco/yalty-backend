@@ -1,8 +1,9 @@
 class TimeOffCategory < ActiveRecord::Base
-  DEFAULT = %w(sickness)
+  DEFAULT = %w(sickness vacation accident maternity civil_service other)
 
   belongs_to :account
   has_many :time_offs
+  has_many :employee_balances, class_name: 'Employee::Balance'
 
   validates :account, :name, presence: true
   validates :name, uniqueness: { scope: :account }

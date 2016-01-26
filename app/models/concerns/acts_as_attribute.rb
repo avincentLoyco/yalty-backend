@@ -12,6 +12,7 @@ module ActsAsAttribute
     serialize :data, AttributeSerializer
 
     validates :attribute_definition_id, presence: true
+    validate :definition_validations, if: :model_and_validation_present?
 
     after_initialize :setup_attribute_definition
   end
@@ -52,6 +53,25 @@ module ActsAsAttribute
   end
 
   private
+
+  def definition_validations
+    attribute_definition.validation.each do |k, _v|
+      validation_method = "validate_#{k}"
+      return nil unless data.attribute_model.respond_to?(validation_method)
+      data.attribute_model.send(validation_method)
+    end
+    map_errors
+  end
+
+  def model_and_validation_present?
+    data.attribute_model && attribute_definition.try(:validation)
+  end
+
+  def map_errors
+    data.attribute_model.errors.messages.each do |kv|
+      errors.add(attribute_definition.name, kv.join(' - '))
+    end
+  end
 
   def setup_attribute_definition(name = nil)
     unless attribute_definition.present?
@@ -105,13 +125,13 @@ module ActsAsAttribute
       end
     end
 
-    private
-
     def attribute_model
       return unless attribute_type.present?
 
       @attribute_model ||= ::Attribute.const_get(attribute_type).new(@data)
     end
+
+    private
 
     def method_missing(meth, *args)
       if attribute_model

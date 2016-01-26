@@ -12,7 +12,6 @@ RSpec.describe Account::User, type: :model do
   it { is_expected.to_not allow_value('test@testcom').for(:email) }
 
   it { is_expected.to have_db_column(:password_digest).with_options(null: false) }
-  it { is_expected.to validate_presence_of(:password) }
   it { is_expected.to validate_confirmation_of(:password) }
   it { is_expected.to validate_length_of(:password).is_at_least(8).is_at_most(74) }
 
@@ -23,6 +22,32 @@ RSpec.describe Account::User, type: :model do
     user = Account::User.find(user.id)
 
     expect(user).to be_valid
+  end
+
+  it 'should generate password on creation if not present' do
+    user = build(:account_user, password: nil)
+    expect(user.password).to be_nil
+
+    user.save
+
+    expect(user.password).to_not be_nil
+  end
+
+  it 'should not overwrite password on creation if present' do
+    user = build(:account_user, password: '1234567890')
+
+    user.save
+
+    expect(user).to be_persisted
+    expect(user.password).to eql('1234567890')
+  end
+
+  it 'should validate presence of password on update' do
+    user = create(:account_user)
+
+    user.password = nil
+
+    expect(user).to_not be_valid
   end
 
   it { should have_db_column(:account_id).of_type(:uuid) }

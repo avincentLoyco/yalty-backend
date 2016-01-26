@@ -9,6 +9,9 @@ class Account::User < ActiveRecord::Base
   validates :reset_password_token, uniqueness: true, allow_nil: true
 
   belongs_to :account, inverse_of: :users, required: true
+  has_one :employee, foreign_key: :account_user_id
+
+  before_validation :generate_password, on: :create
 
   def self.current=(user)
     RequestStore.write(:current_account_user, user)
@@ -34,6 +37,10 @@ class Account::User < ActiveRecord::Base
     self.reset_password_token = SecureRandom.urlsafe_base64(16)
   end
 
+  def generate_password
+    self.password ||= SecureRandom.urlsafe_base64(12)
+  end
+
   def intercom_type
     :users
   end
@@ -51,5 +58,33 @@ class Account::User < ActiveRecord::Base
         company_id: account.id
       }]
     }
+  end
+
+  def intercom_user
+    @intercom_user ||= intercom_client.users.find(user_id: id)
+  end
+
+  def intercom_leads
+    @intercom_leads ||= begin
+      beta_invitation_key = account.registration_key.try(:token)
+
+      leads = intercom_client.contacts.find_all(
+        custom_attributes: { beta_invitation_key: beta_invitation_key }
+      ) if beta_invitation_key.present?
+      leads = intercom_client.contacts.find_all(email: email) if leads.blank?
+
+      leads
+    end
+  end
+
+  def convert_intercom_leads
+    return unless intercom_enabled?
+    return unless intercom_user.present?
+
+    intercom_leads.each do |lead|
+      intercom_client.contacts.convert(lead, intercom_user)
+    end
+  rescue IntercomError
+    Rails.logger.error "An error occur on when '#{email}' lead is converted to user '#{id}'"
   end
 end

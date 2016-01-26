@@ -1,6 +1,7 @@
 module API
   module V1
     class EmployeeAttributeDefinitionsController < API::ApplicationController
+      authorize_resource class: 'Employee::AttributeDefinition', except: :create
       include EmployeeAttributeDefinitionRules
 
       def index
@@ -14,6 +15,7 @@ module API
       def create
         verified_params(gate_rules) do |attributes|
           @resource = Account.current.employee_attribute_definitions.new(attributes)
+          authorize! :create, resource
 
           if resource.save
             render_resource(resource)
