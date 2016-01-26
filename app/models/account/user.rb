@@ -65,6 +65,7 @@ class Account::User < ActiveRecord::Base
   end
 
   def convert_intercom_lead
+    return unless intercom_enabled?
     return unless intercom_user.present?
 
     beta_invitation_key = account.registration_key.try(:token)
