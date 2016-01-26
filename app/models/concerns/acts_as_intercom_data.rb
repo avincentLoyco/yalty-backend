@@ -39,6 +39,6 @@ module ActsAsIntercomData
   end
 
   def intercom_enabled?
-    defined?(Intercom) && ENV['INTERCOM_APP_ID'].present? && ENV['INTERCOM_API_KEY'].present?
+    !Rails.env.test? && ENV['INTERCOM_APP_ID'].present? && ENV['INTERCOM_API_KEY'].present?
   end
 end
