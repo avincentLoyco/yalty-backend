@@ -33,7 +33,7 @@ namespace :intercom do
       STDOUT.puts 'List of email to invite (coma separator):'
       emails = STDIN.gets.chomp.split(',').map(&:strip)
 
-      beta_requests.delete_if {|lead| !emails.include?(lead.email) }
+      beta_requests.delete_if { |lead| !emails.include?(lead.email) }
 
       (emails - beta_requests.map(&:email)).each do |email|
         lead   = intercom_client.contacts.find_all(email: email).first
@@ -42,7 +42,7 @@ namespace :intercom do
         next if lead.custom_attributes['beta_invitation_key'].present?
         next if lead.tags.map(&:name).include?('beta excluded')
 
-        intercom_client.tags.tag(name: 'beta request', users: [{id: lead.id}])
+        intercom_client.tags.tag(name: 'beta request', users: [{ id: lead.id }])
 
         puts "Create lead '#{lead.email}'"
         beta_requests << lead
@@ -78,11 +78,11 @@ namespace :intercom do
       @beta_requests ||= begin
         intercom_client.contacts
           .all
-          .select {|beta_request|
+          .select do |beta_request|
             !beta_request.custom_attributes['beta_invitation_key'].present? &&
               beta_request.tags.map(&:name).include?('beta request') &&
               !beta_request.tags.map(&:name).include?('beta excluded')
-          }
+          end
       end
     end
 
@@ -90,10 +90,10 @@ namespace :intercom do
       @beta_requests ||= begin
         intercom_client.contacts
           .all
-          .select {|beta_request|
+          .select do |beta_request|
             beta_request.custom_attributes['beta_invitation_key'].present? &&
               beta_request.tags.map(&:name).include?('beta invitation')
-          }
+          end
       end
     end
 

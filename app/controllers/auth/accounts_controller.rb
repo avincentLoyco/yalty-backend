@@ -9,7 +9,7 @@ class Auth::AccountsController < ApplicationController
 
       ActiveRecord::Base.transaction do
         save!(account, user)
-        user.convert_intercom_lead
+        user.convert_intercom_leads
       end
 
       send_user_credentials(attributes[:user][:password])
