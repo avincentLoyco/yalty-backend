@@ -1,5 +1,5 @@
 class TimeOffCategory < ActiveRecord::Base
-  DEFAULT = %w(sickness)
+  DEFAULT = %w(sickness vacation accident maternity civil_service other)
 
   belongs_to :account
   has_many :time_offs
