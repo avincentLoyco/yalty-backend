@@ -15,14 +15,15 @@ module API
 
       def create
         verified_params(gate_rules) do |attributes|
-          days_params = attributes.delete(:presence_days) if attributes.has_key?(:presence_days)
+          days_params = attributes.delete(:presence_days) if attributes.key?(:presence_days)
           related = related_params(attributes).compact
           resource = Account.current.presence_policies.new(attributes)
           authorize! :create, resource
 
           transactions do
             save!(resource, related)
-            CreateCompletePresencePolicy.new(resource.reload, days_params).call if days_params.present?
+            CreateCompletePresencePolicy.new(resource.reload, days_params).call if
+              days_params.present?
           end
 
           render_resource_with_relationships(resource, status: :created)
