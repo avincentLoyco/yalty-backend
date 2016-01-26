@@ -22,22 +22,18 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
       it 'should return current account time off policies' do
         subject
 
-        TimeOffPolicy.joins(:time_off_category)
-          .where(time_off_categories: { account_id: account.id } )
-          .each do |policy|
-            expect(response.body).to include policy[:id]
-          end
+        account.time_off_policies.each do |policy|
+          expect(response.body).to include policy[:id]
+        end
       end
 
       it 'should not be visible in context of other account' do
         Account.current = create(:account)
         subject
 
-        TimeOffPolicy.joins(:time_off_category)
-          .where(time_off_categories: { account_id: account.id } )
-          .each do |policy|
+        account.time_off_policies.each do |policy|
             expect(response.body).to_not include policy[:id]
-          end
+        end
       end
     end
 
@@ -182,7 +178,7 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
         end
       end
 
-      context 'without obligatory params' do
+      context 'without not obligatory params' do
         before do
           params.delete(:amount)
           params.delete(:working_places)
@@ -237,10 +233,6 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
         policy_type: 'balance',
         years_to_effect: 2,
         years_passed: 0,
-        time_off_category:{
-          id: time_off_category_id,
-          type: 'time_off_category'
-        },
         employees: [
           {
             id: employee_id,
@@ -259,21 +251,15 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
       it { expect { subject }.to change { policy.reload.start_day } }
       it { is_expected.to have_http_status(204) }
 
-      context 'without obligatory params' do
+      context 'without not obligatory params' do
         before do
           params.delete(:amount)
           params.delete(:working_places)
           params.delete(:employees)
         end
-
+        it { expect { subject }.not_to change { policy.reload.time_off_category_id } }
         it { expect { subject }.to change { policy.reload.start_day } }
         it { is_expected.to have_http_status(204) }
-      end
-
-      context 'and when time_off_category_id belongs to other accout' do
-        let(:time_off_category_id) { create(:time_off_category).id }
-
-        it { is_expected.to have_http_status(404) }
       end
     end
 

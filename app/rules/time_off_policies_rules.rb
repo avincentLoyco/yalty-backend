@@ -3,38 +3,35 @@ module TimeOffPoliciesRules
 
   def post_rules
     Gate.rules do
-      required :end_day
-      required :end_month
-      required :start_day
-      required :start_month
-      optional :amount
-      required :years_passed
-      required :years_to_effect
-      required :policy_type
+      required :end_day, :Integer
+      required :end_month, :Integer
+      required :start_day, :Integer
+      required :start_month, :Integer
+      optional :amount, :Integer
+      required :years_passed, :Integer
+      required :years_to_effect, :Integer
+      required :policy_type, :String
       required :time_off_category, :Hash do
-        required :id
+        required :id, :String
       end
-      optional :employees, :Array
-      optional :working_places, :Array
+      optional :employees, :Array, allow_nil: true
+      optional :working_places, :Array, allow_nil: true
     end
   end
 
   def put_rules
     Gate.rules do
-      required :id
-      required :end_day
-      required :end_month
-      required :start_day
-      required :start_month
-      optional :amount
-      required :years_passed
-      required :years_to_effect
-      required :policy_type
-      required :time_off_category, :Hash do
-        required :id
-      end
-      optional :employees, :Array
-      optional :working_places, :Array
+      required :id, :String
+      required :end_day, :Integer
+      required :end_month, :Integer
+      required :start_day, :Integer
+      required :start_month, :Integer
+      optional :amount, :Integer
+      required :years_passed, :Integer
+      required :years_to_effect, :Integer
+      required :policy_type, :String
+      optional :employees, :Array, allow_nil: true
+      optional :working_places, :Array, allow_nil: true
     end
   end
 end

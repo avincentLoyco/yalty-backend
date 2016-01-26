@@ -15,4 +15,10 @@ class TimeOffPolicy < ActiveRecord::Base
     presence: true
   validates :policy_type, inclusion: { in: %w(counter balance) }
   validates :years_to_effect, :years_passed, numericality: { greater_than_or_equal_to: 0 }
+
+  scope :for_account_and_category, lambda { |account_id, time_off_category_id|
+    joins(:time_off_category).where(
+      time_off_categories: { account_id: account_id, id: time_off_category_id }
+    )
+  }
 end
