@@ -45,6 +45,8 @@ RSpec.describe Auth::AccountsController, type: :controller do
         expect do
           post :create, params
         end.to change(ActionMailer::Base.deliveries, :count)
+
+        expect(ActionMailer::Base.deliveries.last.body).to match(/password: .+/)
       end
 
       context 'should create account when user has no password' do
@@ -59,6 +61,11 @@ RSpec.describe Auth::AccountsController, type: :controller do
         it { expect { subject }.to change { registration_key.reload.account } }
 
         it { is_expected.to have_http_status(:found) }
+
+        it 'expect to add generated password to email' do
+          expect(subject).to have_http_status(:found)
+          expect(ActionMailer::Base.deliveries.last.body).to match(/password: .+/)
+        end
       end
     end
 

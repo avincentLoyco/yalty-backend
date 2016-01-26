@@ -12,7 +12,7 @@ class Auth::AccountsController < ApplicationController
         user.convert_intercom_leads
       end
 
-      send_user_credentials(attributes[:user][:password])
+      send_user_credentials(user.password)
       render_response
     end
   end
