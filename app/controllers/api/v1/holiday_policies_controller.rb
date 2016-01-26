@@ -18,31 +18,22 @@ module API
           resource = Account.current.holiday_policies.new(attributes)
           authorize! :create, resource
 
-          result = transactions do
-            resource.save &&
-              assign_related(resource, related)
+          transactions do
+            resource.save!
+            assign_related(resource, related)
           end
-
-          if result
-            render_resource(resource, status: :created)
-          else
-            resource_invalid_error(resource)
-          end
+          render_resource(resource, status: :created)
         end
       end
 
       def update
         verified_params(gate_rules) do |attributes|
           related = related_params(attributes)
-          result = transactions do
-            resource.update(attributes) &&
-              assign_related(resource, related)
+          transactions do
+            resource.update!(attributes)
+            assign_related(resource, related)
           end
-          if result
-            render_no_content
-          else
-            resource_invalid_error(resource)
-          end
+          render_no_content
         end
       end
 

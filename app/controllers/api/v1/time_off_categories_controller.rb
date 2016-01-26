@@ -17,21 +17,15 @@ module API
           resource = Account.current.time_off_categories.new(attributes)
           authorize! :create, resource
 
-          if resource.save
-            render_resource(resource, status: :created)
-          else
-            resource_invalid_error(resource)
-          end
+          resource.save!
+          render_resource(resource, status: :created)
         end
       end
 
       def update
         verified_params(gate_rules) do |attributes|
-          if editable_resource.update(attributes)
-            render_no_content
-          else
-            resource_invalid_error(resource)
-          end
+          editable_resource.update!(attributes)
+          render_no_content
         end
       end
 

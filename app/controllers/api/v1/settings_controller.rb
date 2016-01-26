@@ -25,11 +25,8 @@ module API
           resource.attributes = attributes
           subdomain_change = resource.subdomain_changed?
 
-          if resource.save
-            render_response_or_redirect(subdomain_change)
-          else
-            resource_invalid_error(resource)
-          end
+          resource.save!
+          render_response_or_redirect(subdomain_change)
         end
       end
 

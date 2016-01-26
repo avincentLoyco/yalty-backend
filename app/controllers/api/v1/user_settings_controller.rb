@@ -13,11 +13,8 @@ module API
         verified_params(gate_rules) do |attributes|
           check_old_password(attributes[:password_params]) if attributes[:password_params]
           params = prepare_attributes(attributes)
-          if resource.update(params)
-            render_no_content
-          else
-            resource_invalid_error(resource)
-          end
+          resource.update!(params)
+          render_no_content
         end
       end
 

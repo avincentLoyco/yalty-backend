@@ -20,7 +20,8 @@ class ApplicationController < ActionController::Base
     head 204
   end
 
-  def resource_invalid_error(resource)
+  def resource_invalid_error(exception)
+    resource = exception.try(:record) ? exception.record : exception
     render json:
       ::Api::V1::ErrorsRepresenter.new(resource).complete, status: 422
   end

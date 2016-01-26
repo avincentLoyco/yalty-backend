@@ -20,12 +20,9 @@ module API
           @resource = Account.current.users.new(attributes)
 
           authorize! :create, resource
-          if resource.save
-            send_user_credentials(resource, attributes[:password])
-            render_resource(resource, status: :created)
-          else
-            resource_invalid_error(resource)
-          end
+          resource.save!
+          send_user_credentials(resource, attributes[:password])
+          render_resource(resource, status: :created)
         end
       end
 
@@ -35,11 +32,8 @@ module API
 
           authorize! :update, attributes[:employee] if attributes[:employee]
           authorize! :update, resource
-          if resource.update(attributes)
-            render_no_content
-          else
-            resource_invalid_error(resource)
-          end
+          resource.update!(attributes)
+          render_no_content
         end
       end
 

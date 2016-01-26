@@ -19,10 +19,11 @@ module API
           @resource = Account.current.working_places.new(attributes)
           authorize! :create, resource
 
-          result = transactions do
-            resource.save && assign_all(related, related_joins_collection)
+          transactions do
+            resource.save!
+            assign_all(related, related_joins_collection)
           end
-          result ? render_resource(resource, status: :created) : resource_invalid_error(resource)
+          render_resource(resource, status: :created)
         end
       end
 
@@ -30,10 +31,11 @@ module API
         verified_params(gate_rules) do |attributes|
           related = related_params(attributes)
           related_joins_collection = related_joins_collection_params(attributes)
-          result = transactions do
-            resource.update(attributes) && assign_all(related, related_joins_collection)
+          transactions do
+            resource.update(attributes)
+            assign_all(related, related_joins_collection)
           end
-          result ? render_no_content : resource_invalid_error(resource)
+          render_no_content
         end
       end
 
@@ -49,7 +51,8 @@ module API
       private
 
       def assign_all(related, related_joins_collection)
-        assign_related(related) && assign_related_joins_collection(related_joins_collection)
+        assign_related(related)
+        assign_related_joins_collection(related_joins_collection)
       end
 
       def assign_related(related_records)
