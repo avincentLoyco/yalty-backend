@@ -59,4 +59,13 @@ class Account::User < ActiveRecord::Base
       }]
     }
   end
+
+  def convert_intercom_lead
+    leads = intercom_client.contacts.find_all(email: email)
+    leads.each do |lead|
+      intercom_client.contacts.convert(lead, intercom_data)
+    end
+  rescue IntercomError
+    Rails.logger.error "An error occur on when '#{email}' lead is converted to user '#{id}'"
+  end
 end
