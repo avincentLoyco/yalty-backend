@@ -14,6 +14,6 @@ class Employee < ActiveRecord::Base
   has_many :time_offs
   has_many :employee_balances, class_name: 'Employee::Balance'
   has_many :employee_time_off_policies
-
+  has_many :time_off_policies, through: :employee_time_off_policies
   validates :working_place_id, presence: true
 end

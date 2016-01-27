@@ -15,8 +15,10 @@ module API
       def update
         verified_params(gate_rules) do |attributes|
           related = related_params(attributes)
+          related_joins_collection = related_joins_collection_params(attributes)
           result = transactions do
             assign_related(related)
+            assign_related_joins_collection(related_joins_collection)
           end
           if result
             render_no_content
@@ -43,10 +45,27 @@ module API
           .merge(presence_policy.to_h)
       end
 
+      def related_joins_collection_params(attributes)
+        related_joins_collection = {}
+
+        if attributes.key?(:time_off_policies)
+          related_joins_collection[:time_off_policies] = attributes.delete(:time_off_policies)
+        end
+
+        related_joins_collection
+      end
+
       def assign_related(related_records)
         return true if related_records.empty?
         related_records.each do |key, value|
           assign_member(resource, value.try(:[], :id), key.to_s)
+        end
+      end
+
+      def assign_related_joins_collection(related_records)
+        return true if related_records.empty?
+        related_records.each do |key, hash_array|
+          assign_join_table_collection(resource, hash_array, key.to_s)
         end
       end
 
