@@ -93,6 +93,8 @@ namespace :deploy do
       puts 'load staging database'
       system "PGPASSWORD=#{db_staging[:password]} psql --quiet -U #{db_staging[:user]} -h 127.0.0.1 -p 10000 -d #{db_staging[:database]} < tmp/sync_dump.sql"
       Process.kill('SIGTERM', tunnel)
+
+      system "#{options.scalingo_cmd} run \"rake setup\"" || fail
     end
   end
 end
