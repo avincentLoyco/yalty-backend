@@ -102,7 +102,7 @@ namespace :intercom do
         registration_key = Account::RegistrationKey.create
         lead.custom_attributes['beta_invitation_key'] = registration_key.token
         intercom_client.contacts.save(lead)
-        puts "Add regsitration key to '#{lead.email}'"
+        puts "Add regsitration key '#{registration_key.token}' to '#{lead.email}'"
       end
     end
   end

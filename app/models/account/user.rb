@@ -68,12 +68,14 @@ class Account::User < ActiveRecord::Base
     @intercom_leads ||= begin
       beta_invitation_key = account.registration_key.try(:token)
 
-      leads = intercom_client.contacts.find_all(
-        custom_attributes: { beta_invitation_key: beta_invitation_key }
-      ) if beta_invitation_key.present?
-      leads = intercom_client.contacts.find_all(email: email) if leads.blank?
+      if beta_invitation_key.present?
+        lead = intercom_client.contacts.all.find do |lead|
+          lead.custom_attributes['beta_invitation_key'] == beta_invitation_key
+        end
+      end
+      leads = intercom_client.contacts.find_all(email: email) if lead.nil?
 
-      leads
+      leads || [lead]
     end
   end
 
@@ -84,7 +86,7 @@ class Account::User < ActiveRecord::Base
     intercom_leads.each do |lead|
       intercom_client.contacts.convert(lead, intercom_user)
     end
-  rescue IntercomError
+  rescue Intercom::IntercomError
     Rails.logger.error "An error occur on when '#{email}' lead is converted to user '#{id}'"
   end
 end
