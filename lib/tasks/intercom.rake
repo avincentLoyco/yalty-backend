@@ -63,7 +63,7 @@ namespace :intercom do
         user = registration_key.account.users.where(email: beta_invitation.email).first
         next unless user.present?
 
-        intercom_client.contacts.convert(beta_invitation, user.intercom_data)
+        intercom_client.contacts.convert(beta_invitation, user.intercom_user)
       end
     end
 
