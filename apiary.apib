@@ -1786,6 +1786,7 @@ Get a list of time off policies
             "start_month": "1",
             "end_month": "4"
             "years_to_effect": "1",
+            "years_passed": "0",
             "amount": "28800",
             "policy_type": "balancer",
             "time_off_category": {
@@ -1801,6 +1802,7 @@ Get a list of time off policies
             "start_month": "1",
             "end_month": "10",
             "years_to_effect": 0,
+            "years_passed": "0",
             "amount": "0",
             "policy_type": "counter",
             "time_off_category": {
@@ -1831,6 +1833,7 @@ Get a list of time off policies in given category
             "start_month": "1",
             "end_month": "4"
             "years_to_effect": "1",
+            "years_passed": "0",
             "amount": "28800",
             "policy_type": "balancer",
             "time_off_category": {
@@ -1846,6 +1849,7 @@ Get a list of time off policies in given category
             "start_month": "1",
             "end_month": "10",
             "years_to_effect": 0,
+            "years_passed": "0",
             "amount": "",
             "policy_type": "counter",
             "time_off_category": {
@@ -1867,7 +1871,7 @@ Create new time off policy. Policy may have two types: counter of balance, if ty
   + end_day: 1(number, required)
   + start_month: 1(number, required)
   + end_month: 10(number, required)
-  + years_to_effect: 1 (string, required)
+  + years_to_effect: 1 (number, required)
   + time_off_category (required)
     + type: time_off_category (string)
     + id: 11 (string, required)
@@ -1918,6 +1922,7 @@ Create new time off policy. Policy may have two types: counter of balance, if ty
           "end_month": "10",
           "amount": "1440",
           "years_to_effect": "1",
+          "years_passed": "0",
           "policy_type": "balancer",
           "time_off_category": {
             "type": "time_off_category",
@@ -1950,6 +1955,7 @@ Show time off policy
           "amount": "1440",
           "policy_type": "balancer",
           "years_to_effect": "1",
+          "years_passed": "0",
           "time_off_category": {
             "type": "time_off_category",
             "id": "12345678-1234-1234-1234-123456789012"
@@ -1984,7 +1990,7 @@ Update time off policy
   + end_day: 1(number, required)
   + start_month: 1(number, required)
   + end_month: 10(number, required)
-  + years_to_effect: 1(string, required)
+  + years_to_effect: 1(number, required)
   + [employees: {"id": "1"}] (array)
   + [working_places: {"id": "1"}] (array)
 
@@ -1998,6 +2004,7 @@ Update time off policy
           "start_month": "1",
           "end_month": "10",
           "years_to_effect": "1",
+          "years_passed": "0",
           "amount": "1440",
           "policy_type": "balancer",
           "time_off_category": {
@@ -2029,7 +2036,3 @@ Update time off policy
 + Request (application/json)
 
 + Response 204
-
-
-
-

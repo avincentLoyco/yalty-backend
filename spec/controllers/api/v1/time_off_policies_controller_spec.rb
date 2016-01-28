@@ -131,7 +131,6 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
         amount: 20,
         policy_type: 'balance',
         years_to_effect: 2,
-        years_passed: 0,
         time_off_category:{
           id: time_off_category_id,
           type: 'time_off_category'
@@ -232,7 +231,6 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
         amount: 20,
         policy_type: 'balance',
         years_to_effect: 2,
-        years_passed: 0,
         employees: [
           {
             id: employee_id,
