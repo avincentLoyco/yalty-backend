@@ -3,6 +3,17 @@ FactoryGirl.define do
     account
     working_place { create(:working_place, account: account) }
 
+    trait :with_policy do
+      transient do
+        employee_time_off_policies { Hash.new }
+      end
+
+      after(:build) do |employee|
+        policy = create(:employee_time_off_policy)
+        employee.employee_time_off_policies << policy
+      end
+    end
+
     trait :with_attributes do
       transient do
         event { Hash.new }

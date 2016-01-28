@@ -4,6 +4,7 @@ module EmployeeBalanceRules
   def post_rules
     Gate.rules do
       required :amount, :Integer
+      optional :effective_at
       required :employee, :Hash do
         required :id
       end
@@ -16,6 +17,7 @@ module EmployeeBalanceRules
   def put_rules
     Gate.rules do
       required :id
+      optional :effective_at
       required :amount, :Integer
     end
   end

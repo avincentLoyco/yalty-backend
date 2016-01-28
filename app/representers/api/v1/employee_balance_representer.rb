@@ -3,7 +3,8 @@ module Api::V1
     def complete
       {
         amount: resource.amount,
-        balance: resource.balance
+        balance: resource.balance,
+        effective_at: resource.effective_at
       }
         .merge(basic)
         .merge(relationship)

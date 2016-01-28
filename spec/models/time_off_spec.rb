@@ -13,7 +13,7 @@ RSpec.describe TimeOff, type: :model do
 
   it { is_expected.to belong_to(:employee) }
   it { is_expected.to belong_to(:time_off_category) }
-  it { is_expected.to have_many(:employee_balances) }
+  it { is_expected.to have_one(:employee_balance) }
 
   it { is_expected.to validate_presence_of(:start_time) }
   it { is_expected.to validate_presence_of(:end_time) }
@@ -35,6 +35,22 @@ RSpec.describe TimeOff, type: :model do
 
       it { expect(subject.valid?).to eq false }
       it { expect { subject.valid? }.to change { subject.errors.messages[:end_time] } }
+    end
+  end
+
+  context 'time off policy presence' do
+    subject { build(:time_off) }
+
+    context 'with valid data' do
+      it { expect(subject.valid?).to eq true }
+      it { expect { subject.valid? }.to_not change { subject.errors.messages } }
+    end
+
+    context 'with invalid data' do
+      before { subject.employee.employee_time_off_policies.destroy_all }
+
+      it { expect(subject.valid?).to eq false }
+      it { expect { subject.valid? }.to change { subject.errors.messages[:employee] } }
     end
   end
 end

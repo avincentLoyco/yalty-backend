@@ -26,7 +26,7 @@ class Employee < ActiveRecord::Base
   end
 
   def last_balance_in_category(category_id)
-    employee_balances.where(time_off_category_id: category_id).order('created_at').last
+    employee_balances.where(time_off_category_id: category_id).order('effective_at').last
   end
 
   def unique_balances_categories

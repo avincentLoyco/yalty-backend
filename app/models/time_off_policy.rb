@@ -12,10 +12,10 @@ class TimeOffPolicy < ActiveRecord::Base
     :time_off_category,
     :name,
     presence: true
-  validates :policy_type, inclusion: { in: %w(counter balance) }
   validates :years_passed, numericality: { greater_than_or_equal_to: 0 }
   validates :amount, presence: true, if: "policy_type == 'balance'"
   validates :amount, absence: true, if: "policy_type == 'counter'"
+  validates :policy_type, inclusion: { in: %w(counter balancer) }
   validates :years_to_effect,
     numericality: { greater_than_or_equal_to: 0 }, if: 'years_to_effect.present?'
   validates :start_day,
@@ -25,7 +25,7 @@ class TimeOffPolicy < ActiveRecord::Base
     :end_month,
     numericality: { greater_than_or_equal_to: 1 },
     presence: true,
-    if: "(end_day.present? || end_month.present?) && policy_type == 'balance'"
+    if: "(end_day.present? || end_month.present?) && policy_type == 'balancer'"
   validate :no_end_dates, if: "policy_type == 'counter'"
 
   scope :for_account_and_category, lambda { |account_id, time_off_category_id|
@@ -64,5 +64,25 @@ class TimeOffPolicy < ActiveRecord::Base
   def no_end_dates
     errors.add(:end_day, 'Should be null for this type of policy') if end_day.present?
     errors.add(:end_month, 'Should be null for this type of policy') if end_month.present?
+  end
+
+  def current_period
+    (start_date..end_date)
+  end
+
+  def previous_period
+    (start_date - 1.year..end_date - 1.year)
+  end
+
+  def next_period
+    (start_date + 1.year..end_date + 1.year)
+  end
+
+  def start_date
+    Date.new(Date.today.year, start_month, start_month)
+  end
+
+  def end_date
+    Date.new(Date.today.year + years_to_effect, end_month, end_day)
   end
 end
