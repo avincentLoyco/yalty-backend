@@ -19,14 +19,19 @@ module API
           resource = resources.new(time_off_attributes(attributes))
           authorize! :create, resource
 
-          resource.save!
+          transactions do
+            resource.save! &&
+              create_new_employee_balance(resource)
+          end
+
           render_resource(resource, status: :created)
         end
       end
 
       def update
         verified_params(gate_rules) do |attributes|
-          resource.update!(attributes)
+          resource.update!(time_off_attributes(attributes))
+          update_employee_balances
           render_no_content
         end
       end
@@ -69,11 +74,37 @@ module API
         attributes.tap do |attr|
           attr.delete(:employee)
           attr.delete(:time_off_category)
-        end.merge(employee: employee)
+        end.merge(employee: employee, beeing_processed: true)
+      end
+
+      def create_new_employee_balance(resource)
+        category, employee, account, amount, options = resource.time_off_category_id,
+          resource.employee_id, Account.current.id, resource.balance, { time_off_id: resource.id }
+
+        CreateEmployeeBalance.new(category, employee, account, amount, options).call
+      end
+
+      def update_employee_balances
+        update_balances_processed_flag(balances_to_update)
+
+        UpdateBalanceJob.perform_later(resource.employee_balance.id, balance_attributes)
       end
 
       def resource_representer
         ::Api::V1::TimeOffsRepresenter
+      end
+
+      def balance_attributes
+        { amount: resource.balance, effective_at: resource.start_time.to_s }
+      end
+
+      def balances_to_update
+        return [resource.employee_balance.id] if resource.employee_balance.last_in_category?
+        resource.employee_balance.later_balances_ids
+      end
+
+      def update_balances_processed_flag(ids)
+        Employee::Balance.where(id: ids).update_all(beeing_processed: true)
       end
     end
   end

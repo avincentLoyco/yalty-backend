@@ -1,27 +1,22 @@
 class UpdateEmployeeBalance
   include API::V1::Exceptions
-  attr_reader :employee_balance, :time_off, :amount
+  attr_reader :employee_balance, :time_off, :options
 
-  def initialize(employee_balance, amount = nil)
+  def initialize(employee_balance, options = {})
     @employee_balance = employee_balance
     @time_off = employee_balance.time_off
-    @amount = amount
+    @options = options
   end
 
   def call
-    update_amount unless amount.blank?
-    recalculate_balance
+    update_attributes unless options.blank?
     update_status
 
     save!
   end
 
-  def update_amount
-    employee_balance.amount = amount
-  end
-
-  def recalculate_balance
-    employee_balance.calculate_and_set_balance
+  def update_attributes
+    employee_balance.assign_attributes(options)
   end
 
   def update_status

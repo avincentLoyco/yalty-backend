@@ -17,20 +17,19 @@ module API
 
       def create
         verified_params(gate_rules) do |attributes|
-          category, employee, account, amount =
-            category_id(attributes), employee_id(attributes), Account.current.id, params[:amount]
+          category, employee, account, amount, options = category_id(attributes),
+            employee_id(attributes), Account.current.id, params[:amount], effective_at(attributes)
 
-          CreateBalanceJob.perform_later(category, employee, account, amount)
-          render_no_content
+          resource = CreateEmployeeBalance.new(category, employee, account, amount, options).call
+          render_resource(resource, status: :created)
         end
       end
 
       def update
         verified_params(gate_rules) do |attributes|
-          amount, balances_ids = params[:amount], balances_to_update
-          update_balances_processed_flag(balances_ids)
+          update_balances_processed_flag(balances_to_update)
 
-          UpdateBalanceJob.perform_later(balances_ids, amount) unless balances_ids.blank?
+          UpdateBalanceJob.perform_later(resource.id, attributes)
           render_no_content
         end
       end
@@ -38,13 +37,18 @@ module API
       def destroy
         balances_ids = balances_to_update - [resource.id]
         update_balances_processed_flag(balances_ids)
+        next_balance_id = resource.next_balance
 
         resource.destroy!
-        UpdateBalanceJob.perform_later(balances_ids) unless balances_ids.blank?
+        UpdateBalanceJob.perform_later(next_balance_id) if next_balance_id.present?
         render_no_content
       end
 
       private
+
+      def effective_at(attributes)
+        { effective_at: attributes[:effective_at] }
+      end
 
       def employee_id(attributes)
         attributes.delete(:employee)[:id]
