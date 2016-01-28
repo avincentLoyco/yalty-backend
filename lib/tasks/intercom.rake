@@ -51,22 +51,6 @@ namespace :intercom do
       add_registration_keys(beta_requests)
     end
 
-    desc 'Convert leads invited to users'
-    task :convert => [:environment] do
-      beta_invitations.each do |beta_invitation|
-        registration_key = Account::RegistrationKey
-          .includes(account: [:users])
-          .where(token: beta_invitation.custom_attributes['beta_invitation_key'])
-          .first
-        next unless registration_key.present? && registration_key.account.present?
-
-        user = registration_key.account.users.where(email: beta_invitation.email).first
-        next unless user.present?
-
-        intercom_client.contacts.convert(beta_invitation, user.intercom_user)
-      end
-    end
-
     def intercom_client
       @intercom_client ||= Intercom::Client.new(
         app_id: ENV['INTERCOM_APP_ID'],
@@ -79,20 +63,12 @@ namespace :intercom do
         intercom_client.contacts
           .all
           .select do |beta_request|
-            !beta_request.custom_attributes['beta_invitation_key'].present? &&
-              beta_request.tags.map(&:name).include?('beta request') &&
-              !beta_request.tags.map(&:name).include?('beta excluded')
-          end
-      end
-    end
+            tags = beta_request.tags.map(&:name)
 
-    def beta_invitations
-      @beta_requests ||= begin
-        intercom_client.contacts
-          .all
-          .select do |beta_request|
-            beta_request.custom_attributes['beta_invitation_key'].present? &&
-              beta_request.tags.map(&:name).include?('beta invitation')
+            tags.include?('beta request') &&
+              !beta_request.custom_attributes['beta_invitation_key'].present? &&
+              !tags.include?('beta invitation') &&
+              !tags.include?('beta excluded')
           end
       end
     end
