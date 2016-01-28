@@ -1,0 +1,14 @@
+ # every_mid_night:
+ #   cron: "0 0 * * *"
+ #   class: CheckPolicyJob
+ #   args:
+ #   queue: check_policy_queue
+ #   description: Chech time off policies add or remove days if neccessay
+
+test_schedule:
+  every:
+    - "30s"
+    - :first_in: '30s'
+  class: "CheckPolicyJob"
+  queue: check_policy_queue
+  description: "This job will check Daemon every 30 seconds after 120 seconds after start"

@@ -19,6 +19,8 @@ gem 'resque-web',         '~> 0.0.7',   require: 'resque_web'
 gem 'tod',                '~> 2.0.2'
 gem 'cancancan',          '~> 1.13.1'
 gem 'intercom',           '~> 3.3.0'
+gem 'resque-scheduler',   '~> 4.0.0'
+gem 'active_scheduler',   '~> 0.0.3'
 
 # Production environment dependencies
 group :production, :staging, :review do
