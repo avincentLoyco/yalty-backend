@@ -25,4 +25,78 @@ RSpec.describe TimeOffPolicy, type: :model do
   it { is_expected.to validate_inclusion_of(:policy_type).in_array(%w(counter balance)) }
   it { is_expected.to validate_numericality_of(:years_to_effect).is_greater_than_or_equal_to(0) }
   it { is_expected.to validate_numericality_of(:years_passed).is_greater_than_or_equal_to(0) }
+  it { is_expected.to validate_numericality_of(:start_day).is_greater_than_or_equal_to(1) }
+  it { is_expected.to validate_numericality_of(:end_day).is_greater_than_or_equal_to(1) }
+  it { is_expected.to validate_numericality_of(:start_month).is_greater_than_or_equal_to(1) }
+  it { is_expected.to validate_numericality_of(:end_month).is_greater_than_or_equal_to(1) }
+
+  let(:start_day) { 1 }
+  let(:start_month) { 1 }
+  let(:end_day) { 1 }
+  let(:end_month) { 4 }
+  let(:time_off_policy) do
+    build(:time_off_policy,
+      start_day: start_day,
+      start_month: start_month,
+      end_day: end_day,
+      end_month: end_month
+    )
+  end
+  context "with valid arguments" do
+    it { expect(time_off_policy).to be_valid }
+  end
+
+  context 'with invalid arguments error messages' do
+    subject { time_off_policy }
+    before { time_off_policy.valid? }
+    
+    context 'when start date is on the 29 of february' do
+      let(:start_day) { 29 }
+      let(:start_month) { 2 }
+      it { expect(subject).not_to be_valid }
+      it { expect(subject.errors[:start_day]).
+        to include '29 of February is not an allowed day'
+      }
+    end
+
+    context 'when end date is on the 29 of february' do
+      let(:end_day) { 29 }
+      let(:end_month) { 2 }
+
+      it { expect(subject).not_to be_valid }
+      it { expect(subject.errors[:end_day]).
+        to include '29 of February is not an allowed day' }
+    end
+
+    context 'when start_month is not valid' do
+      let(:start_month) { 13 }
+      it { expect(subject).not_to be_valid }
+      it { expect(subject.errors[:start_month]).to include 'invalid month number' }
+    end
+
+    context 'when end_month is not valid' do
+      let(:end_month) { 20 }
+
+      it { expect(subject).not_to be_valid }
+      it { expect(subject.errors[:end_month]).to include 'invalid month number' }
+    end
+
+    context 'when start_day is not valid' do
+      let(:start_day) { 40 }
+
+      it { expect(subject).not_to be_valid }
+      it { expect(subject.errors[:start_day]).
+        to include 'invalid day number given for this month'
+      }
+    end
+
+    context 'when end_day is not valid' do
+      let(:end_day) { 45 }
+
+      it { expect(subject).not_to be_valid }
+      it { expect(subject.errors[:end_day]).
+        to include 'invalid day number given for this month'
+      }
+    end
+  end
 end
