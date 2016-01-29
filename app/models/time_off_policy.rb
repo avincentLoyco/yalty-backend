@@ -66,6 +66,23 @@ class TimeOffPolicy < ActiveRecord::Base
     errors.add(:end_month, 'Should be null for this type of policy') if end_month.present?
   end
 
+  def last_balance_addition
+    employee_balances.where(policy_credit_addition: true).order(effective_at: :asc).last
+  end
+
+  def affected_employees_ids
+    (working_place_time_off_policies.affected_employees(id) +
+      employee_time_off_policies.affected_employees(id)).uniq
+  end
+
+  def starts_today?
+    start_date == Date.today
+  end
+
+  def ends_today?
+    end_date == Date.today
+  end
+
   def current_period
     (start_date..end_date)
   end
@@ -79,7 +96,7 @@ class TimeOffPolicy < ActiveRecord::Base
   end
 
   def start_date
-    Date.new(Date.today.year, start_month, start_month)
+    Date.new(Date.today.year, start_month, start_day)
   end
 
   def end_date

@@ -3,6 +3,7 @@ class TimeOffCategory < ActiveRecord::Base
 
   belongs_to :account
   has_many :time_offs
+  has_many :time_off_policies
   has_many :employee_balances, class_name: 'Employee::Balance'
   has_many :time_off_policies
 

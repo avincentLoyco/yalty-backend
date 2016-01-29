@@ -40,6 +40,7 @@ class Account < ActiveRecord::Base
   has_many :time_entries, through: :presence_days
   has_many :time_off_policies, through: :time_off_categories
   has_many :employee_balances, through: :employees
+  has_many :time_off_policies, through: :time_off_categories
 
   before_validation :generate_subdomain, on: :create
   after_create :update_default_attribute_definitions!
