@@ -125,9 +125,9 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
       {
         type: 'time_off_policy',
         start_day: start_day,
-        end_day: 1,
-        start_month:1 ,
-        end_month: 4,
+        end_day: 7,
+        start_month: 8,
+        end_month: 7,
         amount: 20,
         policy_type: 'balance',
         years_to_effect: 2,
@@ -182,6 +182,8 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
           params.delete(:amount)
           params.delete(:working_places)
           params.delete(:employees)
+          params.delete(:end_day)
+          params.delete(:end_month)
         end
 
         it { expect { subject }.to change { TimeOffPolicy.count }.by(1) }
@@ -209,6 +211,21 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
         it { expect { subject }.to_not change { TimeOffPolicy.count } }
         it { is_expected.to have_http_status(422) }
       end
+
+      context ' and with only ' do
+        context 'end_day in params but no end_month' do
+          before { params.delete(:end_month) }
+
+          it { expect { subject }.to_not change { TimeOffPolicy.count } }
+          it { is_expected.to have_http_status(422) }
+        end
+        context 'end_month in params but no end_day' do
+          before { params.delete(:end_day) }
+
+          it { expect { subject }.to_not change { TimeOffPolicy.count } }
+          it { is_expected.to have_http_status(422) }
+        end
+      end
     end
   end
 
@@ -220,14 +237,16 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
     let(:employee_id) { employee.id }
     let(:time_off_category_id) { new_time_off_category.id }
     let(:start_day) { 10 }
+    let(:end_day) { 7 }
+    let(:end_month) { 7 }
     let(:params) do
       {
         id: id,
         type: 'time_off_policy',
         start_day: start_day,
-        end_day: 1,
-        start_month:1 ,
-        end_month: 4,
+        end_day: end_day,
+        start_month: 8,
+        end_month: end_month,
         amount: 20,
         policy_type: 'balance',
         years_to_effect: 2,
@@ -281,6 +300,21 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
 
         it { expect { subject }.to_not change { policy.reload.start_day  } }
         it { is_expected.to have_http_status(422) }
+      end
+
+      context 'when params have' do
+        context 'end_day is nil' do
+          let(:end_day) { nil }
+
+          it { expect { subject }.to_not change { TimeOffPolicy.count } }
+          it { is_expected.to have_http_status(422) }
+        end
+        context 'end_month but no end_day' do
+          let(:end_month) { nil }
+
+          it { expect { subject }.to_not change { TimeOffPolicy.count } }
+          it { is_expected.to have_http_status(422) }
+        end
       end
     end
   end

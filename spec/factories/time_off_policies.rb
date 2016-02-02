@@ -12,6 +12,8 @@ FactoryGirl.define do
 
     trait :as_counter do
       policy_type 'counter'
+      end_day nil
+      end_month nil
     end
 
     trait :longer_than_year do

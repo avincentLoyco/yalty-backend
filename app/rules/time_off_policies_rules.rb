@@ -3,8 +3,8 @@ module TimeOffPoliciesRules
 
   def post_rules
     Gate.rules do
-      required :end_day, :Integer
-      required :end_month, :Integer
+      optional :end_day, :Integer, allow_nil: true
+      optional :end_month, :Integer, allow_nil: true
       required :start_day, :Integer
       required :start_month, :Integer
       optional :amount, :Integer
@@ -21,8 +21,8 @@ module TimeOffPoliciesRules
   def put_rules
     Gate.rules do
       required :id, :String
-      required :end_day, :Integer
-      required :end_month, :Integer
+      optional :end_day, :Integer, allow_nil: true
+      optional :end_month, :Integer, allow_nil: true
       required :start_day, :Integer
       required :start_month, :Integer
       optional :amount, :Integer

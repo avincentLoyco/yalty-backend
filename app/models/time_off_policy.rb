@@ -8,8 +8,6 @@ class TimeOffPolicy < ActiveRecord::Base
   validate :correct_dates
   validates :start_day,
     :start_month,
-    :end_day,
-    :end_month,
     :policy_type,
     :time_off_category,
     presence: true
@@ -19,9 +17,13 @@ class TimeOffPolicy < ActiveRecord::Base
     numericality: { greater_than_or_equal_to: 0 }
   validates :start_day,
     :start_month,
-    :end_day,
-    :end_month,
     numericality: { greater_than_or_equal_to: 1 }
+  validates :end_day,
+    :end_month,
+    numericality: { greater_than_or_equal_to: 1 },
+    presence: true,
+    if: "(end_day.present? || end_month.present?) && policy_type == 'balance'"
+  validate :no_end_dates, if: "policy_type == 'counter'"
 
   scope :for_account_and_category, lambda { |account_id, time_off_category_id|
     joins(:time_off_category).where(
@@ -33,7 +35,7 @@ class TimeOffPolicy < ActiveRecord::Base
 
   def correct_dates
     verify_date(start_day, start_month, :start_day, :start_month)
-    verify_date(end_day, end_month, :end_day, :end_month)
+    verify_date(end_day, end_month, :end_day, :end_month) if end_day.present? || end_month.present?
   end
 
   def verify_date(day, month, day_symbol, month_symbol)
@@ -54,5 +56,10 @@ class TimeOffPolicy < ActiveRecord::Base
 
   def verify_twenty_of_february(day, month, day_symbol)
     errors.add(day_symbol, '29 of February is not an allowed day') if day == 29 && month == 2
+  end
+
+  def no_end_dates
+    errors.add(:end_day, 'Should be null for this type of policy') if end_day.present?
+    errors.add(:end_month, 'Should be null for this type of policy') if end_month.present?
   end
 end

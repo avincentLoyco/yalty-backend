@@ -24,6 +24,20 @@ COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
 
 
 --
+-- Name: citext; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS citext WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION citext; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION citext IS 'data type for case-insensitive character strings';
+
+
+--
 -- Name: hstore; Type: EXTENSION; Schema: -; Owner: -
 --
 
@@ -75,7 +89,7 @@ CREATE TABLE account_registration_keys (
 --
 
 CREATE TABLE account_users (
-    email character varying NOT NULL,
+    email citext NOT NULL,
     password_digest character varying NOT NULL,
     account_id uuid NOT NULL,
     created_at timestamp without time zone NOT NULL,
@@ -428,9 +442,9 @@ CREATE TABLE time_off_categories (
 CREATE TABLE time_off_policies (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
     start_day integer NOT NULL,
-    end_day integer NOT NULL,
+    end_day integer,
     start_month integer NOT NULL,
-    end_month integer NOT NULL,
+    end_month integer,
     amount integer DEFAULT 0 NOT NULL,
     years_to_effect integer DEFAULT 0 NOT NULL,
     policy_type character varying NOT NULL,
@@ -1334,4 +1348,8 @@ INSERT INTO schema_migrations (version) VALUES ('20160122152943');
 INSERT INTO schema_migrations (version) VALUES ('20160126163922');
 
 INSERT INTO schema_migrations (version) VALUES ('20160127110502');
+
+INSERT INTO schema_migrations (version) VALUES ('20160201173053');
+
+INSERT INTO schema_migrations (version) VALUES ('20160202112542');
 
