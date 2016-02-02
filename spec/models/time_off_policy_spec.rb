@@ -157,4 +157,99 @@ RSpec.describe TimeOffPolicy, type: :model do
       it { expect(subject.errors[:end_month]).to include "Should be null for this type of policy" }
     end
   end
+
+  describe '#helper period methods' do
+    let(:year) { Date.today.year }
+    let(:starts) { Date.new(year, subject.start_month, subject.start_day).strftime('%m-%d') }
+
+    context 'when policy has end month and end day' do
+      let(:ends) { Date.new(year, subject.end_month, subject.end_day).strftime('%m-%d') }
+
+      context '#one_year_policy' do
+        subject { build(:time_off_policy, :with_end_date) }
+
+        it { expect(subject.valid?).to eq false }
+        it { expect(subject.current_period.to_s)
+          .to eq "#{year}-#{starts}..#{year}-#{ends}" }
+        it { expect(subject.previous_period.to_s)
+          .to eq "#{year - 1}-#{starts}..#{year - 1}-#{ends}" }
+        it { expect(subject.next_period.to_s)
+          .to eq "#{year + 1}-#{starts}..#{year + 1}-#{ends}" }
+      end
+
+      context '#two_years_policy' do
+        subject { build(:time_off_policy, :with_end_date, years_to_effect: 1) }
+
+        it { expect(subject.valid?).to eq true }
+        it { expect(subject.current_period.to_s)
+          .to eq "#{year}-#{starts}..#{year + 1}-#{ends}"  }
+        it { expect(subject.previous_period.to_s)
+          .to eq "#{year - 1}-#{starts}..#{year}-#{ends}" }
+        it { expect(subject.next_period.to_s)
+          .to eq "#{year + 1}-#{starts}..#{year + 2}-#{ends}" }
+      end
+
+      context '#three_years_policy' do
+        subject { build(:time_off_policy, :with_end_date, years_to_effect: 2) }
+
+        it { expect(subject.valid?).to eq true }
+        it { expect(subject.current_period.to_s)
+          .to eq "#{year}-#{starts}..#{year + 2}-#{ends}"  }
+        it { expect(subject.previous_period.to_s)
+          .to eq "#{year - 2}-#{starts}..#{year}-#{ends}" }
+        it { expect(subject.next_period.to_s)
+          .to eq "#{year + 2}-#{starts}..#{year + 4}-#{ends}" }
+
+        context 'years passed eq 1' do
+          subject { build(:time_off_policy, :with_end_date, years_to_effect: 2, years_passed: 1) }
+
+          it { expect(subject.valid?).to eq true }
+          it { expect(subject.current_period.to_s)
+            .to eq "#{year - 1}-#{starts}..#{year + 1}-#{ends}"  }
+          it { expect(subject.previous_period.to_s)
+            .to eq "#{year - 3}-#{starts}..#{year - 1}-#{ends}" }
+          it { expect(subject.next_period.to_s)
+            .to eq "#{year + 1}-#{starts}..#{year + 3}-#{ends}" }
+        end
+      end
+    end
+
+    context 'when policy does not have end month and day' do
+      context 'one year policy' do
+        subject { build(:time_off_policy) }
+
+        it { expect(subject.valid?).to eq true }
+        it { expect(subject.current_period.to_s)
+          .to eq "#{year}-#{starts}..#{year + 1}-#{starts}"  }
+        it { expect(subject.previous_period.to_s)
+          .to eq "#{year - 1}-#{starts}..#{year}-#{starts}" }
+        it { expect(subject.next_period.to_s)
+          .to eq "#{year + 1}-#{starts}..#{year + 2}-#{starts}" }
+      end
+
+      context 'two year policy' do
+        subject { build(:time_off_policy, years_to_effect: 1) }
+
+        it { expect(subject.valid?).to eq true }
+        it { expect(subject.current_period.to_s)
+          .to eq "#{year}-#{starts}..#{year + 2}-#{starts}"  }
+        it { expect(subject.previous_period.to_s)
+          .to eq "#{year - 2}-#{starts}..#{year}-#{starts}" }
+        it { expect(subject.next_period.to_s)
+          .to eq "#{year + 2}-#{starts}..#{year + 4}-#{starts}" }
+      end
+
+      context 'three years policy' do
+        subject { build(:time_off_policy, years_to_effect: 2) }
+
+        it { expect(subject.valid?).to eq true }
+        it { expect(subject.current_period.to_s)
+          .to eq "#{year}-#{starts}..#{year + 3}-#{starts}"  }
+        it { expect(subject.previous_period.to_s)
+          .to eq "#{year - 3}-#{starts}..#{year}-#{starts}" }
+        it { expect(subject.next_period.to_s)
+          .to eq "#{year + 3}-#{starts}..#{year + 6}-#{starts}" }
+      end
+    end
+  end
 end
