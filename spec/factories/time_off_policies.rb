@@ -4,7 +4,7 @@ FactoryGirl.define do
     name { Faker::Lorem.word }
     amount { Faker::Number.number(4) }
     start_day 1
-    start_month 10
+    start_month 1
     policy_type 'balancer'
     years_to_effect 0
     years_passed 0

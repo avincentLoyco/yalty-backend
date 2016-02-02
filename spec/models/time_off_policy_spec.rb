@@ -21,7 +21,7 @@ RSpec.describe TimeOffPolicy, type: :model do
   it { is_expected.to validate_presence_of(:start_month) }
   it { is_expected.to validate_presence_of(:name) }
   it { is_expected.to validate_presence_of(:time_off_category) }
-  it { is_expected.to validate_inclusion_of(:policy_type).in_array(%w(counter balance)) }
+  it { is_expected.to validate_inclusion_of(:policy_type).in_array(%w(counter balancer)) }
   it { is_expected.to validate_numericality_of(:years_to_effect).is_greater_than_or_equal_to(0) }
   it { is_expected.to validate_numericality_of(:years_passed).is_greater_than_or_equal_to(0) }
   it { is_expected.to validate_numericality_of(:start_day).is_greater_than_or_equal_to(1) }
@@ -166,7 +166,7 @@ RSpec.describe TimeOffPolicy, type: :model do
       let(:ends) { Date.new(year, subject.end_month, subject.end_day).strftime('%m-%d') }
 
       context '#one_year_policy' do
-        subject { build(:time_off_policy, :with_end_date) }
+        subject { build(:time_off_policy, :with_end_date, start_month: 10) }
 
         it { expect(subject.valid?).to eq false }
         it { expect(subject.current_period.to_s)

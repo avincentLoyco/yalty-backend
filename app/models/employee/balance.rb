@@ -4,12 +4,13 @@ class Employee::Balance < ActiveRecord::Base
   belongs_to :time_off
   belongs_to :time_off_policy
 
-  validates :employee, :time_off_category, :balance, :amount, :time_off_policy, presence: true
-  validate :time_off_policy_date, if: 'time_off_policy.present?'
+  validates :employee, :time_off_category, :balance, :amount, :effective_at, :time_off_policy,
+    presence: true
   validates :effective_at, uniqueness: { scope: [:time_off_policy, :employee] }
+  validate :time_off_policy_date, if: :time_off_policy
 
   before_validation :calculate_and_set_balance, if: :attributes_present?
-  before_validation :set_effective_at, if: 'effective_at.blank?'
+  before_validation :set_effective_at, unless: :effective_at
 
   def last_in_category?
     id == employee.last_balance_in_category(time_off_category_id).id
@@ -76,7 +77,7 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   def attributes_present?
-    employee.present? && time_off_category.present? && amount.present?
+    employee.present? && time_off_category.present? && amount.present? && time_off_policy.present?
   end
 
   def time_off_policy_date
