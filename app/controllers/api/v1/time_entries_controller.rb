@@ -17,21 +17,15 @@ module API
           resource = resources.new(time_entry_params(attributes))
           authorize! :create, resource
 
-          if resource.save
-            render_resource(resource, status: :created)
-          else
-            resource_invalid_error(resource)
-          end
+          resource.save!
+          render_resource(resource, status: :created)
         end
       end
 
       def update
         verified_params(gate_rules) do |attributes|
-          if resource.update(attributes)
-            render_no_content
-          else
-            resource_invalid_error(resource)
-          end
+          resource.update!(attributes)
+          render_no_content
         end
       end
 

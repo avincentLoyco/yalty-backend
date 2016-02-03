@@ -9,6 +9,7 @@ class ApplicationController < ActionController::Base
   rescue_from StandardError, with: :render_500_error
   rescue_from ActionController::RoutingError, with: :bad_request_error
   rescue_from ActiveRecord::RecordNotFound, with: :record_not_found_error
+  rescue_from ActiveRecord::RecordInvalid, with: :resource_invalid_error
   rescue_from EventTypeNotFoundError, with: :event_type_not_found
   rescue_from InvalidPasswordError, with: :invalid_password_error
   rescue_from InvalidResourcesError, with: :invalid_resources_error
@@ -19,7 +20,8 @@ class ApplicationController < ActionController::Base
     head 204
   end
 
-  def resource_invalid_error(resource)
+  def resource_invalid_error(exception)
+    resource = exception.try(:record) ? exception.record : exception
     render json:
       ::Api::V1::ErrorsRepresenter.new(resource).complete, status: 422
   end

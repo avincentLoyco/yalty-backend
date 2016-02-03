@@ -7,23 +7,17 @@ class Auth::UsersController < ApplicationController
     verified_params(gate_rules) do |attributes|
       user = resource_from_email(attributes[:email])
       user.generate_reset_password_token
-      if user.save
-        send_reset_password_token(user)
-        render_no_content
-      else
-        resource_invalid_error(resource)
-      end
+      user.save!
+      send_reset_password_token(user)
+      render_no_content
     end
   end
 
   def new_password
     verified_params(gate_rules) do |attributes|
       resource = resource_from_token(attributes.delete(:reset_password_token))
-      if resource.update(attributes)
-        render_no_content
-      else
-        resource_invalid_error(resource)
-      end
+      resource.update!(attributes)
+      render_no_content
     end
   end
 

@@ -16,15 +16,11 @@ module API
         verified_params(gate_rules) do |attributes|
           related = related_params(attributes)
           related_joins_collection = related_joins_collection_params(attributes)
-          result = transactions do
+          transactions do
             assign_related(related)
             assign_related_joins_collection(related_joins_collection)
           end
-          if result
-            render_no_content
-          else
-            resource_invalid_error(resource)
-          end
+          render_no_content
         end
       end
 
