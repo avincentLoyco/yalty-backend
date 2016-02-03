@@ -132,7 +132,7 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
         start_month: 8,
         end_month: 7,
         amount: 20,
-        policy_type: policy_type,
+        policy_type: 'balancer',
         years_to_effect: 2,
         time_off_category:{
           id: time_off_category_id,
@@ -264,7 +264,7 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
         start_month: 8,
         end_month: end_month,
         amount: 20,
-        policy_type: 'balance',
+        policy_type: 'balancer',
         years_to_effect: 2,
         employees: [
           {

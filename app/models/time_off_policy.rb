@@ -35,38 +35,6 @@ class TimeOffPolicy < ActiveRecord::Base
     )
   }
 
-  private
-
-  def correct_dates
-    verify_date(start_day, start_month, :start_day, :start_month)
-    verify_date(end_day, end_month, :end_day, :end_month) if end_day.present? || end_month.present?
-  end
-
-  def verify_date(day, month, day_symbol, month_symbol)
-    verify_invalid_month(month, month_symbol)
-    verify_invalid_day(day, month, day_symbol)
-    verify_twenty_of_february(day, month, day_symbol)
-  end
-
-  def verify_invalid_day(day, month, day_symbol)
-    days_in_month = month ? Time.days_in_month(month, Time.zone.now.year) : nil
-    errors.add(day_symbol, 'invalid day number given for this month') if
-      day && days_in_month && day >= days_in_month
-  end
-
-  def verify_invalid_month(month, month_symbol)
-    errors.add(month_symbol, 'invalid month number') unless month && month >= 1 && month <= 12
-  end
-
-  def verify_twenty_of_february(day, month, day_symbol)
-    errors.add(day_symbol, '29 of February is not an allowed day') if day == 29 && month == 2
-  end
-
-  def no_end_dates
-    errors.add(:end_day, 'Should be null for this type of policy') if end_day.present?
-    errors.add(:end_month, 'Should be null for this type of policy') if end_month.present?
-  end
-
   def last_balance_addition
     employee_balances.where(policy_credit_addition: true).order(effective_at: :asc).last
   end
@@ -121,5 +89,37 @@ class TimeOffPolicy < ActiveRecord::Base
 
   def end_date_after_start_date
     errors.add(:end_month, 'Must be after start month') if end_date < start_date
+  end
+
+  private
+
+  def correct_dates
+    verify_date(start_day, start_month, :start_day, :start_month)
+    verify_date(end_day, end_month, :end_day, :end_month) if end_day.present? || end_month.present?
+  end
+
+  def verify_date(day, month, day_symbol, month_symbol)
+    verify_invalid_month(month, month_symbol)
+    verify_invalid_day(day, month, day_symbol)
+    verify_twenty_of_february(day, month, day_symbol)
+  end
+
+  def verify_invalid_day(day, month, day_symbol)
+    days_in_month = month ? Time.days_in_month(month, Time.zone.now.year) : nil
+    errors.add(day_symbol, 'invalid day number given for this month') if
+      day && days_in_month && day >= days_in_month
+  end
+
+  def verify_invalid_month(month, month_symbol)
+    errors.add(month_symbol, 'invalid month number') unless month && month >= 1 && month <= 12
+  end
+
+  def verify_twenty_of_february(day, month, day_symbol)
+    errors.add(day_symbol, '29 of February is not an allowed day') if day == 29 && month == 2
+  end
+
+  def no_end_dates
+    errors.add(:end_day, 'Should be null for this type of policy') if end_day.present?
+    errors.add(:end_month, 'Should be null for this type of policy') if end_month.present?
   end
 end
