@@ -10,13 +10,20 @@ class UpdateEmployeeBalance
 
   def call
     update_attributes unless options.blank?
+    recalculate_amount if employee_balance.policy_credit_removal
     update_status
 
     save!
   end
 
+  private
+
   def update_attributes
     employee_balance.assign_attributes(options)
+  end
+
+  def recalculate_amount
+    employee_balance.time_off_policy.counter? ? counter_recalculation : balancer_recalculation
   end
 
   def update_status
@@ -31,5 +38,21 @@ class UpdateEmployeeBalance
 
       fail InvalidResourcesError.new(employee_balance, messages)
     end
+  end
+
+  def counter_recalculation
+    employee_balance.amount = 0 - last_balance
+  end
+
+  def balancer_recalculation
+    if employee_balance.balance_credit_addition.amount - last_balance > 0
+      employee_balance.amount = employee_balance.balance_credit_addition.amount - last_balance
+    else
+      employee_balance.amount = 0
+    end
+  end
+
+  def last_balance
+    employee_balance.employee.last_balance_in_policy(employee_balance.time_off_policy_id)
   end
 end

@@ -35,6 +35,10 @@ class TimeOffPolicy < ActiveRecord::Base
     )
   }
 
+  def counter?
+    policy_type == 'counter'
+  end
+
   def last_balance_addition
     employee_balances.where(policy_credit_addition: true).order(effective_at: :asc).last
   end
@@ -54,15 +58,15 @@ class TimeOffPolicy < ActiveRecord::Base
   end
 
   def current_period
-    (start_date..end_date)
+    (start_date...end_date)
   end
 
   def previous_period
-    (start_date - years_or_effect..end_date - years_or_effect)
+    (start_date - years_or_effect...end_date - years_or_effect)
   end
 
   def next_period
-    (start_date + years_or_effect..end_date + years_or_effect)
+    (start_date + years_or_effect...end_date + years_or_effect)
   end
 
   def start_years_ago

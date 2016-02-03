@@ -33,7 +33,7 @@ class CreateEmployeeBalance
       time_off: time_off,
       time_off_category: category,
       time_off_policy: time_off_policy,
-      policy_credit_addition: policy_credit_addition,
+      validity_date: validity_date,
       policy_credit_removal: policy_credit_removal,
       effective_at: effective_at
     )
@@ -70,8 +70,8 @@ class CreateEmployeeBalance
     employee.active_policy_in_category(category.id)
   end
 
-  def policy_credit_addition
-    options.delete(:policy_credit_addition)
+  def validity_date
+    options.delete(:validity_date)
   end
 
   def policy_credit_removal
@@ -79,7 +79,7 @@ class CreateEmployeeBalance
   end
 
   def update_next_employee_balances
-    return if employee_balance.last_in_category?
+    return if employee_balance.last_in_policy?
     balances_ids = employee_balance.later_balances_ids
     update_beeing_processed_status(balances_ids)
     UpdateBalanceJob.perform_later(employee_balance.id)

@@ -8,7 +8,7 @@ module API
       end
 
       def index
-        if params[:time_off_cateogry_id]
+        if params[:time_off_category_id]
           render_resource(resources)
         else
           render json: ::Api::V1::EmployeeBalanceRepresenter.new(resources).balances_sum
@@ -18,7 +18,7 @@ module API
       def create
         verified_params(gate_rules) do |attributes|
           category, employee, account, amount, options = category_id(attributes),
-            employee_id(attributes), Account.current.id, params[:amount], effective_at(attributes)
+            employee_id(attributes), Account.current.id, params[:amount], find_options(attributes)
 
           resource = CreateEmployeeBalance.new(category, employee, account, amount, options).call
           render_resource(resource, status: :created)
@@ -46,8 +46,11 @@ module API
 
       private
 
-      def effective_at(attributes)
-        { effective_at: attributes[:effective_at] }
+      def find_options(attributes)
+        params = {}
+        params.merge!({ effective_at: attributes[:effective_at]  }) if attributes[:effective_at]
+        params.merge!({ validity_date: attributes[:validity_date] }) if attributes[:validity_date]
+        params
       end
 
       def employee_id(attributes)
@@ -74,7 +77,7 @@ module API
       end
 
       def balances_to_update
-        return [resource.id] if resource.last_in_category?
+        return [resource.id] if resource.last_in_policy?
         resource.later_balances_ids
       end
 

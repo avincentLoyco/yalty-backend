@@ -2,12 +2,27 @@ require 'rails_helper'
 require 'fakeredis/rspec'
 
 RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
-  include_examples 'example_authorization',
-    resource_name: 'employee_balance'
+  include ActiveJob::TestHelper
   include_context 'shared_context_headers'
 
-  let(:employee) { create(:employee, account: account) }
-  let(:employee_balance) { create(:employee_balance, employee: employee, amount: 200) }
+  let(:previous_start) { policy.start_date - time_off_policy.years_to_effect.years }
+  let(:previous_end) { policy.end_date - policy.years_to_effect.years }
+  let(:employee) { create(:employee, :with_policy, account: account) }
+  let(:policy_category) do
+    employee.employee_time_off_policies.first.time_off_policy.time_off_category.tap do |c|
+      c.update!(account: account)
+    end
+  end
+  let(:policy) { employee.employee_time_off_policies.first.time_off_policy }
+  let(:employee_balance) do
+    create(:employee_balance,
+      employee: employee,
+      amount: 200,
+      time_off_category: policy_category,
+      time_off_policy: policy,
+      effective_at: previous_end + 1.week
+    )
+  end
 
   describe 'GET #show' do
     subject { get :show, id: id }
@@ -21,7 +36,10 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
         before { subject }
 
         it { expect_json_keys(
-          [:id, :balance, :amount, :employee, :time_off_category, :time_off_policy]
+          [
+            :id, :balance, :amount, :employee, :time_off_category, :time_off_policy, :effective_at,
+            :beeing_processed, :policy_credit_removal
+          ]
         )}
       end
     end
@@ -46,40 +64,47 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
     subject { get :index, employee_id: employee_id, time_off_category_id: category_id }
     let(:category_id) { nil }
     let(:employee_id) { employee.id }
+    let!(:first_balance) { create(:employee_balance, employee: employee) }
+    let!(:second_balance) { create(:employee_balance, employee: employee) }
+    let!(:third_balance) do
+      create(:employee_balance,
+        employee: employee, time_off_category: second_balance.time_off_category
+      )
+    end
+
+    it { expect(first_balance.time_off_category_id).to_not eq second_balance.time_off_category_id }
 
     context 'with valid data' do
-      context 'only when employee id given' do
-        context 'and employee does not have balances' do
-          before { subject }
+      context 'when only employee_id given' do
+        before { subject }
 
-          it { expect_json([]) }
-          it { is_expected.to have_http_status(200) }
-        end
+        it { expect_json_sizes(2) }
+        it { is_expected.to have_http_status(200) }
 
-        context 'and employee has balances' do
-          let!(:employee_balance) { create(:employee_balance, employee: employee, amount: 200) }
-          before { subject }
-
-          it { is_expected.to have_http_status(200) }
-          it { expect(response.body).to include(employee_balance.amount.to_s) }
-        end
+        it { expect(response.body).to include(first_balance.id, third_balance.id) }
+        it { expect(response.body).to_not include(second_balance.id) }
       end
 
       context 'when employee id and category id given' do
-        let(:category_id) { employee_balance.time_off_category_id }
+        let(:category_id) { second_balance.time_off_category_id }
+        before { subject }
 
+        it { expect_json_sizes(2) }
         it { is_expected.to have_http_status(200) }
+
+        it { expect(response.body).to include(second_balance.id, third_balance.id) }
+        it { expect(response.body).to_not include first_balance.id }
       end
     end
 
     context 'with invalid data' do
-      context 'invalid employee id' do
+      context 'when invalid employee_id' do
         let(:employee_id) { 'abc' }
 
         it { is_expected.to have_http_status(404) }
       end
 
-      context 'invalid category id' do
+      context 'when invalid time_off_category_id' do
         let(:category_id) { 'abc' }
 
         it { is_expected.to have_http_status(404) }
@@ -88,193 +113,137 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
   end
 
   describe 'POST #create' do
-    subject { post :create, params }
+    let(:amount) { '100' }
+    let(:effective_at_date) { Time.now - 1.week }
+    let(:employee_id) { employee.id }
     let(:params) do
       {
         amount: amount,
-        type: 'employee_balance',
+        effective_at: effective_at_date,
         time_off_category: {
-          id: category_id,
-          type: 'time_off_category'
+          id: category_id
         },
         employee: {
-          id: employee_id,
-          type: 'employee_id'
+          id: employee_id
         }
       }
     end
-    let(:time_off_policy) { employee_balance.time_off_policy }
-    let!(:employee_time_off_policy) do
-      create(:employee_time_off_policy, employee: employee, time_off_policy: time_off_policy)
-    end
-    let(:category) { employee_balance.time_off_category }
-    let(:employee_id) { employee.id }
-    let(:category_id) { category.id }
-    let(:amount) { '100' }
 
-    context 'with valid params' do
-      it { is_expected.to have_http_status(204) }
-
-      it 'calls CreateBalanceJob' do
-        expect(CreateBalanceJob).to receive(:perform_later).with(
-          category_id, employee_id, Account.current.id, amount
-        )
-        subject
-      end
-    end
-
-    context 'with invalid params' do
-      context 'when params are missing' do
-        before { params.delete(:amount) }
-
-        it { is_expected.to have_http_status(422) }
-
-        it 'does not call CreateBalanceJob' do
-          expect(CreateBalanceJob).to_not receive(:perform_later)
-          subject
-        end
-      end
-
-      context 'when params in invalid format' do
-        before { params[:amount] = 'test' }
-
-        it { is_expected.to have_http_status(422) }
-
-        it 'does not call CreateBalanceJob' do
-          expect(CreateBalanceJob).to_not receive(:perform_later)
-          subject
-        end
-      end
-    end
-  end
-
-  describe 'PUT #update' do
-    subject { put :update, params }
-    let(:employee_balance) { create(:employee_balance, amount: 100, employee: employee) }
-    let(:params) do
-      {
-        id: balance_id,
-        amount: amount,
-        type: 'employee_balance'
-      }
-    end
-    let(:balance_id) { employee_balance.id }
-    let(:amount) { '200' }
-
-    context 'with valid params' do
-      context 'when employee balance last or only in category' do
-        it { expect { subject }.to change { employee_balance.reload.beeing_processed }.to true }
-        it { is_expected.to have_http_status(204) }
-
-        it 'calls UpdateBalanceJob' do
-          expect(UpdateBalanceJob).to receive(:perform_later).with(
-            [employee_balance.id], amount
-          )
-          subject
-        end
-      end
-
-      context 'when employee balance has next balances' do
-        let(:next_balance) { employee_balance.dup }
-        before { next_balance.update!(created_at: employee_balance.created_at + 1.week) }
-
-        it { expect { subject }.to change { employee_balance.reload.beeing_processed }.to true }
-        it { expect { subject }.to change { next_balance.reload.beeing_processed }.to true }
-        it { is_expected.to have_http_status(204) }
-
-        it 'calls UpdateBalanceJob' do
-          expect(UpdateBalanceJob).to receive(:perform_later).with(
-            [employee_balance.id, next_balance.id], amount
-          )
-          subject
-        end
-      end
-    end
-
-    context 'with invalid params' do
-      shared_examples 'Invalid Params' do
-        it { expect { subject }.to_not change { employee_balance.reload.beeing_processed } }
-
-        it 'does not call UpdateBalanceJob' do
-          expect(UpdateBalanceJob).to_not receive(:perform_later)
-          subject
-        end
-      end
-
-      context 'invalid id' do
-        let(:balance_id) { 'abc' }
-
-        it_behaves_like 'Invalid Params'
-
-        it { is_expected.to have_http_status(404) }
-      end
-
-      context 'param is missing' do
-        before { params.delete(:amount) }
-
-        it_behaves_like 'Invalid Params'
-
-        it { is_expected.to have_http_status(422) }
-      end
-
-      context 'invalid amount format' do
-        let(:amount) { 'abc' }
-
-        it_behaves_like 'Invalid Params'
-
-        it { is_expected.to have_http_status(422) }
-      end
-    end
-  end
-
-  describe 'DELETE #destroy' do
-    let!(:employee_balance) { create(:employee_balance, employee: employee) }
-    subject { delete :destroy, id: id }
+    subject { post :create, params }
 
     context 'with valid data' do
-      context 'when balance only or last in category' do
-        let(:id) { employee_balance.id }
+      context 'for current policy period' do
+        let(:category_id) { policy_category.id }
+        before { employee_balance.update(effective_at: Time.now - 1.day) }
 
-        it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
-        it { is_expected.to have_http_status(204) }
+        context 'when employee_balance is last in policy' do
+          before { params.delete(:effective_at) }
 
-        it 'does not call UpdateBalanceJob' do
-          expect(UpdateBalanceJob).to_not receive(:perform_later)
-          subject
+          it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+          it { expect { subject }.to_not change { enqueued_jobs.size } }
+
+          it { is_expected.to have_http_status(201) }
+
+          context 'response body' do
+            before { subject }
+
+            it { expect_json(amount: 100, balance: 300) }
+          end
+        end
+
+        context 'when employee balance is not last but in current policy period' do
+          it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+          it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+          it { expect { subject }.to change { employee_balance.reload.beeing_processed }.to(true) }
+
+          it { is_expected.to have_http_status(201) }
+
+          context 'response body' do
+            before { subject }
+
+            it { expect_json(amount: 100, balance: 100) }
+          end
         end
       end
 
-      context 'when balance has next balances' do
-        let(:next_balance) { employee_balance.dup }
-        before { next_balance.update!(created_at: employee_balance.created_at + 1.week) }
+      context 'when employee balance in previous policy period' do
+        let(:effective_at_date) { previous.first + 2.months }
+        let(:category_id) { category.id }
 
-        let(:id) { employee_balance.id }
+        context 'and policy type is counter' do
+          include_context 'shared_context_balances',
+            type: 'counter',
+            years_to_effect: 0
 
-        it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
-        it { expect { subject }.to change { next_balance.reload.beeing_processed }.to(true) }
-        it { is_expected.to have_http_status(204) }
+          it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+          it { expect { subject }.to change { previous_removal.reload.beeing_processed }.to true }
+          it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
 
-        it 'calls UpdateBalanceJob' do
-          expect(UpdateBalanceJob).to receive(:perform_later).with([next_balance.id])
-          subject
+          it { expect { subject }.to_not change { previous_balance.reload.beeing_processed } }
+          it { expect { subject }.to_not change { balance_add.reload.beeing_processed } }
+          it { expect { subject }.to_not change { balance.reload.beeing_processed } }
+
+          it { is_expected.to have_http_status(201) }
+
+          context 'response body' do
+            before { subject }
+
+            it { expect_json(amount: 100, balance: 1100) }
+          end
+        end
+
+        context 'and policy type is balancer' do
+          context 'and it does not have end date' do
+            include_context 'shared_context_balances',
+              type: 'balancer',
+              years_to_effect: 0
+
+            it { expect { subject }.to change { Employee::Balnce.count }.by(1) }
+
+            it 'should change previous removal balance but not amount'
+            it 'should change current period balances'
+            it 'should not update balances with effective date before new balance'
+
+            context 'and there is a balance with validity date' do
+              context 'balance smaller than removal' do
+                it 'should update only to balance removal'
+              end
+
+              context 'balance bigger than removal' do
+                it 'should update balances to and after balance removal'
+              end
+            end
+          end
+
+          context 'and it does have end date' do
+            context 'balance removal bigger or eqal balance' do
+              it 'should update balances to removal'
+              it 'should not update balances from current period'
+              it 'should not update balances with effective date before new balance'
+            end
+
+            context 'balance removal smaller than balance' do
+              it 'should not update balances with effective date before new balance'
+              it 'should change balances before and after removal'
+              it 'should change balance removal amount'
+            end
+          end
         end
       end
     end
 
     context 'with invalid data' do
-      let(:next_balance) { employee_balance.dup }
-      before { next_balance.update!(created_at: employee_balance.created_at + 1.week) }
+      context 'params are missing' do
+      end
 
-      let(:id) { 'abc' }
-
-      it { expect { subject }.to_not change { Employee::Balance.count } }
-      it { expect { subject }.to_not change { next_balance.reload.beeing_processed } }
-      it { is_expected.to have_http_status(404) }
-
-      it 'does not call UpdateBalanceJob' do
-        expect(UpdateBalanceJob).to_not receive(:perform_later)
-        subject
+      context 'data do not pass validation' do
       end
     end
+  end
+
+  describe 'PUT #update' do
+  end
+
+  describe 'DELETE #destroy' do
   end
 end

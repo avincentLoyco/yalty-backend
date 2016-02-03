@@ -12,6 +12,7 @@ RSpec.describe Employee::Balance, type: :model do
   it { is_expected.to have_db_column(:validity_date).of_type(:date) }
   it { is_expected.to have_db_column(:policy_credit_removal).of_type(:boolean)
     .with_options(default: false) }
+  it { is_expected.to have_db_column(:balance_credit_addition_id).of_type(:uuid) }
 
   it { is_expected.to have_db_index(:time_off_id) }
   it { is_expected.to have_db_index(:time_off_category_id) }
@@ -60,6 +61,22 @@ RSpec.describe Employee::Balance, type: :model do
         subject { build(:employee_balance, amount: 200, effective_at: Time.now - 1.week) }
 
         it { expect { subject.valid? }.to_not change { subject.effective_at } }
+      end
+    end
+
+    context 'validity_date set up' do
+      subject { build(:employee_balance, amount: 200, time_off_policy: time_off_policy) }
+
+      context 'when time off policy has end date' do
+        let(:time_off_policy) { create(:time_off_policy, :with_end_date) }
+
+        it { expect { subject.valid? }.to change { subject.validity_date }.to be_kind_of(Date) }
+      end
+
+      context 'when time off policy does not have end date' do
+        let(:time_off_policy) { build(:time_off_policy) }
+
+        it { expect { subject.valid? }.to_not change { subject.validity_date } }
       end
     end
   end
