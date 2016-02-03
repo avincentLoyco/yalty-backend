@@ -5,6 +5,7 @@ module EmployeeBalanceRules
     Gate.rules do
       required :amount, :Integer
       optional :effective_at
+      optional :validity_date
       required :employee, :Hash do
         required :id
       end
@@ -18,6 +19,7 @@ module EmployeeBalanceRules
     Gate.rules do
       required :id
       optional :effective_at
+      optional :validity_date
       required :amount, :Integer
     end
   end

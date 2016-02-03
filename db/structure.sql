@@ -205,9 +205,10 @@ CREATE TABLE employee_balances (
     created_at timestamp without time zone,
     updated_at timestamp without time zone,
     beeing_processed boolean DEFAULT false,
-    effective_at timestamp without time zone DEFAULT '2016-01-26 14:33:51.920878'::timestamp without time zone NOT NULL,
-    policy_credit_addition boolean DEFAULT false,
-    policy_credit_removal boolean DEFAULT false
+    effective_at timestamp without time zone,
+    validity_date date,
+    policy_credit_removal boolean DEFAULT false,
+    balance_credit_addition_id uuid
 );
 
 
@@ -767,6 +768,13 @@ CREATE INDEX index_employee_attribute_versions_on_employee_event_id ON employee_
 --
 
 CREATE INDEX index_employee_attribute_versions_on_employee_id ON employee_attribute_versions USING btree (employee_id);
+
+
+--
+-- Name: index_employee_balances_on_balance_credit_addition_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE INDEX index_employee_balances_on_balance_credit_addition_id ON employee_balances USING btree (balance_credit_addition_id);
 
 
 --
@@ -1349,7 +1357,13 @@ INSERT INTO schema_migrations (version) VALUES ('20160119110649');
 
 INSERT INTO schema_migrations (version) VALUES ('20160120143600');
 
+INSERT INTO schema_migrations (version) VALUES ('20160122142845');
+
 INSERT INTO schema_migrations (version) VALUES ('20160122152943');
+
+INSERT INTO schema_migrations (version) VALUES ('20160125090608');
+
+INSERT INTO schema_migrations (version) VALUES ('20160126142900');
 
 INSERT INTO schema_migrations (version) VALUES ('20160126163922');
 
@@ -1369,8 +1383,9 @@ INSERT INTO schema_migrations (version) VALUES ('20160219112404');
 
 INSERT INTO schema_migrations (version) VALUES ('20160122142845');
 
-INSERT INTO schema_migrations (version) VALUES ('20160125090608');
-
-INSERT INTO schema_migrations (version) VALUES ('20160126142900');
-
 INSERT INTO schema_migrations (version) VALUES ('20160127113247');
+
+INSERT INTO schema_migrations (version) VALUES ('20160202112542');
+
+INSERT INTO schema_migrations (version) VALUES ('20160203104303');
+

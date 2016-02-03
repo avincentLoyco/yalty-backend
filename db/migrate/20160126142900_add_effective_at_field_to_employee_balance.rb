@@ -1,6 +1,6 @@
 class AddEffectiveAtFieldToEmployeeBalance < ActiveRecord::Migration
   def change
-    add_column :employee_balances, :effective_at, :timestamp, null: false, default: Time.now
+    add_column :employee_balances, :effective_at, :timestamp
 
     execute <<-SQL
       UPDATE employee_balances

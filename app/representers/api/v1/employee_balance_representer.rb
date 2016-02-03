@@ -4,7 +4,10 @@ module Api::V1
       {
         amount: resource.amount,
         balance: resource.balance,
-        effective_at: resource.effective_at
+        effective_at: resource.effective_at,
+        beeing_processed: resource.beeing_processed,
+        validity_date: resource.validity_date,
+        policy_credit_removal: resource.policy_credit_removal
       }
         .merge(basic)
         .merge(relationship)
