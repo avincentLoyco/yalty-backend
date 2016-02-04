@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe Account, type: :model do
-  subject { build(:account) }
+  subject { build(:account, subdomain: 'subdomain') }
 
   it { is_expected.to have_db_column(:id).of_type(:uuid) }
   it { is_expected.to have_db_column(:subdomain).with_options(null: false) }

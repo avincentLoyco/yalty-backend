@@ -162,7 +162,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
   describe 'POST #create' do
     subject { post :create, json_payload }
 
-    let(:effective_at) { 1.days.from_now.at_beginning_of_day.as_json }
+    let(:effective_at) { 1.days.from_now.at_beginning_of_day }
     let(:comment) { 'A test comment' }
 
     let(:first_name) { 'Walter' }
@@ -608,7 +608,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       }
     end
 
-    let(:effective_at) { 1.days.from_now.at_beginning_of_day.as_json }
+    let(:effective_at) { 1.days.from_now.at_beginning_of_day }
     let(:comment) { 'change comment' }
 
     let(:first_name) { 'Walter' }

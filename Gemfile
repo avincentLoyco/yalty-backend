@@ -2,18 +2,18 @@ source 'https://rubygems.org'
 
 ruby '2.2.2'
 
-gem 'rails',              '4.2.3'
-gem 'pg',                 '~> 0.18.1'
+gem 'rails',              '4.2.5.1'
+gem 'pg',                 '~> 0.18.4'
 gem 'bcrypt',             '~> 3.1.10'
 gem 'rack-cors',          '~> 0.4.0',   require: 'rack/cors'
-gem 'doorkeeper',         '~> 2.2.1'
+gem 'doorkeeper',         '~> 3.1.0'
 gem 'virtus',             '~> 1.0.5'
-gem 'request_store',      '~> 1.2.0'
-gem 'scenic',             '~> 0.3.0'
-gem 'countries',          '~> 1.1.0'
-gem 'holidays',           '~> 2.2.0'
+gem 'request_store',      '~> 1.3.0'
+gem 'scenic',             '~> 1.1.0'
+gem 'countries',          '~> 1.2.5'
+gem 'holidays',           '~> 3.1.2'
 gem 'gate',               '~> 0.4.1'
-gem 'newrelic_rpm',       '~> 3.14.0'
+gem 'newrelic_rpm',       '~> 3.14.2'
 gem 'resque',             '~> 1.25.2'
 gem 'resque-web',         '~> 0.0.7',   require: 'resque_web'
 gem 'tod',                '~> 2.0.2'
@@ -22,7 +22,7 @@ gem 'intercom',           '~> 3.3.0'
 
 # Production environment dependencies
 group :production, :staging, :review do
-  gem 'puma',             '~> 2.13.4'
+  gem 'puma',             '~> 2.16.0'
   gem 'rails_12factor',   '~> 0.0.3'
   gem 'therubyracer',     '~> 0.12.2'
 end
@@ -34,7 +34,7 @@ group :development, :test do
 
   # tests
   gem 'rspec-rails'
-  gem 'shoulda-matchers', require: false
+  gem 'shoulda-matchers'
   gem 'factory_girl_rails'
   gem 'airborne'
   gem 'faker'
