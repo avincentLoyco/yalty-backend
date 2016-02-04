@@ -198,34 +198,99 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
               type: 'balancer',
               years_to_effect: 0
 
-            it { expect { subject }.to change { Employee::Balnce.count }.by(1) }
+            it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+            it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
 
-            it 'should change previous removal balance but not amount'
-            it 'should change current period balances'
-            it 'should not update balances with effective date before new balance'
+            it { expect { subject }.to change { previous_balance.reload.beeing_processed }.to true }
+            it { expect { subject }.to change { balance_add.reload.beeing_processed }.to true }
+            it { expect { subject }.to change { balance.reload.beeing_processed }.to true }
+
+            it { expect { subject }.to_not change { previous_add.reload.beeing_processed } }
+
+            it { is_expected.to have_http_status(201) }
 
             context 'and there is a balance with validity date' do
+              let(:amount) { -500 }
+              let!(:prev_mid_add) do
+                create(:employee_balance, employee: employee, time_off_policy: policy,
+                  time_off_category: category, amount: 1000, effective_at: previous.first + 1.week,
+                  validity_date: previous.first + 3.months
+                )
+              end
+
+              let!(:prev_mid_removal) do
+                create(:employee_balance, employee: employee, time_off_policy: policy,
+                  time_off_category: category, amount: -1000, balance_credit_addition: prev_mid_add,
+                  effective_at: prev_mid_add.validity_date + 1.day, policy_credit_removal: true
+                )
+              end
+
               context 'balance smaller than removal' do
-                it 'should update only to balance removal'
+                it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+                it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+                it { expect { subject }.to change { prev_mid_removal.reload.beeing_processed } }
+
+                it { expect { subject }.to_not change { previous_balance.reload.beeing_processed } }
+                it { expect { subject }.to_not change { balance_add.reload.beeing_processed } }
+                it { expect { subject }.to_not change { balance.reload.beeing_processed } }
+                it { expect { subject }.to_not change { previous_add.reload.beeing_processed } }
+
+                it { is_expected.to have_http_status(201) }
               end
 
               context 'balance bigger than removal' do
-                it 'should update balances to and after balance removal'
+                let(:amount) { -1200 }
+
+                it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+                it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+
+                it { expect { subject }.to change { prev_mid_removal.reload.beeing_processed } }
+                it { expect { subject }.to change { previous_balance.reload.beeing_processed } }
+                it { expect { subject }.to change { balance_add.reload.beeing_processed } }
+                it { expect { subject }.to change { balance.reload.beeing_processed } }
+
+                it { expect { subject }.to_not change { previous_add.reload.beeing_processed } }
+
+                it { is_expected.to have_http_status(201) }
               end
             end
           end
 
           context 'and it does have end date' do
+            include_context 'shared_context_balances',
+              type: 'balancer',
+              years_to_effect: 1,
+              end_day: 1,
+              end_month: 4
+
             context 'balance removal bigger or eqal balance' do
-              it 'should update balances to removal'
-              it 'should not update balances from current period'
-              it 'should not update balances with effective date before new balance'
+              it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+              it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+
+              it { expect { subject }.to change { previous_balance.reload.beeing_processed } }
+              it { expect { subject }.to change { previous_removal.reload.beeing_processed } }
+
+              it { expect { subject }.to_not change { balance_add.reload.beeing_processed } }
+              it { expect { subject }.to_not change { balance.reload.beeing_processed } }
+              it { expect { subject }.to_not change { previous_add.reload.beeing_processed } }
+
+              it { is_expected.to have_http_status(201) }
             end
 
             context 'balance removal smaller than balance' do
-              it 'should not update balances with effective date before new balance'
-              it 'should change balances before and after removal'
-              it 'should change balance removal amount'
+              let(:amount) { -1200 }
+
+              it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+              it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+
+              it { expect { subject }.to change { previous_removal.reload.beeing_processed } }
+              it { expect { subject }.to change { previous_balance.reload.beeing_processed } }
+              it { expect { subject }.to change { balance_add.reload.beeing_processed } }
+              it { expect { subject }.to change { balance.reload.beeing_processed } }
+
+              it { expect { subject }.to_not change { previous_add.reload.beeing_processed } }
+
+              it { is_expected.to have_http_status(201) }
             end
           end
         end
