@@ -169,6 +169,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
       context 'when employee balance in previous policy period' do
         let(:effective_at_date) { previous.first + 2.months }
         let(:category_id) { category.id }
+        let(:amount) { -100 }
 
         context 'and policy type is counter' do
           include_context 'shared_context_balances',
@@ -188,7 +189,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
           context 'response body' do
             before { subject }
 
-            it { expect_json(amount: 100, balance: 1100) }
+            it { expect_json(amount: -100, balance: -1100) }
           end
         end
 
@@ -298,17 +299,114 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
     end
 
     context 'with invalid data' do
+      let(:category_id) { policy_category.id }
+
       context 'params are missing' do
+        before { params.delete(:amount) }
+
+        it { expect { subject }.to_not change { Employee::Balance.count } }
+        it { is_expected.to have_http_status(422) }
       end
 
       context 'data do not pass validation' do
+        let(:amount) { '' }
+
+        it { expect { subject }.to_not change { Employee::Balance.count } }
+        it { is_expected.to have_http_status(422) }
       end
     end
   end
 
   describe 'PUT #update' do
+
   end
 
   describe 'DELETE #destroy' do
+    subject { delete :destroy, id: id }
+
+    context 'employee balance time off policy is a counter type' do
+      include_context 'shared_context_balances',
+        type: 'counter',
+        years_to_effect: 0
+
+      context 'balance is current or next policy period' do
+        let(:id) { balance_add.id }
+
+        it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
+        it { expect { subject }.to change { balance.reload.beeing_processed }.to true }
+        it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+
+        it { expect { subject }.to_not change { previous_balance.reload.beeing_processed } }
+        it { expect { subject }.to_not change { previous_removal.reload.beeing_processed } }
+
+        it { is_expected.to have_http_status(204) }
+      end
+
+      context 'balance in previous policy period' do
+        let(:id) { previous_balance.id }
+
+        it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
+        it { expect { subject }.to change { previous_removal.reload.beeing_processed }.to true }
+        it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+
+        it { expect { subject }.to_not change { balance_add.reload.beeing_processed } }
+        it { expect { subject }.to_not change { balance.reload.beeing_processed } }
+
+        it { is_expected.to have_http_status(204) }
+      end
+    end
+
+    context 'employee balance time off policy is a balancer type' do
+      context 'when employee balance without validity date is removed' do
+        include_context 'shared_context_balances',
+          type: 'balancer',
+          years_to_effect: 0
+
+        context 'in current policy period' do
+          let(:id) { balance.id }
+
+          it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
+
+          it { expect { subject }.to_not change { balance_add.reload.beeing_processed } }
+          it { expect { subject }.to_not change { previous_balance.reload.beeing_processed } }
+          it { expect { subject }.to_not change { enqueued_jobs.size } }
+
+          it { is_expected.to have_http_status(204) }
+        end
+
+        context 'in previous policy period' do
+          let(:id) { previous_balance.id }
+
+          it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
+          it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+          it { expect { subject }.to change { balance_add.reload.beeing_processed }.to true }
+          it { expect { subject }.to change { balance.reload.beeing_processed }.to true }
+
+          it { expect { subject }.to_not change { previous_add.reload.beeing_processed } }
+
+          it { is_expected.to have_http_status(204) }
+        end
+      end
+
+      context 'when employee with validity date is removed' do
+        include_context 'shared_context_balances',
+          type: 'balancer',
+          years_to_effect: 1,
+          end_day: 1,
+          end_month: 4
+
+        context 'and employee balance validity date in past' do
+          let(:id) { previous_add.id }
+
+          it { expect { subject }.to change { Employee::Balance.count }.by(-2) }
+          it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+          it { expect { subject }.to change { balance_add.reload.beeing_processed }.to true }
+          it { expect { subject }.to change { balance.reload.beeing_processed }.to true }
+          it { expect { subject }.to change { previous_balance.reload.beeing_processed }.to true }
+
+          it { is_expected.to have_http_status(204) }
+        end
+      end
+    end
   end
 end

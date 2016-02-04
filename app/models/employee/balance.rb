@@ -6,7 +6,7 @@ class Employee::Balance < ActiveRecord::Base
 
   belongs_to :balance_credit_addition, class_name: 'Employee::Balance'
   has_one :balance_credit_removal, class_name: 'Employee::Balance',
-    foreign_key: 'balance_credit_addition_id'
+    foreign_key: 'balance_credit_addition_id', dependent: :destroy
 
   validates :employee,
     :time_off_category,
@@ -38,7 +38,7 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   def next_balance
-    balance.where('effective_at > ? AND employee_id = ?', now_or_effective_at, self.employee_id)
+    balances.where('effective_at > ? AND employee_id = ?', now_or_effective_at, self.employee_id)
       .order(effective_at: :asc).first.try(:id)
   end
 
@@ -75,7 +75,7 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   def find_ids_for_counter
-    all_later_ids if current_or_next_period? || next_removal.blank?
+    return all_later_ids if current_or_next_period? || next_removal.blank?
     balances.where(effective_at: effective_at..next_removal.effective_at).pluck(:id)
   end
 
@@ -99,12 +99,11 @@ class Employee::Balance < ActiveRecord::Base
       .pluck(:balance_credit_addition_id))
   end
 
-  private
-
   def all_later_ids
-    time_off_policy.employee_balances.where("effective_at >= ? AND employee_id = ?",
-      self.effective_at, self.employee_id).pluck(:id)
+    balances.where("effective_at >= ?", effective_at).pluck(:id)
   end
+
+  private
 
   def previous_balance
     time_off_policy.employee_balances.where('effective_at < ? AND employee_id = ?',

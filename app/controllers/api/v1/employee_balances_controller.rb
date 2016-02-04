@@ -35,7 +35,7 @@ module API
       end
 
       def destroy
-        balances_ids = balances_to_update - [resource.id]
+        balances_ids = balances_to_update - [resource.id, resource.balance_credit_removal.try(:id)]
         update_balances_processed_flag(balances_ids)
         next_balance_id = resource.next_balance
 
@@ -78,7 +78,7 @@ module API
 
       def balances_to_update
         return [resource.id] if resource.last_in_policy?
-        resource.later_balances_ids
+        resource.validity_date.present? ? resource.all_later_ids : resource.later_balances_ids
       end
 
       def update_balances_processed_flag(ids)

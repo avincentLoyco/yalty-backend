@@ -61,7 +61,7 @@ RSpec.shared_context 'shared_context_balances' do |settings|
   else
     let!(:previous_balance) do
       create(:employee_balance,
-        effective_at: previous.first + 1.month, amount: 1000, time_off_policy: policy,
+        effective_at: previous.first + 1.month, amount: -1000, time_off_policy: policy,
         employee: employee, time_off_category: category
       )
     end
