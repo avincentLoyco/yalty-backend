@@ -21,7 +21,10 @@ Doorkeeper.configure do
   # This block will be called to check user credentials when use password grant type
   resource_owner_from_credentials do |routes|
     username, subdomain = params[:username].match(/\A(.*?)(?:\(([^()]*)\)){0,1}\z/)[1..2]
-    user = Account::User.joins(:account).where(email: username, accounts: { subdomain: subdomain }).first
+    user = Account::User.joins(:account)
+      .where( 'lower(email) = ? AND lower(accounts.subdomain) = ?',
+        username.downcase, subdomain.downcase
+      ).first
     user.try(:authenticate, params[:password])
   end
 
