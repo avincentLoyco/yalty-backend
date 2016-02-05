@@ -147,7 +147,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
           context 'response body' do
             before { subject }
 
-            it { expect_json(amount: 100, balance: 300) }
+            it { expect_json('0', amount: 100, balance: 300) }
           end
         end
 
@@ -161,7 +161,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
           context 'response body' do
             before { subject }
 
-            it { expect_json(amount: 100, balance: 100) }
+            it { expect_json('0', amount: 100, balance: 100) }
           end
         end
       end
@@ -189,7 +189,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
           context 'response body' do
             before { subject }
 
-            it { expect_json(amount: -100, balance: -1100) }
+            it { expect_json('0', amount: -100, balance: -1100) }
           end
         end
 
@@ -294,6 +294,42 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
               it { is_expected.to have_http_status(201) }
             end
           end
+          context 'and validity date is in past' do
+            include_context 'shared_context_balances',
+              type: 'balancer',
+              years_to_effect: 1
+
+            let(:amount) { 1000 }
+            let(:effective_at_date) { previous.first + 1.week }
+            let!(:positive_balance) do
+              create(:employee_balance, employee: employee, time_off_policy: policy,
+                time_off_category: category, amount: 500, effective_at: previous.first + 1.month,
+              )
+            end
+            let!(:negative_balance) do
+              create(:employee_balance, employee: employee, time_off_policy: policy,
+                time_off_category: category, amount: -500, effective_at: previous.first + 2.months,
+              )
+            end
+
+            before { params.merge!({ validity_date: previous.last - 1.day }) }
+
+            it { expect { subject }.to change { Employee::Balance.count }.by(2) }
+            it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+            it { expect { subject }.to change { previous_balance.reload.beeing_processed } }
+            it { expect { subject }.to change { balance_add.reload.beeing_processed } }
+            it { expect { subject }.to change { balance.reload.beeing_processed } }
+
+            it { expect { subject }.to_not change { previous_add.reload.beeing_processed } }
+
+            it { is_expected.to have_http_status(201) }
+
+            context 'response body' do
+              before { subject }
+
+              it { expect(response.body).to include('1000', '-500', '500') }
+            end
+          end
         end
       end
     end
@@ -318,7 +354,119 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
   end
 
   describe 'PUT #update' do
+    subject { put :update, params }
+    let(:amount) { '100' }
+    let(:employee_id) { employee.id }
+    let(:params) do
+      {
+        id: id,
+        amount: amount
+      }
+    end
 
+    context 'with valid params' do
+      context 'employee balance policy of type counter' do
+        let(:amount) { '50' }
+
+        include_context 'shared_context_balances',
+          type: 'counter',
+          years_to_effect: 0
+
+        context 'and in current policy period' do
+          let(:id) { balance.id }
+
+          it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+          it { expect { subject }.to change { balance.reload.beeing_processed }.to true }
+
+          it { expect { subject }.to_not change { balance_add.reload.beeing_processed } }
+
+          it { is_expected.to have_http_status(204) }
+        end
+
+        context 'and in previous policy period' do
+          let(:id) { previous_balance.id }
+
+          it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+          it { expect { subject }.to change { previous_removal.reload.beeing_processed }.to true }
+          it { expect { subject }.to change { previous_balance.reload.beeing_processed }.to true }
+
+          it { expect { subject }.to_not change { balance.reload.beeing_processed } }
+          it { expect { subject }.to_not change { balance_add.reload.beeing_processed } }
+
+          it { expect { subject } }
+        end
+      end
+
+      context 'employee balance policy of type balancer' do
+        context 'in current policy period' do
+          context 'and do not have validity date' do
+            include_context 'shared_context_balances',
+              type: 'balancer',
+              years_to_effect: 0
+
+            context 'and now have it in the past' do
+              let(:id) { balance.id }
+              before do
+                params.merge!(
+                  {
+                    validity_date: previous.last - 2.months,
+                    effective_at: previous.last - 4.months
+                  }
+                )
+              end
+
+              it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+              it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+              it { expect { subject }.to change { balance.reload.beeing_processed }.to true }
+              it { expect { subject }.to change { balance_add.reload.beeing_processed }.to true }
+              it { expect { subject }.to change { previous_balance.reload.beeing_processed } }
+
+              it { is_expected.to have_http_status(204) }
+            end
+
+            context 'and have it in the future' do
+              include_context 'shared_context_balances',
+                type: 'balancer',
+                years_to_effect: 0
+
+              let(:id) { balance.id }
+              before do
+                params.merge!(
+                  {
+                    validity_date: current.last - 1.month,
+                  }
+                )
+              end
+
+              it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+              it { expect { subject }.to change { balance.reload.beeing_processed }.to true }
+
+              it { expect { subject }.to_not change { Employee::Balance.count } }
+              it { expect { subject }.to_not change { balance_add.reload.beeing_processed } }
+              it { expect { subject }.to_not change { previous_balance.reload.beeing_processed } }
+
+              it { is_expected.to have_http_status(204) }
+            end
+          end
+
+          context 'have validity date' do
+          end
+        end
+
+        context 'in previous policy period' do
+        end
+      end
+    end
+
+    context 'with invalid params' do
+      context 'when param is missing' do
+
+      end
+
+      context 'when params do not pass validation' do
+
+      end
+    end
   end
 
   describe 'DELETE #destroy' do

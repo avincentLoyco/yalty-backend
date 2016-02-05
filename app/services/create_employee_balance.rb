@@ -1,6 +1,7 @@
 class CreateEmployeeBalance
   include API::V1::Exceptions
-  attr_reader :category, :employee, :amount, :employee_balance, :account, :time_off, :options
+  attr_reader :category, :employee, :amount, :employee_balance,
+    :account, :time_off, :options, :balance_removal
 
   def initialize(category_id, employee_id, account_id, amount, options = {})
     @options = options
@@ -9,17 +10,20 @@ class CreateEmployeeBalance
     @employee = account.employees.find(employee_id)
     @amount = amount
     @employee_balance = nil
-    @time_off = find_time_off
+    @balance_removal = nil
+    @time_off = time_off
   end
 
   def call
     ActiveRecord::Base.transaction do
-      build_employee_balance if related_present?
+      build_employee_balance
+      build_employee_balance_removal if validity_date.present? && validity_date <= Date.today
+      calculate_amount
       save!
 
       update_next_employee_balances
     end
-    employee_balance
+    balance_removal ? [employee_balance, balance_removal] : [employee_balance]
   end
 
   def find_time_off_policy
@@ -27,22 +31,18 @@ class CreateEmployeeBalance
   end
 
   def build_employee_balance
-    @employee_balance = Employee::Balance.new(
-      amount: amount,
-      employee: employee,
-      time_off: time_off,
-      time_off_category: category,
-      time_off_policy: time_off_policy,
-      validity_date: validity_date,
-      policy_credit_removal: policy_credit_removal,
-      effective_at: effective_at
-    )
+    @employee_balance = Employee::Balance.new(employee_balance_params)
+  end
+
+  def build_employee_balance_removal
+    @balance_removal = employee_balance.build_balance_credit_removal(employee_balance_removal_params)
   end
 
   def save!
     if employee_balance.valid?
       employee_balance.save!
-      employee_balance
+      employee_balance.balance_credit_addition.save! if employee_balance.policy_credit_removal
+      balance_removal.try(:save!)
     else
       messages = employee_balance.errors.messages
 
@@ -52,13 +52,34 @@ class CreateEmployeeBalance
 
   private
 
-  def related_present?
-    account.present? && employee.present? && category.present?
+  def common_params
+    {
+      employee: employee,
+      time_off: time_off,
+      time_off_category: category,
+      time_off_policy: time_off_policy
+    }
   end
 
-  def find_time_off
-    return nil unless options.has_key?(:time_off_id)
-    employee.time_offs.find(options.delete(:time_off_id))
+  def employee_balance_params
+    {
+      amount: amount,
+      validity_date: validity_date,
+      effective_at: effective_at,
+      policy_credit_removal: policy_credit_removal,
+      balance_credit_addition_id: balance_credit_addition_id
+    }.merge(common_params)
+  end
+
+  def employee_balance_removal_params
+    {
+      effective_at: employee_balance.validity_date,
+      policy_credit_removal: true
+    }.merge(common_params)
+  end
+
+  def time_off
+    options.has_key?(:time_off_id) ? employee.time_offs.find(options.delete(:time_off_id)) : nil
   end
 
   def effective_at
@@ -71,15 +92,25 @@ class CreateEmployeeBalance
   end
 
   def validity_date
-    options.delete(:validity_date)
+    DateTime.parse(options[:validity_date]) rescue nil
   end
 
   def policy_credit_removal
-    options.delete(:policy_credit_removal)
+    options[:policy_credit_removal]
+  end
+
+  def balance_credit_addition_id
+    options[:balance_credit_addition_id]
+  end
+
+  def calculate_amount
+    return unless balance_removal || employee_balance.policy_credit_removal
+    balance_removal ? balance_removal.calculate_removal_amount(employee_balance) :
+    employee_balance.calculate_removal_amount
   end
 
   def update_next_employee_balances
-    return if employee_balance.last_in_policy?
+    return if employee_balance.last_in_policy? || options[:skip_update]
     balances_ids = employee_balance.later_balances_ids
     update_beeing_processed_status(balances_ids)
     UpdateBalanceJob.perform_later(employee_balance.id)

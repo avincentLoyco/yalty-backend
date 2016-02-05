@@ -20,14 +20,15 @@ module API
           category, employee, account, amount, options = category_id(attributes),
             employee_id(attributes), Account.current.id, params[:amount], find_options(attributes)
 
-          resource = CreateEmployeeBalance.new(category, employee, account, amount, options).call
-          render_resource(resource, status: :created)
+          resources = CreateEmployeeBalance.new(category, employee, account, amount, options).call
+          render_resource(resources, status: :created)
         end
       end
 
       def update
         verified_params(gate_rules) do |attributes|
-          update_balances_processed_flag(balances_to_update)
+          create_removal_if_validity_date_in_past(attributes)
+          update_balances_processed_flag(balances_to_update(attributes[:effective_at]))
 
           UpdateBalanceJob.perform_later(resource.id, attributes)
           render_no_content
@@ -76,9 +77,14 @@ module API
           .find(params[:employee_id]).employee_balances
       end
 
-      def balances_to_update
-        return [resource.id] if resource.last_in_policy?
-        resource.validity_date.present? ? resource.all_later_ids : resource.later_balances_ids
+      def balances_to_update(effective_at = nil)
+        return [resource.id] if resource.last_in_policy? && effective_at.blank?
+        if resource.validity_date.present? || effective_at
+          return resource.all_later_ids unless effective_at && effective_at < resource.effective_at
+          resource.all_later_ids(effective_at)
+        else
+          resource.later_balances_ids
+        end
       end
 
       def update_balances_processed_flag(ids)
@@ -87,6 +93,21 @@ module API
 
       def resource_representer
         ::Api::V1::EmployeeBalanceRepresenter
+      end
+
+      def create_removal_if_validity_date_in_past(attributes)
+        return unless attributes[:validity_date] && moved_to_past?(attributes[:validity_date])
+
+        category, employee, account, amount, options =
+          resource.time_off_category_id, resource.employee_id, Account.current.id, nil,
+            { policy_credit_removal: true, skip_update: true, balance_credit_addition_id: resource.id }
+
+        CreateEmployeeBalance.new(category, employee, account, amount, options).call
+      end
+
+      def moved_to_past?(date)
+        !resource.time_off_policy.previous_period.include?(resource.validity_date) &&
+          resource.time_off_policy.previous_period.include?(date.to_date)
       end
     end
   end
