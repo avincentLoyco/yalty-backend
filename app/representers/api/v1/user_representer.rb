@@ -7,13 +7,17 @@ module Api::V1
         is_employee:        resource.employee.present?
       }
         .merge(basic)
-        .merge(employee)
+        .merge(relationships)
     end
 
-    def employee
-      return {} if resource.employee.blank?
+    def relationships
+      {
+        employee: employee_json,
+      }
+    end
 
-      Api::V1::EmployeeRepresenter.new(resource.employee).basic
+    def employee_json
+      EmployeeRepresenter.new(resource.employee).basic
     end
   end
 end

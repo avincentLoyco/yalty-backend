@@ -97,6 +97,23 @@ RSpec.describe API::V1::UsersController, type: :controller do
       it { expect_json_sizes(users.count + 1) }
       it { is_expected.to have_http_status(200) }
     end
+
+    it 'should return the users for the current account' do
+      subject
+
+      users.each do |user|
+        expect(response.body).to include user[:id]
+      end
+    end
+
+    it 'should not be visible in context of other account' do
+      Account.current = create(:account)
+      subject
+
+      users.each do |user|
+        expect(response.body).to_not include user[:id]
+      end
+    end
   end
 
   describe 'GET #show' do
@@ -109,6 +126,12 @@ RSpec.describe API::V1::UsersController, type: :controller do
       before { subject }
 
       it { is_expected.to have_http_status(200) }
+    end
+
+    context 'response body' do
+      before { subject }
+
+      it { expect_json_keys([:id, :type, :email, :account_manager, :employee, :is_employee]) }
     end
   end
 
