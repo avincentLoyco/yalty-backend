@@ -12,7 +12,7 @@ module Api::V1
 
     def relationships
       {
-        employee: employee_json,
+        employee: employee_json
       }
     end
 

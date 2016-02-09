@@ -48,6 +48,24 @@ RSpec.describe API::V1::UsersController, type: :controller do
         end
       end
 
+      context 'without optional params' do
+        before do
+          params.delete(:account_manager)
+          params.delete(:is_employee)
+          params.delete(:employee)
+        end
+
+        it { is_expected.to have_http_status(201) }
+        it { expect { subject }.to change { Account::User.count }.by(1) }
+      end
+
+      context 'with null employee' do
+        before { params[:employee] = nil }
+
+        it { is_expected.to have_http_status(201) }
+        it { expect { subject }.to change { Account::User.count }.by(1) }
+      end
+
       context 'without password' do
         before do
           params.delete(:password)
@@ -154,6 +172,7 @@ RSpec.describe API::V1::UsersController, type: :controller do
       it { expect { subject }.to_not change { Account::User.count } }
       it { is_expected.to have_http_status(204) }
       it { expect { subject }.to change { users.first.reload.email } }
+      it { expect { subject }.to change { users.first.reload.employee } }
 
       context 'assign employee' do
         it { expect { subject }.to change { employee.reload.account_user_id } }
@@ -170,6 +189,30 @@ RSpec.describe API::V1::UsersController, type: :controller do
         context 'with blank id' do
           it { expect { subject }.to_not change { employee.reload.account_user_id } }
         end
+      end
+
+      context 'without optional params' do
+        before do
+          params.delete(:account_manager)
+          params.delete(:is_employee)
+          params.delete(:employee)
+        end
+
+        it { expect { subject }.to_not change { Account::User.count } }
+        it { is_expected.to have_http_status(204) }
+        it { expect { subject }.to change { users.first.reload.email } }
+      end
+
+      context 'with null employee' do
+        before do
+          users.first.employee = employee
+          users.first.save
+          params[:employee] = nil
+        end
+
+        it { expect { subject }.to_not change { Account::User.count } }
+        it { is_expected.to have_http_status(204) }
+        it { expect { subject }.to change { employee.reload.account_user_id } }
       end
     end
 

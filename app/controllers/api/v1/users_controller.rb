@@ -59,8 +59,8 @@ module API
       def load_related_employee(attributes)
         return unless attributes.key?(:employee)
 
-        employee_id = attributes.delete(:employee)[:id]
-        attributes[:employee] = Account.current.employees.find(employee_id)
+        employee_id = attributes.delete(:employee).try(:[], :id)
+        attributes[:employee] = employee_id ? Account.current.employees.find(employee_id) : nil
       end
 
       def send_user_credentials(user, password)
