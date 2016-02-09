@@ -3,6 +3,8 @@ module API
     class EmployeeBalancesController < API::ApplicationController
       include EmployeeBalanceRules
 
+      before_action :verifiy_effective_at_and_validity_date, only: :update
+
       def show
         render_resource(resource)
       end
@@ -27,7 +29,7 @@ module API
 
       def update
         verified_params(gate_rules) do |attributes|
-          create_removal_if_validity_date_in_past(attributes)
+          create_removal_if_in_past(attributes)
           update_balances_processed_flag(balances_to_update(attributes[:effective_at]))
 
           UpdateBalanceJob.perform_later(resource.id, attributes)
@@ -95,7 +97,7 @@ module API
         ::Api::V1::EmployeeBalanceRepresenter
       end
 
-      def create_removal_if_validity_date_in_past(attributes)
+      def create_removal_if_in_past(attributes)
         return unless attributes[:validity_date] && moved_to_past?(attributes[:validity_date])
 
         category, employee, account, amount, options =
@@ -108,6 +110,16 @@ module API
       def moved_to_past?(date)
         !resource.time_off_policy.previous_period.include?(resource.validity_date) &&
           resource.time_off_policy.previous_period.include?(date.to_date)
+      end
+
+      def verifiy_effective_at_and_validity_date
+        return unless params[:validity_date] || params[:effective_at]
+        validity_date = params[:validity_date] ? params[:validity_date] : resource.validity_date
+        effective_at = params[:effective_at] ? params[:effective_at] : resource.effective_at
+
+        if validity_date.to_date < effective_at.to_date
+          fail InvalidResourcesError.new(resource, ['validity date must be after effective at'])
+        end
       end
     end
   end

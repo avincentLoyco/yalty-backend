@@ -21,7 +21,6 @@ class Employee::Balance < ActiveRecord::Base
 
   before_validation :calculate_and_set_balance, if: :attributes_present?
   before_validation :find_effective_at, unless: :effective_at
-  before_validation :find_validity_date, unless: [:validity_date, :policy_end_dates_blank?]
 
   scope :employee_balances, -> (employee_id, time_off_policy_id) {
     where(employee_id: employee_id, time_off_policy: time_off_policy_id) }
@@ -132,17 +131,8 @@ class Employee::Balance < ActiveRecord::Base
     time_off_policy.blank? || (time_off_policy.end_day.blank? && time_off_policy.end_month.blank?)
   end
 
-  def policy_period_end_date
-    [time_off_policy.previous_period, time_off_policy.current_period, time_off_policy.next_period]
-      .find { |r| r.include?(effective_at.to_date) }.try(:max)
-  end
-
   def removal_and_balancer?
-    time_off_policy.policy_type == 'balancer' && policy_credit_removal
-  end
-
-  def find_validity_date
-    self.validity_date = policy_period_end_date
+    time_off_policy && time_off_policy.policy_type == 'balancer' && policy_credit_removal
   end
 
   def find_effective_at

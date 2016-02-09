@@ -63,22 +63,6 @@ RSpec.describe Employee::Balance, type: :model do
         it { expect { subject.valid? }.to_not change { subject.effective_at } }
       end
     end
-
-    context 'validity_date set up' do
-      subject { build(:employee_balance, amount: 200, time_off_policy: time_off_policy) }
-
-      context 'when time off policy has end date' do
-        let(:time_off_policy) { create(:time_off_policy, :with_end_date) }
-
-        it { expect { subject.valid? }.to change { subject.validity_date }.to be_kind_of(Date) }
-      end
-
-      context 'when time off policy does not have end date' do
-        let(:time_off_policy) { build(:time_off_policy) }
-
-        it { expect { subject.valid? }.to_not change { subject.validity_date } }
-      end
-    end
   end
 
   context 'custom validations' do
