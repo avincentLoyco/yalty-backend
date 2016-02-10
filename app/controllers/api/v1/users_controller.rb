@@ -21,7 +21,7 @@ module API
 
           authorize! :create, resource
           resource.save!
-          send_user_credentials(resource, attributes[:password])
+          send_user_credentials(resource)
           render_resource(resource, status: :created)
         end
       end
@@ -63,11 +63,11 @@ module API
         attributes[:employee] = employee_id ? Account.current.employees.find(employee_id) : nil
       end
 
-      def send_user_credentials(user, password)
+      def send_user_credentials(user)
         subdomain = Account.current.subdomain
         UserMailer.credentials(
           user.id,
-          password,
+          user.password,
           subdomain + '.' + ENV['YALTY_APP_DOMAIN']
         ).deliver_later
       end

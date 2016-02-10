@@ -31,6 +31,12 @@ RSpec.describe API::V1::UsersController, type: :controller do
         it { expect_json_keys(:email, :account_manager, :is_employee, :employee) }
       end
 
+      it 'should send email with credentials' do
+        expect { subject }.to change(ActionMailer::Base.deliveries, :count)
+
+        expect(ActionMailer::Base.deliveries.last.body).to match(/password: .+/)
+      end
+
       context 'assign employee' do
         it { expect { subject }.to change { employee.reload.account_user_id } }
       end
@@ -73,6 +79,11 @@ RSpec.describe API::V1::UsersController, type: :controller do
 
         it { expect { subject }.to change { Account::User.count }.by(1) }
         it { is_expected.to have_http_status(201) }
+
+        it 'expect to add generated password to email' do
+          expect(subject).to have_http_status(:created)
+          expect(ActionMailer::Base.deliveries.last.body).to match(/password: .+/)
+        end
       end
 
       context 'should send email notification' do
