@@ -21,7 +21,7 @@ module API
 
           transactions do
             resource.save! &&
-              create_new_employee_balance(resource)
+            create_new_employee_balance(resource)
           end
 
           render_resource(resource, status: :created)
@@ -30,7 +30,7 @@ module API
 
       def update
         verified_params(gate_rules) do |attributes|
-          resource.update!(time_off_attributes(attributes))
+          resource.update!(attributes)
           update_employee_balances
           render_no_content
         end
@@ -78,10 +78,10 @@ module API
       end
 
       def create_new_employee_balance(resource)
-        category, employee, account, amount, options = resource.time_off_category_id,
+        category, employee_id, account, amount, options = resource.time_off_category_id,
           resource.employee_id, Account.current.id, resource.balance, { time_off_id: resource.id }
 
-        CreateEmployeeBalance.new(category, employee, account, amount, options).call
+        CreateEmployeeBalance.new(category, employee_id, account, amount, options).call
       end
 
       def update_employee_balances

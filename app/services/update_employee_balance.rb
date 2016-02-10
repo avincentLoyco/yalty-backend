@@ -10,7 +10,7 @@ class UpdateEmployeeBalance
 
   def call
     update_attributes unless options.blank?
-    recalculate_amount if employee_balance.policy_credit_removal
+    recalculate_amount if employee_balance.balance_credit_addition
     update_status
 
     save!
@@ -23,7 +23,8 @@ class UpdateEmployeeBalance
   end
 
   def recalculate_amount
-    employee_balance.time_off_policy.counter? ? counter_recalculation : balancer_recalculation
+    employee_balance.amount = employee_balance.time_off_policy.counter? ?
+      counter_recalculation : balancer_recalculation
   end
 
   def update_status
@@ -45,11 +46,7 @@ class UpdateEmployeeBalance
   end
 
   def balancer_recalculation
-    if employee_balance.balance_credit_addition.amount - last_balance > 0
-      employee_balance.amount = employee_balance.balance_credit_addition.amount - last_balance
-    else
-      employee_balance.amount = 0
-    end
+    employee_balance.calculate_removal_amount(employee_balance.balance_credit_addition)
   end
 
   def last_balance

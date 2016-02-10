@@ -218,6 +218,10 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
     subject { put :update, params }
 
     context 'with valid params' do
+      let!(:employee_balance) do
+        create(:employee_balance,
+          time_off: time_off, time_off_category: time_off_category, employee: employee)
+      end
       it { expect { subject }.to change { time_off.reload.start_time } }
       it { expect { subject }.to change { time_off.reload.end_time } }
 

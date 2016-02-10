@@ -1,16 +1,15 @@
 require 'rails_helper'
 
 RSpec.describe UpdateBalanceJob do
-  subject { UpdateBalanceJob.perform_now(ids, 100) }
+  subject { UpdateBalanceJob.perform_now(first_balance.id, { amount: 100 }) }
 
-  let(:first_balance) { create(:employee_balance, beeing_processed: true) }
-  let(:second_balance) { first_balance.dup }
-  let(:third_balance) { first_balance.dup}
-  let(:ids) { Employee::Balance.pluck(:id) }
+  let!(:first_balance) { create(:employee_balance, beeing_processed: true) }
+  let!(:second_balance) { first_balance.dup }
+  let!(:third_balance) { first_balance.dup}
 
   before do
-    second_balance.update!(created_at: Time.now + 1.week, updated_at: Time.now + 1.week)
-    third_balance.update!(created_at: Time.now + 1.month, updated_at: Time.now + 1.month)
+    second_balance.update!(effective_at: Time.now + 1.week)
+    third_balance.update!(effective_at: Time.now + 1.month)
   end
 
   describe '#perform' do
@@ -34,15 +33,18 @@ RSpec.describe UpdateBalanceJob do
     end
 
     context 'without amount param' do
-      subject { UpdateBalanceJob.perform_now(ids) }
+      subject { UpdateBalanceJob.perform_now(second_balance.id) }
       before { first_balance.destroy! }
 
       it_behaves_like 'Balance and Beeing Processed Status Change'
     end
 
     context 'with time off id' do
-      subject { UpdateBalanceJob.perform_now(ids, 100, time_off.id) }
-      let(:time_off) { create(:time_off, employee: first_balance.employee, beeing_processed: true) }
+      before { first_balance.time_off = time_off }
+      subject do
+        UpdateBalanceJob.perform_now(first_balance.id, { amount: 100,  time_off_id: time_off.id })
+      end
+      let(:time_off) { create(:time_off, beeing_processed: true) }
 
       it { expect { subject }.to change { time_off.reload.beeing_processed }.to false }
     end

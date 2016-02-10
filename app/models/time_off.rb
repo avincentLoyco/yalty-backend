@@ -6,6 +6,7 @@ class TimeOff < ActiveRecord::Base
   validates :employee_id, :time_off_category_id, :start_time, :end_time, presence: true
   validate :end_time_after_start_time
   validate :time_off_policy_presence, if: 'employee.present?'
+  validates :employee_balance, presence: true, on: :update
 
   def balance
     - (end_time - start_time) / 60
