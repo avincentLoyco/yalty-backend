@@ -5,6 +5,7 @@ class Account::User < ActiveRecord::Base
 
   validates :email, presence: true
   validates :email, format: { with: /\b[A-Z0-9._%a-z\-]+@(?:[A-Z0-9a-z\-]+\.)+[A-Za-z]{2,4}\z/ }
+  validates :email, uniqueness: { scope: :account_id, case_sensitive: false }
   validates :password, length: { in: 8..74 }, if: ->() { !password.nil? }
   validates :reset_password_token, uniqueness: true, allow_nil: true
 
