@@ -91,10 +91,6 @@ class TimeOffPolicy < ActiveRecord::Base
     end_date == Date.today
   end
 
-  def end_date_after_start_date
-    errors.add(:end_month, 'Must be after start month') if end_date < start_date
-  end
-
   private
 
   def correct_dates
@@ -125,5 +121,10 @@ class TimeOffPolicy < ActiveRecord::Base
   def no_end_dates
     errors.add(:end_day, 'Should be null for this type of policy') if end_day.present?
     errors.add(:end_month, 'Should be null for this type of policy') if end_month.present?
+  end
+
+  def end_date_after_start_date
+    return unless errors.blank?
+    errors.add(:end_month, 'Must be after start month') if end_date < start_date
   end
 end

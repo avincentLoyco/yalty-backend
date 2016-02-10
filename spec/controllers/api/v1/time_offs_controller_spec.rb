@@ -3,8 +3,11 @@ require 'rails_helper'
 RSpec.describe API::V1::TimeOffsController, type: :controller do
   include_context 'shared_context_headers'
 
-  let(:time_off_category) { create(:time_off_category, account: account) }
-  let(:employee) { create(:employee, account: account) }
+  let(:employee) { create(:employee, :with_policy, account: account) }
+  let(:time_off_category) do
+    employee.employee_time_off_policies.first.time_off_policy.time_off_category
+  end
+  before { time_off_category.update!(account: Account.current) }
   let!(:time_off) do
     create(:time_off, time_off_category_id: time_off_category.id, employee: employee)
   end

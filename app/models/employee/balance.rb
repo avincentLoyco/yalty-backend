@@ -21,6 +21,7 @@ class Employee::Balance < ActiveRecord::Base
 
   before_validation :calculate_and_set_balance, if: :attributes_present?
   before_validation :find_effective_at, unless: :effective_at
+  before_validation :check_if_credit_removal, if: :balance_credit_addition
 
   scope :employee_balances, -> (employee_id, time_off_policy_id) {
     where(employee_id: employee_id, time_off_policy: time_off_policy_id) }
@@ -104,7 +105,7 @@ class Employee::Balance < ActiveRecord::Base
 
   def calculate_removal_amount(addition = balance_credit_addition)
     last_balance = previous_balances.where('amount <= ?', 0).last
-    return addition.amount unless last_balance
+    return -addition.amount unless last_balance
 
     positive_balances = balances.where(effective_at: addition.effective_at..now_or_effective_at,
       amount: 1..Float::INFINITY, validity_date: nil).pluck(:amount).sum
@@ -114,6 +115,10 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   private
+
+  def check_if_credit_removal
+    self.policy_credit_removal = true
+  end
 
   def previous_balances
     balances.where('effective_at < ?', now_or_effective_at).order(effective_at: :asc)

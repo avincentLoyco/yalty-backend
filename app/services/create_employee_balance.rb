@@ -63,23 +63,26 @@ class CreateEmployeeBalance
 
   def employee_balance_params
     {
-      amount: amount,
+      amount: find_amount,
       validity_date: validity_date,
       effective_at: effective_at,
-      policy_credit_removal: policy_credit_removal,
-      balance_credit_addition_id: balance_credit_addition_id
+      balance_credit_addition: balance_credit_addition
     }.merge(common_params)
   end
 
   def employee_balance_removal_params
     {
       effective_at: employee_balance.validity_date,
-      policy_credit_removal: true
     }.merge(common_params)
   end
 
   def time_off
-    options.has_key?(:time_off_id) ? employee.time_offs.find(options.delete(:time_off_id)) : nil
+    options.has_key?(:time_off_id) ? employee.time_offs.find(options[:time_off_id]) : nil
+  end
+
+  def find_amount
+    return amount unless balance_credit_addition && time_off_policy
+    balance_credit_addition.calculate_removal_amount(balance_credit_addition)
   end
 
   def effective_at
@@ -95,12 +98,9 @@ class CreateEmployeeBalance
     DateTime.parse(options[:validity_date]) rescue nil
   end
 
-  def policy_credit_removal
-    options[:policy_credit_removal]
-  end
-
-  def balance_credit_addition_id
-    options[:balance_credit_addition_id]
+  def balance_credit_addition
+    return nil unless options[:balance_credit_addition_id]
+    Employee::Balance.find(options[:balance_credit_addition_id])
   end
 
   def calculate_amount
@@ -110,10 +110,16 @@ class CreateEmployeeBalance
   end
 
   def update_next_employee_balances
-    return if employee_balance.last_in_policy? || options[:skip_update]
+    return if only_in_balance_period? || options[:skip_update]
     balances_ids = employee_balance.later_balances_ids
     update_beeing_processed_status(balances_ids)
     UpdateBalanceJob.perform_later(employee_balance.id)
+  end
+
+  def only_in_balance_period?
+    employee_balance.last_in_policy? || balance_removal.try(:last_in_policy?) &&
+      Employee::Balance.where(effective_at:
+        employee_balance.effective_at...balance_removal.effective_at).count == 1
   end
 
   def update_beeing_processed_status(balances_ids)
