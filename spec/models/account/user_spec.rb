@@ -1,6 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe Account::User, type: :model do
+  subject { build(:account_user) }
   it { is_expected.to have_db_column(:id).of_type(:uuid) }
   it { is_expected.to have_db_column(:email).with_options(null: false) }
   it { is_expected.to have_db_index([:email, :account_id]).unique(true) }
@@ -10,11 +11,11 @@ RSpec.describe Account::User, type: :model do
   it { is_expected.to_not allow_value('testtest.com').for(:email) }
   it { is_expected.to_not allow_value('testtestcom').for(:email) }
   it { is_expected.to_not allow_value('test@testcom').for(:email) }
+  it { is_expected.to validate_uniqueness_of(:email).scoped_to(:account_id).case_insensitive }
 
   it { is_expected.to have_db_column(:password_digest).with_options(null: false) }
   it { is_expected.to validate_confirmation_of(:password) }
   it { is_expected.to validate_length_of(:password).is_at_least(8).is_at_most(74) }
-
   it { is_expected.to have_db_column(:reset_password_token).of_type(:string) }
 
   it 'should validate length of password only when is updated' do

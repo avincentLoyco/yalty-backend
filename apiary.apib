@@ -2036,3 +2036,134 @@ Update time off policy
 + Request (application/json)
 
 + Response 204
+
+
+## Users Collection [/api/v1/users]
+
+### Get Users [GET]
+
+Get a list of users
+
++ Request (application/json)
+
++ Response 200 (application/json)
+
+        [
+          {
+            "email": "yalty@company.com",
+            "account_manager": true,
+            "is_employee": false,
+            "id": "12345678-1234-1234-1234-123456789013",
+            "type": "account_user",
+            "employee": null
+          },
+          {
+            "email": "test@example.com",
+            "account_manager": false,
+            "is_employee": true,
+            "id": "12345678-1234-1234-1234-123456789013",
+            "type": "account_user",
+            "employee":
+              {
+                "id": "12345678-1234-1234-1234-123456789013",
+                "type": "employee"
+              }
+          }
+        ]
+
+### POST Create a new account user [POST /api/v1/users]
+
+Create a new User
+By default account_id is equal Account.current.id
+
++ Attributes
+  + type: "account_user" (string)
+  + password: "12345678" (string)
+  + email: "test@example.com" (string)
+  + account_manager: false (boolean)
+  + employee:
+    + id: "11" (string, required)
+    + type: "employee" (string)
+
++ Request (application/json)
+
+        {
+            "email": "test@example.com",
+            "password": "12345678",
+            "account_manager": false,
+            "type": "account_user",
+            "employee":
+              {
+                "id": "12345678-1234-1234-1234-123456789013",
+                "type": "employee"
+              }
+        }
+
++ Response 201 (application/json)
+
+        {
+          "email": "test@example.com",
+          "account_manager": false,
+          "is_employee": true,
+          "id": "12345678-1234-1234-1234-123456789013",
+          "type": "account_user",
+          "employee":
+            {
+              "id": "12345678-1234-1234-1234-123456789013",
+              "type": "employee"
+            }
+        }
+
+
+## User [/api/v1/users/{user_id}]
+
+### Get users [GET]
+
+Show user
+
++ Request (application/json)
+
++ Response 200 (application/json)
+
+        {
+          "email": "test@example.com",
+          "account_manager": false,
+          "is_employee": true,
+          "id": "12345678-1234-1234-1234-123456789013",
+          "type": "account_user",
+          "employee":
+            {
+              "id": "12345678-1234-1234-1234-123456789013",
+              "type": "employee"
+            }
+        }
+
+
+### PUT Time off Policy [PUT]
+
+Update user
+
++ Attributes
+  + type: "account_user" (string)
+  + email: "test@example.com" (string)
+  + account_manager: true (boolean)
+  + employee:
+    + id: "11" (string, required)
+    + type: "employee" (string)
+
++ Request (application/json)
+
+        {
+          "email": "test@example.com",
+          "account_manager": false,
+          "id": "12345678-1234-1234-1234-123456789013",
+          "type": "account_user",
+          "employee":
+            {
+              "id": "12345678-1234-1234-1234-123456789013",
+              "type": "employee"
+            }
+        }
+
+
++ Response 204 (application/json)

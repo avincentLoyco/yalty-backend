@@ -31,6 +31,12 @@ RSpec.describe API::V1::UsersController, type: :controller do
         it { expect_json_keys(:email, :account_manager, :is_employee, :employee) }
       end
 
+      it 'should send email with credentials' do
+        expect { subject }.to change(ActionMailer::Base.deliveries, :count)
+
+        expect(ActionMailer::Base.deliveries.last.body).to match(/password: .+/)
+      end
+
       context 'assign employee' do
         it { expect { subject }.to change { employee.reload.account_user_id } }
       end
@@ -48,6 +54,24 @@ RSpec.describe API::V1::UsersController, type: :controller do
         end
       end
 
+      context 'without optional params' do
+        before do
+          params.delete(:account_manager)
+          params.delete(:is_employee)
+          params.delete(:employee)
+        end
+
+        it { is_expected.to have_http_status(201) }
+        it { expect { subject }.to change { Account::User.count }.by(1) }
+      end
+
+      context 'with null employee' do
+        before { params[:employee] = nil }
+
+        it { is_expected.to have_http_status(201) }
+        it { expect { subject }.to change { Account::User.count }.by(1) }
+      end
+
       context 'without password' do
         before do
           params.delete(:password)
@@ -55,6 +79,11 @@ RSpec.describe API::V1::UsersController, type: :controller do
 
         it { expect { subject }.to change { Account::User.count }.by(1) }
         it { is_expected.to have_http_status(201) }
+
+        it 'expect to add generated password to email' do
+          expect(subject).to have_http_status(:created)
+          expect(ActionMailer::Base.deliveries.last.body).to match(/password: .+/)
+        end
       end
 
       context 'should send email notification' do
@@ -97,6 +126,23 @@ RSpec.describe API::V1::UsersController, type: :controller do
       it { expect_json_sizes(users.count + 1) }
       it { is_expected.to have_http_status(200) }
     end
+
+    it 'should return the users for the current account' do
+      subject
+
+      users.each do |user|
+        expect(response.body).to include user[:id]
+      end
+    end
+
+    it 'should not be visible in context of other account' do
+      Account.current = create(:account)
+      subject
+
+      users.each do |user|
+        expect(response.body).to_not include user[:id]
+      end
+    end
   end
 
   describe 'GET #show' do
@@ -109,6 +155,12 @@ RSpec.describe API::V1::UsersController, type: :controller do
       before { subject }
 
       it { is_expected.to have_http_status(200) }
+    end
+
+    context 'response body' do
+      before { subject }
+
+      it { expect_json_keys([:id, :type, :email, :account_manager, :employee, :is_employee]) }
     end
   end
 
@@ -131,6 +183,7 @@ RSpec.describe API::V1::UsersController, type: :controller do
       it { expect { subject }.to_not change { Account::User.count } }
       it { is_expected.to have_http_status(204) }
       it { expect { subject }.to change { users.first.reload.email } }
+      it { expect { subject }.to change { users.first.reload.employee } }
 
       context 'assign employee' do
         it { expect { subject }.to change { employee.reload.account_user_id } }
@@ -147,6 +200,30 @@ RSpec.describe API::V1::UsersController, type: :controller do
         context 'with blank id' do
           it { expect { subject }.to_not change { employee.reload.account_user_id } }
         end
+      end
+
+      context 'without optional params' do
+        before do
+          params.delete(:account_manager)
+          params.delete(:is_employee)
+          params.delete(:employee)
+        end
+
+        it { expect { subject }.to_not change { Account::User.count } }
+        it { is_expected.to have_http_status(204) }
+        it { expect { subject }.to change { users.first.reload.email } }
+      end
+
+      context 'with null employee' do
+        before do
+          users.first.employee = employee
+          users.first.save
+          params[:employee] = nil
+        end
+
+        it { expect { subject }.to_not change { Account::User.count } }
+        it { is_expected.to have_http_status(204) }
+        it { expect { subject }.to change { employee.reload.account_user_id } }
       end
     end
 
