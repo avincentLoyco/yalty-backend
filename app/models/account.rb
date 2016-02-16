@@ -33,7 +33,6 @@ class Account < ActiveRecord::Base
   has_many :employee_attribute_versions, through: :employees
   has_many :holiday_policies
   has_many :presence_policies
-  has_many :custom_holidays, through: :holiday_policies
   has_many :presence_days, through: :presence_policies
   has_one :registration_key, class_name: 'Account::RegistrationKey'
   has_many :time_off_categories

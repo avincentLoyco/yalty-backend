@@ -34,9 +34,9 @@ RSpec.describe AssignJoinTableCollection, type: :service do
       end
 
       context " and models that do not have a join table" do
-        let(:holidays_id_hash) { create_list(:holiday, 2).map{ |t| { id: t.id} } }
+        let(:holiday_policiess_id_hash) { create_list(:holiday_policy, 2).map{ |t| { id: t.id} } }
         it "raises an error" do
-          expect{described_class.new(employee, holidays_id_hash, "holidays").call}.
+          expect{described_class.new(employee, holiday_policiess_id_hash, "holiday_policies").call}.
             to raise_error(ActiveRecord::RecordNotFound)
         end
       end
