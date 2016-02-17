@@ -1,11 +1,13 @@
 AllCops:
-  RunRailsCops: true
   Exclude:
     - 'bin/**/*'
     - 'config/**/*'
     - 'db/**/*'
     - 'vendor/**/*'
     - 'spec/**/*'
+
+Rails:
+  Enabled: true
 
 Rails/FindBy:
   Enabled: false
