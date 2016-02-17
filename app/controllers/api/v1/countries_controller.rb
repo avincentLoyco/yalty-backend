@@ -3,7 +3,7 @@ module API
     class CountriesController < API::ApplicationController
       def show
         authorize! :show, current_user
-        fail ActiveRecord::RecordNotFound unless country_has_codes_for_holidays
+        raise ActiveRecord::RecordNotFound unless country_has_codes_for_holidays
         render_resource(params[:id])
       end
 

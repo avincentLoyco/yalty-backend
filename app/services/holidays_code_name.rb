@@ -1,5 +1,5 @@
 class HolidaysCodeName
-  COUNTRIES_WITH_CODES = %w(ch)
+  COUNTRIES_WITH_CODES = %w(ch).freeze
   CODES =
     {
       'Karfreitag' => 'good_friday',
@@ -27,7 +27,7 @@ class HolidaysCodeName
       'Weihnachten' => 'christmas',
       'Stefanstag' => 'st_stephens_day',
       'Restauration de la République' => 'restoration_republic_geneva'
-    }
+    }.freeze
 
   def self.get_name_code(holiday_name)
     CODES[holiday_name]
