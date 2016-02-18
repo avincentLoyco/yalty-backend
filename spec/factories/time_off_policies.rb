@@ -1,6 +1,7 @@
 FactoryGirl.define do
   factory :time_off_policy do
     time_off_category
+    name { Faker::Lorem.word }
     amount { Faker::Number.number(4) }
     start_day 1
     start_month 1

@@ -10,6 +10,7 @@ class TimeOffPolicy < ActiveRecord::Base
     :start_month,
     :policy_type,
     :time_off_category,
+    :name,
     presence: true
   validates :policy_type, inclusion: { in: %w(counter balance) }
   validates :years_to_effect,

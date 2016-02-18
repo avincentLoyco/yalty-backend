@@ -83,6 +83,7 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
           expect_json_keys(
             [ :id,
               :type,
+              :name,
               :start_day,
               :end_day,
               :start_month,
@@ -123,6 +124,7 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
     let(:start_day) { 10 }
     let(:params) do
       {
+        name: 'Vacations of Adams',
         type: 'time_off_policy',
         start_day: start_day,
         end_day: 7,
@@ -162,6 +164,7 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
           expect_json_keys(
             [ :id,
               :type,
+              :name,
               :start_day,
               :end_day,
               :start_month,
@@ -179,6 +182,7 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
 
       context 'without not obligatory params' do
         before do
+          params.delete(:years_to_effect)
           params.delete(:amount)
           params.delete(:working_places)
           params.delete(:employees)
@@ -241,6 +245,7 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
     let(:end_month) { 7 }
     let(:params) do
       {
+        name: 'Vacations of Adams',
         id: id,
         type: 'time_off_policy',
         start_day: start_day,
@@ -270,9 +275,11 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
 
       context 'without not obligatory params' do
         before do
+          params.delete(:name)
           params.delete(:amount)
           params.delete(:working_places)
           params.delete(:employees)
+          params.delete(:years_to_effect)
         end
         it { expect { subject }.not_to change { policy.reload.time_off_category_id } }
         it { expect { subject }.to change { policy.reload.start_day } }

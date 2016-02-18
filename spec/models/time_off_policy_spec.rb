@@ -19,6 +19,7 @@ RSpec.describe TimeOffPolicy, type: :model do
   it { is_expected.to validate_presence_of(:policy_type) }
   it { is_expected.to validate_presence_of(:start_day) }
   it { is_expected.to validate_presence_of(:start_month) }
+  it { is_expected.to validate_presence_of(:name) }
   it { is_expected.to validate_presence_of(:time_off_category) }
   it { is_expected.to validate_inclusion_of(:policy_type).in_array(%w(counter balance)) }
   it { is_expected.to validate_numericality_of(:years_to_effect).is_greater_than_or_equal_to(0) }
