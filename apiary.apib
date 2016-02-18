@@ -1864,6 +1864,7 @@ Get a list of time off policies in given category
 Create new time off policy. Policy may have two types: counter of balance, if type counter amount should not be send.
 
 + Attributes
+  + name: Example (string)
   + type: time_off_policy (string)
   + amount: 1440 (string)
   + policy_type: balancer (string, required)
@@ -1871,7 +1872,7 @@ Create new time off policy. Policy may have two types: counter of balance, if ty
   + end_day: 1(number)
   + start_month: 1(number, required)
   + end_month: 10(number)
-  + years_to_effect: 1 (number, required)
+  + years_to_effect: 1 (number)
   + time_off_category (required)
     + type: time_off_category (string)
     + id: 11 (string, required)
@@ -1881,6 +1882,7 @@ Create new time off policy. Policy may have two types: counter of balance, if ty
 + Request (application/json)
 
         {
+          "name": "Example",
           "type": "time_off_policy",
           "start_day": "1",
           "end_day": "1",
@@ -1915,6 +1917,7 @@ Create new time off policy. Policy may have two types: counter of balance, if ty
 
          {
           "id": "12345678-1234-1234-1234-123456789013",
+          "name": "Example",
           "type": "time_off_policy",
           "start_day": "1",
           "end_day": "1",
@@ -1947,6 +1950,7 @@ Show time off policy
 
         {
           "id": "12345678-1234-1234-1234-123456789013",
+          "name": "Example",
           "type": "time_off_policy",
           "start_day": "1",
           "end_day": "1",
@@ -1983,6 +1987,7 @@ Show time off policy
 Update time off policy
 
 + Attributes
+  + name: Example (string)
   + type: time_off_policy (string)
   + amount: 1440 (string)
   + policy_type: balancer (string, required)
@@ -1998,6 +2003,7 @@ Update time off policy
 
         {
           "id": "12345678-1234-1234-1234-123456789013",
+          "name": "Example",
           "type": "time_off_policy",
           "start_day": "1",
           "end_day": "1",
