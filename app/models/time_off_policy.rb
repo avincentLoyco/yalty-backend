@@ -14,6 +14,8 @@ class TimeOffPolicy < ActiveRecord::Base
     presence: true
   validates :policy_type, inclusion: { in: %w(counter balance) }
   validates :years_passed, numericality: { greater_than_or_equal_to: 0 }
+  validates :amount, presence: true, if: "policy_type == 'balance'"
+  validates :amount, absence: true, if: "policy_type == 'counter'"
   validates :years_to_effect,
     numericality: { greater_than_or_equal_to: 0 }, if: 'years_to_effect.present?'
   validates :start_day,

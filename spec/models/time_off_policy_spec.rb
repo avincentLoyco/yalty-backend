@@ -8,7 +8,7 @@ RSpec.describe TimeOffPolicy, type: :model do
   it { is_expected.to have_db_column(:start_day).of_type(:integer).with_options(null: false) }
   it { is_expected.to have_db_column(:start_month).of_type(:integer).with_options(null: false) }
   it { is_expected.to have_db_column(:amount).of_type(:integer)
-    .with_options(null: false, default: 0) }
+    .with_options(null: true) }
   it { is_expected.to have_db_column(:years_to_effect).of_type(:integer)
     .with_options(null: true) }
   it { is_expected.to have_db_column(:years_passed).of_type(:integer)
@@ -31,6 +31,7 @@ RSpec.describe TimeOffPolicy, type: :model do
   let(:start_month) { 1 }
   let(:end_day) { 1 }
   let(:end_month) { 4 }
+  let(:amount){ 20 }
   let(:policy_type) { 'balance' }
   let(:time_off_policy) do
     build(:time_off_policy,
@@ -38,6 +39,7 @@ RSpec.describe TimeOffPolicy, type: :model do
       start_month: start_month,
       end_day: end_day,
       end_month: end_month,
+      amount: amount,
       policy_type: policy_type
     )
   end
@@ -60,6 +62,7 @@ RSpec.describe TimeOffPolicy, type: :model do
       context "without end dates" do
         let(:end_day) { nil }
         let(:end_month) { nil }
+        let(:amount) { nil }
         let(:policy_type) { 'counter' }
 
         it { expect(time_off_policy).to be_valid }
@@ -70,6 +73,16 @@ RSpec.describe TimeOffPolicy, type: :model do
   context 'with invalid arguments error messages' do
     subject { time_off_policy }
     before { time_off_policy.valid? }
+
+    context 'for counter type' do
+      let(:policy_type) { 'counter' }
+
+      it { expect(time_off_policy).to validate_absence_of(:amount) }
+    end
+
+    context 'for balancer type' do
+      it { expect(time_off_policy).to validate_presence_of(:amount) }
+    end
 
     context 'when start date is on the 29 of february' do
       let(:start_day) { 29 }
