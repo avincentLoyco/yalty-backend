@@ -54,6 +54,7 @@ class CreateEmployeeBalance
 
   def common_params
     {
+      amount: find_amount,
       employee: employee,
       time_off: time_off,
       time_off_category: category,
@@ -63,7 +64,6 @@ class CreateEmployeeBalance
 
   def employee_balance_params
     {
-      amount: find_amount,
       validity_date: validity_date,
       effective_at: effective_at,
       balance_credit_addition: balance_credit_addition
@@ -87,7 +87,7 @@ class CreateEmployeeBalance
 
   def effective_at
     return nil unless options.has_key?(:effective_at) || time_off
-    time_off ? time_off.start_time : options.delete(:effective_at)
+    time_off ? time_off.start_time : options[:effective_at]
   end
 
   def time_off_policy

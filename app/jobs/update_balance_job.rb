@@ -8,18 +8,14 @@ class UpdateBalanceJob < ActiveJob::Base
     @employee_balance = Employee::Balance.find(balance_id)
 
     ActiveRecord::Base.transaction do
-      options.has_key?(:effective_at) ? find_previous_and_update : update_balances
+      update_balances
       update_time_off_status
     end
   end
 
-  def find_previous_and_update
+  def update_balances
     previous_ids = employee_balance.later_balances_ids
 
-    update_balances(previous_ids)
-  end
-
-  def update_balances(previous_ids = nil)
     UpdateEmployeeBalance.new(employee_balance, options).call
     employee_balances = find_balances_by_ids(previous_ids)
 

@@ -19,8 +19,7 @@ module API
 
       def create
         verified_params(gate_rules) do |attributes|
-          category, employee, account, amount, options = category_id(attributes),
-            employee_id(attributes), Account.current.id, params[:amount], find_options(attributes)
+          category, employee, account, amount, options = params_from_attributes(attributes)
 
           resources = CreateEmployeeBalance.new(category, employee, account, amount, options).call
           render_resource(resources, status: :created)
@@ -29,7 +28,7 @@ module API
 
       def update
         verified_params(gate_rules) do |attributes|
-          create_removal_if_in_past(attributes)
+          manage_removal(attributes) if attributes[:validity_date]
           update_balances_processed_flag(balances_to_update(attributes[:effective_at]))
 
           UpdateBalanceJob.perform_later(resource.id, attributes)
@@ -49,19 +48,22 @@ module API
 
       private
 
-      def find_options(attributes)
+      def options(attributes)
         params = {}
         params.merge!({ effective_at: attributes[:effective_at]  }) if attributes[:effective_at]
         params.merge!({ validity_date: attributes[:validity_date] }) if attributes[:validity_date]
         params
       end
 
-      def employee_id(attributes)
-        attributes.delete(:employee)[:id]
+      def params_from_attributes(attributes)
+        [attributes[:time_off_category][:id], attributes[:employee][:id], Account.current.id,
+         attributes[:amount], options(attributes)]
       end
 
-      def category_id(attributes)
-        attributes.delete(:time_off_category)[:id]
+      def params_from_resource
+        [resource.time_off_category_id, resource.employee_id, Account.current.id, nil,
+        { policy_credit_removal: true, skip_update: true, balance_credit_addition_id: resource.id,
+          effective_at: params[:validity_date]} ]
       end
 
       def resource
@@ -69,53 +71,58 @@ module API
       end
 
       def resources
-        @resources ||= !params[:time_off_category_id] ? employee_balances :
-          employee_balances.where(time_off_category:
-            TimeOffCategory.find(params[:time_off_category_id]))
+        @resources ||= params[:time_off_category_id] ?
+          employee_balances.where(time_off_category: time_off_category) : employee_balances
       end
 
-      def employee_balances
-        @employee_balances ||= Account.current.employees
-          .find(params[:employee_id]).employee_balances
-      end
-
-      def balances_to_update(effective_at = nil)
-        return [resource.id] if resource.last_in_policy? && effective_at.blank?
-        if resource.validity_date.present? || effective_at
-          return resource.all_later_ids unless effective_at && effective_at < resource.effective_at
-          resource.all_later_ids(effective_at)
-        else
-          resource.later_balances_ids
-        end
-      end
-
-      def update_balances_processed_flag(ids)
-        Employee::Balance.where(id: ids).update_all(beeing_processed: true)
+      def time_off_category
+        TimeOffCategory.find(params[:time_off_category_id])
       end
 
       def resource_representer
         ::Api::V1::EmployeeBalanceRepresenter
       end
 
-      def create_removal_if_in_past(attributes)
-        return unless attributes[:validity_date] && moved_to_past?(attributes[:validity_date])
+      def employee_balances
+        Account.current.employees.find(params[:employee_id]).employee_balances
+      end
 
-        category, employee, account, amount, options =
-          resource.time_off_category_id, resource.employee_id, Account.current.id, nil,
-            { policy_credit_removal: true, skip_update: true, balance_credit_addition_id: resource.id }
+      def update_balances_processed_flag(ids)
+        Employee::Balance.where(id: ids).update_all(beeing_processed: true)
+      end
+
+      def manage_removal(attributes)
+        date = attributes[:validity_date]
+        return unless moved_to_past?(date) || moved_to_future?(date)
+        moved_to_past?(date) ? create_removal(attributes) : resource.balance_credit_removal.try(:destroy!)
+      end
+
+      def moved_to_past?(date)
+        validity_date = resource.validity_date
+        (validity_date.blank? || validity_date.to_time > Time.now) && date.to_time < Time.now
+      end
+
+      def moved_to_future?(date)
+        validity_date = resource.validity_date
+        (validity_date.blank? || validity_date.to_time < Time.now) && date.to_time > Time.now
+      end
+
+      def create_removal(attributes)
+        category, employee, account, amount, options = params_from_resource
 
         CreateEmployeeBalance.new(category, employee, account, amount, options).call
       end
 
-      def moved_to_past?(date)
-        !resource.time_off_policy.previous_period.include?(resource.validity_date) &&
-          resource.time_off_policy.previous_period.include?(date.to_date)
+      def balances_to_update(effective_at = nil)
+        return [resource.id] if resource.last_in_policy? && effective_at.blank?
+        effective_at && effective_at < resource.effective_at ?
+          resource.all_later_ids(effective_at) : resource.later_balances_ids
       end
 
       def verifiy_effective_at_and_validity_date
-        return unless params[:validity_date] || params[:effective_at]
         validity_date = params[:validity_date] ? params[:validity_date] : resource.validity_date
         effective_at = params[:effective_at] ? params[:effective_at] : resource.effective_at
+        return unless validity_date && effective_at
 
         if validity_date.to_date < effective_at.to_date
           fail InvalidResourcesError.new(resource, ['validity date must be after effective at'])

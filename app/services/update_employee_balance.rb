@@ -23,8 +23,8 @@ class UpdateEmployeeBalance
   end
 
   def recalculate_amount
-    employee_balance.amount = employee_balance.time_off_policy.counter? ?
-      counter_recalculation : balancer_recalculation
+    employee_balance.amount =
+      employee_balance.time_off_policy.counter? ? counter_recalculation : balancer_recalculation
   end
 
   def update_status
@@ -42,11 +42,11 @@ class UpdateEmployeeBalance
   end
 
   def counter_recalculation
-    employee_balance.amount = 0 - last_balance
+    0 - last_balance
   end
 
   def balancer_recalculation
-    employee_balance.calculate_removal_amount(employee_balance.balance_credit_addition)
+    employee_balance.calculate_removal_amount
   end
 
   def last_balance

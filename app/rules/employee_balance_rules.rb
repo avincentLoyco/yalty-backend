@@ -19,7 +19,7 @@ module EmployeeBalanceRules
     Gate.rules do
       required :id
       optional :effective_at
-      optional :validity_date
+      optional :validity_date, allow_nil: true
       required :amount, :Integer
     end
   end

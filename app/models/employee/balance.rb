@@ -15,7 +15,7 @@ class Employee::Balance < ActiveRecord::Base
     :time_off_policy,
     presence: true
   validates :effective_at, uniqueness: { scope: [:time_off_policy, :employee] }
-  validates :balance_credit_addition, presence: true, if: :removal_and_balancer?
+  validates :balance_credit_addition, presence: true, uniqueness: true, if: :removal_and_balancer?
   validate :time_off_policy_date, if: :time_off_policy
   validate :validity_date_later_than_effective_at, if: [:effective_at, :validity_date]
 
@@ -59,7 +59,7 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   def next_removals_smaller_than_amount?
-    return false unless active_balances_with_removals
+    return true unless active_balances_with_removals.present?
     active_balances_with_removals.pluck(:amount).map(&:abs).sum < amount.abs
   end
 
