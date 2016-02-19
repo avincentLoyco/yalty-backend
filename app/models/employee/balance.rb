@@ -105,13 +105,15 @@ class Employee::Balance < ActiveRecord::Base
 
   def calculate_removal_amount(addition = balance_credit_addition)
     last_balance = previous_balances.where('amount <= ?', 0).last
-    return -addition.amount unless last_balance
-
-    positive_balances = balances.where(effective_at: addition.effective_at..now_or_effective_at,
+    if last_balance.blank?
+      self.amount = -addition.amount
+    else
+      positive_balances = balances.where(effective_at: addition.effective_at..now_or_effective_at,
       amount: 1..Float::INFINITY, validity_date: nil).pluck(:amount).sum
 
-    sum = (last_balance.balance - positive_balances - active_balances.pluck(:amount).sum)
-    self.amount = sum > 0 ? -sum : 0
+      sum = (last_balance.balance - positive_balances - active_balances.pluck(:amount).sum)
+      self.amount = sum > 0 ? -sum : 0
+    end
   end
 
   private
