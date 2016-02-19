@@ -3,6 +3,7 @@ module API
     class TimeOffsController < ApplicationController
       authorize_resource except: [:create, :index, :show]
       include TimeOffsRules
+      include EmployeeBalanceUpdate
 
       def show
         authorize! :show, resource
@@ -30,14 +31,22 @@ module API
 
       def update
         verified_params(gate_rules) do |attributes|
-          resource.update!(attributes)
-          update_employee_balances
+          transactions do
+            resource.update!(attributes) &&
+            update_employee_balances(resource.employee_balance, balance_attributes)
+          end
+
           render_no_content
         end
       end
 
       def destroy
-        resource.destroy!
+        transactions do
+          update_balances_after_removed(resource.employee_balance)
+          resource.employee_balance.destroy! &&
+          resource.destroy!
+        end
+
         render_no_content
       end
 
@@ -84,27 +93,12 @@ module API
         CreateEmployeeBalance.new(category, employee_id, account, amount, options).call
       end
 
-      def update_employee_balances
-        update_balances_processed_flag(balances_to_update)
-
-        UpdateBalanceJob.perform_later(resource.employee_balance.id, balance_attributes)
-      end
-
       def resource_representer
         ::Api::V1::TimeOffsRepresenter
       end
 
       def balance_attributes
         { amount: resource.balance, effective_at: resource.start_time.to_s }
-      end
-
-      def balances_to_update
-        return [resource.employee_balance.id] if resource.employee_balance.last_in_category?
-        resource.employee_balance.later_balances_ids
-      end
-
-      def update_balances_processed_flag(ids)
-        Employee::Balance.where(id: ids).update_all(beeing_processed: true)
       end
     end
   end

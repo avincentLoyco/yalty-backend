@@ -2,6 +2,7 @@ module API
   module V1
     class EmployeeBalancesController < API::ApplicationController
       include EmployeeBalanceRules
+      include EmployeeBalanceUpdate
 
       before_action :verifiy_effective_at_and_validity_date, only: :update
 
@@ -29,7 +30,7 @@ module API
       def update
         verified_params(gate_rules) do |attributes|
           manage_removal(attributes) if attributes[:validity_date]
-          update_balances_processed_flag(balances_to_update(attributes[:effective_at]))
+          update_balances_processed_flag(balances_to_update(resource, attributes[:effective_at]))
 
           UpdateBalanceJob.perform_later(resource.id, attributes)
           render_no_content
@@ -37,12 +38,8 @@ module API
       end
 
       def destroy
-        balances_ids = balances_to_update - [resource.id, resource.balance_credit_removal.try(:id)]
-        update_balances_processed_flag(balances_ids)
-        next_balance_id = resource.next_balance
-
+        update_balances_after_removed(resource)
         resource.destroy!
-        UpdateBalanceJob.perform_later(next_balance_id) if next_balance_id.present?
         render_no_content
       end
 
@@ -87,10 +84,6 @@ module API
         Account.current.employees.find(params[:employee_id]).employee_balances
       end
 
-      def update_balances_processed_flag(ids)
-        Employee::Balance.where(id: ids).update_all(beeing_processed: true)
-      end
-
       def manage_removal(attributes)
         date = attributes[:validity_date]
         return unless moved_to_past?(date) || moved_to_future?(date)
@@ -111,12 +104,6 @@ module API
         category, employee, account, amount, options = params_from_resource
 
         CreateEmployeeBalance.new(category, employee, account, amount, options).call
-      end
-
-      def balances_to_update(effective_at = nil)
-        return [resource.id] if resource.last_in_policy? && effective_at.blank?
-        effective_at && effective_at < resource.effective_at ?
-          resource.all_later_ids(effective_at) : resource.later_balances_ids
       end
 
       def verifiy_effective_at_and_validity_date

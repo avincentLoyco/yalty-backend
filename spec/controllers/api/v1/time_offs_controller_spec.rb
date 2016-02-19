@@ -133,10 +133,12 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
       it { expect { subject }.to_not change { TimeOff.count } }
       it { expect { subject }.to_not change { employee.reload.time_offs.count } }
       it { expect { subject }.to_not change { time_off_category.reload.time_offs } }
+      it { expect { subject }.to_not change { Employee::Balance.count } }
     end
 
     context 'with valid params' do
       it { expect { subject }.to change { TimeOff.count }.by(1) }
+      it { expect { subject }.to change { Employee::Balance.count }.by(1) }
       it { expect { subject }.to change { time_off_category.reload.time_offs.count }.by(1) }
       it { expect { subject }.to change { employee.reload.time_offs.count }.by(1) }
 
@@ -214,16 +216,17 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
         end_time: end_time,
       }
     end
+    let!(:employee_balance) do
+      create(:employee_balance,
+        time_off: time_off, time_off_category: time_off_category, employee: employee)
+    end
 
     subject { put :update, params }
 
     context 'with valid params' do
-      let!(:employee_balance) do
-        create(:employee_balance,
-          time_off: time_off, time_off_category: time_off_category, employee: employee)
-      end
       it { expect { subject }.to change { time_off.reload.start_time } }
       it { expect { subject }.to change { time_off.reload.end_time } }
+      it { expect { subject }.to change { employee_balance.reload.beeing_processed } }
 
       it { is_expected.to have_http_status(204) }
     end
@@ -234,6 +237,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
 
         it { expect { subject }.to_not change { time_off.reload.start_time } }
         it { expect { subject }.to_not change { time_off.reload.end_time } }
+        it { expect { subject }.to_not change { employee_balance.reload.amount } }
 
         it { is_expected.to have_http_status(422) }
       end
@@ -243,6 +247,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
 
         it { expect { subject }.to_not change { time_off.reload.start_time } }
         it { expect { subject }.to_not change { time_off.reload.end_time } }
+        it { expect { subject }.to_not change { employee_balance.reload.amount } }
 
         it { is_expected.to have_http_status(422) }
       end
@@ -252,6 +257,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
 
         it { expect { subject }.to_not change { time_off.reload.start_time } }
         it { expect { subject }.to_not change { time_off.reload.end_time } }
+        it { expect { subject }.to_not change { employee_balance.reload.amount } }
 
         it { is_expected.to have_http_status(404) }
       end
@@ -261,11 +267,16 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
   describe 'DELETE #destroy' do
     subject { delete :destroy, id: id }
     let(:id) { time_off.id }
+    let!(:employee_balance) do
+      create(:employee_balance,
+        time_off: time_off, time_off_category: time_off_category, employee: employee)
+    end
 
     context 'with valid data' do
       let(:id) { time_off.id }
 
       it { expect { subject }.to change { TimeOff.count }.by(-1) }
+      it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
       it { is_expected.to have_http_status(204) }
     end
 
@@ -274,6 +285,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
         let(:id) { 'abc' }
 
         it { expect { subject }.to_not change { TimeOff.count } }
+        it { expect { subject }.to_not change { Employee::Balance.count } }
         it { is_expected.to have_http_status(404) }
       end
 
@@ -281,6 +293,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
         before { Account.current = create(:account) }
 
         it { expect { subject }.to_not change { TimeOff.count } }
+        it { expect { subject }.to_not change { Employee::Balance.count } }
         it { is_expected.to have_http_status(404) }
       end
     end
