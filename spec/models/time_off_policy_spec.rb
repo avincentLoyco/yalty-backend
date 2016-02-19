@@ -10,7 +10,7 @@ RSpec.describe TimeOffPolicy, type: :model do
   it { is_expected.to have_db_column(:amount).of_type(:integer)
     .with_options(null: false, default: 0) }
   it { is_expected.to have_db_column(:years_to_effect).of_type(:integer)
-    .with_options(null: false, default: 0) }
+    .with_options(null: true) }
   it { is_expected.to have_db_column(:years_passed).of_type(:integer)
     .with_options(null: false, default: 0) }
 

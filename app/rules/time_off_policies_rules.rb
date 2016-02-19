@@ -9,7 +9,7 @@ module TimeOffPoliciesRules
       required :start_day, :Integer
       required :start_month, :Integer
       optional :amount, :Integer
-      optional :years_to_effect, :Integer
+      optional :years_to_effect, :Integer, allow_nil: true
       required :policy_type, :String
       required :time_off_category, :Hash do
         required :id, :String
@@ -28,7 +28,7 @@ module TimeOffPoliciesRules
       required :start_day, :Integer
       required :start_month, :Integer
       optional :amount, :Integer
-      optional :years_to_effect, :Integer
+      optional :years_to_effect, :Integer, allow_nil: true
       required :policy_type, :String
       optional :employees, :Array, allow_nil: true
       optional :working_places, :Array, allow_nil: true
