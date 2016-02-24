@@ -1,16 +1,10 @@
 require 'rails_helper'
 
 RSpec.describe AddPolicyAdditionsJob do
-  subject { AddPolicyAdditionsJob.perform_now }
-  before do
-    Timecop.freeze(2015, 1, 1, 0, 0)
-    allow_any_instance_of(Account).to receive(:update_default_attribute_definitions!) { true }
-    allow_any_instance_of(Account).to receive(:update_default_time_off_categories!) { true }
-  end
+  include_context 'shared_context_account_helper'
+  include_context 'shared_context_timecop_helper'
 
-  after do
-    Timecop.return
-  end
+  subject { AddPolicyAdditionsJob.perform_now }
 
   let(:account) { create(:account) }
   let(:category) { create(:time_off_category, account: account) }

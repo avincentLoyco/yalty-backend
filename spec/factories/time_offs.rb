@@ -10,5 +10,9 @@ FactoryGirl.define do
           .time_off_policy.time_off_category
       end
     end
+
+    trait :with_balance do
+      employee_balance
+    end
   end
 end

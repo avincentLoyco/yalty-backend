@@ -31,6 +31,8 @@ end
 
 # Development environment dependencies (also needed by test environement)
 group :development, :test do
+  gem 'factory_girl_rails'
+  gem 'faker'
   gem 'dotenv-rails'
   gem 'codeclimate-test-reporter', require: false
 
@@ -48,9 +50,7 @@ group :test do
   gem 'timecop'
   gem 'rspec-rails'
   gem 'shoulda-matchers'
-  gem 'factory_girl_rails'
   gem 'airborne'
-  gem 'faker'
   gem 'temping'
   gem 'guard-rspec'
   gem 'database_cleaner'

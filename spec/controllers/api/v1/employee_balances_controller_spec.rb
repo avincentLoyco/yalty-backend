@@ -517,7 +517,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
       end
 
       context 'validity date before effective at' do
-        before { params.merge!({ validity_date: current.last - 1.month  }) }
+        before { params.merge!({ validity_date: current.last - 1.month }) }
         let(:effective_at) { current.last - 1.week }
 
         it { expect { subject }.to_not change { balance.reload.beeing_processed } }

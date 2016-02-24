@@ -1,15 +1,10 @@
 require 'rails_helper'
 
 RSpec.describe AddBalanceRemovalsJob do
+  include_context 'shared_context_account_helper'
+  include_context 'shared_context_timecop_helper'
+
   subject { AddBalanceRemovalsJob.perform_now  }
-
-  before do
-    Timecop.freeze(2015, 1, 1, 0, 0)
-  end
-
-  after do
-    Timecop.return
-  end
 
   let(:employee) { create(:employee) }
   let!(:policy) { create(:time_off_policy, time_off_category: category) }

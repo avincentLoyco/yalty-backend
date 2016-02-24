@@ -3,9 +3,7 @@ RSpec.shared_context 'shared_context_headers', :a => :b do
   let(:account) { user.account }
 
   unless described_class == API::V1::EmployeeAttributeDefinitionsController
-    before do
-      allow_any_instance_of(Account).to receive(:update_default_attribute_definitions!) { true }
-    end
+    include_context 'shared_context_account_helper'
   end
 
   before(:each) do
