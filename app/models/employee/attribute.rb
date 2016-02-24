@@ -12,7 +12,7 @@ class Employee::Attribute < ActiveRecord::Base
 
   PUBLIC_ATTRIBUTES_FOR_OTHERS = %w(
     firstname lastname language job_title start_date occupation_rate department
-    manager professional_email professional_mobile
+    manager professional_email professional_mobile cost_center department gender
   )
 
   scope :for_other_employees, -> { where(attribute_name: PUBLIC_ATTRIBUTES_FOR_OTHERS) }
