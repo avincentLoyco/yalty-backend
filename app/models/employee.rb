@@ -19,6 +19,11 @@ class Employee < ActiveRecord::Base
 
   validates :working_place_id, presence: true
 
+  def active_presence_policy
+    return presence_policy if presence_policy.present?
+    working_place.presence_policy
+  end
+
   def active_policy_in_category(category_id)
     employee_policy = time_off_policy_in_category(category_id)
     return employee_policy if employee_policy

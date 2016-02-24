@@ -9,7 +9,7 @@ class TimeOff < ActiveRecord::Base
   validates :employee_balance, presence: true, on: :update
 
   def balance
-    - (end_time - start_time) / 60
+    - CalculateTimeOffBalance.new(self).call
   end
 
   private
