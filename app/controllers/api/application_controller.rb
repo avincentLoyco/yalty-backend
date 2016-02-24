@@ -55,7 +55,8 @@ class API::ApplicationController < ApplicationController
     representer = options.delete(:representer) || resource_representer
 
     if resource.respond_to?(:map)
-      response = resource.map { |item| representer.new(item).complete }
+      response =
+        resource.map { |item| representer.new(item, current_user.try(:account_manager)).complete }
     else
       response = representer.new(resource).complete
     end

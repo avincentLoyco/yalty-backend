@@ -19,6 +19,7 @@ module Api::V1
     end
 
     def relationships
+      return {} unless requester_is_manager
       holiday_policy = HolidayPolicyRepresenter.new(resource.holiday_policy).basic
       {
         holiday_policy: holiday_policy

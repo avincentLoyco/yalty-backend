@@ -1,9 +1,10 @@
 module Api::V1
   class BaseRepresenter
-    attr_reader :resource
+    attr_reader :resource, :requester_is_manager
 
-    def initialize(resource)
+    def initialize(resource, is_manager=nil)
       @resource = resource
+      @requester_is_manager = is_manager
     end
 
     def basic(_ = {})
