@@ -75,7 +75,7 @@ module API
 
       def resource_representer
         if current_user.account_manager ||
-          ( @resource && current_user.employee.try(:id) == @resource.id )
+            (@resource && current_user.employee.try(:id) == @resource.id)
           ::Api::V1::EmployeeRepresenter
         else
           ::Api::V1::PublicEmployeeRepresenter
