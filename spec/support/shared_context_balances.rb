@@ -36,9 +36,8 @@ RSpec.shared_context 'shared_context_balances' do |settings|
 
       let!(:previous_removal) do
         create(:employee_balance,
-          effective_at: previous.last, policy_credit_removal: true, amount: -900,
-          time_off_policy: policy, employee: employee, time_off_category: category,
-          balance_credit_addition: previous_add
+          policy_credit_removal: true, amount: -900, time_off_policy: policy, employee: employee,
+          time_off_category: category, balance_credit_addition: previous_add
         )
       end
 

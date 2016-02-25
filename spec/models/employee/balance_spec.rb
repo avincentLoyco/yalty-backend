@@ -57,6 +57,19 @@ RSpec.describe Employee::Balance, type: :model do
         it { expect { subject.valid? }.to change { subject.effective_at }.to be_kind_of(Time) }
       end
 
+       context 'when balance is removal' do
+        let(:addition) { create(:employee_balance, validity_date: Time.now + 1.week ) }
+        subject { build(:employee_balance, amount: 200, balance_credit_addition: addition) }
+
+        it { expect { subject.valid? }.to change { subject.effective_at } }
+
+        context 'removal effective at equals addition validity date' do
+          before { subject.valid? }
+
+          it { expect(subject.effective_at.to_date).to eq addition.validity_date.to_date }
+        end
+      end
+
       context 'when effective at already set' do
         subject { build(:employee_balance, amount: 200, effective_at: Time.now - 1.week) }
 
@@ -65,7 +78,7 @@ RSpec.describe Employee::Balance, type: :model do
     end
   end
 
-  context 'custom validations' do
+  context 'validations' do
     context 'time_off_policy date' do
       let(:time_off_policy) { create(:time_off_policy, :with_end_date) }
       subject do
@@ -78,6 +91,53 @@ RSpec.describe Employee::Balance, type: :model do
       it { expect { subject.valid? }.to change { subject.errors.size } }
       it { expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
         .to include('Must belong to current, next or previous policy.') }
+    end
+
+    context 'removal effective at date' do
+      before { allow_any_instance_of(Employee::Balance).to receive(:find_effective_at) { true } }
+      subject { removal.valid? }
+
+      let(:balance_addition) do
+        create(:employee_balance, validity_date: Date.today, effective_at: Date.today - 1.week)
+      end
+      let(:removal) do
+        build(:employee_balance, balance_credit_addition: balance_addition, effective_at: Date.today)
+      end
+
+      context 'when removal effective_at valid' do
+        it { expect { subject }.to_not change { removal.errors.size } }
+        it { expect(subject).to eq true }
+      end
+
+      context 'when removal effective at not valid' do
+        before { removal.effective_at = Date.today - 1.month }
+
+        it { expect(subject).to eq false }
+        it { expect { subject }.to change { removal.errors.size } }
+        it { expect { subject }.to change { removal.errors.messages[:effective_at] }
+          .to include('Removal effective at must equal addition validity date') }
+      end
+    end
+
+    context 'amount numericallty' do
+      subject { balance.valid? }
+      let(:balance) do
+        build(:employee_balance, validity_date: Date.today, amount: 100)
+      end
+
+      context 'when valid amount' do
+        it { expect { subject }.to_not change { balance.errors.size } }
+        it { expect(subject).to eq true }
+      end
+
+      context 'when invalid amount' do
+        before { balance.amount =  -100 }
+
+        it { expect(subject).to eq false }
+        it { expect { subject }.to change { balance.errors.size } }
+        it { expect { subject }.to change { balance.errors.messages[:amount] }
+          .to include('must be greater than or equal to 0') }
+      end
     end
   end
 end

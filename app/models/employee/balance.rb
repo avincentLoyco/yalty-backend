@@ -17,11 +17,14 @@ class Employee::Balance < ActiveRecord::Base
     presence: true
   validates :effective_at, uniqueness: { scope: [:time_off_policy, :employee] }
   validates :balance_credit_addition, presence: true, uniqueness: true, if: :removal_and_balancer?
+  validates :amount, numericality: { greater_than_or_equal_to: 0 }, if: :validity_date
+
+  validate :removal_effective_at_date, if: :removal_and_balancer?
   validate :time_off_policy_date, if: :time_off_policy
   validate :validity_date_later_than_effective_at, if: [:effective_at, :validity_date]
 
   before_validation :calculate_and_set_balance, if: :attributes_present?
-  before_validation :find_effective_at, unless: :effective_at
+  before_validation :find_effective_at #, unless: :effective_at
   before_validation :check_if_credit_removal, if: :balance_credit_addition
 
   scope :employee_balances, -> (employee_id, time_off_policy_id) {
@@ -81,7 +84,16 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   def find_effective_at
-    self.effective_at = Time.now
+    return if effective_at.present? && balance_credit_addition.blank?
+    self.effective_at = balance_credit_addition.try(:validity_date) ?
+      balance_credit_addition.validity_date : Time.now
+  end
+
+  def removal_effective_at_date
+    return unless balance_credit_addition.validity_date.present?
+    if effective_at.to_date != balance_credit_addition.validity_date.to_date
+      errors.add(:effective_at, 'Removal effective at must equal addition validity date')
+    end
   end
 
   def time_off_policy_date

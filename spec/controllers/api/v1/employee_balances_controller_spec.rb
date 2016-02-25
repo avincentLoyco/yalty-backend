@@ -222,7 +222,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
               let!(:prev_mid_removal) do
                 create(:employee_balance, employee: employee, time_off_policy: policy,
                   time_off_category: category, amount: -1000, balance_credit_addition: prev_mid_add,
-                  effective_at: prev_mid_add.validity_date + 1.day, policy_credit_removal: true
+                  policy_credit_removal: true
                 )
               end
 

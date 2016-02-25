@@ -2,7 +2,6 @@ require 'rails_helper'
 
 RSpec.describe CreateEmployeeBalance, type: :service do
   include ActiveJob::TestHelper
-
   before { Account.current = create(:account) }
 
   let(:category) { create(:time_off_category, account: Account.current) }
@@ -33,13 +32,15 @@ RSpec.describe CreateEmployeeBalance, type: :service do
         ).call
       end
       context 'valdiity date given' do
+        let(:amount) { 100 }
+
         context 'and in future' do
           let(:options) {{ validity_date: (Time.now + 1.month).to_s }}
 
           it { expect { subject }.to change { Employee::Balance.count }.by(1) }
           it { expect { subject }.to_not change { enqueued_jobs.size } }
 
-          it { expect(subject.first.amount).to eq -100 }
+          it { expect(subject.first.amount).to eq 100 }
           it { expect(subject.first.validity_date).to be_kind_of(Date) }
           it { expect(subject.first.effective_at).to be_kind_of(Time) }
           it { expect(subject.first.balance_credit_removal).to eq nil }
@@ -52,7 +53,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
 
           it { expect { subject }.to change { Employee::Balance.count }.by(2) }
 
-          it { expect(subject.first.amount).to eq -100 }
+          it { expect(subject.first.amount).to eq 100 }
           it { expect(subject.first.validity_date).to be_kind_of(Date) }
           it { expect(subject.first.effective_at).to be_kind_of(Time) }
           it { expect(subject.first.balance_credit_removal).to be_kind_of(Employee::Balance) }
