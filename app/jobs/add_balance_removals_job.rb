@@ -3,7 +3,7 @@ class AddBalanceRemovalsJob < ActiveJob::Base
 
   def perform
     Employee::Balance.where('validity_date IS NOT NULL').each do |balance|
-      if balance.validity_date == Date.today
+      if balance.validity_date == Date.today && balance.balance_credit_removal.blank?
         create_removal(balance)
       end
     end

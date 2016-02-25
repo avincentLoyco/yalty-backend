@@ -31,6 +31,13 @@ RSpec.describe AddBalanceRemovalsJob do
     end
   end
 
+  context 'when employee balance already has removals' do
+    before { subject }
+
+    it { expect { subject }.to_not change { Employee::Balance.count } }
+    it { expect { subject }.to_not change { balance.reload.balance_credit_removal } }
+  end
+
   context 'when employee_balance does not have validity date today' do
     before { balance.update!(validity_date: Date.today + 1.week) }
 
