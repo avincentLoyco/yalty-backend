@@ -29,7 +29,7 @@ module API
 
       def update
         verified_params(gate_rules) do |attributes|
-          manage_removal(attributes) if attributes[:validity_date]
+          manage_removal(attributes) if attributes.has_key?(:validity_date)
           update_balances_processed_flag(balances_to_update(resource, attributes[:effective_at]))
 
           UpdateBalanceJob.perform_later(resource.id, attributes)
@@ -86,21 +86,23 @@ module API
 
       def manage_removal(attributes)
         date = attributes[:validity_date]
-        return unless moved_to_past?(date) || moved_to_future?(date)
-        moved_to_past?(date) ? create_removal(attributes) : resource.balance_credit_removal.try(:destroy!)
+        return unless !attributes[:validity_date] || moved_to_past?(date) || moved_to_future?(date)
+        !attributes[:validity_date] || moved_to_future?(date) ?
+          resource.balance_credit_removal.try(:destroy!) : create_removal(attributes)
       end
 
       def moved_to_past?(date)
         validity_date = resource.validity_date
-        (validity_date.blank? || validity_date.to_time > Time.now) && date.to_time < Time.now
+        (validity_date.blank? || validity_date.to_date >= Date.today) #&& date.to_time < Time.now
       end
 
       def moved_to_future?(date)
         validity_date = resource.validity_date
-        (validity_date.blank? || validity_date.to_time < Time.now) && date.to_time > Time.now
+        (validity_date.blank? || validity_date.to_date < Date.today) && date.to_time > Time.now
       end
 
       def create_removal(attributes)
+        return unless resource.balance_credit_removal.blank?
         category, employee, account, amount, options = params_from_resource
 
         CreateEmployeeBalance.new(category, employee, account, amount, options).call
@@ -111,7 +113,7 @@ module API
         effective_at = params[:effective_at] ? params[:effective_at] : resource.effective_at
         return unless validity_date && effective_at
 
-        if validity_date.to_date < effective_at.to_date
+        if validity_date < effective_at
           fail InvalidResourcesError.new(resource, ['validity date must be after effective at'])
         end
       end

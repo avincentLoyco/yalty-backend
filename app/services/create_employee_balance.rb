@@ -66,7 +66,8 @@ class CreateEmployeeBalance
     {
       validity_date: validity_date,
       effective_at: effective_at,
-      balance_credit_addition: balance_credit_addition
+      balance_credit_addition: balance_credit_addition,
+      policy_credit_addition: options[:policy_credit_addition]
     }.merge(common_params)
   end
 

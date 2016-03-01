@@ -41,7 +41,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
           it { expect { subject }.to_not change { enqueued_jobs.size } }
 
           it { expect(subject.first.amount).to eq 100 }
-          it { expect(subject.first.validity_date).to be_kind_of(Date) }
+          it { expect(subject.first.validity_date).to be_kind_of(Time) }
           it { expect(subject.first.effective_at).to be_kind_of(Time) }
           it { expect(subject.first.balance_credit_removal).to eq nil }
         end
@@ -54,7 +54,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
           it { expect { subject }.to change { Employee::Balance.count }.by(2) }
 
           it { expect(subject.first.amount).to eq 100 }
-          it { expect(subject.first.validity_date).to be_kind_of(Date) }
+          it { expect(subject.first.validity_date).to be_kind_of(Time) }
           it { expect(subject.first.effective_at).to be_kind_of(Time) }
           it { expect(subject.first.balance_credit_removal).to be_kind_of(Employee::Balance) }
 

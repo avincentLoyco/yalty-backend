@@ -12,6 +12,11 @@ module RelativeEmployeeBalancesFinders
       .order(effective_at: :asc).first
   end
 
+  def next_addition
+    balances.where('policy_credit_addition = true AND effective_at > ?', effective_at)
+      .order(effective_at: :asc).first
+  end
+
   def previous_balances
     balances.where('effective_at < ?', now_or_effective_at).order(effective_at: :asc)
   end
@@ -35,30 +40,34 @@ module RelativeEmployeeBalancesFinders
       .pluck(:balance_credit_addition_id))
   end
 
-  def later_balances_ids
+  def later_balances_ids(new_amount = amount)
     return nil unless time_off_policy
-    time_off_policy.counter? ? find_ids_for_counter : find_ids_for_balancer
+    time_off_policy.counter? ? find_ids_for_counter : find_ids_for_balancer(new_amount)
   end
 
   def find_ids_for_counter
-    return all_later_ids if current_or_next_period || next_removal.blank?
-    balances.where(effective_at: effective_at..next_removal.effective_at).pluck(:id)
+    return all_later_ids if current_or_next_period || next_addition.blank?
+    balances.where(effective_at: effective_at..next_addition.effective_at).pluck(:id)
   end
 
-  def find_ids_for_balancer
+  def find_ids_for_balancer(new_amount)
     current_or_next_period && active_balances_with_removals.blank? ||
       active_balances_with_removals.blank? && policy_end_dates_blank? ||
-      next_removals_smaller_than_amount? ? all_later_ids : ids_to_removal
+      next_removals_smaller_than_amount?(new_amount) ? all_later_ids : ids_to_removal(new_amount)
   end
 
   def all_later_ids(effective = effective_at)
     balances.where("effective_at >= ?", effective).pluck(:id)
   end
 
-  def ids_to_removal
+  def next_removals_smaller_than_amount?(new_amount)
+    return true unless active_balances_with_removals.present?
+    active_balances_with_removals.pluck(:amount).map(&:abs).sum < new_amount.try(:abs).to_i
+  end
+
+  def ids_to_removal(new_amount)
     removals = balances.where(balance_credit_addition_id: active_balances.pluck(:id))
       .order(effective_at: :asc)
-    new_amount = amount
 
     removals.each do |removal|
       new_amount = new_amount - removal.amount unless removal.amount.abs >= new_amount.abs
@@ -67,6 +76,8 @@ module RelativeEmployeeBalancesFinders
   end
 
   def now_or_effective_at
-    effective_at || Time.now
+    return effective_at if effective_at.present? && balance_credit_addition.blank?
+    balance_credit_addition.try(:validity_date) ?
+      balance_credit_addition.validity_date : Time.now
   end
 end

@@ -16,8 +16,8 @@ class AddPolicyAdditionsJob < ActiveJob::Base
 
     employees.each do |employee|
       category, employee, account, amount, options =
-        policy.time_off_category_id, employee.id, employee.account_id, 0,
-        { policy_credit_addition: true }
+        policy.time_off_category_id, employee.id, employee.account_id,
+        counter_amount(policy, employee), { policy_credit_addition: true }
 
       CreateEmployeeBalance.new(category, employee, account, amount, options).call
     end
@@ -34,5 +34,10 @@ class AddPolicyAdditionsJob < ActiveJob::Base
 
       CreateEmployeeBalance.new(category, employee, account, amount, options).call
     end
+  end
+
+  def counter_amount(policy, employee)
+    last_balance = employee.last_balance_in_policy(policy.id).try(:balance)
+    0 - last_balance.to_i
   end
 end

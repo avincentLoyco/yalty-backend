@@ -179,9 +179,9 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
           it { expect { subject }.to change { Employee::Balance.count }.by(1) }
           it { expect { subject }.to change { previous_removal.reload.beeing_processed }.to true }
           it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+          it { expect { subject }.to change { balance_add.reload.beeing_processed } }
 
           it { expect { subject }.to_not change { previous_balance.reload.beeing_processed } }
-          it { expect { subject }.to_not change { balance_add.reload.beeing_processed } }
           it { expect { subject }.to_not change { balance.reload.beeing_processed } }
 
           it { is_expected.to have_http_status(201) }
@@ -389,9 +389,9 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
           it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
           it { expect { subject }.to change { previous_removal.reload.beeing_processed }.to true }
           it { expect { subject }.to change { previous_balance.reload.beeing_processed }.to true }
+          it { expect { subject }.to change { balance_add.reload.beeing_processed }.to true }
 
           it { expect { subject }.to_not change { balance.reload.beeing_processed } }
-          it { expect { subject }.to_not change { balance_add.reload.beeing_processed } }
 
           it { expect { subject } }
         end
@@ -554,8 +554,8 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
         it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
         it { expect { subject }.to change { previous_removal.reload.beeing_processed }.to true }
         it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+        it { expect { subject }.to change { balance_add.reload.beeing_processed } }
 
-        it { expect { subject }.to_not change { balance_add.reload.beeing_processed } }
         it { expect { subject }.to_not change { balance.reload.beeing_processed } }
 
         it { is_expected.to have_http_status(204) }

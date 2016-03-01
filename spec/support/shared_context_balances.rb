@@ -29,7 +29,7 @@ RSpec.shared_context 'shared_context_balances' do |settings|
 
       let!(:previous_balance) do
         create(:employee_balance,
-          effective_at: previous.last - 1.week, amount: -100, time_off_policy: policy,
+          effective_at: previous.first + 3.months, amount: -100, time_off_policy: policy,
           employee: employee, time_off_category: category
         )
       end
@@ -67,8 +67,8 @@ RSpec.shared_context 'shared_context_balances' do |settings|
 
     let!(:previous_removal) do
       create(:employee_balance,
-        effective_at: previous.last, policy_credit_removal: true, amount: 1000,
-        time_off_policy: policy, employee: employee, time_off_category: category
+        effective_at: previous.last, amount: -500, time_off_policy: policy, employee: employee,
+        time_off_category: category
       )
     end
   end
@@ -83,11 +83,20 @@ RSpec.shared_context 'shared_context_balances' do |settings|
       )
     end
   else
-    let!(:balance_add) do
-      create(:employee_balance,
-        amount: 1000, time_off_policy: policy, employee: employee, time_off_category: category,
-        effective_at: current.last - 1.month
-      )
+    if settings[:type] == 'counter'
+      let!(:balance_add) do
+        create(:employee_balance,
+          amount: 1500, time_off_policy: policy, employee: employee, time_off_category: category,
+          effective_at: current.last - 1.month, policy_credit_addition: true
+        )
+      end
+    else
+      let!(:balance_add) do
+        create(:employee_balance,
+          amount: 1000, time_off_policy: policy, employee: employee, time_off_category: category,
+          effective_at: current.last - 1.month
+        )
+      end
     end
   end
 
