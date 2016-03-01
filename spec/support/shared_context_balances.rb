@@ -94,7 +94,7 @@ RSpec.shared_context 'shared_context_balances' do |settings|
       let!(:balance_add) do
         create(:employee_balance,
           amount: 1000, time_off_policy: policy, employee: employee, time_off_category: category,
-          effective_at: current.last - 1.month
+          effective_at: current.last - 1.month, policy_credit_addition: true
         )
       end
     end

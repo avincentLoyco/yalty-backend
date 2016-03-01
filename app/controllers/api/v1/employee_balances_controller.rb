@@ -29,17 +29,21 @@ module API
 
       def update
         verified_params(gate_rules) do |attributes|
-          manage_removal(attributes) if attributes.has_key?(:validity_date)
-          update_balances_processed_flag(balances_to_update(resource, attributes[:effective_at]))
+          effective_at = attributes[:effective_at]
 
-          UpdateBalanceJob.perform_later(resource.id, attributes)
+          transactions do
+            manage_removal(attributes) if attributes.has_key?(:validity_date)
+            update_balances_processed_flag(balances_to_update(editable_resource, effective_at))
+          end
+
+          UpdateBalanceJob.perform_later(editable_resource.id, attributes)
           render_no_content
         end
       end
 
       def destroy
-        update_balances_after_removed(resource)
-        resource.destroy!
+        update_balances_after_removed(editable_resource)
+        editable_resource.destroy!
         render_no_content
       end
 
@@ -65,6 +69,10 @@ module API
 
       def resource
         @resource ||= Account.current.employee_balances.find(params[:id])
+      end
+
+      def editable_resource
+        @editable_resource = Account.current.employee_balances.editable.find(params[:id])
       end
 
       def resources
@@ -93,7 +101,7 @@ module API
 
       def moved_to_past?(date)
         validity_date = resource.validity_date
-        (validity_date.blank? || validity_date.to_date >= Date.today) #&& date.to_time < Time.now
+        (validity_date.blank? || validity_date.to_date >= Date.today)
       end
 
       def moved_to_future?(date)

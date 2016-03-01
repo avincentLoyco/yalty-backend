@@ -30,6 +30,7 @@ class Employee::Balance < ActiveRecord::Base
 
   scope :employee_balances, -> (employee_id, time_off_policy_id) {
     where(employee_id: employee_id, time_off_policy: time_off_policy_id) }
+  scope :editable, -> { where(policy_credit_removal: false, policy_credit_addition: false) }
 
   def last_in_category?
     id == employee.last_balance_in_category(time_off_category_id).id

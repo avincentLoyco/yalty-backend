@@ -524,6 +524,16 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
 
         it { is_expected.to have_http_status(422) }
       end
+
+      context 'not editable balance edited' do
+        before { params.merge!({ validity_date: current.last - 1.month }) }
+        let(:id) { balance_add.id }
+
+        it { expect { subject }.to_not change { balance_add.reload.beeing_processed } }
+        it { expect { subject }.to_not change { Employee::Balance.count } }
+
+        it { is_expected.to have_http_status(404) }
+      end
     end
   end
 
@@ -536,14 +546,13 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
         years_to_effect: 0
 
       context 'balance is current or next policy period' do
-        let(:id) { balance_add.id }
+        let(:id) { balance.id }
 
         it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
-        it { expect { subject }.to change { balance.reload.beeing_processed }.to true }
-        it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
 
         it { expect { subject }.to_not change { previous_balance.reload.beeing_processed } }
         it { expect { subject }.to_not change { previous_removal.reload.beeing_processed } }
+        it { expect { subject }.to_not change { enqueued_jobs.size } }
 
         it { is_expected.to have_http_status(204) }
       end
@@ -559,6 +568,15 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
         it { expect { subject }.to_not change { balance.reload.beeing_processed } }
 
         it { is_expected.to have_http_status(204) }
+      end
+
+      context 'not editable balance id send' do
+        let(:id) { balance_add.id }
+
+        it { expect { subject }.to_not change { Employee::Balance.count } }
+        it { expect { subject }.to_not change { enqueued_jobs.size } }
+
+        it { is_expected.to have_http_status(404) }
       end
     end
 
