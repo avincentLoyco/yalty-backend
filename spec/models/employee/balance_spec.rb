@@ -9,7 +9,7 @@ RSpec.describe Employee::Balance, type: :model do
   it { is_expected.to have_db_column(:time_off_policy_id).of_type(:uuid) }
   it { is_expected.to have_db_column(:time_off_category_id)
     .of_type(:uuid).with_options(null: false) }
-  it { is_expected.to have_db_column(:validity_date).of_type(:date) }
+  it { is_expected.to have_db_column(:validity_date).of_type(:datetime) }
   it { is_expected.to have_db_column(:policy_credit_removal).of_type(:boolean)
     .with_options(default: false) }
   it { is_expected.to have_db_column(:balance_credit_addition_id).of_type(:uuid) }
@@ -122,7 +122,9 @@ RSpec.describe Employee::Balance, type: :model do
     context 'amount numericallty' do
       subject { balance.valid? }
       let(:balance) do
-        build(:employee_balance, validity_date: Date.today, amount: 100)
+        build(:employee_balance,
+          effective_at: Date.today - 1.day, validity_date: Date.today, amount: 100
+        )
       end
 
       context 'when valid amount' do

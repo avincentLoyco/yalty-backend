@@ -206,9 +206,10 @@ CREATE TABLE employee_balances (
     updated_at timestamp without time zone,
     beeing_processed boolean DEFAULT false,
     effective_at timestamp without time zone,
-    validity_date date,
+    balance_credit_addition_id uuid,
+    validity_date timestamp without time zone,
     policy_credit_removal boolean DEFAULT false,
-    balance_credit_addition_id uuid
+    policy_credit_addition boolean DEFAULT false
 );
 
 

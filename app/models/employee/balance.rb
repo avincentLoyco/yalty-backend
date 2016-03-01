@@ -24,7 +24,7 @@ class Employee::Balance < ActiveRecord::Base
   validate :validity_date_later_than_effective_at, if: [:effective_at, :validity_date]
 
   before_validation :calculate_and_set_balance, if: :attributes_present?
-  before_validation :find_effective_at #, unless: :effective_at
+  before_validation :find_effective_at
   before_validation :check_if_credit_removal, if: :balance_credit_addition
 
   scope :employee_balances, -> (employee_id, time_off_policy_id) {
@@ -43,11 +43,6 @@ class Employee::Balance < ActiveRecord::Base
       .find { |r| r.include?(effective_at.to_date) }
   end
 
-  def next_removals_smaller_than_amount?
-    return true unless active_balances_with_removals.present?
-    active_balances_with_removals.pluck(:amount).map(&:abs).sum < amount.abs
-  end
-
   def calculate_and_set_balance
     previous = previous_balances.last
     self.balance = previous && previous.id != id ? previous.balance + amount : amount
@@ -58,10 +53,10 @@ class Employee::Balance < ActiveRecord::Base
       self.amount = addition.amount > addition.balance && addition.balance > 0 ?
         -addition.balance : -addition.amount
     else
-      sum = (last_balance(addition).balance - positive_balances(addition) -
-        active_balances.pluck(:amount).sum)
+      sum = addition.amount - previous_balances.last.try(:balance).to_i +
+        + positive_balances(addition)  + active_balances.pluck(:amount).sum
 
-      self.amount = sum > 0 ? -sum : 0
+      self.amount = (sum > 0 && sum < addition.amount) ? - (addition.amount - sum) : 0
     end
   end
 
@@ -84,9 +79,7 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   def find_effective_at
-    return if effective_at.present? && balance_credit_addition.blank?
-    self.effective_at = balance_credit_addition.try(:validity_date) ?
-      balance_credit_addition.validity_date : Time.now
+    self.effective_at = now_or_effective_at
   end
 
   def removal_effective_at_date
@@ -102,6 +95,6 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   def validity_date_later_than_effective_at
-    errors.add(:effective_at, 'Must be after start month') if effective_at.to_date > validity_date
+    errors.add(:effective_at, 'Must be after start month') if effective_at > validity_date
   end
 end
