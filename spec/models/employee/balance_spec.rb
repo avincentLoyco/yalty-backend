@@ -93,6 +93,35 @@ RSpec.describe Employee::Balance, type: :model do
         .to include('Must belong to current, next or previous policy.') }
     end
 
+    context 'counter validity date blank' do
+      let(:policy) { create(:time_off_policy, policy_type: 'counter') }
+      let(:employee_balance) do
+        build(:employee_balance, time_off_policy: policy, effective_at: Date.today - 1.day)
+      end
+      subject { employee_balance.valid? }
+
+      context 'when validity date is nil' do
+        it { expect(subject).to eq true }
+        it { expect { subject }.to_not change { employee_balance.errors.size } }
+      end
+
+      context 'when validity date is present' do
+        before { employee_balance.validity_date = Date.today }
+
+        context 'and policy is a counter type' do
+          it { expect(subject).to eq false }
+          it { expect { subject }.to change { employee_balance.errors.size } }
+        end
+
+        context 'and policy is a balancer type' do
+          before { policy.update!(policy_type: 'balancer') }
+
+          it { expect(subject).to eq true }
+          it { expect { subject }.to_not change { employee_balance.errors.size } }
+        end
+      end
+    end
+
     context 'removal effective at date' do
       before { allow_any_instance_of(Employee::Balance).to receive(:find_effective_at) { true } }
       subject { removal.valid? }

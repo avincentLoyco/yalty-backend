@@ -22,6 +22,7 @@ class Employee::Balance < ActiveRecord::Base
   validate :removal_effective_at_date, if: :removal_and_balancer?
   validate :time_off_policy_date, if: :time_off_policy
   validate :validity_date_later_than_effective_at, if: [:effective_at, :validity_date]
+  validate :counter_validity_date_blank
 
   before_validation :calculate_and_set_balance, if: :attributes_present?
   before_validation :find_effective_at
@@ -82,6 +83,11 @@ class Employee::Balance < ActiveRecord::Base
     self.effective_at = now_or_effective_at
   end
 
+  def counter_validity_date_blank
+    return unless time_off_policy.try(:counter?) && validity_date.present?
+    errors.add(:validity_date, 'Must be nil when counter type')
+  end
+
   def removal_effective_at_date
     return unless balance_credit_addition.validity_date.present?
     if effective_at.to_date != balance_credit_addition.validity_date.to_date
@@ -95,6 +101,6 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   def validity_date_later_than_effective_at
-    errors.add(:effective_at, 'Must be after start month') if effective_at > validity_date
+    errors.add(:effective_at, 'Must be after start date') if effective_at > validity_date
   end
 end
