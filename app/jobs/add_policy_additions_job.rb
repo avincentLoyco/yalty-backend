@@ -1,5 +1,5 @@
 class AddPolicyAdditionsJob < ActiveJob::Base
-  @queue = :add_policy_addition_job
+  queue_as :policies_and_balances
 
   def perform
     TimeOffPolicy.all.each do |policy|

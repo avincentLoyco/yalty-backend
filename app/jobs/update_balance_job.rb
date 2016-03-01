@@ -1,7 +1,7 @@
 class UpdateBalanceJob < ActiveJob::Base
   attr_reader :employee_balance, :options
 
-  @queue = :balance
+  queue_as :update_balance
 
   def perform(balance_id, options = {})
     @options = options

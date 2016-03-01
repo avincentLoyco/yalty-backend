@@ -1,5 +1,5 @@
 class AddBalanceRemovalsJob < ActiveJob::Base
-  @queue = :add_balance_removals_job
+  queue_as :policies_and_balances
 
   def perform
     Employee::Balance.where('validity_date IS NOT NULL').each do |balance|
