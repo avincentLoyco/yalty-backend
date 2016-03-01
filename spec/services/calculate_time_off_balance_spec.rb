@@ -42,7 +42,9 @@ RSpec.describe CreateCompletePresencePolicy, type: :service do
     end
 
     context 'time off start and ends in the middle of entries' do
-      before { time_off.update!(start_time: Date.today + 8.hours, end_time: Date.today + 113.hours ) }
+      before do
+        time_off.update!(start_time: Date.today + 8.hours, end_time: Date.today + 113.hours)
+      end
 
       it { expect(subject).to eq 480 }
     end

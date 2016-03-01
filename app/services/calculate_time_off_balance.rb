@@ -33,13 +33,14 @@ class CalculateTimeOffBalance
   end
 
   def occurances_with_entries
-    all_orders = ((1..7).to_a * (num_of_days / 7) + repeated)
+    all_orders = num_of_days % 7 == 0 ? ((1..7).to_a * (num_of_days / 7 - 1) + repeated) :
+      ((1..7).to_a * (num_of_days / 7) + repeated)
     total_occurances = all_orders.inject(Hash.new(0)) { |total, e| total[e] += 1 ;total }
     total_occurances.select { |k, _v| presence_days_with_entries_duration.keys.include?(k) }
   end
 
   def repeated
-    return [] unless num_of_days > 0 && start_order != end_order
+    return [] unless num_of_days > 0
     days = [start_order, end_order]
     (1..7).to_a - (days.min..days.max).to_a
   end

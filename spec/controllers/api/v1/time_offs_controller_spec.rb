@@ -2,8 +2,10 @@ require 'rails_helper'
 
 RSpec.describe API::V1::TimeOffsController, type: :controller do
   include_context 'shared_context_headers'
+  include_context 'shared_context_timecop_helper'
 
-  let(:employee) { create(:employee, :with_policy, account: account) }
+  let(:policy) { create(:presence_policy, account: Account.current) }
+  let(:employee) { create(:employee, :with_policy, account: account, presence_policy: policy) }
   let(:time_off_category) do
     employee.employee_time_off_policies.first.time_off_policy.time_off_category
   end
@@ -108,7 +110,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
   end
 
   describe 'POST #create' do
-    let(:start_time) { Time.now }
+    let(:start_time) { '15:00:00'.to_time  }
     let(:end_time) { start_time + 1.week }
     let(:employee_id) { employee.id }
     let(:time_off_category_id) { time_off_category.id }
@@ -148,6 +150,26 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
         before { subject }
 
         it { expect_json_keys([:id, :type, :employee, :time_off_category, :start_time, :end_time]) }
+      end
+
+      context 'when time off has time entries in its period' do
+        let(:first_day) { create(:presence_day, order: 5, presence_policy: policy) }
+        let(:second_day) { create(:presence_day, order: 2, presence_policy: policy) }
+        let!(:second_entry) { create(:time_entry, presence_day: second_day) }
+        let!(:first_entry) do
+          create(:time_entry, start_time: '10:00', end_time: '17:00', presence_day: first_day)
+        end
+
+        it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+        it { expect { subject }.to change { TimeOff.count }.by(1) }
+
+        it { is_expected.to have_http_status(201) }
+
+        context 'new employee balance amount' do
+          before { subject }
+
+          it { expect(Employee::Balance.last.amount).to eq -480 }
+        end
       end
     end
 
@@ -206,8 +228,8 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
 
   describe 'PUT #update' do
     let(:id) { time_off.id }
-    let(:start_time) { Time.now }
-    let(:end_time) { start_time + 1.week }
+    let(:start_time) { Date.today }
+    let(:end_time) { Date.today + 1.week }
     let(:params) do
       {
         id: id,
