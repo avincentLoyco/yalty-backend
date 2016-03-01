@@ -456,6 +456,8 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
               end_day: 1,
               end_month: 4
 
+            before { previous_add.update!(validity_date: Time.now - 1.month) }
+
             context 'validity date in past' do
               let(:id) { previous_add.id }
 
@@ -482,10 +484,37 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
               it { expect { subject }.to_not change { previous_removal.reload.beeing_processed } }
 
               it { is_expected.to have_http_status(204) }
+
+              context 'and moved to today or earlier' do
+                before { params.merge!({ validity_date: Time.now, effective_at: Time.now - 1.week }) }
+                let(:id) { balance_add.id }
+
+                it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+                it { expect { subject }.to change { balance_add.reload.beeing_processed } }
+                it { expect { subject }.to change { balance.reload.beeing_processed } }
+                it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+
+                it { is_expected.to have_http_status(204) }
+              end
             end
 
             context 'validity date in past moved to future' do
               before { params.merge!({ validity_date: current.last }) }
+              let(:id) { previous_add.id }
+              let(:removal_id) { previous_removal.id }
+
+              it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+              it { expect { subject }.to change { balance_add.reload.beeing_processed } }
+              it { expect { subject }.to change { balance.reload.beeing_processed } }
+              it { expect { subject }.to change { previous_balance.reload.beeing_processed } }
+              it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
+              it { expect { subject }.to change { Employee::Balance.exists?(id: removal_id) } }
+
+              it { is_expected.to have_http_status(204) }
+            end
+
+            context 'validity date in past moved to today' do
+              before { params.merge!({ validity_date: Time.now }) }
               let(:id) { previous_add.id }
 
               it { expect { subject }.to change { enqueued_jobs.size }.by(1) }

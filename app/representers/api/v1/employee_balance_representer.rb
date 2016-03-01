@@ -30,6 +30,8 @@ module Api::V1
       end
     end
 
+    private
+
     def employee_json
       EmployeeRepresenter.new(resource.employee).basic
     end
