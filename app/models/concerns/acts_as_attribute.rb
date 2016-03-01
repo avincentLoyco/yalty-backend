@@ -3,6 +3,16 @@ require 'active_support/concern'
 module ActsAsAttribute
   extend ActiveSupport::Concern
 
+  PUBLIC_ATTRIBUTES_FOR_OTHERS = %w(
+    firstname lastname language job_title start_date occupation_rate department
+    manager professional_email professional_mobile cost_center department gender
+  ).freeze
+
+  NOT_EDITABLE_ATTRIBUTES_FOR_EMPLOYEE = %w(
+    annual_salary contract_type cost_center department exit_date hourly_salary job_title
+    manager monthly_payments occupation_rate representation_fees start_date tax_source_code
+  ).freeze
+
   included do
     belongs_to :attribute_definition,
       -> { readonly },

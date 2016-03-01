@@ -13,6 +13,9 @@ class Ability
       can :show, TimeOff do |time_off|
         time_off.employee_id = user.employee.try(:id)
       end
+      can [:read, :update], Employee::Event do |event|
+        event.employee_id = user.employee.try(:id)
+      end
     end
   end
 end

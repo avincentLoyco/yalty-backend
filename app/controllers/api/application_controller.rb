@@ -56,7 +56,7 @@ class API::ApplicationController < ApplicationController
 
     if resource.respond_to?(:map)
       response =
-        resource.map { |item| representer.new(item, current_user.try(:account_manager)).complete }
+        resource.map { |item| representer.new(item, current_user).complete }
     else
       response = representer.new(resource).complete
     end

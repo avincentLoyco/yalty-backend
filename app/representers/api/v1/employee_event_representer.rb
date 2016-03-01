@@ -19,8 +19,18 @@ module Api::V1
     end
 
     def attribute_versions
-      resource.employee_attribute_versions.map do |attribute|
+      attribute_versions = select_attributes
+      attribute_versions.map do |attribute|
         EmployeeAttributeVersionRepresenter.new(attribute).complete
+      end
+    end
+
+    def select_attributes
+      if current_user.try(:employee).try(:id) == resource.employee_id ||
+          current_user.try(:account_manager)
+        resource.employee_attribute_versions
+      else
+        resource.employee_attribute_versions.visible_for_other_employees
       end
     end
   end
