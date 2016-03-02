@@ -75,6 +75,19 @@ RSpec.describe Employee::Balance, type: :model do
 
         it { expect { subject.valid? }.to_not change { subject.effective_at } }
       end
+
+      context 'when employee balance has time off' do
+        let(:time_off) { create(:time_off, start_time: Date.today - 1.month) }
+        subject { build(:employee_balance, time_off: time_off) }
+
+        it { expect { subject.valid? }.to change { subject.effective_at } }
+
+        context 'effective_at date value' do
+          before { subject.valid? }
+
+          it { expect(subject.effective_at).to eq time_off.start_time }
+        end
+      end
     end
   end
 

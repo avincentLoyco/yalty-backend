@@ -76,8 +76,8 @@ module RelativeEmployeeBalancesFinders
   end
 
   def now_or_effective_at
-    return effective_at if effective_at.present? && balance_credit_addition.blank?
+    return effective_at if effective_at && balance_credit_addition.blank? && time_off.blank?
     balance_credit_addition.try(:validity_date) ?
-      balance_credit_addition.validity_date : Time.now
+      balance_credit_addition.validity_date : time_off.try(:start_time) || Time.now
   end
 end

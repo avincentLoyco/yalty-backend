@@ -72,9 +72,7 @@ class CreateEmployeeBalance
   end
 
   def employee_balance_removal_params
-    {
-      effective_at: employee_balance.validity_date,
-    }.merge(common_params)
+    common_params.merge({ effective_at: employee_balance.validity_date })
   end
 
   def time_off
@@ -82,8 +80,7 @@ class CreateEmployeeBalance
   end
 
   def effective_at
-    return nil unless options.has_key?(:effective_at) || time_off
-    time_off ? time_off.start_time : options[:effective_at]
+    options[:effective_at]
   end
 
   def time_off_policy
