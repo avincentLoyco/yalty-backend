@@ -46,7 +46,6 @@ class CreateEvent
 
   def build_versions
     attributes_params.each do |attribute|
-
       version = build_version(attribute)
       if version.attribute_definition_id.present?
         version.value = attribute[:value]
@@ -88,11 +87,11 @@ class CreateEvent
       messages = {}
       messages = messages.merge(employee_attributes: 'Not unique') unless unique_attribute_versions?
       messages = messages
-        .merge(event.errors.messages)
-        .merge(employee.errors.messages)
-        .merge(attribute_versions_errors)
+                 .merge(event.errors.messages)
+                 .merge(employee.errors.messages)
+                 .merge(attribute_versions_errors)
 
-      fail InvalidResourcesError.new(event, messages)
+      raise InvalidResourcesError.new(event, messages)
     end
   end
 

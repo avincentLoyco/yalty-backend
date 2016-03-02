@@ -40,7 +40,7 @@ class UpdateEmployeeBalance
     else
       messages = employee_balance.errors.messages
 
-      fail InvalidResourcesError.new(employee_balance, messages)
+      raise InvalidResourcesError.new(employee_balance, messages)
     end
   end
 

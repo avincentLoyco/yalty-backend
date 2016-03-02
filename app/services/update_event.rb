@@ -111,11 +111,11 @@ class UpdateEvent
       messages = {}
       messages = messages.merge(employee_attributes: 'Not unique') unless unique_attribute_versions?
       messages = messages
-        .merge(event.errors.messages)
-        .merge(employee.errors.messages)
-        .merge(attribute_versions_errors)
+                 .merge(event.errors.messages)
+                 .merge(employee.errors.messages)
+                 .merge(attribute_versions_errors)
 
-      fail InvalidResourcesError.new(event, messages)
+      raise InvalidResourcesError.new(event, messages)
     end
   end
 

@@ -29,10 +29,11 @@ module API
 
       def update
         verified_params(gate_rules) do |attributes|
-          effective_at, validity_date = attributes[:effective_at], attributes[:validity_date]
+          effective_at = attributes[:effective_at]
+          validity_date = attributes[:validity_date]
 
           transactions do
-            manage_removal(validity_date.to_date) if attributes.has_key?(:validity_date)
+            manage_removal(validity_date.to_date) if attributes.key?(:validity_date)
             update_balances_processed_flag(balances_to_update(editable_resource, effective_at))
           end
 
@@ -51,8 +52,8 @@ module API
 
       def options(attributes)
         params = {}
-        params.merge!({ effective_at: attributes[:effective_at]  }) if attributes[:effective_at]
-        params.merge!({ validity_date: attributes[:validity_date] }) if attributes[:validity_date]
+        params[:effective_at] = attributes[:effective_at] if attributes[:effective_at]
+        params[:validity_date] = attributes[:validity_date] if attributes[:validity_date]
         params
       end
 
@@ -63,8 +64,8 @@ module API
 
       def params_from_resource
         [resource.time_off_category_id, resource.employee_id, Account.current.id, nil,
-        { policy_credit_removal: true, skip_update: true, balance_credit_addition_id: resource.id,
-          effective_at: params[:validity_date]} ]
+         { policy_credit_removal: true, skip_update: true, balance_credit_addition_id: resource.id,
+           effective_at: params[:validity_date] }]
       end
 
       def resource
@@ -76,8 +77,12 @@ module API
       end
 
       def resources
-        @resources ||= params[:time_off_category_id] ?
-          employee_balances.where(time_off_category: time_off_category) : employee_balances
+        @resources ||=
+          if params[:time_off_category_id]
+            employee_balances.where(time_off_category: time_off_category)
+          else
+            employee_balances
+          end
       end
 
       def time_off_category
@@ -94,17 +99,21 @@ module API
 
       def manage_removal(new_date)
         return unless new_date.blank? || moved_to_past?(new_date) || moved_to_future?(new_date)
-
-        new_date.blank? || moved_to_future?(new_date) ?
-          resource.balance_credit_removal.try(:destroy!) : create_removal
+        if new_date.blank? || moved_to_future?(new_date)
+          resource.balance_credit_removal.try(:destroy!)
+        else
+          create_removal
+        end
       end
 
       def moved_to_past?(new_date, current_date = resource.validity_date)
-        (current_date.blank? || current_date.to_date > Date.today) && new_date <= Date.today
+        (current_date.blank? || current_date.to_date > Time.zone.today) &&
+          new_date <= Time.zone.today
       end
 
       def moved_to_future?(new_date, current_date = resource.validity_date)
-        (current_date.blank? || current_date.to_date <= Date.today) && new_date > Date.today
+        (current_date.blank? || current_date.to_date <= Time.zone.today) &&
+          new_date > Time.zone.today
       end
 
       def create_removal
@@ -118,7 +127,7 @@ module API
         validity_date = params[:validity_date] ? params[:validity_date] : resource.validity_date
         effective_at = params[:effective_at] ? params[:effective_at] : resource.effective_at
         return unless validity_date && effective_at && validity_date < effective_at
-        fail InvalidResourcesError.new(resource, ['validity date must be after effective at'])
+        raise InvalidResourcesError.new(resource, ['validity date must be after effective at'])
       end
     end
   end

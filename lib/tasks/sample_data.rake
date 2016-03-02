@@ -54,14 +54,14 @@ take yalty:load_sample_data [ACCOUNT_SUBDOMAIN=my-company]
 
         data.each do |key, value|
           attribute = event.employee_attribute_versions
-            .joins(:attribute_definition)
-            .where('employee_attribute_definitions.name = ?', key)
-            .first
+                           .joins(:attribute_definition)
+                           .where('employee_attribute_definitions.name = ?', key)
+                           .first
 
           if attribute.nil?
             attribute_definition = account.employee_attribute_definitions
-              .where(name: key)
-              .first!
+                                          .where(name: key)
+                                          .first!
 
             attribute = event.employee_attribute_versions.build(
               employee: event.employee,

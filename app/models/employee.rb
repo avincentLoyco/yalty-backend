@@ -46,6 +46,7 @@ class Employee < ActiveRecord::Base
 
   def time_off_policy_in_category(category_id)
     employee_time_off_policies.joins(:time_off_policy)
-      .find_by(time_off_policies: { time_off_category_id: category_id }).try(:time_off_policy)
+                              .find_by(time_off_policies: { time_off_category_id: category_id })
+                              .try(:time_off_policy)
   end
 end

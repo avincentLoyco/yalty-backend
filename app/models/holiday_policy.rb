@@ -18,7 +18,7 @@ class HolidayPolicy < ActiveRecord::Base
   before_validation :downcase, if: :local?
 
   COUNTRIES_WITHOUT_REGIONS = %w(ar at be br cl cr cz dk el fr je gg im hr hu ie is it li lt nl no
-                                 pl pt ro sk si fi jp ma ph se sg ve vi za)
+                                 pl pt ro sk si fi jp ma ph se sg ve vi za).freeze
   HolidayStruct = Struct.new(:date, :name)
 
   def holidays

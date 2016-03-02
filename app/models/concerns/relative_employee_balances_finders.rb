@@ -9,12 +9,12 @@ module RelativeEmployeeBalancesFinders
 
   def next_removal
     balances.where('policy_credit_removal = true AND effective_at > ?', effective_at)
-      .order(effective_at: :asc).first
+            .order(effective_at: :asc).first
   end
 
   def next_addition
     balances.where('policy_credit_addition = true AND effective_at > ?', effective_at)
-      .order(effective_at: :asc).first
+            .order(effective_at: :asc).first
   end
 
   def previous_balances
@@ -27,7 +27,7 @@ module RelativeEmployeeBalancesFinders
 
   def positive_balances(addition)
     balances.where(effective_at: addition.effective_at..now_or_effective_at,
-      amount: 1..Float::INFINITY, validity_date: nil).pluck(:amount).sum
+                   amount: 1..Float::INFINITY, validity_date: nil).pluck(:amount).sum
   end
 
   def active_balances
@@ -51,13 +51,11 @@ module RelativeEmployeeBalancesFinders
   end
 
   def find_ids_for_balancer(new_amount)
-    current_or_next_period && active_balances_with_removals.blank? ||
-      active_balances_with_removals.blank? && policy_end_dates_blank? ||
-      next_removals_smaller_than_amount?(new_amount) ? all_later_ids : ids_to_removal(new_amount)
+    no_removals_or_bigger_than_amount?(new_amount) ? all_later_ids : ids_to_removal(new_amount)
   end
 
   def all_later_ids(effective = effective_at)
-    balances.where("effective_at >= ?", effective).pluck(:id)
+    balances.where('effective_at >= ?', effective).pluck(:id)
   end
 
   def next_removals_smaller_than_amount?(new_amount)
@@ -67,17 +65,26 @@ module RelativeEmployeeBalancesFinders
 
   def ids_to_removal(new_amount)
     removals = balances.where(balance_credit_addition_id: active_balances.pluck(:id))
-      .order(effective_at: :asc)
+                       .order(effective_at: :asc)
 
     removals.each do |removal|
-      new_amount = new_amount - removal.amount unless removal.amount.abs >= new_amount.abs
+      new_amount -= removal.amount unless removal.amount.abs >= new_amount.abs
       return balances.where(effective_at: effective_at..removal.effective_at).pluck(:id)
     end
   end
 
   def now_or_effective_at
     return effective_at if effective_at && balance_credit_addition.blank? && time_off.blank?
-    balance_credit_addition.try(:validity_date) ?
-      balance_credit_addition.validity_date : time_off.try(:start_time) || Time.now
+    if balance_credit_addition.try(:validity_date)
+      balance_credit_addition.validity_date
+    else
+      time_off.try(:start_time) || Time.zone.now
+    end
+  end
+
+  def no_removals_or_bigger_than_amount?(new_amount)
+    current_or_next_period && active_balances_with_removals.blank? ||
+      active_balances_with_removals.blank? && policy_end_dates_blank? ||
+      next_removals_smaller_than_amount?(new_amount)
   end
 end

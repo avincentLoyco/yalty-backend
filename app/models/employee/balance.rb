@@ -7,7 +7,7 @@ class Employee::Balance < ActiveRecord::Base
 
   belongs_to :balance_credit_addition, class_name: 'Employee::Balance'
   has_one :balance_credit_removal, class_name: 'Employee::Balance',
-    foreign_key: 'balance_credit_addition_id', dependent: :destroy
+                                   foreign_key: 'balance_credit_addition_id', dependent: :destroy
 
   validates :employee,
     :time_off_category,
@@ -28,8 +28,9 @@ class Employee::Balance < ActiveRecord::Base
   before_validation :find_effective_at
   before_validation :check_if_credit_removal, if: :balance_credit_addition
 
-  scope :employee_balances, -> (employee_id, time_off_policy_id) {
-    where(employee_id: employee_id, time_off_policy: time_off_policy_id) }
+  scope :employee_balances, lambda  { |employee_id, time_off_policy_id|
+    where(employee_id: employee_id, time_off_policy: time_off_policy_id)
+  }
   scope :editable, -> { where(policy_credit_removal: false, policy_credit_addition: false) }
 
   def last_in_category?
@@ -47,22 +48,29 @@ class Employee::Balance < ActiveRecord::Base
 
   def calculate_and_set_balance
     previous = previous_balances.last
-    self.balance = previous && previous.id != id ? previous.balance + amount : amount
+    self.balance = (previous && previous.id != id ? previous.balance + amount : amount)
   end
 
   def calculate_removal_amount(addition = balance_credit_addition)
     if last_balance(addition).blank?
-      self.amount = addition.amount > addition.balance && addition.balance > 0 ?
-        -addition.balance : -addition.amount
+      self.amount = amount_from_addition(addition)
     else
       sum = addition.amount - previous_balances.last.try(:balance).to_i +
-        + positive_balances(addition)  + active_balances.pluck(:amount).sum
+        + positive_balances(addition) + active_balances.pluck(:amount).sum
 
       self.amount = (sum > 0 && sum < addition.amount) ? - (addition.amount - sum) : 0
     end
   end
 
   private
+
+  def amount_from_addition(addition)
+    if addition.amount > addition.balance && addition.balance > 0
+      -addition.balance
+    else
+      -addition.amount
+    end
+  end
 
   def attributes_present?
     employee.present? && time_off_category.present? && amount.present? && time_off_policy.present?

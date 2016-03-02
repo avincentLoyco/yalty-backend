@@ -17,7 +17,7 @@ class CreateEmployeeBalance
   def call
     ActiveRecord::Base.transaction do
       build_employee_balance
-      build_employee_balance_removal if validity_date.present? && validity_date <= Date.today
+      build_employee_balance_removal if validity_date.present? && validity_date <= Time.zone.today
       calculate_amount
       save!
 
@@ -31,11 +31,11 @@ class CreateEmployeeBalance
   end
 
   def build_employee_balance
-    @employee_balance = Employee::Balance.new(employee_balance_params)
+    @employee_balance = Employee::Balance.new(balance_params)
   end
 
   def build_employee_balance_removal
-    @balance_removal = employee_balance.build_balance_credit_removal(employee_balance_removal_params)
+    @balance_removal = employee_balance.build_balance_credit_removal(balance_removal_params)
   end
 
   def save!
@@ -46,7 +46,7 @@ class CreateEmployeeBalance
     else
       messages = employee_balance.errors.messages
 
-      fail InvalidResourcesError.new(employee_balance, messages)
+      raise InvalidResourcesError.new(employee_balance, messages)
     end
   end
 
@@ -62,7 +62,7 @@ class CreateEmployeeBalance
     }
   end
 
-  def employee_balance_params
+  def balance_params
     {
       validity_date: validity_date,
       effective_at: effective_at,
@@ -71,12 +71,12 @@ class CreateEmployeeBalance
     }.merge(common_params)
   end
 
-  def employee_balance_removal_params
-    common_params.merge({ effective_at: employee_balance.validity_date })
+  def balance_removal_params
+    common_params.merge(effective_at: employee_balance.validity_date)
   end
 
   def time_off
-    options.has_key?(:time_off_id) ? employee.time_offs.find(options[:time_off_id]) : nil
+    options.key?(:time_off_id) ? employee.time_offs.find(options[:time_off_id]) : nil
   end
 
   def effective_at
@@ -88,7 +88,9 @@ class CreateEmployeeBalance
   end
 
   def validity_date
-    DateTime.parse(options[:validity_date]) rescue nil
+    DateTime.parse(options[:validity_date]).in_time_zone
+  rescue
+    nil
   end
 
   def balance_credit_addition
@@ -98,8 +100,11 @@ class CreateEmployeeBalance
 
   def calculate_amount
     return unless balance_removal || employee_balance.balance_credit_addition.present?
-    balance_removal ? balance_removal.calculate_removal_amount(employee_balance) :
-    employee_balance.calculate_removal_amount
+    if balance_removal
+      balance_removal.calculate_removal_amount(employee_balance)
+    else
+      employee_balance.calculate_removal_amount
+    end
   end
 
   def update_next_employee_balances

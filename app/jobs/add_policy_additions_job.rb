@@ -15,9 +15,11 @@ class AddPolicyAdditionsJob < ActiveJob::Base
     employees = Employee.where(id: policy.affected_employees_ids)
 
     employees.each do |employee|
-      category, employee, account, amount, options =
-        policy.time_off_category_id, employee.id, employee.account_id,
-        counter_amount(policy, employee), { policy_credit_addition: true }
+      category = policy.time_off_category_id
+      account = employee.account_id
+      amount = counter_amount(policy, employee)
+      employee = employee.id
+      options = { policy_credit_addition: true }
 
       CreateEmployeeBalance.new(category, employee, account, amount, options).call
     end
@@ -28,9 +30,11 @@ class AddPolicyAdditionsJob < ActiveJob::Base
     policy_addition = policy.amount
 
     employees.each do |employee|
-      category, employee, account, amount, options =
-        policy.time_off_category_id, employee.id, employee.account_id, policy_addition,
-        { policy_credit_addition: true }
+      category = policy.time_off_category_id
+      account = employee.account_id
+      employee = employee.id
+      amount = policy_addition
+      options = { policy_credit_addition: true }
 
       CreateEmployeeBalance.new(category, employee, account, amount, options).call
     end

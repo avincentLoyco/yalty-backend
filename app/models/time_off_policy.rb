@@ -49,7 +49,7 @@ class TimeOffPolicy < ActiveRecord::Base
   end
 
   def start_date
-    Date.new(Date.today.year - start_years_ago, start_month, start_day)
+    Date.new(Time.zone.today.year - start_years_ago, start_month, start_day)
   end
 
   def end_date
@@ -76,7 +76,7 @@ class TimeOffPolicy < ActiveRecord::Base
 
   def years_or_effect
     return (years_to_effect + 1).years if end_day.blank? && end_month.blank?
-    years_to_effect > 1 ? years_to_effect.years : 1.years
+    years_to_effect > 1 ? years_to_effect.years : 1.year
   end
 
   def end_in_years
@@ -84,11 +84,11 @@ class TimeOffPolicy < ActiveRecord::Base
   end
 
   def starts_today?
-    start_date == Date.today
+    start_date == Time.zone.today
   end
 
   def ends_today?
-    end_date == Date.today
+    end_date == Time.zone.today
   end
 
   private

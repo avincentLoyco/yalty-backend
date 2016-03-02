@@ -22,7 +22,7 @@ module API
 
       def check_old_password(attributes)
         return if resource.authenticate(attributes.delete(:old_password))
-        fail InvalidPasswordError.new(resource, message: 'Given Password Invalid')
+        raise InvalidPasswordError.new(resource, message: 'Given Password Invalid')
       end
 
       def prepare_attributes(attributes)

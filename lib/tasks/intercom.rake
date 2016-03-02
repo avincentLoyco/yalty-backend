@@ -1,6 +1,6 @@
 namespace :intercom do
   desc 'import users to intercom'
-  task :import => [:environment] do
+  task import: [:environment] do
     Account.all.each do |account|
       puts "import  #{account.company_name}"
       account.create_or_update_on_intercom(true)
@@ -16,7 +16,7 @@ namespace :intercom do
 
   namespace :invite do
     desc 'Add registration key to a random list of lead'
-    task :random => [:environment] do
+    task random: [:environment] do
       STDOUT.puts "Number of leads to invite: (default: 0, max: #{beta_requests.size})"
       invitation_count = STDIN.gets.chomp.to_i
       invitation_count = 0 if invitation_count < 0
@@ -29,7 +29,7 @@ namespace :intercom do
     end
 
     desc 'Add registration key to choosen leads'
-    task :email => [:environment] do
+    task email: [:environment] do
       STDOUT.puts 'List of email to invite (coma separator):'
       emails = STDIN.gets.chomp.split(',').map(&:strip)
 
@@ -61,15 +61,15 @@ namespace :intercom do
     def beta_requests
       @beta_requests ||= begin
         intercom_client.contacts
-          .all
-          .select do |beta_request|
-            tags = beta_request.tags.map(&:name)
+                       .all
+                       .select do |beta_request|
+          tags = beta_request.tags.map(&:name)
 
-            tags.include?('beta request') &&
-              !beta_request.custom_attributes['beta_invitation_key'].present? &&
-              !tags.include?('beta invitation') &&
-              !tags.include?('beta excluded')
-          end
+          tags.include?('beta request') &&
+            !beta_request.custom_attributes['beta_invitation_key'].present? &&
+            !tags.include?('beta invitation') &&
+            !tags.include?('beta excluded')
+        end
       end
     end
 

@@ -26,7 +26,7 @@ module Api::V1
       resource.first.employee.unique_balances_categories.map do |category|
         EmployeeBalanceRepresenter.new(
           resource.first.employee.last_balance_in_category(category.id)).complete
-            .merge(time_off_category: TimeOffCategoryRepresenter.new(category).basic)
+                                  .merge(time_off_category: time_off_category_json(category))
       end
     end
 
@@ -36,8 +36,8 @@ module Api::V1
       EmployeeRepresenter.new(resource.employee).basic
     end
 
-    def time_off_category_json
-      TimeOffCategoryRepresenter.new(resource.time_off_category).basic
+    def time_off_category_json(category = resource.time_off_category)
+      TimeOffCategoryRepresenter.new(category).basic
     end
 
     def time_off_policy_json

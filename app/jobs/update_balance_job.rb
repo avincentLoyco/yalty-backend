@@ -39,8 +39,8 @@ class UpdateBalanceJob < ActiveJob::Base
   end
 
   def earlier_date
-    options[:effective_at] < employee_balance.effective_at ?
-      options[:effective_at] : employee_balance.effective_at
+    return options[:effective_at] if options[:effective_at] < employee_balance.effective_at
+    employee_balance.effective_at
   end
 
   def current_or_new_amount

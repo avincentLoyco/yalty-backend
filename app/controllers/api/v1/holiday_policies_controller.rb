@@ -58,7 +58,7 @@ module API
         working_places =
           { working_places: attributes.delete(:working_places) } if attributes.key?(:working_places)
         related.merge(employees.to_h)
-          .merge(working_places.to_h)
+               .merge(working_places.to_h)
       end
 
       def resource

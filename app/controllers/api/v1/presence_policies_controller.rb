@@ -71,7 +71,7 @@ module API
           resource.save!
           assign_related(resource, related)
         else
-          fail InvalidResourcesError.new(resource, resource.errors.messages)
+          raise InvalidResourcesError.new(resource, resource.errors.messages)
         end
       end
 

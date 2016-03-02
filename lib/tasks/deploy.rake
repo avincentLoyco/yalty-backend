@@ -7,10 +7,10 @@ namespace :deploy do
     options.branch = branch || `git rev-parse --abbrev-ref HEAD`.chomp
 
     if options.remote == 'production' && options.branch != 'stable'
-      fail "branch '#{options.branch}' can't be deploy to '#{options.remote}' environment"
+      raise "branch '#{options.branch}' can't be deploy to '#{options.remote}' environment"
     elsif options.remote == 'staging' && options.branch !~ %r{^(master)|(stable)|(release/[0-9\.]+)$}
-      fail "branch '#{options.branch}' can't be deploy to '#{options.remote}' environment"
-    elsif options.remote =~ %r{^(review)|(staging)$}
+      raise "branch '#{options.branch}' can't be deploy to '#{options.remote}' environment"
+    elsif options.remote =~ /^(review)|(staging)$/
       options.git_args = '--force'
     end
 
@@ -39,7 +39,7 @@ namespace :deploy do
   end
 
   def migrate_on(options)
-    system "#{options.scalingo_cmd} run \"rake db:migrate\"" || fail
+    system "#{options.scalingo_cmd} run \"rake db:migrate\"" || raise
     system "#{options.scalingo_cmd} restart"
   end
 
@@ -55,7 +55,7 @@ namespace :deploy do
         database: result[4]
       }
     else
-      fail "Cannot get database information for #{target_env}"
+      raise "Cannot get database information for #{target_env}"
     end
   end
 
@@ -78,7 +78,7 @@ namespace :deploy do
 
   namespace :staging do
     desc 'Reset staging environment with production code and data'
-    task :reset => [:environment] do
+    task reset: [:environment] do
       options = options_for('staging', 'stable')
       deploy_to(options)
 
@@ -94,7 +94,7 @@ namespace :deploy do
       system "PGPASSWORD=#{db_staging[:password]} psql --quiet -U #{db_staging[:user]} -h 127.0.0.1 -p 10000 -d #{db_staging[:database]} < tmp/sync_dump.sql"
       Process.kill('SIGTERM', tunnel)
 
-      system "#{options.scalingo_cmd} run \"rake setup\"" || fail
+      system "#{options.scalingo_cmd} run \"rake setup\"" || raise
     end
   end
 end

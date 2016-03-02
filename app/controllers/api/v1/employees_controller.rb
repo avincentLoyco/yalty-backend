@@ -38,7 +38,7 @@ module API
         end
 
         related.merge(holiday_policy.to_h)
-          .merge(presence_policy.to_h)
+               .merge(presence_policy.to_h)
       end
 
       def related_joins_collection_params(attributes)
