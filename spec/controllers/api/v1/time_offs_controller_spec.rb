@@ -45,38 +45,55 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
     let!(:time_offs) { create_list(:time_off, 3, time_off_category: time_off_category) }
     subject { get :index, params }
 
-    context 'without employee id param' do
-      it 'should return time off category time offs' do
+    before { user.employee = employee }
+
+    context 'when user is a manager' do
+      before { user.update_attribute(:account_manager, true) }
+      it 'should return all time off category time offs' do
         subject
 
         time_off_category.time_offs.each do |time_off|
           expect(response.body).to include time_off[:id]
         end
+        expect(response.body).to include time_off.id
       end
 
       it { is_expected.to have_http_status(200) }
     end
 
-    context 'with employee id param' do
-      before { params.merge!(employee_id: employee.id) }
+    context 'when the user is not a manager' do
+      before { user.account_manager = false }
+      context 'when user has an employee' do
+        it 'should return employee time offs and not others time offs' do
+          subject
 
-      it 'should return employee time offs' do
-        subject
+          expect(response.body).to include time_off.id
 
-        expect(response.body).to include time_off.id
+          time_offs.each do |time_off|
+            expect(response.body).to_not include time_off[:id]
+          end
+        end
       end
 
-      it 'should not return not employee time offs' do
-        subject
+      context 'when the user does not has an employee' do
+        before(:each) do
+          user.employee = nil
+        end
 
-        time_offs.each do |time_off|
-          expect(response.body).to_not include time_off[:id]
+        it 'should return an empty collection' do
+          subject
+
+          time_offs.each do |time_off|
+            expect(response.body).to_not include time_off[:id]
+          end
+          expect(response.body).to_not include time_off.id
         end
       end
 
       it { is_expected.to have_http_status(200) }
     end
 
+    context 'when user does not have a an employee'
     it 'should not be visible in context of other account' do
       Account.current = create(:account)
       subject

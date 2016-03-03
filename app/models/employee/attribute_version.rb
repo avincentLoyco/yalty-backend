@@ -15,6 +15,20 @@ class Employee::AttributeVersion < ActiveRecord::Base
 
   validates :order, presence: true, if: 'multiple?'
 
+  scope :visible_for_other_employees, lambda {
+    joins(:attribute_definition)
+      .where(employee_attribute_definitions:
+              { name: PUBLIC_ATTRIBUTES_FOR_OTHERS }
+            )
+  }
+
+  scope :not_editable, lambda {
+    joins(:attribute_definition)
+      .where(employee_attribute_definitions:
+              { name: NOT_EDITABLE_ATTRIBUTES_FOR_EMPLOYEE }
+            )
+  }
+
   def effective_at
     event.try(:effective_at)
   end

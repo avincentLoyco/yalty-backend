@@ -1,14 +1,16 @@
 module API
   module V1
     class TimeOffsController < ApplicationController
-      authorize_resource except: :create
+      authorize_resource except: [:create, :index, :show]
       include TimeOffsRules
 
       def show
+        authorize! :show, resource
         render_resource(resource)
       end
 
       def index
+        authorize! :index, current_user
         render_resource(resources)
       end
 
@@ -49,8 +51,9 @@ module API
       end
 
       def resources
-        return time_off_category.time_offs unless params[:employee_id]
-        time_off_category.time_offs.where(employee: employee)
+        return time_off_category.time_offs if current_user.account_manager
+        return TimeOff.none unless current_user.employee
+        time_off_category.time_offs.where(employee: current_user.employee)
       end
 
       def employee_params
