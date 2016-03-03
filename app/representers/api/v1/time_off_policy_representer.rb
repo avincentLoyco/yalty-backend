@@ -2,6 +2,7 @@ module Api::V1
   class TimeOffPolicyRepresenter < BaseRepresenter
     def complete
       {
+        name: resource.name,
         start_day: resource.start_day,
         end_day: resource.end_day,
         start_month: resource.start_month,

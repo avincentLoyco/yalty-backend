@@ -83,6 +83,7 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
           expect_json_keys(
             [ :id,
               :type,
+              :name,
               :start_day,
               :end_day,
               :start_month,
@@ -120,16 +121,18 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
     let(:working_place_id) { working_place.id }
     let(:employee_id) { employee.id }
     let(:time_off_category_id) { time_off_category.id }
+    let(:policy_type) { 'balance' }
     let(:start_day) { 10 }
     let(:params) do
       {
+        name: 'Vacations of Adams',
         type: 'time_off_policy',
         start_day: start_day,
         end_day: 7,
         start_month: 8,
         end_month: 7,
         amount: 20,
-        policy_type: 'balance',
+        policy_type: policy_type,
         years_to_effect: 2,
         time_off_category:{
           id: time_off_category_id,
@@ -162,6 +165,7 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
           expect_json_keys(
             [ :id,
               :type,
+              :name,
               :start_day,
               :end_day,
               :start_month,
@@ -179,15 +183,26 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
 
       context 'without not obligatory params' do
         before do
-          params.delete(:amount)
+          params.delete(:years_to_effect)
           params.delete(:working_places)
           params.delete(:employees)
           params.delete(:end_day)
           params.delete(:end_month)
         end
+        context 'for type balancer' do
 
-        it { expect { subject }.to change { TimeOffPolicy.count }.by(1) }
-        it { is_expected.to have_http_status(201) }
+          it { expect { subject }.to change { TimeOffPolicy.count }.by(1) }
+          it { is_expected.to have_http_status(201) }
+        end
+        context 'for type counter' do
+          let(:policy_type) { 'counter' }
+          before do
+            params.delete(:amount)
+          end
+
+          it { expect { subject }.to change { TimeOffPolicy.count }.by(1) }
+          it { is_expected.to have_http_status(201) }
+        end
       end
 
       context 'and when time_off_category_id belongs to other accout' do
@@ -241,6 +256,7 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
     let(:end_month) { 7 }
     let(:params) do
       {
+        name: 'Vacations of Adams',
         id: id,
         type: 'time_off_policy',
         start_day: start_day,
@@ -270,9 +286,11 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
 
       context 'without not obligatory params' do
         before do
+          params.delete(:name)
           params.delete(:amount)
           params.delete(:working_places)
           params.delete(:employees)
+          params.delete(:years_to_effect)
         end
         it { expect { subject }.not_to change { policy.reload.time_off_category_id } }
         it { expect { subject }.to change { policy.reload.start_day } }
