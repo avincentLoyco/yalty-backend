@@ -5,7 +5,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     resource_name: 'employee_event'
   include_context 'shared_context_headers'
 
-  let(:user) { create(:account_user) }
   let!(:employee_eattribute_definition) do
     create(:employee_attribute_definition,
       account: Account.current,
@@ -16,19 +15,22 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
   let!(:employee) do
     create(:employee, :with_attributes,
       account: account,
+      account_user_id: user.id,
       event: {
         event_type: 'hired',
         effective_at: 2.days.from_now.at_beginning_of_day
       },
       employee_attributes: {
         firstname: employee_first_name,
-        lastname: employee_last_name
+        lastname: employee_last_name,
+        annual_salary: employee_annual_salary
       }
     )
   end
   let(:employee_id) { employee.id }
   let(:employee_first_name) { 'John' }
   let(:employee_last_name) { 'Doe' }
+  let(:employee_annual_salary) { '2000' }
 
   let!(:event) { employee.events.where(event_type: 'hired').first! }
   let(:event_id) { event.id }
@@ -40,6 +42,14 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     end
   end
   let(:first_name_attribute_id) { first_name_attribute.id }
+
+  let(:annual_salary_attribute_definition) { 'annual_salary'}
+  let(:annual_salary_attribute_id) { annual_salary_attribute.id }
+  let(:annual_salary_attribute) do
+    event.employee_attribute_versions.find do |attr|
+      attr.attribute_name == 'annual_salary'
+    end
+  end
 
   let(:last_name_attribute_definition) { 'lastname'}
   let(:last_name_attribute) do
@@ -237,7 +247,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           pet_multiple_attribute
 
         expect(subject).to have_http_status(201)
-        expect(Employee::AttributeVersion.count).to eq(6)
+        expect(Employee::AttributeVersion.count).to eq(7)
       end
 
       it 'should create event when empty array send' do
@@ -448,7 +458,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
             system_multiple_attribute
 
           expect(subject).to have_http_status(201)
-          expect(Employee::AttributeVersion.count).to eq(6)
+          expect(Employee::AttributeVersion.count).to eq(7)
         end
       end
     end
@@ -603,6 +613,12 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
             type: "employee_attribute",
             attribute_name: last_name_attribute_definition,
             value: last_name
+          },
+          {
+            id: annual_salary_attribute_id,
+            type: "employee_attribute",
+            attribute_name: annual_salary_attribute_definition,
+            value: annual_salary
           }
         ]
       }
@@ -613,6 +629,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
     let(:first_name) { 'Walter' }
     let(:last_name) { 'Smith' }
+    let(:annual_salary) { '300' }
 
     context 'with change in all fields' do
       it { expect { subject }.to_not change { Employee::Event.count } }
@@ -624,9 +641,61 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
       it { expect { subject }.to change { first_name_attribute.reload.value }.to(first_name) }
       it { expect { subject }.to change { last_name_attribute.reload.value }.to(last_name) }
+      it { expect { subject }.to change { annual_salary_attribute.reload.value }.to(annual_salary) }
 
       it 'should respond with success' do
         expect(subject).to have_http_status(204)
+      end
+    end
+    context 'when the user is not an account manager'do
+      before { user.account_manager = false }
+
+      context 'and there is a forbidden attribute in the payload' do
+        context 'and it has been updated' do
+          it 'should respond with error' do
+            expect(subject).to have_http_status(403)
+            expect(subject.body).to include('Not authorized!')
+          end
+        end
+
+        context 'and it has not been updated' do
+          let(:annual_salary) { employee_annual_salary }
+
+          it { expect { subject }.to_not change { Employee::Event.count } }
+          it { expect { subject }.to_not change { Employee.count } }
+          it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
+
+          it { expect { subject }.to change { event.reload.comment }.to('change comment') }
+          it { expect { subject }.to change { event.reload.effective_at }.to(effective_at) }
+
+          it { expect { subject }.to change { first_name_attribute.reload.value }.to(first_name) }
+          it { expect { subject }.to change { last_name_attribute.reload.value }.to(last_name) }
+          it { expect { subject }.to_not change { annual_salary_attribute.reload.value } }
+        end
+      end
+
+      context 'and there is not a forbidden attribute payload' do
+        before do
+          json_payload[:employee_attributes].delete_if do |attr|
+            attr[:attribute_name] ==annual_salary_attribute_definition
+          end
+          annual_salary_attribute.destroy
+        end
+        context 'with change in all fields' do
+          it { expect { subject }.to_not change { Employee::Event.count } }
+          it { expect { subject }.to_not change { Employee.count } }
+          it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
+
+          it { expect { subject }.to change { event.reload.comment }.to('change comment') }
+          it { expect { subject }.to change { event.reload.effective_at }.to(effective_at) }
+
+          it { expect { subject }.to change { first_name_attribute.reload.value }.to(first_name) }
+          it { expect { subject }.to change { last_name_attribute.reload.value }.to(last_name) }
+
+          it 'should respond with success' do
+            expect(subject).to have_http_status(204)
+          end
+        end
       end
     end
 
@@ -827,7 +896,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           pet_multiple_attribute
 
         expect(subject).to have_http_status(204)
-        expect(Employee::AttributeVersion.count).to eq(4)
+        expect(Employee::AttributeVersion.count).to eq(5)
         expect(
           employee.reload.employee_attribute_versions.map(&:value)
         ).to include(
@@ -967,6 +1036,30 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       get :show, id: '12345678-1234-1234-1234-123456789012'
 
       expect(response).to have_http_status(404)
+    end
+
+    context 'if current_user is not the empoyee requested and not manager' do
+      subject { get :show, id: event_id }
+      it 'should not include some attributes' do
+        subject
+        event_attributes = employee.events.first.employee_attribute_versions
+        public_attributes = event_attributes.visible_for_other_employees
+        not_public_attributes =
+          event_attributes
+          .joins(:attribute_definition)
+          .where
+          .not(employee_attribute_definitions:
+                { name: ActsAsAttribute::PUBLIC_ATTRIBUTES_FOR_OTHERS }
+              )
+
+        public_attributes.each do |attr|
+          expect(response.body).to include(attr.attribute_name)
+        end
+
+        not_public_attributes.each do |attr|
+          expect(response.body).not_to include(attr.attribute_name)
+        end
+      end
     end
   end
 end
