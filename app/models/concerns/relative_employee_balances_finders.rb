@@ -60,7 +60,7 @@ module RelativeEmployeeBalancesFinders
 
   def next_removals_smaller_than_amount?(new_amount)
     return true unless active_balances_with_removals.present?
-    active_balances_with_removals.pluck(:amount).map(&:abs).sum < new_amount.try(:abs).to_i
+    active_balances_with_removals.pluck(:amount).sum < new_amount.try(:abs).to_i
   end
 
   def ids_to_removal(new_amount)
@@ -68,8 +68,10 @@ module RelativeEmployeeBalancesFinders
                        .order(effective_at: :asc)
 
     removals.each do |removal|
-      new_amount -= removal.amount unless removal.amount.abs >= new_amount.abs
-      return balances.where(effective_at: effective_at..removal.effective_at).pluck(:id)
+      if removal.amount.abs >= new_amount.abs
+        return balances.where(effective_at: effective_at..removal.effective_at).pluck(:id)
+      end
+      new_amount -= removal.amount
     end
   end
 
