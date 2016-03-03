@@ -52,25 +52,10 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   def calculate_removal_amount(addition = balance_credit_addition)
-    if last_balance(addition).blank?
-      self.amount = amount_from_addition(addition)
-    else
-      sum = addition.amount - previous_balances.last.try(:balance).to_i +
-        + positive_balances(addition) + active_balances.pluck(:amount).sum
-
-      self.amount = (sum > 0 && sum < addition.amount) ? - (addition.amount - sum) : 0
-    end
+    self.amount = CalculateEmployeeBalanceRemovalAmount.new(self, addition).call
   end
 
   private
-
-  def amount_from_addition(addition)
-    if addition.amount > addition.balance && addition.balance > 0
-      -addition.balance
-    else
-      -addition.amount
-    end
-  end
 
   def attributes_present?
     employee.present? && time_off_category.present? && amount.present? && time_off_policy.present?

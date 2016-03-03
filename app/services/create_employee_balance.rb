@@ -99,7 +99,7 @@ class CreateEmployeeBalance
   end
 
   def calculate_amount
-    return unless balance_removal || employee_balance.balance_credit_addition.present?
+    return unless balancer_removal? || counter_addition?
     if balance_removal
       balance_removal.calculate_removal_amount(employee_balance)
     else
@@ -123,5 +123,13 @@ class CreateEmployeeBalance
   def update_beeing_processed_status(balances_ids)
     Employee::Balance.where(id: balances_ids).update_all(beeing_processed: true)
     TimeOff.find(time_off.id).update(beeing_processed: true) if time_off
+  end
+
+  def balancer_removal?
+    balance_removal || employee_balance.balance_credit_addition.present?
+  end
+
+  def counter_addition?
+    employee_balance.policy_credit_addition && employee_balance.time_off_policy.counter?
   end
 end
