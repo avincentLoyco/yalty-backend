@@ -24,7 +24,7 @@ RSpec.describe AddPolicyAdditionsJob do
 
     context 'when policy starts today' do
       context 'when policy type is counter' do
-        before { policy.update!(policy_type: 'counter') }
+        before { policy.update!(policy_type: 'counter', amount: nil) }
 
         it { expect { subject }.to change { Employee::Balance.count }.by(2) }
         it { expect { subject }.to change { policy.reload.employee_balances.count }.by(2) }

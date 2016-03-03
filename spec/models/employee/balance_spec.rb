@@ -107,7 +107,7 @@ RSpec.describe Employee::Balance, type: :model do
     end
 
     context 'counter validity date blank' do
-      let(:policy) { create(:time_off_policy, policy_type: 'counter') }
+      let(:policy) { create(:time_off_policy, policy_type: 'counter', amount: nil) }
       let(:employee_balance) do
         build(:employee_balance, time_off_policy: policy, effective_at: Date.today - 1.day)
       end
@@ -127,7 +127,7 @@ RSpec.describe Employee::Balance, type: :model do
         end
 
         context 'and policy is a balancer type' do
-          before { policy.update!(policy_type: 'balancer') }
+          before { policy.update!(policy_type: 'balancer', amount: 100) }
 
           it { expect(subject).to eq true }
           it { expect { subject }.to_not change { employee_balance.errors.size } }

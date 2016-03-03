@@ -13,7 +13,7 @@ class TimeOffPolicy < ActiveRecord::Base
     :name,
     presence: true
   validates :years_passed, numericality: { greater_than_or_equal_to: 0 }
-  validates :amount, presence: true, if: "policy_type == 'balance'"
+  validates :amount, presence: true, if: "policy_type == 'balancer'"
   validates :amount, absence: true, if: "policy_type == 'counter'"
   validates :policy_type, inclusion: { in: %w(counter balancer) }
   validates :years_to_effect,
@@ -27,7 +27,7 @@ class TimeOffPolicy < ActiveRecord::Base
     presence: true,
     if: "(end_day.present? || end_month.present?) && policy_type == 'balancer'"
   validate :no_end_dates, if: "policy_type == 'counter'"
-  validate :end_date_after_start_date, if: [:start_day, :start_month]
+  validate :end_date_after_start_date, if: [:start_day, :start_month, :end_day, :end_month]
 
   scope :for_account_and_category, lambda { |account_id, time_off_category_id|
     joins(:time_off_category).where(
@@ -70,12 +70,12 @@ class TimeOffPolicy < ActiveRecord::Base
   end
 
   def start_years_ago
-    return 0 unless years_to_effect > 1 && years_passed != 0
+    return 0 unless years_to_effect && years_to_effect > 1 && years_passed != 0
     years_passed % years_to_effect
   end
 
   def years_or_effect
-    return (years_to_effect + 1).years if end_day.blank? && end_month.blank?
+    return (years_to_effect.to_i + 1).years if years_to_effect.blank? || dates_blank?
     years_to_effect > 1 ? years_to_effect.years : 1.year
   end
 
@@ -92,6 +92,10 @@ class TimeOffPolicy < ActiveRecord::Base
   end
 
   private
+
+  def dates_blank?
+    (end_day.blank? && end_month.blank?)
+  end
 
   def correct_dates
     verify_date(start_day, start_month, :start_day, :start_month)

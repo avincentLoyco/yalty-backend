@@ -1,14 +1,29 @@
 RSpec.shared_context 'shared_context_balances' do |settings|
   let!(:category) { create(:time_off_category, account: account) }
-  let(:policy) do
-    create(:time_off_policy,
-      time_off_category: category,
-      policy_type: settings[:type],
-      end_month: settings[:end_month],
-      end_day: settings[:end_day],
-      years_to_effect: settings[:years_to_effect]
-    )
+
+  if settings[:type] == 'balancer'
+    let(:policy) do
+      create(:time_off_policy,
+        time_off_category: category,
+        policy_type: settings[:type],
+        end_month: settings[:end_month],
+        end_day: settings[:end_day],
+        years_to_effect: settings[:years_to_effect]
+      )
+    end
+  else
+    let(:policy) do
+      create(:time_off_policy,
+        time_off_category: category,
+        policy_type: settings[:type],
+        end_month: settings[:end_month],
+        end_day: settings[:end_day],
+        years_to_effect: settings[:years_to_effect],
+        amount: nil
+      )
+    end
   end
+
   let!(:employee_time_off_policy) do
     create(:employee_time_off_policy, employee: employee, time_off_policy: policy)
   end
