@@ -39,7 +39,7 @@ class ManageRemoval
 
   def params
     [resource.time_off_category_id, resource.employee_id, Account.current.id, nil,
-    { policy_credit_removal: true, skip_update: true, balance_credit_addition_id: resource.id,
-      effective_at: new_date }]
+     { policy_credit_removal: true, skip_update: true, balance_credit_addition_id: resource.id,
+       effective_at: new_date }]
   end
 end
