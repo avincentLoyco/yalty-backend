@@ -33,7 +33,7 @@ module API
           validity_date = attributes[:validity_date]
 
           transactions do
-            manage_removal(validity_date.to_date) if attributes.key?(:validity_date)
+            ManageRemoval.new(validity_date, resource).call if attributes.key?(:validity_date)
             update_balances_processed_flag(balances_to_update(editable_resource, effective_at))
           end
 
@@ -62,12 +62,6 @@ module API
          attributes[:amount], options(attributes)]
       end
 
-      def params_from_resource
-        [resource.time_off_category_id, resource.employee_id, Account.current.id, nil,
-         { policy_credit_removal: true, skip_update: true, balance_credit_addition_id: resource.id,
-           effective_at: params[:validity_date] }]
-      end
-
       def resource
         @resource ||= Account.current.employee_balances.find(params[:id])
       end
@@ -89,38 +83,8 @@ module API
         TimeOffCategory.find(params[:time_off_category_id])
       end
 
-      def resource_representer
-        ::Api::V1::EmployeeBalanceRepresenter
-      end
-
       def employee_balances
         Account.current.employees.find(params[:employee_id]).employee_balances
-      end
-
-      def manage_removal(new_date)
-        return unless new_date.blank? || moved_to_past?(new_date) || moved_to_future?(new_date)
-        if new_date.blank? || moved_to_future?(new_date)
-          resource.balance_credit_removal.try(:destroy!)
-        else
-          create_removal
-        end
-      end
-
-      def moved_to_past?(new_date, current_date = resource.validity_date)
-        (current_date.blank? || current_date.to_date > Time.zone.today) &&
-          new_date <= Time.zone.today
-      end
-
-      def moved_to_future?(new_date, current_date = resource.validity_date)
-        (current_date.blank? || current_date.to_date <= Time.zone.today) &&
-          new_date > Time.zone.today
-      end
-
-      def create_removal
-        return unless resource.balance_credit_removal.blank?
-        category, employee, account, amount, options = params_from_resource
-
-        CreateEmployeeBalance.new(category, employee, account, amount, options).call
       end
 
       def verifiy_effective_at_and_validity_date
@@ -128,6 +92,10 @@ module API
         effective_at = params[:effective_at] ? params[:effective_at] : resource.effective_at
         return unless validity_date && effective_at && validity_date < effective_at
         raise InvalidResourcesError.new(resource, ['validity date must be after effective at'])
+      end
+
+      def resource_representer
+        ::Api::V1::EmployeeBalanceRepresenter
       end
     end
   end

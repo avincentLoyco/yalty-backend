@@ -18,7 +18,7 @@ class CreateEmployeeBalance
     ActiveRecord::Base.transaction do
       build_employee_balance
       build_employee_balance_removal if validity_date.present? && validity_date <= Time.zone.today
-      calculate_amount
+      calculate_amount if time_off_policy
       save!
 
       update_next_employee_balances
