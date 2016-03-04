@@ -458,7 +458,7 @@ CREATE TABLE time_off_policies (
     created_at timestamp without time zone,
     updated_at timestamp without time zone,
     years_passed integer DEFAULT 0 NOT NULL,
-    name character varying NOT NULL
+    name character varying
 );
 
 
@@ -1377,8 +1377,6 @@ INSERT INTO schema_migrations (version) VALUES ('20160202112542');
 INSERT INTO schema_migrations (version) VALUES ('20160203104303');
 
 INSERT INTO schema_migrations (version) VALUES ('20160210170022');
-
-INSERT INTO schema_migrations (version) VALUES ('20160216100000');
 
 INSERT INTO schema_migrations (version) VALUES ('20160218120538');
 
