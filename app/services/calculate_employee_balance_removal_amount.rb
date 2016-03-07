@@ -27,7 +27,7 @@ class CalculateEmployeeBalanceRemovalAmount
   end
 
   def amount_from_addition
-    return -addition.balance if addition.amount > addition.balance && addition.balance > 0
+    return -addition.balance if addition.amount > addition.balance && addition.balance >= 0
     -addition.amount
   end
 
@@ -37,7 +37,7 @@ class CalculateEmployeeBalanceRemovalAmount
   end
 
   def sum
-    addition.amount - (previous_balance - positive_amounts)
+    addition.amount - (previous_balance - positive_amounts - amount_difference)
   end
 
   def previous_balance
@@ -47,5 +47,10 @@ class CalculateEmployeeBalanceRemovalAmount
   def positive_amounts
     employee_balance.positive_balances_after(addition) +
       + employee_balance.active_balances.pluck(:amount).sum
+  end
+
+  def amount_difference
+    return 0 unless addition.amount < addition.balance
+    addition.balance - addition.amount
   end
 end

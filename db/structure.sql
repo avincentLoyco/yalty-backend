@@ -206,10 +206,10 @@ CREATE TABLE employee_balances (
     updated_at timestamp without time zone,
     beeing_processed boolean DEFAULT false,
     effective_at timestamp without time zone,
-    balance_credit_addition_id uuid,
     validity_date timestamp without time zone,
     policy_credit_removal boolean DEFAULT false,
-    policy_credit_addition boolean DEFAULT false
+    policy_credit_addition boolean DEFAULT false,
+    balance_credit_addition_id uuid
 );
 
 
@@ -458,7 +458,7 @@ CREATE TABLE time_off_policies (
     created_at timestamp without time zone,
     updated_at timestamp without time zone,
     years_passed integer DEFAULT 0 NOT NULL,
-    name character varying
+    name character varying NOT NULL
 );
 
 

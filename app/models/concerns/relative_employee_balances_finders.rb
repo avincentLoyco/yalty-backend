@@ -55,7 +55,7 @@ module RelativeEmployeeBalancesFinders
   end
 
   def all_later_ids(effective = effective_at)
-    balances.where('effective_at >= ?', effective).pluck(:id)
+    balances.where('effective_at >= ?', effective.to_time).pluck(:id)
   end
 
   def next_removals_smaller_than_amount?(new_amount)

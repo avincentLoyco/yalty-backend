@@ -31,6 +31,16 @@ RSpec.describe AddPolicyAdditionsJob do
         it { expect { subject }.to change { employees.first.reload.employee_balances.count }.by(1) }
         it { expect { subject }.to change { employees.last.reload.employee_balances.count }.by(1) }
         it { expect { subject }.to change { employee_balance.reload.beeing_processed } }
+
+        context 'and already called' do
+          before { subject }
+
+          it { expect { subject }.to_not change { Employee::Balance.count } }
+          it { expect { subject }.to_not change { policy.reload.employee_balances.count } }
+          it { expect { subject }.to_not change { employees.first.reload.employee_balances.count } }
+          it { expect { subject }.to_not change { employees.last.reload.employee_balances.count } }
+          it { expect { subject }.to_not change { employee_balance.reload.beeing_processed } }
+        end
       end
 
       context 'when policy type is balancer' do
@@ -39,6 +49,16 @@ RSpec.describe AddPolicyAdditionsJob do
         it { expect { subject }.to change { employees.first.reload.employee_balances.count }.by(1) }
         it { expect { subject }.to change { employees.last.reload.employee_balances.count }.by(1) }
         it { expect { subject }.to change { employee_balance.reload.beeing_processed } }
+
+        context 'and already called' do
+          before { subject }
+
+          it { expect { subject }.to_not change { Employee::Balance.count } }
+          it { expect { subject }.to_not change { policy.reload.employee_balances.count } }
+          it { expect { subject }.to_not change { employees.first.reload.employee_balances.count } }
+          it { expect { subject }.to_not change { employees.last.reload.employee_balances.count } }
+          it { expect { subject }.to_not change { employee_balance.reload.beeing_processed } }
+        end
       end
     end
 

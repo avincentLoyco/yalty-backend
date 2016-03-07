@@ -87,11 +87,11 @@ class TimeOffPolicy < ActiveRecord::Base
     end_date == Time.zone.today
   end
 
-  private
-
   def dates_blank?
     (end_day.blank? && end_month.blank?)
   end
+
+  private
 
   def correct_dates
     verify_date(start_day, start_month, :start_day, :start_month)

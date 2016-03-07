@@ -20,6 +20,8 @@ class AddPolicyAdditionsJob < ActiveJob::Base
       employee = employee.id
       options = { policy_credit_addition: true }
 
+      next if addition_already_exist?(policy.id, employee)
+
       CreateEmployeeBalance.new(category, employee, account, nil, options).call
     end
   end
@@ -33,9 +35,24 @@ class AddPolicyAdditionsJob < ActiveJob::Base
       account = employee.account_id
       employee = employee.id
       amount = policy_addition
-      options = { policy_credit_addition: true }
+      options = { policy_credit_addition: true, validity_date: policy_end_date(policy) }
+
+      next if addition_already_exist?(policy.id, employee)
 
       CreateEmployeeBalance.new(category, employee, account, amount, options).call
     end
+  end
+
+  def addition_already_exist?(policy_id, employee_id)
+    additions = Employee::Balance.employee_balances(employee_id, policy_id)
+                                 .where('policy_credit_addition = true AND effective_at::date = ?',
+                                          Date.today
+                                       ).count
+    additions > 0
+  end
+
+  def policy_end_date(policy)
+    return nil if policy.dates_blank?
+    policy.end_date.to_s
   end
 end
