@@ -21,11 +21,11 @@ module RelativeEmployeeBalancesFinders
     balances.where('effective_at < ?', now_or_effective_at).order(effective_at: :asc)
   end
 
-  def last_balance(addition)
+  def last_balance_after(addition)
     previous_balances.where('amount <= ? AND effective_at > ?', 0, addition.effective_at).last
   end
 
-  def positive_balances(addition)
+  def positive_balances_after(addition)
     balances.where(effective_at: addition.effective_at..now_or_effective_at,
                    amount: 1..Float::INFINITY, validity_date: nil).pluck(:amount).sum
   end

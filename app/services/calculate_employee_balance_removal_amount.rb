@@ -19,7 +19,7 @@ class CalculateEmployeeBalanceRemovalAmount
   end
 
   def calculate_balancer_amount
-    if employee_balance.last_balance(addition).blank?
+    if employee_balance.last_balance_after(addition).blank?
       amount_from_addition
     else
       amount_from_previous_balances
@@ -45,7 +45,7 @@ class CalculateEmployeeBalanceRemovalAmount
   end
 
   def positive_amounts
-    employee_balance.positive_balances(addition) +
+    employee_balance.positive_balances_after(addition) +
       + employee_balance.active_balances.pluck(:amount).sum
   end
 end

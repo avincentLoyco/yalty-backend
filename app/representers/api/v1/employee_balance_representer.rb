@@ -25,8 +25,8 @@ module Api::V1
       return [] if resource.blank?
       resource.first.employee.unique_balances_categories.map do |category|
         EmployeeBalanceRepresenter.new(
-          resource.first.employee.last_balance_in_category(category.id)).complete
-                                  .merge(time_off_category: time_off_category_json(category))
+          resource.first.employee.last_balance_in_category(category.id)
+        ).complete.merge(time_off_category: time_off_category_json(category))
       end
     end
 

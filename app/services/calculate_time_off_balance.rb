@@ -35,16 +35,16 @@ class CalculateTimeOffBalance
     (time_off.end_time - time_off.start_time).to_i / 1.day
   end
 
-  def repeated
+  def order_numbers_in_period
     return [] unless num_of_days > 0
     days = [start_order, end_order]
     (1..7).to_a - (days.min..days.max).to_a
   end
 
   def presence_days_with_entries_duration
-    PresenceDay.with_entries(presence_policy.id).each_with_object({}) do |t, e|
-      e[t.order] = t.time_entries.pluck(:duration).sum
-      e
+    PresenceDay.with_entries(presence_policy.id).each_with_object({}) do |day, total|
+      total[day.order] = day.time_entries.pluck(:duration).sum
+      total
     end
   end
 
@@ -92,15 +92,15 @@ class CalculateTimeOffBalance
 
   def orders_occurances
     if num_of_days % 7 == 0
-      ((1..7).to_a * (num_of_days / 7 - 1) + repeated)
+      ((1..7).to_a * (num_of_days / 7 - 1) + order_numbers_in_period)
     else
-      ((1..7).to_a * (num_of_days / 7) + repeated)
+      ((1..7).to_a * (num_of_days / 7) + order_numbers_in_period)
     end
   end
 
   def orders_with_entries_occurances
-    occurances = orders_occurances.each_with_object(Hash.new(0)) do |e, total|
-      total[e] += 1
+    occurances = orders_occurances.each_with_object(Hash.new(0)) do |order, total|
+      total[order] += 1
       total
     end
     occurances.select { |k, _v| presence_days_with_entries_duration.keys.include?(k) }

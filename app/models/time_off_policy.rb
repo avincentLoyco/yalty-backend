@@ -39,10 +39,6 @@ class TimeOffPolicy < ActiveRecord::Base
     policy_type == 'counter'
   end
 
-  def last_balance_addition
-    employee_balances.where(policy_credit_addition: true).order(effective_at: :asc).last
-  end
-
   def affected_employees_ids
     (working_place_time_off_policies.affected_employees(id) +
       employee_time_off_policies.affected_employees(id)).uniq
@@ -70,7 +66,7 @@ class TimeOffPolicy < ActiveRecord::Base
   end
 
   def start_years_ago
-    return 0 unless years_to_effect && years_to_effect > 1 && years_passed != 0
+    return 0 unless years_to_effect && years_to_effect > 1
     years_passed % years_to_effect
   end
 
