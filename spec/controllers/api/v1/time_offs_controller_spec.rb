@@ -11,7 +11,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
   end
   before { time_off_category.update!(account: Account.current) }
   let!(:time_off) do
-    create(:time_off, time_off_category_id: time_off_category.id, employee: employee)
+    create(:time_off, :with_balance, time_off_category_id: time_off_category.id, employee: employee)
   end
 
   describe 'GET #show' do
@@ -25,7 +25,9 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
       context 'response body' do
         before { subject }
 
-        it { expect_json_keys([:id, :type, :start_time, :end_time, :employee, :time_off_category]) }
+        it { expect_json_keys(
+          [:id, :type, :start_time, :end_time, :employee, :time_off_category, :employee_balance]
+        ) }
       end
     end
 
@@ -110,6 +112,8 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
   end
 
   describe 'POST #create' do
+    before { Employee::Balance.destroy_all }
+
     let(:start_time) { '15:00:00'.to_time  }
     let(:end_time) { start_time + 1.week }
     let(:employee_id) { employee.id }
@@ -227,6 +231,8 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
   end
 
   describe 'PUT #update' do
+    before { Employee::Balance.destroy_all }
+
     let(:id) { time_off.id }
     let(:start_time) { Date.today }
     let(:end_time) { Date.today + 1.week }
@@ -289,10 +295,6 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
   describe 'DELETE #destroy' do
     subject { delete :destroy, id: id }
     let(:id) { time_off.id }
-    let!(:employee_balance) do
-      create(:employee_balance,
-        time_off: time_off, time_off_category: time_off_category, employee: employee)
-    end
 
     context 'with valid data' do
       let(:id) { time_off.id }

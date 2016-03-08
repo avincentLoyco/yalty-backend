@@ -38,7 +38,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
         it { expect_json_keys(
           [
             :id, :balance, :amount, :employee, :time_off_category, :time_off_policy, :effective_at,
-            :beeing_processed, :policy_credit_removal
+            :beeing_processed, :policy_credit_removal, :time_off
           ]
         )}
       end

@@ -46,8 +46,8 @@ class AddPolicyAdditionsJob < ActiveJob::Base
   def addition_already_exist?(policy_id, employee_id)
     additions = Employee::Balance.employee_balances(employee_id, policy_id)
                                  .where('policy_credit_addition = true AND effective_at::date = ?',
-                                          Date.today
-                                       ).count
+                                   Time.zone.today)
+                                 .count
     additions > 0
   end
 
