@@ -2,12 +2,16 @@
 -- PostgreSQL database dump
 --
 
+-- Dumped from database version 9.5.1
+-- Dumped by pg_dump version 9.5.1
+
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
+SET row_security = off;
 
 --
 -- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: -
@@ -220,7 +224,8 @@ CREATE TABLE employee_balances (
 CREATE TABLE employee_time_off_policies (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
     employee_id uuid NOT NULL,
-    time_off_policy_id uuid NOT NULL
+    time_off_policy_id uuid NOT NULL,
+    effective_at timestamp without time zone NOT NULL
 );
 
 
@@ -485,7 +490,8 @@ CREATE TABLE time_offs (
 CREATE TABLE working_place_time_off_policies (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
     working_place_id uuid NOT NULL,
-    time_off_policy_id uuid NOT NULL
+    time_off_policy_id uuid NOT NULL,
+    effective_at timestamp without time zone NOT NULL
 );
 
 
@@ -814,10 +820,10 @@ CREATE INDEX index_employee_events_on_employee_id ON employee_events USING btree
 
 
 --
--- Name: index_employee_id_time_off_policy_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_employee_id_time_off_policy_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
-CREATE UNIQUE INDEX index_employee_id_time_off_policy_id ON employee_time_off_policies USING btree (time_off_policy_id, employee_id);
+CREATE INDEX index_employee_id_time_off_policy_id ON employee_time_off_policies USING btree (time_off_policy_id, employee_id);
 
 
 --
@@ -835,7 +841,14 @@ CREATE INDEX index_employee_time_off_policies_on_time_off_policy_id ON employee_
 
 
 --
--- Name: index_employees_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_employee_time_off_policy_effective_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_employee_time_off_policy_effective_at ON employee_time_off_policies USING btree (employee_id, time_off_policy_id, effective_at);
+
+
+--
+-- Name: index_employees_on_account_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX index_employees_on_account_id ON employees USING btree (account_id);
@@ -954,10 +967,10 @@ CREATE INDEX index_time_offs_on_time_off_category_id ON time_offs USING btree (t
 
 
 --
--- Name: index_working_place_id_time_off_policy_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_working_place_id_time_off_policy_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
-CREATE UNIQUE INDEX index_working_place_id_time_off_policy_id ON working_place_time_off_policies USING btree (time_off_policy_id, working_place_id);
+CREATE INDEX index_working_place_id_time_off_policy_id ON working_place_time_off_policies USING btree (time_off_policy_id, working_place_id);
 
 
 --
@@ -975,7 +988,14 @@ CREATE INDEX index_working_place_time_off_policies_on_working_place_id ON workin
 
 
 --
--- Name: index_working_places_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_working_place_time_off_policy_effective_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_working_place_time_off_policy_effective_at ON working_place_time_off_policies USING btree (working_place_id, time_off_policy_id, effective_at);
+
+
+--
+-- Name: index_working_places_on_account_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX index_working_places_on_account_id ON working_places USING btree (account_id);
@@ -1216,7 +1236,7 @@ ALTER TABLE ONLY time_offs
 -- PostgreSQL database dump complete
 --
 
-SET search_path TO "$user",public;
+SET search_path TO "$user", public;
 
 INSERT INTO schema_migrations (version) VALUES ('20150506171210');
 
