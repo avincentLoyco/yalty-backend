@@ -287,110 +287,75 @@ By default account_id is equal Account.current.id
 
 
 
-## Holiday Collection [/api/v1/holiday_policies/{holiday_policy_id}/holidays]
+## Country Collection [/api/v1/countries/{country_id}]
 
 + Parameters
-   + holiday_policy_id: 12345678-1234-1234-123456789012 (required, string) - ID is in uuid format
+   + country_id: 'ch' (required, string)
 
-### GET List of all holiday_policy holidays [GET]
+### GET List of all holidays for a country  [GET]
 
-Get a list of holidays which belongs to particular holiday_policy
+Get a list of holidays which belongs to aparticular country along with the regions in which each holiday is present
 
 + Request (application/json)
 
 + Response 200 (application/json)
 
-        [
+        {
+          "holidays": [
             {
-              "date": "01/01",
-              "id": "87654321-1234-1234-1234-123456789012",
-              "type": "holiday"
+              "date": "2016-01-01",
+              "code": "new_years_day"
             },
             {
-              "date": "01/01",
-              "id": "12345678-1234-1234-1234-123456789012",
-              "type": "holiday"
+              "date": "2016-01-02",
+              "code": "saint_berchtold"
+            },
             }
-        ]
-
-### POST Create a holiday [POST /api/v1/holidays]
-
-Create a new holiday
-
-+ Attributes
-  + name: holiday (string, required)
-  + date: 1 (string, required)
-  + holiday_policy
-    + id: 11 (string, required)
-
-+ Request (application/json)
-
-        {
-            "name": "holiday",
-            "date": "01.01.2013",
-            "holiday_policy": {
-              "id": "12345678-1234-1234-1234-123456789012"
+              "date": "2016-03-28",
+              "code": "easter_monday"
+            },
+            {
+              "date": "2016-12-25",
+              "code": "christmas"
             }
+          ],
+          "regions": [
+            {
+              "code": "ch_zh",
+              "holidays": [
+                "new_years_day",
+                "saint_berchtold",
+                "easter_monday",
+                "christmas"
+              ]
+            },
+            {
+              "code": "ch_be",
+              "holidays": [
+                "saint_berchtold",
+                "easter_monday",
+                "christmas"
+              ]
+            },
+            {
+              "code": "ch_lu",
+              "holidays": [
+                "new_years_day",
+                "easter_monday",
+                "christmas"
+              ]
+            },
+            {
+              "code": "ch_ur",
+              "holidays": [
+                "saint_berchtold",
+                "new_years_day",
+                "easter_monday",
+                "christmas"
+              ]
+            }
+          ]
         }
-
-+ Response 201 (application/json)
-
-        {
-            "id": "12345678-1234-1234-1234-123456789012",
-            "name": "holiday",
-            "type": "holiday"
-        }
-
-## Holiday [/api/v1/holidays/{holiday_id}]
-
-+ Parameters
-    + holiday_id: 12345678-1234-1234-123456789012 (required, string) - ID of the Holiday is an uuid
-
-### GET Get Holiday Details [GET /api/v1/holidays/{holiday_id}]
-
-+ Parameters
-   + holiday_id: 12345678-1234-1234-123456789012 (required, string) - ID of the Holiday is an uuid
-
-+ Request (application/json)
-
-+ Response 200 (application/json)
-
-        {
-            "id": "12345678-1234-1234-1234-123456789012",
-            "name": "holiday",
-            "type": "holiday",
-            "date": "01/01"
-        }
-
-### PUT Update Holiday [PUT]
-
-+ Attributes
-  + id: 1 (string, required)
-  + name: holiday (string, required)
-  + date: 1 (string, required)
-
-+ Request (application/json)
-
-        {
-            "name": "holiday",
-            "date" : "01.01.2015"
-        }
-
-+ Response 204 (application/json)
-
-### DELETE holiday [DELETE]
-
-+ Attributes
-  + holiday_policy_id: 1 (string, required)
-
-+ Request (application/json)
-
-+ Response 204
-
-
-
-
-
 
 
 ## PresencePolicy Collection [/api/v1/presence_policies]
@@ -1228,7 +1193,20 @@ Get a list of all employees
               "type": "employee_attribute",
               "value": "Dsa",
               "attribute_name": "firstname"
+            },
+            {
+              "type": "employee_attribute",
+              "attribute_name" : "child",
+              "order" : "1",
+              "value" : {
+                  "birthdate" : "01/01/2016",
+                  "firstname" : "Franciszek",
+                  "gender" : "",
+                  "is_student" : true,
+                  "lastname": "Kowalski",
+                  "mother_is_working": false
             }
+        }
           ]
         }
 
@@ -1256,6 +1234,18 @@ Get a list of all employees
               "type": "employee_attribute",
               "value": "Dsa",
               "attribute_name": "firstname"
+            },
+            {
+              "type": "employee_attribute",
+              "attribute_name" : "child",
+              "order" : "1",
+              "value" : {
+                  "birthdate" : "01/01/2016",
+                  "firstname" : "Franciszek",
+                  "gender" : "",
+                  "is_student" : true,
+                  "lastname": "Kowalski",
+                  "mother_is_working": false
             }
           ]
         }

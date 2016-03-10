@@ -1,7 +1,5 @@
 class HolidayPolicy < ActiveRecord::Base
   belongs_to :account
-  has_many :custom_holidays,
-    class_name: 'Holiday'
   has_many :working_places
   has_many :employees
   has_one :assigned_account,
@@ -24,11 +22,7 @@ class HolidayPolicy < ActiveRecord::Base
   HolidayStruct = Struct.new(:date, :name)
 
   def holidays
-    if country.present? || region.present?
-      custom_holidays + country_holidays
-    else
-      custom_holidays
-    end
+    country_holidays if country.present? || region.present?
   end
 
   private
@@ -37,7 +31,8 @@ class HolidayPolicy < ActiveRecord::Base
     from = Time.zone.now.beginning_of_year
     to = Time.zone.now.end_of_year
     Holidays.between(from, to, country_with_region).map do |holiday|
-      HolidayStruct.new(holiday[:date], 'Holiday')
+      holiday_name = HolidaysCodeName.get_name_code(holiday[:name])
+      HolidayStruct.new(holiday[:date], holiday_name)
     end
   end
 
