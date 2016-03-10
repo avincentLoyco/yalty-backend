@@ -15,14 +15,14 @@ class AddPolicyAdditionsJob < ActiveJob::Base
     employees = Employee.where(id: policy.affected_employees_ids)
 
     employees.each do |employee|
-      category = policy.time_off_category_id
-      account = employee.account_id
-      employee = employee.id
+      category_id = policy.time_off_category_id
+      account_id = employee.account_id
+      employee_id = employee.id
       options = { policy_credit_addition: true }
 
-      next if addition_already_exist?(policy.id, employee)
+      next if addition_already_exist?(policy.id, employee) || not_active?(policy, employee)
 
-      CreateEmployeeBalance.new(category, employee, account, nil, options).call
+      CreateEmployeeBalance.new(category_id, employee_id, account_id, nil, options).call
     end
   end
 
@@ -31,15 +31,15 @@ class AddPolicyAdditionsJob < ActiveJob::Base
     policy_addition = policy.amount
 
     employees.each do |employee|
-      category = policy.time_off_category_id
-      account = employee.account_id
-      employee = employee.id
+      category_id = policy.time_off_category_id
+      account_id = employee.account_id
+      employee_id = employee.id
       amount = policy_addition
       options = { policy_credit_addition: true, validity_date: policy_end_date(policy) }
 
-      next if addition_already_exist?(policy.id, employee)
+      next if addition_already_exist?(policy.id, employee) || not_active?(policy, employee)
 
-      CreateEmployeeBalance.new(category, employee, account, amount, options).call
+      CreateEmployeeBalance.new(category_id, employee_id, account_id, amount, options).call
     end
   end
 
@@ -54,5 +54,9 @@ class AddPolicyAdditionsJob < ActiveJob::Base
   def policy_end_date(policy)
     return nil if policy.dates_blank?
     policy.end_date.to_s
+  end
+
+  def not_active?(policy, employee)
+    policy != employee.active_policy_in_category(policy.time_off_category_id)
   end
 end

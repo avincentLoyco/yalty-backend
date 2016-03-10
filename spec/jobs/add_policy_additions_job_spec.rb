@@ -13,7 +13,9 @@ RSpec.describe AddPolicyAdditionsJob do
   let!(:employees) { create_list(:employee, 2, account: account, working_place: working_place) }
   let(:employee_balance) { create(:employee_balance, employee: employees.first) }
   let!(:working_place_policy) do
-    create(:working_place_time_off_policy, time_off_policy: policy, working_place: working_place)
+    create(:working_place_time_off_policy,
+      time_off_policy: policy, working_place: working_place, effective_at: Date.today
+    )
   end
 
   describe '#perform' do
@@ -59,6 +61,21 @@ RSpec.describe AddPolicyAdditionsJob do
           it { expect { subject }.to_not change { employees.last.reload.employee_balances.count } }
           it { expect { subject }.to_not change { employee_balance.reload.being_processed } }
         end
+      end
+
+      context 'when two employee policies starts at the same day' do
+        let(:new_policy) { create(:time_off_policy, time_off_category: category) }
+        let!(:second_working_place_policy) do
+          create(:working_place_time_off_policy,
+            time_off_policy: new_policy, working_place: working_place,
+            effective_at: Date.today + 8.hours
+          )
+        end
+
+        it { expect { subject }.to change { Employee::Balance.count }.by(2) }
+        it { expect { subject }.to change { new_policy.reload.employee_balances.count }.by(2) }
+
+        it { expect { subject }.to_not change { policy.reload.employee_balances } }
       end
     end
 

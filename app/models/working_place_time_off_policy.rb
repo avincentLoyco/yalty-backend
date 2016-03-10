@@ -6,6 +6,8 @@ class WorkingPlaceTimeOffPolicy < ActiveRecord::Base
   validates :working_place_id, :time_off_policy_id, :effective_at, presence: true
   validates :time_off_policy_id, uniqueness: { scope: [:working_place_id, :effective_at] }
 
+  scope :assigned, -> { where(['effective_at <= ?', Date.tomorrow]) }
+
   scope :affected_employees, lambda { |policy_id|
     where(time_off_policy_id: policy_id).joins(:working_place)
       .joins(:employees).pluck(:'employees.id')

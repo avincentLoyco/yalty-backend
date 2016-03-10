@@ -30,9 +30,9 @@ class Employee < ActiveRecord::Base
   end
 
   def active_policy_in_category(category_id)
-    employee_policy = time_off_policy_in_category(category_id)
+    employee_policy = active_time_off_policy_in_category(category_id)
     return employee_policy if employee_policy
-    working_place.time_off_policy_in_category(category_id)
+    working_place.active_time_off_policy_in_category(category_id)
   end
 
   def last_balance_in_policy(policy_id)
@@ -53,9 +53,10 @@ class Employee < ActiveRecord::Base
 
   private
 
-  def time_off_policy_in_category(category_id)
-    employee_time_off_policies.joins(:time_off_policy)
-                              .find_by(time_off_policies: { time_off_category_id: category_id })
-                              .try(:time_off_policy)
+  def active_time_off_policy_in_category(category_id)
+    employee_time_off_policies.assigned
+                              .joins(:time_off_policy)
+                              .where(time_off_policies: { time_off_category_id: category_id })
+                              .order(effective_at: :asc).last.try(:time_off_policy)
   end
 end

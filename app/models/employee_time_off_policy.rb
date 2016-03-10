@@ -8,4 +8,6 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
   scope :affected_employees, lambda { |policy_id|
     where(time_off_policy_id: policy_id).pluck(:employee_id)
   }
+
+  scope :assigned, -> { where(['effective_at <= ?', Date.tomorrow]) }
 end
