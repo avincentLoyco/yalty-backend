@@ -76,25 +76,27 @@ namespace :deploy do
     end
   end
 
-  namespace :staging do
-    desc 'Reset staging environment with production code and data'
-    task reset: [:environment] do
-      options = options_for('staging', 'stable')
-      deploy_to(options)
+  %w(staging review).each do |target_env|
+    namespace target_env do
+      desc "Reset #{target_env} environment with production code and data"
+      task reset: [:environment] do
+        options = options_for(target_env, 'stable')
+        deploy_to(options)
 
-      db_production = postgresql_for(:production)
-      tunnel = postgresql_tunnel_to(db_production)
-      puts 'dump production database'
-      system "PGPASSWORD=#{db_production[:password]} pg_dump --clean --if-exists --no-acl --no-owner -n public -U #{db_production[:user]} -h 127.0.0.1 -p 10000 #{db_production[:database]} > tmp/sync_dump.sql"
-      Process.kill('SIGTERM', tunnel)
+        db_production = postgresql_for(:production)
+        tunnel = postgresql_tunnel_to(db_production)
+        puts 'dump production database'
+        system "PGPASSWORD=#{db_production[:password]} pg_dump --clean --if-exists --no-acl --no-owner -n public -U #{db_production[:user]} -h 127.0.0.1 -p 10000 #{db_production[:database]} > tmp/sync_dump.sql"
+        Process.kill('SIGTERM', tunnel)
 
-      db_staging = postgresql_for(:staging)
-      tunnel = postgresql_tunnel_to(db_staging)
-      puts 'load staging database'
-      system "PGPASSWORD=#{db_staging[:password]} psql --quiet -U #{db_staging[:user]} -h 127.0.0.1 -p 10000 -d #{db_staging[:database]} < tmp/sync_dump.sql"
-      Process.kill('SIGTERM', tunnel)
+        db_target = postgresql_for(target_env)
+        tunnel = postgresql_tunnel_to(db_target)
+        puts "load #{target_env} database"
+        system "PGPASSWORD=#{db_target[:password]} psql --quiet -U #{db_target[:user]} -h 127.0.0.1 -p 10000 -d #{db_target[:database]} < tmp/sync_dump.sql"
+        Process.kill('SIGTERM', tunnel)
 
-      system "#{options.scalingo_cmd} run \"rake setup\"" || raise
+        system "#{options.scalingo_cmd} run \"rake setup\"" || raise
+      end
     end
   end
 end
