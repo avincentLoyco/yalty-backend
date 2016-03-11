@@ -127,12 +127,12 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
 
           it_behaves_like 'Invalid Data'
 
-          it { is_expected.to have_http_status(404) }
+          it { is_expected.to have_http_status(422) }
 
           context 'response' do
             before { subject }
 
-            it { expect_json(regex("Record Not Found")) }
+            it { expect_json(regex("can't be blank")) }
           end
         end
       end
@@ -277,12 +277,12 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
 
             it_behaves_like 'Invalid Data'
 
-            it { is_expected.to have_http_status(404) }
+            it { is_expected.to have_http_status(422) }
 
             context 'response' do
               before { subject }
 
-              it { expect_json(regex("Record Not Found")) }
+              it { expect_json(regex("can't be blank")) }
             end
           end
         end
