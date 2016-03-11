@@ -14,7 +14,7 @@ module EmployeeBalanceUpdate
   end
 
   def balances_to_update(resource, effective_at = nil)
-    return [resource.id] if resource.last_in_policy? && effective_at.blank?
+    return [resource.id] if resource.last_in_category? && effective_at.blank?
     effective_at ? resource.all_later_ids(earlier_date(effective_at)) : resource.later_balances_ids
   end
 

@@ -28,17 +28,13 @@ class Employee::Balance < ActiveRecord::Base
   before_validation :find_effective_at
   before_validation :check_if_credit_removal, if: :balance_credit_addition
 
-  scope :employee_balances, lambda  { |employee_id, time_off_policy_id|
-    where(employee_id: employee_id, time_off_policy: time_off_policy_id)
+  scope :employee_balances, lambda  { |employee_id, time_off_category_id|
+    where(employee_id: employee_id, time_off_category_id: time_off_category_id)
   }
   scope :editable, -> { where(policy_credit_removal: false, policy_credit_addition: false) }
 
   def last_in_category?
     id == employee.last_balance_in_category(time_off_category_id).id
-  end
-
-  def last_in_policy?
-    id == employee.last_balance_in_policy(time_off_policy_id).id
   end
 
   def current_or_next_period

@@ -115,7 +115,7 @@ class CreateEmployeeBalance
   end
 
   def only_in_balance_period?
-    employee_balance.last_in_policy? || balance_removal.try(:last_in_policy?) &&
+    employee_balance.last_in_category? || balance_removal.try(:last_in_category?) &&
       Employee::Balance.where(effective_at:
         employee_balance.effective_at...balance_removal.effective_at).count == 1
   end

@@ -35,10 +35,6 @@ class Employee < ActiveRecord::Base
     working_place.active_time_off_policy_in_category(category_id)
   end
 
-  def last_balance_in_policy(policy_id)
-    employee_balances.where(time_off_policy_id: policy_id).order('effective_at').last
-  end
-
   def last_balance_in_category(category_id)
     employee_balances.where(time_off_category_id: category_id).order('effective_at').last
   end

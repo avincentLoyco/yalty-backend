@@ -1,6 +1,6 @@
 module RelativeEmployeeBalancesFinders
   def balances
-    self.class.employee_balances(employee_id, time_off_policy_id)
+    self.class.employee_balances(employee_id, time_off_category_id)
   end
 
   def next_balance
@@ -55,7 +55,7 @@ module RelativeEmployeeBalancesFinders
   end
 
   def all_later_ids(effective = effective_at)
-    balances.where('effective_at >= ?', effective).pluck(:id)
+    balances.where('effective_at >= ?', effective.to_datetime).pluck(:id)
   end
 
   def next_removals_smaller_than_amount?(new_amount)

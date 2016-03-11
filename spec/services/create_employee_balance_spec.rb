@@ -31,7 +31,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
           category.id, employee.id, Account.current.id, amount, options
         ).call
       end
-      context 'valdiity date given' do
+      context 'validity date given' do
         let(:amount) { 100 }
 
         context 'and in future' do
@@ -83,6 +83,44 @@ RSpec.describe CreateEmployeeBalance, type: :service do
 
             it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
           end
+        end
+      end
+
+      context 'effective date is after an existing balance effective date from another policy' do
+        let(:amount) { 100 }
+        let(:options) do
+          { effective_at: Time.now - 1.month, validity_date: (Time.now + 1.month).to_s }
+        end
+        let!(:other_working_place_policy) do
+          create(:working_place_time_off_policy, time_off_policy: other_policy,
+            effective_at: Time.zone.now - 1.month
+          )
+        end
+
+        context 'in the same category' do
+          let(:other_policy) { create(:time_off_policy, time_off_category: category) }
+          let!(:employee_balance) do
+            create(:employee_balance,
+              employee: employee, effective_at: Time.now - 2.month, time_off_category: category,
+              time_off_policy: other_policy, amount: 100
+            )
+          end
+
+          it { expect { subject }.not_to change { enqueued_jobs.size } }
+          it { expect(subject.first.balance).to eq 200 }
+        end
+        context 'in a different category category' do
+          let(:other_policy) { create(:time_off_policy) }
+          let!(:employee_balance) do
+            create(:employee_balance,
+              employee: employee, effective_at: Time.now - 2.month,
+              time_off_category: other_policy.time_off_category,
+              time_off_policy: other_policy, amount: 100
+            )
+          end
+
+          it { expect { subject }.not_to change { enqueued_jobs.size } }
+          it { expect(subject.first.balance).to eq 100 }
         end
       end
 

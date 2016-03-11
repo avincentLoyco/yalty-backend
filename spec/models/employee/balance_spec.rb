@@ -27,14 +27,15 @@ RSpec.describe Employee::Balance, type: :model do
     subject { build(:employee_balance, amount: 200) }
 
     context 'balance calculation' do
-      context 'when balance first in policy' do
+      context 'when balance is the first in category' do
         it { expect { subject.valid? }.to change { subject.balance }.to(200) }
       end
 
-      context 'when balances before already exist' do
+      context 'when balances before already exist in the category' do
         before do
           create(:employee_balance,
-            amount: 100, employee: employee, time_off_policy: subject.time_off_policy
+            amount: 100, employee: employee, time_off_policy: subject.time_off_policy,
+            time_off_category: subject.time_off_category
           )
         end
 
@@ -46,7 +47,6 @@ RSpec.describe Employee::Balance, type: :model do
 
         context 'and belong to current balance employee' do
           let(:employee) { subject.employee }
-
           it { expect { subject.valid? }.to change { subject.balance }.to(300) }
         end
       end
