@@ -47,7 +47,7 @@ class Account::User < ActiveRecord::Base
   end
 
   def intercom_attributes
-    %w(id created_at email)
+    %w(id created_at email account_manager employee)
   end
 
   def intercom_data
@@ -55,6 +55,10 @@ class Account::User < ActiveRecord::Base
       user_id: id,
       email: email,
       signed_up_at: created_at,
+      custom_attributes: {
+        employee_id: employee ? employee.id : nil,
+        account_manager: account_manager
+      },
       companies: [{
         company_id: account.id
       }]
