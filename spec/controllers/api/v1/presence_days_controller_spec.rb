@@ -16,8 +16,9 @@ RSpec.describe API::V1::PresenceDaysController, type: :controller do
       let(:employee) do
         create(:employee, :with_time_offs, account: account, presence_policy: presence_policy)
       end
-      let!(:f_time_off) { employee.time_offs.first }
-      let!(:s_time_off) { employee.time_offs.last }
+      let(:f_time_off) { employee.time_offs.first }
+      let(:s_time_off) { employee.time_offs.second }
+      let(:t_time_off) { employee.time_offs.last }
 
       context 'and he does not have related balances' do
         it { is_expected.to have_http_status(204) }
@@ -26,6 +27,7 @@ RSpec.describe API::V1::PresenceDaysController, type: :controller do
       context 'and he has related balances' do
         it { expect { subject }.to change { f_time_off.employee_balance.reload.beeing_processed } }
         it { expect { subject }.to change { s_time_off.employee_balance.reload.beeing_processed } }
+        it { expect { subject }.to change { t_time_off.employee_balance.reload.beeing_processed } }
 
         it { is_expected.to have_http_status(204) }
       end

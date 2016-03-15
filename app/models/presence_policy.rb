@@ -12,10 +12,7 @@ class PresencePolicy < ActiveRecord::Base
   end
 
   def affected_employees
-    employees = []
-    Employee.all.map do |employee|
-      employees << employee if employee.active_presence_policy == self
-    end
-    employees
+    (Employee.joins(:working_place).where(working_places: { presence_policy_id: id }) +
+      Employee.where(presence_policy_id: id).to_a).uniq
   end
 end

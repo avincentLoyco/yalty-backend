@@ -17,11 +17,9 @@ module EmployeeBalanceUpdatePresencePerspective
   def update_balances_in_affected_policy(policy_id, employee)
     start_balance = employee.first_balance_in_policy(policy_id)
 
-    if start_balance.present?
-      balances_to_update = start_balance.all_later_ids
+    balances_to_update = start_balance.all_later_ids
 
-      Employee::Balance.where(id: balances_to_update).update_all(beeing_processed: true)
-      UpdateBalanceJob.perform_later(start_balance.id, update_all: true)
-    end
+    Employee::Balance.where(id: balances_to_update).update_all(beeing_processed: true)
+    UpdateBalanceJob.perform_later(start_balance.id, update_all: true)
   end
 end

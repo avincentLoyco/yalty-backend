@@ -12,11 +12,13 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
 
   shared_examples 'Employee Balance Update' do
     let(:employee) { create(:employee, :with_time_offs, account: account, presence_policy: presence_policy) }
-    let!(:f_time_off) { employee.time_offs.first }
-    let!(:s_time_off) { employee.time_offs.last }
+    let(:f_time_off) { employee.time_offs.first }
+    let(:s_time_off) { employee.time_offs.second }
+    let(:t_time_off) { employee.time_offs.last }
 
     it { expect { subject }.to change { f_time_off.employee_balance.reload.beeing_processed } }
     it { expect { subject }.to change { s_time_off.employee_balance.reload.beeing_processed } }
+    it { expect { subject }.to change { t_time_off.employee_balance.reload.beeing_processed } }
   end
 
   describe 'GET #show' do

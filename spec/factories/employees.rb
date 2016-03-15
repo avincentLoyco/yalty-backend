@@ -15,7 +15,6 @@ FactoryGirl.define do
     end
 
     trait :with_time_offs do
-      before { employee.employee_time_off_policy.destroy_all }
       transient do
         employee_time_off_policies { Hash.new }
         time_offs { Hash.new }
@@ -28,16 +27,44 @@ FactoryGirl.define do
       end
 
       after(:create) do |employee|
-        policy = employee.employee_time_off_policies.first.time_off_policy
-        first_time_off = create(:time_off,
-          time_off_category: policy.time_off_category,
-          employee: employee
+        first_policy = employee.employee_time_off_policies.first.time_off_policy
+        second_policy = employee.employee_time_off_policies.last.time_off_policy
+
+        first_balance = create(:employee_balance,
+          time_off_policy: first_policy,
+          employee: employee,
+          time_off_category: first_policy.time_off_category
+        )
+        second_balance = create(:employee_balance,
+          time_off_policy: second_policy,
+          employee: employee,
+          time_off_category: second_policy.time_off_category
         )
 
-        second_time_off = create(:time_off,
-          time_off_category: policy.time_off_category,
+        third_balance = create(:employee_balance,
+          time_off_policy: second_policy,
           employee: employee,
-          start_time: Date.today + 1.day
+          time_off_category: second_policy.time_off_category
+        )
+
+        first_time_off = create(:no_category_assigned_time_off,
+          time_off_category: first_policy.time_off_category,
+          employee: employee,
+          employee_balance: first_balance
+        )
+
+        second_time_off = create(:no_category_assigned_time_off,
+          time_off_category: second_policy.time_off_category,
+          employee: employee,
+          start_time: Date.today,
+          employee_balance: second_balance
+        )
+
+        third_time_off = create(:no_category_assigned_time_off,
+          time_off_category: second_policy.time_off_category,
+          employee: employee,
+          start_time: Date.today + 1.day,
+          employee_balance: third_balance
         )
       end
     end
