@@ -10,8 +10,8 @@ RSpec.describe CalculateTimeOffBalance, type: :service do
   let(:employee) { create(:employee, :with_policy, presence_policy: policy) }
   let(:category) { employee.employee_time_off_policies.first.time_off_policy.time_off_category }
   let(:time_off) do
-    create(:time_off, :with_balance,
-      employee: employee, time_off_category: category, start_time: Date.today + 2.day,
+    create(:time_off,
+      employee: employee, time_off_category: category, start_time: Date.today + 2.days,
       end_time: Date.today + 8.days
     )
   end

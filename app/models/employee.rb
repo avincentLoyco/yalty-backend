@@ -47,6 +47,10 @@ class Employee < ActiveRecord::Base
     time_off_categories.distinct
   end
 
+  def first_balance_in_policy(policy_id)
+    employee_balances.where(time_off_policy_id: policy_id).order(effective_at: :asc).first
+  end
+
   private
 
   def time_off_policy_in_category(category_id)

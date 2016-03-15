@@ -14,6 +14,34 @@ FactoryGirl.define do
       end
     end
 
+    trait :with_time_offs do
+      before { employee.employee_time_off_policy.destroy_all }
+      transient do
+        employee_time_off_policies { Hash.new }
+        time_offs { Hash.new }
+      end
+
+      after(:build) do |employee|
+        first_policy = create(:employee_time_off_policy)
+        second_policy = create(:employee_time_off_policy)
+        employee.employee_time_off_policies << [first_policy, second_policy]
+      end
+
+      after(:create) do |employee|
+        policy = employee.employee_time_off_policies.first.time_off_policy
+        first_time_off = create(:time_off,
+          time_off_category: policy.time_off_category,
+          employee: employee
+        )
+
+        second_time_off = create(:time_off,
+          time_off_category: policy.time_off_category,
+          employee: employee,
+          start_time: Date.today + 1.day
+        )
+      end
+    end
+
     trait :with_attributes do
       transient do
         event { Hash.new }

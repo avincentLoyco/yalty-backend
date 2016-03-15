@@ -89,9 +89,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
       context 'time off given' do
         let(:options) {{ time_off_id: time_off.id }}
         let(:time_off) do
-          create(:time_off,
-            employee: employee, time_off_category: category
-          )
+          create(:time_off, employee_balance: nil, employee: employee, time_off_category: category)
         end
 
         it { expect { subject }.to change { Employee::Balance.count }.by(1) }

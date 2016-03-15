@@ -34,8 +34,11 @@ class UpdateBalanceJob < ActiveJob::Base
   end
 
   def balances_to_update
-    return employee_balance.all_later_ids(earlier_date) if options[:effective_at]
-    employee_balance.later_balances_ids(current_or_new_amount)
+    if options[:effective_at] || options[:update_all]
+      employee_balance.all_later_ids(earlier_date)
+    else
+      employee_balance.later_balances_ids(current_or_new_amount)
+    end
   end
 
   def earlier_date

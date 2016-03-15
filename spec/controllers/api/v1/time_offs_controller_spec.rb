@@ -11,7 +11,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
   end
   before { time_off_category.update!(account: Account.current) }
   let!(:time_off) do
-    create(:time_off, :with_balance, time_off_category_id: time_off_category.id, employee: employee)
+    create(:time_off, time_off_category_id: time_off_category.id, employee: employee)
   end
 
   describe 'GET #show' do

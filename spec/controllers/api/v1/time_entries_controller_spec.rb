@@ -10,6 +10,15 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
   let!(:next_presence_day) { create(:presence_day, presence_policy: presence_policy, order: 2) }
   let!(:time_entry) { create(:time_entry, presence_day: presence_day) }
 
+  shared_examples 'Employee Balance Update' do
+    let(:employee) { create(:employee, :with_time_offs, account: account, presence_policy: presence_policy) }
+    let!(:f_time_off) { employee.time_offs.first }
+    let!(:s_time_off) { employee.time_offs.last }
+
+    it { expect { subject }.to change { f_time_off.employee_balance.reload.beeing_processed } }
+    it { expect { subject }.to change { s_time_off.employee_balance.reload.beeing_processed } }
+  end
+
   describe 'GET #show' do
     subject { get :show, id: id }
     let(:id) { time_entry.id }
@@ -87,6 +96,8 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
       it { expect { subject }.to change { presence_day.reload.minutes }.by(120) }
       it { is_expected.to have_http_status(201) }
 
+      it_behaves_like 'Employee Balance Update'
+
       context 'response body' do
         before { subject }
 
@@ -159,6 +170,8 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
       it { expect { subject }.to change { presence_day.reload.minutes } }
       it { expect { subject }.to change { time_entry.reload.duration }.to(120) }
       it { is_expected.to have_http_status(204) }
+
+      it_behaves_like 'Employee Balance Update'
     end
 
     context 'with invalid params' do
@@ -202,6 +215,8 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
     context 'with valid data' do
       it { expect { subject }.to change { TimeEntry.count }.by(-1) }
       it { is_expected.to have_http_status(204) }
+
+      it_behaves_like 'Employee Balance Update'
 
       context 'presence day minutes' do
         before { subject }
