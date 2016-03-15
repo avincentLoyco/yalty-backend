@@ -24,6 +24,11 @@ class Employee < ActiveRecord::Base
     working_place.presence_policy
   end
 
+  def active_holiday_policy
+    return holiday_policy if holiday_policy.present?
+    working_place.holiday_policy
+  end
+
   def active_policy_in_category(category_id)
     employee_policy = time_off_policy_in_category(category_id)
     return employee_policy if employee_policy

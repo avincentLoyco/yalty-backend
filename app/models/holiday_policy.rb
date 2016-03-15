@@ -25,11 +25,15 @@ class HolidayPolicy < ActiveRecord::Base
     country_holidays if country.present? || region.present?
   end
 
+  def holidays_in_period(start_date, end_date)
+    country_holidays(start_date, end_date) if country.present? || region.present?
+  end
+
   private
 
-  def country_holidays
-    from = Time.zone.now.beginning_of_year
-    to = Time.zone.now.end_of_year
+  def country_holidays(from = nil, to = nil)
+    from ||= Time.zone.now.beginning_of_year
+    to ||= Time.zone.now.end_of_year
     Holidays.between(from, to, country_with_region).map do |holiday|
       holiday_name = HolidaysCodeName.get_name_code(holiday[:name])
       HolidayStruct.new(holiday[:date], holiday_name)
