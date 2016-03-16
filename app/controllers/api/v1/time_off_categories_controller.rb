@@ -1,14 +1,15 @@
 module API
   module V1
     class TimeOffCategoriesController < ApplicationController
-      authorize_resource except: :create
       include TimeOffCategoriesRules
 
       def show
+        authorize! :show, Account.current
         render_resource(resource)
       end
 
       def index
+        authorize! :index, Account.current
         render_resource(resources)
       end
 
@@ -23,6 +24,7 @@ module API
       end
 
       def update
+        authorize! :create, editable_resource
         verified_params(gate_rules) do |attributes|
           editable_resource.update!(attributes)
           render_no_content
@@ -30,6 +32,7 @@ module API
       end
 
       def destroy
+        authorize! :create, editable_resource
         if editable_resource.time_offs.empty?
           editable_resource.destroy!
           render_no_content
