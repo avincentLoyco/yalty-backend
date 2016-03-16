@@ -6,12 +6,12 @@ module API
       GateResult = Struct.new(:attributes, :errors)
 
       def show
-        authorize! :show, resource
+        authorize! :show, Account.current
         render_resource(resource)
       end
 
       def index
-        authorize! :read, resources
+        authorize! :read, Account.current
         render_resource(resources)
       end
 

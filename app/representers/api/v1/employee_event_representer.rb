@@ -11,11 +11,14 @@ module Api::V1
     end
 
     def relationship
-      employee = EmployeeRepresenter.new(resource.employee).basic
       {
-        employee: employee,
+        employee: employee_json,
         employee_attributes: attribute_versions
       }
+    end
+
+    def employee_json
+      EmployeeRepresenter.new(resource.employee).basic
     end
 
     def attribute_versions
@@ -26,8 +29,8 @@ module Api::V1
     end
 
     def select_attributes
-      if current_user.try(:employee).try(:id) == resource.employee_id ||
-          current_user.try(:account_manager)
+      if Account::User.current.try(:account_manager) ||
+          Account::User.current.try(:employee).try(:id) == resource.employee_id
         resource.employee_attribute_versions
       else
         resource.employee_attribute_versions.visible_for_other_employees
