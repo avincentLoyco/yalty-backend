@@ -16,9 +16,9 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
     let(:s_time_off) { employee.time_offs.second }
     let(:t_time_off) { employee.time_offs.last }
 
-    it { expect { subject }.to change { f_time_off.employee_balance.reload.beeing_processed } }
-    it { expect { subject }.to change { s_time_off.employee_balance.reload.beeing_processed } }
-    it { expect { subject }.to change { t_time_off.employee_balance.reload.beeing_processed } }
+    it { expect { subject }.to change { f_time_off.employee_balance.reload.being_processed } }
+    it { expect { subject }.to change { s_time_off.employee_balance.reload.being_processed } }
+    it { expect { subject }.to change { t_time_off.employee_balance.reload.being_processed } }
   end
 
   describe 'GET #show' do

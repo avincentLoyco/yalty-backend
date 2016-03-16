@@ -30,7 +30,7 @@ class UpdateBalanceJob < ActiveJob::Base
 
   def update_time_off_status
     return unless employee_balance.time_off_id.present?
-    TimeOff.find(employee_balance.time_off_id).update!(beeing_processed: false)
+    TimeOff.find(employee_balance.time_off_id).update!(being_processed: false)
   end
 
   def balances_to_update

@@ -25,9 +25,9 @@ RSpec.describe API::V1::PresenceDaysController, type: :controller do
       end
 
       context 'and he has related balances' do
-        it { expect { subject }.to change { f_time_off.employee_balance.reload.beeing_processed } }
-        it { expect { subject }.to change { s_time_off.employee_balance.reload.beeing_processed } }
-        it { expect { subject }.to change { t_time_off.employee_balance.reload.beeing_processed } }
+        it { expect { subject }.to change { f_time_off.employee_balance.reload.being_processed } }
+        it { expect { subject }.to change { s_time_off.employee_balance.reload.being_processed } }
+        it { expect { subject }.to change { t_time_off.employee_balance.reload.being_processed } }
 
         it { is_expected.to have_http_status(204) }
       end

@@ -30,7 +30,7 @@ class UpdateEmployeeBalance
   end
 
   def update_status
-    employee_balance.beeing_processed = false
+    employee_balance.being_processed = false
   end
 
   def save!

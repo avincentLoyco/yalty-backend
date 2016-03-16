@@ -83,7 +83,7 @@ module API
         attributes.tap do |attr|
           attr.delete(:employee)
           attr.delete(:time_off_category)
-        end.merge(employee: employee, beeing_processed: true)
+        end.merge(employee: employee, being_processed: true)
       end
 
       def create_new_employee_balance(resource)

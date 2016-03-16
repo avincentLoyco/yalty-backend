@@ -23,6 +23,6 @@ module EmployeeBalanceUpdate
   end
 
   def update_balances_processed_flag(ids)
-    Employee::Balance.where(id: ids).update_all(beeing_processed: true)
+    Employee::Balance.where(id: ids).update_all(being_processed: true)
   end
 end

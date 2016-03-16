@@ -20,7 +20,7 @@ RSpec.describe UpdateEmployeeBalance, type: :service do
       end
       subject { UpdateEmployeeBalance.new(employee_balance, options).call }
 
-      it { expect { subject }.to change { employee_balance.reload.beeing_processed }.to false }
+      it { expect { subject }.to change { employee_balance.reload.being_processed }.to false }
       it { expect { subject }.to_not change { Employee::Balance.count } }
       it { expect { subject }.to change { employee_balance.reload.balance } }
       it { expect { subject }.to change { employee_balance.reload.amount } }
@@ -34,7 +34,7 @@ RSpec.describe UpdateEmployeeBalance, type: :service do
   context 'when amount given' do
     let(:options) {{ amount: 100 }}
 
-    it { expect { subject }.to change { employee_balance.reload.beeing_processed }.to false }
+    it { expect { subject }.to change { employee_balance.reload.being_processed }.to false }
     it { expect { subject }.to_not change { Employee::Balance.count } }
     it { expect { subject }.to change { employee_balance.reload.balance } }
     it { expect { subject }.to change { employee_balance.reload.amount } }

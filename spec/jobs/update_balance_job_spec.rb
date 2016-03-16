@@ -14,7 +14,7 @@ RSpec.describe UpdateBalanceJob do
       type: 'counter',
       years_to_effect: 0
 
-    before { Employee::Balance.update_all(beeing_processed: true) }
+    before { Employee::Balance.update_all(being_processed: true) }
 
     context 'and balance from previous policy period is edited' do
       let(:balance_id) { previous_balance.id }
@@ -22,21 +22,21 @@ RSpec.describe UpdateBalanceJob do
 
       it { expect { subject }.to change { previous_balance.reload.amount }.to(-100) }
       it { expect { subject }.to change { previous_balance.reload.balance }.to(-100) }
-      it { expect { subject }.to change { previous_balance.reload.beeing_processed } }
+      it { expect { subject }.to change { previous_balance.reload.being_processed } }
       it { expect { subject }.to change { previous_removal.reload.balance }.to(-600) }
-      it { expect { subject }.to change { previous_removal.reload.beeing_processed } }
+      it { expect { subject }.to change { previous_removal.reload.being_processed } }
       it { expect { subject }.to change { balance_add.reload.amount }.to 600 }
 
       it { expect { subject }.to_not change { balance_add.reload.balance } }
       it { expect { subject }.to_not change { previous_removal.reload.amount } }
-      it { expect { subject }.to_not change { balance.reload.beeing_processed } }
+      it { expect { subject }.to_not change { balance.reload.being_processed } }
 
       context 'when counter has time off' do
-        let(:time_off) { create(:time_off, employee_balance: balance, beeing_processed: true) }
+        let(:time_off) { create(:time_off, employee_balance: balance, being_processed: true) }
         let(:balance_id) { balance.id }
 
-        it { expect { subject }.to change { time_off.reload.beeing_processed } }
-        it { expect { subject }.to change { balance.reload.beeing_processed } }
+        it { expect { subject }.to change { time_off.reload.being_processed } }
+        it { expect { subject }.to change { balance.reload.being_processed } }
       end
     end
 
@@ -46,17 +46,17 @@ RSpec.describe UpdateBalanceJob do
 
       it { expect { subject }.to change { balance.reload.amount }.to(-100) }
       it { expect { subject }.to change { balance.reload.balance }.to(-100) }
-      it { expect { subject }.to change { balance.reload.beeing_processed } }
+      it { expect { subject }.to change { balance.reload.being_processed } }
 
-      it { expect { subject }.to_not change { previous_removal.reload.beeing_processed } }
-      it { expect { subject }.to_not change { balance_add.reload.beeing_processed } }
+      it { expect { subject }.to_not change { previous_removal.reload.being_processed } }
+      it { expect { subject }.to_not change { balance_add.reload.being_processed } }
 
       context 'when counter has time off' do
-        let(:time_off) { create(:time_off, employee_balance: balance, beeing_processed: true) }
+        let(:time_off) { create(:time_off, employee_balance: balance, being_processed: true) }
         let(:balance_id) { balance.id }
 
-        it { expect { subject }.to change { time_off.reload.beeing_processed } }
-        it { expect { subject }.to change { balance.reload.beeing_processed } }
+        it { expect { subject }.to change { time_off.reload.being_processed } }
+        it { expect { subject }.to change { balance.reload.being_processed } }
       end
     end
   end
@@ -70,16 +70,16 @@ RSpec.describe UpdateBalanceJob do
         end_month: (Date.today + 1.year).month
 
       context 'and in current policy period' do
-        before { Employee::Balance.update_all(beeing_processed: true) }
+        before { Employee::Balance.update_all(being_processed: true) }
 
         let(:balance_id) { balance.id }
         let(:options) { { amount: -400 } }
 
         it { expect { subject }.to change { balance.reload.amount }.to(-400) }
         it { expect { subject }.to change { balance.reload.balance }.to(600) }
-        it { expect { subject }.to change { balance.reload.beeing_processed } }
+        it { expect { subject }.to change { balance.reload.being_processed } }
 
-        it { expect { subject }.to_not change { balance_add.reload.beeing_processed } }
+        it { expect { subject }.to_not change { balance_add.reload.being_processed } }
 
         context 'and changes to previous policy' do
           context 'and policy does have end date' do
@@ -88,11 +88,11 @@ RSpec.describe UpdateBalanceJob do
 
               it { expect { subject }.to change { balance.reload.amount }.to(-2000) }
               it { expect { subject }.to change { balance.reload.balance }.to(-1000) }
-              it { expect { subject }.to change { balance.reload.beeing_processed } }
-              it { expect { subject }.to change { previous_removal.reload.beeing_processed } }
+              it { expect { subject }.to change { balance.reload.being_processed } }
+              it { expect { subject }.to change { previous_removal.reload.being_processed } }
               it { expect { subject }.to change { previous_removal.reload.amount }.to(0) }
               it { expect { subject }.to change { previous_removal.reload.balance } }
-              it { expect { subject }.to change { balance_add.reload.beeing_processed } }
+              it { expect { subject }.to change { balance_add.reload.being_processed } }
               it { expect { subject }.to change { balance_add.reload.balance } }
             end
 
@@ -101,10 +101,10 @@ RSpec.describe UpdateBalanceJob do
 
               it { expect { subject }.to change { balance.reload.amount }.to(-300) }
               it { expect { subject }.to change { balance.reload.balance }.to(700) }
-              it { expect { subject }.to change { balance.reload.beeing_processed } }
-              it { expect { subject }.to change { previous_removal.reload.beeing_processed } }
+              it { expect { subject }.to change { balance.reload.being_processed } }
+              it { expect { subject }.to change { previous_removal.reload.being_processed } }
               it { expect { subject }.to change { previous_removal.reload.amount }.to(-600) }
-              it { expect { subject }.to change { balance_add.reload.beeing_processed } }
+              it { expect { subject }.to change { balance_add.reload.being_processed } }
 
               it { expect { subject }.to_not change { previous_removal.reload.balance } }
               it { expect { subject }.to_not change { balance_add.reload.balance } }
@@ -114,7 +114,7 @@ RSpec.describe UpdateBalanceJob do
       end
 
       context 'and in previous policy period' do
-        before { Employee::Balance.update_all(beeing_processed: true) }
+        before { Employee::Balance.update_all(being_processed: true) }
         let(:balance_id) { previous_balance.id }
 
         context 'amount smaller or equal policy removal' do
@@ -122,12 +122,12 @@ RSpec.describe UpdateBalanceJob do
 
           it { expect { subject }.to change { previous_balance.reload.amount }.to(-1000) }
           it { expect { subject }.to change { previous_balance.reload.balance }.to(0) }
-          it { expect { subject }.to change { previous_balance.reload.beeing_processed } }
-          it { expect { subject }.to change { previous_removal.reload.beeing_processed } }
+          it { expect { subject }.to change { previous_balance.reload.being_processed } }
+          it { expect { subject }.to change { previous_removal.reload.being_processed } }
           it { expect { subject }.to change { previous_removal.reload.amount }.to(0) }
 
-          it { expect { subject }.to_not change { balance.reload.beeing_processed } }
-          it { expect { subject }.to_not change { balance_add.reload.beeing_processed } }
+          it { expect { subject }.to_not change { balance.reload.being_processed } }
+          it { expect { subject }.to_not change { balance_add.reload.being_processed } }
           it { expect { subject }.to_not change { balance_add.reload.balance } }
         end
 
@@ -136,13 +136,13 @@ RSpec.describe UpdateBalanceJob do
 
           it { expect { subject }.to change { previous_balance.reload.amount }.to(-2000) }
           it { expect { subject }.to change { previous_balance.reload.balance }.to(-1000) }
-          it { expect { subject }.to change { previous_balance.reload.beeing_processed } }
-          it { expect { subject }.to change { previous_removal.reload.beeing_processed } }
+          it { expect { subject }.to change { previous_balance.reload.being_processed } }
+          it { expect { subject }.to change { previous_removal.reload.being_processed } }
           it { expect { subject }.to change { previous_removal.reload.amount }.to(0) }
 
-          it { expect { subject }.to change { balance.reload.beeing_processed } }
+          it { expect { subject }.to change { balance.reload.being_processed } }
           it { expect { subject }.to change { balance.reload.balance } }
-          it { expect { subject }.to change { balance_add.reload.beeing_processed } }
+          it { expect { subject }.to change { balance_add.reload.being_processed } }
           it { expect { subject }.to change { balance_add.reload.balance } }
         end
 
@@ -151,13 +151,13 @@ RSpec.describe UpdateBalanceJob do
 
           it { expect { subject }.to change { previous_balance.reload.amount }.to(2000) }
           it { expect { subject }.to change { previous_balance.reload.balance }.to(3000) }
-          it { expect { subject }.to change { previous_balance.reload.beeing_processed } }
-          it { expect { subject }.to change { previous_removal.reload.beeing_processed } }
+          it { expect { subject }.to change { previous_balance.reload.being_processed } }
+          it { expect { subject }.to change { previous_removal.reload.being_processed } }
           it { expect { subject }.to change { previous_removal.reload.amount }.to(-1000) }
 
-          it { expect { subject }.to change { balance.reload.beeing_processed } }
+          it { expect { subject }.to change { balance.reload.being_processed } }
           it { expect { subject }.to change { balance.reload.balance } }
-          it { expect { subject }.to change { balance_add.reload.beeing_processed } }
+          it { expect { subject }.to change { balance_add.reload.being_processed } }
           it { expect { subject }.to change { balance_add.reload.balance } }
         end
 
@@ -166,13 +166,13 @@ RSpec.describe UpdateBalanceJob do
 
           it { expect { subject }.to change { previous_balance.reload.effective_at } }
           it { expect { subject }.to change { previous_balance.reload.balance }.to(500) }
-          it { expect { subject }.to change { previous_balance.reload.beeing_processed } }
-          it { expect { subject }.to change { previous_removal.reload.beeing_processed } }
+          it { expect { subject }.to change { previous_balance.reload.being_processed } }
+          it { expect { subject }.to change { previous_removal.reload.being_processed } }
           it { expect { subject }.to change { previous_removal.reload.amount }.to(-1000) }
           it { expect { subject }.to change { balance.reload.balance }.to(0) }
 
-          it { expect { subject }.to change { balance.reload.beeing_processed } }
-          it { expect { subject }.to change { balance_add.reload.beeing_processed } }
+          it { expect { subject }.to change { balance.reload.being_processed } }
+          it { expect { subject }.to change { balance_add.reload.being_processed } }
 
           it { expect { subject }.to_not change { balance_add.reload.balance } }
         end
@@ -184,7 +184,7 @@ RSpec.describe UpdateBalanceJob do
         type: 'balancer',
         years_to_effect: 1
 
-      before { Employee::Balance.update_all(beeing_processed: true) }
+      before { Employee::Balance.update_all(being_processed: true) }
 
       context 'balance in current policy' do
         let(:balance_id) { balance.id }
@@ -192,17 +192,17 @@ RSpec.describe UpdateBalanceJob do
 
         it { expect { subject }.to change { balance.reload.amount } }
         it { expect { subject }.to change { balance.reload.balance } }
-        it { expect { subject }.to change { balance.reload.beeing_processed } }
+        it { expect { subject }.to change { balance.reload.being_processed } }
 
-        it { expect { subject }.to_not change { balance_add.reload.beeing_processed } }
-        it { expect { subject }.to_not change { previous_balance.reload.beeing_processed } }
+        it { expect { subject }.to_not change { balance_add.reload.being_processed } }
+        it { expect { subject }.to_not change { previous_balance.reload.being_processed } }
 
         context 'and now in previous' do
           let(:options) { { effective_at: previous.first + 2.days, amount: 500 } }
 
           it { expect { subject }.to change { balance.reload.amount } }
           it { expect { subject }.to change { balance.reload.balance } }
-          it { expect { subject }.to change { balance.reload.beeing_processed } }
+          it { expect { subject }.to change { balance.reload.being_processed } }
           it { expect { subject }.to change { previous_balance.reload.balance } }
           it { expect { subject }.to change { balance_add.reload.balance } }
         end
@@ -214,7 +214,7 @@ RSpec.describe UpdateBalanceJob do
 
         it { expect { subject }.to change { previous_balance.reload.amount } }
         it { expect { subject }.to change { previous_balance.reload.balance } }
-        it { expect { subject }.to change { balance.reload.beeing_processed } }
+        it { expect { subject }.to change { balance.reload.being_processed } }
         it { expect { subject }.to change { balance_add.reload.balance } }
 
         context 'and now in current' do
@@ -222,7 +222,7 @@ RSpec.describe UpdateBalanceJob do
 
           it { expect { subject }.to change { previous_balance.reload.amount } }
           it { expect { subject }.to change { previous_balance.reload.balance } }
-          it { expect { subject }.to change { balance.reload.beeing_processed } }
+          it { expect { subject }.to change { balance.reload.being_processed } }
           it { expect { subject }.to change { balance_add.reload.balance } }
         end
       end

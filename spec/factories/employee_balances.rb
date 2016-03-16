@@ -6,7 +6,7 @@ FactoryGirl.define do
     amount { Faker::Number.number(5) }
 
     trait :processing do
-      beeing_processed true
+      being_processed true
     end
 
     trait :with_time_off do

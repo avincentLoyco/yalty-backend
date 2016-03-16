@@ -38,7 +38,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
         it { expect_json_keys(
           [
             :id, :balance, :amount, :employee, :time_off_category, :time_off_policy, :effective_at,
-            :beeing_processed, :policy_credit_removal, :time_off
+            :being_processed, :policy_credit_removal, :time_off
           ]
         )}
       end
@@ -154,7 +154,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
         context 'when employee balance is not last but in current policy period' do
           it { expect { subject }.to change { Employee::Balance.count }.by(1) }
           it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
-          it { expect { subject }.to change { employee_balance.reload.beeing_processed }.to(true) }
+          it { expect { subject }.to change { employee_balance.reload.being_processed }.to(true) }
 
           it { is_expected.to have_http_status(201) }
 
@@ -177,12 +177,12 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
             years_to_effect: 0
 
           it { expect { subject }.to change { Employee::Balance.count }.by(1) }
-          it { expect { subject }.to change { previous_removal.reload.beeing_processed }.to true }
+          it { expect { subject }.to change { previous_removal.reload.being_processed }.to true }
           it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
-          it { expect { subject }.to change { balance_add.reload.beeing_processed } }
+          it { expect { subject }.to change { balance_add.reload.being_processed } }
 
-          it { expect { subject }.to_not change { previous_balance.reload.beeing_processed } }
-          it { expect { subject }.to_not change { balance.reload.beeing_processed } }
+          it { expect { subject }.to_not change { previous_balance.reload.being_processed } }
+          it { expect { subject }.to_not change { balance.reload.being_processed } }
 
           it { is_expected.to have_http_status(201) }
 
@@ -202,11 +202,11 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
             it { expect { subject }.to change { Employee::Balance.count }.by(1) }
             it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
 
-            it { expect { subject }.to change { previous_balance.reload.beeing_processed }.to true }
-            it { expect { subject }.to change { balance_add.reload.beeing_processed }.to true }
-            it { expect { subject }.to change { balance.reload.beeing_processed }.to true }
+            it { expect { subject }.to change { previous_balance.reload.being_processed }.to true }
+            it { expect { subject }.to change { balance_add.reload.being_processed }.to true }
+            it { expect { subject }.to change { balance.reload.being_processed }.to true }
 
-            it { expect { subject }.to_not change { previous_add.reload.beeing_processed } }
+            it { expect { subject }.to_not change { previous_add.reload.being_processed } }
 
             it { is_expected.to have_http_status(201) }
 
@@ -229,12 +229,12 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
               context 'balance smaller than removal' do
                 it { expect { subject }.to change { Employee::Balance.count }.by(1) }
                 it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
-                it { expect { subject }.to change { prev_mid_removal.reload.beeing_processed } }
+                it { expect { subject }.to change { prev_mid_removal.reload.being_processed } }
 
-                it { expect { subject }.to_not change { previous_balance.reload.beeing_processed } }
-                it { expect { subject }.to_not change { balance_add.reload.beeing_processed } }
-                it { expect { subject }.to_not change { balance.reload.beeing_processed } }
-                it { expect { subject }.to_not change { previous_add.reload.beeing_processed } }
+                it { expect { subject }.to_not change { previous_balance.reload.being_processed } }
+                it { expect { subject }.to_not change { balance_add.reload.being_processed } }
+                it { expect { subject }.to_not change { balance.reload.being_processed } }
+                it { expect { subject }.to_not change { previous_add.reload.being_processed } }
 
                 it { is_expected.to have_http_status(201) }
               end
@@ -245,12 +245,12 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
                 it { expect { subject }.to change { Employee::Balance.count }.by(1) }
                 it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
 
-                it { expect { subject }.to change { prev_mid_removal.reload.beeing_processed } }
-                it { expect { subject }.to change { previous_balance.reload.beeing_processed } }
-                it { expect { subject }.to change { balance_add.reload.beeing_processed } }
-                it { expect { subject }.to change { balance.reload.beeing_processed } }
+                it { expect { subject }.to change { prev_mid_removal.reload.being_processed } }
+                it { expect { subject }.to change { previous_balance.reload.being_processed } }
+                it { expect { subject }.to change { balance_add.reload.being_processed } }
+                it { expect { subject }.to change { balance.reload.being_processed } }
 
-                it { expect { subject }.to_not change { previous_add.reload.beeing_processed } }
+                it { expect { subject }.to_not change { previous_add.reload.being_processed } }
 
                 it { is_expected.to have_http_status(201) }
               end
@@ -268,12 +268,12 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
               it { expect { subject }.to change { Employee::Balance.count }.by(1) }
               it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
 
-              it { expect { subject }.to change { previous_balance.reload.beeing_processed } }
-              it { expect { subject }.to change { previous_removal.reload.beeing_processed } }
+              it { expect { subject }.to change { previous_balance.reload.being_processed } }
+              it { expect { subject }.to change { previous_removal.reload.being_processed } }
 
-              it { expect { subject }.to_not change { balance_add.reload.beeing_processed } }
-              it { expect { subject }.to_not change { balance.reload.beeing_processed } }
-              it { expect { subject }.to_not change { previous_add.reload.beeing_processed } }
+              it { expect { subject }.to_not change { balance_add.reload.being_processed } }
+              it { expect { subject }.to_not change { balance.reload.being_processed } }
+              it { expect { subject }.to_not change { previous_add.reload.being_processed } }
 
               it { is_expected.to have_http_status(201) }
             end
@@ -284,12 +284,12 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
               it { expect { subject }.to change { Employee::Balance.count }.by(1) }
               it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
 
-              it { expect { subject }.to change { previous_removal.reload.beeing_processed } }
-              it { expect { subject }.to change { previous_balance.reload.beeing_processed } }
-              it { expect { subject }.to change { balance_add.reload.beeing_processed } }
-              it { expect { subject }.to change { balance.reload.beeing_processed } }
+              it { expect { subject }.to change { previous_removal.reload.being_processed } }
+              it { expect { subject }.to change { previous_balance.reload.being_processed } }
+              it { expect { subject }.to change { balance_add.reload.being_processed } }
+              it { expect { subject }.to change { balance.reload.being_processed } }
 
-              it { expect { subject }.to_not change { previous_add.reload.beeing_processed } }
+              it { expect { subject }.to_not change { previous_add.reload.being_processed } }
 
               it { is_expected.to have_http_status(201) }
             end
@@ -316,11 +316,11 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
 
             it { expect { subject }.to change { Employee::Balance.count }.by(2) }
             it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
-            it { expect { subject }.to change { previous_balance.reload.beeing_processed } }
-            it { expect { subject }.to change { balance_add.reload.beeing_processed } }
-            it { expect { subject }.to change { balance.reload.beeing_processed } }
+            it { expect { subject }.to change { previous_balance.reload.being_processed } }
+            it { expect { subject }.to change { balance_add.reload.being_processed } }
+            it { expect { subject }.to change { balance.reload.being_processed } }
 
-            it { expect { subject }.to_not change { previous_add.reload.beeing_processed } }
+            it { expect { subject }.to_not change { previous_add.reload.being_processed } }
 
             it { is_expected.to have_http_status(201) }
 
@@ -376,9 +376,9 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
           let(:id) { balance.id }
 
           it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
-          it { expect { subject }.to change { balance.reload.beeing_processed }.to true }
+          it { expect { subject }.to change { balance.reload.being_processed }.to true }
 
-          it { expect { subject }.to_not change { balance_add.reload.beeing_processed } }
+          it { expect { subject }.to_not change { balance_add.reload.being_processed } }
 
           it { is_expected.to have_http_status(204) }
         end
@@ -387,11 +387,11 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
           let(:id) { previous_balance.id }
 
           it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
-          it { expect { subject }.to change { previous_removal.reload.beeing_processed }.to true }
-          it { expect { subject }.to change { previous_balance.reload.beeing_processed }.to true }
-          it { expect { subject }.to change { balance_add.reload.beeing_processed }.to true }
+          it { expect { subject }.to change { previous_removal.reload.being_processed }.to true }
+          it { expect { subject }.to change { previous_balance.reload.being_processed }.to true }
+          it { expect { subject }.to change { balance_add.reload.being_processed }.to true }
 
-          it { expect { subject }.to_not change { balance.reload.beeing_processed } }
+          it { expect { subject }.to_not change { balance.reload.being_processed } }
 
           it { expect { subject } }
         end
@@ -417,9 +417,9 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
 
               it { expect { subject }.to change { Employee::Balance.count }.by(1) }
               it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
-              it { expect { subject }.to change { balance.reload.beeing_processed }.to true }
-              it { expect { subject }.to change { balance_add.reload.beeing_processed }.to true }
-              it { expect { subject }.to change { previous_balance.reload.beeing_processed } }
+              it { expect { subject }.to change { balance.reload.being_processed }.to true }
+              it { expect { subject }.to change { balance_add.reload.being_processed }.to true }
+              it { expect { subject }.to change { previous_balance.reload.being_processed } }
 
               it { is_expected.to have_http_status(204) }
             end
@@ -439,11 +439,11 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
               end
 
               it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
-              it { expect { subject }.to change { balance.reload.beeing_processed }.to true }
+              it { expect { subject }.to change { balance.reload.being_processed }.to true }
 
               it { expect { subject }.to_not change { Employee::Balance.count } }
-              it { expect { subject }.to_not change { balance_add.reload.beeing_processed } }
-              it { expect { subject }.to_not change { previous_balance.reload.beeing_processed } }
+              it { expect { subject }.to_not change { balance_add.reload.being_processed } }
+              it { expect { subject }.to_not change { previous_balance.reload.being_processed } }
 
               it { is_expected.to have_http_status(204) }
             end
@@ -462,11 +462,11 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
               let(:id) { previous_add.id }
 
               it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
-              it { expect { subject }.to change { balance_add.reload.beeing_processed } }
-              it { expect { subject }.to change { balance.reload.beeing_processed } }
-              it { expect { subject }.to change { previous_add.reload.beeing_processed } }
-              it { expect { subject }.to change { previous_balance.reload.beeing_processed } }
-              it { expect { subject }.to change { previous_removal.reload.beeing_processed } }
+              it { expect { subject }.to change { balance_add.reload.being_processed } }
+              it { expect { subject }.to change { balance.reload.being_processed } }
+              it { expect { subject }.to change { previous_add.reload.being_processed } }
+              it { expect { subject }.to change { previous_balance.reload.being_processed } }
+              it { expect { subject }.to change { previous_removal.reload.being_processed } }
 
               it { expect { subject }.to_not change { Employee::Balance.count } }
 
@@ -477,11 +477,11 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
               let(:id) { balance_add.id }
 
               it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
-              it { expect { subject }.to change { balance_add.reload.beeing_processed } }
-              it { expect { subject }.to change { balance.reload.beeing_processed } }
+              it { expect { subject }.to change { balance_add.reload.being_processed } }
+              it { expect { subject }.to change { balance.reload.being_processed } }
 
               it { expect { subject }.to_not change { Employee::Balance.count } }
-              it { expect { subject }.to_not change { previous_removal.reload.beeing_processed } }
+              it { expect { subject }.to_not change { previous_removal.reload.being_processed } }
 
               it { is_expected.to have_http_status(204) }
 
@@ -490,8 +490,8 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
                 let(:id) { balance_add.id }
 
                 it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
-                it { expect { subject }.to change { balance_add.reload.beeing_processed } }
-                it { expect { subject }.to change { balance.reload.beeing_processed } }
+                it { expect { subject }.to change { balance_add.reload.being_processed } }
+                it { expect { subject }.to change { balance.reload.being_processed } }
                 it { expect { subject }.to change { Employee::Balance.count }.by(1) }
 
                 it { is_expected.to have_http_status(204) }
@@ -504,9 +504,9 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
               let(:removal_id) { previous_removal.id }
 
               it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
-              it { expect { subject }.to change { balance_add.reload.beeing_processed } }
-              it { expect { subject }.to change { balance.reload.beeing_processed } }
-              it { expect { subject }.to change { previous_balance.reload.beeing_processed } }
+              it { expect { subject }.to change { balance_add.reload.being_processed } }
+              it { expect { subject }.to change { balance.reload.being_processed } }
+              it { expect { subject }.to change { previous_balance.reload.being_processed } }
               it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
               it { expect { subject }.to change { Employee::Balance.exists?(id: removal_id) } }
 
@@ -518,10 +518,10 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
               let(:id) { previous_add.id }
 
               it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
-              it { expect { subject }.to change { balance_add.reload.beeing_processed } }
-              it { expect { subject }.to change { balance.reload.beeing_processed } }
-              it { expect { subject }.to change { previous_balance.reload.beeing_processed } }
-              it { expect { subject }.to change { previous_removal.reload.beeing_processed } }
+              it { expect { subject }.to change { balance_add.reload.being_processed } }
+              it { expect { subject }.to change { balance.reload.being_processed } }
+              it { expect { subject }.to change { previous_balance.reload.being_processed } }
+              it { expect { subject }.to change { previous_removal.reload.being_processed } }
 
               it { expect { subject }.to_not change { Employee::Balance.count } }
 
@@ -541,7 +541,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
       context 'when param is missing' do
         before { params.delete(:amount) }
 
-        it { expect { subject }.to_not change { balance.reload.beeing_processed } }
+        it { expect { subject }.to_not change { balance.reload.being_processed } }
         it { is_expected.to have_http_status(422) }
       end
 
@@ -549,7 +549,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
         before { params.merge!({ validity_date: current.last - 1.month }) }
         let(:effective_at) { current.last - 1.week }
 
-        it { expect { subject }.to_not change { balance.reload.beeing_processed } }
+        it { expect { subject }.to_not change { balance.reload.being_processed } }
 
         it { is_expected.to have_http_status(422) }
       end
@@ -558,7 +558,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
         before { params.merge!({ validity_date: current.last - 1.month }) }
         let(:id) { balance_add.id }
 
-        it { expect { subject }.to_not change { balance_add.reload.beeing_processed } }
+        it { expect { subject }.to_not change { balance_add.reload.being_processed } }
         it { expect { subject }.to_not change { Employee::Balance.count } }
 
         it { is_expected.to have_http_status(404) }
@@ -579,8 +579,8 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
 
         it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
 
-        it { expect { subject }.to_not change { previous_balance.reload.beeing_processed } }
-        it { expect { subject }.to_not change { previous_removal.reload.beeing_processed } }
+        it { expect { subject }.to_not change { previous_balance.reload.being_processed } }
+        it { expect { subject }.to_not change { previous_removal.reload.being_processed } }
         it { expect { subject }.to_not change { enqueued_jobs.size } }
 
         it { is_expected.to have_http_status(204) }
@@ -590,11 +590,11 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
         let(:id) { previous_balance.id }
 
         it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
-        it { expect { subject }.to change { previous_removal.reload.beeing_processed }.to true }
+        it { expect { subject }.to change { previous_removal.reload.being_processed }.to true }
         it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
-        it { expect { subject }.to change { balance_add.reload.beeing_processed } }
+        it { expect { subject }.to change { balance_add.reload.being_processed } }
 
-        it { expect { subject }.to_not change { balance.reload.beeing_processed } }
+        it { expect { subject }.to_not change { balance.reload.being_processed } }
 
         it { is_expected.to have_http_status(204) }
       end
@@ -620,8 +620,8 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
 
           it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
 
-          it { expect { subject }.to_not change { balance_add.reload.beeing_processed } }
-          it { expect { subject }.to_not change { previous_balance.reload.beeing_processed } }
+          it { expect { subject }.to_not change { balance_add.reload.being_processed } }
+          it { expect { subject }.to_not change { previous_balance.reload.being_processed } }
           it { expect { subject }.to_not change { enqueued_jobs.size } }
 
           it { is_expected.to have_http_status(204) }
@@ -632,10 +632,10 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
 
           it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
           it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
-          it { expect { subject }.to change { balance_add.reload.beeing_processed }.to true }
-          it { expect { subject }.to change { balance.reload.beeing_processed }.to true }
+          it { expect { subject }.to change { balance_add.reload.being_processed }.to true }
+          it { expect { subject }.to change { balance.reload.being_processed }.to true }
 
-          it { expect { subject }.to_not change { previous_add.reload.beeing_processed } }
+          it { expect { subject }.to_not change { previous_add.reload.being_processed } }
 
           it { is_expected.to have_http_status(204) }
         end
@@ -653,9 +653,9 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
 
           it { expect { subject }.to change { Employee::Balance.count }.by(-2) }
           it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
-          it { expect { subject }.to change { balance_add.reload.beeing_processed }.to true }
-          it { expect { subject }.to change { balance.reload.beeing_processed }.to true }
-          it { expect { subject }.to change { previous_balance.reload.beeing_processed }.to true }
+          it { expect { subject }.to change { balance_add.reload.being_processed }.to true }
+          it { expect { subject }.to change { balance.reload.being_processed }.to true }
+          it { expect { subject }.to change { previous_balance.reload.being_processed }.to true }
 
           it { is_expected.to have_http_status(204) }
         end

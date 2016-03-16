@@ -254,7 +254,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
     context 'with valid params' do
       it { expect { subject }.to change { time_off.reload.start_time } }
       it { expect { subject }.to change { time_off.reload.end_time } }
-      it { expect { subject }.to change { employee_balance.reload.beeing_processed } }
+      it { expect { subject }.to change { employee_balance.reload.being_processed } }
 
       it { is_expected.to have_http_status(204) }
     end

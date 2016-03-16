@@ -19,7 +19,7 @@ module EmployeeBalanceUpdatePresencePerspective
 
     balances_to_update = start_balance.all_later_ids
 
-    Employee::Balance.where(id: balances_to_update).update_all(beeing_processed: true)
+    Employee::Balance.where(id: balances_to_update).update_all(being_processed: true)
     UpdateBalanceJob.perform_later(start_balance.id, update_all: true)
   end
 end

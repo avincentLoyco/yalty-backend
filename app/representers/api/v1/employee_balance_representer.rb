@@ -5,7 +5,7 @@ module Api::V1
         amount: resource.amount,
         balance: resource.balance,
         effective_at: resource.effective_at,
-        beeing_processed: resource.beeing_processed,
+        being_processed: resource.being_processed,
         validity_date: resource.validity_date,
         policy_credit_removal: resource.policy_credit_removal,
         policy_credit_addition: resource.policy_credit_addition
@@ -19,7 +19,7 @@ module Api::V1
         amount: resource.amount,
         balance: resource.balance,
         effective_at: resource.effective_at,
-        beeing_processed: resource.beeing_processed
+        being_processed: resource.being_processed
       }
         .merge(basic)
     end

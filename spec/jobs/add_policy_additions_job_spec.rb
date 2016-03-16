@@ -30,7 +30,7 @@ RSpec.describe AddPolicyAdditionsJob do
         it { expect { subject }.to change { policy.reload.employee_balances.count }.by(2) }
         it { expect { subject }.to change { employees.first.reload.employee_balances.count }.by(1) }
         it { expect { subject }.to change { employees.last.reload.employee_balances.count }.by(1) }
-        it { expect { subject }.to change { employee_balance.reload.beeing_processed } }
+        it { expect { subject }.to change { employee_balance.reload.being_processed } }
 
         context 'and already called' do
           before { subject }
@@ -39,7 +39,7 @@ RSpec.describe AddPolicyAdditionsJob do
           it { expect { subject }.to_not change { policy.reload.employee_balances.count } }
           it { expect { subject }.to_not change { employees.first.reload.employee_balances.count } }
           it { expect { subject }.to_not change { employees.last.reload.employee_balances.count } }
-          it { expect { subject }.to_not change { employee_balance.reload.beeing_processed } }
+          it { expect { subject }.to_not change { employee_balance.reload.being_processed } }
         end
       end
 
@@ -48,7 +48,7 @@ RSpec.describe AddPolicyAdditionsJob do
         it { expect { subject }.to change { policy.reload.employee_balances.count }.by(2) }
         it { expect { subject }.to change { employees.first.reload.employee_balances.count }.by(1) }
         it { expect { subject }.to change { employees.last.reload.employee_balances.count }.by(1) }
-        it { expect { subject }.to change { employee_balance.reload.beeing_processed } }
+        it { expect { subject }.to change { employee_balance.reload.being_processed } }
 
         context 'and already called' do
           before { subject }
@@ -57,7 +57,7 @@ RSpec.describe AddPolicyAdditionsJob do
           it { expect { subject }.to_not change { policy.reload.employee_balances.count } }
           it { expect { subject }.to_not change { employees.first.reload.employee_balances.count } }
           it { expect { subject }.to_not change { employees.last.reload.employee_balances.count } }
-          it { expect { subject }.to_not change { employee_balance.reload.beeing_processed } }
+          it { expect { subject }.to_not change { employee_balance.reload.being_processed } }
         end
       end
     end
@@ -67,7 +67,7 @@ RSpec.describe AddPolicyAdditionsJob do
 
       it { expect { subject }.to_not change { Employee::Balance.count } }
       it { expect { subject }.to_not change { policy.reload.employee_balances } }
-      it { expect { subject }.to_not change { employee_balance.reload.beeing_processed } }
+      it { expect { subject }.to_not change { employee_balance.reload.being_processed } }
     end
   end
 end
