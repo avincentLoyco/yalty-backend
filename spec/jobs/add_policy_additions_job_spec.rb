@@ -83,7 +83,7 @@ RSpec.describe AddPolicyAdditionsJob do
       before { policy.update!(start_day: 10) }
 
       it { expect { subject }.to_not change { Employee::Balance.count } }
-      it { expect { subject }.to_not change { policy.reload.employee_balances } }
+      it { expect { subject }.to_not change { policy.reload.employee_balances.count } }
       it { expect { subject }.to_not change { employee_balance.reload.being_processed } }
     end
   end
