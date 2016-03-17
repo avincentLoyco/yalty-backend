@@ -229,6 +229,32 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
       it { expect { subject }.to change { employee.reload.employee_time_off_policies.count }.by(1) }
 
       it { is_expected.to have_http_status(204) }
+
+      context 'when presence policy param send' do
+        let(:employee_with_time_offs) { create(:employee, :with_time_offs, account: account) }
+        let(:id) { employee_with_time_offs.id }
+        let(:first_time_off) { employee_with_time_offs.time_offs.first.employee_balance }
+        let(:second_time_off) { employee_with_time_offs.time_offs.second.employee_balance }
+        let(:third_time_off) { employee_with_time_offs.time_offs.last.employee_balance }
+
+        context 'and equas employee current presence policy' do
+          before { employee_with_time_offs.update!(presence_policy: presence_policy) }
+
+          it { expect { subject }.to_not change { first_time_off.reload.being_processed } }
+          it { expect { subject }.to_not change { second_time_off.reload.being_processed } }
+          it { expect { subject }.to_not change { third_time_off.reload.being_processed } }
+
+          it { is_expected.to have_http_status(204) }
+        end
+
+        context 'and it is different than employee presence policy' do
+          it { expect { subject }.to change { first_time_off.reload.being_processed } }
+          it { expect { subject }.to change { second_time_off.reload.being_processed } }
+          it { expect { subject }.to change { third_time_off.reload.being_processed } }
+
+          it { is_expected.to have_http_status(204) }
+        end
+      end
     end
 
     context 'with invalid data' do

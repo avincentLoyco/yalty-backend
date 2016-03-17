@@ -3,6 +3,7 @@ module API
     class WorkingPlacesController < ApplicationController
       authorize_resource except: :create
       include WorkingPlaceRules
+      include EmployeeBalanceUpdatePresencePerspective
 
       def index
         render_resource(resources)
@@ -29,11 +30,13 @@ module API
 
       def update
         verified_params(gate_rules) do |attributes|
+          active_policy = resource.presence_policy.try(:id)
           related = related_params(attributes)
           related_joins_collection = related_joins_collection_params(attributes)
           transactions do
             resource.update(attributes)
             assign_all(related, related_joins_collection)
+            update_balances(resource.employees) if policy_changed?(active_policy)
           end
           render_no_content
         end
@@ -93,6 +96,10 @@ module API
         end
 
         related_joins_collection
+      end
+
+      def policy_changed?(active_policy)
+        active_policy != resource.reload.presence_policy.try(:id)
       end
 
       def resources
