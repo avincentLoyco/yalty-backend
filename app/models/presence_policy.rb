@@ -12,7 +12,9 @@ class PresencePolicy < ActiveRecord::Base
   end
 
   def affected_employees
-    (Employee.joins(:working_place).where(working_places: { presence_policy_id: id }) +
-      Employee.where(presence_policy_id: id).to_a).uniq
+    working_place_ids = working_places.joins(:employees)
+                                      .where(employees: { presence_policy_id: nil })
+                                      .map(&:employee_ids).flatten
+    Employee.where('presence_policy_id = ? OR id IN (?)', id, working_place_ids)
   end
 end

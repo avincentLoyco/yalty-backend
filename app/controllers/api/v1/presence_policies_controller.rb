@@ -36,6 +36,9 @@ module API
         verified_params(gate_rules) do |attributes|
           related = related_params(attributes)
           previously_affected = resource.affected_employees
+          # Without below line query is not performed after update what influences
+          # calculations result.
+          previously_affected.present?
 
           transactions do
             resource.attributes = attributes

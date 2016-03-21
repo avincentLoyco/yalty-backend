@@ -12,9 +12,8 @@ class UpdateEmployeeBalance
   def call
     update_attributes unless options.blank?
     update_removal_effective_at if options[:validity_date] && balance_removal
-    recalculate_amount if employee_balance.balance_credit_addition || counter_and_addition?
+    recalculate_amount
     update_status
-
     save!
   end
 
@@ -25,8 +24,13 @@ class UpdateEmployeeBalance
   end
 
   def recalculate_amount
-    employee_balance.amount =
-      employee_balance.time_off_policy.counter? ? counter_recalculation : balancer_recalculation
+    return unless  employee_balance.balance_credit_addition || counter_and_addition? || time_off
+    if time_off
+      employee_balance.amount = time_off.balance
+    else
+      employee_balance.amount =
+        employee_balance.time_off_policy.counter? ? counter_recalculation : balancer_recalculation
+    end
   end
 
   def update_status
