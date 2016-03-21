@@ -16,13 +16,11 @@ module API
       def create
         verified_params(gate_rules) do |attributes|
           related = related_params(attributes)
-          related_joins_collection = related_joins_collection_params(attributes)
           @resource = Account.current.working_places.new(attributes)
           authorize! :create, resource
-
           transactions do
             resource.save!
-            assign_all(related, related_joins_collection)
+            assign_all(related)
           end
           render_resource(resource, status: :created)
         end
@@ -32,10 +30,9 @@ module API
         verified_params(gate_rules) do |attributes|
           active_policy = resource.presence_policy.try(:id)
           related = related_params(attributes)
-          related_joins_collection = related_joins_collection_params(attributes)
           transactions do
             resource.update(attributes)
-            assign_all(related, related_joins_collection)
+            assign_all(related)
             update_balances(resource.employees) if policy_changed?(active_policy)
           end
           render_no_content
@@ -53,22 +50,14 @@ module API
 
       private
 
-      def assign_all(related, related_joins_collection)
+      def assign_all(related)
         assign_related(related)
-        assign_related_joins_collection(related_joins_collection)
       end
 
       def assign_related(related_records)
         return true if related_records.empty?
         related_records.each do |key, value|
           assign_member(resource, value.try(:[], :id), key.to_s)
-        end
-      end
-
-      def assign_related_joins_collection(related_records)
-        return true if related_records.empty?
-        related_records.each do |key, hash_array|
-          assign_join_table_collection(resource, hash_array, key.to_s)
         end
       end
 
@@ -86,16 +75,6 @@ module API
         related
           .merge(holiday_policy.to_h)
           .merge(presence_policy.to_h)
-      end
-
-      def related_joins_collection_params(attributes)
-        related_joins_collection = {}
-
-        if attributes.key?(:time_off_policies)
-          related_joins_collection[:time_off_policies] = attributes.delete(:time_off_policies)
-        end
-
-        related_joins_collection
       end
 
       def policy_changed?(active_policy)

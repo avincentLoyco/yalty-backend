@@ -1,58 +1,58 @@
 class AssignJoinTableCollection
-  attr_reader :resource, :resource_name_as_attribute, :collection, :collection_name,
+  attr_reader :resource, :resource_name_as_attribute, :collection_name,
     :collection_model_name, :join_table_model, :join_table_model_association,
-    :collection_name_as_attribute_with_id, :join_table_model_extra_attributes
+    :join_table_model_attributes
 
   JOIN_TABLE_MODELS = [EmployeeTimeOffPolicy.to_s, WorkingPlaceTimeOffPolicy.to_s].freeze
-  # attr_reader :resource, :collection, :collection_name, :collection_model_name
 
-  def initialize(resource, id_hash_array, collection_name, opts = {})
+  def initialize(resource, join_table_attribute_hash_array, collection_name)
     @resource = resource
     @resource_name_as_attribute = resource.class.to_s.tableize.singularize
-    @collection = id_hash_array.present? ? id_hash_array.map { |id_hash| id_hash[:id] } : []
     @collection_name = collection_name
     @collection_model_name = collection_name.classify.constantize
-    @collection_name_as_attribute_with_id = "#{collection_name.singularize}_id"
     @join_table_model = find_join_model
     @join_table_model_association = join_table_model.to_s.tableize
-    @join_table_model_extra_attributes = opts
+    @join_table_model_attributes = join_table_attribute_hash_array
   end
 
   def call
     raise_fail unless resource.respond_to?(collection_name)
-    remove_from_resource_collection
-    add_to_resource_collection
+    to_be_assigned, to_be_removed = to_be_assigned_and_removed
+    remove_from_resource_collection(to_be_removed)
+    add_to_resource_collection(to_be_assigned)
   end
 
   private
 
-  def remove_from_resource_collection
-    resource.send(join_table_model_association)
-            .where.not(collection_name_as_attribute_with_id => collection)
-            .destroy_all
+  def get_extra_attributes(hash_array)
+    return [] unless hash_array.present?
+    hash_array.map { |hash| hash.reject { |k, _v| k == 'id' } }
   end
 
-  def add_to_resource_collection
-    to_be_assigned.each do |member_id|
-      attributes =
-        {
-          resource_name_as_attribute => resource,
-          collection_name_as_attribute_with_id => member_id
-        }.merge(join_table_model_extra_attributes)
-      join_table_model.create!(attributes)
+  def get_collection_ids(hash_array)
+    return [] unless hash_array.present?
+    hash_array.map { |id_hash| id_hash[:id] }
+  end
+
+  def remove_from_resource_collection(hash_array)
+    join_table_collection = resource.send(join_table_model_association)
+    hash_array.each do |attributes_hash|
+      join_models = join_table_collection.where(attributes_hash)
+      join_models.first.destroy if join_models.any?
     end
   end
 
-  def fetch_collection(collection_of_ids)
-    collection = collection_model_name.where(id: collection_of_ids)
-    raise_fail unless collection.size == collection_of_ids.size
-    collection
+  def add_to_resource_collection(hash_array)
+    hash_array.each do |attributes_hash|
+      join_table_model.create!(attributes_hash)
+    end
   end
 
-  def to_be_assigned
-    already_assigned = resource.send(join_table_model_association)
-                               .pluck(collection_name_as_attribute_with_id)
-    collection - already_assigned
+  def to_be_assigned_and_removed
+    already_assigned = resource.send(join_table_model_association).map do |joins_table_model|
+      joins_table_model.as_json(except: :id)
+    end
+    [join_table_model_attributes - already_assigned, already_assigned - join_table_model_attributes]
   end
 
   def raise_fail

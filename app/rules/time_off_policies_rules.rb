@@ -14,8 +14,8 @@ module TimeOffPoliciesRules
       required :time_off_category, :Hash do
         required :id, :String
       end
-      optional :employees, :Array, allow_nil: true
-      optional :working_places, :Array, allow_nil: true
+      optional :employees_relationships, :Array, allow_nil: true
+      optional :working_places_relationships, :Array, allow_nil: true
     end
   end
 
@@ -30,8 +30,8 @@ module TimeOffPoliciesRules
       optional :amount, :Integer, allow_nil: true
       optional :years_to_effect, :Integer, allow_nil: true
       required :policy_type, :String
-      optional :employees, :Array, allow_nil: true
-      optional :working_places, :Array, allow_nil: true
+      optional :employees_relationships, :Array, allow_nil: true
+      optional :working_places_relationships, :Array, allow_nil: true
     end
   end
 end
