@@ -1,7 +1,7 @@
 class AssignJoinTableCollection
   attr_reader :resource, :resource_name_as_attribute, :collection_name,
     :collection_model_name, :join_table_model, :join_table_model_association,
-    :join_table_model_attributes
+    :join_table_model_attributes, :assigned_collection
 
   JOIN_TABLE_MODELS = [EmployeeTimeOffPolicy.to_s, WorkingPlaceTimeOffPolicy.to_s].freeze
 
@@ -13,6 +13,7 @@ class AssignJoinTableCollection
     @join_table_model = find_join_model
     @join_table_model_association = join_table_model.to_s.tableize
     @join_table_model_attributes = join_table_attribute_hash_array
+    @assigned_collection = []
   end
 
   def call
@@ -20,6 +21,7 @@ class AssignJoinTableCollection
     to_be_assigned, to_be_removed = to_be_assigned_and_removed
     remove_from_resource_collection(to_be_removed)
     add_to_resource_collection(to_be_assigned)
+    update_balances unless assigned_collection.blank?
   end
 
   private
@@ -44,7 +46,7 @@ class AssignJoinTableCollection
 
   def add_to_resource_collection(hash_array)
     hash_array.each do |attributes_hash|
-      join_table_model.create!(attributes_hash)
+      assigned_collection << join_table_model.create!(attributes_hash)
     end
   end
 
@@ -72,5 +74,11 @@ class AssignJoinTableCollection
 
   def get_possible_model_names(name_a, name_b)
     [name_a + name_b, name_b + name_a]
+  end
+
+  def update_balances
+    assigned_collection.map do |assigned|
+      ManageEmployeeBalances.new(assigned).call
+    end
   end
 end

@@ -9,11 +9,21 @@ class WorkingPlace < ActiveRecord::Base
   validates :name, :account_id, presence: true
 
   def active_time_off_policy_in_category(category_id)
+    time_off_policies_in_category(category_id).first.try(:time_off_policy)
+  end
+
+  def previous_time_off_policy_in_category(category_id)
+    time_off_policies_in_category(category_id).second.try(:time_off_policy)
+  end
+
+  private
+
+  def time_off_policies_in_category(category_id)
     working_place_time_off_policies.assigned
                                    .joins(:time_off_policy)
                                    .where(time_off_policies:
                                               { time_off_category_id: category_id }
                                          )
-                                   .order(effective_at: :asc).last.try(:time_off_policy)
+                                   .order(effective_at: :desc)
   end
 end

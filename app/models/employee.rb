@@ -19,6 +19,12 @@ class Employee < ActiveRecord::Base
 
   validates :working_place_id, presence: true
 
+  def previous_time_off_policy(category_id)
+    employee_policy = previous_time_off_policy_in_category(category_id)
+    return employee_policy if employee_policy
+    working_place.previous_time_off_policy_in_category(category_id)
+  end
+
   def active_presence_policy
     return presence_policy if presence_policy.present?
     working_place.presence_policy
@@ -49,10 +55,18 @@ class Employee < ActiveRecord::Base
 
   private
 
-  def active_time_off_policy_in_category(category_id)
+  def time_off_policies_in_category(category_id)
     employee_time_off_policies.assigned
                               .joins(:time_off_policy)
                               .where(time_off_policies: { time_off_category_id: category_id })
-                              .order(effective_at: :asc).last.try(:time_off_policy)
+                              .order(effective_at: :desc)
+  end
+
+  def previous_time_off_policy_in_category(category_id)
+    time_off_policies_in_category(category_id).second.try(:time_off_policy)
+  end
+
+  def active_time_off_policy_in_category(category_id)
+    time_off_policies_in_category(category_id).first.try(:time_off_policy)
   end
 end
