@@ -8,13 +8,11 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
 
   let(:holiday_policy) { create(:holiday_policy, account: account) }
   let(:presence_policy) { create(:presence_policy, account: account) }
-  let(:time_off_policy) { create(:time_off_policy) }
 
   context 'POST #create' do
     let(:name) { 'test' }
     let(:holiday_policy_id) { holiday_policy.id }
     let(:presence_policy_id) { presence_policy.id }
-    let(:time_off_policy_id) { time_off_policy.id }
     let(:valid_data_json) do
       {
         name: name,
@@ -26,13 +24,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
         presence_policy: {
           id: presence_policy_id,
           type: 'presence_policy'
-        },
-        time_off_policies: [
-          {
-            id: time_off_policy_id,
-            type: 'time_off_policy'
-          }
-        ]
+        }
       }
     end
     shared_examples 'Invalid Data' do
@@ -41,7 +33,6 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
         it { expect { subject }.to_not change { account.reload.working_places.count } }
         it { expect { subject }.to_not change { holiday_policy.working_places.count } }
         it { expect { subject }.to_not change { presence_policy.working_places.count } }
-        it { expect { subject }.to_not change { time_off_policy.working_places.count } }
       end
     end
 
@@ -52,7 +43,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
       it { expect { subject }.to change { account.reload.working_places.count }.by(1) }
       it { expect { subject }.to change { holiday_policy.working_places.count }.by(1) }
       it { expect { subject }.to change { presence_policy.working_places.count }.by(1) }
-      it { expect { subject }.to change { time_off_policy.working_places.count }.by(1) }
+
 
       it { is_expected.to have_http_status(201) }
 
@@ -121,20 +112,6 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
             it { expect_json(regex("Record Not Found")) }
           end
         end
-
-        context 'with invalid time off policies' do
-          let(:time_off_policy_id) { '1' }
-
-          it_behaves_like 'Invalid Data'
-
-          it { is_expected.to have_http_status(422) }
-
-          context 'response' do
-            before { subject }
-
-            it { expect_json(regex("can't be blank")) }
-          end
-        end
       end
     end
   end
@@ -146,7 +123,6 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
       let(:id) { working_place.id }
       let(:holiday_policy_id) { holiday_policy.id }
       let(:presence_policy_id) { presence_policy.id }
-      let(:time_off_policy_id) { time_off_policy.id }
       let(:valid_data_json) do
         {
           id: id,
@@ -159,13 +135,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
           presence_policy: {
             id: presence_policy_id,
             type: 'presence_policy'
-          },
-          time_off_policies: [
-            {
-              id: time_off_policy_id,
-              type: 'time_off_policy'
-            }
-          ]
+          }
         }
       end
 
@@ -184,7 +154,8 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
         it { expect { subject }.to change { working_place.reload.name } }
         it { expect { subject }.to change { working_place.reload.holiday_policy_id } }
         it { expect { subject }.to change { working_place.reload.presence_policy_id } }
-        it { expect { subject }.to change { working_place.reload.time_off_policies.pluck(:id) } }
+        it { expect { subject }.to_not change { working_place.reload.time_off_policies } }
+
 
         it { is_expected.to have_http_status(204) }
 
@@ -287,20 +258,6 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
               before { subject }
 
               it { expect_json(regex("Record Not Found")) }
-            end
-          end
-
-          context 'with invalid time off policies' do
-            let(:time_off_policy_id) { '1' }
-
-            it_behaves_like 'Invalid Data'
-
-            it { is_expected.to have_http_status(422) }
-
-            context 'response' do
-              before { subject }
-
-              it { expect_json(regex("can't be blank")) }
             end
           end
         end
