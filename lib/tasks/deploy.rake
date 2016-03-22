@@ -97,6 +97,14 @@ namespace :deploy do
 
         system "#{options.scalingo_cmd} run \"rake setup\"" || raise
       end
+
+      task dump: [:environment] do
+        db = postgresql_for(target_env)
+        tunnel = postgresql_tunnel_to(db)
+        puts "dump #{target_env} database to ./tmp/dump.sql"
+        system "PGPASSWORD=#{db[:password]} pg_dump --clean --if-exists --no-acl --no-owner -n public -U #{db[:user]} -h 127.0.0.1 -p 10000 #{db[:database]} > tmp/dump.sql"
+        Process.kill('SIGTERM', tunnel)
+      end
     end
   end
 end
