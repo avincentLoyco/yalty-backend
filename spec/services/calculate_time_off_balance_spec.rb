@@ -30,6 +30,11 @@ RSpec.describe CalculateTimeOffBalance, type: :service do
       it { expect(subject).to eq 120 }
     end
 
+    context 'when time off period is 2 days long' do
+      before { time_off.update!(start_time: Date.today - 1.day + 23.hours , end_time: Date.today + 11.hour) }
+      it { expect(subject).to eq 300 }
+    end
+
     context 'when time off shorter than one week' do
       it { expect(subject).to eq 600 }
     end
