@@ -67,7 +67,7 @@ class CalculateTimeOffBalance
   end
 
   def num_of_days_in_time_off
-    ((time_off.end_time - time_off.start_time).to_i + 1.day) / 1.day
+    (time_off.end_time.to_date - time_off.start_time.to_date).to_i + 1
   end
 
   def presence_days_with_entries_duration
