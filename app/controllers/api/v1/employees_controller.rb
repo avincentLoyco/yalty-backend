@@ -3,6 +3,7 @@ module API
     class EmployeesController < ApplicationController
       authorize_resource
       include EmployeeRules
+      include EmployeeBalanceUpdatePresencePerspective
 
       def show
         render_resource(resource)
@@ -14,11 +15,13 @@ module API
 
       def update
         verified_params(gate_rules) do |attributes|
+          active_policy = resource.active_presence_policy.try(:id)
           related = related_params(attributes)
           related_joins_collection = related_joins_collection_params(attributes)
           transactions do
             assign_related(related)
             assign_related_joins_collection(related_joins_collection)
+            update_balances([resource]) if policy_changed?(active_policy)
           end
           render_no_content
         end
@@ -38,7 +41,7 @@ module API
         end
 
         related.merge(holiday_policy.to_h)
-          .merge(presence_policy.to_h)
+               .merge(presence_policy.to_h)
       end
 
       def related_joins_collection_params(attributes)
@@ -63,6 +66,10 @@ module API
         related_records.each do |key, hash_array|
           assign_join_table_collection(resource, hash_array, key.to_s)
         end
+      end
+
+      def policy_changed?(active_policy)
+        active_policy != resource.reload.active_presence_policy.try(:id)
       end
 
       def resource

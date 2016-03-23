@@ -3,6 +3,7 @@ module API
     class PresenceDaysController < ApplicationController
       authorize_resource except: :create
       include PresenceDayRules
+      include EmployeeBalanceUpdatePresencePerspective
 
       def show
         render_resource(resource)
@@ -24,13 +25,21 @@ module API
 
       def update
         verified_params(gate_rules) do |attributes|
-          resource.update!(attributes)
+          previous_order = resource.order
+
+          transactions do
+            resource.update!(attributes)
+            find_and_update_balances(resource.presence_policy) if previous_order != resource.order
+          end
           render_no_content
         end
       end
 
       def destroy
-        resource.destroy!
+        transactions do
+          find_and_update_balances(resource.presence_policy)
+          resource.destroy!
+        end
         render_no_content
       end
 

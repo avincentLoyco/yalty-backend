@@ -7,10 +7,10 @@ namespace :deploy do
     options.branch = branch || `git rev-parse --abbrev-ref HEAD`.chomp
 
     if options.remote == 'production' && options.branch != 'stable'
-      fail "branch '#{options.branch}' can't be deploy to '#{options.remote}' environment"
+      raise "branch '#{options.branch}' can't be deploy to '#{options.remote}' environment"
     elsif options.remote == 'staging' && options.branch !~ %r{^(master)|(stable)|(release/[0-9\.]+)$}
-      fail "branch '#{options.branch}' can't be deploy to '#{options.remote}' environment"
-    elsif options.remote =~ %r{^(review)|(staging)$}
+      raise "branch '#{options.branch}' can't be deploy to '#{options.remote}' environment"
+    elsif options.remote =~ /^(review)|(staging)$/
       options.git_args = '--force'
     end
 
@@ -39,7 +39,7 @@ namespace :deploy do
   end
 
   def migrate_on(options)
-    system "#{options.scalingo_cmd} run \"rake db:migrate\"" || fail
+    system "#{options.scalingo_cmd} run \"rake db:migrate\"" || raise
     system "#{options.scalingo_cmd} restart"
   end
 
@@ -55,7 +55,7 @@ namespace :deploy do
         database: result[4]
       }
     else
-      fail "Cannot get database information for #{target_env}"
+      raise "Cannot get database information for #{target_env}"
     end
   end
 
@@ -76,25 +76,35 @@ namespace :deploy do
     end
   end
 
-  namespace :staging do
-    desc 'Reset staging environment with production code and data'
-    task :reset => [:environment] do
-      options = options_for('staging', 'stable')
-      deploy_to(options)
+  %w(staging review).each do |target_env|
+    namespace target_env do
+      desc "Reset #{target_env} environment with production code and data"
+      task reset: [:environment] do
+        options = options_for(target_env, 'stable')
+        deploy_to(options)
 
-      db_production = postgresql_for(:production)
-      tunnel = postgresql_tunnel_to(db_production)
-      puts 'dump production database'
-      system "PGPASSWORD=#{db_production[:password]} pg_dump --clean --if-exists --no-acl --no-owner -n public -U #{db_production[:user]} -h 127.0.0.1 -p 10000 #{db_production[:database]} > tmp/sync_dump.sql"
-      Process.kill('SIGTERM', tunnel)
+        db_production = postgresql_for(:production)
+        tunnel = postgresql_tunnel_to(db_production)
+        puts 'dump production database'
+        system "PGPASSWORD=#{db_production[:password]} pg_dump --clean --if-exists --no-acl --no-owner -n public -U #{db_production[:user]} -h 127.0.0.1 -p 10000 #{db_production[:database]} > tmp/sync_dump.sql"
+        Process.kill('SIGTERM', tunnel)
 
-      db_staging = postgresql_for(:staging)
-      tunnel = postgresql_tunnel_to(db_staging)
-      puts 'load staging database'
-      system "PGPASSWORD=#{db_staging[:password]} psql --quiet -U #{db_staging[:user]} -h 127.0.0.1 -p 10000 -d #{db_staging[:database]} < tmp/sync_dump.sql"
-      Process.kill('SIGTERM', tunnel)
+        db_target = postgresql_for(target_env)
+        tunnel = postgresql_tunnel_to(db_target)
+        puts "load #{target_env} database"
+        system "PGPASSWORD=#{db_target[:password]} psql --quiet -U #{db_target[:user]} -h 127.0.0.1 -p 10000 -d #{db_target[:database]} < tmp/sync_dump.sql"
+        Process.kill('SIGTERM', tunnel)
 
-      system "#{options.scalingo_cmd} run \"rake setup\"" || fail
+        system "#{options.scalingo_cmd} run \"rake setup\"" || raise
+      end
+
+      task dump: [:environment] do
+        db = postgresql_for(target_env)
+        tunnel = postgresql_tunnel_to(db)
+        puts "dump #{target_env} database to ./tmp/dump.sql"
+        system "PGPASSWORD=#{db[:password]} pg_dump --clean --if-exists --no-acl --no-owner -n public -U #{db[:user]} -h 127.0.0.1 -p 10000 #{db[:database]} > tmp/dump.sql"
+        Process.kill('SIGTERM', tunnel)
+      end
     end
   end
 end

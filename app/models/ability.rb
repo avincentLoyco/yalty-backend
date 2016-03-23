@@ -10,10 +10,11 @@ class Ability
       can [:show, :index], Employee
       can :update, Employee, account_user_id: user.id
       can [:update, :read, :index], Account::User, id: user.id
-      can :show, TimeOff do |time_off|
+      can [:show, :create, :update], TimeOff do |time_off|
         time_off.employee_id = user.employee.try(:id)
       end
-      can [:read, :update], Employee::Event do |event|
+      can [:read], Account, id: user.account_id
+      can [:read, :show, :update], Employee::Event do |event|
         event.employee_id = user.employee.try(:id)
       end
     end

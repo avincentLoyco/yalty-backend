@@ -164,7 +164,9 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
   end
 
   describe 'DELETE #destroy' do
+    before { allow_any_instance_of(TimeOff).to receive(:valid?) { true } }
     let!(:time_off_category) { create(:time_off_category, account: account) }
+    let(:employee) { create(:employee, account: account) }
     let(:id) { time_off_category.id }
     subject { delete :destroy, id: id }
 
@@ -182,7 +184,9 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
       end
 
       context 'when time off category has time offs assigned' do
-        let!(:time_off) { create(:time_off, time_off_category_id: time_off_category.id) }
+        let!(:time_off) do
+          create(:time_off, time_off_category: time_off_category, employee: employee)
+        end
 
         it { expect { subject }.to_not change { TimeOffCategory.count } }
         it { is_expected.to have_http_status(423) }

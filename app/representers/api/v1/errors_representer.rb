@@ -10,15 +10,15 @@ module Api::V1
     def complete
       response = {}
       if @messages.blank?
-        if resource.is_a?(ActiveRecord::Base)
-          @messages = resource.errors.messages
-        elsif resource.is_a?(Gate::Result)
-          @messages = resource.errors
-        elsif resource.is_a?(Struct)
-          @messages = resource.errors
-        else
-          @messages = []
-        end
+        @messages = if resource.is_a?(ActiveRecord::Base)
+                      resource.errors.messages
+                    elsif resource.is_a?(Gate::Result)
+                      resource.errors
+                    elsif resource.is_a?(Struct)
+                      resource.errors
+                    else
+                      []
+                    end
       end
 
       errors = @messages.map do |field, message|

@@ -3,6 +3,72 @@ FactoryGirl.define do
     account
     working_place { create(:working_place, account: account) }
 
+    trait :with_policy do
+      transient do
+        employee_time_off_policies { Hash.new }
+      end
+
+      after(:build) do |employee|
+        policy = create(:employee_time_off_policy)
+        employee.employee_time_off_policies << policy
+      end
+    end
+
+    trait :with_time_offs do
+      transient do
+        employee_time_off_policies { Hash.new }
+        time_offs { Hash.new }
+      end
+
+      after(:build) do |employee|
+        first_policy = create(:employee_time_off_policy)
+        second_policy = create(:employee_time_off_policy)
+        employee.employee_time_off_policies << [first_policy, second_policy]
+      end
+
+      after(:create) do |employee|
+        first_policy = employee.employee_time_off_policies.first.time_off_policy
+        second_policy = employee.employee_time_off_policies.last.time_off_policy
+
+        first_balance = create(:employee_balance,
+          time_off_policy: first_policy,
+          employee: employee,
+          time_off_category: first_policy.time_off_category
+        )
+        second_balance = create(:employee_balance,
+          time_off_policy: second_policy,
+          employee: employee,
+          time_off_category: second_policy.time_off_category
+        )
+
+        third_balance = create(:employee_balance,
+          time_off_policy: second_policy,
+          employee: employee,
+          time_off_category: second_policy.time_off_category
+        )
+
+        first_time_off = create(:no_category_assigned_time_off,
+          time_off_category: first_policy.time_off_category,
+          employee: employee,
+          employee_balance: first_balance
+        )
+
+        second_time_off = create(:no_category_assigned_time_off,
+          time_off_category: second_policy.time_off_category,
+          employee: employee,
+          start_time: Date.today,
+          employee_balance: second_balance
+        )
+
+        third_time_off = create(:no_category_assigned_time_off,
+          time_off_category: second_policy.time_off_category,
+          employee: employee,
+          start_time: Date.today + 1.day,
+          employee_balance: third_balance
+        )
+      end
+    end
+
     trait :with_attributes do
       transient do
         event { Hash.new }

@@ -2,9 +2,14 @@ require 'rails_helper'
 
 RSpec.describe API::V1::TimeOffsController, type: :controller do
   include_context 'shared_context_headers'
+  include_context 'shared_context_timecop_helper'
 
-  let(:time_off_category) { create(:time_off_category, account: account) }
-  let(:employee) { create(:employee, account: account) }
+  let(:policy) { create(:presence_policy, account: Account.current) }
+  let(:employee) { create(:employee, :with_policy, account: account, presence_policy: policy) }
+  let(:time_off_category) do
+    employee.employee_time_off_policies.first.time_off_policy.time_off_category
+  end
+  before { time_off_category.update!(account: Account.current) }
   let!(:time_off) do
     create(:time_off, time_off_category_id: time_off_category.id, employee: employee)
   end
@@ -20,7 +25,9 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
       context 'response body' do
         before { subject }
 
-        it { expect_json_keys([:id, :type, :start_time, :end_time, :employee, :time_off_category]) }
+        it { expect_json_keys(
+          [:id, :type, :start_time, :end_time, :employee, :time_off_category, :employee_balance]
+        ) }
       end
     end
 
@@ -105,7 +112,9 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
   end
 
   describe 'POST #create' do
-    let(:start_time) { Time.now }
+    before { Employee::Balance.destroy_all }
+
+    let(:start_time) { '15:00:00'.to_time  }
     let(:end_time) { start_time + 1.week }
     let(:employee_id) { employee.id }
     let(:time_off_category_id) { time_off_category.id }
@@ -130,10 +139,12 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
       it { expect { subject }.to_not change { TimeOff.count } }
       it { expect { subject }.to_not change { employee.reload.time_offs.count } }
       it { expect { subject }.to_not change { time_off_category.reload.time_offs } }
+      it { expect { subject }.to_not change { Employee::Balance.count } }
     end
 
     context 'with valid params' do
       it { expect { subject }.to change { TimeOff.count }.by(1) }
+      it { expect { subject }.to change { Employee::Balance.count }.by(1) }
       it { expect { subject }.to change { time_off_category.reload.time_offs.count }.by(1) }
       it { expect { subject }.to change { employee.reload.time_offs.count }.by(1) }
 
@@ -143,6 +154,26 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
         before { subject }
 
         it { expect_json_keys([:id, :type, :employee, :time_off_category, :start_time, :end_time]) }
+      end
+
+      context 'when time off has time entries in its period' do
+        let(:first_day) { create(:presence_day, order: 5, presence_policy: policy) }
+        let(:second_day) { create(:presence_day, order: 2, presence_policy: policy) }
+        let!(:second_entry) { create(:time_entry, presence_day: second_day) }
+        let!(:first_entry) do
+          create(:time_entry, start_time: '10:00', end_time: '17:00', presence_day: first_day)
+        end
+
+        it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+        it { expect { subject }.to change { TimeOff.count }.by(1) }
+
+        it { is_expected.to have_http_status(201) }
+
+        context 'new employee balance amount' do
+          before { subject }
+
+          it { expect(Employee::Balance.last.amount).to eq -480 }
+        end
       end
     end
 
@@ -200,9 +231,11 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
   end
 
   describe 'PUT #update' do
+    before { Employee::Balance.destroy_all }
+
     let(:id) { time_off.id }
-    let(:start_time) { Time.now }
-    let(:end_time) { start_time + 1.week }
+    let(:start_time) { Date.today }
+    let(:end_time) { Date.today + 1.week }
     let(:params) do
       {
         id: id,
@@ -211,12 +244,17 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
         end_time: end_time,
       }
     end
+    let!(:employee_balance) do
+      create(:employee_balance,
+        time_off: time_off, time_off_category: time_off_category, employee: employee)
+    end
 
     subject { put :update, params }
 
     context 'with valid params' do
       it { expect { subject }.to change { time_off.reload.start_time } }
       it { expect { subject }.to change { time_off.reload.end_time } }
+      it { expect { subject }.to change { employee_balance.reload.being_processed } }
 
       it { is_expected.to have_http_status(204) }
     end
@@ -227,6 +265,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
 
         it { expect { subject }.to_not change { time_off.reload.start_time } }
         it { expect { subject }.to_not change { time_off.reload.end_time } }
+        it { expect { subject }.to_not change { employee_balance.reload.amount } }
 
         it { is_expected.to have_http_status(422) }
       end
@@ -236,6 +275,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
 
         it { expect { subject }.to_not change { time_off.reload.start_time } }
         it { expect { subject }.to_not change { time_off.reload.end_time } }
+        it { expect { subject }.to_not change { employee_balance.reload.amount } }
 
         it { is_expected.to have_http_status(422) }
       end
@@ -245,6 +285,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
 
         it { expect { subject }.to_not change { time_off.reload.start_time } }
         it { expect { subject }.to_not change { time_off.reload.end_time } }
+        it { expect { subject }.to_not change { employee_balance.reload.amount } }
 
         it { is_expected.to have_http_status(404) }
       end
@@ -259,6 +300,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
       let(:id) { time_off.id }
 
       it { expect { subject }.to change { TimeOff.count }.by(-1) }
+      it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
       it { is_expected.to have_http_status(204) }
     end
 
@@ -267,6 +309,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
         let(:id) { 'abc' }
 
         it { expect { subject }.to_not change { TimeOff.count } }
+        it { expect { subject }.to_not change { Employee::Balance.count } }
         it { is_expected.to have_http_status(404) }
       end
 
@@ -274,6 +317,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
         before { Account.current = create(:account) }
 
         it { expect { subject }.to_not change { TimeOff.count } }
+        it { expect { subject }.to_not change { Employee::Balance.count } }
         it { is_expected.to have_http_status(404) }
       end
     end

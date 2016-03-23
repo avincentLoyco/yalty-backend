@@ -1040,24 +1040,54 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
     context 'if current_user is not the empoyee requested and not manager' do
       subject { get :show, id: event_id }
-      it 'should not include some attributes' do
-        subject
-        event_attributes = employee.events.first.employee_attribute_versions
-        public_attributes = event_attributes.visible_for_other_employees
-        not_public_attributes =
-          event_attributes
-          .joins(:attribute_definition)
-          .where
-          .not(employee_attribute_definitions:
-                { name: ActsAsAttribute::PUBLIC_ATTRIBUTES_FOR_OTHERS }
-              )
 
-        public_attributes.each do |attr|
-          expect(response.body).to include(attr.attribute_name)
+      context 'when current user is account manager' do
+        it 'should include some attributes' do
+          subject
+          event_attributes = employee.events.first.employee_attribute_versions
+          public_attributes = event_attributes.visible_for_other_employees
+          not_public_attributes =
+            event_attributes
+            .joins(:attribute_definition)
+            .where
+            .not(employee_attribute_definitions:
+                  { name: ActsAsAttribute::PUBLIC_ATTRIBUTES_FOR_OTHERS }
+                )
+
+          public_attributes.each do |attr|
+            expect(response.body).to include(attr.attribute_name)
+          end
+
+          not_public_attributes.each do |attr|
+            expect(response.body).to include(attr.attribute_name)
+          end
+        end
+      end
+
+      context 'when current user is not account manager' do
+        before do
+          Account::User.current.update!(account_manager: false, employee: nil)
         end
 
-        not_public_attributes.each do |attr|
-          expect(response.body).not_to include(attr.attribute_name)
+        it 'should not include some attributes' do
+          subject
+          event_attributes = employee.events.first.employee_attribute_versions
+          public_attributes = event_attributes.visible_for_other_employees
+          not_public_attributes =
+            event_attributes
+            .joins(:attribute_definition)
+            .where
+            .not(employee_attribute_definitions:
+                  { name: ActsAsAttribute::PUBLIC_ATTRIBUTES_FOR_OTHERS }
+                )
+
+          public_attributes.each do |attr|
+            expect(response.body).to include(attr.attribute_name)
+          end
+
+          not_public_attributes.each do |attr|
+            expect(response.body).to_not include(attr.attribute_name)
+          end
         end
       end
     end

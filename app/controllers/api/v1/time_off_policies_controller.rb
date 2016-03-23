@@ -66,7 +66,7 @@ module API
       end
 
       def vefiry_category_belongs_to_current_account(time_off_category_id)
-        fail ActiveRecord::RecordNotFound unless
+        raise ActiveRecord::RecordNotFound unless
           Account.current.time_off_categories.pluck(:id).include?(time_off_category_id)
       end
 

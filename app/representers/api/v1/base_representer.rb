@@ -8,14 +8,11 @@ module Api::V1
     end
 
     def basic(_ = {})
-      if resource.present?
-        {
-          id: resource.id,
-          type: resource_type
-        }
-      else
-        nil
-      end
+      return unless resource.present?
+      {
+        id: resource.id,
+        type: resource_type
+      }
     end
 
     private

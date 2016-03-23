@@ -121,7 +121,7 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
     let(:working_place_id) { working_place.id }
     let(:employee_id) { employee.id }
     let(:time_off_category_id) { time_off_category.id }
-    let(:policy_type) { 'balance' }
+    let(:policy_type) { 'balancer' }
     let(:start_day) { 10 }
     let(:params) do
       {
@@ -261,10 +261,10 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
         type: 'time_off_policy',
         start_day: start_day,
         end_day: end_day,
-        start_month: 8,
+        start_month: 6,
         end_month: end_month,
         amount: 20,
-        policy_type: 'balance',
+        policy_type: 'balancer',
         years_to_effect: 2,
         employees: [
           {
@@ -292,6 +292,7 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
           params.delete(:employees)
           params.delete(:years_to_effect)
         end
+
         it { expect { subject }.not_to change { policy.reload.time_off_category_id } }
         it { expect { subject }.to change { policy.reload.start_day } }
         it { is_expected.to have_http_status(204) }

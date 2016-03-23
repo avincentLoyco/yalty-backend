@@ -28,7 +28,7 @@ module API
 
       def check_event_type!
         return if Employee::Event.event_types.include?(event_type)
-        fail EventTypeNotFoundError.new(event_type, message: 'Event Type Not Found')
+        raise EventTypeNotFoundError.new(event_type, message: 'Event Type Not Found')
       end
 
       def event_attributes

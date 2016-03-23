@@ -37,8 +37,8 @@ module ActsAsAttribute
 
   def attribute_key
     data.attributes.keys
-      .find { |key| key.to_sym != :attribute_type }
-      .to_sym
+        .find { |key| key.to_sym != :attribute_type }
+        .to_sym
   end
 
   def attribute_name=(value)
@@ -89,9 +89,9 @@ module ActsAsAttribute
         self.attribute_definition = nil
       else
         self.attribute_definition = account.employee_attribute_definitions
-          .where(name: name)
-          .readonly
-          .first
+                                           .where(name: name)
+                                           .readonly
+                                           .first
       end
     end
 

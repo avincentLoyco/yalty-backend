@@ -3,6 +3,7 @@ module API
     class PresencePoliciesController < ApplicationController
       authorize_resource except: :create
       include PresencePolicyRules
+      include EmployeeBalanceUpdatePresencePerspective
 
       def show
         render_resource_with_relationships(resource)
@@ -24,6 +25,7 @@ module API
             save!(resource, related)
             CreateCompletePresencePolicy.new(resource.reload, days_params).call if
               days_params.present?
+            update_balances(resource.affected_employees)
           end
 
           render_resource_with_relationships(resource, status: :created)
@@ -33,10 +35,15 @@ module API
       def update
         verified_params(gate_rules) do |attributes|
           related = related_params(attributes)
+          previously_affected = resource.affected_employees
+          # Without below line query is not performed after update what influences
+          # calculations result.
+          previously_affected.present?
 
           transactions do
             resource.attributes = attributes
             save!(resource, related)
+            update_balances(employees_to_update(previously_affected))
           end
 
           render_no_content
@@ -71,7 +78,7 @@ module API
           resource.save!
           assign_related(resource, related)
         else
-          fail InvalidResourcesError.new(resource, resource.errors.messages)
+          raise InvalidResourcesError.new(resource, resource.errors.messages)
         end
       end
 
@@ -80,6 +87,11 @@ module API
         related_records.each do |key, values|
           assign_collection(resource, values, key.to_s)
         end
+      end
+
+      def employees_to_update(previously_affected)
+        (resource.affected_employees + previously_affected).uniq -
+          (resource.affected_employees & previously_affected)
       end
 
       def resource

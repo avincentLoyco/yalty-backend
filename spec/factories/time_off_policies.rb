@@ -5,20 +5,21 @@ FactoryGirl.define do
     amount { Faker::Number.number(4) }
     start_day 1
     start_month 1
-    end_day 1
-    end_month 4
-    policy_type 'balance'
+    policy_type 'balancer'
     years_to_effect 0
     years_passed 0
 
     trait :as_counter do
       policy_type 'counter'
-      end_day nil
-      end_month nil
     end
 
-    trait :longer_than_year do
-      years_to_effect 1
+    trait :with_end_date do
+      end_day 1
+      end_month 4
+    end
+
+    trait :as_counter do
+      policy_type 'counter'
     end
   end
 end

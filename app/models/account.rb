@@ -2,7 +2,7 @@ class Account < ActiveRecord::Base
   include ActsAsIntercomData
 
   SUPPORTED_TIMEZONES = ActiveSupport::TimeZone.all
-    .map { |tz| tz.tzinfo.name } + ['Europe/Zurich']
+                                               .map { |tz| tz.tzinfo.name } + ['Europe/Zurich']
 
   validates :subdomain,
     presence: true,
@@ -39,6 +39,8 @@ class Account < ActiveRecord::Base
   has_many :time_offs, through: :time_off_categories
   has_many :time_entries, through: :presence_days
   has_many :time_off_policies, through: :time_off_categories
+  has_many :employee_balances, through: :employees
+  has_many :time_off_policies, through: :time_off_categories
 
   before_validation :generate_subdomain, on: :create
   after_create :update_default_attribute_definitions!
@@ -60,7 +62,7 @@ class Account < ActiveRecord::Base
     occupation_rate: { presence: true }
   }.with_indifferent_access
 
-  MULTIPLE_ATTRIBUTES = %w(child spouse)
+  MULTIPLE_ATTRIBUTES = %w(child spouse).freeze
 
   DEFAULT_ATTRIBUTES = {
     Attribute::String.attribute_type => %w(
@@ -80,7 +82,7 @@ class Account < ActiveRecord::Base
     Attribute::Address.attribute_type => %w(address),
     Attribute::Child.attribute_type => %w(child),
     Attribute::Person.attribute_type => %w(spouse)
-  }
+  }.freeze
 
   DEFAULT_ATTRIBUTE_DEFINITIONS = Account::DEFAULT_ATTRIBUTES.map do |type, attributes|
     attributes.map do |name|
@@ -154,11 +156,11 @@ class Account < ActiveRecord::Base
     return unless company_name.present?
 
     self.subdomain = ActiveSupport::Inflector.transliterate(company_name)
-      .strip
-      .downcase
-      .gsub(/\s/, '-')
-      .gsub(/(\A[\-]+)|([^a-z\d-])|([\-]+\z)/, '')
-      .squeeze('-')
+                                             .strip
+                                             .downcase
+                                             .gsub(/\s/, '-')
+                                             .gsub(/(\A[\-]+)|([^a-z\d-])|([\-]+\z)/, '')
+                                             .squeeze('-')
 
     ensure_subdomain_is_unique
   end

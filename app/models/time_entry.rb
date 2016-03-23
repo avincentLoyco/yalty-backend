@@ -19,6 +19,14 @@ class TimeEntry < ActiveRecord::Base
     TODS.new(start_time_tod, end_time_tod, true)
   end
 
+  def start_time_tod
+    TOD.parse(start_time)
+  end
+
+  def end_time_tod
+    TOD.parse(end_time)
+  end
+
   private
 
   def update_presence_day_minutes!
@@ -67,14 +75,6 @@ class TimeEntry < ActiveRecord::Base
 
   def end_time_parsable?
     TOD.parsable?(end_time)
-  end
-
-  def start_time_tod
-    TOD.parse(start_time)
-  end
-
-  def end_time_tod
-    TOD.parse(end_time)
   end
 
   def time_entry_not_reserved

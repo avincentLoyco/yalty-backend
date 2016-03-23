@@ -23,12 +23,21 @@ RSpec.describe AssignJoinTableCollection, type: :service do
             }.by(1)
           end
 
-          it "when it is given an empty array" do
-            expect{
-              described_class.new(employee, [], "time_off_policies").call
-            }.to change {
-              EmployeeTimeOffPolicy.count
-            }.by(-1)
+          context "when it is given an empty array" do
+            it '' do
+              expect{
+                described_class.new(employee, [], "time_off_policies").call
+              }.to change {
+                EmployeeTimeOffPolicy.count
+              }.by(-1)
+            end
+            it '' do
+              expect{
+                described_class.new(employee, [], "time_off_policies").call
+              }.not_to change {
+                TimeOffPolicy.count
+              }
+            end
           end
         end
       end
@@ -44,6 +53,7 @@ RSpec.describe AssignJoinTableCollection, type: :service do
 
     context "with invalid attributes raises an error" do
       let(:wrong_attributes) { ["a"] }
+      let(:param_with_wrong_id) { [{ id: "1111 2222 3333 4444"}] }
 
       it "when there is a wrong collection_name" do
         expect{ described_class.new(employee, [], "wrong_attributes").call }.
@@ -53,6 +63,11 @@ RSpec.describe AssignJoinTableCollection, type: :service do
       it "when there is a wrong collection" do
         expect{ described_class.new(employee, wrong_attributes, "time_off_policies").call }.
           to raise_error(TypeError)
+      end
+
+      it "where there is a wrong id for a correct collection" do
+        expect{ described_class.new(employee, param_with_wrong_id , "time_off_policies").call }.
+          to raise_error(ActiveRecord::RecordInvalid)
       end
 
       it "when there is a wrong resource" do

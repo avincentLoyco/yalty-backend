@@ -127,12 +127,12 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
 
           it_behaves_like 'Invalid Data'
 
-          it { is_expected.to have_http_status(404) }
+          it { is_expected.to have_http_status(422) }
 
           context 'response' do
             before { subject }
 
-            it { expect_json(regex("Record Not Found")) }
+            it { expect_json(regex("can't be blank")) }
           end
         end
       end
@@ -187,6 +187,24 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
         it { expect { subject }.to change { working_place.reload.time_off_policies.pluck(:id) } }
 
         it { is_expected.to have_http_status(204) }
+
+        context 'when presence policy params is given' do
+          context 'and working place has employees assigned' do
+            before { working_place.employees << [first_employee, second_employee] }
+            let(:first_employee) { create(:employee, :with_time_offs, account: account) }
+            let(:second_employee) { create(:employee, :with_time_offs, account: account) }
+
+            let(:first_balance) { first_employee.employee_balances.first }
+            let(:second_balance) { first_employee.employee_balances.last }
+            let(:third_balance) { second_employee.employee_balances.first }
+            let(:fourth_balance) { second_employee.employee_balances.last }
+
+            it { expect { subject }.to change { first_balance.reload.being_processed } }
+            it { expect { subject }.to change { second_balance.reload.being_processed } }
+            it { expect { subject }.to change { third_balance.reload.being_processed } }
+            it { expect { subject }.to change { fourth_balance.reload.being_processed } }
+          end
+        end
       end
 
       context 'with holiday_policy null send' do
@@ -277,12 +295,12 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
 
             it_behaves_like 'Invalid Data'
 
-            it { is_expected.to have_http_status(404) }
+            it { is_expected.to have_http_status(422) }
 
             context 'response' do
               before { subject }
 
-              it { expect_json(regex("Record Not Found")) }
+              it { expect_json(regex("can't be blank")) }
             end
           end
         end

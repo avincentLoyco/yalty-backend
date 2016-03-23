@@ -3,6 +3,7 @@ module API
     class TimeOffsController < ApplicationController
       authorize_resource except: [:create, :index, :show]
       include TimeOffsRules
+      include EmployeeBalanceUpdate
 
       def show
         authorize! :show, resource
@@ -19,20 +20,33 @@ module API
           resource = resources.new(time_off_attributes(attributes))
           authorize! :create, resource
 
-          resource.save!
+          transactions do
+            resource.save! &&
+              create_new_employee_balance(resource)
+          end
+
           render_resource(resource, status: :created)
         end
       end
 
       def update
         verified_params(gate_rules) do |attributes|
-          resource.update!(attributes)
+          transactions do
+            resource.update!(attributes) &&
+              update_employee_balances(resource.employee_balance, balance_attributes)
+          end
+
           render_no_content
         end
       end
 
       def destroy
-        resource.destroy!
+        transactions do
+          update_balances_after_removed(resource.employee_balance)
+          resource.employee_balance.destroy! &&
+            resource.destroy!
+        end
+
         render_no_content
       end
 
@@ -69,11 +83,25 @@ module API
         attributes.tap do |attr|
           attr.delete(:employee)
           attr.delete(:time_off_category)
-        end.merge(employee: employee)
+        end.merge(employee: employee, being_processed: true)
+      end
+
+      def create_new_employee_balance(resource)
+        category = resource.time_off_category_id
+        employee_id = resource.employee_id
+        account = Account.current.id
+        amount = resource.balance
+        options = { time_off_id: resource.id }
+
+        CreateEmployeeBalance.new(category, employee_id, account, amount, options).call
       end
 
       def resource_representer
         ::Api::V1::TimeOffsRepresenter
+      end
+
+      def balance_attributes
+        { amount: resource.balance, effective_at: resource.start_time.to_s }
       end
     end
   end

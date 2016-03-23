@@ -12,10 +12,10 @@ class TimeOffPolicy < ActiveRecord::Base
     :time_off_category,
     :name,
     presence: true
-  validates :policy_type, inclusion: { in: %w(counter balance) }
   validates :years_passed, numericality: { greater_than_or_equal_to: 0 }
-  validates :amount, presence: true, if: "policy_type == 'balance'"
+  validates :amount, presence: true, if: "policy_type == 'balancer'"
   validates :amount, absence: true, if: "policy_type == 'counter'"
+  validates :policy_type, inclusion: { in: %w(counter balancer) }
   validates :years_to_effect,
     numericality: { greater_than_or_equal_to: 0 }, if: 'years_to_effect.present?'
   validates :start_day,
@@ -25,14 +25,71 @@ class TimeOffPolicy < ActiveRecord::Base
     :end_month,
     numericality: { greater_than_or_equal_to: 1 },
     presence: true,
-    if: "(end_day.present? || end_month.present?) && policy_type == 'balance'"
+    if: "(end_day.present? || end_month.present?) && policy_type == 'balancer'"
   validate :no_end_dates, if: "policy_type == 'counter'"
+  validate :end_date_after_start_date, if: [:start_day, :start_month, :end_day, :end_month]
 
   scope :for_account_and_category, lambda { |account_id, time_off_category_id|
     joins(:time_off_category).where(
       time_off_categories: { account_id: account_id, id: time_off_category_id }
     )
   }
+
+  def counter?
+    policy_type == 'counter'
+  end
+
+  def affected_employees_ids
+    (working_place_time_off_policies.affected_employees(id) +
+      employee_time_off_policies.affected_employees(id)).uniq
+  end
+
+  def start_date
+    Date.new(Time.zone.today.year - start_years_ago, start_month, start_day)
+  end
+
+  def end_date
+    return start_date + years_or_effect unless end_day && end_month
+    Date.new(end_in_years, end_month, end_day)
+  end
+
+  def current_period
+    (start_date...end_date)
+  end
+
+  def previous_period
+    (start_date - years_or_effect...end_date - years_or_effect)
+  end
+
+  def next_period
+    (start_date + years_or_effect...end_date + years_or_effect)
+  end
+
+  def start_years_ago
+    return 0 unless years_to_effect && years_to_effect > 1
+    years_passed % years_to_effect
+  end
+
+  def years_or_effect
+    return (years_to_effect.to_i + 1).years if years_to_effect.blank? || dates_blank?
+    years_to_effect > 1 ? years_to_effect.years : 1.year
+  end
+
+  def end_in_years
+    start_date.year + years_to_effect
+  end
+
+  def starts_today?
+    start_date == Time.zone.today
+  end
+
+  def ends_today?
+    end_date == Time.zone.today
+  end
+
+  def dates_blank?
+    (end_day.blank? && end_month.blank?)
+  end
 
   private
 
@@ -64,5 +121,10 @@ class TimeOffPolicy < ActiveRecord::Base
   def no_end_dates
     errors.add(:end_day, 'Should be null for this type of policy') if end_day.present?
     errors.add(:end_month, 'Should be null for this type of policy') if end_month.present?
+  end
+
+  def end_date_after_start_date
+    return unless errors.blank?
+    errors.add(:end_month, 'Must be after start month') if end_date < start_date
   end
 end

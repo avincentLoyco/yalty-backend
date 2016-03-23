@@ -30,7 +30,7 @@ class CreateCompletePresencePolicy
     if resource.valid?
       resource.save!
     else
-      fail InvalidResourcesError.new(resource, resource.errors.messages)
+      raise InvalidResourcesError.new(resource, resource.errors.messages)
     end
   end
 end
