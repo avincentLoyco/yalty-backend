@@ -4,16 +4,20 @@ RSpec.describe AssignJoinTableCollection, type: :service do
   let(:time_off_policy) { create(:time_off_policy) }
   let(:employee) { create(:employee) }
   let!(:employee_time_off_policy) do
-    create(:employee_time_off_policy, employee: employee, time_off_policy: time_off_policy)
+    create(:employee_time_off_policy,
+      employee: employee,
+      time_off_policy: time_off_policy,
+      effective_at: Time.zone.now
+    )
   end
   describe "#call" do
     context "with valid attributes" do
       context " and models that have a join table" do
         context "updates the collection association of the resource" do
           let(:employee_time_off_policy_attribute_hash) do
-            create_list(:employee, 2, account: employee.account).map do |employee|
+            create_list(:employee, 2, account: employee.account).map do |e|
               {
-                employee_id: employee.id,
+                employee_id: e.id,
                 effective_at: Time.zone.today,
                 time_off_policy_id: time_off_policy.id
               }
@@ -43,6 +47,33 @@ RSpec.describe AssignJoinTableCollection, type: :service do
                 Employee.count
               }
             end
+          end
+        end
+
+        context "when trying to remove one association but it has an associated balance" do
+          let!(:balance) do
+            create(:employee_balance,
+              time_off_policy: time_off_policy,
+              time_off_category: time_off_policy.time_off_category,
+              employee: employee,
+              effective_at: Time.zone.now + 3.days
+            )
+          end
+          before do
+            Timecop.freeze(2016, 1, 1, 0, 0)
+          end
+
+          after do
+            Timecop.return
+          end
+          it '' do
+            expect {
+              described_class.new(
+                time_off_policy,
+                [],
+                "employees"
+              ).call
+            }.to raise_error(CanCan::AccessDenied)
           end
         end
       end

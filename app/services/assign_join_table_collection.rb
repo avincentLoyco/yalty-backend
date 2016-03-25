@@ -40,8 +40,13 @@ class AssignJoinTableCollection
     join_table_collection = resource.send(join_table_model_association)
     hash_array.each do |attributes_hash|
       join_models = join_table_collection.where(attributes_hash)
-      join_models.first.destroy if join_models.any?
+      join_models.first.destroy if
+       join_models.first.present? && verify_if_deletable(join_models.first)
     end
+  end
+
+  def verify_if_deletable(join_model)
+    ValidateDeletabilityOfTimeOffPolicyJoinTable.new(join_model).call
   end
 
   def add_to_resource_collection(hash_array)
