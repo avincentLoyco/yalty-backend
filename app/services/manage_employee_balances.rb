@@ -1,26 +1,69 @@
 class ManageEmployeeBalances
-  attr_reader :previous_policy, :related, :current_policy, :resource_policy
+  include EmployeeBalanceUpdate
+
+  attr_reader :previous_policy, :related, :current_policy, :resource_policy,
+    :previous_resource_policy, :category_id
 
   def initialize(resource_policy)
     @resource_policy = resource_policy
-    @current_policy = resource_policy.time_off_policy
     @related = find_related
-    @previous_policy = related.previous_time_off_policy(current_policy.time_off_category_id)
+    @category_id = resource_policy.time_off_policy.time_off_category_id
+    @previous_resource_policy = related.previous_related_time_off_policy(category_id)
+    @previous_policy = previous_resource_policy.try(:time_off_policy)
   end
 
   def call
-    return if current_policy.start_date > Time.zone.today
+    return if resource_policy.first_start_date > Time.zone.today
     create_or_update_previous_policy_balance
   end
 
   private
 
   def create_or_update_previous_policy_balance
-    if previous_policy && previous_policy.start_date == current_policy.start_date
-      # update balance
+    if previous_policy &&
+        previous_resource_policy.previous_start_date == resource_policy.first_start_date
+      update_balances
     else
-      # create new balance
+      create_balances
     end
+  end
+
+  def update_balances
+    Employee.where(id: employees_ids).each do |employee|
+      resource = employee.last_balance_addition_in_category(category_id)
+      attributes = { amount: policy_amount }
+      update_employee_balances(resource, attributes)
+    end
+  end
+
+  def create_balances
+    Employee.where(id: employees_ids).each do |employee|
+      employee_id = employee.id
+      account_id = employee.account_id
+      amount = policy_amount
+      options =
+        { policy_credit_addition: true, effective_at: balance_effective_at }.merge(balancer_options)
+
+      CreateEmployeeBalance.new(category_id, employee_id, account_id, amount, options).call
+    end
+  end
+
+  def employees_ids
+    return [related.id] if related.is_a?(Employee)
+    resource_policy.affected_employees
+  end
+
+  def policy_amount
+    resource_policy.time_off_policy.counter? ? 0 : resource_policy.time_off_policy.amount
+  end
+
+  def balancer_options
+    return {} if resource_policy.time_off_policy.counter?
+    { validity_date: resource_policy.end_date }
+  end
+
+  def balance_effective_at
+    resource_policy.last_start_date
   end
 
   def find_related

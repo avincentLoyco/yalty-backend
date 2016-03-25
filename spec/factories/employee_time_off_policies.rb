@@ -13,8 +13,7 @@ FactoryGirl.define do
           employee: policy.employee,
           time_off_policy: time_off_policy,
           time_off_category: time_off_policy.time_off_category,
-          policy_credit_addition: true,
-          effective_at: time_off_policy.start_date
+          policy_credit_addition: true
         )
       end
     end

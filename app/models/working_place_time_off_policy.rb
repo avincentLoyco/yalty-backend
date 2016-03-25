@@ -7,11 +7,20 @@ class WorkingPlaceTimeOffPolicy < ActiveRecord::Base
   validates :time_off_policy_id, uniqueness: { scope: [:working_place_id, :effective_at] }
   validate :effective_at_newer_than_previous_start_date, if: [:time_off_policy, :effective_at]
 
+  scope :not_assigned, -> { where(['effective_at > ?', Date.today]) }
   scope :assigned, -> { where(['effective_at <= ?', Date.tomorrow]) }
 
   scope :affected_employees, lambda { |policy_id|
     where(time_off_policy_id: policy_id).joins(:working_place)
       .joins(:employees).pluck(:'employees.id')
+  }
+
+  scope :by_working_place_in_category, lambda { |working_place_id, category_id|
+    joins(:time_off_policy)
+      .where(time_off_policies:
+            { time_off_category_id: category_id }, working_place_id: working_place_id
+            )
+      .order(effective_at: :desc)
   }
 
   private
