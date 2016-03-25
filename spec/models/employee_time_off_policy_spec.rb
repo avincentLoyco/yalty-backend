@@ -15,6 +15,19 @@ RSpec.describe EmployeeTimeOffPolicy, type: :model do
     is_expected.to have_db_index([:employee_id, :time_off_policy_id, :effective_at]).unique
   end
 
+  describe '#CalculateRelatedTimeOffPeriods' do
+    include_context 'shared_context_timecop_helper'
+
+    let(:related_policy) do
+      build(:employee_time_off_policy,
+        time_off_policy: time_off_policy,
+        effective_at: effective_at
+      )
+    end
+
+    include_context 'shared_context_calculated_time_off_periods'
+  end
+
   describe 'custom validations' do
     context '#effective_at_newer_than_previous_start_date' do
       let(:employee_policy) { build(:employee_time_off_policy, effective_at: effective_at) }

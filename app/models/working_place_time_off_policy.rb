@@ -1,4 +1,6 @@
 class WorkingPlaceTimeOffPolicy < ActiveRecord::Base
+  include CalculateRelatedTimeOffPeriods
+
   belongs_to :working_place
   belongs_to :time_off_policy
   has_many :employees, through: :working_place

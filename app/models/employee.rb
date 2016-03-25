@@ -42,12 +42,12 @@ class Employee < ActiveRecord::Base
     end
   end
 
-  def current_policy_period(category_id)
-    (current_start_date(category_id)..current_end_date(category_id))
-  end
-
   def previous_policy_period(category_id)
     (previous_start_date(category_id)..current_start_date(category_id))
+  end
+
+  def current_policy_period(category_id)
+    (current_start_date(category_id)..current_end_date(category_id))
   end
 
   def previous_related_time_off_policy(category_id)
@@ -102,7 +102,7 @@ class Employee < ActiveRecord::Base
   end
 
   def current_start_date(category_id)
-    newest = assigned_time_off_policies_in_category(category_id).first.try(:time_off_policy).start_date
+    newest = assigned_time_off_policies_in_category(category_id).first.try(:time_off_policy).try(:start_date)
     return newest if newest <= Time.zone.today
     time_off_policies_in_category(category_id).second.try(:start_date)
   end
