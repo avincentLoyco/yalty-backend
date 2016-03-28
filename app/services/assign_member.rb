@@ -8,7 +8,7 @@ class AssignMember
   end
 
   def call
-    resource.update(member_name => member)
+    resource.update!(member_name => member)
   end
 
   private

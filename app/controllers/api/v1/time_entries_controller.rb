@@ -3,6 +3,7 @@ module API
     class TimeEntriesController < API::ApplicationController
       authorize_resource except: :create
       include TimeEntriesRules
+      include EmployeeBalanceUpdatePresencePerspective
 
       def show
         render_resource(resource)
@@ -17,26 +18,27 @@ module API
           resource = resources.new(time_entry_params(attributes))
           authorize! :create, resource
 
-          if resource.save
-            render_resource(resource, status: :created)
-          else
-            resource_invalid_error(resource)
+          transactions do
+            resource.save!
+            find_and_update_balances(resource.presence_day.presence_policy)
           end
+          render_resource(resource, status: :created)
         end
       end
 
       def update
         verified_params(gate_rules) do |attributes|
-          if resource.update(attributes)
-            render_no_content
-          else
-            resource_invalid_error(resource)
+          transactions do
+            resource.update!(attributes)
+            find_and_update_balances(resource.presence_day.presence_policy)
           end
+          render_no_content
         end
       end
 
       def destroy
         transactions do
+          find_and_update_balances(resource.presence_day.presence_policy)
           resource.destroy!
           resource.presence_day.update_minutes!
         end

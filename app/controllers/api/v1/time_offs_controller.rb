@@ -1,14 +1,17 @@
 module API
   module V1
     class TimeOffsController < ApplicationController
-      authorize_resource except: :create
+      authorize_resource except: [:create, :index, :show]
       include TimeOffsRules
+      include EmployeeBalanceUpdate
 
       def show
+        authorize! :show, resource
         render_resource(resource)
       end
 
       def index
+        authorize! :index, current_user
         render_resource(resources)
       end
 
@@ -17,26 +20,33 @@ module API
           resource = resources.new(time_off_attributes(attributes))
           authorize! :create, resource
 
-          if resource.save
-            render_resource(resource, status: :created)
-          else
-            resource_invalid_error(resource)
+          transactions do
+            resource.save! &&
+              create_new_employee_balance(resource)
           end
+
+          render_resource(resource, status: :created)
         end
       end
 
       def update
         verified_params(gate_rules) do |attributes|
-          if resource.update(attributes)
-            render_no_content
-          else
-            resource_invalid_error(resource)
+          transactions do
+            resource.update!(attributes) &&
+              update_employee_balances(resource.employee_balance, balance_attributes)
           end
+
+          render_no_content
         end
       end
 
       def destroy
-        resource.destroy!
+        transactions do
+          update_balances_after_removed(resource.employee_balance)
+          resource.employee_balance.destroy! &&
+            resource.destroy!
+        end
+
         render_no_content
       end
 
@@ -55,8 +65,9 @@ module API
       end
 
       def resources
-        return time_off_category.time_offs unless params[:employee_id]
-        time_off_category.time_offs.where(employee: employee)
+        return time_off_category.time_offs if current_user.account_manager
+        return TimeOff.none unless current_user.employee
+        time_off_category.time_offs.where(employee: current_user.employee)
       end
 
       def employee_params
@@ -72,11 +83,25 @@ module API
         attributes.tap do |attr|
           attr.delete(:employee)
           attr.delete(:time_off_category)
-        end.merge(employee: employee)
+        end.merge(employee: employee, being_processed: true)
+      end
+
+      def create_new_employee_balance(resource)
+        category = resource.time_off_category_id
+        employee_id = resource.employee_id
+        account = Account.current.id
+        amount = resource.balance
+        options = { time_off_id: resource.id }
+
+        CreateEmployeeBalance.new(category, employee_id, account, amount, options).call
       end
 
       def resource_representer
         ::Api::V1::TimeOffsRepresenter
+      end
+
+      def balance_attributes
+        { amount: resource.balance, effective_at: resource.start_time.to_s }
       end
     end
   end

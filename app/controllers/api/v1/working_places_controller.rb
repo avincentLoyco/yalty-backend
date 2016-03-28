@@ -3,6 +3,7 @@ module API
     class WorkingPlacesController < ApplicationController
       authorize_resource except: :create
       include WorkingPlaceRules
+      include EmployeeBalanceUpdatePresencePerspective
 
       def index
         render_resource(resources)
@@ -15,33 +16,29 @@ module API
       def create
         verified_params(gate_rules) do |attributes|
           related = related_params(attributes)
+          related_joins_collection = related_joins_collection_params(attributes)
           @resource = Account.current.working_places.new(attributes)
           authorize! :create, resource
 
-          result = transactions do
-            resource.save &&
-              assign_related(related)
+          transactions do
+            resource.save!
+            assign_all(related, related_joins_collection)
           end
-          if result
-            render_resource(resource, status: :created)
-          else
-            resource_invalid_error(resource)
-          end
+          render_resource(resource, status: :created)
         end
       end
 
       def update
         verified_params(gate_rules) do |attributes|
+          active_policy = resource.presence_policy.try(:id)
           related = related_params(attributes)
-          result = transactions do
-            resource.update(attributes) &&
-              assign_related(related)
+          related_joins_collection = related_joins_collection_params(attributes)
+          transactions do
+            resource.update(attributes)
+            assign_all(related, related_joins_collection)
+            update_balances(resource.employees) if policy_changed?(active_policy)
           end
-          if result
-            render_no_content
-          else
-            resource_invalid_error(resource)
-          end
+          render_no_content
         end
       end
 
@@ -56,10 +53,22 @@ module API
 
       private
 
+      def assign_all(related, related_joins_collection)
+        assign_related(related)
+        assign_related_joins_collection(related_joins_collection)
+      end
+
       def assign_related(related_records)
         return true if related_records.empty?
         related_records.each do |key, value|
           assign_member(resource, value.try(:[], :id), key.to_s)
+        end
+      end
+
+      def assign_related_joins_collection(related_records)
+        return true if related_records.empty?
+        related_records.each do |key, hash_array|
+          assign_join_table_collection(resource, hash_array, key.to_s)
         end
       end
 
@@ -77,6 +86,20 @@ module API
         related
           .merge(holiday_policy.to_h)
           .merge(presence_policy.to_h)
+      end
+
+      def related_joins_collection_params(attributes)
+        related_joins_collection = {}
+
+        if attributes.key?(:time_off_policies)
+          related_joins_collection[:time_off_policies] = attributes.delete(:time_off_policies)
+        end
+
+        related_joins_collection
+      end
+
+      def policy_changed?(active_policy)
+        active_policy != resource.reload.presence_policy.try(:id)
       end
 
       def resources

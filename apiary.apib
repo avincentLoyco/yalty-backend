@@ -287,110 +287,75 @@ By default account_id is equal Account.current.id
 
 
 
-## Holiday Collection [/api/v1/holiday_policies/{holiday_policy_id}/holidays]
+## Country Collection [/api/v1/countries/{country_id}]
 
 + Parameters
-   + holiday_policy_id: 12345678-1234-1234-123456789012 (required, string) - ID is in uuid format
+   + country_id: 'ch' (required, string)
 
-### GET List of all holiday_policy holidays [GET]
+### GET List of all holidays for a country  [GET]
 
-Get a list of holidays which belongs to particular holiday_policy
+Get a list of holidays which belongs to aparticular country along with the regions in which each holiday is present
 
 + Request (application/json)
 
 + Response 200 (application/json)
 
-        [
+        {
+          "holidays": [
             {
-              "date": "01/01",
-              "id": "87654321-1234-1234-1234-123456789012",
-              "type": "holiday"
+              "date": "2016-01-01",
+              "code": "new_years_day"
             },
             {
-              "date": "01/01",
-              "id": "12345678-1234-1234-1234-123456789012",
-              "type": "holiday"
+              "date": "2016-01-02",
+              "code": "saint_berchtold"
+            },
             }
-        ]
-
-### POST Create a holiday [POST /api/v1/holidays]
-
-Create a new holiday
-
-+ Attributes
-  + name: holiday (string, required)
-  + date: 1 (string, required)
-  + holiday_policy
-    + id: 11 (string, required)
-
-+ Request (application/json)
-
-        {
-            "name": "holiday",
-            "date": "01.01.2013",
-            "holiday_policy": {
-              "id": "12345678-1234-1234-1234-123456789012"
+              "date": "2016-03-28",
+              "code": "easter_monday"
+            },
+            {
+              "date": "2016-12-25",
+              "code": "christmas"
             }
+          ],
+          "regions": [
+            {
+              "code": "ch_zh",
+              "holidays": [
+                "new_years_day",
+                "saint_berchtold",
+                "easter_monday",
+                "christmas"
+              ]
+            },
+            {
+              "code": "ch_be",
+              "holidays": [
+                "saint_berchtold",
+                "easter_monday",
+                "christmas"
+              ]
+            },
+            {
+              "code": "ch_lu",
+              "holidays": [
+                "new_years_day",
+                "easter_monday",
+                "christmas"
+              ]
+            },
+            {
+              "code": "ch_ur",
+              "holidays": [
+                "saint_berchtold",
+                "new_years_day",
+                "easter_monday",
+                "christmas"
+              ]
+            }
+          ]
         }
-
-+ Response 201 (application/json)
-
-        {
-            "id": "12345678-1234-1234-1234-123456789012",
-            "name": "holiday",
-            "type": "holiday"
-        }
-
-## Holiday [/api/v1/holidays/{holiday_id}]
-
-+ Parameters
-    + holiday_id: 12345678-1234-1234-123456789012 (required, string) - ID of the Holiday is an uuid
-
-### GET Get Holiday Details [GET /api/v1/holidays/{holiday_id}]
-
-+ Parameters
-   + holiday_id: 12345678-1234-1234-123456789012 (required, string) - ID of the Holiday is an uuid
-
-+ Request (application/json)
-
-+ Response 200 (application/json)
-
-        {
-            "id": "12345678-1234-1234-1234-123456789012",
-            "name": "holiday",
-            "type": "holiday",
-            "date": "01/01"
-        }
-
-### PUT Update Holiday [PUT]
-
-+ Attributes
-  + id: 1 (string, required)
-  + name: holiday (string, required)
-  + date: 1 (string, required)
-
-+ Request (application/json)
-
-        {
-            "name": "holiday",
-            "date" : "01.01.2015"
-        }
-
-+ Response 204 (application/json)
-
-### DELETE holiday [DELETE]
-
-+ Attributes
-  + holiday_policy_id: 1 (string, required)
-
-+ Request (application/json)
-
-+ Response 204
-
-
-
-
-
 
 
 ## PresencePolicy Collection [/api/v1/presence_policies]
@@ -1228,7 +1193,20 @@ Get a list of all employees
               "type": "employee_attribute",
               "value": "Dsa",
               "attribute_name": "firstname"
+            },
+            {
+              "type": "employee_attribute",
+              "attribute_name" : "child",
+              "order" : "1",
+              "value" : {
+                  "birthdate" : "01/01/2016",
+                  "firstname" : "Franciszek",
+                  "gender" : "",
+                  "is_student" : true,
+                  "lastname": "Kowalski",
+                  "mother_is_working": false
             }
+        }
           ]
         }
 
@@ -1256,6 +1234,18 @@ Get a list of all employees
               "type": "employee_attribute",
               "value": "Dsa",
               "attribute_name": "firstname"
+            },
+            {
+              "type": "employee_attribute",
+              "attribute_name" : "child",
+              "order" : "1",
+              "value" : {
+                  "birthdate" : "01/01/2016",
+                  "firstname" : "Franciszek",
+                  "gender" : "",
+                  "is_student" : true,
+                  "lastname": "Kowalski",
+                  "mother_is_working": false
             }
           ]
         }
@@ -1441,7 +1431,15 @@ Get a list of time offs
             "time_off_category": {
               "id": "f6d72193-ba17-44be-835a-77b4b80c395b",
               "type": "time_off_category"
-            }
+            },
+             "employee_balance": {
+              "id": "f6d72193-ba17-44be-835a-77b4b80c395b",
+              "type": "employee_balance",
+              "amount": "-1200",
+              "balance": "6000",
+              "being_processed": "false",
+              "effective_at": "2016-03-01T15:41:41.000Z"
+            },
           },
           {
             "start_time": "2015-11-14T12:00:18.000Z",
@@ -1455,6 +1453,14 @@ Get a list of time offs
             "time_off_category": {
               "id": "f6d72193-ba17-44be-835a-77b4b80c395b",
               "type": "time_off_category"
+            },
+            "employee_balance": {
+              "id": "f6d72193-ba17-44be-835a-77b4b80c395b",
+              "type": "employee_balance",
+              "amount": "-1200",
+              "balance": "6000",
+              "being_processed": "false",
+              "effective_at": "2016-03-01T15:41:41.000Z"
             }
           }
         ]
@@ -1502,6 +1508,14 @@ Create new time off
           "time_off_category": {
             "id": "f6d72193-ba17-44be-835a-77b4b80c395b",
             "type": "time_off_category"
+          },
+          "employee_balance": {
+            "id": "f6d72193-ba17-44be-835a-77b4b80c395b",
+            "type": "employee_balance",
+            "amount": "-1200",
+            "balance": "6000",
+            "being_processed": "false",
+            "effective_at": "2016-03-01T15:41:41.000Z"
           }
         }
 
@@ -1532,6 +1546,14 @@ Show Time Off
           "time_off_category": {
             "id": "f6d72193-ba17-44be-835a-77b4b80c395b",
             "type": "time_off_category"
+          },
+          "employee_balance": {
+            "id": "f6d72193-ba17-44be-835a-77b4b80c395b",
+            "type": "employee_balance",
+            "amount": "-1200",
+            "balance": "6000",
+            "being_processed": "false",
+            "effective_at": "2016-03-01T15:41:41.000Z"
           }
         }
 
@@ -1786,6 +1808,7 @@ Get a list of time off policies
             "start_month": "1",
             "end_month": "4"
             "years_to_effect": "1",
+            "years_passed": "0",
             "amount": "28800",
             "policy_type": "balancer",
             "time_off_category": {
@@ -1801,6 +1824,7 @@ Get a list of time off policies
             "start_month": "1",
             "end_month": "10",
             "years_to_effect": 0,
+            "years_passed": "0",
             "amount": "0",
             "policy_type": "counter",
             "time_off_category": {
@@ -1831,6 +1855,7 @@ Get a list of time off policies in given category
             "start_month": "1",
             "end_month": "4"
             "years_to_effect": "1",
+            "years_passed": "0",
             "amount": "28800",
             "policy_type": "balancer",
             "time_off_category": {
@@ -1846,6 +1871,7 @@ Get a list of time off policies in given category
             "start_month": "1",
             "end_month": "10",
             "years_to_effect": 0,
+            "years_passed": "0",
             "amount": "",
             "policy_type": "counter",
             "time_off_category": {
@@ -1860,14 +1886,15 @@ Get a list of time off policies in given category
 Create new time off policy. Policy may have two types: counter of balance, if type counter amount should not be send.
 
 + Attributes
+  + name: Example (string)
   + type: time_off_policy (string)
   + amount: 1440 (string)
   + policy_type: balancer (string, required)
   + start_day: 1(number, required)
-  + end_day: 1(number, required)
+  + end_day: 1(number)
   + start_month: 1(number, required)
-  + end_month: 10(number, required)
-  + years_to_effect: 1 (string, required)
+  + end_month: 10(number)
+  + years_to_effect: 1 (number)
   + time_off_category (required)
     + type: time_off_category (string)
     + id: 11 (string, required)
@@ -1877,6 +1904,7 @@ Create new time off policy. Policy may have two types: counter of balance, if ty
 + Request (application/json)
 
         {
+          "name": "Example",
           "type": "time_off_policy",
           "start_day": "1",
           "end_day": "1",
@@ -1911,6 +1939,7 @@ Create new time off policy. Policy may have two types: counter of balance, if ty
 
          {
           "id": "12345678-1234-1234-1234-123456789013",
+          "name": "Example",
           "type": "time_off_policy",
           "start_day": "1",
           "end_day": "1",
@@ -1918,6 +1947,7 @@ Create new time off policy. Policy may have two types: counter of balance, if ty
           "end_month": "10",
           "amount": "1440",
           "years_to_effect": "1",
+          "years_passed": "0",
           "policy_type": "balancer",
           "time_off_category": {
             "type": "time_off_category",
@@ -1942,6 +1972,7 @@ Show time off policy
 
         {
           "id": "12345678-1234-1234-1234-123456789013",
+          "name": "Example",
           "type": "time_off_policy",
           "start_day": "1",
           "end_day": "1",
@@ -1950,6 +1981,7 @@ Show time off policy
           "amount": "1440",
           "policy_type": "balancer",
           "years_to_effect": "1",
+          "years_passed": "0",
           "time_off_category": {
             "type": "time_off_category",
             "id": "12345678-1234-1234-1234-123456789012"
@@ -1977,14 +2009,15 @@ Show time off policy
 Update time off policy
 
 + Attributes
+  + name: Example (string)
   + type: time_off_policy (string)
   + amount: 1440 (string)
   + policy_type: balancer (string, required)
   + start_day: 1(number, required)
-  + end_day: 1(number, required)
+  + end_day: 1(number)
   + start_month: 1(number, required)
-  + end_month: 10(number, required)
-  + years_to_effect: 1(string, required)
+  + end_month: 10(number)
+  + years_to_effect: 1(number, required)
   + [employees: {"id": "1"}] (array)
   + [working_places: {"id": "1"}] (array)
 
@@ -1992,12 +2025,14 @@ Update time off policy
 
         {
           "id": "12345678-1234-1234-1234-123456789013",
+          "name": "Example",
           "type": "time_off_policy",
           "start_day": "1",
           "end_day": "1",
           "start_month": "1",
           "end_month": "10",
           "years_to_effect": "1",
+          "years_passed": "0",
           "amount": "1440",
           "policy_type": "balancer",
           "time_off_category": {
@@ -2031,5 +2066,132 @@ Update time off policy
 + Response 204
 
 
+## Users Collection [/api/v1/users]
+
+### Get Users [GET]
+
+Get a list of users
+
++ Request (application/json)
+
++ Response 200 (application/json)
+
+        [
+          {
+            "email": "yalty@company.com",
+            "account_manager": true,
+            "is_employee": false,
+            "id": "12345678-1234-1234-1234-123456789013",
+            "type": "account_user",
+            "employee": null
+          },
+          {
+            "email": "test@example.com",
+            "account_manager": false,
+            "is_employee": true,
+            "id": "12345678-1234-1234-1234-123456789013",
+            "type": "account_user",
+            "employee":
+              {
+                "id": "12345678-1234-1234-1234-123456789013",
+                "type": "employee"
+              }
+          }
+        ]
+
+### POST Create a new account user [POST /api/v1/users]
+
+Create a new User
+By default account_id is equal Account.current.id
+
++ Attributes
+  + type: "account_user" (string)
+  + password: "12345678" (string)
+  + email: "test@example.com" (string)
+  + account_manager: false (boolean)
+  + employee:
+    + id: "11" (string, required)
+    + type: "employee" (string)
+
++ Request (application/json)
+
+        {
+            "email": "test@example.com",
+            "password": "12345678",
+            "account_manager": false,
+            "type": "account_user",
+            "employee":
+              {
+                "id": "12345678-1234-1234-1234-123456789013",
+                "type": "employee"
+              }
+        }
+
++ Response 201 (application/json)
+
+        {
+          "email": "test@example.com",
+          "account_manager": false,
+          "is_employee": true,
+          "id": "12345678-1234-1234-1234-123456789013",
+          "type": "account_user",
+          "employee":
+            {
+              "id": "12345678-1234-1234-1234-123456789013",
+              "type": "employee"
+            }
+        }
 
 
+## User [/api/v1/users/{user_id}]
+
+### Get users [GET]
+
+Show user
+
++ Request (application/json)
+
++ Response 200 (application/json)
+
+        {
+          "email": "test@example.com",
+          "account_manager": false,
+          "is_employee": true,
+          "id": "12345678-1234-1234-1234-123456789013",
+          "type": "account_user",
+          "employee":
+            {
+              "id": "12345678-1234-1234-1234-123456789013",
+              "type": "employee"
+            }
+        }
+
+
+### PUT Time off Policy [PUT]
+
+Update user
+
++ Attributes
+  + type: "account_user" (string)
+  + email: "test@example.com" (string)
+  + account_manager: true (boolean)
+  + employee:
+    + id: "11" (string, required)
+    + type: "employee" (string)
+
++ Request (application/json)
+
+        {
+          "email": "test@example.com",
+          "account_manager": false,
+          "id": "12345678-1234-1234-1234-123456789013",
+          "type": "account_user",
+          "employee":
+            {
+              "id": "12345678-1234-1234-1234-123456789013",
+              "type": "employee"
+            }
+        }
+
+
++ Response 204 (application/json)

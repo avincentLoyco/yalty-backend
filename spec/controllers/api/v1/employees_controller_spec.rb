@@ -200,6 +200,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
     let(:id) { employee.id }
     let(:holiday_policy_id) { holiday_policy.id }
     let(:presence_policy_id) { presence_policy.id }
+    let(:time_off_policy_id) { create(:time_off_policy).id }
     let(:valid_params_json) do
       {
         id: id,
@@ -211,7 +212,13 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
         holiday_policy: {
           id: holiday_policy_id,
           type: 'holiday_policy'
-        }
+        },
+        time_off_policies: [
+          {
+            id: time_off_policy_id,
+            type: 'time_off_policy'
+          }
+        ]
       }
     end
     subject { put :update, valid_params_json }
@@ -219,8 +226,35 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
     context 'with valid data' do
       it { expect { subject }.to change { employee.reload.holiday_policy_id } }
       it { expect { subject }.to change { employee.reload.presence_policy_id } }
+      it { expect { subject }.to change { employee.reload.employee_time_off_policies.count }.by(1) }
 
       it { is_expected.to have_http_status(204) }
+
+      context 'when presence policy param send' do
+        let(:employee_with_time_offs) { create(:employee, :with_time_offs, account: account) }
+        let(:id) { employee_with_time_offs.id }
+        let(:first_time_off) { employee_with_time_offs.time_offs.first.employee_balance }
+        let(:second_time_off) { employee_with_time_offs.time_offs.second.employee_balance }
+        let(:third_time_off) { employee_with_time_offs.time_offs.last.employee_balance }
+
+        context 'and equas employee current presence policy' do
+          before { employee_with_time_offs.update!(presence_policy: presence_policy) }
+
+          it { expect { subject }.to_not change { first_time_off.reload.being_processed } }
+          it { expect { subject }.to_not change { second_time_off.reload.being_processed } }
+          it { expect { subject }.to_not change { third_time_off.reload.being_processed } }
+
+          it { is_expected.to have_http_status(204) }
+        end
+
+        context 'and it is different than employee presence policy' do
+          it { expect { subject }.to change { first_time_off.reload.being_processed } }
+          it { expect { subject }.to change { second_time_off.reload.being_processed } }
+          it { expect { subject }.to change { third_time_off.reload.being_processed } }
+
+          it { is_expected.to have_http_status(204) }
+        end
+      end
     end
 
     context 'with invalid data' do
@@ -230,6 +264,8 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
 
           it { expect { subject }.to_not change { employee.reload.holiday_policy_id } }
           it { expect { subject }.to_not change { employee.reload.presence_policy_id } }
+          it { expect { subject }.to_not change {
+            employee.reload.employee_time_off_policies.count } }
 
           it { is_expected.to have_http_status(404) }
         end
@@ -239,6 +275,8 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
 
           it { expect { subject }.to_not change { employee.reload.holiday_policy_id } }
           it { expect { subject }.to_not change { employee.reload.presence_policy_id } }
+          it { expect { subject }.to_not change {
+            employee.reload.employee_time_off_policies.count } }
 
           it { is_expected.to have_http_status(404) }
         end
@@ -248,8 +286,21 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
 
           it { expect { subject }.to_not change { employee.reload.holiday_policy_id } }
           it { expect { subject }.to_not change { employee.reload.presence_policy_id } }
+          it { expect { subject }.to_not change {
+            employee.reload.employee_time_off_policies.count } }
 
           it { is_expected.to have_http_status(404) }
+        end
+
+        context 'invalid time off policy id' do
+          let(:time_off_policy_id) { '1' }
+
+          it { expect { subject }.to_not change { employee.reload.holiday_policy_id } }
+          it { expect { subject }.to_not change { employee.reload.presence_policy_id } }
+          it { expect { subject }.to_not change {
+            employee.reload.employee_time_off_policies.count } }
+
+          it { is_expected.to have_http_status(422) }
         end
       end
     end

@@ -10,12 +10,9 @@ class Employee::Attribute < ActiveRecord::Base
   belongs_to :employee_attribute_definition
   has_one :account, through: :employee
 
-  PUBLIC_ATTRIBUTES_FOR_OTHERS = %w(
-    firstname lastname language job_title start_date occupation_rate department
-    manager professional_email professional_mobile
-  )
-
-  scope :for_other_employees, -> { where(attribute_name: PUBLIC_ATTRIBUTES_FOR_OTHERS) }
+  scope :visible_for_other_employees, lambda {
+    where(attribute_name: PUBLIC_ATTRIBUTES_FOR_OTHERS)
+  }
 
   private
 

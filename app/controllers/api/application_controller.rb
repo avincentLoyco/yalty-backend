@@ -8,15 +8,15 @@ class API::ApplicationController < ApplicationController
   protected
 
   def resources
-    fail NotImplementedError, "#{__method__} must be implemented in #{self.class.name}"
+    raise NotImplementedError, "#{__method__} must be implemented in #{self.class.name}"
   end
 
   def resource
-    fail NotImplementedError, "#{__method__} must be implemented in #{self.class.name}"
+    raise NotImplementedError, "#{__method__} must be implemented in #{self.class.name}"
   end
 
   def resource_representer
-    fail NotImplementedError, "#{__method__} must be implemented in #{self.class.name}"
+    raise NotImplementedError, "#{__method__} must be implemented in #{self.class.name}"
   end
 
   private
@@ -31,6 +31,10 @@ class API::ApplicationController < ApplicationController
     return unless Account.current.nil?
     render json:
       ::Api::V1::ErrorsRepresenter.new(nil, message: 'User unauthorized').complete, status: 401
+  end
+
+  def assign_join_table_collection(resource, collection, collection_name)
+    AssignJoinTableCollection.new(resource, collection, collection_name).call
   end
 
   def assign_collection(resource, collection, collection_name)
@@ -50,11 +54,11 @@ class API::ApplicationController < ApplicationController
   def render_resource(resource, options = {})
     representer = options.delete(:representer) || resource_representer
 
-    if resource.respond_to?(:map)
-      response = resource.map { |item| representer.new(item).complete }
-    else
-      response = representer.new(resource).complete
-    end
+    response = if resource.respond_to?(:map)
+                 resource.map { |item| representer.new(item).complete }
+               else
+                 representer.new(resource).complete
+               end
 
     render options.merge(json: response)
   end

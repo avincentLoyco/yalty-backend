@@ -9,8 +9,8 @@ module Api::V1
 
     def with_relationships
       complete.merge(presence_days: presence_days_json)
-        .merge(employees: employees_json)
-        .merge(working_places: working_places_json)
+              .merge(employees: employees_json)
+              .merge(working_places: working_places_json)
     end
 
     def presence_days_json

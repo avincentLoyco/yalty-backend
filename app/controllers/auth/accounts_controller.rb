@@ -47,10 +47,10 @@ class Auth::AccountsController < ApplicationController
       @current_resource_owner = user
     else
       messages = account.errors.messages
-        .merge(user.errors.messages)
-        .merge(account.try(:registration_key).errors.messages)
+                        .merge(user.errors.messages)
+                        .merge(account.try(:registration_key).errors.messages)
 
-      fail InvalidResourcesError.new(account, messages)
+      raise InvalidResourcesError.new(account, messages)
     end
   end
 

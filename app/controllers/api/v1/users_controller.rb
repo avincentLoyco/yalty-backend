@@ -20,12 +20,9 @@ module API
           @resource = Account.current.users.new(attributes)
 
           authorize! :create, resource
-          if resource.save
-            send_user_credentials(resource, attributes[:password])
-            render_resource(resource, status: :created)
-          else
-            resource_invalid_error(resource)
-          end
+          resource.save!
+          send_user_credentials(resource)
+          render_resource(resource, status: :created)
         end
       end
 
@@ -35,11 +32,8 @@ module API
 
           authorize! :update, attributes[:employee] if attributes[:employee]
           authorize! :update, resource
-          if resource.update(attributes)
-            render_no_content
-          else
-            resource_invalid_error(resource)
-          end
+          resource.update!(attributes)
+          render_no_content
         end
       end
 
@@ -65,15 +59,15 @@ module API
       def load_related_employee(attributes)
         return unless attributes.key?(:employee)
 
-        employee_id = attributes.delete(:employee)[:id]
-        attributes[:employee] = Account.current.employees.find(employee_id)
+        employee_id = attributes.delete(:employee).try(:[], :id)
+        attributes[:employee] = employee_id ? Account.current.employees.find(employee_id) : nil
       end
 
-      def send_user_credentials(user, password)
+      def send_user_credentials(user)
         subdomain = Account.current.subdomain
         UserMailer.credentials(
           user.id,
-          password,
+          user.password,
           subdomain + '.' + ENV['YALTY_APP_DOMAIN']
         ).deliver_later
       end

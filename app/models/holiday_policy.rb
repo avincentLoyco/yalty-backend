@@ -1,7 +1,5 @@
 class HolidayPolicy < ActiveRecord::Base
   belongs_to :account
-  has_many :custom_holidays,
-    class_name: 'Holiday'
   has_many :working_places
   has_many :employees
   has_one :assigned_account,
@@ -20,24 +18,25 @@ class HolidayPolicy < ActiveRecord::Base
   before_validation :downcase, if: :local?
 
   COUNTRIES_WITHOUT_REGIONS = %w(ar at be br cl cr cz dk el fr je gg im hr hu ie is it li lt nl no
-                                 pl pt ro sk si fi jp ma ph se sg ve vi za)
+                                 pl pt ro sk si fi jp ma ph se sg ve vi za).freeze
   HolidayStruct = Struct.new(:date, :name)
 
   def holidays
-    if country.present? || region.present?
-      custom_holidays + country_holidays
-    else
-      custom_holidays
-    end
+    country_holidays if country.present? || region.present?
+  end
+
+  def holidays_in_period(start_date, end_date)
+    country_holidays(start_date, end_date) if country.present? || region.present?
   end
 
   private
 
-  def country_holidays
-    from = Time.zone.now.beginning_of_year
-    to = Time.zone.now.end_of_year
+  def country_holidays(from = nil, to = nil)
+    from ||= Time.zone.now.beginning_of_year
+    to ||= Time.zone.now.end_of_year
     Holidays.between(from, to, country_with_region).map do |holiday|
-      HolidayStruct.new(holiday[:date], 'Holiday')
+      holiday_name = HolidaysCodeName.get_name_code(holiday[:name])
+      HolidayStruct.new(holiday[:date], holiday_name)
     end
   end
 

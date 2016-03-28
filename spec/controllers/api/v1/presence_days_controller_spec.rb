@@ -7,6 +7,33 @@ RSpec.describe API::V1::PresenceDaysController, type: :controller do
 
   let(:presence_policy) { create(:presence_policy, account: account) }
 
+  shared_examples 'Employee Balances Update' do
+    context 'when there are no employees affected by the policy' do
+      it { is_expected.to have_http_status(204) }
+    end
+
+    context 'when there is employee affected by policy' do
+      let(:employee) do
+        create(:employee, :with_time_offs, account: account, presence_policy: presence_policy)
+      end
+      let(:f_time_off) { employee.time_offs.first }
+      let(:s_time_off) { employee.time_offs.second }
+      let(:t_time_off) { employee.time_offs.last }
+
+      context 'and he does not have related balances' do
+        it { is_expected.to have_http_status(204) }
+      end
+
+      context 'and he has related balances' do
+        it { expect { subject }.to change { f_time_off.employee_balance.reload.being_processed } }
+        it { expect { subject }.to change { s_time_off.employee_balance.reload.being_processed } }
+        it { expect { subject }.to change { t_time_off.employee_balance.reload.being_processed } }
+
+        it { is_expected.to have_http_status(204) }
+      end
+    end
+  end
+
   describe 'GET #show' do
     let(:presence_day) { create(:presence_day, presence_policy: presence_policy) }
     subject { get :show, params }
@@ -162,7 +189,8 @@ RSpec.describe API::V1::PresenceDaysController, type: :controller do
 
     context 'with valid params' do
       it { expect { subject }.to change { presence_day.reload.order } }
-      it { is_expected.to have_http_status(204) }
+
+      it_behaves_like 'Employee Balances Update'
     end
 
     context 'with invalid params' do
@@ -211,6 +239,8 @@ RSpec.describe API::V1::PresenceDaysController, type: :controller do
 
       it { expect { subject }.to change { PresenceDay.count }.by(-1) }
       it { is_expected.to have_http_status(204) }
+
+      it_behaves_like 'Employee Balances Update'
     end
 
     context 'with invalid id' do

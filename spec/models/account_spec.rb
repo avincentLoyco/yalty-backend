@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe Account, type: :model do
-  subject { build(:account) }
+  subject { build(:account, subdomain: 'subdomain') }
 
   it { is_expected.to have_db_column(:id).of_type(:uuid) }
   it { is_expected.to have_db_column(:subdomain).with_options(null: false) }
@@ -117,8 +117,6 @@ RSpec.describe Account, type: :model do
   it { is_expected.to validate_presence_of(:company_name) }
 
   it { is_expected.to have_many(:working_places) }
-
-  it { is_expected.to have_many(:custom_holidays).through(:holiday_policies) }
 
   it { is_expected.to have_many(:users).class_name('Account::User').inverse_of(:account) }
 

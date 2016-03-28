@@ -14,6 +14,48 @@ class Employee < ActiveRecord::Base
   has_many :time_offs
   has_many :employee_balances, class_name: 'Employee::Balance'
   has_many :employee_time_off_policies
+  has_many :time_off_policies, through: :employee_time_off_policies
+  has_many :time_off_categories, through: :employee_balances
 
   validates :working_place_id, presence: true
+
+  def active_presence_policy
+    return presence_policy if presence_policy.present?
+    working_place.presence_policy
+  end
+
+  def active_holiday_policy
+    return holiday_policy if holiday_policy.present?
+    working_place.holiday_policy
+  end
+
+  def active_policy_in_category(category_id)
+    employee_policy = time_off_policy_in_category(category_id)
+    return employee_policy if employee_policy
+    working_place.time_off_policy_in_category(category_id)
+  end
+
+  def last_balance_in_policy(policy_id)
+    employee_balances.where(time_off_policy_id: policy_id).order('effective_at').last
+  end
+
+  def last_balance_in_category(category_id)
+    employee_balances.where(time_off_category_id: category_id).order('effective_at').last
+  end
+
+  def unique_balances_categories
+    time_off_categories.distinct
+  end
+
+  def first_balance_in_policy(policy_id)
+    employee_balances.where(time_off_policy_id: policy_id).order(effective_at: :asc).first
+  end
+
+  private
+
+  def time_off_policy_in_category(category_id)
+    employee_time_off_policies.joins(:time_off_policy)
+                              .find_by(time_off_policies: { time_off_category_id: category_id })
+                              .try(:time_off_policy)
+  end
 end

@@ -5,6 +5,7 @@ class Account::User < ActiveRecord::Base
 
   validates :email, presence: true
   validates :email, format: { with: /\b[A-Z0-9._%a-z\-]+@(?:[A-Z0-9a-z\-]+\.)+[A-Za-z]{2,4}\z/ }
+  validates :email, uniqueness: { scope: :account_id, case_sensitive: false }
   validates :password, length: { in: 8..74 }, if: ->() { !password.nil? }
   validates :reset_password_token, uniqueness: true, allow_nil: true
 
@@ -46,7 +47,7 @@ class Account::User < ActiveRecord::Base
   end
 
   def intercom_attributes
-    %w(id created_at email)
+    %w(id created_at email account_manager employee)
   end
 
   def intercom_data
@@ -54,6 +55,10 @@ class Account::User < ActiveRecord::Base
       user_id: id,
       email: email,
       signed_up_at: created_at,
+      custom_attributes: {
+        employee_id: employee ? employee.id : nil,
+        account_manager: account_manager
+      },
       companies: [{
         company_id: account.id
       }]

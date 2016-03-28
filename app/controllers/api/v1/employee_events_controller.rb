@@ -2,26 +2,32 @@ module API
   module V1
     class EmployeeEventsController < ApplicationController
       include EmployeeEventRules
+
       GateResult = Struct.new(:attributes, :errors)
 
       def show
+        authorize! :show, Account.current
         render_resource(resource)
       end
 
       def index
+        authorize! :read, Account.current
         render_resource(resources)
       end
 
       def create
         verified_params(gate_rules) do |event_attributes, employee_attributes|
           resource = CreateEvent.new(event_attributes, employee_attributes).call
-
+          authorize! :create, resource
           render_resource(resource, status: :created)
         end
       end
 
       def update
         verified_params(gate_rules) do |event_attributes, employee_attributes|
+          authorize! :update, resource
+          UpdateEventAttributeValidator.new(employee_attributes, resource).call unless
+            current_user.account_manager
           UpdateEvent.new(event_attributes, employee_attributes).call
 
           render_no_content
@@ -68,7 +74,7 @@ module API
       end
 
       def verify_employee_attributes
-        # TODO temporary solution we are waiting for issue:
+        # TODO: temporary solution we are waiting for issue:
         # https://github.com/monterail/gate/issues/1
         return [[], []] unless params[:employee_attributes]
 
