@@ -12,7 +12,7 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
     where(time_off_policy_id: policy_id).pluck(:employee_id)
   }
 
-  scope :not_assigned, -> { where(['effective_at > ?', Date.today]) }
+  scope :not_assigned, -> { where(['effective_at > ?', Time.zone.today]) }
   scope :assigned, -> { where(['effective_at <= ?', Date.tomorrow]) }
   scope :by_employee_in_category, lambda { |employee_id, category_id|
     joins(:time_off_policy)
