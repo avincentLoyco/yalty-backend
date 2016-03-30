@@ -1,6 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe HolidaysForCountry, type: :service do
+  include_context 'shared_context_timecop_helper'
   subject{ described_class.new('ch', true).call }
 
   describe '#call' do
@@ -15,6 +16,7 @@ RSpec.describe HolidaysForCountry, type: :service do
         regions_with_holidays.each do |region_hash|
           expect(region_hash[:code]).to_not equal :at
         end
+        expect(regions_with_holidays.size).to eq(27)
     end
   end
 
