@@ -3,7 +3,6 @@ class Employee::Balance < ActiveRecord::Base
   belongs_to :employee
   belongs_to :time_off_category
   belongs_to :time_off
-  belongs_to :time_off_policy
 
   belongs_to :balance_credit_addition, class_name: 'Employee::Balance'
   has_one :balance_credit_removal, class_name: 'Employee::Balance',
@@ -15,7 +14,7 @@ class Employee::Balance < ActiveRecord::Base
     :effective_at,
     :time_off_policy,
     presence: true
-  validates :effective_at, uniqueness: { scope: [:time_off_policy, :employee] }
+  validates :effective_at, uniqueness: { scope: [:time_off_category, :employee] }
   validates :balance_credit_addition, presence: true, uniqueness: true, if: :removal_and_balancer?
   validates :amount, numericality: { greater_than_or_equal_to: 0 }, if: :validity_date
 
@@ -38,7 +37,7 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   def current_or_next_period
-    [time_off_policy.current_period, time_off_policy.next_period]
+    [employee.current_policy_period(time_off_category_id), time_off_policy.next_period]
       .find { |r| r.include?(effective_at.to_date) }
   end
 
@@ -49,6 +48,12 @@ class Employee::Balance < ActiveRecord::Base
 
   def calculate_removal_amount(addition = balance_credit_addition)
     self.amount = CalculateEmployeeBalanceRemovalAmount.new(self, addition).call
+  end
+
+  def time_off_policy
+    return nil unless employee && time_off_category
+    employee.active_policy_in_category_at_date(time_off_category_id, now_or_effective_at)
+            .try(:time_off_policy)
   end
 
   private
@@ -86,7 +91,8 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   def time_off_policy_date
-    return if current_or_next_period || time_off_policy.previous_period.cover?(effective_at)
+    return if current_or_next_period ||
+        employee.previous_policy_period(time_off_category_id).cover?(effective_at)
     errors.add(:effective_at, 'Must belong to current, next or previous policy.')
   end
 

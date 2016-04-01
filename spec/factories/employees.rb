@@ -31,18 +31,15 @@ FactoryGirl.define do
         second_policy = employee.employee_time_off_policies.last.time_off_policy
 
         first_balance = create(:employee_balance,
-          time_off_policy: first_policy,
           employee: employee,
           time_off_category: first_policy.time_off_category
         )
         second_balance = create(:employee_balance,
-          time_off_policy: second_policy,
           employee: employee,
           time_off_category: second_policy.time_off_category
         )
 
         third_balance = create(:employee_balance,
-          time_off_policy: second_policy,
           employee: employee,
           time_off_category: second_policy.time_off_category
         )

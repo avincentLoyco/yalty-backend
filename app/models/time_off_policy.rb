@@ -107,7 +107,7 @@ class TimeOffPolicy < ActiveRecord::Base
   def verify_invalid_day(day, month, day_symbol)
     days_in_month = month ? Time.days_in_month(month, Time.zone.now.year) : nil
     errors.add(day_symbol, 'invalid day number given for this month') if
-      day && days_in_month && day >= days_in_month
+      day && days_in_month && day > days_in_month
   end
 
   def verify_invalid_month(month, month_symbol)

@@ -18,16 +18,12 @@ class CreateEmployeeBalance
     ActiveRecord::Base.transaction do
       build_employee_balance
       build_employee_balance_removal if validity_date.present? && validity_date <= Time.zone.today
-      calculate_amount if time_off_policy
+      calculate_amount if employee_balance.time_off_policy.present?
       save!
 
       update_next_employee_balances
     end
     balance_removal ? [employee_balance, balance_removal] : [employee_balance]
-  end
-
-  def find_time_off_policy
-    @time_off_policy = employee.active_policy_in_category(category.id)
   end
 
   def build_employee_balance
@@ -57,8 +53,7 @@ class CreateEmployeeBalance
       amount: amount,
       employee: employee,
       time_off: time_off,
-      time_off_category: category,
-      time_off_policy: time_off_policy
+      time_off_category: category
     }
   end
 
@@ -81,10 +76,6 @@ class CreateEmployeeBalance
 
   def effective_at
     options[:effective_at]
-  end
-
-  def time_off_policy
-    employee.active_policy_in_category(category.id)
   end
 
   def validity_date

@@ -23,6 +23,11 @@ class Employee < ActiveRecord::Base
     time_off_policies_in_category(category_id).first.try(:effective_at)
   end
 
+  def last_balance_before_date(category_id, effective_at)
+    employee_balances.where('time_off_category_id = ? AND effective_at > ?',
+      category_id, effective_at).order(:effective_at).first
+  end
+
   def last_balance_addition_in_category(category_id)
     employee_balances.where(
       time_off_category_id: category_id,
@@ -62,6 +67,16 @@ class Employee < ActiveRecord::Base
     assigned_time_off_policies_in_category(category_id).first.try(:time_off_policy)
   end
 
+  def active_policy_in_category_at_date(category_id, date)
+    employee_policy = employee_time_off_policies.assigned_at(date)
+                                                .by_employee_in_category(id, category_id)
+                                                .order(:effective_at).last
+    return employee_policy if employee_policy.present?
+    working_place.working_place_time_off_policies.assigned_at(date)
+                 .by_working_place_in_category(working_place.id, category_id)
+                 .order(:effective_at).last
+  end
+
   def active_presence_policy
     return presence_policy if presence_policy.present?
     working_place.presence_policy
@@ -99,6 +114,10 @@ class Employee < ActiveRecord::Base
     active_end_date = active_related_time_off_policy(category_id).try(:end_date)
     future_start_date = future_related_time_off_policy(category_id).try(:end_date)
     !future_start_date || active_end_date < future_start_date ? active_end_date : future_start_date
+  end
+
+  def future_policy_period(category_id)
+    # TODO
   end
 
   private

@@ -11,6 +11,7 @@ class WorkingPlaceTimeOffPolicy < ActiveRecord::Base
 
   scope :not_assigned, -> { where(['effective_at > ?', Time.zone.today]) }
   scope :assigned, -> { where(['effective_at <= ?', Date.tomorrow]) }
+  scope :assigned_at, -> (date) { where(['effective_at <= ?', date]) }
 
   scope :affected_employees, lambda { |policy_id|
     where(time_off_policy_id: policy_id).joins(:working_place)

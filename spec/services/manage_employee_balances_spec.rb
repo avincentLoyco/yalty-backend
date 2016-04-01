@@ -30,6 +30,14 @@ RSpec.describe ManageEmployeeBalances, type: :service do
       it { expect { subject }.to_not change { previous_balance.reload.being_processed } }
     end
 
+    context 'when current policy effective at today' do
+      let(:effective_at) { Time.now }
+
+      it { expect { subject }.to change {
+        current_employee_policy.reload.employee.employee_balances.count }.by(1) }
+      it { expect { subject }.to change { previous_balance.destroyed? } }
+    end
+
     context 'when current policy effective at is in past' do
       let(:effective_at) { Time.now - 1.year }
       before do

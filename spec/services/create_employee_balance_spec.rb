@@ -1,14 +1,25 @@
 require 'rails_helper'
 
 RSpec.describe CreateEmployeeBalance, type: :service do
+  include_context 'shared_context_account_helper'
   include ActiveJob::TestHelper
-  before { Account.current = create(:account) }
+  before do
+    Account.current = create(:account)
+    allow_any_instance_of(Employee).to receive(:active_policy_in_category_at_date)
+      .and_return(working_place_policy)
+    allow_any_instance_of(Employee).to receive(:active_related_time_off_policy)
+      .and_return(working_place_policy)
+  end
 
   let(:category) { create(:time_off_category, account: Account.current) }
   let(:policy) { create(:time_off_policy, time_off_category: category) }
-  let(:working_place_policy) { create(:working_place_time_off_policy, time_off_policy: policy) }
   let(:employee) do
     create(:employee, account: Account.current, working_place: working_place_policy.working_place)
+  end
+  let(:working_place_policy) do
+    build(:working_place_time_off_policy,
+      time_off_policy: policy, effective_at: Date.today - 5.years
+    )
   end
   let(:amount) { -100 }
 
@@ -65,8 +76,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
           context 'balance after policy' do
             let!(:employee_balance) do
               create(:employee_balance,
-                employee: employee, effective_at: Time.now - 2.months, time_off_category: category,
-                time_off_policy: policy
+                employee: employee, effective_at: Time.now - 2.months, time_off_category: category
               )
             end
 
@@ -76,8 +86,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
           context 'balance in current balance period' do
             let!(:employee_balance) do
               create(:employee_balance,
-                employee: employee, effective_at: Time.now, time_off_category: category,
-                time_off_policy: policy
+                employee: employee, effective_at: Time.now, time_off_category: category
               )
             end
 
@@ -102,7 +111,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
           let!(:employee_balance) do
             create(:employee_balance,
               employee: employee, effective_at: Time.now - 2.month, time_off_category: category,
-              time_off_policy: other_policy, amount: 100
+              amount: 100
             )
           end
 
@@ -110,17 +119,25 @@ RSpec.describe CreateEmployeeBalance, type: :service do
           it { expect(subject.first.balance).to eq 200 }
         end
         context 'in a different category category' do
-          let(:other_policy) { create(:time_off_policy) }
+          let(:new_category) { create(:time_off_category, account: Account.current) }
+          let(:other_policy) { create(:time_off_policy, time_off_category: new_category) }
+          let!(:new_policy) do
+            create(:working_place_time_off_policy,
+              working_place: employee.working_place,
+              time_off_policy: other_policy,
+              effective_at: Date.today - 1.years
+            )
+          end
           let!(:employee_balance) do
             create(:employee_balance,
               employee: employee, effective_at: Time.now - 2.month,
-              time_off_category: other_policy.time_off_category,
-              time_off_policy: other_policy, amount: 100
+              time_off_category: category,
+              amount: 100
             )
           end
 
           it { expect { subject }.not_to change { enqueued_jobs.size } }
-          it { expect(subject.first.balance).to eq 100 }
+          it { expect(subject.first.balance).to eq 200 }
         end
       end
 
@@ -143,7 +160,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
       context 'balance credit addition given' do
         let!(:employee_balance) do
           create(:employee_balance,
-            time_off_category: category, time_off_policy: policy, employee: employee, amount: 1000
+            time_off_category: category, employee: employee, amount: 1000
           )
         end
 
@@ -165,7 +182,10 @@ RSpec.describe CreateEmployeeBalance, type: :service do
     subject { CreateEmployeeBalance.new(category.id, employee.id, Account.current.id, amount).call }
 
     context 'time off policy does not exist' do
-      before { working_place_policy.destroy! }
+      before do
+        allow_any_instance_of(Employee).to receive(:active_policy_in_category_at_date)
+          .and_return(nil)
+      end
 
       it { expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
     end

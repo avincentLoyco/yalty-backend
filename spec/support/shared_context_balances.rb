@@ -1,6 +1,5 @@
 RSpec.shared_context 'shared_context_balances' do |settings|
   let!(:category) { create(:time_off_category, account: account) }
-
   if settings[:type] == 'balancer'
     let(:policy) do
       create(:time_off_policy,
