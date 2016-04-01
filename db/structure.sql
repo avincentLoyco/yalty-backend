@@ -201,7 +201,6 @@ CREATE TABLE employee_balances (
     time_off_id uuid,
     employee_id uuid NOT NULL,
     time_off_category_id uuid NOT NULL,
-    time_off_policy_id uuid,
     created_at timestamp without time zone,
     updated_at timestamp without time zone,
     being_processed boolean DEFAULT false,
@@ -802,13 +801,6 @@ CREATE INDEX index_employee_balances_on_time_off_id ON employee_balances USING b
 
 
 --
--- Name: index_employee_balances_on_time_off_policy_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
---
-
-CREATE INDEX index_employee_balances_on_time_off_policy_id ON employee_balances USING btree (time_off_policy_id);
-
-
---
 -- Name: index_employee_events_on_employee_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
@@ -1165,14 +1157,6 @@ ALTER TABLE ONLY employee_balances
 
 
 --
--- Name: fk_rails_b31bf8c36e; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY employee_balances
-    ADD CONSTRAINT fk_rails_b31bf8c36e FOREIGN KEY (time_off_policy_id) REFERENCES time_off_policies(id);
-
-
---
 -- Name: fk_rails_be9ada4c17; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1407,6 +1391,8 @@ INSERT INTO schema_migrations (version) VALUES ('20160309100705');
 INSERT INTO schema_migrations (version) VALUES ('20160316092439');
 
 INSERT INTO schema_migrations (version) VALUES ('20160324094939');
+
+INSERT INTO schema_migrations (version) VALUES ('20160401084042');
 
 INSERT INTO schema_migrations (version) VALUES ('20160401104731');
 
