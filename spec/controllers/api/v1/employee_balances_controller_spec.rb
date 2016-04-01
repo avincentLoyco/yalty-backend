@@ -19,7 +19,6 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
       employee: employee,
       amount: 200,
       time_off_category: policy_category,
-      time_off_policy: policy,
       effective_at: previous_end + 1.week
     )
   end
@@ -37,7 +36,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
 
         it { expect_json_keys(
           [
-            :id, :balance, :amount, :employee, :time_off_category, :time_off_policy, :effective_at,
+            :id, :balance, :amount, :employee, :time_off_category, :effective_at,
             :being_processed, :policy_credit_removal, :time_off
           ]
         )}
@@ -213,14 +212,14 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
             context 'and there is a balance with validity date' do
               let(:amount) { -500 }
               let!(:prev_mid_add) do
-                create(:employee_balance, employee: employee, time_off_policy: policy,
+                create(:employee_balance, employee: employee,
                   time_off_category: category, amount: 1000, effective_at: previous.first + 1.week,
                   validity_date: previous.first + 3.months
                 )
               end
 
               let!(:prev_mid_removal) do
-                create(:employee_balance, employee: employee, time_off_policy: policy,
+                create(:employee_balance, employee: employee,
                   time_off_category: category, amount: -1000, balance_credit_addition: prev_mid_add,
                   policy_credit_removal: true
                 )
@@ -302,12 +301,12 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
             let(:amount) { 1000 }
             let(:effective_at_date) { previous.first + 1.week }
             let!(:positive_balance) do
-              create(:employee_balance, employee: employee, time_off_policy: policy,
+              create(:employee_balance, employee: employee,
                 time_off_category: category, amount: 500, effective_at: previous.first + 1.month,
               )
             end
             let!(:negative_balance) do
-              create(:employee_balance, employee: employee, time_off_policy: policy,
+              create(:employee_balance, employee: employee,
                 time_off_category: category, amount: -500, effective_at: previous.first + 2.months,
               )
             end
