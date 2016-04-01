@@ -52,7 +52,7 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount, type: :service do
     let(:addition) { previous_add }
     let!(:negative_balance) do
       create(:employee_balance,
-        time_off_policy: policy, employee: employee, time_off_category: category, amount: -600,
+        employee: employee, time_off_category: category, amount: -600,
         effective_at: previous.first + 4.months
       )
     end
@@ -64,7 +64,7 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount, type: :service do
     context 'positive balances in balance period' do
       let!(:positive_balance) do
         create(:employee_balance,
-          time_off_policy: policy, employee: employee, time_off_category: category, amount: 600,
+          employee: employee, time_off_category: category, amount: 600,
           effective_at: previous.first + 5.months
         )
       end
@@ -83,7 +83,7 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount, type: :service do
     context 'employee balances with validity dates in balance period' do
       let!(:positive_balance) do
         create(:employee_balance,
-          time_off_policy: policy, employee: employee, time_off_category: category, amount: 600,
+          employee: employee, time_off_category: category, amount: 600,
           effective_at: previous.first + 5.months, validity_date: Time.now + 2.months
         )
       end

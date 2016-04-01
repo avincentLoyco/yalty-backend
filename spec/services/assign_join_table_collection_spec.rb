@@ -53,7 +53,6 @@ RSpec.describe AssignJoinTableCollection, type: :service do
         context "when trying to remove one association but it has an associated balance" do
           let!(:balance) do
             create(:employee_balance,
-              time_off_policy: time_off_policy,
               time_off_category: time_off_policy.time_off_category,
               employee: employee,
               effective_at: Time.zone.now + 3.days

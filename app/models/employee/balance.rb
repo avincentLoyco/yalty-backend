@@ -12,7 +12,6 @@ class Employee::Balance < ActiveRecord::Base
     :time_off_category,
     :balance, :amount,
     :effective_at,
-    :time_off_policy,
     presence: true
   validates :effective_at, uniqueness: { scope: [:time_off_category, :employee] }
   validates :balance_credit_addition, presence: true, uniqueness: true, if: :removal_and_balancer?
