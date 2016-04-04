@@ -1,16 +1,14 @@
 module Api::V1
   class CountryRepresenter
-    attr_reader :country
+    attr_reader :country, :has_regions
 
     def initialize(country)
-      unless HolidayPolicy::COUNTRIES_WITHOUT_REGIONS.include?(country)
-        country = "#{country}_"
-      end
       @country = country
+      @has_regions = !HolidayPolicy::COUNTRIES_WITHOUT_REGIONS.include?(country)
     end
 
     def complete
-      holidays, regions_with_holidays = HolidaysForCountry.new(country).call
+      holidays, regions_with_holidays = HolidaysForCountry.new(country, has_regions).call
       {
         holidays: holidays,
         regions: regions_with_holidays
