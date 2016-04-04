@@ -79,7 +79,7 @@ class CreateEmployeeBalance
   end
 
   def validity_date
-    DateTime.parse(options[:validity_date]).in_time_zone
+    DateTime.parse(options[:validity_date].to_s).in_time_zone
   rescue
     nil
   end

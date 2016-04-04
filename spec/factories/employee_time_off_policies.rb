@@ -5,8 +5,10 @@ FactoryGirl.define do
     effective_at { Time.zone.today - 1.year }
 
     trait :with_employee_balance do
-      after(:build) do |policy|
+      after(:create) do |policy|
         amount = policy.time_off_policy.counter? ? 0 : policy.time_off_policy.amount
+        time_off_policy = policy.time_off_policy
+        amount = time_off_policy.counter? ? 0 : time_off_policy.amount
         create(:employee_balance,
           amount: amount,
           employee: policy.employee,

@@ -32,4 +32,22 @@ module CalculateRelatedTimeOffPeriods
   def previous_start_date
     last_start_date - policy_length.years
   end
+
+  def last_validity_date
+    return nil unless time_off_policy.end_month && time_off_policy.end_day
+    Date.new(
+      last_start_date.year + time_off_policy.years_to_effect,
+      time_off_policy.end_month,
+      time_off_policy.end_day
+    )
+  end
+
+  def first_validity_date
+    return nil unless time_off_policy.end_month && time_off_policy.end_day
+    Date.new(
+      first_start_date.year + time_off_policy.years_to_effect,
+      time_off_policy.end_month,
+      time_off_policy.end_day
+    )
+  end
 end

@@ -29,11 +29,7 @@ class Employee < ActiveRecord::Base
   end
 
   def last_balance_addition_in_category(category_id)
-    employee_balances.where(
-      time_off_category_id: category_id,
-      policy_credit_addition: true,
-      time_off_policy: previous_related_time_off_policy(category_id).try(:time_off_policy)
-    )
+    employee_balances.where(time_off_category: category_id, policy_credit_addition: true)
                      .order(effective_at: :desc).first
   end
 

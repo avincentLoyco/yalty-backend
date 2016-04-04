@@ -13,13 +13,11 @@ class ManageEmployeeBalances
   end
 
   def call
-    (update_balances && return) if resource_policy.first_start_date > Date.today
-    if previous_resource_policy.present? &&
-        previous_resource_policy.previous_start_date <= resource_policy.first_start_date
+    return if resource_policy.first_start_date > Date.today
+    if previous_resource_policy.present? && previous_start_date_equal_current?
       update_balances
     else
       ActiveRecord::Base.transaction do
-        # LOOK AT removing balances with removal -> crazy border case
         destroy_previous_additions
         create_balances
       end
@@ -28,19 +26,26 @@ class ManageEmployeeBalances
 
   private
 
+  def previous_start_date_equal_current?
+    previous_resource_policy.last_start_date == resource_policy.first_start_date ||
+      previous_resource_policy.previous_start_date == resource_policy.first_start_date
+  end
+
   def update_balances
     Employee.where(id: employees_ids).each do |employee|
-      resource, attributes = find_resource_and_attributes(employee)
+      resource = employee.last_balance_addition_in_category(category_id)
+      options = { amount: policy_amount, validity_date: resource_policy.first_validity_date.to_s }
       next if resource.blank?
-      update_employee_balances(resource, attributes)
+      update_employee_balances(resource, options)
     end
   end
 
   def destroy_previous_additions
     balances_ids = Employee.where(id: employees_ids).joins(:employee_balances)
                            .where('employee_balances.policy_credit_addition = true
-                              AND effective_at <= ? AND time_off_category_id = ?',
-                             Time.zone.today, category_id).map(&:employee_balance_ids).flatten
+                              AND effective_at >= ? AND time_off_category_id = ?',
+                             resource_policy.effective_at, category_id)
+                           .map(&:employee_balance_ids).flatten
     Employee::Balance.where(id: balances_ids).destroy_all
   end
 
@@ -65,20 +70,9 @@ class ManageEmployeeBalances
     resource_policy.time_off_policy.counter? ? 0 : resource_policy.time_off_policy.amount
   end
 
-  def find_resource_and_attributes(employee)
-    if previous_resource_policy.present? &&
-        previous_resource_policy.previous_start_date == resource_policy.first_start_date
-      resource = employee.last_balance_addition_in_category(category_id)
-      [resource, { amount: policy_amount }]
-    else
-      resource = employee.last_balance_before_date(category_id, resource_policy.effective_at)
-      [resource, {}]
-    end
-  end
-
   def balancer_options
     return {} if resource_policy.time_off_policy.counter?
-    { validity_date: resource_policy.end_date }
+    { validity_date: resource_policy.first_validity_date }
   end
 
   def balance_effective_at
