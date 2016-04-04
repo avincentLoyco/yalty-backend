@@ -21,7 +21,7 @@ RSpec.describe AddPolicyAdditionsJob do
   describe '#perform' do
     let!(:employee_balance) do
       create(:employee_balance, employee: employees.first, time_off_category: category,
-        time_off_policy: policy, amount: -100, effective_at: Time.now + 1.week)
+        amount: -100, effective_at: Time.now + 1.week)
     end
 
     context 'when policy starts today' do
@@ -29,7 +29,7 @@ RSpec.describe AddPolicyAdditionsJob do
         before { policy.update!(policy_type: 'counter', amount: nil) }
 
         it { expect { subject }.to change { Employee::Balance.count }.by(2) }
-        it { expect { subject }.to change { policy.reload.employee_balances.count }.by(2) }
+        it { expect { subject }.to change { category.reload.employee_balances.count }.by(2) }
         it { expect { subject }.to change { employees.first.reload.employee_balances.count }.by(1) }
         it { expect { subject }.to change { employees.last.reload.employee_balances.count }.by(1) }
         it { expect { subject }.to change { employee_balance.reload.being_processed } }
@@ -38,7 +38,7 @@ RSpec.describe AddPolicyAdditionsJob do
           before { subject }
 
           it { expect { subject }.to_not change { Employee::Balance.count } }
-          it { expect { subject }.to_not change { policy.reload.employee_balances.count } }
+          it { expect { subject }.to_not change { category.reload.employee_balances.count } }
           it { expect { subject }.to_not change { employees.first.reload.employee_balances.count } }
           it { expect { subject }.to_not change { employees.last.reload.employee_balances.count } }
           it { expect { subject }.to_not change { employee_balance.reload.being_processed } }
@@ -47,7 +47,7 @@ RSpec.describe AddPolicyAdditionsJob do
 
       context 'when policy type is balancer' do
         it { expect { subject }.to change { Employee::Balance.count }.by(2) }
-        it { expect { subject }.to change { policy.reload.employee_balances.count }.by(2) }
+        it { expect { subject }.to change { category.reload.employee_balances.count }.by(2) }
         it { expect { subject }.to change { employees.first.reload.employee_balances.count }.by(1) }
         it { expect { subject }.to change { employees.last.reload.employee_balances.count }.by(1) }
         it { expect { subject }.to change { employee_balance.reload.being_processed } }
@@ -56,7 +56,7 @@ RSpec.describe AddPolicyAdditionsJob do
           before { subject }
 
           it { expect { subject }.to_not change { Employee::Balance.count } }
-          it { expect { subject }.to_not change { policy.reload.employee_balances.count } }
+          it { expect { subject }.to_not change { category.reload.employee_balances.count } }
           it { expect { subject }.to_not change { employees.first.reload.employee_balances.count } }
           it { expect { subject }.to_not change { employees.last.reload.employee_balances.count } }
           it { expect { subject }.to_not change { employee_balance.reload.being_processed } }
@@ -73,9 +73,9 @@ RSpec.describe AddPolicyAdditionsJob do
         end
 
         it { expect { subject }.to change { Employee::Balance.count }.by(2) }
-        it { expect { subject }.to change { new_policy.reload.employee_balances.count }.by(2) }
+        it { expect { subject }.to change { category.reload.employee_balances.count }.by(2) }
 
-        it { expect { subject }.to_not change { policy.reload.employee_balances } }
+        it { expect { subject }.to_not change { category.reload.employee_balances } }
       end
     end
 
@@ -83,7 +83,7 @@ RSpec.describe AddPolicyAdditionsJob do
       before { policy.update!(start_day: 10) }
 
       it { expect { subject }.to_not change { Employee::Balance.count } }
-      it { expect { subject }.to_not change { policy.reload.employee_balances.count } }
+      it { expect { subject }.to_not change { category.reload.employee_balances.count } }
       it { expect { subject }.to_not change { employee_balance.reload.being_processed } }
     end
   end

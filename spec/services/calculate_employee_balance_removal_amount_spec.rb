@@ -19,7 +19,6 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount, type: :service do
 
       context 'and their balance bigger than 0' do
         before { previous_removal.update!(amount: 5000) }
-
         it { expect(subject).to eq -4000 }
       end
 

@@ -24,13 +24,17 @@ RSpec.shared_context 'shared_context_balances' do |settings|
   end
 
   let!(:employee_time_off_policy) do
-    create(:employee_time_off_policy, employee: employee)
+    create(:employee_time_off_policy,
+      employee: employee,
+      time_off_policy: policy,
+      effective_at: Date.new(2013,1,1)
+    )
   end
 
   # balances in previous policy period
 
-  let(:previous) { policy.previous_period }
-  let(:current) { policy.current_period }
+  let(:previous) { employee.previous_policy_period(category.id) } #{ policy.previous_period }
+  let(:current) { employee.current_policy_period(category.id) } #policy.current_period }
 
   if settings[:type] == 'balancer'
     if settings[:end_month] && settings[:end_day]
@@ -74,7 +78,7 @@ RSpec.shared_context 'shared_context_balances' do |settings|
   else
     let!(:previous_balance) do
       create(:employee_balance,
-        effective_at: previous.first + 1.month, amount: -1000,
+        effective_at: previous.first + 9.month, amount: -1000,
         employee: employee, time_off_category: category
       )
     end

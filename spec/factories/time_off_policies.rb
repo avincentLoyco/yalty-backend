@@ -17,9 +17,5 @@ FactoryGirl.define do
       end_day 1
       end_month 4
     end
-
-    trait :as_counter do
-      policy_type 'counter'
-    end
   end
 end

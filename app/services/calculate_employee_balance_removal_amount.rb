@@ -7,11 +7,22 @@ class CalculateEmployeeBalanceRemovalAmount
   end
 
   def call
-    return calculate_counter_amount if employee_balance.time_off_policy.counter?
+    return calculate_counter_amount if balance_belongs_to_counter_policy?
     calculate_balancer_amount
   end
 
   private
+
+  def balance_belongs_to_counter_policy?
+    join_model_time_off_policy =
+      employee_balance
+      .employee
+      .active_policy_in_category_at_date(
+        employee_balance.time_off_category_id, employee_balance.effective_at
+      )
+    return false unless join_model_time_off_policy
+    join_model_time_off_policy.time_off_policy.counter?
+  end
 
   def calculate_counter_amount
     last_balance = employee_balance.previous_balances.last.try(:balance)
