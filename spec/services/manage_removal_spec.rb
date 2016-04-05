@@ -5,13 +5,20 @@ RSpec.describe ManageRemoval, type: :service do
     Account.current = account
     balance.time_off_category.update!(account: account)
     balance.employee.update!(account: account)
-    allow_any_instance_of(Employee).to receive(:active_policy_in_category) { balance.time_off_policy }
+    employee_time_off_policy
   end
 
   subject { ManageRemoval.new(new_date, balance).call }
   let(:account) { create(:account)  }
   let(:validity_date) { Date.today - 1.day }
   let(:new_date) { Date.today }
+  let(:time_off_policy) { create(:time_off_policy, time_off_category_id: balance.time_off_category_id)}
+  let(:employee_time_off_policy) do
+    create(:employee_time_off_policy,
+      employee_id: balance.employee_id,
+      time_off_policy: time_off_policy
+    )
+  end
   let!(:balance) do
     create(:employee_balance, effective_at: Date.today - 1.month, validity_date: validity_date)
   end
