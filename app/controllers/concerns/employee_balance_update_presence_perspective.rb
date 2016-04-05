@@ -6,10 +6,8 @@ module EmployeeBalanceUpdatePresencePerspective
       next if employee.time_offs.empty?
 
       categories = employee.time_offs.pluck(:time_off_category_id).uniq
-      policies = TimeOffPolicy.where(time_off_category_id: categories).pluck(:id)
-
-      policies.each do |policy_id|
-        update_balances_in_affected_policy(policy_id, employee)
+      categories.each do |category_id|
+        update_balances_in_affected_policy(category_id, employee)
       end
     end
   end
@@ -17,16 +15,14 @@ module EmployeeBalanceUpdatePresencePerspective
   def update_balances(employees)
     employees.each do |employee|
       categories = employee.time_offs.pluck(:time_off_category_id).uniq
-      policies = TimeOffPolicy.where(time_off_category_id: categories).pluck(:id)
-      policies.each do |policy_id|
-        update_balances_in_affected_policy(policy_id, employee)
+      categories.each do |category_id|
+        update_balances_in_affected_policy(category_id, employee)
       end
     end
   end
 
-  def update_balances_in_affected_policy(policy_id, employee)
-    start_balance = employee.first_balance_in_policy(policy_id)
-
+  def update_balances_in_affected_policy(category_id, employee)
+    start_balance = employee.first_balance_in_category(category_id)
     if start_balance.present?
       balances_to_update = start_balance.all_later_ids
 

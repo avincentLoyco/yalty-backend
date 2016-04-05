@@ -181,15 +181,6 @@ RSpec.describe CreateEmployeeBalance, type: :service do
   context 'with invalid data' do
     subject { CreateEmployeeBalance.new(category.id, employee.id, Account.current.id, amount).call }
 
-    context 'time off policy does not exist' do
-      before do
-        allow_any_instance_of(Employee).to receive(:active_policy_in_category_at_date)
-          .and_return(nil)
-      end
-
-      it { expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
-    end
-
     context 'missing param' do
       context 'missing category' do
         subject { CreateEmployeeBalance.new(nil, employee.id, Account.current.id, amount).call }
