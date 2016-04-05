@@ -171,6 +171,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
         let(:amount) { -100 }
 
         context 'and policy type is counter' do
+          let(:effective_at_date) { previous_balance.effective_at + 2.months }
           include_context 'shared_context_balances',
             type: 'counter',
             years_to_effect: 0
