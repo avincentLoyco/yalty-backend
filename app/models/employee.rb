@@ -19,15 +19,6 @@ class Employee < ActiveRecord::Base
 
   validates :working_place_id, presence: true
 
-  def last_effective_at(category_id)
-    time_off_policies_in_category(category_id).first.try(:effective_at)
-  end
-
-  def last_balance_before_date(category_id, effective_at)
-    employee_balances.where('time_off_category_id = ? AND effective_at > ?',
-      category_id, effective_at).order(:effective_at).first
-  end
-
   def last_balance_addition_in_category(category_id)
     employee_balances.where(time_off_category: category_id, policy_credit_addition: true)
                      .order(effective_at: :desc).first
@@ -115,10 +106,10 @@ class Employee < ActiveRecord::Base
     future_start_date = future_related_time_off_policy(category_id).try(:end_date)
     !future_start_date || active_end_date < future_start_date ? active_end_date : future_start_date
   end
-
-  def future_policy_period(category_id)
-    # TODO
-  end
+  #
+  # def future_policy_period(category_id)
+  #   # TODO
+  # end
 
   private
 

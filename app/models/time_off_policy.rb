@@ -52,10 +52,6 @@ class TimeOffPolicy < ActiveRecord::Base
     Date.new(end_in_years, end_month, end_day)
   end
 
-  def current_period
-    (start_date...end_date)
-  end
-
   def previous_period
     (start_date - years_or_effect...end_date - years_or_effect)
   end
@@ -80,10 +76,6 @@ class TimeOffPolicy < ActiveRecord::Base
 
   def starts_today?
     start_date == Time.zone.today
-  end
-
-  def ends_today?
-    end_date == Time.zone.today
   end
 
   def dates_blank?

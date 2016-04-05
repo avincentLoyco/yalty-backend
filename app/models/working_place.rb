@@ -12,10 +12,6 @@ class WorkingPlace < ActiveRecord::Base
     time_off_policies_in_category(category_id).first.try(:time_off_policy)
   end
 
-  def previous_time_off_policy_in_category(category_id)
-    time_off_policies_in_category(category_id).second.try(:time_off_policy)
-  end
-
   def time_off_policies_in_category(category_id)
     working_place_time_off_policies.assigned
                                    .joins(:time_off_policy)

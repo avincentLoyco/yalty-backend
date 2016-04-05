@@ -13,7 +13,7 @@ class ManageEmployeeBalances
   end
 
   def call
-    return if resource_policy.first_start_date > Date.today
+    return if resource_policy.first_start_date > Time.zone.today
     if previous_resource_policy.present? && previous_start_date_equal_current?
       update_balances
     else
