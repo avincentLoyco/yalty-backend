@@ -95,6 +95,10 @@ class Employee < ActiveRecord::Base
     employee_balances.where(time_off_category_id: category_id).order(effective_at: :asc).first
   end
 
+  def first_balance_in_category(category_id)
+    employee_balances.where(time_off_category_id: category_id).order(effective_at: :asc).first
+  end
+
   def current_start_date(category_id)
     newest = active_related_time_off_policy(category_id)
     previous = previous_related_time_off_policy(category_id)

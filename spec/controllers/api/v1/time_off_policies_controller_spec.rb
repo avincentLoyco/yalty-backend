@@ -355,13 +355,8 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
         it { is_expected.to have_http_status(404) }
       end
 
-      context 'when time off policy has an employee balance' do
-        let!(:employee_balance) do
-          create(:employee_balance,
-            time_off_category: time_off_category,
-            time_off_policy: policy
-          )
-        end
+      context 'when time off policy has an related time off policy' do
+        before { create(:employee_time_off_policy, time_off_policy_id: policy.id) }
 
         it { expect { subject }.to_not change { TimeOffPolicy.count } }
         it { is_expected.to have_http_status(423) }

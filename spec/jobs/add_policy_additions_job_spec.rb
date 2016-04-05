@@ -14,7 +14,7 @@ RSpec.describe AddPolicyAdditionsJob do
   let(:employee_balance) { create(:employee_balance, employee: employees.first) }
   let!(:working_place_policy) do
     create(:working_place_time_off_policy,
-      time_off_policy: policy, working_place: working_place, effective_at: Date.today
+      time_off_policy: policy, working_place: working_place, effective_at: Date.today - 1.year
     )
   end
 

@@ -18,7 +18,7 @@ class CalculateEmployeeBalanceRemovalAmount
       employee_balance
       .employee
       .active_policy_in_category_at_date(
-        employee_balance.time_off_category_id, employee_balance.effective_at
+        employee_balance.time_off_category_id, employee_balance.now_or_effective_at
       )
     return false unless join_model_time_off_policy
     join_model_time_off_policy.time_off_policy.counter?
