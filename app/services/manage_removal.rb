@@ -12,14 +12,15 @@ class ManageRemoval
     if new_date.blank? || moved_to_future?
       resource.balance_credit_removal.try(:destroy!)
     else
-      create_removal
+      create_removal unless resource.balance_credit_removal.present?
     end
   end
 
   private
 
   def validity_date_changed?
-    !resource.time_off_policy.counter? && (new_date.blank? || moved_to_past? || moved_to_future?)
+    (!resource.time_off_policy.counter? && (new_date.blank? || moved_to_past? ||
+      moved_to_future?)) || resource.attribute_changed?(:validity_date)
   end
 
   def moved_to_past?
@@ -38,7 +39,7 @@ class ManageRemoval
   end
 
   def params
-    [resource.time_off_category_id, resource.employee_id, Account.current.id, nil,
+    [resource.time_off_category_id, resource.employee_id, resource.employee.account_id, nil,
      { policy_credit_removal: true, skip_update: true, balance_credit_addition_id: resource.id,
        effective_at: new_date }]
   end

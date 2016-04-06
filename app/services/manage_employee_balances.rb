@@ -36,6 +36,7 @@ class ManageEmployeeBalances
       resource = employee.last_balance_addition_in_category(category_id)
       options = { amount: policy_amount, validity_date: resource_policy.first_validity_date.to_s }
       next if resource.blank?
+      resource.balance_credit_removal.destroy! if resource.balance_credit_removal.present?
       update_employee_balances(resource, options)
     end
   end

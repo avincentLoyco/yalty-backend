@@ -70,6 +70,27 @@ RSpec.describe ManageEmployeeBalances, type: :service do
         context 'and its start date is eql previous policy start date' do
           it { expect { subject }.to_not change { Employee::Balance.count } }
           it { expect { subject }.to change { previous_balance.reload.being_processed } }
+
+          context 'and previous addition has its removal' do
+            let!(:removal) do
+              create(:employee_balance,
+                effective_at: previous_balance.validity_date,
+                balance_credit_addition: previous_balance,
+                policy_credit_removal: true,
+                employee: previous_balance.employee,
+                time_off_category: previous_balance.time_off_category
+              )
+            end
+
+            it { expect { subject }.to change { previous_balance.reload.being_processed } }
+            it { expect { subject }.to change { Employee::Balance.exists?(id: removal.id) } }
+          end
+
+          context 'and current addition has end date before current date' do
+            before { new_policy.update!(end_day: 2, end_month: 12) }
+
+            it { expect { subject }.to change { previous_balance.reload.being_processed } }
+          end
         end
 
         context 'and its start date is before previous policy start date' do
