@@ -35,6 +35,7 @@ group :development, :test do
   gem 'faker'
   gem 'dotenv-rails'
   gem 'codeclimate-test-reporter', require: false
+  gem 'mutant-rspec'
 
   # debug
   gem 'pry-rails'
