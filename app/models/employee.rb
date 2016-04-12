@@ -24,24 +24,6 @@ class Employee < ActiveRecord::Base
                      .order(effective_at: :desc).first
   end
 
-  def previous_start_date(category_id)
-    previous_start = active_related_time_off_policy(category_id).try(:previous_start_date)
-    if active_related_time_off_policy(category_id).effective_at > previous_start &&
-        previous_related_time_off_policy(category_id)
-      previous_related_time_off_policy(category_id).last_start_date
-    else
-      previous_start
-    end
-  end
-
-  def previous_policy_period(category_id)
-    (previous_start_date(category_id)..current_start_date(category_id))
-  end
-
-  def current_policy_period(category_id)
-    (current_start_date(category_id)..current_end_date(category_id))
-  end
-
   def previous_related_time_off_policy(category_id)
     assigned_time_off_policies_in_category(category_id).second
   end
@@ -90,26 +72,19 @@ class Employee < ActiveRecord::Base
     employee_balances.where(time_off_category_id: category_id).order(effective_at: :asc).first
   end
 
-  def current_start_date(category_id)
-    newest = active_related_time_off_policy(category_id)
-    previous = previous_related_time_off_policy(category_id)
-    return newest.last_start_date if newest.last_start_date <= Time.zone.today
-    if previous
-      current_start_date_from_previous(category_id)
-    else
-      newest.last_start_date - newest.policy_length
-    end
+  def next_related_time_off_policy(category_id)
+    employee_policies = EmployeeTimeOffPolicy.by_employee_in_category(id, category_id)
+    return employee_policies.not_assigned.last if employee_policies.present?
+    WorkingPlaceTimeOffPolicy.not_assigned.by_working_place_in_category(
+      working_place_id, category_id).last
   end
 
-  def current_end_date(category_id)
-    active_end_date = active_related_time_off_policy(category_id).try(:end_date)
-    future_start_date = future_related_time_off_policy(category_id).try(:end_date)
-    !future_start_date || active_end_date < future_start_date ? active_end_date : future_start_date
+  def future_related_time_off_policy(category_id)
+    employee_policies = EmployeeTimeOffPolicy.by_employee_in_category(id, category_id)
+    return employee_policies.not_assigned.last(2).first if employee_policies.present?
+    WorkingPlaceTimeOffPolicy.not_assigned.by_working_place_in_category(
+      working_place_id, category_id).last(2).first
   end
-  #
-  # def future_policy_period(category_id)
-  #   # TODO
-  # end
 
   private
 
@@ -119,21 +94,5 @@ class Employee < ActiveRecord::Base
     from_working_place = WorkingPlaceTimeOffPolicy.assigned.by_working_place_in_category(
       working_place_id, category_id).limit(3)
     from_employee + from_working_place
-  end
-
-  def future_related_time_off_policy(category_id)
-    employee_policies = EmployeeTimeOffPolicy.by_employee_in_category(id, category_id)
-    return employee_policies.not_assigned.last if employee_policies.present?
-    WorkingPlaceTimeOffPolicy.assigned.by_working_place_in_category(
-      working_place_id, category_id).last
-  end
-
-  def current_start_date_from_previous(category_id)
-    previous = assigned_time_off_policies_in_category(category_id).second
-    if previous.last_start_date < active_related_time_off_policy(category_id).effective_at
-      previous.last_start_date
-    else
-      previous.previous_start_date
-    end
   end
 end

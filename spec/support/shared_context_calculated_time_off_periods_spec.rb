@@ -95,6 +95,12 @@ RSpec.shared_context 'shared_context_calculated_time_off_periods', :a => :b do
   context '.end_date' do
     subject { related_policy.end_date }
 
+    it { expect(subject).to eq '1/1/2018'.to_date }
+  end
+
+  context '.last_validity_date' do
+    subject { related_policy.last_validity_date }
+
     context 'when time off policy has end dates' do
       let(:end_day) { 1 }
       let(:end_month) { 2 }
@@ -102,8 +108,8 @@ RSpec.shared_context 'shared_context_calculated_time_off_periods', :a => :b do
       it { expect(subject).to eq '1/2/2018'.to_date }
     end
 
-    context 'when time off policy does not have end dates' do
-      it { expect(subject).to eq '1/1/2018'.to_date }
+    context 'when time off policy does not have end date' do
+      it { expect(subject).to eq nil }
     end
   end
 end

@@ -1,3 +1,5 @@
+require 'policy_period'
+
 module CalculateRelatedTimeOffPeriods
   def policy_length
     time_off_policy.years_to_effect > 1 ? time_off_policy.years_to_effect : 1
@@ -20,13 +22,7 @@ module CalculateRelatedTimeOffPeriods
   end
 
   def end_date
-    if time_off_policy.end_day && time_off_policy.end_month
-      Date.new(
-        last_start_date.year + policy_length, time_off_policy.end_month, time_off_policy.end_day
-      )
-    else
-      last_start_date + policy_length.years
-    end
+    last_start_date + policy_length.years
   end
 
   def previous_start_date

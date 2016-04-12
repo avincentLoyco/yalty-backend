@@ -32,9 +32,9 @@ RSpec.shared_context 'shared_context_balances' do |settings|
   end
 
   # balances in previous policy period
-
-  let(:previous) { employee.previous_policy_period(category.id) }
-  let(:current) { employee.current_policy_period(category.id) }
+  let(:periods) { PolicyPeriod.new(employee, category.id) }
+  let(:previous) { periods.previous_policy_period }
+  let(:current) { periods.current_policy_period }
 
   if settings[:type] == 'balancer'
     if settings[:end_month] && settings[:end_day]
