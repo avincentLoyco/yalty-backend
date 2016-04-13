@@ -71,11 +71,7 @@ RSpec.describe AddPolicyAdditionsJob do
             effective_at: Date.today + 8.hours
           )
         end
-
-        it { expect { subject }.to change { Employee::Balance.count }.by(2) }
-        it { expect { subject }.to change { category.reload.employee_balances.count }.by(2) }
-
-        it { expect { subject }.to_not change { category.reload.employee_balances } }
+        it { expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
       end
     end
 

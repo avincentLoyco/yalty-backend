@@ -2,16 +2,12 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 9.5.2
--- Dumped by pg_dump version 9.5.0
-
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
-SET row_security = off;
 
 --
 -- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: -
@@ -224,7 +220,8 @@ CREATE TABLE employee_time_off_policies (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
     employee_id uuid NOT NULL,
     time_off_policy_id uuid NOT NULL,
-    effective_at timestamp without time zone
+    effective_at timestamp without time zone,
+    time_off_category_id uuid
 );
 
 
@@ -490,7 +487,8 @@ CREATE TABLE working_place_time_off_policies (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
     working_place_id uuid NOT NULL,
     time_off_policy_id uuid NOT NULL,
-    effective_at timestamp without time zone
+    effective_at timestamp without time zone,
+    time_off_category_id uuid
 );
 
 
@@ -1220,7 +1218,7 @@ ALTER TABLE ONLY time_offs
 -- PostgreSQL database dump complete
 --
 
-SET search_path TO "$user", public;
+SET search_path TO "$user",public;
 
 INSERT INTO schema_migrations (version) VALUES ('20150506171210');
 
@@ -1399,6 +1397,8 @@ INSERT INTO schema_migrations (version) VALUES ('20160324094939');
 INSERT INTO schema_migrations (version) VALUES ('20160401084042');
 
 INSERT INTO schema_migrations (version) VALUES ('20160401104731');
+
+INSERT INTO schema_migrations (version) VALUES ('20160412122041');
 
 INSERT INTO schema_migrations (version) VALUES ('20160502065212');
 
