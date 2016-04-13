@@ -1,4 +1,4 @@
-class ManageRemoval
+class ManageEmployeeBalanceRemoval
   attr_reader :new_date, :resource, :current_date
 
   def initialize(new_date, resource)

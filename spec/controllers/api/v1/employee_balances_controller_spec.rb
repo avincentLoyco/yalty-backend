@@ -215,7 +215,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
               let!(:prev_mid_add) do
                 create(:employee_balance, employee: employee,
                   time_off_category: category, amount: 1000, effective_at: previous.first + 1.week,
-                  validity_date: previous.first + 3.months
+                  validity_date: previous.first + 3.months, policy_credit_addition: true
                 )
               end
 
@@ -392,8 +392,6 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
           it { expect { subject }.to change { balance_add.reload.being_processed }.to true }
 
           it { expect { subject }.to_not change { balance.reload.being_processed } }
-
-          it { expect { subject } }
         end
       end
 

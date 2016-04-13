@@ -25,9 +25,7 @@ module EmployeeBalanceUpdatePresencePerspective
     start_balance = employee.first_balance_in_category(category_id)
 
     if start_balance.present?
-      balances_to_update = start_balance.all_later_ids
-
-      Employee::Balance.where(id: balances_to_update).update_all(being_processed: true)
+      PrepareEmployeeBalancesToUpdate.new(start_balance).call
       UpdateBalanceJob.perform_later(start_balance.id, update_all: true)
     end
   end

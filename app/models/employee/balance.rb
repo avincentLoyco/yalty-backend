@@ -32,9 +32,11 @@ class Employee::Balance < ActiveRecord::Base
     where(employee_id: employee_id, time_off_category_id: time_off_category_id)
   }
   scope :editable, -> { where(policy_credit_removal: false, policy_credit_addition: false) }
+  scope :additions, -> { where(policy_credit_addition: true) }
 
   def last_in_category?
-    id == employee.last_balance_in_category(time_off_category_id).id
+    last_balance_id =  employee.last_balance_in_category(time_off_category_id).try(:id)
+    id == last_balance_id || last_balance_id.blank?
   end
 
   def current_or_next_period

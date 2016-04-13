@@ -1,6 +1,4 @@
 class ManageEmployeeBalances
-  include EmployeeBalanceUpdate
-
   attr_reader :previous_policy, :related, :current_policy, :resource_policy,
     :previous_resource_policy, :category_id
 
@@ -37,7 +35,9 @@ class ManageEmployeeBalances
       options = { amount: policy_amount, validity_date: resource_policy.first_validity_date.to_s }
       next if resource.blank?
       resource.balance_credit_removal.destroy! if resource.balance_credit_removal.present?
-      update_employee_balances(resource, options)
+
+      PrepareEmployeeBalancesToUpdate.new(resource, options).call
+      UpdateBalanceJob.perform_later(resource.id, options)
     end
   end
 

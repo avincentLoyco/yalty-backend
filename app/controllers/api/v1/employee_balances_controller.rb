@@ -2,7 +2,6 @@ module API
   module V1
     class EmployeeBalancesController < API::ApplicationController
       include EmployeeBalanceRules
-      include EmployeeBalanceUpdate
 
       before_action :verifiy_effective_at_and_validity_date, only: :update
 
@@ -29,12 +28,11 @@ module API
 
       def update
         verified_params(gate_rules) do |attributes|
-          effective_at = attributes[:effective_at]
           validity_date = attributes[:validity_date]
 
           transactions do
-            ManageRemoval.new(validity_date, resource).call if attributes.key?(:validity_date)
-            update_balances_processed_flag(balances_to_update(editable_resource, effective_at))
+            ManageEmployeeBalanceRemoval.new(validity_date, resource).call if attributes.key?(:validity_date)
+            PrepareEmployeeBalancesToUpdate.new(editable_resource, attributes).call
           end
 
           UpdateBalanceJob.perform_later(editable_resource.id, attributes)
@@ -43,8 +41,15 @@ module API
       end
 
       def destroy
-        update_balances_after_removed(editable_resource)
-        editable_resource.destroy!
+        next_balance = resource.next_balance
+
+        transactions do
+          resource_to_delete = editable_resource
+          editable_resource.destroy!
+          PrepareEmployeeBalancesToUpdate.new(resource_to_delete).call if next_balance
+        end
+
+        UpdateBalanceJob.perform_later(next_balance.id) if next_balance.present?
         render_no_content
       end
 

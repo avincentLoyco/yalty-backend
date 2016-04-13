@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe ManageRemoval, type: :service do
+RSpec.describe ManageEmployeeBalanceRemoval, type: :service do
   before do
     Account.current = account
     balance.time_off_category.update!(account: account)
@@ -8,7 +8,7 @@ RSpec.describe ManageRemoval, type: :service do
     employee_time_off_policy
   end
 
-  subject { ManageRemoval.new(new_date, balance).call }
+  subject { ManageEmployeeBalanceRemoval.new(new_date, balance).call }
   let(:account) { create(:account)  }
   let(:validity_date) { Date.today - 1.day }
   let(:new_date) { Date.today }

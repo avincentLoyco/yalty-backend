@@ -100,8 +100,7 @@ class CreateEmployeeBalance
 
   def update_next_employee_balances
     return if only_in_balance_period? || options[:skip_update]
-    balances_ids = employee_balance.later_balances_ids
-    update_being_processed_status(balances_ids)
+    PrepareEmployeeBalancesToUpdate.new(employee_balance).call
     UpdateBalanceJob.perform_later(employee_balance.id)
   end
 
@@ -109,11 +108,6 @@ class CreateEmployeeBalance
     employee_balance.last_in_category? || balance_removal.try(:last_in_category?) &&
       Employee::Balance.where(effective_at:
         employee_balance.effective_at...balance_removal.effective_at).count == 1
-  end
-
-  def update_being_processed_status(balances_ids)
-    Employee::Balance.where(id: balances_ids).update_all(being_processed: true)
-    TimeOff.find(time_off.id).update(being_processed: true) if time_off
   end
 
   def balancer_removal?
