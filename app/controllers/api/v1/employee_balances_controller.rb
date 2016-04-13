@@ -31,7 +31,9 @@ module API
           validity_date = attributes[:validity_date]
 
           transactions do
-            ManageEmployeeBalanceRemoval.new(validity_date, resource).call if attributes.key?(:validity_date)
+            if attributes.key?(:validity_date)
+              ManageEmployeeBalanceRemoval.new(validity_date, resource).call
+            end
             PrepareEmployeeBalancesToUpdate.new(editable_resource, attributes).call
           end
 

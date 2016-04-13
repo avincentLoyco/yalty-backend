@@ -10,13 +10,17 @@ class UpdateEmployeeBalance
 
   def call
     update_attributes unless options.blank?
-    ManageEmployeeBalanceRemoval.new(options[:validity_date], employee_balance).call if options[:validity_date]
+    manage_removal if options[:validity_date]
     recalculate_amount
     update_status
     save!
   end
 
   private
+
+  def manage_removal
+    ManageEmployeeBalanceRemoval.new(options[:validity_date], employee_balance).call
+  end
 
   def update_attributes
     employee_balance.assign_attributes(options)

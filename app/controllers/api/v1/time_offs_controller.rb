@@ -31,8 +31,8 @@ module API
       def update
         verified_params(gate_rules) do |attributes|
           transactions do
-            resource.update!(attributes) &&
-              PrepareEmployeeBalancesToUpdate.new(resource.employee_balance, balance_attributes).call
+            resource.update!(attributes)
+            PrepareEmployeeBalancesToUpdate.new(resource.employee_balance, balance_attributes).call
           end
 
           UpdateBalanceJob.perform_later(resource.employee_balance.id, balance_attributes)

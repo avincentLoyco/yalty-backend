@@ -74,12 +74,9 @@ module API
       end
 
       def save!(resource, related)
-        if resource.valid?
-          resource.save!
-          assign_related(resource, related)
-        else
-          raise InvalidResourcesError.new(resource, resource.errors.messages)
-        end
+        raise InvalidResourcesError.new(resource, resource.errors.messages) unless resource.valid?
+        resource.save!
+        assign_related(resource, related)
       end
 
       def assign_related(resource, related_records)
