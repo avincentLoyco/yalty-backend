@@ -1,6 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe PrepareEmployeeBalancesToUpdate, type: :service do
+  include_context 'shared_context_account_helper'
+
   before { allow_any_instance_of(FindEmployeeBalancesToUpdate).to receive(:call) { balances } }
   subject { PrepareEmployeeBalancesToUpdate.new(resource).call }
 

@@ -6,7 +6,7 @@ class FindEmployeeBalancesToUpdate
     @options = options
     @effective_at = earlier_date
     @related_balances = find_related_balances
-    @amount = options[:amount] ? options[:amount] : resource.amount
+    @amount = find_amount
   end
 
   def call
@@ -15,6 +15,14 @@ class FindEmployeeBalancesToUpdate
   end
 
   private
+
+  def find_amount
+    if options[:amount]
+      options[:amount] - resource.amount
+    else
+      resource.amount
+    end
+  end
 
   def addition_destroyed?
     !Employee::Balance.exists?(resource.id) && resource.validity_date
@@ -64,9 +72,11 @@ class FindEmployeeBalancesToUpdate
   end
 
   def active_balances_with_removals
-    return [] unless active_balances.present?
-    balance_additions_ids = related_balances.where(
-      balance_credit_addition_id: active_balances.pluck(:id)).pluck(:balance_credit_addition_id)
+    balance_additions_ids =
+      related_balances
+      .where(balance_credit_addition_id: active_balances.pluck(:id))
+      .pluck(:balance_credit_addition_id)
+
     related_balances.where(id: balance_additions_ids)
   end
 
@@ -79,12 +89,15 @@ class FindEmployeeBalancesToUpdate
     removals = related_balances.where(balance_credit_addition_id: active_balances.pluck(:id))
                                .order(effective_at: :asc)
     operation_amount = amount
+    ids_till_removal = []
 
     removals.each do |removal|
       if removal.amount.abs >= operation_amount.abs
-        return related_balances.where(effective_at: effective_at..removal.effective_at).pluck(:id)
+        ids_till_removal = related_balances.where(effective_at: effective_at..removal.effective_at)
+                                           .pluck(:id)
       end
       operation_amount -= removal.amount
     end
+    ids_till_removal.present? ? ids_till_removal : all_later_balances_ids
   end
 end
