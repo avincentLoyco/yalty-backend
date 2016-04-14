@@ -5,10 +5,13 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
 
   belongs_to :employee
   belongs_to :time_off_policy
+  belongs_to :time_off_category
 
   validates :employee_id, :time_off_policy_id, :effective_at, presence: true
   validates :time_off_policy_id, uniqueness: { scope: [:employee_id, :effective_at] }
   validate :effective_at_newer_than_previous_start_date, if: [:time_off_policy, :effective_at]
+
+  before_create :add_category_id
 
   scope :affected_employees, lambda { |policy_id|
     where(time_off_policy_id: policy_id).pluck(:employee_id)
@@ -24,6 +27,10 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
   }
 
   private
+
+  def add_category_id
+    self.time_off_category_id = time_off_policy.time_off_category_id
+  end
 
   def effective_at_newer_than_previous_start_date
     category_id = time_off_policy.time_off_category_id

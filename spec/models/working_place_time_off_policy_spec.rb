@@ -7,12 +7,17 @@ RSpec.describe WorkingPlaceTimeOffPolicy, type: :model do
 
   it { is_expected.to have_db_column(:working_place_id).of_type(:uuid) }
   it { is_expected.to have_db_column(:time_off_policy_id).of_type(:uuid) }
+  it { is_expected.to have_db_column(:time_off_category_id).of_type(:uuid) }
   it { is_expected.to validate_presence_of(:working_place_id) }
   it { is_expected.to validate_presence_of(:time_off_policy_id) }
   it { is_expected.to validate_presence_of(:effective_at) }
   it { is_expected.to have_db_index([:time_off_policy_id, :working_place_id]) }
   it '' do
     is_expected.to have_db_index([:working_place_id, :time_off_policy_id, :effective_at]).unique
+  end
+
+  it 'the category_id must be the one to whihc the policy belongs' do
+    expect(wptop.time_off_category_id).to eq(wptop.time_off_policy.time_off_category_id)
   end
 
   describe '#CalculateRelatedTimeOffPeriods' do

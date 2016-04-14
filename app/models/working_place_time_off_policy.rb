@@ -3,11 +3,14 @@ class WorkingPlaceTimeOffPolicy < ActiveRecord::Base
 
   belongs_to :working_place
   belongs_to :time_off_policy
+  belongs_to :time_off_category
   has_many :employees, through: :working_place
 
   validates :working_place_id, :time_off_policy_id, :effective_at, presence: true
   validates :time_off_policy_id, uniqueness: { scope: [:working_place_id, :effective_at] }
   validate :effective_at_newer_than_previous_start_date, if: [:time_off_policy, :effective_at]
+
+  before_create :add_category_id
 
   scope :not_assigned, -> { where(['effective_at > ?', Time.zone.today]) }
   scope :assigned, -> { where(['effective_at <= ?', Date.tomorrow]) }
@@ -27,6 +30,10 @@ class WorkingPlaceTimeOffPolicy < ActiveRecord::Base
   }
 
   private
+
+  def add_category_id
+    self.time_off_category_id = time_off_policy.time_off_category_id
+  end
 
   def effective_at_newer_than_previous_start_date
     category_id = time_off_policy.time_off_category_id
