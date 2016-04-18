@@ -45,6 +45,10 @@ class API::ApplicationController < ApplicationController
     AssignMember.new(resource, member, member_name).call
   end
 
+  def update_affected_balances(presence_policy, employees = [])
+    UpdateAffectedEmployeeBalances.new(presence_policy, employees).call
+  end
+
   def transactions
     ActiveRecord::Base.transaction do
       yield

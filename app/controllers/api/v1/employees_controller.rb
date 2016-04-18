@@ -3,7 +3,6 @@ module API
     class EmployeesController < ApplicationController
       authorize_resource
       include EmployeeRules
-      include EmployeeBalanceUpdatePresencePerspective
 
       def show
         render_resource(resource)
@@ -19,7 +18,7 @@ module API
           related = related_params(attributes)
           transactions do
             assign_related(related)
-            update_balances([resource]) if policy_changed?(active_policy)
+            update_affected_balances(nil, [resource]) if policy_changed?(active_policy)
           end
           render_no_content
         end

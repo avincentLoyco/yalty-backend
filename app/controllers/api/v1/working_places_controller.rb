@@ -3,7 +3,6 @@ module API
     class WorkingPlacesController < ApplicationController
       authorize_resource except: :create
       include WorkingPlaceRules
-      include EmployeeBalanceUpdatePresencePerspective
 
       def index
         render_resource(resources)
@@ -33,7 +32,7 @@ module API
           transactions do
             resource.update(attributes)
             assign_all(related)
-            update_balances(resource.employees) if policy_changed?(active_policy)
+            update_affected_balances(nil, resource.employees) if policy_changed?(active_policy)
           end
           render_no_content
         end

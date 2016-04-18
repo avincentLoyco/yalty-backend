@@ -64,10 +64,6 @@ class Employee < ActiveRecord::Base
     time_off_categories.distinct
   end
 
-  def first_balance_in_category(category_id)
-    employee_balances.where(time_off_category_id: category_id).order(effective_at: :asc).first
-  end
-
   def next_related_time_off_policy(category_id)
     employee_policies = EmployeeTimeOffPolicy.by_employee_in_category(id, category_id)
     return employee_policies.not_assigned.last if employee_policies.present?

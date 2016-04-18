@@ -3,7 +3,6 @@ module API
     class PresencePoliciesController < ApplicationController
       authorize_resource except: :create
       include PresencePolicyRules
-      include EmployeeBalanceUpdatePresencePerspective
 
       def show
         render_resource_with_relationships(resource)
@@ -25,7 +24,7 @@ module API
             save!(resource, related)
             CreateCompletePresencePolicy.new(resource.reload, days_params).call if
               days_params.present?
-            update_balances(resource.affected_employees)
+            update_affected_balances(nil, resource.affected_employees)
           end
 
           render_resource_with_relationships(resource, status: :created)
@@ -43,7 +42,7 @@ module API
           transactions do
             resource.attributes = attributes
             save!(resource, related)
-            update_balances(employees_to_update(previously_affected))
+            update_affected_balances(nil, employees_to_update(previously_affected))
           end
 
           render_no_content
