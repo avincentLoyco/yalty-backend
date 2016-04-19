@@ -1,7 +1,6 @@
 require 'policy_period'
 
 class Employee::Balance < ActiveRecord::Base
-  include RelativeEmployeeBalancesFinders
   belongs_to :employee
   belongs_to :time_off_category
   belongs_to :time_off
@@ -46,7 +45,7 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   def calculate_and_set_balance
-    previous = previous_balances.last
+    previous = RelativeEmployeeBalancesFinder.new(self).previous_balances.last
     self.balance = (previous && previous.id != id ? previous.balance + amount : amount)
   end
 
@@ -58,6 +57,15 @@ class Employee::Balance < ActiveRecord::Base
     return nil unless employee && time_off_category
     employee.active_policy_in_category_at_date(time_off_category_id, now_or_effective_at)
             .try(:time_off_policy)
+  end
+
+  def now_or_effective_at
+    return effective_at if effective_at && balance_credit_addition.blank? && time_off.blank?
+    if balance_credit_addition.try(:validity_date)
+      balance_credit_addition.validity_date
+    else
+      time_off.try(:start_time) || Time.zone.now
+    end
   end
 
   private

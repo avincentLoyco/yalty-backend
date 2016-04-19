@@ -43,7 +43,7 @@ module API
       end
 
       def destroy
-        next_balance = resource.next_balance
+        next_balance = RelativeEmployeeBalancesFinder.new(resource).next_balance
 
         transactions do
           resource_to_delete = editable_resource
@@ -51,7 +51,7 @@ module API
           PrepareEmployeeBalancesToUpdate.new(resource_to_delete).call if next_balance
         end
 
-        UpdateBalanceJob.perform_later(next_balance.id) if next_balance.present?
+        UpdateBalanceJob.perform_later(next_balance) if next_balance.present?
         render_no_content
       end
 

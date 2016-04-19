@@ -41,7 +41,7 @@ module API
       end
 
       def destroy
-        next_balance = resource.employee_balance.next_balance
+        next_balance = RelativeEmployeeBalancesFinder.new(resource.employee_balance).next_balance
 
         transactions do
           resource.employee_balance.destroy!

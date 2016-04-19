@@ -60,7 +60,7 @@ class UpdateEmployeeBalance
   end
 
   def last_balance
-    employee_balance.previous_balances.last.try(:balance)
+    RelativeEmployeeBalancesFinder.new(employee_balance).previous_balances.last.try(:balance)
   end
 
   def counter_and_addition?

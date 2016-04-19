@@ -25,12 +25,11 @@ class CalculateEmployeeBalanceRemovalAmount
   end
 
   def calculate_counter_amount
-    last_balance = employee_balance.previous_balances.last.try(:balance)
-    0 - last_balance.to_i
+    0 - previous_balance.to_i
   end
 
   def calculate_balancer_amount
-    if employee_balance.last_balance_after(addition).blank?
+    if last_balance_after_addition.blank?
       amount_from_addition
     else
       amount_from_previous_balances
@@ -51,17 +50,40 @@ class CalculateEmployeeBalanceRemovalAmount
     addition.amount - (previous_balance - positive_amounts - amount_difference)
   end
 
-  def previous_balance
-    employee_balance.previous_balances.last.try(:balance).to_i
-  end
-
   def positive_amounts
-    employee_balance.positive_balances_after(addition) +
-      + employee_balance.active_balances.pluck(:amount).sum
+    positive_balance_after_addition + active_balances.pluck(:amount).sum
   end
 
   def amount_difference
     return 0 unless addition.amount < addition.balance
     addition.balance - addition.amount
+  end
+
+  def active_balances
+    RelativeEmployeeBalancesFinder.new(employee_balance).active_balances
+  end
+
+  def previous_balance
+    RelativeEmployeeBalancesFinder.new(employee_balance).previous_balances.last.try(:balance).to_i
+  end
+
+  def last_balance_after_addition
+    RelativeEmployeeBalancesFinder
+      .new(employee_balance)
+      .previous_balances
+      .where('amount <= ? AND effective_at > ?', 0, addition.effective_at)
+      .last
+  end
+
+  def positive_balance_after_addition
+    RelativeEmployeeBalancesFinder
+      .new(employee_balance)
+      .balances_related_by_category_and_employee
+      .where(
+        effective_at: addition.effective_at..employee_balance.now_or_effective_at,
+        amount: 1..Float::INFINITY,
+        validity_date: nil
+      )
+      .pluck(:amount).sum
   end
 end

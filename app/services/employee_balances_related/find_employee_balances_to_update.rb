@@ -53,12 +53,12 @@ class FindEmployeeBalancesToUpdate
     no_removals_or_removals_bigger_than_amount? ? all_later_balances_ids : ids_to_removal
   end
 
-  def next_addition
-    related_balances.additions.where('effective_at > ?', effective_at).order(:effective_at).first
+  def find_related_balances
+    RelativeEmployeeBalancesFinder.new(resource).balances_related_by_category_and_employee
   end
 
-  def find_related_balances
-    Employee::Balance.employee_balances(resource.employee.id, resource.time_off_category_id)
+  def next_addition
+    related_balances.additions.where('effective_at > ?', effective_at).order(:effective_at).first
   end
 
   def no_removals_or_removals_bigger_than_amount?
