@@ -49,6 +49,18 @@ class API::ApplicationController < ApplicationController
     UpdateAffectedEmployeeBalances.new(presence_policy, employees).call
   end
 
+  def prepare_balanaces_to_update(resource, attributes = {})
+    PrepareEmployeeBalancesToUpdate.new(resource, attributes).call
+  end
+
+  def update_balances_job(resource, attributes = {})
+    UpdateBalanceJob.perform_later(resource, attributes)
+  end
+
+  def next_balance(resource)
+    RelativeEmployeeBalancesFinder.new(resource).next_balance
+  end
+
   def transactions
     ActiveRecord::Base.transaction do
       yield

@@ -32,24 +32,24 @@ module API
         verified_params(gate_rules) do |attributes|
           transactions do
             resource.update!(attributes)
-            PrepareEmployeeBalancesToUpdate.new(resource.employee_balance, balance_attributes).call
+            prepare_balanaces_to_update(resource.employee_balance, balance_attributes)
           end
 
-          UpdateBalanceJob.perform_later(resource.employee_balance.id, balance_attributes)
+          update_balances_job(resource.employee_balance.id, balance_attributes)
           render_no_content
         end
       end
 
       def destroy
-        next_balance = RelativeEmployeeBalancesFinder.new(resource.employee_balance).next_balance
+        next_balance = next_balance(resource.employee_balance)
 
         transactions do
           resource.employee_balance.destroy!
           resource.destroy!
-          PrepareEmployeeBalancesToUpdate.new(resource.employee_balance, balance_attributes).call
+          prepare_balanaces_to_update(resource.employee_balance, balance_attributes)
         end
 
-        UpdateBalanceJob.perform_later(next_balance.id, balance_attributes) if next_balance.present?
+        update_balances_job(next_balance.id, balance_attributes) if next_balance
         render_no_content
       end
 
