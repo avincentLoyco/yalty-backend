@@ -22,6 +22,7 @@ class Employee::Balance < ActiveRecord::Base
   validate :time_off_policy_date, if: :time_off_policy
   validate :validity_date_later_than_effective_at, if: [:effective_at, :validity_date]
   validate :counter_validity_date_blank
+  validate :time_off_policy_presence
 
   before_validation :calculate_and_set_balance, if: :attributes_present?
   before_validation :find_effective_at
@@ -110,5 +111,9 @@ class Employee::Balance < ActiveRecord::Base
 
   def validity_date_later_than_effective_at
     errors.add(:effective_at, 'Must be after start date') if effective_at > validity_date
+  end
+
+  def time_off_policy_presence
+    errors.add(:employee, 'Must have time off policy in category') unless time_off_policy
   end
 end

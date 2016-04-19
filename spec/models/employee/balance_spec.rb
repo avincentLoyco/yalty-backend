@@ -116,6 +116,26 @@ RSpec.describe Employee::Balance, type: :model do
     end
 
     context 'validations' do
+      context 'time_off_policy_presence' do
+        context 'when employee has active time off policy' do
+          let(:policy) { build(:time_off_policy) }
+          before do
+            allow_any_instance_of(Employee::Balance).to receive(:time_off_policy) { policy }
+          end
+
+          it { expect(subject.valid?).to eq true }
+          it { expect { subject.valid? }.to_not change { subject.errors.messages } }
+        end
+
+        context 'when employee does not have active policy' do
+          before { allow_any_instance_of(Employee::Balance).to receive(:time_off_policy) { nil } }
+
+          it { expect(subject.valid?).to eq false }
+          it { expect { subject.valid? }.to change { subject.errors.messages[:employee] }
+            .to include('Must have time off policy in category') }
+        end
+      end
+
       context 'time_off_policy date' do
         before { balance.effective_at =  Time.new(2011, 5, 10) }
 

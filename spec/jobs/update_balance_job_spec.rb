@@ -32,11 +32,12 @@ RSpec.describe UpdateBalanceJob do
       it { expect { subject }.to_not change { balance.reload.being_processed } }
 
       context 'when counter has time off' do
-        let(:time_off) { create(:time_off, employee_balance: balance, being_processed: true) }
+        before { time_off.employee_balance = balance }
+        let(:time_off) { create(:time_off, :without_balance, being_processed: true) }
         let(:balance_id) { balance.id }
 
         it { expect { subject }.to change { time_off.reload.being_processed } }
-        it { expect { subject }.to change { balance.reload.being_processed } }
+        it { expect { subject }.to change { time_off.employee_balance.reload.being_processed } }
       end
     end
 
@@ -52,7 +53,8 @@ RSpec.describe UpdateBalanceJob do
       it { expect { subject }.to_not change { balance_add.reload.being_processed } }
 
       context 'when counter has time off' do
-        let(:time_off) { create(:time_off, employee_balance: balance, being_processed: true) }
+        before { time_off.employee_balance = balance }
+        let(:time_off) { create(:time_off, :without_balance, being_processed: true) }
         let(:balance_id) { balance.id }
 
         it { expect { subject }.to change { time_off.reload.being_processed } }
