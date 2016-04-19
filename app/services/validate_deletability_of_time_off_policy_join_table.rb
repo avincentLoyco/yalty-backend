@@ -1,13 +1,11 @@
 class ValidateDeletabilityOfTimeOffPolicyJoinTable
-  attr_reader :effective_at, :time_off_policy_id, :category_id, :time_off_policy_id, :category_id,
-    :join_model
+  attr_reader :effective_at, :time_off_policy_id, :category_id, :category_id, :join_model
 
   def initialize(join_model)
     @join_model = join_model
     @effective_at = join_model.effective_at
     @time_off_policy_id = join_model.time_off_policy_id
     @category_id = join_model.time_off_policy.time_off_category_id
-    @time_off_policy_id = join_model.time_off_policy_id
   end
 
   def call
