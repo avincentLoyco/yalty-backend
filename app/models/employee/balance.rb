@@ -1,4 +1,4 @@
-require 'policy_period'
+require 'employee_policy_period'
 
 class Employee::Balance < ActiveRecord::Base
   belongs_to :employee
@@ -40,8 +40,8 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   def current_or_next_period
-    [PolicyPeriod.new(employee, time_off_category_id).current_policy_period,
-     PolicyPeriod.new(employee, time_off_category_id).future_policy_period]
+    [EmployeePolicyPeriod.new(employee, time_off_category_id).current_policy_period,
+     EmployeePolicyPeriod.new(employee, time_off_category_id).future_policy_period]
       .find { |r| r.include?(effective_at.to_date) }
   end
 
@@ -105,7 +105,8 @@ class Employee::Balance < ActiveRecord::Base
 
   def time_off_policy_date
     return if current_or_next_period ||
-        PolicyPeriod.new(employee, time_off_category_id).previous_policy_period.cover?(effective_at)
+        EmployeePolicyPeriod.new(employee, time_off_category_id)
+                            .previous_policy_period.cover?(effective_at)
     errors.add(:effective_at, 'Must belong to current, next or previous policy.')
   end
 

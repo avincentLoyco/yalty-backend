@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe PolicyPeriod do
+RSpec.describe EmployeePolicyPeriod do
   include_context 'shared_context_account_helper'
   include_context 'shared_context_timecop_helper'
 
@@ -9,7 +9,7 @@ RSpec.describe PolicyPeriod do
   let(:policy) { create(:time_off_policy, time_off_category: category, start_month: 4) }
   let(:previous_policy) { create(:time_off_policy, time_off_category: category) }
   let(:employee) { create(:employee, account: account) }
-  subject { PolicyPeriod.new(employee, category.id) }
+  subject { EmployeePolicyPeriod.new(employee, category.id) }
 
   context 'when previous policy not present' do
     let!(:current_policy) do
@@ -48,7 +48,7 @@ RSpec.describe PolicyPeriod do
     end
 
     context '#current_start_date' do
-      subject { PolicyPeriod.new(employee, category.id).current_start_date }
+      subject { EmployeePolicyPeriod.new(employee, category.id).current_start_date }
 
       context 'but already new came in' do
         let(:effective_at) { Date.today - 4.months }
@@ -64,7 +64,7 @@ RSpec.describe PolicyPeriod do
     end
 
     context '#next_start_date' do
-      subject { PolicyPeriod.new(employee, category.id).next_start_date }
+      subject { EmployeePolicyPeriod.new(employee, category.id).next_start_date }
 
       context 'when there is new policy in the future' do
         let(:effective_at) { Date.today + 2.months }
@@ -83,7 +83,7 @@ RSpec.describe PolicyPeriod do
     context '#future_start_date' do
       let(:effective_at) { Date.today + 2.months }
 
-      subject { PolicyPeriod.new(employee, category.id).future_start_date }
+      subject { EmployeePolicyPeriod.new(employee, category.id).future_start_date }
 
       context 'when there is future time off policy' do
         let(:future_policy) do
@@ -104,7 +104,7 @@ RSpec.describe PolicyPeriod do
     end
 
     context '#current_policy_period' do
-      subject { PolicyPeriod.new(employee, category.id).current_policy_period }
+      subject { EmployeePolicyPeriod.new(employee, category.id).current_policy_period }
 
       context 'other policy end date' do
         let(:effective_at) { Date.today + 1.month }
@@ -114,7 +114,7 @@ RSpec.describe PolicyPeriod do
     end
 
     context '#previous_start_date' do
-      subject { PolicyPeriod.new(employee, category.id).previous_start_date }
+      subject { EmployeePolicyPeriod.new(employee, category.id).previous_start_date }
 
       context 'other policy period' do
         let(:effective_at) { Date.today - 4.months }
@@ -124,7 +124,7 @@ RSpec.describe PolicyPeriod do
     end
 
     context '#previous_policy_period' do
-      subject { PolicyPeriod.new(employee, category.id).previous_policy_period }
+      subject { EmployeePolicyPeriod.new(employee, category.id).previous_policy_period }
 
       context 'other policy period' do
         let(:effective_at) { Date.today - 1.year }

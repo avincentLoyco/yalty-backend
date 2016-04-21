@@ -21,7 +21,7 @@ RSpec.shared_context 'shared_context_balances' do |settings|
   end
 
   # balances in previous policy period
-  let(:periods) { PolicyPeriod.new(employee, category.id) }
+  let(:periods) { EmployeePolicyPeriod.new(employee, category.id) }
   let(:previous) { periods.previous_policy_period }
   let(:current) { periods.current_policy_period }
 
