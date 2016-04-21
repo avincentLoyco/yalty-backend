@@ -1,6 +1,6 @@
 class ManageEmployeeBalances
   attr_reader :previous_policy, :related, :current_policy, :resource_policy,
-    :previous_resource_policy, :category_id
+    :previous_resource_policy, :category_id, :resource_period
 
   def initialize(resource_policy)
     @resource_policy = resource_policy
@@ -8,10 +8,11 @@ class ManageEmployeeBalances
     @category_id = resource_policy.time_off_policy.time_off_category_id
     @previous_resource_policy = related.previous_related_time_off_policy(category_id)
     @previous_policy = previous_resource_policy.try(:time_off_policy)
+    @resource_period = RelatedPolicyPeriod.new(resource_policy)
   end
 
   def call
-    return if resource_policy.first_start_date > Time.zone.today
+    return if resource_period.first_start_date > Time.zone.today
     if previous_resource_policy.present? && previous_start_date_equal_current?
       update_balances
     else
@@ -25,15 +26,18 @@ class ManageEmployeeBalances
   private
 
   def previous_start_date_equal_current?
-    previous_resource_policy.last_start_date == resource_policy.first_start_date ||
-      previous_resource_policy.previous_start_date == resource_policy.first_start_date
+    previous_resource_period = RelatedPolicyPeriod.new(previous_resource_policy)
+
+    previous_resource_period.last_start_date == resource_period.first_start_date ||
+      previous_resource_period.previous_start_date == resource_period.first_start_date
   end
 
   def update_balances
     Employee.where(id: employees_ids).each do |employee|
       resource = employee.last_balance_addition_in_category(category_id)
-      options = { amount: policy_amount, validity_date: resource_policy.first_validity_date.to_s }
       next if resource.blank?
+
+      options = { amount: policy_amount, validity_date: resource_period.first_validity_date.to_s }
       resource.balance_credit_removal.destroy! if resource.balance_credit_removal.present?
 
       PrepareEmployeeBalancesToUpdate.new(resource, options).call
@@ -73,11 +77,11 @@ class ManageEmployeeBalances
 
   def balancer_options
     return {} if resource_policy.time_off_policy.counter?
-    { validity_date: resource_policy.first_validity_date }
+    { validity_date: resource_period.first_validity_date }
   end
 
   def balance_effective_at
-    resource_policy.last_start_date
+    resource_period.last_start_date
   end
 
   def find_related

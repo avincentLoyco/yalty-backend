@@ -41,7 +41,9 @@ RSpec.describe ManageEmployeeBalances, type: :service do
       context 'and previous policy start date is not today' do
         before do
           old_policy.update!(start_month: 12)
-          previous_balance.update!(effective_at: previous_employee_policy.last_start_date)
+          previous_balance.update!(
+            effective_at: RelatedPolicyPeriod.new(previous_employee_policy).last_start_date
+          )
         end
 
         it { expect { subject }.to change { Employee::Balance.count }.by(1) }
@@ -64,7 +66,9 @@ RSpec.describe ManageEmployeeBalances, type: :service do
         let(:effective_at) { Time.now - 1.year }
         before do
           Employee::Balance.first.update!(
-          effective_at: previous_employee_policy.previous_start_date + 1.month)
+            effective_at:
+              RelatedPolicyPeriod.new(previous_employee_policy).previous_start_date + 1.month
+          )
         end
 
         context 'and its start date is eql previous policy start date' do

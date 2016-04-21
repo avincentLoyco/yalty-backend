@@ -1,6 +1,4 @@
 class WorkingPlaceTimeOffPolicy < ActiveRecord::Base
-  include CalculateRelatedTimeOffPeriods
-
   belongs_to :working_place
   belongs_to :time_off_policy
   belongs_to :time_off_category
@@ -38,7 +36,8 @@ class WorkingPlaceTimeOffPolicy < ActiveRecord::Base
   def effective_at_newer_than_previous_start_date
     category_id = time_off_policy.time_off_category_id
     active_policy = working_place.active_time_off_policy_in_category(category_id)
-    return unless active_policy && active_policy.previous_period.first > effective_at.to_date
+    return unless active_policy &&
+        working_place.previous_start_date(category_id) > effective_at.to_date
     errors.add(:effective_at, 'Must be after current policy previous perdiod start date')
   end
 end

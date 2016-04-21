@@ -1,8 +1,6 @@
 require 'rails_helper'
 
 RSpec.describe EmployeeTimeOffPolicy, type: :model do
-  include_context 'shared_context_timecop_helper'
-
   let(:etop) { create(:employee_time_off_policy) }
 
   it { is_expected.to have_db_column(:employee_id).of_type(:uuid) }
@@ -18,18 +16,6 @@ RSpec.describe EmployeeTimeOffPolicy, type: :model do
 
   it 'the category_id must be the one to whihc the policy belongs' do
     expect(etop.time_off_category_id).to eq(etop.time_off_policy.time_off_category_id)
-  end
-  describe '#CalculateRelatedTimeOffPeriods' do
-    include_context 'shared_context_timecop_helper'
-
-    let(:related_policy) do
-      build(:employee_time_off_policy,
-        time_off_policy: time_off_policy,
-        effective_at: effective_at
-      )
-    end
-
-    include_context 'shared_context_calculated_time_off_periods'
   end
 
   describe 'custom validations' do
