@@ -20,37 +20,67 @@ RSpec.describe TimeOff, type: :model do
   it { is_expected.to validate_presence_of(:time_off_category_id) }
   it { is_expected.to validate_presence_of(:employee_id) }
 
-  context 'end time validation' do
-    subject { build(:time_off, end_time: end_time)  }
-
-    context 'when valid data' do
-      let(:end_time) { Time.now + 1.month }
-
-      it { expect(subject.valid?).to eq true }
-      it { expect { subject.valid? }.to_not change { subject.errors.messages } }
+  context 'validations' do
+    let(:employee_policy) { build(:employee_time_off_policy) }
+    before do
+      allow_any_instance_of(Employee)
+        .to receive(:active_related_time_off_policy) { employee_policy }
     end
 
-    context 'when invalid data' do
-      let(:end_time) { Time.now - 1.month }
+    context '#start_time_after_employee_creation' do
+      subject { build(:time_off, start_time: Time.now - 1.year) }
 
-      it { expect(subject.valid?).to eq false }
-      it { expect { subject.valid? }.to change { subject.errors.messages[:end_time] } }
+      context 'with valid data' do
+        before do
+          allow_any_instance_of(Employee).to receive(:created_at) { Time.now }
+        end
+
+        it { expect(subject.valid?).to eq false }
+        it { expect { subject.valid? }.to change { subject.errors.messages[:start_time] }
+          .to include('Can not be added before employee creation') }
+      end
+
+      context 'with invalid params' do
+        it { expect(subject.valid?).to eq true }
+        it { expect { subject.valid? }.to_not change { subject.errors.messages.count } }
+      end
     end
-  end
 
-  context 'time off policy presence' do
-    subject { build(:time_off) }
+    context '#end_time_after_start_time' do
+      subject { build(:time_off, end_time: end_time)  }
 
-    context 'with valid data' do
-      it { expect(subject.valid?).to eq true }
-      it { expect { subject.valid? }.to_not change { subject.errors.messages } }
+      context 'when valid data' do
+        let(:end_time) { Time.now + 1.month }
+
+        it { expect(subject.valid?).to eq true }
+        it { expect { subject.valid? }.to_not change { subject.errors.messages } }
+      end
+
+      context 'when invalid data' do
+        let(:end_time) { Time.now - 1.month }
+
+        it { expect(subject.valid?).to eq false }
+        it { expect { subject.valid? }.to change { subject.errors.messages[:end_time] } }
+      end
     end
 
-    context 'with invalid data' do
-      before { subject.employee.employee_time_off_policies.destroy_all }
+    context '#time_off_policy_presence' do
+      subject { build(:time_off) }
 
-      it { expect(subject.valid?).to eq false }
-      it { expect { subject.valid? }.to change { subject.errors.messages[:employee] } }
+      context 'with valid data' do
+        it { expect(subject.valid?).to eq true }
+        it { expect { subject.valid? }.to_not change { subject.errors.messages } }
+      end
+
+      context 'with invalid data' do
+        before do
+          allow_any_instance_of(Employee)
+            .to receive(:active_related_time_off_policy) { nil }
+        end
+
+        it { expect(subject.valid?).to eq false }
+        it { expect { subject.valid? }.to change { subject.errors.messages[:employee] } }
+      end
     end
   end
 end

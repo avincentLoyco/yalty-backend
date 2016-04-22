@@ -116,13 +116,32 @@ RSpec.describe Employee::Balance, type: :model do
     end
 
     context 'validations' do
-      context 'time_off_policy_presence' do
-        context 'when employee has active time off policy' do
-          let(:policy) { build(:time_off_policy) }
+      let(:policy) { build(:time_off_policy) }
+      before do
+        allow_any_instance_of(Employee::Balance).to receive(:time_off_policy) { policy }
+      end
+
+      context 'effective_after_employee_creation' do
+        subject { build(:employee_balance, effective_at: Time.now - 1.years) }
+
+        context 'when effective at before employee creation' do
           before do
-            allow_any_instance_of(Employee::Balance).to receive(:time_off_policy) { policy }
+            allow_any_instance_of(Employee).to receive(:created_at) { Time.now }
           end
 
+          it { expect(subject.valid?).to eq false }
+          it { expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
+            .to include('Can not be added before employee creation') }
+        end
+
+        context 'when effective at after employee creation' do
+          it { expect(subject.valid?).to eq true }
+          it { expect { subject.valid? }.to_not change { subject.errors.messages.count } }
+        end
+      end
+
+      context 'time_off_policy_presence' do
+        context 'when employee has active time off policy' do
           it { expect(subject.valid?).to eq true }
           it { expect { subject.valid? }.to_not change { subject.errors.messages } }
         end

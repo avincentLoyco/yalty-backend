@@ -2,6 +2,7 @@ FactoryGirl.define do
   factory :employee do
     account
     working_place { create(:working_place, account: account) }
+    created_at { Time.now - 10.years }
 
     trait :with_policy do
       transient do

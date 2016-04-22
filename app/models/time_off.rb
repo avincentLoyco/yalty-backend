@@ -7,6 +7,7 @@ class TimeOff < ActiveRecord::Base
   validate :end_time_after_start_time
   validate :time_off_policy_presence, if: 'employee.present?'
   validates :employee_balance, presence: true, on: :update
+  validate :start_time_after_employee_creation, if: :employee
 
   def balance
     - CalculateTimeOffBalance.new(self).call
@@ -22,5 +23,10 @@ class TimeOff < ActiveRecord::Base
   def time_off_policy_presence
     return if employee.active_related_time_off_policy(time_off_category_id).try(:time_off_policy)
     errors.add(:employee, 'Time off policy in category required')
+  end
+
+  def start_time_after_employee_creation
+    return unless start_time < employee.created_at
+    errors.add(:start_time, 'Can not be added before employee creation')
   end
 end
