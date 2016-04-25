@@ -208,7 +208,8 @@ CREATE TABLE employee_balances (
     validity_date timestamp without time zone,
     policy_credit_removal boolean DEFAULT false,
     policy_credit_addition boolean DEFAULT false,
-    balance_credit_addition_id uuid
+    balance_credit_addition_id uuid,
+    reset_balance boolean DEFAULT false
 );
 
 
@@ -1397,6 +1398,8 @@ INSERT INTO schema_migrations (version) VALUES ('20160324094939');
 INSERT INTO schema_migrations (version) VALUES ('20160401084042');
 
 INSERT INTO schema_migrations (version) VALUES ('20160412122041');
+
+INSERT INTO schema_migrations (version) VALUES ('20160419142848');
 
 INSERT INTO schema_migrations (version) VALUES ('20160502065212');
 
