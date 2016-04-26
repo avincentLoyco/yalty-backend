@@ -37,6 +37,9 @@ group :development, :test do
   gem 'codeclimate-test-reporter', require: false
   gem 'mutant-rspec'
 
+  # improve test speed
+  gem 'parallel_tests'
+
   # debug
   gem 'pry-rails'
   gem 'pry-byebug'
