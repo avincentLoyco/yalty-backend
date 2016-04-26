@@ -176,6 +176,18 @@ RSpec.describe CreateEmployeeBalance, type: :service do
         it { expect(subject.first.balance_credit_addition_id).to eq(employee_balance.id) }
       end
     end
+
+    context 'when the balance is a reset balance' do
+      let(:amount) { 0 }
+      let(:options) { { reset_balance: true } }
+
+      it { expect(subject.first.amount).to eq 0 }
+      it { expect(subject.first.balance).to eq 0 }
+      it { expect(subject.first.validity_date).to eq nil }
+      it { expect(subject.first.effective_at).to be_kind_of(Time) }
+      it { expect(subject.first.balance_credit_removal).to eq nil }
+      it { expect(subject.first.balance_credit_addition_id).to eq nil }
+    end
   end
 
   context 'with invalid data' do

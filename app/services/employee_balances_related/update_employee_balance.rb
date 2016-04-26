@@ -11,7 +11,7 @@ class UpdateEmployeeBalance
   def call
     update_attributes unless options.blank?
     manage_removal if options[:validity_date]
-    recalculate_amount
+    recalculate_amount unless employee_balance.reset_balance
     update_status
     save!
   end

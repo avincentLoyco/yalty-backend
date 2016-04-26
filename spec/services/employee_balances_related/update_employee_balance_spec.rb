@@ -56,6 +56,18 @@ RSpec.describe UpdateEmployeeBalance, type: :service do
     context 'and employee balance is not removal' do
       it { expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
     end
+
+    context ' and employee balances is a reset_balance' do
+      let(:options) { {} }
+      before do
+        employee_balance.reset_balance = true
+        employee_balance.save
+      end
+      it { expect { subject }.to change { employee_balance.reload.being_processed }.to false }
+      it { expect { subject }.to_not change { Employee::Balance.count } }
+      it { expect { subject }.to_not change { employee_balance.reload.balance } }
+      it { expect { subject }.to_not change { employee_balance.reload.amount } }
+    end
   end
 
   context 'when amount given' do
