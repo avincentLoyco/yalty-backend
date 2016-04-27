@@ -155,13 +155,11 @@ RSpec.describe Employee::Balance, type: :model do
         end
       end
 
-      context 'time_off_policy date' do
+      context 'when time_off_policy date is not on the current previous or next period' do
         before { balance.effective_at =  Time.new(2011, 5, 10) }
 
-        it { expect(subject.valid?).to eq false }
-        it { expect { subject.valid? }.to change { subject.errors.size } }
-        it { expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
-          .to include('Must belong to current, next or previous policy.') }
+        it { expect(subject.valid?).to eq true }
+        it { expect { subject.valid? }.to_not change { subject.errors.size } }
       end
 
       context 'counter validity date blank' do

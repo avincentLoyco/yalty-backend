@@ -43,22 +43,11 @@ RSpec.describe EmployeeTimeOffPolicy, type: :model do
           it { expect { subject }.to_not change { employee_policy.errors.messages.count } }
         end
 
-        context 'and new policy dates are invalid' do
+        context 'and new policy dates outside current next and previous period are valid' do
           let(:effective_at) { '31.12.2014'.to_date }
 
-          it { expect(subject).to eq false }
-
-          it 'changes erros size' do
-            expect { subject }.to change {
-              employee_policy.errors.messages.count }.by(1)
-          end
-
-          it 'adds proper error message' do
-            subject
-
-            expect(employee_policy.errors.messages[:effective_at])
-              .to include 'Must be after current policy previous perdiod start date'
-          end
+          it { expect(subject).to eq true }
+          it { expect { subject }.to_not change { employee_policy.errors.messages.count } }
         end
       end
     end

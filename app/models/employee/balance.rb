@@ -17,9 +17,7 @@ class Employee::Balance < ActiveRecord::Base
   validates :effective_at, uniqueness: { scope: [:time_off_category, :employee] }
   validates :balance_credit_addition, presence: true, uniqueness: true, if: :removal_and_balancer?
   validates :amount, numericality: { greater_than_or_equal_to: 0 }, if: :validity_date
-
   validate :removal_effective_at_date, if: :removal_and_balancer?
-  validate :time_off_policy_date, if: :time_off_policy
   validate :validity_date_later_than_effective_at, if: [:effective_at, :validity_date]
   validate :counter_validity_date_blank
   validate :time_off_policy_presence

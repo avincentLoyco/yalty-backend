@@ -7,7 +7,6 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
 
   validates :employee_id, :time_off_policy_id, :effective_at, presence: true
   validates :time_off_policy_id, uniqueness: { scope: [:employee_id, :effective_at] }
-  validate :effective_at_newer_than_previous_start_date, if: [:time_off_policy, :effective_at]
 
   before_create :add_category_id
 
