@@ -19,8 +19,8 @@ module Api::V1
     def relationships
       {
         time_off_category: time_off_category_json,
-        employees: employees_json,
-        working_places: working_places_json
+        assigned_employees: assigned_employees_json,
+        assigned_working_places: assigned_working_places_json
       }
     end
 
@@ -28,15 +28,15 @@ module Api::V1
       TimeOffCategoryRepresenter.new(resource.time_off_category).basic
     end
 
-    def employees_json
-      resource.employees.map do |employee|
-        EmployeeRepresenter.new(employee).basic
+    def assigned_employees_json
+      resource.employee_time_off_policies.map do |etop|
+        EmployeeTimeOffPolicyRepresenter.new(etop).complete
       end
     end
 
-    def working_places_json
-      resource.working_places.map do |working_place|
-        WorkingPlaceRepresenter.new(working_place).basic
+    def assigned_working_places_json
+      resource.working_place_time_off_policies.map do |wptop|
+        WorkingPlaceTimeOffPolicyRepresenter.new(wptop).complete
       end
     end
   end

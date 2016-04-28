@@ -93,8 +93,8 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
               :years_to_effect,
               :years_passed,
               :time_off_category,
-              :employees,
-              :working_places
+              :assigned_employees,
+              :assigned_working_places
             ]
           )
         end
@@ -113,6 +113,47 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
         let(:id) { policy.id }
 
         it { is_expected.to have_http_status(404) }
+      end
+    end
+
+    context 'when has employees and working_places' do
+      let(:id) { policy.id }
+
+      before do
+        create(:employee_time_off_policy, time_off_policy_id: policy.id)
+        create(:working_place_time_off_policy, time_off_policy_id: policy.id)
+      end
+
+      it { is_expected.to have_http_status(200) }
+
+      context 'response body' do
+        before { subject }
+
+        it '' do
+          expect_json_keys(
+            'assigned_employees.*',
+            [
+              :id,
+              :assignation_id,
+              :assignation_type,
+              :effective_at,
+              :effective_till
+            ]
+          )
+        end
+
+        it '' do
+          expect_json_keys(
+            'assigned_working_places.*',
+            [
+              :id,
+              :assignation_id,
+              :assignation_type,
+              :effective_at,
+              :effective_till
+            ]
+          )
+        end
       end
     end
   end
@@ -174,8 +215,8 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
               :policy_type,
               :years_to_effect,
               :time_off_category,
-              :employees,
-              :working_places
+              :assigned_employees,
+              :assigned_working_places
             ]
           )
         end
