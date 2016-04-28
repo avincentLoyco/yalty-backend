@@ -14,6 +14,33 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
       create_list(:time_off_policy, 3, time_off_category: time_off_category)
     end
 
+    context 'response body' do
+      subject { get :index }
+      before { subject }
+
+      it { is_expected.to have_http_status(200) }
+
+      it '' do
+        expect_json_keys(
+          '?',
+          [
+            :id,
+            :type,
+            :name,
+            :start_day,
+            :end_day,
+            :start_month,
+            :end_month,
+            :amount,
+            :policy_type,
+            :years_to_effect,
+            :time_off_category,
+            :assigned_employees
+          ]
+        )
+      end
+    end
+
     context "without params" do
       subject { get :index }
 
@@ -91,10 +118,8 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
               :amount,
               :policy_type,
               :years_to_effect,
-              :years_passed,
               :time_off_category,
-              :assigned_employees,
-              :assigned_working_places
+              :assigned_employees
             ]
           )
         end
@@ -132,19 +157,6 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
         it '' do
           expect_json_keys(
             'assigned_employees.*',
-            [
-              :id,
-              :assignation_id,
-              :assignation_type,
-              :effective_at,
-              :effective_till
-            ]
-          )
-        end
-
-        it '' do
-          expect_json_keys(
-            'assigned_working_places.*',
             [
               :id,
               :assignation_id,
@@ -213,10 +225,7 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
               :end_month,
               :amount,
               :policy_type,
-              :years_to_effect,
-              :time_off_category,
-              :assigned_employees,
-              :assigned_working_places
+              :years_to_effect
             ]
           )
         end

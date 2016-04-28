@@ -10,18 +10,13 @@ module Api::V1
         amount: resource.amount,
         policy_type: resource.policy_type,
         years_to_effect: resource.years_to_effect,
-        years_passed: resource.years_passed
       }
         .merge(basic)
-        .merge(relationships)
+        .merge(time_off_category: time_off_category_json)
     end
 
-    def relationships
-      {
-        time_off_category: time_off_category_json,
-        assigned_employees: assigned_employees_json,
-        assigned_working_places: assigned_working_places_json
-      }
+    def with_relationships
+      complete.merge(assigned_employees: assigned_employees_json)
     end
 
     def time_off_category_json
@@ -31,12 +26,6 @@ module Api::V1
     def assigned_employees_json
       resource.employee_time_off_policies.map do |etop|
         EmployeeTimeOffPolicyRepresenter.new(etop).complete
-      end
-    end
-
-    def assigned_working_places_json
-      resource.working_place_time_off_policies.map do |wptop|
-        WorkingPlaceTimeOffPolicyRepresenter.new(wptop).complete
       end
     end
   end
