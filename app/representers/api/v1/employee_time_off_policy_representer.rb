@@ -1,13 +1,19 @@
-module Api::V1
-  class EmployeeTimeOffPolicyRepresenter < BaseRepresenter
-    def complete
-      {
-        id: resource.employee_id,
-        assignation_type: resource_type,
-        assignation_id: resource.id,
-        effective_at: resource.effective_at,
-        effective_till: nil
-      }
+module Api
+  module V1
+    class EmployeeTimeOffPolicyRepresenter < BaseRepresenter
+      def complete
+        {
+          assignation_id: resource.id,
+          assignation_type: resource_type,
+          effective_at: resource.effective_at,
+          effective_till: nil
+        }
+          .merge(employee_json)
+      end
+
+      def employee_json
+        EmployeeRepresenter.new(resource.employee).basic
+      end
     end
   end
 end
