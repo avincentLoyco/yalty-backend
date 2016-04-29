@@ -31,6 +31,7 @@ Rails.application.routes.draw do
       resources :time_entries, except: [:edit, :new, :index]
       resources :time_off_policies, except: [:edit, :new] do
         post '/employees', to: "employee_time_off_policies#create"
+        get '/employees', to: "employee_time_off_policies#index"
       end
 
       resources :users

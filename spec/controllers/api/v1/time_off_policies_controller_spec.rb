@@ -141,12 +141,11 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
       end
     end
 
-    context 'when has employees and working_places' do
+    context 'when has employees' do
       let(:id) { policy.id }
 
       before do
         create(:employee_time_off_policy, time_off_policy_id: policy.id)
-        create(:working_place_time_off_policy, time_off_policy_id: policy.id)
       end
 
       it { is_expected.to have_http_status(200) }
@@ -225,7 +224,8 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
               :end_month,
               :amount,
               :policy_type,
-              :years_to_effect
+              :years_to_effect,
+              :time_off_category
             ]
           )
         end

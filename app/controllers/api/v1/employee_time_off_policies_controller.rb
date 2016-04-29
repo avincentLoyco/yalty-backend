@@ -1,8 +1,12 @@
 module API
   module V1
     class EmployeeTimeOffPoliciesController < ApplicationController
-      before_action :verify_time_off_policy
+      before_action :time_off_policy, only: :create
       include EmployeeTimeOffPoliciesRules
+
+      def index
+        render_resource(resources)
+      end
 
       def create
         verified_params(gate_rules) do |attributes|
@@ -13,11 +17,15 @@ module API
 
       private
 
+      def resources
+        @resources = time_off_policy.employee_time_off_policies
+      end
+
       def employee
         @employee ||= Account.current.employees.find(params[:id])
       end
 
-      def verify_time_off_policy
+      def time_off_policy
         Account.current.time_off_policies.find(params[:time_off_policy_id])
       end
 

@@ -4,12 +4,40 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
   include_context 'shared_context_headers'
   include_context 'shared_context_timecop_helper'
 
+  let(:category) { create(:time_off_category, account: Account.current) }
+  let(:employee) { create(:employee, account: Account.current) }
+  let(:time_off_policy) { create(:time_off_policy, time_off_category: category) }
+
+  describe 'GET #index' do
+    subject { get :index, time_off_policy_id: time_off_policy.id }
+
+    let!(:employee_time_off_policies) do
+      create_list(:employee_time_off_policy, 3, time_off_policy: time_off_policy)
+    end
+
+    context 'with valid time_off_policy' do
+      it { is_expected.to have_http_status(200) }
+
+      context 'response' do
+        before { subject }
+
+        it { expect_json_sizes(3) }
+        it { expect_json_keys(
+          '*', [:id, :type, :assignation_id, :assignation_type, :effective_at, :effective_till])
+        }
+      end
+    end
+
+    context 'with invalid time_off_policy' do
+      subject { get :index, time_off_policy_id: '1' }
+
+      it { is_expected.to have_http_status(404) }
+    end
+  end
+
   describe 'POST #create' do
     subject { post :create, params }
 
-    let(:category) { create(:time_off_category, account: Account.current) }
-    let(:employee) { create(:employee, account: Account.current) }
-    let(:time_off_policy) { create(:time_off_policy, time_off_category: category) }
     let(:params) do
       {
         id: employee.id,
