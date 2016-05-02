@@ -60,7 +60,7 @@ class Account < ActiveRecord::Base
     start_date: { presence: true }
   }.with_indifferent_access
 
-  MULTIPLE_ATTRIBUTES = %w(child spouse).freeze
+  MULTIPLE_ATTRIBUTES = %w(child).freeze
 
   DEFAULT_ATTRIBUTES = {
     Attribute::String.attribute_type => %w(
