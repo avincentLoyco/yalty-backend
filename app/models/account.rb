@@ -60,7 +60,7 @@ class Account < ActiveRecord::Base
     start_date: { presence: true }
   }.with_indifferent_access
 
-  MULTIPLE_ATTRIBUTES = %w(child spouse).freeze
+  MULTIPLE_ATTRIBUTES = %w(child).freeze
 
   DEFAULT_ATTRIBUTES = {
     Attribute::String.attribute_type => %w(
@@ -68,7 +68,8 @@ class Account < ActiveRecord::Base
       personal_phone professional_email professional_mobile emergency_lastname
       emergency_firstname emergency_phone permit_type tax_source_code bank_name
       account_owner_name iban clearing_number job_title contract_type department
-      cost_center manager civil_status spouse_working_region
+      cost_center manager civil_status spouse_working_region professional_phone
+      personal_mobile
     ),
     Attribute::Date.attribute_type => %w(
       birthdate permit_expiry start_date exit_date civil_status_date

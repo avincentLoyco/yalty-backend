@@ -1,0 +1,2 @@
+*           whitespace=space-before-tab,trailing-space,cr-at-eol
+*.sql       -whitespace
