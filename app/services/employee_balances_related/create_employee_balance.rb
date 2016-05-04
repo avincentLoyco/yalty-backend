@@ -16,11 +16,8 @@ class CreateEmployeeBalance
 
   def call
     ActiveRecord::Base.transaction do
-      build_employee_balance
-      build_employee_balance_removal if validity_date.present? && validity_date <= Time.zone.today
-      calculate_amount if employee_balance.time_off_policy.present?
+      build_valid_employee_balance
       save!
-
       update_next_employee_balances
     end
     balance_removal ? [employee_balance, balance_removal] : [employee_balance]
@@ -117,5 +114,11 @@ class CreateEmployeeBalance
 
   def counter_addition?
     employee_balance.policy_credit_addition && employee_balance.time_off_policy.counter?
+  end
+
+  def build_valid_employee_balance
+    build_employee_balance
+    build_employee_balance_removal if validity_date.present? && validity_date <= Time.zone.today
+    calculate_amount if employee_balance.time_off_policy.present?
   end
 end
