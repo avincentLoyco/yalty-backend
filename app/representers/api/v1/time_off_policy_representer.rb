@@ -9,7 +9,7 @@ module Api::V1
         end_month: resource.end_month,
         amount: resource.amount,
         policy_type: resource.policy_type,
-        years_to_effect: resource.years_to_effect,
+        years_to_effect: resource.years_to_effect
       }
         .merge(basic)
         .merge(time_off_category: time_off_category_json)

@@ -44,6 +44,7 @@ class EmployeeCategoryPolicyFinder
         #{info_of_previous_policies_of_different_type_for_employees_with_working_place_policy} ;
       ").to_ary
   end
+
   private
 
   def info_of_previous_policies_of_different_type_for_employees_with_employee_policy
