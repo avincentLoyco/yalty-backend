@@ -61,6 +61,17 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
     context 'with invalid params' do
       let(:new_account) { create(:account) }
 
+      context 'when there is employee balance after effective at' do
+        let!(:balance) do
+          create(:employee_balance,
+            employee: employee, effective_at: Time.now + 1.year, time_off_category: category
+          )
+        end
+
+        it { expect { subject }.to_not change { employee.employee_time_off_policies.count } }
+        it { is_expected.to have_http_status(422) }
+      end
+
       context 'when employee does not belong to current account' do
         before { employee.update!(account: new_account) }
 

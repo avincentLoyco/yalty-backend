@@ -1,29 +1,18 @@
 require 'rails_helper'
 
 RSpec.describe ManageEmployeeBalanceRemoval, type: :service do
-  before do
-    Account.current = account
-    balance.time_off_category.update!(account: account)
-    balance.employee.update!(account: account)
-    employee_time_off_policy
-  end
+  include_context 'shared_context_account_helper'
 
-  subject { ManageEmployeeBalanceRemoval.new(new_date, balance).call }
-  let(:account) { create(:account)  }
-  let(:validity_date) { Date.today - 1.day }
-  let(:new_date) { Date.today }
-  let(:time_off_policy) { create(:time_off_policy, time_off_category_id: balance.time_off_category_id)}
-  let(:employee_time_off_policy) do
-    create(:employee_time_off_policy,
-      employee_id: balance.employee_id,
-      time_off_policy: time_off_policy
-    )
-  end
   let!(:balance) do
-    create(:employee_balance, effective_at: Date.today - 1.month, validity_date: validity_date)
+    create(:employee_balance, effective_at: Date.today - 2.years, validity_date: validity_date)
   end
 
   describe '#call' do
+    subject { ManageEmployeeBalanceRemoval.new(new_date, balance).call }
+
+    let(:validity_date) { Date.today - 1.day }
+    let(:new_date) { Date.today }
+
     context 'when employee balance is a balancer' do
       context 'when validity date present' do
         context 'and in past' do

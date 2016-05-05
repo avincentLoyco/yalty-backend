@@ -9,6 +9,7 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
 
   validates :employee_id, :time_off_policy_id, :effective_at, presence: true
   validates :effective_at, uniqueness: { scope: [:employee_id, :time_off_policy_id] }
+  validate :no_balances_after_effective_at, on: :create, if: :time_off_policy
 
   delegate :end_month, :end_day, to: :time_off_policy
 
@@ -28,6 +29,14 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
   }
 
   private
+
+  def no_balances_after_effective_at
+    balances_after_effective_at =
+      Employee::Balance.employee_balances(employee_id, time_off_policy.time_off_category_id)
+                       .where('effective_at >= ?', effective_at)
+    return unless balances_after_effective_at.present?
+    errors.add(:time_off_category, 'Employee balance after effective at already exists')
+  end
 
   def add_category_id
     self.time_off_category_id = time_off_policy.time_off_category_id

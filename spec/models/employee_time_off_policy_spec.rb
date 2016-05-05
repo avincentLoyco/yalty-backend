@@ -19,6 +19,35 @@ RSpec.describe EmployeeTimeOffPolicy, type: :model do
   end
 
   describe 'custom validations' do
+    context '#no_balances_after_effective_at' do
+      let(:employee) { create(:employee, created_at: Time.now - 12.years) }
+      let(:effective_at) { Time.now + 1.day }
+      let!(:balance) { create(:employee_balance, effective_at: effective_at, employee: employee) }
+      let(:policy) { TimeOffPolicy.first }
+      let(:new_policy) do
+        build(:employee_time_off_policy,
+          employee: balance.employee, time_off_policy: policy, effective_at: Time.now - 4.years
+        )
+      end
+
+      subject { new_policy }
+
+      context 'when there is no employee balance in a future' do
+        let(:effective_at) { Time.now - 6.years }
+
+        it { expect(subject.valid?).to eq true }
+        it { expect { subject.valid? }.to_not change { subject.errors.messages.count } }
+      end
+
+      context 'when there is employee balance in the future' do
+        let(:effective_at) { Time.now - 2.years }
+
+        it { expect(subject.valid?).to eq false }
+        it { expect { subject.valid? }.to change { subject.errors.messages[:time_off_category] }
+          .to include('Employee balance after effective at already exists') }
+      end
+    end
+
     context '#effective_at_newer_than_previous_start_date' do
       let(:employee_policy) { build(:employee_time_off_policy, effective_at: effective_at) }
       let(:effective_at) { Time.now }

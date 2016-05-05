@@ -21,7 +21,6 @@ class AssignJoinTableCollection
     to_be_assigned, to_be_removed = to_be_assigned_and_removed
     remove_from_resource_collection(to_be_removed)
     add_to_resource_collection(to_be_assigned)
-    update_balances unless assigned_collection.blank?
   end
 
   private
@@ -79,11 +78,5 @@ class AssignJoinTableCollection
 
   def get_possible_model_names(name_a, name_b)
     [name_a + name_b, name_b + name_a]
-  end
-
-  def update_balances
-    assigned_collection.map do |assigned|
-      ManageEmployeeBalances.new(assigned).call
-    end
   end
 end
