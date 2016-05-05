@@ -1,0 +1,127 @@
+require 'rails_helper'
+
+RSpec.describe ManageEmployeeBalanceAdditions, type: :service do
+  include_context 'shared_context_timecop_helper'
+  include_context 'shared_context_account_helper'
+
+  subject { ManageEmployeeBalanceAdditions.new(resource).call }
+  let(:employee) { create(:employee) }
+  let(:category) { create(:time_off_category, account: employee.account) }
+  let(:resource) do
+    create(:employee_time_off_policy,
+      time_off_policy: policy, effective_at: effective_at, employee: employee
+    )
+  end
+
+  context 'when resource first start date in a past' do
+    let(:policy) do
+      create(:time_off_policy, policy_type: 'counter', amount: nil, time_off_category: category)
+    end
+
+    context 'when resource first start date in the future' do
+      let(:effective_at) { Time.zone.now + 1.day }
+
+      it { expect { subject }.to_not change { Employee::Balance.count } }
+      it { expect { subject }.to_not raise_exception }
+    end
+
+    context 'and resource is a counter type' do
+      let(:effective_at) { Time.zone.now - 3.years }
+
+      it { expect { subject }.to change { Employee::Balance.additions.count }.by(4) }
+      it { expect { subject }.to_not change { Employee::Balance.removals.count } }
+
+      context 'created balances params' do
+        before { subject }
+
+        it { expect(Employee::Balance.additions.pluck(:amount).uniq).to eq [0] }
+
+        it 'has valid effective_at' do
+          expect(Employee::Balance.additions.pluck(:effective_at).map(&:to_date))
+            .to eql(['1/1/2013', '1/1/2014', '1/1/2015', '1/1/2016'].map(&:to_date))
+        end
+      end
+    end
+
+    context 'and resource is a balancer type' do
+      let(:policy) do
+        create(:time_off_policy, policy_type: 'balancer', time_off_category: category, amount: 1000)
+      end
+
+      context 'when resource first start date in the future' do
+        let(:effective_at) { Time.zone.now + 1.day }
+
+        it { expect { subject }.to_not change { Employee::Balance.count } }
+        it { expect { subject }.to_not raise_exception }
+      end
+
+      context 'when resource first start date in past' do
+        let(:effective_at) { Time.zone.now - 3.years }
+
+        context 'and resource policy does not have validity date' do
+          let(:effective_at) { Time.zone.now - 3.years }
+
+          it { expect { subject }.to change { Employee::Balance.additions.count }.by(4) }
+          it { expect { subject }.to_not change { Employee::Balance.removals.count } }
+        end
+
+        context 'and resource policy has validity date' do
+          before { policy.update!(end_month: 4, end_day: 1, years_to_effect: years) }
+
+          context 'and years to effect eql 0' do
+            let(:years) { 0 }
+
+            it { expect { subject }.to change { Employee::Balance.additions.count }.by(4) }
+            it { expect { subject }.to change { Employee::Balance.removals.count }.by(3) }
+
+            it 'has valid validity dates' do
+              subject
+
+              expect(Employee::Balance.removals.pluck(:effective_at).map(&:to_date))
+                .to eql(['1/4/2013', '1/4/2014', '1/4/2015'].map(&:to_date))
+            end
+          end
+
+          context 'and years to effectt eql 1' do
+            let(:years) { 1 }
+
+            it { expect { subject }.to change { Employee::Balance.additions.count }.by(4) }
+            it { expect { subject }.to change { Employee::Balance.removals.count }.by(2) }
+
+            it 'has valid validity dates' do
+              subject
+
+              expect(Employee::Balance.removals.pluck(:effective_at).map(&:to_date))
+                .to eql(['1/4/2014', '1/4/2015'].map(&:to_date))
+            end
+          end
+
+          context 'and years to effect eql 2' do
+            let(:years) { 2 }
+
+            it { expect { subject }.to change { Employee::Balance.additions.count }.by(2) }
+            it { expect { subject }.to change { Employee::Balance.removals.count }.by(1) }
+
+            it 'has valid validity dates' do
+              subject
+
+              expect(Employee::Balance.removals.pluck(:effective_at).map(&:to_date))
+                .to eql(['1/4/2015'].map(&:to_date))
+            end
+          end
+        end
+
+        context 'created balances params' do
+          before { subject }
+
+          it { expect(Employee::Balance.additions.pluck(:amount).uniq).to eq [1000] }
+
+          it 'has valid effective_at' do
+            expect(Employee::Balance.additions.pluck(:effective_at).map(&:to_date))
+              .to eql(['1/1/2013', '1/1/2014', '1/1/2015', '1/1/2016'].map(&:to_date))
+          end
+        end
+      end
+    end
+  end
+end

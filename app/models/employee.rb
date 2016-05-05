@@ -19,6 +19,15 @@ class Employee < ActiveRecord::Base
 
   validates :working_place_id, presence: true
 
+  def next_effective_at_after(related)
+    employee_time_off_policies
+      .where(
+        'effective_at > ? AND time_off_category_id = ?',
+        related.effective_at, related.time_off_category_id
+      )
+      .order(:effective_at).last
+  end
+
   def last_balance_addition_in_category(category_id)
     employee_balances.where(time_off_category: category_id, policy_credit_addition: true)
                      .order(effective_at: :desc).first

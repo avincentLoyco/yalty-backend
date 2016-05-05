@@ -8,6 +8,8 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
   validates :employee_id, :time_off_policy_id, :effective_at, presence: true
   validates :effective_at, uniqueness: { scope: [:employee_id, :time_off_policy_id] }
 
+  delegate :end_month, :end_day, to: :time_off_policy
+
   before_create :add_category_id
 
   scope :affected_employees, lambda { |policy_id|

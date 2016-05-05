@@ -10,7 +10,13 @@ module API
 
       def create
         verified_params(gate_rules) do |attributes|
-          resource = employee.employee_time_off_policies.create!(attributes.except(:id))
+          resource = employee.employee_time_off_policies.new(attributes.except(:id))
+
+          transactions do
+            resource.save!
+            ManageEmployeeBalanceAdditions.new(resource).call
+          end
+
           render_resource(resource, status: 201)
         end
       end

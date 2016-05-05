@@ -1,12 +1,12 @@
 class RelatedPolicyPeriod
-  attr_reader :related_policy, :start_day, :start_month, :effective_at, :time_off_policy
+  attr_reader :related_policy, :effective_at, :time_off_policy
+
+  delegate :start_day, :start_month, :years_to_effect, :end_day, :end_month, to: :time_off_policy
 
   def initialize(related_policy)
     @related_policy = related_policy
     @effective_at = related_policy.effective_at
     @time_off_policy = related_policy.time_off_policy
-    @start_day = time_off_policy.start_day
-    @start_month = time_off_policy.start_month
   end
 
   def last_start_date_before(date)
@@ -17,7 +17,7 @@ class RelatedPolicyPeriod
   end
 
   def policy_length
-    time_off_policy.years_to_effect > 1 ? time_off_policy.years_to_effect : 1
+    years_to_effect > 1 ? years_to_effect : 1
   end
 
   def first_start_date
@@ -41,19 +41,19 @@ class RelatedPolicyPeriod
 
   def last_validity_date
     return nil unless time_off_policy.end_month && time_off_policy.end_day
-    Date.new(
-      last_start_date.year + time_off_policy.years_to_effect,
-      time_off_policy.end_month,
-      time_off_policy.end_day
-    )
+    Date.new(last_start_date.year + time_off_policy.years_to_effect, end_month, end_day)
   end
 
   def first_validity_date
     return nil unless time_off_policy.end_month && time_off_policy.end_day
-    Date.new(
-      first_start_date.year + time_off_policy.years_to_effect,
-      time_off_policy.end_month,
-      time_off_policy.end_day
-    )
+    Date.new(first_start_date.year + years_to_effect, end_month, end_day)
+  end
+
+  def validity_date_for(date)
+    return nil unless related_policy.end_day && related_policy.end_month
+    validity_date =
+      Date.new(date.year + years_to_effect, related_policy.end_month, related_policy.end_day)
+
+    validity_date < date ? validity_date + 1.year : validity_date
   end
 end
