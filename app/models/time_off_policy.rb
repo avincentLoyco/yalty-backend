@@ -38,11 +38,6 @@ class TimeOffPolicy < ActiveRecord::Base
     policy_type == 'counter'
   end
 
-  def affected_employees_ids
-    (working_place_time_off_policies.affected_employees(id) +
-      employee_time_off_policies.affected_employees(id)).uniq
-  end
-
   def start_date
     Date.new(Time.zone.today.year - start_years_ago, start_month, start_day)
   end
@@ -50,14 +45,6 @@ class TimeOffPolicy < ActiveRecord::Base
   def end_date
     return start_date + years_or_effect unless end_day && end_month
     Date.new(end_in_years, end_month, end_day)
-  end
-
-  def previous_period
-    (start_date - years_or_effect...end_date - years_or_effect)
-  end
-
-  def next_period
-    (start_date + years_or_effect...end_date + years_or_effect)
   end
 
   def start_years_ago
@@ -72,10 +59,6 @@ class TimeOffPolicy < ActiveRecord::Base
 
   def end_in_years
     start_date.year + years_to_effect
-  end
-
-  def starts_today?
-    start_date == Time.zone.today
   end
 
   def dates_blank?

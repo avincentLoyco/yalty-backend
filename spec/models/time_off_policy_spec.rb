@@ -169,39 +169,23 @@ RSpec.describe TimeOffPolicy, type: :model do
         subject { build(:time_off_policy, :with_end_date, start_month: 10, end_month: 4) }
 
         it { expect(subject.valid?).to eq false }
-        it { expect(subject.previous_period.to_s)
-          .to eq "#{year - 1}-#{starts}...#{year - 1}-#{ends}" }
-        it { expect(subject.next_period.to_s)
-          .to eq "#{year + 1}-#{starts}...#{year + 1}-#{ends}" }
       end
 
       context '#two_years_policy' do
         subject { build(:time_off_policy, :with_end_date, years_to_effect: 1) }
 
         it { expect(subject.valid?).to eq true }
-        it { expect(subject.previous_period.to_s)
-          .to eq "#{year - 1}-#{starts}...#{year}-#{ends}" }
-        it { expect(subject.next_period.to_s)
-          .to eq "#{year + 1}-#{starts}...#{year + 2}-#{ends}" }
       end
 
       context '#three_years_policy' do
         subject { build(:time_off_policy, :with_end_date, years_to_effect: 2) }
 
         it { expect(subject.valid?).to eq true }
-        it { expect(subject.previous_period.to_s)
-          .to eq "#{year - 2}-#{starts}...#{year}-#{ends}" }
-        it { expect(subject.next_period.to_s)
-          .to eq "#{year + 2}-#{starts}...#{year + 4}-#{ends}" }
 
         context 'years passed eq 1' do
           subject { build(:time_off_policy, :with_end_date, years_to_effect: 2, years_passed: 1) }
 
           it { expect(subject.valid?).to eq true }
-          it { expect(subject.previous_period.to_s)
-            .to eq "#{year - 3}-#{starts}...#{year - 1}-#{ends}" }
-          it { expect(subject.next_period.to_s)
-            .to eq "#{year + 1}-#{starts}...#{year + 3}-#{ends}" }
         end
       end
     end
@@ -211,30 +195,18 @@ RSpec.describe TimeOffPolicy, type: :model do
         subject { build(:time_off_policy) }
 
         it { expect(subject.valid?).to eq true }
-        it { expect(subject.previous_period.to_s)
-          .to eq "#{year - 1}-#{starts}...#{year}-#{starts}" }
-        it { expect(subject.next_period.to_s)
-          .to eq "#{year + 1}-#{starts}...#{year + 2}-#{starts}" }
       end
 
       context 'two year policy' do
         subject { build(:time_off_policy, years_to_effect: 1) }
 
         it { expect(subject.valid?).to eq true }
-        it { expect(subject.previous_period.to_s)
-          .to eq "#{year - 2}-#{starts}...#{year}-#{starts}" }
-        it { expect(subject.next_period.to_s)
-          .to eq "#{year + 2}-#{starts}...#{year + 4}-#{starts}" }
       end
 
       context 'three years policy' do
         subject { build(:time_off_policy, years_to_effect: 2) }
 
         it { expect(subject.valid?).to eq true }
-        it { expect(subject.previous_period.to_s)
-          .to eq "#{year - 3}-#{starts}...#{year}-#{starts}" }
-        it { expect(subject.next_period.to_s)
-          .to eq "#{year + 3}-#{starts}...#{year + 6}-#{starts}" }
       end
     end
   end

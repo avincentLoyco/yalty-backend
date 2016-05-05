@@ -75,10 +75,6 @@ class Employee::Balance < ActiveRecord::Base
     employee.present? && time_off_category.present? && amount.present? && time_off_policy.present?
   end
 
-  def policy_end_dates_blank?
-    time_off_policy.blank? || (time_off_policy.end_day.blank? && time_off_policy.end_month.blank?)
-  end
-
   def removal_and_balancer?
     time_off_policy && time_off_policy.policy_type == 'balancer' && policy_credit_removal
   end
@@ -101,13 +97,6 @@ class Employee::Balance < ActiveRecord::Base
     if effective_at.to_date != balance_credit_addition.validity_date.to_date
       errors.add(:effective_at, 'Removal effective at must equal addition validity date')
     end
-  end
-
-  def time_off_policy_date
-    return if current_or_next_period ||
-        EmployeePolicyPeriod.new(employee, time_off_category_id)
-                            .previous_policy_period.cover?(effective_at)
-    errors.add(:effective_at, 'Must belong to current, next or previous policy.')
   end
 
   def validity_date_later_than_effective_at
