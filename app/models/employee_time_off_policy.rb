@@ -1,6 +1,8 @@
 require 'employee_policy_period'
 
 class EmployeeTimeOffPolicy < ActiveRecord::Base
+  attr_accessor :effective_till
+
   belongs_to :employee
   belongs_to :time_off_policy
   belongs_to :time_off_category

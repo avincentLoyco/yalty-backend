@@ -6,7 +6,7 @@ module Api
           assignation_id: resource.id,
           assignation_type: resource_type,
           effective_at: resource.effective_at,
-          effective_till: nil
+          effective_till: resource.effective_till
         }
           .merge(employee_json)
       end
