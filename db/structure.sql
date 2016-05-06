@@ -894,6 +894,27 @@ CREATE UNIQUE INDEX index_employee_id_working_place_id ON employee_working_place
 
 
 --
+-- Name: index_employee_presence_policies_on_employee_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE INDEX index_employee_presence_policies_on_employee_id ON employee_presence_policies USING btree (employee_id);
+
+
+--
+-- Name: index_employee_presence_policies_on_presence_policy_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE INDEX index_employee_presence_policies_on_presence_policy_id ON employee_presence_policies USING btree (presence_policy_id);
+
+
+--
+-- Name: index_employee_presence_policy_effective_at; Type: INDEX; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE UNIQUE INDEX index_employee_presence_policy_effective_at ON employee_presence_policies USING btree (employee_id, presence_policy_id, effective_at);
+
+
+--
 -- Name: index_employee_time_off_policies_on_employee_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
@@ -929,7 +950,6 @@ CREATE UNIQUE INDEX index_employees_on_id_and_account_id ON employees USING btre
 
 
 --
-<<<<<<< d25a934f7bf13adbb5d297a8a945869516de15da
 -- Name: index_employees_on_working_place_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
@@ -937,8 +957,6 @@ CREATE INDEX index_employees_on_working_place_id ON employees USING btree (worki
 
 
 --
-=======
->>>>>>> [YWA-354] Create EmployeeWorkingPlace model, move existing working places
 -- Name: index_holiday_policies_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
