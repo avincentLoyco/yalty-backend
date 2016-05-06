@@ -261,6 +261,8 @@ CREATE TABLE employees (
     account_id uuid,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
+    holiday_policy_id uuid,
+    presence_policy_id uuid,
     account_user_id uuid
 );
 
@@ -889,6 +891,12 @@ CREATE INDEX index_employee_presence_policies_on_presence_policy_id ON employee_
 
 CREATE UNIQUE INDEX index_employee_presence_policy_effective_at ON employee_presence_policies USING btree (employee_id, presence_policy_id, effective_at);
 
+--
+-- Name: index_employee_id_working_place_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE UNIQUE INDEX index_employee_id_working_place_id ON employee_working_places USING btree (working_place_id, employee_id, effective_at);
+
 
 --
 -- Name: index_employee_time_off_policies_on_employee_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
@@ -1453,6 +1461,8 @@ INSERT INTO schema_migrations (version) VALUES ('20160316092439');
 INSERT INTO schema_migrations (version) VALUES ('20160324094939');
 
 INSERT INTO schema_migrations (version) VALUES ('20160401084042');
+
+INSERT INTO schema_migrations (version) VALUES ('20160401104731');
 
 INSERT INTO schema_migrations (version) VALUES ('20160412122041');
 
