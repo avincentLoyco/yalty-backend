@@ -214,6 +214,19 @@ CREATE TABLE employee_balances (
 
 
 --
+-- Name: employee_presence_policies; Type: TABLE; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE TABLE employee_presence_policies (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    employee_id uuid NOT NULL,
+    presence_policy_id uuid NOT NULL,
+    effective_at date NOT NULL,
+    start_day_order integer DEFAULT 1 NOT NULL
+);
+
+
+--
 -- Name: employee_time_off_policies; Type: TABLE; Schema: public; Owner: -; Tablespace:
 --
 
@@ -586,6 +599,14 @@ ALTER TABLE ONLY employee_events
 
 
 --
+-- Name: employee_presence_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
+--
+
+ALTER TABLE ONLY employee_presence_policies
+    ADD CONSTRAINT employee_presence_policies_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: employee_time_off_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
@@ -811,10 +832,38 @@ CREATE INDEX index_employee_events_on_employee_id ON employee_events USING btree
 
 
 --
+-- Name: index_employee_id_presence_policy_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE INDEX index_employee_id_presence_policy_id ON employee_presence_policies USING btree (presence_policy_id, employee_id);
+
+
+--
 -- Name: index_employee_id_time_off_policy_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
 CREATE INDEX index_employee_id_time_off_policy_id ON employee_time_off_policies USING btree (time_off_policy_id, employee_id);
+
+
+--
+-- Name: index_employee_presence_policies_on_employee_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE INDEX index_employee_presence_policies_on_employee_id ON employee_presence_policies USING btree (employee_id);
+
+
+--
+-- Name: index_employee_presence_policies_on_presence_policy_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE INDEX index_employee_presence_policies_on_presence_policy_id ON employee_presence_policies USING btree (presence_policy_id);
+
+
+--
+-- Name: index_employee_presence_policy_effective_at; Type: INDEX; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE UNIQUE INDEX index_employee_presence_policy_effective_at ON employee_presence_policies USING btree (employee_id, presence_policy_id, effective_at);
 
 
 --
@@ -1024,6 +1073,14 @@ ALTER TABLE ONLY time_entries
 
 
 --
+-- Name: fk_rails_1776c10fbd; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY employee_presence_policies
+    ADD CONSTRAINT fk_rails_1776c10fbd FOREIGN KEY (presence_policy_id) REFERENCES time_off_policies(id) ON DELETE CASCADE;
+
+
+--
 -- Name: fk_rails_1c5b30ec32; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1045,6 +1102,14 @@ ALTER TABLE ONLY employee_attribute_versions
 
 ALTER TABLE ONLY oauth_access_grants
     ADD CONSTRAINT fk_rails_330c32d8d9 FOREIGN KEY (resource_owner_id) REFERENCES account_users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: fk_rails_4421c7d101; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY employee_presence_policies
+    ADD CONSTRAINT fk_rails_4421c7d101 FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE;
 
 
 --
@@ -1397,6 +1462,8 @@ INSERT INTO schema_migrations (version) VALUES ('20160324094939');
 
 INSERT INTO schema_migrations (version) VALUES ('20160401084042');
 
+INSERT INTO schema_migrations (version) VALUES ('20160401104731');
+
 INSERT INTO schema_migrations (version) VALUES ('20160412122041');
 
 INSERT INTO schema_migrations (version) VALUES ('20160419142848');
@@ -1406,3 +1473,5 @@ INSERT INTO schema_migrations (version) VALUES ('20160502065212');
 INSERT INTO schema_migrations (version) VALUES ('20160502104901');
 
 INSERT INTO schema_migrations (version) VALUES ('20160502132953');
+
+INSERT INTO schema_migrations (version) VALUES ('20160506084601');
