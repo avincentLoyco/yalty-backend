@@ -10,8 +10,9 @@ FactoryGirl.define do
       end
 
       after(:build) do |employee|
-        policy = create(:employee_time_off_policy)
+        policy = build(:employee_time_off_policy)
         employee.employee_time_off_policies << policy
+        policy.save!
       end
     end
 

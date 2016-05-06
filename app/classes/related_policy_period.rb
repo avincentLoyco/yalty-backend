@@ -40,19 +40,18 @@ class RelatedPolicyPeriod
   end
 
   def last_validity_date
-    return nil unless time_off_policy.end_month && time_off_policy.end_day
-    Date.new(last_start_date.year + time_off_policy.years_to_effect, end_month, end_day)
+    return nil unless end_month && end_day
+    Date.new(last_start_date.year + years_to_effect, end_month, end_day)
   end
 
   def first_validity_date
-    return nil unless time_off_policy.end_month && time_off_policy.end_day
+    return nil unless end_month && end_day
     Date.new(first_start_date.year + years_to_effect, end_month, end_day)
   end
 
   def validity_date_for(date)
-    return nil unless related_policy.end_day && related_policy.end_month
-    validity_date =
-      Date.new(date.year + years_to_effect, related_policy.end_month, related_policy.end_day)
+    return nil unless end_day && end_month
+    validity_date = Date.new(date.year + years_to_effect, end_month, end_day)
 
     validity_date < date ? validity_date + 1.year : validity_date
   end
