@@ -1,6 +1,5 @@
 class Employee < ActiveRecord::Base
   belongs_to :account, inverse_of: :employees, required: true
-  belongs_to :working_place, inverse_of: :employees
   belongs_to :holiday_policy
   belongs_to :presence_policy
   belongs_to :user, class_name: 'Account::User'
@@ -16,8 +15,8 @@ class Employee < ActiveRecord::Base
   has_many :employee_time_off_policies
   has_many :time_off_policies, through: :employee_time_off_policies
   has_many :time_off_categories, through: :employee_balances
-
-  validates :working_place_id, presence: true
+  has_many :employee_working_places
+  has_many :working_places, through: :employee_working_places
 
   def next_effective_at_after(related)
     employee_time_off_policies

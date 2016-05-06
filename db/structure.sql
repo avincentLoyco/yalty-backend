@@ -240,6 +240,20 @@ CREATE TABLE employee_time_off_policies (
 
 
 --
+-- Name: employee_working_places; Type: TABLE; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE TABLE employee_working_places (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    employee_id uuid NOT NULL,
+    working_place_id uuid NOT NULL,
+    effective_at date NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL
+);
+
+
+--
 -- Name: employees; Type: TABLE; Schema: public; Owner: -; Tablespace:
 --
 
@@ -248,7 +262,6 @@ CREATE TABLE employees (
     account_id uuid,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
-    working_place_id uuid,
     holiday_policy_id uuid,
     presence_policy_id uuid,
     account_user_id uuid
@@ -615,6 +628,14 @@ ALTER TABLE ONLY employee_time_off_policies
 
 
 --
+-- Name: employee_working_places_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
+--
+
+ALTER TABLE ONLY employee_working_places
+    ADD CONSTRAINT employee_working_places_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: employees_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
@@ -865,6 +886,12 @@ CREATE INDEX index_employee_presence_policies_on_presence_policy_id ON employee_
 
 CREATE UNIQUE INDEX index_employee_presence_policy_effective_at ON employee_presence_policies USING btree (employee_id, presence_policy_id, effective_at);
 
+--
+-- Name: index_employee_id_working_place_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE UNIQUE INDEX index_employee_id_working_place_id ON employee_working_places USING btree (working_place_id, employee_id, effective_at);
+
 
 --
 -- Name: index_employee_time_off_policies_on_employee_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
@@ -902,6 +929,7 @@ CREATE UNIQUE INDEX index_employees_on_id_and_account_id ON employees USING btre
 
 
 --
+<<<<<<< d25a934f7bf13adbb5d297a8a945869516de15da
 -- Name: index_employees_on_working_place_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
@@ -909,6 +937,8 @@ CREATE INDEX index_employees_on_working_place_id ON employees USING btree (worki
 
 
 --
+=======
+>>>>>>> [YWA-354] Create EmployeeWorkingPlace model, move existing working places
 -- Name: index_holiday_policies_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
@@ -1049,6 +1079,14 @@ CREATE UNIQUE INDEX unique_schema_migrations ON schema_migrations USING btree (v
 
 
 --
+-- Name: fk_rails_04a25b070a; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY employee_working_places
+    ADD CONSTRAINT fk_rails_04a25b070a FOREIGN KEY (working_place_id) REFERENCES working_places(id) ON DELETE CASCADE;
+
+
+--
 -- Name: fk_rails_06c847ea6d; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1094,6 +1132,14 @@ ALTER TABLE ONLY working_places
 
 ALTER TABLE ONLY employee_attribute_versions
     ADD CONSTRAINT fk_rails_1d20586b4f FOREIGN KEY (attribute_definition_id) REFERENCES employee_attribute_definitions(id);
+
+
+--
+-- Name: fk_rails_2b93aa4b89; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY employee_working_places
+    ADD CONSTRAINT fk_rails_2b93aa4b89 FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE;
 
 
 --
@@ -1462,7 +1508,15 @@ INSERT INTO schema_migrations (version) VALUES ('20160324094939');
 
 INSERT INTO schema_migrations (version) VALUES ('20160401084042');
 
+INSERT INTO schema_migrations (version) VALUES ('20160401104731');
+
 INSERT INTO schema_migrations (version) VALUES ('20160412122041');
+
+INSERT INTO schema_migrations (version) VALUES ('20160418142554');
+
+INSERT INTO schema_migrations (version) VALUES ('20160419101614');
+
+INSERT INTO schema_migrations (version) VALUES ('20160419103050');
 
 INSERT INTO schema_migrations (version) VALUES ('20160419142848');
 
@@ -1473,5 +1527,7 @@ INSERT INTO schema_migrations (version) VALUES ('20160502104901');
 INSERT INTO schema_migrations (version) VALUES ('20160502132953');
 
 INSERT INTO schema_migrations (version) VALUES ('20160506084601');
+
+INSERT INTO schema_migrations (version) VALUES ('20160506143400');
 
 INSERT INTO schema_migrations (version) VALUES ('20160515174339');

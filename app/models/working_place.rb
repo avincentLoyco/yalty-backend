@@ -2,9 +2,10 @@ class WorkingPlace < ActiveRecord::Base
   belongs_to :account, inverse_of: :working_places, required: true
   belongs_to :holiday_policy
   belongs_to :presence_policy
-  has_many :employees, inverse_of: :working_place
   has_many :working_place_time_off_policies
   has_many :time_off_policies, through: :working_place_time_off_policies
+  has_many :employee_working_places
+  has_many :employees, through: :employee_working_places
 
   validates :name, :account_id, presence: true
 
