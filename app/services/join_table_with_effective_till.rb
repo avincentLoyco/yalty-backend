@@ -8,7 +8,7 @@ class JoinTableWithEffectiveTill
 
   def call
     ActiveRecord::Base.connection.select_all(
-      if join_table == EmployeeTimeOffPolicy
+      if join_table_class == EmployeeTimeOffPolicy
         sql(category_condition_sql)
       else
         sql('')
