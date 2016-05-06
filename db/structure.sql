@@ -1077,7 +1077,7 @@ ALTER TABLE ONLY time_entries
 --
 
 ALTER TABLE ONLY employee_presence_policies
-    ADD CONSTRAINT fk_rails_1776c10fbd FOREIGN KEY (presence_policy_id) REFERENCES time_off_policies(id) ON DELETE CASCADE;
+    ADD CONSTRAINT fk_rails_1776c10fbd FOREIGN KEY (presence_policy_id) REFERENCES presence_policies(id) ON DELETE CASCADE;
 
 
 --
@@ -1461,8 +1461,6 @@ INSERT INTO schema_migrations (version) VALUES ('20160316092439');
 INSERT INTO schema_migrations (version) VALUES ('20160324094939');
 
 INSERT INTO schema_migrations (version) VALUES ('20160401084042');
-
-INSERT INTO schema_migrations (version) VALUES ('20160401104731');
 
 INSERT INTO schema_migrations (version) VALUES ('20160412122041');
 

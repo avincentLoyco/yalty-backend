@@ -12,7 +12,7 @@ class CreateEmployeePresencePolicy < ActiveRecord::Migration
                     on_delete: :cascade,
                     column: :employee_id
     add_foreign_key :employee_presence_policies,
-                    :time_off_policies,
+                    :presence_policies,
                     on_delete: :cascade,
                     column: :presence_policy_id
 
