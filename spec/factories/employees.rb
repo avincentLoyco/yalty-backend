@@ -3,8 +3,14 @@ FactoryGirl.define do
     account
     created_at { Time.now - 10.years }
 
-    after(:create) do |employee|
-      create(:employee_working_place, employee: employee)
+    after(:build) do |employee|
+      working_place = build(:working_place, account: employee.account)
+      employee_working_place = build(
+        :employee_working_place,
+        employee: employee,
+        working_place: working_place
+      )
+      employee.employee_working_places << employee_working_place
     end
 
     trait :with_policy do

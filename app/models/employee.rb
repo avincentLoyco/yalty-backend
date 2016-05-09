@@ -18,19 +18,7 @@ class Employee < ActiveRecord::Base
   has_many :employee_working_places
   has_many :working_places, through: :employee_working_places
 
-  def next_effective_at_after(related)
-    employee_time_off_policies
-      .where(
-        'effective_at > ? AND time_off_category_id = ?',
-        related.effective_at, related.time_off_category_id
-      )
-      .order(:effective_at).last
-  end
-
-  def last_balance_addition_in_category(category_id)
-    employee_balances.where(time_off_category: category_id, policy_credit_addition: true)
-                     .order(effective_at: :desc).first
-  end
+  validates :employee_working_places, length: { minimum: 1 }
 
   def previous_related_time_off_policy(category_id)
     assigned_time_off_policies_in_category(category_id).second
@@ -45,13 +33,11 @@ class Employee < ActiveRecord::Base
   end
 
   def active_policy_in_category_at_date(category_id, date)
-    employee_policy = employee_time_off_policies.assigned_at(date)
-                                                .by_employee_in_category(id, category_id)
-                                                .order(:effective_at).last
-    return employee_policy if employee_policy.present?
-    working_place.working_place_time_off_policies.assigned_at(date)
-                 .by_working_place_in_category(working_place.id, category_id)
-                 .order(:effective_at).last
+    employee_time_off_policies
+      .assigned_at(date)
+      .by_employee_in_category(id, category_id)
+      .order(:effective_at)
+      .last
   end
 
   def active_presence_policy
@@ -73,26 +59,16 @@ class Employee < ActiveRecord::Base
   end
 
   def next_related_time_off_policy(category_id)
-    employee_policies = EmployeeTimeOffPolicy.by_employee_in_category(id, category_id)
-    return employee_policies.not_assigned.last if employee_policies.present?
-    WorkingPlaceTimeOffPolicy.not_assigned.by_working_place_in_category(
-      working_place_id, category_id).last
+    EmployeeTimeOffPolicy.by_employee_in_category(id, category_id).not_assigned.last
   end
 
   def future_related_time_off_policy(category_id)
-    employee_policies = EmployeeTimeOffPolicy.by_employee_in_category(id, category_id)
-    return employee_policies.not_assigned.last(2).first if employee_policies.present?
-    WorkingPlaceTimeOffPolicy.not_assigned.by_working_place_in_category(
-      working_place_id, category_id).last(2).first
+    EmployeeTimeOffPolicy.by_employee_in_category(id, category_id).not_assigned.last(2).first
   end
 
   private
 
   def assigned_time_off_policies_in_category(category_id)
-    from_employee = EmployeeTimeOffPolicy.assigned.by_employee_in_category(id, category_id).limit(3)
-    return from_employee if from_employee.size > 3
-    from_working_place = WorkingPlaceTimeOffPolicy.assigned.by_working_place_in_category(
-      working_place_id, category_id).limit(3)
-    from_employee + from_working_place
+    EmployeeTimeOffPolicy.assigned.by_employee_in_category(id, category_id).limit(3)
   end
 end

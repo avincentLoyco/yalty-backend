@@ -2,6 +2,6 @@ class EmployeeWorkingPlace < ActiveRecord::Base
   belongs_to :employee
   belongs_to :working_place
 
-  validates :employee_id, :working_place_id, :effective_at, presence: true
-  validates :working_place_id, uniqueness: { scope: [:employee_id, :effective_at] }
+  validates :employee, :working_place, :effective_at, presence: true
+  validates :effective_at, uniqueness: { scope: [:employee_id, :working_place_id] }
 end

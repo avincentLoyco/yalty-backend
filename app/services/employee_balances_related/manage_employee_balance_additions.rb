@@ -1,11 +1,10 @@
 class ManageEmployeeBalanceAdditions
-  attr_reader :resource, :employee, :effective_at, :effective_till, :balances
+  attr_reader :resource, :employee, :effective_at, :balances
 
   def initialize(resource)
     @resource = resource
     @employee = resource.employee
     @effective_at = resource.effective_at
-    @effective_till = employee.next_effective_at_after(resource)
     @balances = []
   end
 
