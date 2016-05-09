@@ -7,9 +7,6 @@ module EmployeeRules
       optional :holiday_policy, allow_nil: true do
         required :id
       end
-      optional :presence_policy, allow_nil: true do
-        required :id
-      end
     end
   end
 end

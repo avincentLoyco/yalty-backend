@@ -7,9 +7,6 @@ module WorkingPlaceRules
       optional :holiday_policy, allow_nil: true do
         required :id
       end
-      optional :presence_policy, allow_nil: true do
-        required :id
-      end
     end
   end
 
@@ -18,9 +15,6 @@ module WorkingPlaceRules
       required :id, :String
       required :name, :String
       optional :holiday_policy, allow_nil: true do
-        required :id
-      end
-      optional :presence_policy, allow_nil: true do
         required :id
       end
     end

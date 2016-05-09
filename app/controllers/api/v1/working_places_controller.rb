@@ -19,7 +19,7 @@ module API
           authorize! :create, resource
           transactions do
             resource.save!
-            assign_all(related)
+            assign_related(related)
           end
           render_resource(resource, status: :created)
         end
@@ -27,12 +27,10 @@ module API
 
       def update
         verified_params(gate_rules) do |attributes|
-          active_policy = resource.presence_policy.try(:id)
           related = related_params(attributes)
           transactions do
             resource.update(attributes)
-            assign_all(related)
-            update_affected_balances(nil, resource.employees) if policy_changed?(active_policy)
+            assign_related(related)
           end
           render_no_content
         end
@@ -49,10 +47,6 @@ module API
 
       private
 
-      def assign_all(related)
-        assign_related(related)
-      end
-
       def assign_related(related_records)
         return true if related_records.empty?
         related_records.each do |key, value|
@@ -67,17 +61,7 @@ module API
           holiday_policy = { holiday_policy: attributes.delete(:holiday_policy) }
         end
 
-        if attributes.key?(:presence_policy)
-          presence_policy = { presence_policy: attributes.delete(:presence_policy) }
-        end
-
-        related
-          .merge(holiday_policy.to_h)
-          .merge(presence_policy.to_h)
-      end
-
-      def policy_changed?(active_policy)
-        active_policy != resource.reload.presence_policy.try(:id)
+        related.merge(holiday_policy.to_h)
       end
 
       def resources
