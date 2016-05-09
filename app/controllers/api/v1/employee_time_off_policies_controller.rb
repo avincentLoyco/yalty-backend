@@ -1,7 +1,7 @@
 module API
   module V1
     class EmployeeTimeOffPoliciesController < ApplicationController
-      before_action :time_off_policy, only: :create
+      before_action :verify_time_off_policy
       include EmployeeTimeOffPoliciesRules
 
       def index
@@ -24,15 +24,15 @@ module API
       private
 
       def resources
-        @resources = time_off_policy.employee_time_off_policies
+        @resources = @time_off_policy.employee_time_off_policies
       end
 
       def employee
         @employee ||= Account.current.employees.find(params[:id])
       end
 
-      def time_off_policy
-        Account.current.time_off_policies.find(params[:time_off_policy_id])
+      def verify_time_off_policy
+        @time_off_policy = Account.current.time_off_policies.find(params[:time_off_policy_id])
       end
 
       def resource_representer
