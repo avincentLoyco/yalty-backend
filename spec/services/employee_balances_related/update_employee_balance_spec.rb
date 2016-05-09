@@ -6,7 +6,7 @@ RSpec.describe UpdateEmployeeBalance, type: :service do
   before do
     allow_any_instance_of(Employee).to receive(:active_policy_in_category_at_date)
       .and_return(employee_policy)
-    allow_any_instance_of(Employee).to receive(:active_related_time_off_policy)
+    allow_any_instance_of(Employee).to receive(:active_policy_in_category_at_date)
       .and_return(employee_policy)
   end
   let(:account) { create(:account) }

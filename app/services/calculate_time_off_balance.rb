@@ -25,8 +25,12 @@ class CalculateTimeOffBalance
   end
 
   def time_off_holidays
-    return [] unless employee.active_holiday_policy
-    employee.active_holiday_policy.holidays_in_period(time_off_start_date, time_off_end_date)
+    # TODO, since we have effective at  needs to handle multiple holiday poliices in one time off
+    #       periods (only when employee does not have directly assigned holiday policy)
+    return [] unless employee.active_holiday_policy_at(time_off_start_date)
+    employee
+      .active_holiday_policy_at(time_off_start_date)
+      .holidays_in_period(time_off_start_date, time_off_end_date)
   end
 
   def holidays_dates_in_time_off

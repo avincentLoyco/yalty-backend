@@ -16,7 +16,7 @@ def setup_params(time_off)
 end
 
 def create_or_find_employeee_policy(employee, category)
-  return if employee.active_policy_in_category(category.id).present?
+  return if employee.active_policy_in_category_at_date(category.id, Time.zone.now).present?
   policy = create_time_off_policy(category)
   create_employee_time_off_policy(employee, policy)
 end

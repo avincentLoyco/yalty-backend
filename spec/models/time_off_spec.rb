@@ -24,7 +24,7 @@ RSpec.describe TimeOff, type: :model do
     let(:employee_policy) { build(:employee_time_off_policy) }
     before do
       allow_any_instance_of(Employee)
-        .to receive(:active_related_time_off_policy) { employee_policy }
+        .to receive(:active_policy_in_category_at_date) { employee_policy }
     end
 
     context '#start_time_after_employee_creation' do
@@ -75,7 +75,7 @@ RSpec.describe TimeOff, type: :model do
       context 'with invalid data' do
         before do
           allow_any_instance_of(Employee)
-            .to receive(:active_related_time_off_policy) { nil }
+            .to receive(:active_policy_in_category_at_date) { nil }
         end
 
         it { expect(subject.valid?).to eq false }

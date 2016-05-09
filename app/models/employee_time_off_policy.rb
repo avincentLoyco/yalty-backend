@@ -17,9 +17,8 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
     where(time_off_policy_id: policy_id).pluck(:employee_id)
   }
 
-  scope :not_assigned, -> { where(['effective_at > ?', Time.zone.today]) }
+  scope :not_assigned_at, -> (date) { where(['effective_at > ?', date]) }
   scope :assigned_at, -> (date) { where(['effective_at <= ?', date]) }
-  scope :assigned, -> { where(['effective_at <= ?', Date.tomorrow]) }
   scope :by_employee_in_category, lambda { |employee_id, category_id|
     joins(:time_off_policy)
       .where(time_off_policies: { time_off_category_id: category_id }, employee_id: employee_id)
@@ -42,7 +41,7 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
 
   def effective_at_newer_than_previous_start_date
     category_id = time_off_policy.time_off_category_id
-    active_policy = employee.active_related_time_off_policy(category_id)
+    active_policy = employee.active_policy_in_category_at_date(category_id)
     return unless active_policy &&
         EmployeePolicyPeriod.new(employee, category_id).previous_start_date > effective_at
     errors.add(:effective_at, 'Must be after current policy previous perdiod start date')

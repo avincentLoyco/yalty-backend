@@ -6,20 +6,14 @@ RSpec.describe CreateEmployeeBalance, type: :service do
   before do
     Account.current = create(:account)
     allow_any_instance_of(Employee).to receive(:active_policy_in_category_at_date)
-      .and_return(working_place_policy)
-    allow_any_instance_of(Employee).to receive(:active_related_time_off_policy)
-      .and_return(working_place_policy)
+      .and_return(employee_policy)
   end
 
   let(:category) { create(:time_off_category, account: Account.current) }
   let(:policy) { create(:time_off_policy, time_off_category: category) }
-  let(:employee) do
-    create(:employee, account: Account.current, working_place: working_place_policy.working_place)
-  end
-  let(:working_place_policy) do
-    build(:working_place_time_off_policy,
-      time_off_policy: policy, effective_at: Date.today - 5.years
-    )
+  let(:employee) { create(:employee, account: Account.current) }
+  let(:employee_policy) do
+    build(:employee_time_off_policy, time_off_policy: policy, effective_at: Date.today - 5.years)
   end
   let(:amount) { -100 }
 
@@ -122,8 +116,8 @@ RSpec.describe CreateEmployeeBalance, type: :service do
           let(:new_category) { create(:time_off_category, account: Account.current) }
           let(:other_policy) { create(:time_off_policy, time_off_category: new_category) }
           let!(:new_policy) do
-            create(:working_place_time_off_policy,
-              working_place: employee.working_place,
+            create(:employee_time_off_policy,
+              employee: employee,
               time_off_policy: other_policy,
               effective_at: Date.today - 1.years
             )

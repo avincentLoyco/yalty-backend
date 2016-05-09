@@ -20,34 +20,28 @@ class Employee < ActiveRecord::Base
 
   validates :employee_working_places, length: { minimum: 1 }
 
-  def previous_related_time_off_policy(category_id)
-    assigned_time_off_policies_in_category(category_id).second
-  end
-
-  def active_related_time_off_policy(category_id)
-    assigned_time_off_policies_in_category(category_id).first
-  end
-
-  def active_policy_in_category(category_id)
-    assigned_time_off_policies_in_category(category_id).first.try(:time_off_policy)
-  end
-
-  def active_policy_in_category_at_date(category_id, date)
-    employee_time_off_policies
-      .assigned_at(date)
-      .by_employee_in_category(id, category_id)
-      .order(:effective_at)
-      .last
+  def active_policy_in_category_at_date(category_id, date = Time.zone.today)
+    assigned_time_off_policies_in_category(category_id, date).first
   end
 
   def active_presence_policy
+    # TODO, Method to change after adding employee_presence_policy
+    #       except adding join model we should receive date param (as in holiday policy)
     return presence_policy if presence_policy.present?
-    working_place.presence_policy
+    active_working_place_at.presence_policy
   end
 
-  def active_holiday_policy
+  def active_holiday_policy_at(date)
     return holiday_policy if holiday_policy.present?
-    working_place.holiday_policy
+    active_working_place_at(date).holiday_policy
+  end
+
+  def active_working_place_at(date = Time.zone.now)
+    employee_working_places
+      .where('effective_at <= ?', date)
+      .order(:effective_at)
+      .last
+      .try(:working_place)
   end
 
   def last_balance_in_category(category_id)
@@ -58,17 +52,11 @@ class Employee < ActiveRecord::Base
     time_off_categories.distinct
   end
 
-  def next_related_time_off_policy(category_id)
-    EmployeeTimeOffPolicy.by_employee_in_category(id, category_id).not_assigned.last
+  def assigned_time_off_policies_in_category(category_id, date = Time.zone.now)
+    EmployeeTimeOffPolicy.assigned_at(date).by_employee_in_category(id, category_id).limit(3)
   end
 
-  def future_related_time_off_policy(category_id)
-    EmployeeTimeOffPolicy.by_employee_in_category(id, category_id).not_assigned.last(2).first
-  end
-
-  private
-
-  def assigned_time_off_policies_in_category(category_id)
-    EmployeeTimeOffPolicy.assigned.by_employee_in_category(id, category_id).limit(3)
+  def not_assigned_time_off_policies_in_category(category_id, date = Time.zone.now)
+    EmployeeTimeOffPolicy.not_assigned_at(date).by_employee_in_category(id, category_id).limit(2)
   end
 end

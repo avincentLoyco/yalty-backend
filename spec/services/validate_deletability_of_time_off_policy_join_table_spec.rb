@@ -6,19 +6,11 @@ RSpec.describe ValidateDeletabilityOfTimeOffPolicyJoinTable, type: :service do
     include_context 'shared_context_timecop_helper'
     let(:account) { create(:account) }
     let(:employee) { create(:employee, account: account) }
-    let(:working_place) { employee.working_place }
-    let(:category_A) do
-      create(:time_off_category, account: account)
-    end
-    let(:category_B) do
-      create(:time_off_category, account: account)
-    end
-    let(:time_off_policy_A) do
-      create(:time_off_policy, start_day: 1, start_month: 1, time_off_category: category_A)
-    end
-    let(:time_off_policy_B) do
-      create(:time_off_policy, start_day: 1, start_month: 1, time_off_category: category_A)
-    end
+    let(:working_place) { employee.employee_working_places.last.working_place }
+    let(:category_A) { create(:time_off_category, account: account) }
+    let(:category_B) { create(:time_off_category, account: account) }
+    let(:time_off_policy_A) { create(:time_off_policy, time_off_category: category_A) }
+    let(:time_off_policy_B) { create(:time_off_policy, time_off_category: category_A) }
     let!(:employee_time_off_policy_1_1_2016) do
       create(
         :employee_time_off_policy,

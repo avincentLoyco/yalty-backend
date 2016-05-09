@@ -5,7 +5,7 @@ FactoryGirl.define do
     amount { Faker::Number.number(5) }
 
     after(:build) do |employee_balance|
-      if employee_balance.employee.active_related_time_off_policy(employee_balance.time_off_category_id).blank?
+      if employee_balance.employee.active_policy_in_category_at_date(employee_balance.time_off_category_id).blank?
         policy = create(:time_off_policy,
           time_off_category: employee_balance.time_off_category,
           years_to_effect: 5

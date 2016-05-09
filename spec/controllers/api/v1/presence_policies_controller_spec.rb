@@ -148,20 +148,18 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
 
       context 'recalculating employee balances' do
         let(:employees_with_time_offs) do
-          create_list(:employee, 2, :with_time_offs, account: account)
+          create_list(:employee, 3, :with_time_offs, account: account)
         end
-        let(:working_place_employee) { create(:employee, :with_time_offs, account: account) }
-        before { working_place.employees << [working_place_employee] }
 
         let(:first_employee_id) { employees_with_time_offs.first.id }
         let(:second_employee_id) { employees_with_time_offs.last.id }
 
+        it { expect { subject }.to_not change {
+          employees_with_time_offs.second.employee_balances.first.reload.being_processed } }
         it { expect { subject }.to change {
           employees_with_time_offs.first.employee_balances.first.reload.being_processed } }
         it { expect { subject }.to change {
           employees_with_time_offs.last.employee_balances.first.reload.being_processed } }
-        it { expect { subject }.to change {
-          working_place_employee.employee_balances.first.reload.being_processed } }
       end
     end
 
@@ -267,25 +265,16 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
 
       context 'recalculating employee balances' do
         let(:employees_with_time_offs) do
-          create_list(:employee, 3, :with_time_offs, account: account)
-        end
-        let(:working_place_employee) { create(:employee, :with_time_offs, account: account) }
-        before do
-          working_place.employees << [working_place_employee]
-          presence_policy.employees << [employees_with_time_offs.first, employees_with_time_offs.second]
+          create_list(:employee, 2, :with_time_offs, account: account)
         end
 
         let(:first_employee_id) { employees_with_time_offs.first.id }
         let(:second_employee_id) { employees_with_time_offs.last.id }
 
-        it { expect { subject }.to_not change {
-          employees_with_time_offs.first.employee_balances.first.reload.being_processed } }
         it { expect { subject }.to change {
           employees_with_time_offs.last.employee_balances.first.reload.being_processed } }
         it { expect { subject }.to change {
-          employees_with_time_offs.second.employee_balances.first.reload.being_processed } }
-        it { expect { subject }.to change {
-          working_place_employee.employee_balances.first.reload.being_processed } }
+          employees_with_time_offs.first.employee_balances.first.reload.being_processed } }
       end
 
       context 'response' do
