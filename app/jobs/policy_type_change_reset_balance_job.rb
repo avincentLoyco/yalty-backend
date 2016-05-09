@@ -7,8 +7,7 @@ class PolicyTypeChangeResetBalanceJob < ActiveJob::Base
     today = Time.zone.today
     finder = EmployeeCategoryPolicyFinder.new
     mixed_table_data =
-      finder.data_from_employees_with_employee_policy_for_effective_date_at(today.to_s) +
-      finder.data_from_employees_with_working_place_policy_for_effective_date_at(today.to_s)
+      finder.data_from_employees_with_employee_policy_for_effective_date_at(today.to_s)
     mixed_table_data.each do |hash|
       create_reset_balance(hash)
     end

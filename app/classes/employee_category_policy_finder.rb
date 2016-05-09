@@ -61,19 +61,6 @@ class EmployeeCategoryPolicyFinder
         ON A.time_off_category_id = B.time_off_category_id
         AND A.employee_id = B.employee_id
         AND A.policy_type != B.policy_type
-      UNION
-      SELECT C.time_off_category_id, C.employee_id, C.account_id
-      FROM
-      (
-        #{previous_employees_with_employee_policy_sql}
-      ) AS C
-      INNER JOIN
-      (
-        #{employees_with_working_place_policy_sql}
-      ) AS D
-        ON C.time_off_category_id = D.time_off_category_id
-        AND C.employee_id = D.employee_id
-        AND C.policy_type != D.policy_type
     "
   end
 
@@ -179,7 +166,7 @@ class EmployeeCategoryPolicyFinder
         top.end_month, top.amount, top.years_to_effect, top.years_passed, toc.account_id
         FROM
         (
-          SELECT DISTINCT employees.id, employees.working_place_id
+          SELECT DISTINCT employees.id
           FROM employees
           LEFT OUTER JOIN employee_time_off_policies as t
           ON employees.id = t.employee_id

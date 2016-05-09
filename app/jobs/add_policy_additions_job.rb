@@ -6,8 +6,7 @@ class AddPolicyAdditionsJob < ActiveJob::Base
   def perform
     finder = EmployeeCategoryPolicyFinder.new(Time.zone.today)
     mixed_table_data =
-      finder.data_from_employees_with_employee_policy_for_day_and_month +
-      finder.data_from_employees_with_working_place_policy_for_day_and_month
+      finder.data_from_employees_with_employee_policy_for_day_and_month
     mixed_table_data.each do |hash|
       hash['policy_type'] == 'counter' ? manage_counter(hash) : manage_balancer(hash)
     end
