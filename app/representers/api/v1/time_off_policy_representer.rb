@@ -24,7 +24,7 @@ module Api::V1
     end
 
     def assigned_employees_json
-      JoinTableWithEffectiveTill.new(EmployeeTimeOffPolicy).call.map do |etop_hash|
+      JoinTableWithEffectiveTill.new(EmployeeTimeOffPolicy, current_user.account_id).call.map do |etop_hash|
         etop = EmployeeTimeOffPolicy.new(etop_hash)
         EmployeeTimeOffPolicyRepresenter.new(etop).complete
       end
