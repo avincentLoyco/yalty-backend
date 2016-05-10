@@ -6,7 +6,7 @@ class EmployeePresencePolicy < ActiveRecord::Base
 
   validates :employee_id, :presence_policy_id, :effective_at, presence: true
   validates :effective_at, uniqueness: { scope: [:employee_id, :presence_policy_id] }
-  validate :no_balances_after_effective_at , on: :create, if: :employee_id
+  validate :no_balances_after_effective_at, on: :create, if: :employee_id
 
   private
 

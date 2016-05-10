@@ -17,6 +17,8 @@ class Employee < ActiveRecord::Base
   has_many :time_off_categories, through: :employee_balances
   has_many :employee_working_places
   has_many :working_places, through: :employee_working_places
+  has_many :employee_presence_policies
+  has_many :presence_policies, through: :employee_presence_policies
 
   validates :employee_working_places, length: { minimum: 1 }
   validate :hired_event_presence, on: :create

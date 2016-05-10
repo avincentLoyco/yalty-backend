@@ -6,7 +6,7 @@ RSpec.describe EmployeePresencePolicy, type: :model do
   it { is_expected.to have_db_column(:employee_id).of_type(:uuid) }
   it { is_expected.to have_db_column(:presence_policy_id).of_type(:uuid) }
   it { is_expected.to have_db_column(:effective_at).of_type(:date) }
-  it { is_expected.to have_db_column(:start_day_order).of_type(:integer) }
+  it { is_expected.to have_db_column(:order_of_start_day).of_type(:integer) }
   it { is_expected.to validate_presence_of(:employee_id) }
   it { is_expected.to validate_presence_of(:presence_policy_id) }
   it { is_expected.to validate_presence_of(:effective_at) }

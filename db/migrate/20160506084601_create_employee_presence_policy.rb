@@ -4,7 +4,7 @@ class CreateEmployeePresencePolicy < ActiveRecord::Migration
       t.uuid :employee_id, null: false
       t.uuid :presence_policy_id, null: false
       t.date :effective_at, null: false
-      t.integer :start_day_order, default: 1, null: false
+      t.integer :order_of_start_day, default: 1, null: false
     end
 
     add_foreign_key :employee_presence_policies,

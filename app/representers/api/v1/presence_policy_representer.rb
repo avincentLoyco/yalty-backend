@@ -9,8 +9,7 @@ module Api::V1
 
     def with_relationships
       complete.merge(presence_days: presence_days_json)
-              .merge(employees: employees_json)
-              .merge(working_places: working_places_json)
+              .merge(assigned_employees: assigned_employees_json)
     end
 
     def presence_days_json
@@ -19,16 +18,12 @@ module Api::V1
       end
     end
 
-    def employees_json
-      resource.employees.map do |attribute|
-        EmployeeRepresenter.new(attribute).basic
-      end
-    end
-
-    def working_places_json
-      resource.working_places.map do |attribute|
-        WorkingPlaceRepresenter.new(attribute).basic
-      end
+    def assigned_employees_json
+      JoinTableWithEffectiveTill
+        .new(EmployeePresencePolicy, current_user.account_id).call.map do |epp_hash|
+          epp = EmployeePresencePolicy.new(epp_hash)
+          EmployeePresencePolicyRepresenter.new(epp).complete
+        end
     end
   end
 end

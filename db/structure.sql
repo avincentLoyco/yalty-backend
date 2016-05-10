@@ -222,7 +222,7 @@ CREATE TABLE employee_presence_policies (
     employee_id uuid NOT NULL,
     presence_policy_id uuid NOT NULL,
     effective_at date NOT NULL,
-    start_day_order integer DEFAULT 1 NOT NULL
+    order_of_start_day integer DEFAULT 1 NOT NULL
 );
 
 
@@ -1545,5 +1545,7 @@ INSERT INTO schema_migrations (version) VALUES ('20160502132953');
 INSERT INTO schema_migrations (version) VALUES ('20160506084601');
 
 INSERT INTO schema_migrations (version) VALUES ('20160506143400');
+
+INSERT INTO schema_migrations (version) VALUES ('20160506135157');
 
 INSERT INTO schema_migrations (version) VALUES ('20160515174339');
