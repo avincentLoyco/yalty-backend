@@ -35,6 +35,7 @@ class Employee::Event < ActiveRecord::Base
     presence: true,
     inclusion: { in: proc { Employee::Event.event_types }, allow_nil: true }
   validate :attributes_presence, if: [:event_attributes, :employee]
+  validate :only_one_hired_event_presence, if: :employee
 
   def self.event_types
     Employee::Event::EVENT_ATTRIBUTES.keys.map(&:to_s)
@@ -59,6 +60,16 @@ class Employee::Event < ActiveRecord::Base
   def already_defined_attributes
     employee.employee_attribute_versions.map do |version|
       version.attribute_definition.name
+    end
+  end
+
+  private
+
+  def only_one_hired_event_presence
+    return unless event_type == 'hired'
+    employee_hired_events = employee.events.where(event_type: 'hired')
+    if employee_hired_events.present? && employee_hired_events.pluck(:id).exclude?(id)
+      errors.add(:event_type, 'Employee can have only one hired event')
     end
   end
 end

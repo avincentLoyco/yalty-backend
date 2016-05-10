@@ -14,6 +14,7 @@ class UpdateEvent
     ActiveRecord::Base.transaction do
       find_and_update_event
       find_employee
+      update_employee_working_place
       manage_versions
 
       save!
@@ -28,13 +29,16 @@ class UpdateEvent
 
   def find_employee
     @employee = Account.current.employees.find(employee_params[:id])
-    working_place_id = employee_params[:working_place_id]
-    @employee.working_place_id = working_place_id if working_place_id.present?
   end
 
   def find_and_update_event
     @event = Account.current.employee_events.find(event_params[:id])
     @event.attributes = event_params
+  end
+
+  def update_employee_working_place
+    return unless employee.first_employee_event.id == event.id
+    # TODO
   end
 
   def manage_versions

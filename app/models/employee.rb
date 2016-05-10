@@ -25,6 +25,10 @@ class Employee < ActiveRecord::Base
     employee_working_places.find_by(effective_at: employee_working_places.pluck(:effective_at).min)
   end
 
+  def first_employee_event
+    events.find_by(event_type: 'hired')
+  end
+
   def active_policy_in_category_at_date(category_id, date = Time.zone.today)
     assigned_time_off_policies_in_category(category_id, date).first
   end
