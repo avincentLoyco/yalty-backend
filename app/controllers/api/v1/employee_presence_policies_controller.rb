@@ -31,7 +31,7 @@ module API
         epp_hash =
           JoinTableWithEffectiveTill
           .new(EmployeePresencePolicy,
-            current_user.account,
+            current_user.account_id,
             nil,
             nil,
             resource_id)
@@ -43,7 +43,7 @@ module API
       def resources
         @resources ||=
           JoinTableWithEffectiveTill
-          .new(EmployeePresencePolicy, current_user.account, @presence_policy.id)
+          .new(EmployeePresencePolicy, current_user.account_id, @presence_policy.id)
           .call
         @resources = resources_with_effective_till(@resources)
       end

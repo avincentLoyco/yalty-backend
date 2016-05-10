@@ -20,7 +20,7 @@ module Api::V1
 
     def assigned_employees_json
       JoinTableWithEffectiveTill
-        .new(EmployeePresencePolicy, current_user.account_id).call.map do |epp_hash|
+        .new(EmployeePresencePolicy, current_user.account_id, resource.id).call.map do |epp_hash|
           epp = EmployeePresencePolicy.new(epp_hash)
           EmployeePresencePolicyRepresenter.new(epp).complete
         end
