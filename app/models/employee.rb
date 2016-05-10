@@ -19,6 +19,11 @@ class Employee < ActiveRecord::Base
   has_many :working_places, through: :employee_working_places
 
   validates :employee_working_places, length: { minimum: 1 }
+  validate :hired_event_presence, on: :create
+
+  def first_employee_working_place
+    employee_working_places.find_by(effective_at: employee_working_places.pluck(:effective_at).min)
+  end
 
   def active_policy_in_category_at_date(category_id, date = Time.zone.today)
     assigned_time_off_policies_in_category(category_id, date).first
@@ -58,5 +63,12 @@ class Employee < ActiveRecord::Base
 
   def not_assigned_time_off_policies_in_category(category_id, date = Time.zone.now)
     EmployeeTimeOffPolicy.not_assigned_at(date).by_employee_in_category(id, category_id).limit(2)
+  end
+
+  private
+
+  def hired_event_presence
+    return if events && events.map(&:event_type).include?('hired')
+    errors.add(:events, 'Employee must have hired event')
   end
 end

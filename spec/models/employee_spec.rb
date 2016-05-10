@@ -18,21 +18,34 @@ RSpec.describe Employee, type: :model do
   it { is_expected.to belong_to(:presence_policy) }
   it { is_expected.to belong_to(:holiday_policy) }
 
-  context 'employee working places presence' do
+  context '#validations' do
     let(:employee) { build(:employee) }
     subject { employee }
 
-    context 'with employee working place' do
-      it { expect(subject.valid?).to eq true }
-      it { expect { subject.valid? }.to_not change { subject.errors.messages.count } }
+    context '#employee working places presence' do
+      context 'with employee working place' do
+        it { expect(subject.valid?).to eq true }
+      end
+
+      context 'without employee working place' do
+        before { employee.employee_working_places = [] }
+
+        it { expect(subject.valid?).to eq false }
+        it { expect { subject.valid? }
+          .to change { subject.errors.messages[:employee_working_places] } }
+      end
     end
 
-    context 'without employee working place' do
-      before { employee.employee_working_places = [] }
+    context '#hired_event_presence' do
+      context 'with hired event' do
+        it { expect(subject.valid?).to eq true }
+      end
 
-      it { expect(subject.valid?).to eq false }
-      it { expect { subject.valid? }
-        .to change { subject.errors.messages[:employee_working_places] } }
+      context 'without hired event' do
+        before { employee.events = [] }
+
+        it { expect(subject.valid?).to eq false }
+      end
     end
   end
 end

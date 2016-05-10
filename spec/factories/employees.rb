@@ -4,13 +4,20 @@ FactoryGirl.define do
     created_at { Time.now - 10.years }
 
     after(:build) do |employee|
-      working_place = build(:working_place, account: employee.account)
-      employee_working_place = build(
-        :employee_working_place,
-        employee: employee,
-        working_place: working_place
-      )
-      employee.employee_working_places << employee_working_place
+      if employee.employee_working_places.empty?
+        working_place = build(:working_place, account: employee.account)
+        employee_working_place = build(
+          :employee_working_place,
+          employee: employee,
+          working_place: working_place
+        )
+        employee.employee_working_places << employee_working_place
+      end
+
+      if employee.events.empty?
+        hired_event = build(:employee_event, event_type: 'hired', employee: employee)
+        employee.events << hired_event
+      end
     end
 
     trait :with_policy do
@@ -55,20 +62,20 @@ FactoryGirl.define do
           time_off_category: second_policy.time_off_category
         )
 
-        first_time_off = create(:no_category_assigned_time_off,
+        create(:no_category_assigned_time_off,
           time_off_category: first_policy.time_off_category,
           employee: employee,
           employee_balance: first_balance
         )
 
-        second_time_off = create(:no_category_assigned_time_off,
+        create(:no_category_assigned_time_off,
           time_off_category: second_policy.time_off_category,
           employee: employee,
           start_time: Date.today,
           employee_balance: second_balance
         )
 
-        third_time_off = create(:no_category_assigned_time_off,
+        create(:no_category_assigned_time_off,
           time_off_category: second_policy.time_off_category,
           employee: employee,
           start_time: Date.today + 1.day,
@@ -84,7 +91,11 @@ FactoryGirl.define do
       end
 
       after(:build) do |employee, evaluator|
-        event = FactoryGirl.build(:employee_event, evaluator.event.merge(employee: employee))
+        if employee.events.blank?
+          event = FactoryGirl.build(:employee_event, evaluator.event.merge(employee: employee))
+        else
+          event = employee.events.first
+        end
 
         if evaluator.employee_attributes.empty?
           event.employee_attribute_versions << FactoryGirl.build_list(

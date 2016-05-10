@@ -35,6 +35,7 @@ class CreateEvent
       @employee.working_place_id = working_place_id if working_place_id.present?
     else
       @employee = Account.current.employees.new(employee_params)
+      employee.events << [event]
     end
 
     event.employee = @employee

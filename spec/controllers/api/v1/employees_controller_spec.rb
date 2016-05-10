@@ -30,7 +30,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
 
       context 'when employee has multiple attributes' do
         let!(:definition) { create(:employee_attribute_definition, multiple: true) }
-        let!(:new_employee) { create(:employee, account: account) }
+        let!(:new_employee) { build(:employee, account: account, events: [employee_event]) }
         let!(:employee_attribute_versions) do
           create_list(:employee_attribute, 2,
             employee: new_employee,
@@ -45,7 +45,6 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
         context 'when employee is not effective at' do
           let!(:employee_event) do
             create(:employee_event,
-              employee: new_employee,
               effective_at: Time.now + 1.week,
               event_type: 'hired'
             )
@@ -69,7 +68,6 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
         context 'when employee event is effective at' do
           let!(:employee_event) do
             create(:employee_event,
-              employee: new_employee,
               effective_at: Time.now - 1.week,
               event_type: 'hired'
             )
@@ -125,11 +123,9 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
     end
 
     context 'effective at date' do
-      let!(:future_employee) { create(:employee, account: account) }
+      let!(:future_employee) { create(:employee, account: account, events: [event]) }
       let!(:attribute) { create(:employee_attribute, event: event, employee: future_employee) }
-      let!(:event) do
-        create(:employee_event, employee: future_employee, effective_at: date, event_type: 'hired')
-      end
+      let!(:event) { create(:employee_event, effective_at: date, event_type: 'hired') }
       let(:employee_body) do
         JSON.parse(response.body).select { |record| record['id'] == future_employee.id }.first
       end
