@@ -47,7 +47,7 @@ class JoinTableWithEffectiveTill
   end
 
   def category_condition_sql
-    'AND A.time_off_category_id = B.time_off_category_id'
+    'WHERE A.time_off_category_id = B.time_off_category_id'
   end
 
   def order_of_start_day_sql
