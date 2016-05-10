@@ -5,7 +5,7 @@ class JoinTableWithEffectiveTill
   def initialize(join_table_class, account_id, resource_id = nil, employee_id = nil, join_table_id = nil)
     @join_table_class = join_table_class
     @join_table = join_table_class.to_s.tableize
-    @account_id = account.id
+    @account_id = account_id
     @join_table_id = join_table_id
     @employee_id = employee_id
     @resource_id = resource_id
