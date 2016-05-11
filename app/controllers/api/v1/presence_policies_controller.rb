@@ -9,7 +9,7 @@ module API
       end
 
       def index
-        response = resources.map { |item| resource_representer.new(item).with_relationships }
+        response = resources.map { |item| resource_representer.new(item, current_user).with_relationships }
         render json: response
       end
 
@@ -50,7 +50,7 @@ module API
       end
 
       def destroy
-        if resource.employees.empty? && resource.working_places.empty?
+        if resource.employees.empty?
           resource.destroy!
           render_no_content
         else
@@ -99,7 +99,7 @@ module API
       end
 
       def render_resource_with_relationships(resource, response = {})
-        render response.merge(json: resource_representer.new(resource).with_relationships)
+        render response.merge(json: resource_representer.new(resource, current_user).with_relationships)
       end
 
       def resource_representer

@@ -44,8 +44,8 @@ class JoinTableWithEffectiveTill
           #{extra_where_conditions}
         GROUP BY  A.id
       ) AS A
-      WHERE A.effective_at is null
-        OR A.effective_at >= to_date('#{Time.zone.today}', 'YYYY-MM_DD');"
+      WHERE A.effective_till is null
+        OR A.effective_till >= to_date('#{Time.zone.today}', 'YYYY-MM_DD');"
   end
 
   def category_condition_sql

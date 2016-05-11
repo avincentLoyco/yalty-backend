@@ -208,8 +208,7 @@ CREATE TABLE employee_balances (
     validity_date timestamp without time zone,
     policy_credit_removal boolean DEFAULT false,
     policy_credit_addition boolean DEFAULT false,
-    balance_credit_addition_id uuid,
-    reset_balance boolean DEFAULT false
+    balance_credit_addition_id uuid
 );
 
 
@@ -262,8 +261,8 @@ CREATE TABLE employees (
     account_id uuid,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
+    working_place_id uuid,
     holiday_policy_id uuid,
-    presence_policy_id uuid,
     account_user_id uuid
 );
 
@@ -529,8 +528,7 @@ CREATE TABLE working_places (
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
-    holiday_policy_id uuid,
-    presence_policy_id uuid
+    holiday_policy_id uuid
 );
 
 
@@ -1097,14 +1095,6 @@ CREATE UNIQUE INDEX unique_schema_migrations ON schema_migrations USING btree (v
 
 
 --
--- Name: fk_rails_04a25b070a; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY employee_working_places
-    ADD CONSTRAINT fk_rails_04a25b070a FOREIGN KEY (working_place_id) REFERENCES working_places(id) ON DELETE CASCADE;
-
-
---
 -- Name: fk_rails_06c847ea6d; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1129,14 +1119,6 @@ ALTER TABLE ONLY time_entries
 
 
 --
--- Name: fk_rails_1776c10fbd; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY employee_presence_policies
-    ADD CONSTRAINT fk_rails_1776c10fbd FOREIGN KEY (presence_policy_id) REFERENCES presence_policies(id) ON DELETE CASCADE;
-
-
---
 -- Name: fk_rails_1c5b30ec32; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1153,27 +1135,11 @@ ALTER TABLE ONLY employee_attribute_versions
 
 
 --
--- Name: fk_rails_2b93aa4b89; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY employee_working_places
-    ADD CONSTRAINT fk_rails_2b93aa4b89 FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE;
-
-
---
 -- Name: fk_rails_330c32d8d9; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY oauth_access_grants
     ADD CONSTRAINT fk_rails_330c32d8d9 FOREIGN KEY (resource_owner_id) REFERENCES account_users(id) ON DELETE CASCADE;
-
-
---
--- Name: fk_rails_4421c7d101; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY employee_presence_policies
-    ADD CONSTRAINT fk_rails_4421c7d101 FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE;
 
 
 --
@@ -1217,14 +1183,6 @@ ALTER TABLE ONLY employee_attribute_versions
 
 
 --
--- Name: fk_rails_7b41ba85db; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY employees
-    ADD CONSTRAINT fk_rails_7b41ba85db FOREIGN KEY (presence_policy_id) REFERENCES presence_policies(id);
-
-
---
 -- Name: fk_rails_836004d785; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1254,14 +1212,6 @@ ALTER TABLE ONLY holidays
 
 ALTER TABLE ONLY presence_policies
     ADD CONSTRAINT fk_rails_95b0b0db67 FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE;
-
-
---
--- Name: fk_rails_aa0d38825b; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY working_places
-    ADD CONSTRAINT fk_rails_aa0d38825b FOREIGN KEY (presence_policy_id) REFERENCES presence_policies(id);
 
 
 --
@@ -1547,5 +1497,7 @@ INSERT INTO schema_migrations (version) VALUES ('20160506084601');
 INSERT INTO schema_migrations (version) VALUES ('20160506143400');
 
 INSERT INTO schema_migrations (version) VALUES ('20160506135157');
+
+INSERT INTO schema_migrations (version) VALUES ('20160510124516');
 
 INSERT INTO schema_migrations (version) VALUES ('20160515174339');

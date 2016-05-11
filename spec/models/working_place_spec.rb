@@ -14,7 +14,6 @@ RSpec.describe WorkingPlace, type: :model do
   it { is_expected.to respond_to(:account) }
   it { is_expected.to validate_presence_of(:account) }
   it { is_expected.to belong_to(:holiday_policy) }
-  it { is_expected.to belong_to(:presence_policy) }
 
   context '#previous_start_date' do
     let(:working_place) { create(:working_place) }
