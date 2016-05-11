@@ -1,13 +1,14 @@
 class UpdateEvent
   include API::V1::Exceptions
   attr_reader :employee_params, :attributes_params, :event_params, :versions,
-    :event, :employee
+    :event, :employee, :updated_working_place
 
   def initialize(params, employee_attributes_params)
-    @versions           = []
-    @employee_params    = params[:employee].tap { |attr| attr.delete(:employee_attributes) }
-    @attributes_params  = employee_attributes_params
-    @event_params       = build_event_params(params)
+    @versions              = []
+    @employee_params       = params[:employee].tap { |attr| attr.delete(:employee_attributes) }
+    @attributes_params     = employee_attributes_params
+    @event_params          = build_event_params(params)
+    @updated_working_place = nil
   end
 
   def call
@@ -37,8 +38,9 @@ class UpdateEvent
   end
 
   def update_employee_working_place
-    return unless employee.first_employee_event.id == event.id
-    # TODO
+    return if event.event_type != 'hired'
+    @updated_working_place =
+      ManageEmployeeWorkingPlace.new(employee, event_params[:effective_at]).call
   end
 
   def manage_versions
@@ -101,7 +103,8 @@ class UpdateEvent
   end
 
   def valid?
-    event.valid? && employee.valid? && unique_attribute_versions? && attribute_version_valid?
+    event.valid? && employee.valid? && unique_attribute_versions? && attribute_version_valid? &&
+      (updated_working_place.blank? || updated_working_place.valid?)
   end
 
   def save!
@@ -118,9 +121,15 @@ class UpdateEvent
                  .merge(event.errors.messages)
                  .merge(employee.errors.messages)
                  .merge(attribute_versions_errors)
+                 .merge(employee_working_place_errors)
 
       raise InvalidResourcesError.new(event, messages)
     end
+  end
+
+  def employee_working_place_errors
+    return {} unless updated_working_place
+    updated_working_place.errors.messages
   end
 
   def attribute_versions_errors

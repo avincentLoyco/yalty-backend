@@ -5,6 +5,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     resource_name: 'employee_event'
   include_context 'shared_context_headers'
 
+
   let!(:employee_eattribute_definition) do
     create(:employee_attribute_definition,
       account: Account.current,
@@ -12,14 +13,11 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       attribute_type: 'Address'
     )
   end
+
   let!(:employee) do
     create(:employee, :with_attributes,
       account: account,
       account_user_id: user.id,
-      event: {
-        event_type: 'hired',
-        effective_at: 2.days.from_now.at_beginning_of_day
-      },
       employee_attributes: {
         firstname: employee_first_name,
         lastname: employee_last_name,
@@ -666,17 +664,27 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     end
     context 'when effective_at changes' do
       context 'and event is first employee event' do
-        context 'and there are not new working places between old and new effective_at' do
+        let(:effective_at) { Time.now + 3.months }
+        let(:first_working_place) { employee.first_employee_working_place }
 
+        context 'and there are not new working places between old and new effective_at' do
+          it { expect { subject }.to change { first_working_place.reload.effective_at } }
+          it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
         end
 
         context 'and there are new working places between old and new effective_at' do
+          let!(:second_working_place) do
+            create(:employee_working_place, employee: employee, effective_at: Time.now + 1.month)
+          end
+          let!(:third_working_place) do
+            create(:employee_working_place, employee: employee, effective_at: Time.now + 2.months)
+          end
 
+          it { expect { subject }.to change { third_working_place.reload.effective_at } }
+          it { expect { subject }.to change { EmployeeWorkingPlace.count }.by(-2) }
+          it { expect { subject }.to change { EmployeeWorkingPlace.exists?(second_working_place.id) } }
+          it { expect { subject }.to change { EmployeeWorkingPlace.exists?(first_working_place.id) } }
         end
-      end
-
-      context 'and event is not first employee event' do
-
       end
     end
     context 'when the user is not an account manager'do
@@ -970,16 +978,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         )
       end
     end
-
-    context 'reassign working_place' do
-      it 'should reassign employee working_place to new one' do
-        working_place = create(:working_place, account: Account.current)
-        json_payload[:employee][:working_place_id] = working_place.id
-
-        expect(subject).to have_http_status(204)
-        expect(Employee.find(employee_id).reload.working_place).to eq(working_place)
-      end
-    end
   end
 
   context 'GET #index' do
@@ -1025,8 +1023,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
   end
 
   context 'GET #show' do
-    let(:employee_event) { create(:employee_event, employee: employee) }
-    subject { get :show, id: employee_event.id }
+    subject { get :show, id: event.id }
 
     it 'should respond with success' do
       subject
@@ -1047,9 +1044,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     end
 
     it 'should have employee attributes' do
-      employee.events.first.employee_attribute_versions.each do |version|
-        version.update!(employee_event_id: employee_event.id)
-      end
       subject
 
       expect_json_keys('employee_attributes.0', [:value, :attribute_name, :id, :type, :order])
