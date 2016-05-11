@@ -7,7 +7,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
 
   let(:previous_start) { policy.start_date - time_off_policy.years_to_effect.years }
   let(:previous_end) { policy.end_date - policy.years_to_effect.years }
-  let(:employee) { create(:employee, :with_policy, account: account) }
+  let(:employee) { create(:employee, :with_time_off_policy, account: account) }
   let(:policy_category) do
     employee.employee_time_off_policies.first.time_off_policy.time_off_category.tap do |c|
       c.update!(account: account)

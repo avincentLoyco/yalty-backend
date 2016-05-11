@@ -219,7 +219,6 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
           let(:holiday_policy_id) { '1' }
 
           it { expect { subject }.to_not change { employee.reload.holiday_policy_id } }
-          it { expect { subject }.to_not change { employee.reload.presence_policy_id } }
           it { expect { subject }.to_not change {
             employee.reload.employee_time_off_policies.count } }
 
@@ -230,7 +229,6 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
           let(:id) { '1' }
 
           it { expect { subject }.to_not change { employee.reload.holiday_policy_id } }
-          it { expect { subject }.to_not change { employee.reload.presence_policy_id } }
           it { expect { subject }.to_not change {
             employee.reload.employee_time_off_policies.count } }
 

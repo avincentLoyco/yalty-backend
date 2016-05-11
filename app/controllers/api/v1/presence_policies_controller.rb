@@ -86,8 +86,8 @@ module API
       end
 
       def employees_to_update(previously_affected)
-        (resource.affected_employees + previously_affected).uniq -
-          (resource.affected_employees & previously_affected)
+        (resource.affected_employees.pluck(:id) + previously_affected).uniq -
+          (resource.affected_employees.pluck(:id) & previously_affected)
       end
 
       def resource

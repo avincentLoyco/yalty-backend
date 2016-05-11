@@ -14,7 +14,7 @@ class UpdateAffectedEmployeeBalances
   private
 
   def find_affected_employees
-    @employees = Employee.where(id: presence_policy.affected_employees)
+    @employees = Employee.where(id: presence_policy.affected_employees.pluck(:id))
   end
 
   def find_categories_and_update_balances

@@ -36,10 +36,7 @@ class Employee < ActiveRecord::Base
   end
 
   def active_presence_policy
-    # TODO, Method to change after adding employee_presence_policy
-    #       except adding join model we should receive date param (as in holiday policy)
-    return presence_policy if presence_policy.present?
-    active_working_place_at.presence_policy
+    PresencePolicy.active_for_employee(id, Time.zone.today)
   end
 
   def active_holiday_policy_at(date)

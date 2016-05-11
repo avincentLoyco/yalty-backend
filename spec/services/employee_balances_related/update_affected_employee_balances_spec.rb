@@ -23,14 +23,14 @@ RSpec.describe UpdateAffectedEmployeeBalances, type: :service do
     context 'and there are employees who are using policy' do
 
       context 'and they do not have time offs' do
-        before { presence_policy.employees << create_list(:employee, 2) }
+        before { create_list(:employee, 2, :with_presence_policy, presence_policy: presence_policy) }
 
         it { expect { subject }.to_not change { enqueued_jobs.size } }
         it { expect { subject }.to_not raise_error }
       end
 
       context 'and they have time offs' do
-        before { presence_policy.employees << create_list(:employee, 2, :with_time_offs) }
+        before { create_list(:employee, 2,:with_presence_policy, :with_time_offs, presence_policy: presence_policy) }
 
         it { expect { subject }.to change { enqueued_jobs.size } }
       end
@@ -40,14 +40,16 @@ RSpec.describe UpdateAffectedEmployeeBalances, type: :service do
   context 'when employees send but not policy' do
     let(:policy) { create(:presence_policy) }
     context 'when employees do not have time offs' do
-      let(:employees) { create_list(:employee, 2, presence_policy: policy) }
+      let(:employees) { create_list(:employee, 2, :with_presence_policy, presence_policy: presence_policy) }
 
       it { expect { subject }.to_not change { enqueued_jobs.size } }
       it { expect { subject }.to_not raise_error }
     end
 
     context 'when employeess have time offs' do
-      let(:employees) { create_list(:employee, 2, :with_time_offs, presence_policy: policy) }
+      let(:employees) do
+        create_list(:employee, 2, :with_presence_policy, :with_time_offs, presence_policy: policy)
+      end
 
       it { expect { subject }.to change { enqueued_jobs.size } }
     end

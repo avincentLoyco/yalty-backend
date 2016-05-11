@@ -20,7 +20,21 @@ FactoryGirl.define do
       end
     end
 
-    trait :with_policy do
+    trait :with_presence_policy do
+
+      transient do
+        presence_policy nil
+      end
+
+      after(:create) do |employee, evaluator|
+        attributes =
+          { employee: employee , effective_at: employee.created_at}
+          .merge( evaluator.presence_policy.present? ? { presence_policy: evaluator.presence_policy } : {} )
+        create(:employee_presence_policy, attributes)
+      end
+    end
+
+    trait :with_time_off_policy do
       transient do
         employee_time_off_policies { Hash.new }
       end

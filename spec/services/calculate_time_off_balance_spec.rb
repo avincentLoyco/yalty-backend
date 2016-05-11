@@ -7,7 +7,11 @@ RSpec.describe CalculateTimeOffBalance, type: :service do
   subject { CalculateTimeOffBalance.new(time_off).call }
 
   let(:policy) { create(:presence_policy) }
-  let(:employee) { create(:employee, :with_policy, presence_policy: policy) }
+  let(:employee) do
+    create(:employee, :with_time_off_policy, :with_presence_policy,
+      presence_policy: policy
+    )
+  end
   let(:category) { employee.employee_time_off_policies.first.time_off_policy.time_off_category }
   let(:time_off) do
     create(:time_off,

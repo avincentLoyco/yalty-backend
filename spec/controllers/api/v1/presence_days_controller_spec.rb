@@ -14,7 +14,9 @@ RSpec.describe API::V1::PresenceDaysController, type: :controller do
 
     context 'when there is employee affected by policy' do
       let(:employee) do
-        create(:employee, :with_time_offs, account: account, presence_policy: presence_policy)
+        create(:employee, :with_presence_policy, :with_time_offs, account: account,
+          presence_policy: presence_policy
+        )
       end
       let(:f_time_off) { employee.time_offs.first }
       let(:s_time_off) { employee.time_offs.second }
