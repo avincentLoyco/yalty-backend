@@ -124,7 +124,6 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
         it { is_expected.to have_http_status(201) }
         it { expect_json_keys( [ :id, :type, :name, :presence_days, :assigned_employees ] ) }
       end
-    end
 
     context 'with invalid data' do
       context 'without all required attributes' do
