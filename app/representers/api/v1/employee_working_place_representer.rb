@@ -14,6 +14,10 @@ module Api
       def employee_json
         EmployeeRepresenter.new(resource.employee).basic
       end
+
+      def working_place_json
+        complete.merge(WorkingPlaceRepresenter.new(resource.working_place).basic)
+      end
     end
   end
 end

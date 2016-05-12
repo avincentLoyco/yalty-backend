@@ -1,10 +1,12 @@
 class EmployeeWorkingPlace < ActiveRecord::Base
+  attr_accessor :effective_till
+
   belongs_to :employee
   belongs_to :working_place
 
   validates :employee, :working_place, :effective_at, presence: true
   validates :effective_at, uniqueness: { scope: [:employee_id, :working_place_id] }
-  validate :effective_at_newer_than_first_event, if: :employee
+  validate :effective_at_newer_than_first_event, if: [:employee, :effective_at]
 
   scope :by_employee, -> (employee_id) { where(employee_id: employee_id) }
 

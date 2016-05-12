@@ -5,7 +5,10 @@ Rails.application.routes.draw do
   # API
   namespace :api, path: '', constraints: { subdomain: /^api/ } do
     namespace :v1 do
-      resources :working_places, except: [:edit, :new]
+      resources :working_places, except: [:edit, :new] do
+        post '/employees', to: "employee_working_places#create"
+        get '/employees', to: "employee_working_places#index"
+      end
       resources :holiday_policies, except: [:edit, :new]
       resources :countries, only: [:show]
       resource :settings, only: [:show, :update]
@@ -13,6 +16,8 @@ Rails.application.routes.draw do
       resources :employees, only: [:index, :show, :update] do
         resources :employee_events, only: :index
         resources :employee_balances, only: :index
+
+        get '/working_places', to: "employee_working_places#index"
       end
       resources :employee_events, only: [:show, :create, :update]
       resources :presence_policies, except: [:edit, :new] do

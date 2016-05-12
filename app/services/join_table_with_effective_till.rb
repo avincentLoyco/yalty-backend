@@ -18,6 +18,8 @@ class JoinTableWithEffectiveTill
         sql(category_condition_sql, '', specific_time_off_policy_sql)
       when EmployeePresencePolicy.to_s
         sql('', order_of_start_day_sql, specific_presence_policy_sql)
+      when EmployeeWorkingPlace.to_s
+        sql('', working_place_id, specific_working_place_sql)
       end
     ).to_ary
   end
@@ -54,12 +56,20 @@ class JoinTableWithEffectiveTill
     ', A.order_of_start_day'
   end
 
+  def working_place_id
+    employee_id.present? ? ', A.working_place_id' : ''
+  end
+
   def specific_presence_policy_sql
     resource_id.present? ? "AND A.presence_policy_id = '#{resource_id}'" : ''
   end
 
   def specific_time_off_policy_sql
     resource_id.present? ? "AND A.time_off_policy_id = '#{resource_id}'" : ''
+  end
+
+  def specific_working_place_sql
+    resource_id.present? ? "AND A.working_place_id = '#{resource_id}'" : ''
   end
 
   def specific_employee_sql
