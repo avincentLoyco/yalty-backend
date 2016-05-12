@@ -213,16 +213,18 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
     end
 
     context 'when working place has employees assigned' do
-      let!(:employee) { create(:employee, working_place: working_place) }
+      let!(:employee_working_place) do
+        create(:employee_working_place, working_place: working_place)
+      end
 
       context 'when working place has employees assigned' do
-        xit { expect { subject  }.to_not change { WorkingPlace.count } }
-        xit { is_expected.to have_http_status(423) }
+        it { expect { subject  }.to_not change { WorkingPlace.count } }
+        it { is_expected.to have_http_status(423) }
 
         context 'response' do
           before { subject }
 
-          xit { expect_json(regex('Locked')) }
+          it { expect_json(regex('Locked')) }
         end
       end
     end
