@@ -19,14 +19,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
 
     it { expect_json_sizes(4) }
     it { expect(response.body).to include employee.id }
-
-    it 'should have in json' do
-      expect_json_keys('*',
-        [:id, :type, :name, :holiday_policy, :employees])
-          :id, :type, :name, :holiday_policy, :employees
-        ]
-      )
-    end
+    it { expect_json_keys('*', [:id, :type, :name, :holiday_policy, :employees]) }
   end
 
   context 'GET #show' do
