@@ -8,6 +8,48 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
 
   let(:holiday_policy) { create(:holiday_policy, account: account) }
   let(:presence_policy) { create(:presence_policy, account: account) }
+  let(:employee) { create(:employee, account: Account.current) }
+  let!(:employee_working_place) { employee.first_employee_working_place }
+
+  context 'GET #index' do
+    subject { get :index }
+    let!(:working_places) { create_list(:working_place, 3, account: Account.current) }
+
+    before { subject }
+
+    it { expect_json_sizes(4) }
+    it { expect(response.body).to include employee.id }
+
+    it 'should have in json' do
+      expect_json_keys('*',
+        [:id, :type, :name, :holiday_policy, :employees])
+          :id, :type, :name, :holiday_policy, :employees
+        ]
+      )
+    end
+  end
+
+  context 'GET #show' do
+    subject { get :show, id: working_place.id }
+    let!(:working_place) { create(:working_place, account: Account.current) }
+
+    context 'when working_place does not have related employee working places' do
+      before { subject }
+
+      it { expect_json('employees', []) }
+    end
+
+    context 'when working place has assigned employee working places' do
+      before do
+        employee_working_place.update!(working_place: working_place)
+        subject
+      end
+
+      it { expect_json('employees.0',
+        id: employee.id, type: 'employee', assignation_id: employee_working_place.id)
+      }
+    end
+  end
 
   context 'POST #create' do
     let(:name) { 'test' }

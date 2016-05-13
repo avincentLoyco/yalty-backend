@@ -61,6 +61,14 @@ class API::ApplicationController < ApplicationController
     RelativeEmployeeBalancesFinder.new(resource).next_balance
   end
 
+  def create_hash(join_table, join_table_id, related_id = nil, employee_id = nil)
+    resources =
+      JoinTableWithEffectiveTill
+      .new(join_table, Account.current.id, related_id, employee_id, join_table_id)
+      .call
+    resources.map { |join_hash| join_table.new(join_hash) }
+  end
+
   def transactions
     ActiveRecord::Base.transaction do
       yield
