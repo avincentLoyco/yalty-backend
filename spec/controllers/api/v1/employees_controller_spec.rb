@@ -15,10 +15,49 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
 
   context 'GET #show' do
     let(:employee) { create(:employee, :with_attributes, account: account) }
+    let(:employee_working_place) { employee.first_employee_working_place }
+    let(:first_working_place) { employee_working_place.working_place }
+    let(:future_working_place) { future_employee_working_place.working_place }
+    let!(:future_employee_working_place) do
+      create(:employee_working_place, employee: employee, effective_at: Time.now + 1.month)
+    end
+
     subject { get :show, id: employee.id }
 
     context 'with valid data' do
       it { is_expected.to have_http_status(200) }
+
+      context 'when the first policy is active one' do
+        before { subject }
+
+        it 'have active policy in json' do
+          expect_json('working_place',
+            id: first_working_place.id,
+            type: 'working_place',
+            assignation_id: employee_working_place.id
+          )
+        end
+      end
+
+      context 'when future policy is now active one' do
+        before do
+          Timecop.freeze(Time.now + 1.month)
+          employee.reload.employee_working_places
+          subject
+        end
+
+        after do
+          Timecop.return
+        end
+
+        it 'have future policy in json' do
+          expect_json('working_place',
+            id: future_working_place.id,
+            type: 'working_place',
+            assignation_id: future_employee_working_place.id
+          )
+        end
+      end
 
       context 'response' do
         before { subject }

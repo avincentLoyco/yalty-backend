@@ -18,7 +18,7 @@ module API
         verified_params(gate_rules) do |attributes|
           authorize! :create, working_place
           resource = employee.employee_working_places.create!(attributes.except(:id))
-          resource = create_hash(resource.id).first
+          resource = create_hash(EmployeeWorkingPlace, resource.id).first
           render_resource(resource, status: 201)
         end
       end
@@ -36,20 +36,12 @@ module API
 
       def working_place_resources
         authorize! :index, working_place
-        create_hash(nil, working_place.id)
+        create_hash(EmployeeWorkingPlace, nil, working_place.id)
       end
 
       def employee_resources
         authorize! :index, employee
-        create_hash(nil, nil, employee.id)
-      end
-
-      def create_hash(resource_id, working_place_id = nil, employee_id = nil)
-        resources =
-          JoinTableWithEffectiveTill
-          .new(EmployeeWorkingPlace, Account.current.id, working_place_id, employee_id, resource_id)
-          .call
-        resources.map { |ewp_hash| EmployeeWorkingPlace.new(ewp_hash) }
+        create_hash(EmployeeWorkingPlace, nil, nil, employee.id)
       end
 
       def resource_representer

@@ -39,7 +39,7 @@ class JoinTableWithEffectiveTill
   def sql(extra_join_conditions, extra_where_conditions)
     " SELECT B.*
       FROM(
-        SELECT A.*, min(B.effective_at::date)
+        SELECT A.*, min(B.effective_at) - integer '1'
                AS effective_till
         FROM #{join_table} AS A
           LEFT OUTER JOIN #{join_table} AS B
@@ -57,7 +57,8 @@ class JoinTableWithEffectiveTill
       WHERE ( B.effective_till is null
               OR B.effective_till >= to_date('#{from_date}', 'YYYY-MM_DD')
             )
-        #{effective_at_before_date_sql};"
+        #{effective_at_before_date_sql}
+      ORDER BY B.effective_at;"
   end
 
   def category_condition_sql

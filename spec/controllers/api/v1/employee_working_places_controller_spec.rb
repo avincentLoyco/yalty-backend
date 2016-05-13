@@ -4,7 +4,7 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
   include_context 'shared_context_headers'
 
   let!(:employee) { create(:employee, account: Account.current) }
-  let!(:new_employee) { create(:employee, account: Account.current) }
+  let(:new_employee) { create(:employee, account: Account.current) }
   let!(:employee_working_place) { employee.first_employee_working_place }
 
   describe 'get #INDEX' do

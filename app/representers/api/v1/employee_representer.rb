@@ -10,7 +10,8 @@ module Api::V1
 
     def relationships
       {
-        employee_attributes: employee_attributes_json
+        employee_attributes: employee_attributes_json,
+        working_place: working_place_json
       }
     end
 
@@ -18,6 +19,10 @@ module Api::V1
       employee_attributes.map do |attribute|
         EmployeeAttributeRepresenter.new(attribute).complete
       end
+    end
+
+    def working_place_json
+      EmployeeWorkingPlaceRepresenter.new(active_employee_working_place).working_place_json
     end
 
     def employee_attributes
@@ -29,6 +34,10 @@ module Api::V1
     def hire_status
       hire_event = resource.events.where(event_type: 'hired').last.try(:effective_at)
       hire_event <= Time.zone.now if hire_event
+    end
+
+    def active_employee_working_place
+      related_resources(EmployeeWorkingPlace, nil, resource.id).first
     end
   end
 end
