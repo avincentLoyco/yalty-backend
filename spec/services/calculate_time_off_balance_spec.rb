@@ -65,7 +65,7 @@ RSpec.describe CalculateTimeOffBalance, type: :service do
 
     context 'and when there are holidays in the time off period' do
       let(:holiday_policy) { create(:holiday_policy, country: 'ch', region: 'zh') }
-      before { employee.update!(holiday_policy: holiday_policy) }
+      before { employee.working_places.first.update!(holiday_policy: holiday_policy) }
       context 'and the period is 1 day long' do
         before do
           time_off.update!(start_time: Date.new(2016,3,25), end_time: Date.new(2016,3,25) + 8.hours)

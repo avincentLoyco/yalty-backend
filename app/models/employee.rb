@@ -1,6 +1,5 @@
 class Employee < ActiveRecord::Base
   belongs_to :account, inverse_of: :employees, required: true
-  belongs_to :holiday_policy
   belongs_to :presence_policy
   belongs_to :user, class_name: 'Account::User'
   has_many :employee_attribute_versions,
@@ -35,12 +34,11 @@ class Employee < ActiveRecord::Base
     assigned_time_off_policies_in_category(category_id, date).first
   end
 
-  def active_presence_policy
-    PresencePolicy.active_for_employee(id, Time.zone.today)
+  def active_presence_policy(date = Time.zone.today)
+    PresencePolicy.active_for_employee(id, date)
   end
 
   def active_holiday_policy_at(date)
-    return holiday_policy if holiday_policy.present?
     active_working_place_at(date).holiday_policy
   end
 

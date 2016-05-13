@@ -53,12 +53,9 @@ module API
 
       def related_params(attributes)
         related = {}
-        employees =
-          { employees: attributes.delete(:employees) } if attributes.key?(:employees)
         working_places =
           { working_places: attributes.delete(:working_places) } if attributes.key?(:working_places)
-        related.merge(employees.to_h)
-               .merge(working_places.to_h)
+        related.merge(working_places.to_h)
       end
 
       def resource

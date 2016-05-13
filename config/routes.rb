@@ -13,7 +13,7 @@ Rails.application.routes.draw do
       resources :countries, only: [:show]
       resource :settings, only: [:show, :update]
       resources :employee_attribute_definitions
-      resources :employees, only: [:index, :show, :update] do
+      resources :employees, only: [:index, :show] do
         resources :employee_events, only: :index
         resources :employee_balances, only: :index
 

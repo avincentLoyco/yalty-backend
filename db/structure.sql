@@ -262,7 +262,6 @@ CREATE TABLE employees (
     account_id uuid,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
-    holiday_policy_id uuid,
     account_user_id uuid
 );
 
@@ -1526,5 +1525,7 @@ INSERT INTO schema_migrations (version) VALUES ('20160506143400');
 INSERT INTO schema_migrations (version) VALUES ('20160506135157');
 
 INSERT INTO schema_migrations (version) VALUES ('20160510124516');
+
+INSERT INTO schema_migrations (version) VALUES ('20160512142051');
 
 INSERT INTO schema_migrations (version) VALUES ('20160515174339');
