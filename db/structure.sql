@@ -208,7 +208,8 @@ CREATE TABLE employee_balances (
     validity_date timestamp without time zone,
     policy_credit_removal boolean DEFAULT false,
     policy_credit_addition boolean DEFAULT false,
-    balance_credit_addition_id uuid
+    balance_credit_addition_id uuid,
+    reset_balance boolean DEFAULT false
 );
 
 
@@ -261,8 +262,6 @@ CREATE TABLE employees (
     account_id uuid,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
-    holiday_policy_id uuid,
-    presence_policy_id uuid,
     account_user_id uuid
 );
 
@@ -891,33 +890,6 @@ CREATE INDEX index_employee_presence_policies_on_presence_policy_id ON employee_
 
 CREATE UNIQUE INDEX index_employee_presence_policy_effective_at ON employee_presence_policies USING btree (employee_id, presence_policy_id, effective_at);
 
---
--- Name: index_employee_id_working_place_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
---
-
-CREATE UNIQUE INDEX index_employee_id_working_place_id ON employee_working_places USING btree (working_place_id, employee_id, effective_at);
-
-
---
--- Name: index_employee_presence_policies_on_employee_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
---
-
-CREATE INDEX index_employee_presence_policies_on_employee_id ON employee_presence_policies USING btree (employee_id);
-
-
---
--- Name: index_employee_presence_policies_on_presence_policy_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
---
-
-CREATE INDEX index_employee_presence_policies_on_presence_policy_id ON employee_presence_policies USING btree (presence_policy_id);
-
-
---
--- Name: index_employee_presence_policy_effective_at; Type: INDEX; Schema: public; Owner: -; Tablespace:
---
-
-CREATE UNIQUE INDEX index_employee_presence_policy_effective_at ON employee_presence_policies USING btree (employee_id, presence_policy_id, effective_at);
-
 
 --
 -- Name: index_employee_time_off_policies_on_employee_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
@@ -952,13 +924,6 @@ CREATE INDEX index_employees_on_account_id ON employees USING btree (account_id)
 --
 
 CREATE UNIQUE INDEX index_employees_on_id_and_account_id ON employees USING btree (id, account_id);
-
-
---
--- Name: index_employees_on_working_place_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
---
-
-CREATE INDEX index_employees_on_working_place_id ON employees USING btree (working_place_id);
 
 
 --
@@ -1102,6 +1067,14 @@ CREATE UNIQUE INDEX unique_schema_migrations ON schema_migrations USING btree (v
 
 
 --
+-- Name: fk_rails_04a25b070a; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY employee_working_places
+    ADD CONSTRAINT fk_rails_04a25b070a FOREIGN KEY (working_place_id) REFERENCES working_places(id) ON DELETE CASCADE;
+
+
+--
 -- Name: fk_rails_06c847ea6d; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1126,6 +1099,14 @@ ALTER TABLE ONLY time_entries
 
 
 --
+-- Name: fk_rails_1776c10fbd; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY employee_presence_policies
+    ADD CONSTRAINT fk_rails_1776c10fbd FOREIGN KEY (presence_policy_id) REFERENCES presence_policies(id) ON DELETE CASCADE;
+
+
+--
 -- Name: fk_rails_1c5b30ec32; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1142,11 +1123,27 @@ ALTER TABLE ONLY employee_attribute_versions
 
 
 --
+-- Name: fk_rails_2b93aa4b89; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY employee_working_places
+    ADD CONSTRAINT fk_rails_2b93aa4b89 FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE;
+
+
+--
 -- Name: fk_rails_330c32d8d9; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY oauth_access_grants
     ADD CONSTRAINT fk_rails_330c32d8d9 FOREIGN KEY (resource_owner_id) REFERENCES account_users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: fk_rails_4421c7d101; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY employee_presence_policies
+    ADD CONSTRAINT fk_rails_4421c7d101 FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE;
 
 
 --
@@ -1501,9 +1498,9 @@ INSERT INTO schema_migrations (version) VALUES ('20160502132953');
 
 INSERT INTO schema_migrations (version) VALUES ('20160506084601');
 
-INSERT INTO schema_migrations (version) VALUES ('20160506143400');
-
 INSERT INTO schema_migrations (version) VALUES ('20160506135157');
+
+INSERT INTO schema_migrations (version) VALUES ('20160506143400');
 
 INSERT INTO schema_migrations (version) VALUES ('20160510124516');
 
