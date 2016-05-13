@@ -1055,43 +1055,6 @@ Get a list of all employees
           ]
         }
 
-### PUT Employee [PUT /api/v1/employees/{employee_id}]
-
-+ Parameters
-  + employee_id: 12 (required, string) - ID is in uuid format
-  + holiday_policy
-    + id: 12 (required, string)
-  + presence_policy
-    + id: 13 (required, string)
-  + time_off_policies: {"id": "1"} (array)
-
-+ Request (application/json)
-
-        {
-            "holiday_policy': {
-              "id": "12345",
-              "type": "holiday_policy"
-            },
-            "presence_policy": {
-              "id": "12345",
-              "type": "holiday_policy"
-            },
-            "time_off_policies": [
-              {
-                "id": "123",
-                "type": "time_off_policy"
-              },
-              {
-                "id": "654",
-                "type": "time_off_policy"
-              }
-            ]
-        }
-
-+ Response 204
-
-
-
 
 ## Employee events [/api/v1/employee_events]
 
