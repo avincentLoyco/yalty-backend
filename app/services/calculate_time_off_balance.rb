@@ -1,41 +1,64 @@
 class CalculateTimeOffBalance
   attr_reader :time_off, :employee, :balane, :presence_policy, :time_off_start_date,
-    :time_off_end_date, :holidays, :holidays_dates_hash
+    :time_off_end_date, :holidays_dates_hash
 
   def initialize(time_off)
     @time_off = time_off
     @time_off_start_date = time_off.start_time.to_date
     @time_off_end_date = time_off.end_time.to_date
     @employee = time_off.employee
-    @presence_policy = employee.active_presence_policy
-    @holidays = time_off_holidays
-    @holidays_dates_hash = holidays_dates_in_time_off
+    @holidays_dates_hash = holidays_dates_in_time_off(time_off_holidays)
     @minutes = 0
   end
 
   def call
-    return 0 if presence_policy.try(:time_entries).blank?
-    calculate_minutes_from_entries
+    minutes_in_time_off = 0
+    active_join_table_for_time_off(EmployeePresencePolicy).each do |epp|
+      next if epp.presence_policy.try(:time_entries).blank?
+      @presence_policy = epp.presence_policy
+      minutes_in_time_off += calculate_minutes_from_entries
+    end
+    minutes_in_time_off
   end
 
   private
 
-  def previous_day_order(order, presence_policy)
-    order == 1 ? presence_policy.last_day_order : order - 1
+  def previous_day_order(order)
+    order == 1 ? @presence_policy.last_day_order : order - 1
+  end
+
+  def active_join_table_for_time_off(join_table_class)
+    JoinTableWithEffectiveTill
+      .new(
+        join_table_class,
+        employee.account_id,
+        nil,
+        employee.id,
+        nil,
+        time_off_start_date,
+        time_off_end_date)
+      .call
+      .map do |join_table_hash|
+        join_table_class.new(join_table_hash)
+      end
   end
 
   def time_off_holidays
-    # TODO, since we have effective at  needs to handle multiple holiday poliices in one time off
-    #       periods (only when employee does not have directly assigned holiday policy)
-    return [] unless employee.active_holiday_policy_at(time_off_start_date)
-    employee
-      .active_holiday_policy_at(time_off_start_date)
-      .holidays_in_period(time_off_start_date, time_off_end_date)
+    all_holidays = []
+    active_ewps = active_join_table_for_time_off(EmployeeWorkingPlace)
+    active_ewps.each do |ewp|
+      holiday_policy = ewp.working_place.holiday_policy
+      next unless holiday_policy
+      start_date = ewp == active_ewps.first ? time_off_start_date : active_ewps.effective_at
+      end_date = ewp == active_ewps.last ? time_off_end_date : active_ewps.effective_till
+      all_holidays += holiday_policy.holidays_in_period(start_date, end_date)
+    end
+    all_holidays
   end
 
-  def holidays_dates_in_time_off
+  def holidays_dates_in_time_off(time_off_holidays)
     holidays_hash = { start_or_end_days: [], middle_days: [] }
-    holidays.each do |holiday|
+    time_off_holidays.each do |holiday|
       if holiday.date == time_off_start_date || holiday.date == time_off_end_date
         holidays_hash[:start_or_end_days] << holiday.date
       else
@@ -75,7 +98,7 @@ class CalculateTimeOffBalance
   end
 
   def presence_days_with_entries_duration
-    PresenceDay.with_entries(presence_policy.id).each_with_object({}) do |day, total|
+    PresenceDay.with_entries(@presence_policy.id).each_with_object({}) do |day, total|
       total[day.order] = day.time_entries.pluck(:duration).sum
       total
     end
@@ -136,7 +159,7 @@ class CalculateTimeOffBalance
   end
 
   def orders_occurrences_time_off_longer_than_policy
-    previous_order = previous_day_order(start_order, presence_policy)
+    previous_order = previous_day_order(start_order)
     orders_ordered_by_occurence = (start_order..7).to_a + (1..previous_order).to_a
     i = 0
     while orders_ordered_by_occurence.size < num_of_days_in_time_off
@@ -188,6 +211,6 @@ class CalculateTimeOffBalance
   end
 
   def day_entries(order)
-    presence_policy.presence_days.find_by(order: order).try(:time_entries)
+    @presence_policy.presence_days.find_by(order: order).try(:time_entries)
   end
 end

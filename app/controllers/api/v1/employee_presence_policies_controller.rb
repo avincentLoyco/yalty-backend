@@ -1,12 +1,11 @@
 module API
   module V1
     class EmployeePresencePoliciesController < ApplicationController
-      before_action :verify_presence_policy
       include EmployeePresencePoliciesRules
 
       def create
         verified_params(gate_rules) do |attributes|
-          authorize! :create, @presence_policy
+          authorize! :create, presence_policy
           resource = employee.employee_presence_policies.new(attributes.except(:id))
           transactions do
             resource.save!
@@ -17,7 +16,7 @@ module API
       end
 
       def index
-        authorize! :index, @presence_policy
+        authorize! :index, presence_policy
         render_resource(resources)
       end
 
@@ -43,7 +42,7 @@ module API
       def resources
         @resources ||=
           JoinTableWithEffectiveTill
-          .new(EmployeePresencePolicy, current_user.account_id, @presence_policy.id)
+          .new(EmployeePresencePolicy, current_user.account_id, presence_policy.id)
           .call
         @resources = resources_with_effective_till(@resources)
       end
@@ -54,8 +53,8 @@ module API
         end
       end
 
-      def verify_presence_policy
-        @presence_policy = Account.current.presence_policies.find(params[:presence_policy_id])
+      def presence_policy
+        Account.current.presence_policies.find(params[:presence_policy_id])
       end
 
       def resource_representer

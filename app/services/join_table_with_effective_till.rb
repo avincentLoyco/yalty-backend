@@ -1,36 +1,46 @@
 class JoinTableWithEffectiveTill
   attr_reader :join_table, :join_table_class, :account_id, :employee_id, :join_table_id,
-    :resource_id
+    :resource_id, :from_date, :till_date
 
-  def initialize(join_table_class, account_id, resource_id = nil, employee_id = nil, join_table_id = nil)
+  def initialize(
+    join_table_class,
+    account_id,
+    resource_id = nil,
+    employee_id = nil,
+    join_table_id = nil,
+    from_date = Time.zone.today,
+    till_date = nil
+  )
     @join_table_class = join_table_class
     @join_table = join_table_class.to_s.tableize
     @account_id = account_id
     @join_table_id = join_table_id
     @employee_id = employee_id
     @resource_id = resource_id
+    @from_date = from_date
+    @till_date = till_date
   end
 
   def call
     ActiveRecord::Base.connection.select_all(
       case join_table_class.to_s
       when EmployeeTimeOffPolicy.to_s
-        sql(category_condition_sql, '', specific_time_off_policy_sql)
+        sql(category_condition_sql, specific_time_off_policy_sql)
       when EmployeePresencePolicy.to_s
-        sql('', order_of_start_day_sql, specific_presence_policy_sql)
+        sql('', specific_presence_policy_sql)
       when EmployeeWorkingPlace.to_s
-        sql('', working_place_id, specific_working_place_sql)
+        sql('', specific_working_place_sql)
       end
     ).to_ary
   end
 
   private
 
-  def sql(extra_join_conditions, extra_select_attributes, extra_where_conditions)
-    " SELECT A.id, A.employee_id, A.effective_at, A.effective_till #{extra_select_attributes}
+  def sql(extra_join_conditions, extra_where_conditions)
+    " SELECT B.*
       FROM(
-        SELECT A.id, A.employee_id, A.effective_at::date, min(B.effective_at::date)
-               AS effective_till #{extra_select_attributes}
+        SELECT A.*, min(B.effective_at::date)
+               AS effective_till
         FROM #{join_table} AS A
           LEFT OUTER JOIN #{join_table} AS B
             ON A.employee_id = B.employee_id
@@ -43,21 +53,19 @@ class JoinTableWithEffectiveTill
           #{specific_join_table_instance_sql}
           #{extra_where_conditions}
         GROUP BY  A.id
-      ) AS A
-      WHERE A.effective_till is null
-        OR A.effective_till >= to_date('#{Time.zone.today}', 'YYYY-MM_DD');"
+      ) AS B
+      WHERE ( B.effective_till is null
+              OR B.effective_till >= to_date('#{from_date}', 'YYYY-MM_DD')
+            )
+        #{effective_at_before_date_sql};"
   end
 
   def category_condition_sql
     'AND A.time_off_category_id = B.time_off_category_id'
   end
 
-  def order_of_start_day_sql
-    ', A.order_of_start_day'
-  end
-
-  def working_place_id
-    employee_id.present? ? ', A.working_place_id' : ''
+  def effective_at_before_date_sql
+    till_date.present? ? "AND B.effective_at <= '#{till_date}'" : ''
   end
 
   def specific_presence_policy_sql
