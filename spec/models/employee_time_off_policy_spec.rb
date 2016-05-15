@@ -6,6 +6,7 @@ RSpec.describe EmployeeTimeOffPolicy, type: :model do
   it { is_expected.to have_db_column(:employee_id).of_type(:uuid) }
   it { is_expected.to have_db_column(:time_off_policy_id).of_type(:uuid) }
   it { is_expected.to have_db_column(:time_off_category_id).of_type(:uuid) }
+  it { is_expected.to have_db_column(:effective_at).of_type(:date) }
   it { is_expected.to validate_presence_of(:employee_id) }
   it { is_expected.to validate_presence_of(:time_off_policy_id) }
     it { is_expected.to validate_presence_of(:effective_at) }
@@ -19,38 +20,6 @@ RSpec.describe EmployeeTimeOffPolicy, type: :model do
   end
 
   describe 'custom validations' do
-    context '#policy_has_minimum_day_period' do
-      let(:new_policy) { build(:employee_time_off_policy, effective_at: Time.now) }
-      let!(:related_policy) do
-        new_policy.dup.tap { |policy| policy.update!(effective_at: effective_at) }
-      end
-
-      subject { new_policy }
-
-      context 'with valid params' do
-        let(:effective_at) { Time.now - 1.day }
-
-        it { expect(subject.valid?).to eq true }
-        it { expect { subject.valid? }.to_not change { subject.errors.messages.size } }
-      end
-
-      context 'when there is policy after' do
-        let(:effective_at) { Time.now - 6.hours }
-
-        it { expect(subject.valid?).to eq false }
-        it { expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
-          .to include('Policy period must last minimum 1 day') }
-      end
-
-      context 'when there is policy before' do
-        let(:effective_at) { Time.now + 6.hours }
-
-        it { expect(subject.valid?).to eq false }
-        it { expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
-          .to include('Policy period must last minimum 1 day') }
-      end
-    end
-
     context '#no_balances_after_effective_at' do
       let(:employee) { create(:employee, created_at: Time.now - 12.years) }
       let(:effective_at) { Time.now + 1.day }

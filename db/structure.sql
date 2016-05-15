@@ -234,7 +234,7 @@ CREATE TABLE employee_time_off_policies (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
     employee_id uuid NOT NULL,
     time_off_policy_id uuid NOT NULL,
-    effective_at timestamp without time zone,
+    effective_at date NOT NULL,
     time_off_category_id uuid
 );
 
@@ -1473,3 +1473,5 @@ INSERT INTO schema_migrations (version) VALUES ('20160502104901');
 INSERT INTO schema_migrations (version) VALUES ('20160502132953');
 
 INSERT INTO schema_migrations (version) VALUES ('20160506084601');
+
+INSERT INTO schema_migrations (version) VALUES ('20160515174339');
