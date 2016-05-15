@@ -9,6 +9,14 @@ class WorkingPlace < ActiveRecord::Base
 
   validates :name, :account_id, presence: true
 
+  scope :active_for_employee, lambda { |employee_id, date|
+    joins(:employee_working_places)
+      .where("employee_working_places.employee_id= ? AND
+              employee_working_places.effective_at <= ?", employee_id, date)
+      .order('employee_working_places.effective_at desc')
+      .first
+  }
+
   def active_time_off_policy_in_category(category_id)
     time_off_policies_in_category(category_id).first.try(:time_off_policy)
   end

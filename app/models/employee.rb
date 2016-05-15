@@ -43,11 +43,7 @@ class Employee < ActiveRecord::Base
   end
 
   def active_working_place_at(date = Time.zone.now)
-    employee_working_places
-      .where('effective_at <= ?', date)
-      .order(:effective_at)
-      .last
-      .try(:working_place)
+    WorkingPlace.active_for_employee(id, date)
   end
 
   def last_balance_in_category(category_id)
