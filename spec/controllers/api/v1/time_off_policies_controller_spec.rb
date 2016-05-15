@@ -10,12 +10,12 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
 
 
   describe 'GET #index' do
+    subject { get :index }
     let!(:time_off_policies) do
       create_list(:time_off_policy, 3, time_off_category: time_off_category)
     end
 
     context 'response body' do
-      subject { get :index }
       before { subject }
 
       it { is_expected.to have_http_status(200) }
@@ -39,6 +39,24 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
           ]
         )
       end
+    end
+
+    context 'with employee time off policies' do
+      let!(:first_etop) do
+        create(:employee_time_off_policy,
+          employee: employee, time_off_policy: time_off_policies.first
+        )
+      end
+      let!(:second_etop) do
+        create(:employee_time_off_policy,
+          employee: employee, time_off_policy: time_off_policies.first,
+          effective_at: Time.now + 2.days
+        )
+      end
+
+      before { subject }
+
+      it { expect(response.body).to include(first_etop.id, second_etop.id) }
     end
 
     context "without params" do

@@ -20,8 +20,7 @@ module Api::V1
     end
 
     def employees_json
-      related = related_resources(EmployeeWorkingPlace, resource.id)
-      related.map do |employee_working_place|
+      related_resources(EmployeeWorkingPlace, resource.id).map do |employee_working_place|
         EmployeeWorkingPlaceRepresenter.new(employee_working_place).complete
       end
     end

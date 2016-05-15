@@ -18,7 +18,7 @@ module API
         verified_params(gate_rules) do |attributes|
           authorize! :create, working_place
           resource = employee.employee_working_places.create!(attributes.except(:id))
-          resource = create_hash(EmployeeWorkingPlace, resource.id).first
+          resource = resources_with_effective_till(EmployeeWorkingPlace, resource.id).first
           render_resource(resource, status: 201)
         end
       end
@@ -36,12 +36,12 @@ module API
 
       def working_place_resources
         authorize! :index, working_place
-        create_hash(EmployeeWorkingPlace, nil, working_place.id)
+        resources_with_effective_till(EmployeeWorkingPlace, nil, working_place.id)
       end
 
       def employee_resources
         authorize! :index, employee
-        create_hash(EmployeeWorkingPlace, nil, nil, employee.id)
+        resources_with_effective_till(EmployeeWorkingPlace, nil, nil, employee.id)
       end
 
       def resource_representer
