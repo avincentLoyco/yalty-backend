@@ -4,17 +4,23 @@ class CalculateTimeOffBalance
 
   def initialize(time_off)
     @time_off = time_off
-    @time_off_start_date = time_off.start_time.to_date
-    @time_off_end_date = time_off.end_time.to_date
+    @time_off_start_date = time_off.start_time
+    @time_off_end_date = time_off.end_time
     @employee = time_off.employee
     @holidays_dates_hash = holidays_dates_in_time_off(time_off_holidays)
-    @minutes = 0
   end
 
   def call
     minutes_in_time_off = 0
-    active_join_table_for_time_off(EmployeePresencePolicy).each do |epp|
+    active_epps = active_join_table_for_time_off(EmployeePresencePolicy)
+    active_epps.each do |epp|
       next if epp.presence_policy.try(:time_entries).blank?
+      @epp_start_datetime =
+        epp == active_epps.first ? time_off_start_date : epp.effective_at.to_datetime
+      @epp_start_date = @epp_start_datetime.to_date
+      @epp_end_datetime =
+        epp == active_epps.last ? time_off_end_date : epp.effective_till.to_datetime + 1
+      @epp_end_date = @epp_end_datetime.to_date
       @presence_policy = epp.presence_policy
       minutes_in_time_off += calculate_minutes_from_entries
     end
@@ -78,7 +84,7 @@ class CalculateTimeOffBalance
   end
 
   def calculate_minutes_from_entries
-    if time_off_start_date == time_off_end_date
+    if @epp_start_date == @epp_end_date
       [common_entries]
     else
       [whole_entries, start_entries, end_entries]
@@ -86,7 +92,7 @@ class CalculateTimeOffBalance
   end
 
   def start_order
-    time_off.start_time.wday.to_s.sub('0', '7').to_i
+    @epp_start_date.wday.to_s.sub('0', '7').to_i
   end
 
   def end_order
@@ -94,7 +100,7 @@ class CalculateTimeOffBalance
   end
 
   def num_of_days_in_time_off
-    (time_off.end_time.to_date - time_off.start_time.to_date).to_i + 1
+    (@epp_end_date.to_date - @epp_start_date.to_date).to_i + 1
   end
 
   def presence_days_with_entries_duration
@@ -114,7 +120,7 @@ class CalculateTimeOffBalance
   end
 
   def start_entries
-    return 0 unless day_order_in_period_and_not_holiday?(start_order, time_off_start_date)
+    return 0 unless day_order_in_period_and_not_holiday?(start_order, @epp_start_date)
     day_entries(start_order).map do |entry|
       shift_start = entry.start_time_tod > starts ? entry.start_time_tod : starts
       shift_end = entry.end_time_tod >= starts ? entry.end_time_tod : midnight
@@ -123,7 +129,7 @@ class CalculateTimeOffBalance
   end
 
   def end_entries
-    return 0 unless day_order_in_period_and_not_holiday?(end_order, time_off_end_date)
+    return 0 unless day_order_in_period_and_not_holiday?(end_order, @epp_end_date)
     day_entries(end_order).map do |entry|
       shift_start = entry.start_time_tod > ends ? ends : entry.start_time_tod
       shift_end = entry.end_time_tod > ends ? ends : entry.end_time_tod
@@ -132,7 +138,7 @@ class CalculateTimeOffBalance
   end
 
   def common_entries
-    return 0 unless day_order_in_period_and_not_holiday?(start_order, time_off_start_date)
+    return 0 unless day_order_in_period_and_not_holiday?(start_order, @epp_start_date)
     day_entries(start_order).map do |entry|
       shift_start = starts > entry.start_time_tod ? starts : entry.start_time_tod
       shift_end = ends < entry.end_time_tod ? ends : entry.end_time_tod
@@ -195,11 +201,11 @@ class CalculateTimeOffBalance
   end
 
   def starts
-    Tod::TimeOfDay.parse(time_off.start_time.strftime('%H:%M'))
+    Tod::TimeOfDay.parse(@epp_start_datetime.strftime('%H:%M'))
   end
 
   def ends
-    Tod::TimeOfDay.parse(time_off.end_time.strftime('%H:%M'))
+    Tod::TimeOfDay.parse(@epp_end_datetime.strftime('%H:%M'))
   end
 
   def midnight
