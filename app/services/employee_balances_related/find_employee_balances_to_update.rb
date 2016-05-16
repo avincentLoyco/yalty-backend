@@ -63,8 +63,7 @@ class FindEmployeeBalancesToUpdate
 
   def no_removals_or_removals_bigger_than_amount?
     resource.current_or_next_period && active_balances_with_removals.blank? ||
-      active_balances_with_removals.blank? && resource.time_off_policy.end_date.blank? ||
-      next_removals_smaller_than_amount?
+      active_balances_with_removals.blank? || next_removals_smaller_than_amount?
   end
 
   def active_balances

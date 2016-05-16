@@ -483,7 +483,6 @@ CREATE TABLE time_off_policies (
     time_off_category_id uuid NOT NULL,
     created_at timestamp without time zone,
     updated_at timestamp without time zone,
-    years_passed integer DEFAULT 0 NOT NULL,
     name character varying NOT NULL
 );
 
@@ -1507,3 +1506,5 @@ INSERT INTO schema_migrations (version) VALUES ('20160510124516');
 INSERT INTO schema_migrations (version) VALUES ('20160512142051');
 
 INSERT INTO schema_migrations (version) VALUES ('20160515174339');
+
+INSERT INTO schema_migrations (version) VALUES ('20160516121616');

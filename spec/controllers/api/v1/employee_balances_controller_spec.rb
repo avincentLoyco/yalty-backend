@@ -5,8 +5,8 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
   include ActiveJob::TestHelper
   include_context 'shared_context_headers'
 
-  let(:previous_start) { policy.start_date - time_off_policy.years_to_effect.years }
-  let(:previous_end) { policy.end_date - policy.years_to_effect.years }
+  let(:previous_start) { related_period.first_start_date - policy.years_to_effect.years }
+  let(:previous_end) { previous_start + policy.years_to_effect.years }
   let(:employee) { create(:employee, :with_time_off_policy, account: account) }
   let(:policy_category) do
     employee.employee_time_off_policies.first.time_off_policy.time_off_category.tap do |c|
@@ -14,6 +14,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
     end
   end
   let(:policy) { employee.employee_time_off_policies.first.time_off_policy }
+  let(:related_period) { RelatedPolicyPeriod.new(employee.employee_time_off_policies.first) }
   let(:employee_balance) do
     create(:employee_balance,
       employee: employee,

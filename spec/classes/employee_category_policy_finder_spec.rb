@@ -47,7 +47,6 @@ RSpec.describe EmployeeCategoryPolicyFinder do
             end_month: first_policy.end_month,
             amount: first_policy.amount.to_s,
             years_to_effect: first_policy.years_to_effect.to_s,
-            years_passed: first_policy.years_passed.to_s,
             account_id: account.id
           }.with_indifferent_access
         expect(subject.first).to eq expected_result
@@ -84,7 +83,6 @@ RSpec.describe EmployeeCategoryPolicyFinder do
             end_month: second_policy.end_month,
             amount: second_policy.amount,
             years_to_effect: second_policy.years_to_effect.to_s,
-            years_passed: second_policy.years_passed.to_s,
             account_id: account.id
           }.with_indifferent_access
         expect(subject.first).to eq expected_result

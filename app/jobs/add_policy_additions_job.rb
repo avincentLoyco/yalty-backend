@@ -42,15 +42,14 @@ class AddPolicyAdditionsJob < ActiveJob::Base
       validity_date: policy_end_date(
         attributes_hash['end_day'],
         attributes_hash['end_month'],
-        attributes_hash['years_to_effect'],
-        attributes_hash['years_passed)']
+        attributes_hash['years_to_effect']
       )
     }
   end
 
-  def policy_end_date(end_day, end_month, years_to_effect, years_passed)
+  def policy_end_date(end_day, end_month, years_to_effect)
     return nil if end_day.blank? && end_month.blank?
     add_years = years_to_effect > 1 ? years_to_effect : 1
-    Date.new(Time.zone.today.year - years_passed + add_years, end_month, end_day)
+    Date.new(Time.zone.today.year + add_years, end_month, end_day)
   end
 end

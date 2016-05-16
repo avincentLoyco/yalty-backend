@@ -11,7 +11,6 @@ class TimeOffPolicy < ActiveRecord::Base
     :time_off_category,
     :name,
     presence: true
-  validates :years_passed, numericality: { greater_than_or_equal_to: 0 }
   validates :amount, presence: true, if: "policy_type == 'balancer'"
   validates :amount, absence: true, if: "policy_type == 'counter'"
   validates :policy_type, inclusion: { in: %w(counter balancer) }
@@ -36,33 +35,6 @@ class TimeOffPolicy < ActiveRecord::Base
 
   def counter?
     policy_type == 'counter'
-  end
-
-  def start_date
-    Date.new(Time.zone.today.year - start_years_ago, start_month, start_day)
-  end
-
-  def end_date
-    return start_date + years_or_effect unless end_day && end_month
-    Date.new(end_in_years, end_month, end_day)
-  end
-
-  def start_years_ago
-    return 0 unless years_to_effect && years_to_effect > 1
-    years_passed % years_to_effect
-  end
-
-  def years_or_effect
-    return (years_to_effect.to_i + 1).years if years_to_effect.blank? || dates_blank?
-    years_to_effect > 1 ? years_to_effect.years : 1.year
-  end
-
-  def end_in_years
-    start_date.year + years_to_effect
-  end
-
-  def dates_blank?
-    (end_day.blank? && end_month.blank?)
   end
 
   private
@@ -99,6 +71,8 @@ class TimeOffPolicy < ActiveRecord::Base
 
   def end_date_after_start_date
     return unless errors.blank?
-    errors.add(:end_month, 'Must be after start month') if end_date < start_date
+    start_date =  Date.new(Time.zone.today.year, start_month, start_day)
+    end_date = Date.new(Time.zone.today.year, end_month, end_day) + years_to_effect.years
+    errors.add(:end_month, 'Must be after start month') if end_date <= start_date
   end
 end

@@ -84,7 +84,7 @@ class EmployeeCategoryPolicyFinder
   def employees_with_employee_policy_sql
     "
       SELECT etopa.employee_id, top.time_off_category_id, top.policy_type, top.end_day,
-        top.end_month, top.amount, top.years_to_effect, top.years_passed, toc.account_id
+        top.end_month, top.amount, top.years_to_effect, toc.account_id
       FROM
       (
         SELECT etop.effective_at, etop.employee_id, etop.time_off_policy_id,
@@ -108,7 +108,7 @@ class EmployeeCategoryPolicyFinder
   def employees_with_working_place_policy_sql
     "
       SELECT e.id as employee_id, top.time_off_category_id, top.policy_type, top.end_day,
-        top.end_month, top.amount, top.years_to_effect, top.years_passed, toc.account_id
+        top.end_month, top.amount, top.years_to_effect, toc.account_id
         FROM
         (
           SELECT DISTINCT employees.id, employees.working_place_id
@@ -139,7 +139,7 @@ class EmployeeCategoryPolicyFinder
   def previous_employees_with_employee_policy_sql
     "
       SELECT etopa.employee_id, top.time_off_category_id, top.policy_type, top.end_day,
-        top.end_month, top.amount, top.years_to_effect, top.years_passed, toc.account_id
+        top.end_month, top.amount, top.years_to_effect, toc.account_id
       FROM
       (
         SELECT etop.effective_at, etop.employee_id, etop.time_off_policy_id,
@@ -163,7 +163,7 @@ class EmployeeCategoryPolicyFinder
   def previous_employees_with_working_place_policy_sql
     "
       SELECT e.id as employee_id, top.time_off_category_id, top.policy_type, top.end_day,
-        top.end_month, top.amount, top.years_to_effect, top.years_passed, toc.account_id
+        top.end_month, top.amount, top.years_to_effect, toc.account_id
         FROM
         (
           SELECT DISTINCT employees.id
