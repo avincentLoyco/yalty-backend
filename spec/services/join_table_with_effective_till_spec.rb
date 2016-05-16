@@ -9,6 +9,8 @@ RSpec.describe JoinTableWithEffectiveTill, type: :service do
     let(:employee_first)  { create(:employee, account: account_first) }
     let(:employee_third)  { create(:employee, account: account_second) }
     let(:account_id)      { account_first.id }
+    let(:from_date)       { nil }
+    let(:till_date)       { nil }
 
     context 'when join table is EmployeeTimeOffPolicy' do
       subject do
@@ -25,7 +27,7 @@ RSpec.describe JoinTableWithEffectiveTill, type: :service do
             :employee_time_off_policy,
             employee: employee_first,
             time_off_policy: policy_second,
-            effective_at: Time.now-1.days
+            effective_at: Time.now-2.days
           )
         end
         let!(:etop_second) do
@@ -33,12 +35,52 @@ RSpec.describe JoinTableWithEffectiveTill, type: :service do
             :employee_time_off_policy,
             employee: employee_first,
             time_off_policy: policy_second,
-            effective_at: Time.now+1.days
+            effective_at: Time.now+2.days
           )
         end
 
         attributes = %w(id effective_at effective_till employee_id)
         it { subject.first {|etop| expect(etop.keys).to match_array(attributes) } }
+
+        context 'and we pass the params from_date and till_date' do
+          subject do
+            described_class.new(EmployeeTimeOffPolicy, account_id, nil, nil, nil, from_date, till_date).call
+          end
+
+          context 'and there are etop with effective_at smaller or equal till_date and effective_till bigger or equal from_date' do
+            let(:from_date) { Time.now+2.days }
+            let(:till_date) { Time.now+5.days }
+
+            before { subject }
+
+            it { expect(subject.class).to eq Array }
+            it { expect(subject.size).to eq 1 }
+
+            it { expect(subject[0]['id']).to eq etop_second.id }
+            it { subject.map { |etop| expect(etop['id']).not_to eq etop_zero.id } }
+          end
+
+          context 'and there are no etops with effective_at smaller then till_date' do
+            let(:till_date) { Time.now-4.days }
+
+            before { subject }
+
+            it { expect(subject.class).to eq Array }
+            it { expect(subject.size).to eq 0 }
+          end
+
+          context 'and there are etop with effective_till equal nil' do
+            let(:from_date) { Time.now+10.days }
+
+            before { subject }
+
+            it { expect(subject.class).to eq Array }
+            it { expect(subject.size).to eq 1 }
+
+            it { expect(subject[0]['id']).to eq etop_second.id }
+            it { subject.map { |etop| expect(etop['id']).not_to eq etop_zero.id } }
+          end
+        end
 
         context 'and we pass the param resource_id' do
           subject do
@@ -88,14 +130,6 @@ RSpec.describe JoinTableWithEffectiveTill, type: :service do
 
         context 'and employees have multiple employee time off policies per category' do
           let(:employee_second) { create(:employee, account: account_first) }
-          let!(:etop_second) do
-          create(
-            :employee_time_off_policy,
-            employee: employee_second,
-            time_off_policy: policy_second,
-            effective_at: Time.now+1.days
-          )
-        end
           let!(:etop_first) do
             create(
               :employee_time_off_policy,
@@ -104,12 +138,20 @@ RSpec.describe JoinTableWithEffectiveTill, type: :service do
               effective_at: Time.now
             )
           end
+          let!(:etop_second) do
+            create(
+              :employee_time_off_policy,
+              employee: employee_second,
+              time_off_policy: policy_second,
+              effective_at: Time.now+2.days
+            )
+          end
           let!(:etop_third) do
             create(
               :employee_time_off_policy,
               employee: employee_first,
               time_off_policy: policy_second,
-              effective_at: Time.now+3.days
+              effective_at: Time.now+4.days
             )
           end
           let!(:etop_fourth) do
@@ -117,7 +159,7 @@ RSpec.describe JoinTableWithEffectiveTill, type: :service do
               :employee_time_off_policy,
               employee: employee_first,
               time_off_policy: policy_first,
-              effective_at: Time.now+4.days
+              effective_at: Time.now+6.days
             )
           end
           let!(:etop_fifth) do
@@ -125,7 +167,7 @@ RSpec.describe JoinTableWithEffectiveTill, type: :service do
               :employee_time_off_policy,
               employee: employee_second,
               time_off_policy: policy_second,
-              effective_at: Time.now+5.days
+              effective_at: Time.now+8.days
             )
           end
 
@@ -148,7 +190,7 @@ RSpec.describe JoinTableWithEffectiveTill, type: :service do
               :employee_time_off_policy,
               employee: employee_first,
               time_off_policy: policy_second,
-              effective_at: Time.now-2.days
+              effective_at: Time.now-4.days
             )
           end
 
@@ -170,7 +212,7 @@ RSpec.describe JoinTableWithEffectiveTill, type: :service do
               :employee_time_off_policy,
               employee: employee_third,
               time_off_policy: policy_third,
-              effective_at: Time.now+1.days
+              effective_at: Time.now
             )
           end
 
@@ -206,7 +248,7 @@ RSpec.describe JoinTableWithEffectiveTill, type: :service do
           create(
             :employee_presence_policy,
             employee: employee_first,
-            effective_at: Time.now-1.days,
+            effective_at: Time.now-2.days,
             presence_policy: presence_policy
           )
         end
@@ -221,6 +263,46 @@ RSpec.describe JoinTableWithEffectiveTill, type: :service do
 
         attributes = %w(id effective_at effective_till employee_id order_of_start_day)
         it { subject.first {|epp| expect(epp.keys).to match_array(attributes) } }
+
+        context 'and we pass the params from_date and till_date' do
+          subject do
+            described_class.new(EmployeePresencePolicy, account_id, nil, nil, nil, from_date, till_date).call
+          end
+
+          context 'and there are policy with effective_at smaller or equal till_date and effective_till bigger or equal from_date' do
+            let(:from_date) { Time.now+2.days }
+            let(:till_date) { Time.now+5.days }
+
+            before { subject }
+
+            it { expect(subject.class).to eq Array }
+            it { expect(subject.size).to eq 1 }
+
+            it { expect(subject[0]['id']).to eq epp_second.id }
+            it { subject.map { |epp| expect(epp['id']).not_to eq epp_zero.id } }
+          end
+
+          context 'and there are no policies with effective_at smaller then till_date' do
+            let(:till_date) { Time.now-4.days }
+
+            before { subject }
+
+            it { expect(subject.class).to eq Array }
+            it { expect(subject.size).to eq 0 }
+          end
+
+          context 'and there are policy with effective_till equal nil' do
+            let(:from_date) { Time.now+10.days }
+
+            before { subject }
+
+            it { expect(subject.class).to eq Array }
+            it { expect(subject.size).to eq 1 }
+
+            it { expect(subject[0]['id']).to eq epp_second.id }
+            it { subject.map { |epp| expect(epp['id']).not_to eq epp_zero.id } }
+          end
+        end
 
         context 'and we pass the param resource_id' do
           subject do
@@ -270,14 +352,14 @@ RSpec.describe JoinTableWithEffectiveTill, type: :service do
 
         context 'and employees have multiple employee presence policies' do
           let(:employee_second) { create(:employee, account: account_first) }
-          let!(:epp_second) do
-            create(:employee_presence_policy, employee: employee_second, effective_at: Time.now+1.days)
-          end
           let!(:epp_first) do
             create(:employee_presence_policy, employee: employee_first, effective_at: Time.now)
           end
+          let!(:epp_second) do
+            create(:employee_presence_policy, employee: employee_second, effective_at: Time.now+2.days)
+          end
           let!(:epp_third) do
-            create(:employee_presence_policy, employee: employee_second, effective_at: Time.now+3.days)
+            create(:employee_presence_policy, employee: employee_second, effective_at: Time.now+4.days)
           end
 
           before { subject }
@@ -292,7 +374,7 @@ RSpec.describe JoinTableWithEffectiveTill, type: :service do
 
         context 'and there are employee presence policies that are previous to the current' do
           let!(:epp_previous) do
-            create(:employee_presence_policy, employee: employee_first, effective_at: Time.now-2.days)
+            create(:employee_presence_policy, employee: employee_first, effective_at: Time.now-4.days)
           end
 
           before { subject }
@@ -307,7 +389,7 @@ RSpec.describe JoinTableWithEffectiveTill, type: :service do
 
         context 'and there are employees with current or future employee presence policies but from other accounts' do
           let!(:epp_from_account_second) do
-            create(:employee_presence_policy, employee: employee_third, effective_at: Time.now+1.days)
+            create(:employee_presence_policy, employee: employee_third, effective_at: Time.now)
           end
 
           before { subject }
@@ -356,6 +438,46 @@ RSpec.describe JoinTableWithEffectiveTill, type: :service do
 
         attributes = %w(id effective_at effective_till employee_id)
         it { subject.first {|etop| expect(etop.keys).to match_array(attributes) } }
+
+        context 'and we pass the params from_date and till_date' do
+          subject do
+            described_class.new(EmployeeWorkingPlace, account_id, nil, nil, nil, from_date, till_date).call
+          end
+
+          context 'and there are working place with effective_at smaller or equal till_date and effective_till bigger or equal from_date' do
+            let(:from_date) { Time.now+2.days }
+            let(:till_date) { Time.now+5.days }
+
+            before { subject }
+
+            it { expect(subject.class).to eq Array }
+            it { expect(subject.size).to eq 1 }
+
+            it { expect(subject[0]['id']).to eq ewp_second.id }
+            it { subject.map { |ewp| expect(ewp['id']).not_to eq ewp_first.id } }
+          end
+
+          context 'and there are no working places with effective_at smaller then till_date' do
+            let(:till_date) { Time.now-4.days }
+
+            before { subject }
+
+            it { expect(subject.class).to eq Array }
+            it { expect(subject.size).to eq 0 }
+          end
+
+          context 'and there are working place with effective_till equal nil' do
+            let(:from_date) { Time.now+10.days }
+
+            before { subject }
+
+            it { expect(subject.class).to eq Array }
+            it { expect(subject.size).to eq 1 }
+
+            it { expect(subject[0]['id']).to eq ewp_second.id }
+            it { subject.map { |ewp| expect(ewp['id']).not_to eq ewp_first.id } }
+          end
+        end
 
         context 'and we pass the param resource_id' do
           subject do
@@ -406,7 +528,7 @@ RSpec.describe JoinTableWithEffectiveTill, type: :service do
           let(:employee_second) { create(:employee, account: account_first) }
           let!(:ewp_from_employee_second) do
             ewp = employee_second.employee_working_places.first
-            ewp.update(effective_at: Time.now+1.days)
+            ewp.update(effective_at: Time.now)
             ewp
           end
 
@@ -443,7 +565,7 @@ RSpec.describe JoinTableWithEffectiveTill, type: :service do
         context 'and there are employees with current employee working places but from other accounts' do
           let!(:ewp_from_account_second) do
             ewp = employee_third.employee_working_places.first
-            ewp.update(effective_at: Time.now+1.days)
+            ewp.update(effective_at: Time.now)
             ewp
           end
 
