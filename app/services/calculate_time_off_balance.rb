@@ -15,12 +15,8 @@ class CalculateTimeOffBalance
     active_epps = active_join_table_for_time_off(EmployeePresencePolicy)
     active_epps.each do |epp|
       next if epp.presence_policy.try(:time_entries).blank?
-      @epp_start_datetime =
-        epp == active_epps.first ? time_off_start_date : epp.effective_at.to_datetime
-      @epp_start_date = @epp_start_datetime.to_date
-      @epp_end_datetime =
-        epp == active_epps.last ? time_off_end_date : epp.effective_till.to_datetime + 1
-      @epp_end_date = @epp_end_datetime.to_date
+      calculate_start_date_for_epp(epp, active_epps)
+      calculate_end_date_for_epp(epp, active_epps)
       @presence_policy = epp.presence_policy
       minutes_in_time_off += calculate_minutes_from_entries
     end
@@ -28,6 +24,18 @@ class CalculateTimeOffBalance
   end
 
   private
+
+  def calculate_start_date_for_epp(epp, active_epps)
+    @epp_start_datetime =
+      epp == active_epps.first ? time_off_start_date : epp.effective_at.to_datetime
+    @epp_start_date = @epp_start_datetime.to_date
+  end
+
+  def calculate_end_date_for_epp(epp, active_epps)
+    @epp_end_datetime =
+      epp == active_epps.last ? time_off_end_date : epp.effective_till.to_datetime + 1
+    @epp_end_date = @epp_end_datetime.to_date
+  end
 
   def previous_day_order(order)
     order == 1 ? @presence_policy.last_day_order : order - 1
