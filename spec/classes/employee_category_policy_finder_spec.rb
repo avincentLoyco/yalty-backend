@@ -79,8 +79,11 @@ RSpec.describe EmployeeCategoryPolicyFinder do
             employee_id: employee.id,
             time_off_category_id: category.id,
             policy_type: second_policy.policy_type,
+            effective_at: employee_time_off_policy.effective_at.to_s,
             end_day: second_policy.end_day,
             end_month: second_policy.end_month,
+            start_day: second_policy.start_day.to_s,
+            start_month: second_policy.start_month.to_s,
             amount: second_policy.amount,
             years_to_effect: second_policy.years_to_effect.to_s,
             account_id: account.id

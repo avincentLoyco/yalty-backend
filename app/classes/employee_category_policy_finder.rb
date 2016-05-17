@@ -83,8 +83,9 @@ class EmployeeCategoryPolicyFinder
 
   def employees_with_employee_policy_sql
     "
-      SELECT etopa.employee_id, top.time_off_category_id, top.policy_type, top.end_day,
-        top.end_month, top.amount, top.years_to_effect, toc.account_id
+      SELECT etopa.employee_id, etopa.effective_at, top.time_off_category_id, top.policy_type,
+        top.end_day, top.end_month, top.amount, top.start_day, top.start_month, top.years_to_effect,
+        toc.account_id
       FROM
       (
         SELECT etop.effective_at, etop.employee_id, etop.time_off_policy_id,
