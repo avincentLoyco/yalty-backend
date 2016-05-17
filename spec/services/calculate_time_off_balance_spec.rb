@@ -114,6 +114,33 @@ RSpec.describe CalculateTimeOffBalance, type: :service do
         end
         it { expect(subject).to eq 0 }
       end
+
+      context 'and there are multiple working places with different holiday policies and diferent' do
+        let(:second_day) { create(:presence_day, order: 4, presence_policy: policy) }
+        let(:first_day) { create(:presence_day, order: 7, presence_policy: policy) }
+        let(:holiday_policy) { create(:holiday_policy, country: 'ch', region: 'ai') }
+        let(:holiday_policy_ow) { create(:holiday_policy, country: 'ch', region: 'ow') }
+        let!(:second_ewp) do
+          create(:employee_working_place,
+            employee: employee,
+            effective_at: Date.new(2016,9,23)
+            )
+        end
+        let!(:third_ewp) do
+          create(:employee_working_place,
+            employee: employee,
+            effective_at: Date.new(2016,9,25)
+            )
+        end
+        let(:second_working_place) { second_ewp.working_place }
+        before do
+          second_ewp.working_place.update!(holiday_policy: holiday_policy_ow)
+          time_off.update!(start_time: Date.new(2016,9,21), end_time: Date.new(2016,9,25))
+        end
+
+        it { expect(subject).to eq 0 }
+      end
+
       context 'and the period is longer than one day day long' do
         context 'and the holiday is in the first day of the time off' do
           before do

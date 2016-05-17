@@ -55,8 +55,8 @@ class CalculateTimeOffBalance
     active_ewps.each do |ewp|
       holiday_policy = ewp.working_place.holiday_policy
       next unless holiday_policy
-      start_date = ewp == active_ewps.first ? time_off_start_date : active_ewps.effective_at
-      end_date = ewp == active_ewps.last ? time_off_end_date : active_ewps.effective_till
+      start_date = ewp == active_ewps.first ? time_off_start_date : ewp.effective_at.to_date
+      end_date = ewp == active_ewps.last ? time_off_end_date : ewp.effective_till.to_date
       all_holidays += holiday_policy.holidays_in_period(start_date, end_date)
     end
     all_holidays

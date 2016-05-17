@@ -1,6 +1,6 @@
 class JoinTableWithEffectiveTill
   attr_reader :join_table, :join_table_class, :account_id, :employee_id, :join_table_id,
-    :resource_id, :from_date, :till_date
+    :resource_id, :effective_till_from_date, :effective_at_till_date
 
   def initialize(
     join_table_class,
@@ -8,8 +8,8 @@ class JoinTableWithEffectiveTill
     resource_id = nil,
     employee_id = nil,
     join_table_id = nil,
-    from_date = Time.zone.today,
-    till_date = nil
+    effective_till_from_date = Time.zone.today,
+    effective_at_till_date = nil
   )
     @join_table_class = join_table_class
     @join_table = join_table_class.to_s.tableize
@@ -17,8 +17,8 @@ class JoinTableWithEffectiveTill
     @join_table_id = join_table_id
     @employee_id = employee_id
     @resource_id = resource_id
-    @from_date = from_date
-    @till_date = till_date
+    @effective_till_from_date = effective_till_from_date
+    @effective_at_till_date = effective_at_till_date
   end
 
   def call
@@ -55,7 +55,7 @@ class JoinTableWithEffectiveTill
         GROUP BY  A.id
       ) AS B
       WHERE ( B.effective_till is null
-              OR B.effective_till >= to_date('#{from_date}', 'YYYY-MM_DD')
+              OR B.effective_till >= to_date('#{effective_till_from_date}', 'YYYY-MM_DD')
             )
         #{effective_at_before_date_sql}
       ORDER BY B.effective_at;"
@@ -66,7 +66,7 @@ class JoinTableWithEffectiveTill
   end
 
   def effective_at_before_date_sql
-    till_date.present? ? "AND B.effective_at <= '#{till_date}'" : ''
+    effective_at_till_date.present? ? "AND B.effective_at <= '#{effective_at_till_date}'" : ''
   end
 
   def specific_presence_policy_sql
