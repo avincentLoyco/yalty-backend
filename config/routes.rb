@@ -50,6 +50,8 @@ Rails.application.routes.draw do
         put  'users/password', to: 'auth/users#new_password'
       end
     end
+
+    post 'newsletters', to: 'newsletters#create'
   end
 
   # ADMIN
