@@ -34,7 +34,7 @@ module API
       end
 
       def time_off_policy
-        @time_off_policy = Account.current.time_off_policies.find(params[:time_off_policy_id])
+        @time_off_policy ||= Account.current.time_off_policies.find(params[:time_off_policy_id])
       end
 
       def resource_representer

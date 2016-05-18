@@ -34,6 +34,8 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
         it { expect_json_sizes(2) }
         it { expect(response.body).to include(employee.id) }
         it { expect(response.body).to include(first_employee_policy.id, second_employee_policy.id) }
+        it { expect_json('1', effective_till: nil, id: employee.id) }
+        it { expect_json('0', effective_till: (first_employee_policy.effective_at - 1.day).to_s) }
         it { expect_json_keys(
           '*', [:id, :type, :assignation_id, :assignation_type, :effective_at, :effective_till])
         }
@@ -51,28 +53,47 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
       it { is_expected.to have_http_status(404) }
     end
+
+    context 'when account is not account manager' do
+      before { Account::User.current.update!(account_manager: false) }
+
+      it { is_expected.to have_http_status(403) }
+    end
   end
 
   describe 'POST #create' do
     subject { post :create, params }
-
+    let(:effective_at) { Time.now }
     let(:params) do
       {
         id: employee.id,
         time_off_policy_id: time_off_policy.id,
-        effective_at: Time.now
+        effective_at: effective_at
       }
     end
 
     context 'with valid params' do
       it { expect { subject }.to change { employee.employee_time_off_policies.count }.by(1) }
-
       it { is_expected.to have_http_status(201) }
 
       context 'response body' do
         before { subject }
 
-        it { expect_json_keys(:id, :type, :assignation_type, :aaa, :effective_at, :assignation_id) }
+        it { expect_json_keys([:id, :type, :assignation_type, :effective_at, :assignation_id]) }
+        it { expect_json(id: employee.id, effective_till: nil) }
+      end
+
+      context 'when policy effective at is in the past' do
+        before { time_off_policy.update!(end_month: 4, end_day: 1, years_to_effect: 1) }
+
+        let(:effective_at) { Time.now - 3.years }
+
+        it { expect { subject }.to change { employee.employee_time_off_policies.count }.by(1) }
+        it { expect { subject }.to change { Employee::Balance.count }.by(6) }
+        it { expect { subject }.to change { employee.employee_balances.additions.count }.by(4) }
+        it { expect { subject }.to change { employee.employee_balances.removals.count }.by(2) }
+
+        it { is_expected.to have_http_status(201) }
       end
     end
 
@@ -102,6 +123,12 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
         it { expect { subject }.to_not change { employee.employee_time_off_policies.count } }
         it { is_expected.to have_http_status(404) }
+      end
+
+      context 'when user is not account manager' do
+        before { Account::User.current.update!(account_manager: false) }
+
+        it { is_expected.to have_http_status(403) }
       end
     end
   end
