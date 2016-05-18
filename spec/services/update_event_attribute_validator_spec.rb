@@ -75,6 +75,19 @@ RSpec.describe UpdateEventAttributeValidator, type: :service do
       it {  expect { subject }.to raise_error(CanCan::AccessDenied, 'Not authorized!') }
     end
 
+    context 'whent there is a unauthorized attribute being removed' do
+      let(:employee_attributes_payload) do
+        [
+          { id: first_name_attribute_id,
+            value: new_first_name_value,
+            attribute_name: first_name_attribute_definition
+          }
+        ]
+      end
+
+      it {  expect { subject }.to raise_error(CanCan::AccessDenied, 'Not authorized!') }
+    end
+
     context 'when the attribute trying to being added does not belong to the event' do
       let(:annual_salary_attribute_id) { "44070cae-0f86-456f-9b3d-17a801db64bf" }
 

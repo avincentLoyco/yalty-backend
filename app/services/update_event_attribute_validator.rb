@@ -10,6 +10,7 @@ class UpdateEventAttributeValidator
   end
 
   def call
+    not_editable_ids = []
     employee_attributes.each do |employee_attribute|
       next unless
         ActsAsAttribute::NOT_EDITABLE_ATTRIBUTES_FOR_EMPLOYEE
@@ -17,7 +18,9 @@ class UpdateEventAttributeValidator
       verify_if_not_new(employee_attribute[:id])
       verify_attr_exist_in_event(employee_attribute[:id])
       verify_if_not_changed(employee_attribute)
+      not_editable_ids << employee_attribute[:id]
     end
+    vefiry_if_existing_restricted_attr_in_event_is_missing(not_editable_ids)
   end
 
   private
@@ -34,6 +37,11 @@ class UpdateEventAttributeValidator
   def verify_attr_exist_in_event(employee_attribute_id)
     unauthorized_attribute_handling unless
       event_unauthorized_attributes_ids.include?(employee_attribute_id)
+  end
+
+  def vefiry_if_existing_restricted_attr_in_event_is_missing(not_editable_ids)
+    unauthorized_attribute_handling unless
+      (event_unauthorized_attributes_ids - not_editable_ids).empty?
   end
 
   def unauthorized_attribute_handling
