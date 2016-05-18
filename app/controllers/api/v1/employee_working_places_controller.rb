@@ -4,6 +4,7 @@ module API
       include EmployeeWorkingPlacesRules
 
       def index
+        authorize! :index, EmployeeWorkingPlace.new
         if params[:working_place_id]
           render_resource(working_place_resources)
         else
@@ -35,12 +36,10 @@ module API
       end
 
       def working_place_resources
-        authorize! :index, working_place
         resources_with_effective_till(EmployeeWorkingPlace, nil, working_place.id)
       end
 
       def employee_resources
-        authorize! :index, employee
         resources_with_effective_till(EmployeeWorkingPlace, nil, nil, employee.id)
       end
 
