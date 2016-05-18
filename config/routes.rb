@@ -45,7 +45,7 @@ Rails.application.routes.draw do
       with_options as: nil do
         post 'accounts',       to: 'auth/accounts#create'
         get  'accounts/token', to: 'auth/accounts/tokens#create'
-        get  'accounts/list',  to: 'auth/accounts#list'
+        post 'accounts/list',  to: 'auth/accounts#list'
         post 'users/password', to: 'auth/users#reset_password'
         put  'users/password', to: 'auth/users#new_password'
       end
