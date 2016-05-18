@@ -3,6 +3,18 @@ require "rails_helper"
 RSpec.describe UserMailer, type: :mailer do
   let(:user) { create(:account_user, :with_reset_password_token) }
 
+  context '#account_creation_confirmation' do
+    let(:password) { '12345678' }
+
+    subject { UserMailer.account_creation_confirmation(user.id, password).deliver_now }
+
+    it { expect { subject }.to change { ActionMailer::Base.deliveries.count } }
+    it 'email should contain proper password and url' do
+      expect(subject.body.to_s).to include(password)
+      expect(subject.body.to_s).to include(user.account.subdomain)
+    end
+  end
+
   context '#credentials' do
     let(:password) { '12345678' }
     let(:url) { Faker::Internet.url }

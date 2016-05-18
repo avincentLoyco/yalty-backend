@@ -12,7 +12,7 @@ class Auth::AccountsController < ApplicationController
         user.convert_intercom_leads
       end
 
-      send_user_credentials(user.password)
+      send_account_creation_confirmation(user.password)
       render_response
     end
   end
@@ -68,13 +68,10 @@ class Auth::AccountsController < ApplicationController
     end
   end
 
-  def send_user_credentials(password)
-    user_id = current_resource_owner.id
-    subdomain = current_resource_owner.account.subdomain
-    UserMailer.credentials(
-      user_id,
-      password,
-      subdomain + '.' + ENV['YALTY_APP_DOMAIN']
+  def send_account_creation_confirmation(password)
+    UserMailer.account_creation_confirmation(
+      current_resource_owner.id,
+      password
     ).deliver_later
   end
 end
