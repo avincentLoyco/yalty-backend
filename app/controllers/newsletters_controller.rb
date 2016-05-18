@@ -4,9 +4,22 @@ class NewslettersController < ApplicationController
 
   def create
     verified_params(gate_rules) do |attributes|
-      intercom_client
-        .contacts
-        .create(attributes)
+      lead = intercom_client.contacts.find_all(email: attributes[:email]).first
+
+      if lead
+        lead.custom_attributes['newsletter_language'] = attributes[:language]
+        intercom_client.contacts.save(lead)
+      else
+        lead = intercom_client.contacts.create(
+          email: attributes[:email],
+          name: attributes[:name],
+          custom_attributes: {
+            newsletter_language: attributes[:language]
+          }
+        )
+      end
+
+      intercom_client.tags.tag(name: 'newsletter', users: [{ id: lead.id }])
 
       render_no_content
     end
