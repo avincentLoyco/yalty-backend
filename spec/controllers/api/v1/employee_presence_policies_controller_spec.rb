@@ -12,11 +12,11 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
 
     let(:new_policy) { create(:presence_policy, account: account) }
     let!(:employee_presence_policy) do
-      create(:employee_presence_policy, presence_policy: new_policy, employee: employee)
+      create(:employee_presence_policy, employee: employee, effective_at: Date.today)
     end
     let!(:employee_presence_policies) do
       today = Date.today
-      [today, today + 1.day, today + 2.days].map do |day|
+      [today + 3.days, today + 4.days, today + 5.days].map do |day|
         create(:employee_presence_policy,
           presence_policy: presence_policy, employee: employee, effective_at: day
         )

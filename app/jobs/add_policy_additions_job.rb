@@ -49,8 +49,8 @@ class AddPolicyAdditionsJob < ActiveJob::Base
 
   def policy_end_date(end_day, end_month, years_to_effect)
     return nil if end_day.blank? && end_month.blank?
-    add_years = years_to_effect > 1 ? years_to_effect : 1
-    Date.new(Time.zone.today.year + add_years, end_month, end_day)
+    add_years = years_to_effect.to_i > 1 ? years_to_effect.to_i : 1
+    Date.new(Time.zone.today.year + add_years, end_month.to_i, end_day.to_i)
   end
 
   def verified_table_data(table_data)
