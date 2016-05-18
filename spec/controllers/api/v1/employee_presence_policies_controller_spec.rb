@@ -10,20 +10,30 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
   describe 'GET #index' do
     subject { get :index, presence_policy_id: presence_policy.id }
 
+    let(:new_policy) { create(:presence_policy, account: account) }
+    let!(:employee_presence_policy) do
+      create(:employee_presence_policy, presence_policy: new_policy, employee: employee)
+    end
     let!(:employee_presence_policies) do
       today = Date.today
       [today, today + 1.day, today + 2.days].map do |day|
-        create(:employee_presence_policy, presence_policy: presence_policy, employee: employee, effective_at: day)
+        create(:employee_presence_policy,
+          presence_policy: presence_policy, employee: employee, effective_at: day
+        )
       end
     end
 
-    context 'with valid presence_policy' do
+    context 'with valid params' do
       it { is_expected.to have_http_status(200) }
 
       context 'response' do
         before { subject }
 
         it { expect_json_sizes(3) }
+        it { expect(response.body).to_not include (employee_presence_policy.id) }
+        it { expect_json('2', effective_till: nil, id: employee.id) }
+        it { expect_json('1', effective_till: (employee_presence_policies.last.effective_at - 1.day).to_s) }
+        it { expect_json('0', effective_till: (employee_presence_policies.second.effective_at - 1.day).to_s) }
         it '' do
           expect_json_keys(
             '*',
@@ -41,10 +51,24 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
       end
     end
 
-    context 'with invalid presence_policy' do
-      subject { get :index, presence_policy_id: '1' }
+    context 'with invalid params' do
+      context 'with invalid presence_policy' do
+        subject { get :index, presence_policy_id: '1' }
 
-      it { is_expected.to have_http_status(404) }
+        it { is_expected.to have_http_status(404) }
+      end
+
+      context 'when presence policy does not belongs to current account' do
+        before { Account.current = create(:account) }
+
+        it { is_expected.to have_http_status(404) }
+      end
+
+      context 'when current account is not account manager' do
+        before { Account::User.current.update!(account_manager: false) }
+
+        it { is_expected.to have_http_status(403) }
+      end
     end
   end
 
@@ -68,8 +92,9 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
       context 'response body' do
         before { subject }
 
+        it { expect_json(id: employee.id, effective_till: nil) }
         it '' do
-          expect_json_keys(
+          expect_json_keys([
             :id,
             :type,
             :assignation_type,
@@ -77,7 +102,7 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
             :assignation_id,
             :order_of_start_day,
             :effective_till
-          )
+          ])
         end
       end
     end
@@ -112,6 +137,13 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
 
         it { expect { subject }.to_not change { employee.employee_presence_policies.count } }
         it { is_expected.to have_http_status(404) }
+      end
+
+      context 'when current user is not account manager' do
+        before { Account::User.current.update!(account_manager: false) }
+
+        it { expect { subject }.to_not change { employee.employee_presence_policies.count } }
+        it { is_expected.to have_http_status(403) }
       end
     end
   end
