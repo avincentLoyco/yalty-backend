@@ -33,10 +33,6 @@ class API::ApplicationController < ApplicationController
       ::Api::V1::ErrorsRepresenter.new(nil, message: 'User unauthorized').complete, status: 401
   end
 
-  def assign_join_table_collection(resource, collection, collection_name)
-    AssignJoinTableCollection.new(resource, collection, collection_name).call
-  end
-
   def assign_collection(resource, collection, collection_name)
     AssignCollection.new(resource, collection, collection_name).call
   end
