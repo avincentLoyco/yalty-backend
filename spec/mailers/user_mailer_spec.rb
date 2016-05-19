@@ -28,16 +28,18 @@ RSpec.describe UserMailer, type: :mailer do
   end
 
   context '#accounts_list' do
-    let(:email) { Faker::Internet.email }
-    let(:subdomains_list) { ['abc', 'cba'] }
+    let(:account) { user.account }
+    let(:second_account) { create(:account_user, email: user.email).account }
 
-    subject { UserMailer.accounts_list(email, subdomains_list).deliver_now }
+    let(:email) { user.email }
+    let(:account_ids) { [account.id, second_account.id] }
+
+    subject { UserMailer.accounts_list(email, account_ids).deliver_now }
 
     it { expect { subject }.to change { ActionMailer::Base.deliveries.count } }
     it 'email should contain proper subdomains' do
-      email = subject
-      expect(email.body.to_s).to include(subdomains_list.first)
-      expect(email.body.to_s).to include(subdomains_list.last)
+      expect(subject.body.to_s).to include(account.subdomain)
+      expect(subject.body.to_s).to include(second_account.subdomain)
     end
   end
 

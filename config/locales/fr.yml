@@ -6,3 +6,5 @@ fr:
       subject: Bienvenue sur yalty
     reset_password:
       subject: Réinitialiser votre mot de passe
+    accounts_list:
+      subject: Votre équipe sur yalty

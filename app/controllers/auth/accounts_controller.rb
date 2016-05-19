@@ -22,10 +22,12 @@ class Auth::AccountsController < ApplicationController
       users = Account::User.includes(:account).where(email: attributes[:email])
 
       if users.present?
-        accounts_subdomains = users.map { |user| user.account.subdomain }
-        UserMailer.accounts_list(attributes[:email], accounts_subdomains).deliver_later
+        account_ids = users.map { |user| user.account.id }
+      else
+        account_ids = []
       end
 
+      UserMailer.accounts_list(attributes[:email], account_ids).deliver_later
       render_no_content
     end
   end

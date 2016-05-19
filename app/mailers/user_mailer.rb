@@ -19,13 +19,19 @@ class UserMailer < ApplicationMailer
     end
   end
 
-  def accounts_list(email, accounts_subdomains)
-    body = "
-      You have access to accounts:
-      #{accounts_subdomains.join(".#{ENV['YALTY_APP_DOMAIN']}, ")}
-    "
+  def accounts_list(email, account_ids)
+    @email = email
+    @accounts = Account.where(id: account_ids).readonly
 
-    send_mail(email, 'Your accounts', body)
+    if @accounts.present?
+      locale = @accounts.first.default_locale
+    else
+      locale = I18n.default_locale
+    end
+
+    I18n.with_locale(locale) do
+      mail to: @email
+    end
   end
 
   def reset_password(user_id)
