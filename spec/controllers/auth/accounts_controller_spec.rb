@@ -18,7 +18,8 @@ RSpec.describe Auth::AccountsController, type: :controller do
       {
         account:
           {
-            company_name: company_name
+            company_name: company_name,
+            default_locale: 'en'
           },
         user:
           {
