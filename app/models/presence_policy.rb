@@ -20,9 +20,4 @@ class PresencePolicy < ActiveRecord::Base
   def last_day_order
     presence_days.pluck(:order).max
   end
-
-  def affected_employees
-    Employee.joins(:employee_presence_policies)
-            .where(employee_presence_policies: { presence_policy_id: id })
-  end
 end

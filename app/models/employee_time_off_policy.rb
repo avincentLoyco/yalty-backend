@@ -13,10 +13,6 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
 
   before_create :add_category_id
 
-  scope :affected_employees, lambda { |policy_id|
-    where(time_off_policy_id: policy_id).pluck(:employee_id)
-  }
-
   scope :not_assigned_at, -> (date) { where(['effective_at > ?', date]) }
   scope :assigned_at, -> (date) { where(['effective_at <= ?', date]) }
   scope :by_employee_in_category, lambda { |employee_id, category_id|

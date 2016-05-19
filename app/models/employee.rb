@@ -22,6 +22,11 @@ class Employee < ActiveRecord::Base
   validates :employee_working_places, length: { minimum: 1 }
   validate :hired_event_presence, on: :create
 
+  scope :affected_by_presence_policy, lambda { |presence_policy_id|
+    joins(:employee_presence_policies)
+      .where(employee_presence_policies: { presence_policy_id: presence_policy_id })
+  }
+
   def first_employee_working_place
     employee_working_places.find_by(effective_at: employee_working_places.pluck(:effective_at).min)
   end

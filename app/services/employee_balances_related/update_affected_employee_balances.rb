@@ -14,7 +14,7 @@ class UpdateAffectedEmployeeBalances
   private
 
   def find_affected_employees
-    @employees = presence_policy.affected_employees
+    @employees = Employee.affected_by_presence_policy(presence_policy.id)
   end
 
   def find_categories_and_update_balances
