@@ -251,5 +251,15 @@ RSpec.describe API::V1::PresenceDaysController, type: :controller do
       it { expect { subject }.to_not change { PresenceDay.count } }
       it { is_expected.to have_http_status(404) }
     end
+
+    context 'if it has a time entry associated' do
+      let(:params) {{ id: presence_day.id, presence_policy_id: presence_policy.id }}
+
+      let!(:time_entry) do
+        create(:time_entry, presence_day: presence_day)
+      end
+      it { is_expected.to have_http_status(423) }
+      it { expect { subject }.to_not change { PresenceDay.count } }
+    end
   end
 end

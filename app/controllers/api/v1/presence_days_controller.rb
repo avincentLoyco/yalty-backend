@@ -35,11 +35,15 @@ module API
       end
 
       def destroy
-        transactions do
-          update_affected_balances(resource.presence_policy)
-          resource.destroy!
+        if resource.time_entries.empty?
+          transactions do
+            update_affected_balances(resource.presence_policy)
+            resource.destroy!
+          end
+          render_no_content
+        else
+          locked_error
         end
-        render_no_content
       end
 
       private
