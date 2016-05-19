@@ -16,12 +16,10 @@ module API
       def create
         verified_params(gate_rules) do |attributes|
           vefiry_category_belongs_to_current_account(attributes[:time_off_category][:id])
-          related_joins_collection = related_joins_collection_params(attributes)
           obligatory_params = get_obligatory_params(attributes)
           @resource = TimeOffPolicy.new(obligatory_params)
           transactions do
             resource.save!
-            assign_related_joins_collection(related_joins_collection)
           end
           render_resource(resource, status: :created)
         end
@@ -29,10 +27,8 @@ module API
 
       def update
         verified_params(gate_rules) do |attributes|
-          related_joins_collection = related_joins_collection_params(attributes)
           transactions do
             resource.update!(attributes)
-            assign_related_joins_collection(related_joins_collection)
           end
           render_no_content
         end
@@ -81,27 +77,6 @@ module API
         time_off_category = obligatory_params.delete(:time_off_category)
         obligatory_params[:time_off_category_id] = time_off_category[:id]
         obligatory_params
-      end
-
-      def related_joins_collection_params(attributes)
-        related_joins_collection = {}
-
-        if attributes.key?(:employees)
-          related_joins_collection[:employees] = attributes.delete(:employees)
-        end
-
-        if attributes.key?(:working_places)
-          related_joins_collection[:working_places] = attributes.delete(:working_places)
-        end
-
-        related_joins_collection
-      end
-
-      def assign_related_joins_collection(related_records)
-        return true if related_records.empty?
-        related_records.each do |key, hash_array|
-          assign_join_table_collection(resource, hash_array, key.to_s)
-        end
       end
     end
   end
