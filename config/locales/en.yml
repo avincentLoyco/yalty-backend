@@ -2,3 +2,5 @@ en:
   user_mailer:
     account_creation_confirmation:
       subject: Welcome to yalty
+    credentials:
+      subject: Welcome to yalty

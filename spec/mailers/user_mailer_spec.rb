@@ -11,21 +11,19 @@ RSpec.describe UserMailer, type: :mailer do
     it { expect { subject }.to change { ActionMailer::Base.deliveries.count } }
     it 'email should contain proper password and url' do
       expect(subject.body.to_s).to include(password)
-      expect(subject.body.to_s).to include(user.account.subdomain)
+      expect(subject.body.to_s).to match(/https?:\/\/#{user.account.subdomain}/)
     end
   end
 
   context '#credentials' do
     let(:password) { '12345678' }
-    let(:url) { Faker::Internet.url }
 
-    subject { UserMailer.credentials(user.id, password, url).deliver_now }
+    subject { UserMailer.credentials(user.id, password).deliver_now }
 
     it { expect { subject }.to change { ActionMailer::Base.deliveries.count } }
     it 'email should contain proper password and url' do
-      email = subject
-      expect(email.body.to_s).to include(password)
-      expect(email.body.to_s).to include(url)
+      expect(subject.body.to_s).to include(password)
+      expect(subject.body.to_s).to match(/https?:\/\/#{user.account.subdomain}/)
     end
   end
 
