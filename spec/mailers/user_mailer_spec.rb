@@ -42,14 +42,11 @@ RSpec.describe UserMailer, type: :mailer do
   end
 
   context '#reset_password' do
-    let(:url) { user.account.subdomain + '.test?reset_password_token=' + user.reset_password_token }
-    subject { UserMailer.reset_password(user.id, url).deliver_now }
+    subject { UserMailer.reset_password(user.id).deliver_now }
 
     it { expect { subject }.to change { ActionMailer::Base.deliveries.count } }
-
     it 'email should contain proper password and url' do
-      email = subject
-      expect(email.body.to_s).to include(url)
+      expect(subject.body.to_s).to include(user.reset_password_token)
     end
   end
 end

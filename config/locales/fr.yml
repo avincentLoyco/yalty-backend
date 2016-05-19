@@ -4,3 +4,5 @@ fr:
       subject: Bienvenue sur yalty
     credentials:
       subject: Bienvenue sur yalty
+    reset_password:
+      subject: Réinitialiser votre mot de passe

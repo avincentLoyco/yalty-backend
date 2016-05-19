@@ -4,3 +4,5 @@ en:
       subject: Welcome to yalty
     credentials:
       subject: Welcome to yalty
+    reset_password:
+      subject: Reset your password
