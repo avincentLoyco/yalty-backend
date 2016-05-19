@@ -9,7 +9,10 @@ module API
       end
 
       def index
-        response = resources.map { |item| resource_representer.new(item, current_user).with_relationships }
+        response =
+          resources.map do |item|
+            resource_representer.new(item, current_user).with_relationships
+          end
         render json: response
       end
 
@@ -24,7 +27,6 @@ module API
             save!(resource, related)
             CreateCompletePresencePolicy.new(resource.reload, days_params).call if
               days_params.present?
-            update_affected_balances(nil, resource.affected_employees)
           end
 
           render_resource_with_relationships(resource, status: :created)
@@ -33,16 +35,9 @@ module API
 
       def update
         verified_params(gate_rules) do |attributes|
-          related = related_params(attributes)
-          previously_affected = resource.affected_employees
-          # Without below line query is not performed after update what influences
-          # calculations result.
-          previously_affected.present?
-
           transactions do
             resource.attributes = attributes
-            save!(resource, related)
-            update_affected_balances(nil, employees_to_update(previously_affected))
+            save!(resource, {})
           end
 
           render_no_content
@@ -50,7 +45,7 @@ module API
       end
 
       def destroy
-        if resource.employees.empty?
+        if resource.employees.empty? && resource.presence_days.empty?
           resource.destroy!
           render_no_content
         else
@@ -83,11 +78,6 @@ module API
         related_records.each do |key, values|
           assign_collection(resource, values, key.to_s)
         end
-      end
-
-      def employees_to_update(previously_affected)
-        (resource.affected_employees.pluck(:id) + previously_affected).uniq -
-          (resource.affected_employees.pluck(:id) & previously_affected)
       end
 
       def resource

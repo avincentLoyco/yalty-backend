@@ -265,6 +265,15 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
         it { is_expected.to have_http_status(423) }
         it { expect { subject }.to_not change { PresencePolicy.count } }
       end
+
+      context 'if it has an presence_day associated' do
+        let(:employee) { create(:employee, account: account) }
+        let!(:presence_day) do
+          create(:presence_day, presence_policy: presence_policy)
+        end
+        it { is_expected.to have_http_status(423) }
+        it { expect { subject }.to_not change { PresencePolicy.count } }
+      end
     end
 
     context 'invalid data' do
