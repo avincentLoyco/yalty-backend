@@ -101,7 +101,7 @@ RSpec.describe Employee::Balance, type: :model do
         end
 
         context 'when employee balance has time off' do
-          let(:time_off) { create(:time_off, start_time: Date.today - 1.month) }
+          let(:time_off) { create(:time_off, start_time: Date.today - 1.week) }
           subject { build(:employee_balance, time_off: time_off) }
 
           it { expect { subject.valid? }.to change { subject.effective_at } }
@@ -122,19 +122,19 @@ RSpec.describe Employee::Balance, type: :model do
       end
 
       context 'effective_after_employee_creation' do
-        subject { build(:employee_balance, effective_at: Time.now - 1.years) }
+        subject { build(:employee_balance, effective_at: effective_at) }
 
         context 'when effective at before employee creation' do
-          before do
-            allow_any_instance_of(Employee).to receive(:created_at) { Time.now }
-          end
+          let(:effective_at) { Time.now - 11.years }
 
           it { expect(subject.valid?).to eq false }
           it { expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
-            .to include('Can not be added before employee creation') }
+            .to include('Can not be added before employee start date') }
         end
 
         context 'when effective at after employee creation' do
+          let(:effective_at) { Time.now - 2.years }
+
           it { expect(subject.valid?).to eq true }
           it { expect { subject.valid? }.to_not change { subject.errors.messages.count } }
         end

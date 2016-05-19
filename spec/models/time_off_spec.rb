@@ -28,19 +28,19 @@ RSpec.describe TimeOff, type: :model do
     end
 
     context '#start_time_after_employee_creation' do
-      subject { build(:time_off, start_time: Time.now - 1.year) }
+      subject { build(:time_off, start_time: effective_at) }
 
-      context 'with valid data' do
-        before do
-          allow_any_instance_of(Employee).to receive(:created_at) { Time.now }
-        end
+      context 'with invalid data' do
+        let(:effective_at) { Time.now - 10.years }
 
         it { expect(subject.valid?).to eq false }
         it { expect { subject.valid? }.to change { subject.errors.messages[:start_time] }
-          .to include('Can not be added before employee creation') }
+          .to include('Can not be added before employee start date') }
       end
 
-      context 'with invalid params' do
+      context 'with valid params' do
+        let(:effective_at) { Time.now - 3.years }
+
         it { expect(subject.valid?).to eq true }
         it { expect { subject.valid? }.to_not change { subject.errors.messages.count } }
       end

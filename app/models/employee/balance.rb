@@ -21,7 +21,7 @@ class Employee::Balance < ActiveRecord::Base
   validate :validity_date_later_than_effective_at, if: [:effective_at, :validity_date]
   validate :counter_validity_date_blank
   validate :time_off_policy_presence
-  validate :effective_after_employee_creation, if: :employee
+  validate :effective_after_employee_start_date, if: :employee
 
   before_validation :calculate_and_set_balance, if: :attributes_present?
   before_validation :find_effective_at
@@ -107,8 +107,8 @@ class Employee::Balance < ActiveRecord::Base
     errors.add(:employee, 'Must have time off policy in category') unless time_off_policy
   end
 
-  def effective_after_employee_creation
-    return unless effective_at < employee.created_at
-    errors.add(:effective_at, 'Can not be added before employee creation')
+  def effective_after_employee_start_date
+    return unless effective_at < employee.first_employee_event.effective_at
+    errors.add(:effective_at, 'Can not be added before employee start date')
   end
 end

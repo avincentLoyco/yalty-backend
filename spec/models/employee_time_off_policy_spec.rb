@@ -21,7 +21,7 @@ RSpec.describe EmployeeTimeOffPolicy, type: :model do
 
   describe 'custom validations' do
     context '#no_balances_after_effective_at' do
-      let(:employee) { create(:employee, created_at: Time.now - 12.years) }
+      let(:employee) { create(:employee) }
       let(:effective_at) { Time.now + 1.day }
       let!(:balance) { create(:employee_balance, effective_at: effective_at, employee: employee) }
       let(:policy) { TimeOffPolicy.first }
@@ -34,7 +34,7 @@ RSpec.describe EmployeeTimeOffPolicy, type: :model do
       subject { new_policy }
 
       context 'when there is no employee balance in a future' do
-        let(:effective_at) { Time.now - 6.years }
+        let(:effective_at) { Time.now - 5.years }
 
         it { expect(subject.valid?).to eq true }
         it { expect { subject.valid? }.to_not change { subject.errors.messages.count } }

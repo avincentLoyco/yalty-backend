@@ -1,7 +1,6 @@
 FactoryGirl.define do
   factory :employee do
     account
-    created_at { Time.now - 10.years }
 
     after(:build) do |employee|
       if employee.employee_working_places.empty?
@@ -15,7 +14,11 @@ FactoryGirl.define do
       end
 
       if employee.events.empty?
-        hired_event = build(:employee_event, event_type: 'hired', employee: employee)
+        hired_event = build(:employee_event,
+          event_type: 'hired',
+          employee: employee,
+          effective_at: Time.zone.now - 6.years
+        )
         employee.events << hired_event
       end
     end
