@@ -34,7 +34,7 @@ RSpec.describe API::V1::UsersController, type: :controller do
       it 'should send email with credentials' do
         expect { subject }.to change(ActionMailer::Base.deliveries, :count)
 
-        expect(ActionMailer::Base.deliveries.last.body).to match(/password: .+/)
+        expect(ActionMailer::Base.deliveries.last.body).to match(/password: .+/i)
       end
 
       context 'assign employee' do
@@ -82,7 +82,7 @@ RSpec.describe API::V1::UsersController, type: :controller do
 
         it 'expect to add generated password to email' do
           expect(subject).to have_http_status(:created)
-          expect(ActionMailer::Base.deliveries.last.body).to match(/password: .+/)
+          expect(ActionMailer::Base.deliveries.last.body).to match(/password: .+/i)
         end
       end
 
