@@ -31,15 +31,9 @@ class Auth::UsersController < ApplicationController
     @resource ||= Account.current.users.find_by!(reset_password_token: token)
   end
 
-  def url_with_subdomain_and_token(user)
-    str = Account.current.subdomain + '.' + ENV['YALTY_APP_DOMAIN']
-    str + '/password?reset_password_token=' + user.reset_password_token
-  end
-
   def send_reset_password_token(user)
     UserMailer.reset_password(
-      user.id,
-      url_with_subdomain_and_token(user)
+      user.id
     ).deliver_later
   end
 

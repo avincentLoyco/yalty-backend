@@ -1,0 +1,25 @@
+Bonjour,
+
+Nous avons recherché pour vous les équipes dont vous faites partie sur yalty avec l’adresse <%= @email %>.
+
+<% if @accounts.present? %>
+Vous avez accès aux équipes suivantes :
+
+  <% @accounts.each do |account| %>
+<%= account.company_name %>
+Votre sous-domaine : <%= subdomain_url_for(account) %>
+
+  <% end %>
+<% else %>
+…. Oups… Cette adresse email ne fait partie d’aucune équipe enregistrée sur yalty pour le moment.
+
+<% end %>
+L’équipe que vous souhaitez rejoindre ne figure pas ci-dessus ? Vous avez peut-être utilisé un autre adresse email ?
+
+Peut-être que votre équipe n’a pas encore de compte sur yalty ? Créez une nouvelle équipe directement sur www.yalty.io.
+
+En cas de questions ou pour toutes suggestions d’améliorations de l’application, n’hésitez pas à nous contacter via le support en ligne directement dans l’application ou par email à hello@yalty.io
+
+Merci !
+
+L’équipe yalty

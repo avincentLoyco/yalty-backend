@@ -18,7 +18,8 @@ RSpec.describe Auth::AccountsController, type: :controller do
       {
         account:
           {
-            company_name: company_name
+            company_name: company_name,
+            default_locale: 'en'
           },
         user:
           {
@@ -46,7 +47,7 @@ RSpec.describe Auth::AccountsController, type: :controller do
           post :create, params
         end.to change(ActionMailer::Base.deliveries, :count)
 
-        expect(ActionMailer::Base.deliveries.last.body).to match(/password: .+/)
+        expect(ActionMailer::Base.deliveries.last.body).to match(/password: .+/i)
       end
 
       context 'should create account when user has no password' do
@@ -64,7 +65,7 @@ RSpec.describe Auth::AccountsController, type: :controller do
 
         it 'expect to add generated password to email' do
           expect(subject).to have_http_status(:found)
-          expect(ActionMailer::Base.deliveries.last.body).to match(/password: .+/)
+          expect(ActionMailer::Base.deliveries.last.body).to match(/password: .+/i)
         end
       end
     end
@@ -144,7 +145,7 @@ RSpec.describe Auth::AccountsController, type: :controller do
       let(:email) { 'test@test.com'}
 
       context 'when user with given email does not exist' do
-        it { expect { subject }.to_not change(ActionMailer::Base.deliveries, :count) }
+        it { expect { subject }.to change(ActionMailer::Base.deliveries, :count) }
         it { is_expected.to have_http_status(204) }
       end
 

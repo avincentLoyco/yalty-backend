@@ -64,11 +64,9 @@ module API
       end
 
       def send_user_credentials(user)
-        subdomain = Account.current.subdomain
         UserMailer.credentials(
           user.id,
-          user.password,
-          subdomain + '.' + ENV['YALTY_APP_DOMAIN']
+          user.password
         ).deliver_later
       end
     end

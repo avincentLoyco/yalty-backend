@@ -1,0 +1,25 @@
+Hi there,
+
+We searched yalty teams that you have already joined using <%= @email %>.
+
+<% if @accounts.present? %>
+You are already member of the following teams:
+
+  <% @accounts.each do |account| %>
+<%= account.company_name %>
+Team url: <%= subdomain_url_for(account) %>
+
+  <% end %>
+<% else %>
+…. Uhu… this email address is not member of any team on yalty yet.
+
+<% end %>
+If you're trying to join a specific team that isn't listed here, you might have used a different email address?
+
+Maybe your team doesn’t have a yalty account yet ? Create a new team now directly on www.yalty.io.
+
+Should you have any question or if there's anything that's bugging you in the app, even the smallest of issues that could be done better, we want to hear about it. Use the in-app chat tool or send us an email at hello@yalty.io.
+
+Thanks!
+
+The Team at yalty
