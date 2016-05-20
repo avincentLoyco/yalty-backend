@@ -1,0 +1,10 @@
+fr:
+  user_mailer:
+    account_creation_confirmation:
+      subject: Bienvenue sur yalty
+    credentials:
+      subject: Bienvenue sur yalty
+    reset_password:
+      subject: Réinitialiser votre mot de passe
+    accounts_list:
+      subject: Votre équipe sur yalty
