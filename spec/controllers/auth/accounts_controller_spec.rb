@@ -145,7 +145,7 @@ RSpec.describe Auth::AccountsController, type: :controller do
       let(:email) { 'test@test.com'}
 
       context 'when user with given email does not exist' do
-        it { expect { subject }.to_not change(ActionMailer::Base.deliveries, :count) }
+        it { expect { subject }.to change(ActionMailer::Base.deliveries, :count) }
         it { is_expected.to have_http_status(204) }
       end
 
