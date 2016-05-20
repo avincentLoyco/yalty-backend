@@ -16,6 +16,7 @@ FactoryGirl.define do
     trait :with_end_date do
       end_day 1
       end_month 4
+      years_to_effect 1
     end
   end
 end

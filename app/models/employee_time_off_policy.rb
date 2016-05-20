@@ -21,6 +21,17 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
       .order(effective_at: :desc)
   }
 
+  def effective_till
+    next_effective_at =
+      self
+      .class
+      .by_employee_in_category(employee_id, time_off_category_id)
+      .where('effective_at > ?', effective_at)
+      .last
+      .try(:effective_at)
+    next_effective_at - 1.day if next_effective_at
+  end
+
   private
 
   def no_balances_after_effective_at

@@ -66,6 +66,7 @@ RSpec.describe ManageEmployeeBalanceAdditions, type: :service do
         end
 
         context 'and resource policy has validity date' do
+          let(:years) { 1 }
           before { policy.update!(end_month: 4, end_day: 1, years_to_effect: years) }
 
           context 'and years to effect eql 0' do
@@ -82,20 +83,6 @@ RSpec.describe ManageEmployeeBalanceAdditions, type: :service do
             end
           end
 
-          context 'and years to effectt eql 1' do
-            let(:years) { 1 }
-
-            it { expect { subject }.to change { Employee::Balance.additions.count }.by(4) }
-            it { expect { subject }.to change { Employee::Balance.removals.count }.by(2) }
-
-            it 'has valid validity dates' do
-              subject
-
-              expect(Employee::Balance.removals.pluck(:effective_at).map(&:to_date))
-                .to eql(['1/4/2014', '1/4/2015'].map(&:to_date))
-            end
-          end
-
           context 'and years to effect eql 2' do
             let(:years) { 2 }
 
@@ -107,6 +94,69 @@ RSpec.describe ManageEmployeeBalanceAdditions, type: :service do
 
               expect(Employee::Balance.removals.pluck(:effective_at).map(&:to_date))
                 .to eql(['1/4/2015'].map(&:to_date))
+            end
+          end
+
+          context 'effective till' do
+            let(:effective_at) { Time.now - 3.years }
+
+            shared_examples 'One year policy with validity date' do
+              it { expect { subject }.to change { Employee::Balance.additions.count }.by(4) }
+              it { expect { subject }.to change { Employee::Balance.removals.count }.by(2) }
+
+              it 'has valid additions effective at' do
+                subject
+
+                expect(Employee::Balance.additions.pluck(:effective_at).map(&:to_date))
+                  .to eql(['1/1/2013', '1/1/2014', '1/1/2015', '1/1/2016'].map(&:to_date))
+              end
+
+              it 'has valid removal effective at' do
+                subject
+
+                expect(Employee::Balance.removals.pluck(:effective_at).map(&:to_date))
+                  .to eql(['1/4/2014', '1/4/2015'].map(&:to_date))
+              end
+            end
+
+            context 'and there is no policy after effective at' do
+              it_behaves_like 'One year policy with validity date'
+            end
+
+            context 'and there is an employee time off policy after effective at' do
+              let!(:next_employee_time_off_policy) do
+                create(:employee_time_off_policy,
+                  employee: employee, effective_at: Time.now - 2.years + 1.day,
+                  time_off_policy: policy,
+                )
+              end
+
+              context 'in the past' do
+                it { expect { subject }.to change { Employee::Balance.additions.count }.by(2) }
+                it { expect { subject }.to change { Employee::Balance.removals.count }.by(2) }
+
+                it 'has valid additions effective at' do
+                  subject
+
+                  expect(Employee::Balance.additions.pluck(:effective_at).map(&:to_date))
+                    .to eql(['1/1/2013', '1/1/2014'].map(&:to_date))
+                end
+
+                it 'has valid removal effective at' do
+                  subject
+
+                  expect(Employee::Balance.removals.pluck(:effective_at).map(&:to_date))
+                    .to eql(['1/4/2014', '1/4/2015'].map(&:to_date))
+                end
+              end
+
+              context 'in the future' do
+                before do
+                  next_employee_time_off_policy.update!(effective_at: Time.now + 1.year + 1.day)
+                end
+
+                it_behaves_like 'One year policy with validity date'
+              end
             end
           end
         end
