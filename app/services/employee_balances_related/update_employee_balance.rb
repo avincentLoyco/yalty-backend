@@ -1,25 +1,26 @@
 class UpdateEmployeeBalance
   include API::V1::Exceptions
-  attr_reader :employee_balance, :time_off, :options
+  attr_reader :employee_balance, :time_off, :options, :current_date
 
   def initialize(employee_balance, options = {})
     @employee_balance = employee_balance
     @time_off = employee_balance.time_off
     @options = options
+    @current_date = employee_balance.validity_date
   end
 
   def call
     update_attributes unless options.blank?
-    manage_removal if options[:validity_date]
     recalculate_amount unless employee_balance.reset_balance
     update_status
     save!
+    manage_removal if options[:validity_date]
   end
 
   private
 
   def manage_removal
-    ManageEmployeeBalanceRemoval.new(options[:validity_date], employee_balance).call
+    ManageEmployeeBalanceRemoval.new(options[:validity_date], employee_balance, current_date).call
   end
 
   def update_attributes

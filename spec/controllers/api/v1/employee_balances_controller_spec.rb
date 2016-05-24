@@ -304,12 +304,12 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
             let(:effective_at_date) { previous.first + 1.week }
             let!(:positive_balance) do
               create(:employee_balance, employee: employee,
-                time_off_category: category, amount: 500, effective_at: previous.first + 1.month,
+                time_off_category: category, amount: 500, effective_at: previous.first + 1.month
               )
             end
             let!(:negative_balance) do
               create(:employee_balance, employee: employee,
-                time_off_category: category, amount: -500, effective_at: previous.first + 2.months,
+                time_off_category: category, amount: -500, effective_at: previous.first + 2.months
               )
             end
 
@@ -324,12 +324,6 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
             it { expect { subject }.to_not change { previous_add.reload.being_processed } }
 
             it { is_expected.to have_http_status(201) }
-
-            context 'response body' do
-              before { subject }
-
-              it { expect(response.body).to include('1000', '-500', '500') }
-            end
           end
         end
       end

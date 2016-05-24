@@ -62,8 +62,9 @@ class FindEmployeeBalancesToUpdate
   end
 
   def no_removals_or_removals_bigger_than_amount?
-    resource.current_or_next_period && active_balances_with_removals.blank? ||
-      active_balances_with_removals.blank? || next_removals_smaller_than_amount?
+    options[:amount] && options[:amount] > 0 && resource.validity_date.blank? ||
+      resource.current_or_next_period && active_balances_with_removals.blank? ||
+      next_removals_smaller_than_amount? || active_balances_with_removals.blank?
   end
 
   def active_balances

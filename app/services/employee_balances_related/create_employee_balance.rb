@@ -16,7 +16,10 @@ class CreateEmployeeBalance
 
   def call
     ActiveRecord::Base.transaction do
-      build_valid_employee_balance
+      build_employee_balance
+      valid_balance?
+      build_employee_balance_removal if validity_date.present? && validity_date <= Time.zone.today
+      calculate_amount if employee_balance.time_off_policy.present?
       save!
       update_next_employee_balances
     end
@@ -32,18 +35,18 @@ class CreateEmployeeBalance
   end
 
   def save!
-    if employee_balance.valid?
-      employee_balance.save!
-      employee_balance.balance_credit_addition.save! if employee_balance.policy_credit_removal
-      balance_removal.try(:save!)
-    else
-      messages = employee_balance.errors.messages
-
-      raise InvalidResourcesError.new(employee_balance, messages)
-    end
+    employee_balance.save!
+    employee_balance.balance_credit_addition.save! if employee_balance.policy_credit_removal
+    balance_removal.try(:save!)
   end
 
   private
+
+  def valid_balance?
+    return if employee_balance.valid? || balancer_removal? || counter_addition?
+    messages = employee_balance.errors.messages
+    raise InvalidResourcesError.new(employee_balance, messages)
+  end
 
   def common_params
     {
@@ -114,11 +117,5 @@ class CreateEmployeeBalance
 
   def counter_addition?
     employee_balance.policy_credit_addition && employee_balance.time_off_policy.counter?
-  end
-
-  def build_valid_employee_balance
-    build_employee_balance
-    build_employee_balance_removal if validity_date.present? && validity_date <= Time.zone.today
-    calculate_amount if employee_balance.time_off_policy.present?
   end
 end

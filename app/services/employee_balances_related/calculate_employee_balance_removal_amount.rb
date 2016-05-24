@@ -71,7 +71,10 @@ class CalculateEmployeeBalanceRemovalAmount
     RelativeEmployeeBalancesFinder
       .new(employee_balance)
       .previous_balances
-      .where('amount <= ? AND effective_at > ?', 0, addition.effective_at)
+      .where(
+        'amount <= ? AND effective_at > ? AND balance_credit_addition_id IS NULL',
+        0, addition.effective_at
+      )
       .last
   end
 

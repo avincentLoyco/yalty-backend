@@ -1,14 +1,14 @@
 class ManageEmployeeBalanceRemoval
   attr_reader :new_date, :resource, :current_date
 
-  def initialize(new_date, resource)
+  def initialize(new_date, resource, current_date = resource.validity_date)
     @new_date = new_date.try(:to_date)
     @resource = resource
-    @current_date = resource.validity_date
+    @current_date = current_date
   end
 
   def call
-    return unless validity_date_changed?
+    return unless !resource.time_off_policy.counter? && validity_date_changed?
     if new_date.blank? || moved_to_future?
       resource.balance_credit_removal.try(:destroy!)
     else
@@ -19,8 +19,7 @@ class ManageEmployeeBalanceRemoval
   private
 
   def validity_date_changed?
-    (!resource.time_off_policy.counter? && (new_date.blank? || moved_to_past? ||
-      moved_to_future?)) || resource.attribute_changed?(:validity_date)
+    ((new_date.blank? || moved_to_past? || moved_to_future?)) || new_date != current_date
   end
 
   def moved_to_past?
@@ -34,7 +33,6 @@ class ManageEmployeeBalanceRemoval
   def create_removal
     return unless resource.balance_credit_removal.blank?
     category, employee, account, amount, options = params
-
     CreateEmployeeBalance.new(category, employee, account, amount, options).call
   end
 
