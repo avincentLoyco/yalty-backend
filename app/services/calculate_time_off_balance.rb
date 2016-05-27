@@ -2,6 +2,9 @@ class CalculateTimeOffBalance
   attr_reader :time_off, :employee, :balane, :presence_policy, :time_off_start_date,
     :time_off_end_date, :holidays_dates_hash
 
+  END_ORDER = 7
+  START_ORDER = 1
+
   def initialize(time_off)
     @time_off = time_off
     @time_off_start_date = time_off.start_time
@@ -35,10 +38,6 @@ class CalculateTimeOffBalance
     @epp_end_datetime =
       epp == active_epps.last ? time_off_end_date : epp.effective_till.to_datetime + 1
     @epp_end_date = @epp_end_datetime.to_date
-  end
-
-  def previous_day_order(order)
-    order == 1 ? @presence_policy.last_day_order : order - 1
   end
 
   def active_join_table_for_time_off(join_table_class)
@@ -104,7 +103,7 @@ class CalculateTimeOffBalance
   end
 
   def end_order
-    (start_order + num_of_days_in_time_off - 1) % 7
+    (start_order + num_of_days_in_time_off - 1) % END_ORDER
   end
 
   def num_of_days_in_time_off
@@ -168,24 +167,25 @@ class CalculateTimeOffBalance
     if start_order < end_order
       (start_order..end_order).to_a
     else
-      (start_order..7).to_a + (1..end_order).to_a
+      (start_order..END_ORDER).to_a + (START_ORDER..end_order).to_a
     end
   end
 
   def orders_occurrences_time_off_longer_than_policy
-    previous_order = previous_day_order(start_order)
-    orders_ordered_by_occurence = (start_order..7).to_a + (1..previous_order).to_a
+    orders_ordered_by_occurence = (start_order..END_ORDER).to_a
+    second_period = (START_ORDER..end_order).to_a
     i = 0
-    while orders_ordered_by_occurence.size < num_of_days_in_time_off
-      orders_ordered_by_occurence << orders_ordered_by_occurence[i]
+    week_days = (START_ORDER..END_ORDER).to_a
+    while (orders_ordered_by_occurence.size + second_period.size) < num_of_days_in_time_off
+      orders_ordered_by_occurence << week_days[i % 7]
       i += 1
     end
-    orders_ordered_by_occurence
+    orders_ordered_by_occurence + second_period
   end
 
   def orders_occurances
     order_ocurrences =
-      if num_of_days_in_time_off <= 7
+      if num_of_days_in_time_off <= END_ORDER
         orders_occurrences_time_off_not_longer_than_policy
       else
         orders_occurrences_time_off_longer_than_policy

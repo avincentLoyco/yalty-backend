@@ -20,6 +20,57 @@ RSpec.describe CalculateTimeOffBalance, type: :service do
     )
   end
 
+  context 'when the time off is long' do
+    let(:time_off) do
+      create(:time_off,
+        employee: employee, time_off_category: category, start_time:  Date.new(2016,6,12),
+        end_time:  Date.new(2016,6,25)+ 20.hours
+      )
+    end
+    let(:presence_days) do
+      [1,2,3,4,7].map do |i|
+        create(:presence_day, order: i, presence_policy: policy)
+      end
+    end
+    let!(:time_entries) do
+      presence_days.map do |presence_day|
+        create(:time_entry, presence_day: presence_day, start_time: '8:00', end_time: '9:00')
+        create(:time_entry, presence_day: presence_day, start_time: '14:00', end_time: '15:00')
+      end
+    end
+
+    context "and starts on a monday" do
+      let(:time_off) do
+        create(:time_off,
+          employee: employee, time_off_category: category, start_time:  Date.new(2016,6,5),
+          end_time:  Date.new(2016,6,14)+ 20.hours
+        )
+      end
+      it { expect(subject).to eq 960 }
+    end
+
+    context "and starts on a sunday" do
+      let(:time_off) do
+        create(:time_off,
+          employee: employee, time_off_category: category, start_time:  Date.new(2016,6,8),
+          end_time:  Date.new(2016,6,15)+ 20.hours
+        )
+      end
+      it { expect(subject).to eq 720 }
+    end
+
+    context "when it begins and ends on the same weekday" do
+      let(:time_off) do
+        create(:time_off,
+          employee: employee, time_off_category: category, start_time:  Date.new(2016,6,6),
+          end_time:  Date.new(2016,6,15)+ 20.hours
+        )
+      end
+      it { expect(subject).to eq 960 }
+    end
+
+  end
+
   context 'when employee have time_entries in policy' do
     let(:first_day) { create(:presence_day, order: 2, presence_policy: policy) }
     let(:second_day) { create(:presence_day, order: 5, presence_policy: policy) }
@@ -49,7 +100,6 @@ RSpec.describe CalculateTimeOffBalance, type: :service do
 
     context 'when time off longer than one week' do
       before { time_off.update!(end_time: Date.today + 17.days) }
-
       it { expect(subject).to eq 1200 }
     end
 
@@ -133,7 +183,7 @@ RSpec.describe CalculateTimeOffBalance, type: :service do
             )
         end
         let(:second_working_place) { second_ewp.working_place }
-        context ""
+
         before do
           second_ewp.working_place.update!(holiday_policy: holiday_policy_ow)
           time_off.update!(start_time: Date.new(2016,9,21), end_time: Date.new(2016,9,28))

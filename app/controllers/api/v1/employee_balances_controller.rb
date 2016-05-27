@@ -34,7 +34,7 @@ module API
             if attributes.key?(:validity_date)
               ManageEmployeeBalanceRemoval.new(validity_date, resource).call
             end
-            prepare_balanaces_to_update(editable_resource, attributes)
+            prepare_balances_to_update(editable_resource, attributes)
           end
 
           update_balances_job(editable_resource.id, attributes)
@@ -48,7 +48,7 @@ module API
         transactions do
           resource_to_delete = editable_resource
           editable_resource.destroy!
-          prepare_balanaces_to_update(resource_to_delete) if next_balance
+          prepare_balances_to_update(resource_to_delete) if next_balance
         end
 
         update_balances_job(next_balance) if next_balance

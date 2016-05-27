@@ -32,7 +32,7 @@ module API
         verified_params(gate_rules) do |attributes|
           transactions do
             resource.update!(attributes)
-            prepare_balanaces_to_update(resource.employee_balance, balance_attributes)
+            prepare_balances_to_update(resource.employee_balance, balance_attributes)
           end
 
           update_balances_job(resource.employee_balance.id, balance_attributes)
@@ -46,7 +46,7 @@ module API
         transactions do
           resource.employee_balance.destroy!
           resource.destroy!
-          prepare_balanaces_to_update(resource.employee_balance, balance_attributes)
+          prepare_balances_to_update(resource.employee_balance, balance_attributes)
         end
 
         update_balances_job(next_balance.id, balance_attributes) if next_balance

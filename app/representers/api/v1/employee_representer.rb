@@ -33,7 +33,7 @@ module Api::V1
 
     def hire_status
       hire_event = resource.events.where(event_type: 'hired').last.try(:effective_at)
-      hire_event <= Time.zone.now if hire_event
+      hire_event <= Time.zone.today if hire_event
     end
 
     def active_employee_working_place

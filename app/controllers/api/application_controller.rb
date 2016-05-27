@@ -45,7 +45,7 @@ class API::ApplicationController < ApplicationController
     UpdateAffectedEmployeeBalances.new(presence_policy, employees).call
   end
 
-  def prepare_balanaces_to_update(resource, attributes = {})
+  def prepare_balances_to_update(resource, attributes = {})
     PrepareEmployeeBalancesToUpdate.new(resource, attributes).call
   end
 

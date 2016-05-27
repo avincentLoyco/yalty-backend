@@ -17,6 +17,7 @@ class UpdateBalanceJob < ActiveJob::Base
 
   def update_balances
     balances_to_update = FindEmployeeBalancesToUpdate.new(@employee_balance, options).call
+    options.delete(:update_all)
     employee_balances = Employee::Balance.where(id: balances_to_update).order(effective_at: :asc)
     UpdateEmployeeBalance.new(employee_balance, options).call
     employee_balances_with_removal(employee_balances).each do |balance|

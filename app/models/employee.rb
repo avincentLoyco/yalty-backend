@@ -47,7 +47,7 @@ class Employee < ActiveRecord::Base
     active_working_place_at(date).holiday_policy
   end
 
-  def active_working_place_at(date = Time.zone.now)
+  def active_working_place_at(date = Time.zone.today)
     WorkingPlace.active_for_employee(id, date)
   end
 
@@ -59,11 +59,11 @@ class Employee < ActiveRecord::Base
     time_off_categories.distinct
   end
 
-  def assigned_time_off_policies_in_category(category_id, date = Time.zone.now)
+  def assigned_time_off_policies_in_category(category_id, date = Time.zone.today)
     EmployeeTimeOffPolicy.assigned_at(date).by_employee_in_category(id, category_id).limit(3)
   end
 
-  def not_assigned_time_off_policies_in_category(category_id, date = Time.zone.now)
+  def not_assigned_time_off_policies_in_category(category_id, date = Time.zone.today)
     EmployeeTimeOffPolicy.not_assigned_at(date).by_employee_in_category(id, category_id).limit(2)
   end
 
