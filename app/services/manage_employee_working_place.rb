@@ -35,7 +35,8 @@ class ManageEmployeeWorkingPlace
 
   def find_working_places_in_range
     @working_places_in_range =
-      EmployeeWorkingPlace
+      employee
+      .employee_working_places
       .where(effective_at: oldest_working_place.effective_at..new_effective_at)
       .order(:effective_at)
   end
