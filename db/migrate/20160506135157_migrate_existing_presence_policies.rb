@@ -15,6 +15,9 @@ class MigrateExistingPresencePolicies < ActiveRecord::Migration
     belongs_to :presence_policy
   end
 
+  class Employee < ActiveRecord::Base
+    has_many :events, class_name: 'Employee::Event'
+  end
 
 
   def change
@@ -23,7 +26,7 @@ class MigrateExistingPresencePolicies < ActiveRecord::Migration
       EmployeePresencePolicy.create(
         employee_id: employee_working_place.employee_id,
         presence_policy_id: employee_working_place.working_place.presence_policy_id,
-        effective_at: employee_working_place.employee.account.created_at.to_date
+        effective_at: employee_working_place.employee.events.where(event_type: "hired").first.effective_at.to_date
       )
     end
   end

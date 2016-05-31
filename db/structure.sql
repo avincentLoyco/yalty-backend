@@ -214,7 +214,7 @@ CREATE TABLE employee_balances (
 
 
 --
--- Name: employee_presence_policies; Type: TABLE; Schema: public; Owner: -; Tablespace:
+-- Name: employee_presence_policies; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE TABLE employee_presence_policies (
@@ -240,7 +240,7 @@ CREATE TABLE employee_time_off_policies (
 
 
 --
--- Name: employee_working_places; Type: TABLE; Schema: public; Owner: -; Tablespace:
+-- Name: employee_working_places; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE TABLE employee_working_places (
@@ -608,7 +608,7 @@ ALTER TABLE ONLY employee_events
 
 
 --
--- Name: employee_presence_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
+-- Name: employee_presence_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY employee_presence_policies
@@ -624,7 +624,7 @@ ALTER TABLE ONLY employee_time_off_policies
 
 
 --
--- Name: employee_working_places_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
+-- Name: employee_working_places_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY employee_working_places
@@ -842,14 +842,14 @@ CREATE INDEX index_employee_balances_on_time_off_id ON employee_balances USING b
 
 
 --
--- Name: index_employee_events_on_employee_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: index_employee_events_on_employee_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE INDEX index_employee_events_on_employee_id ON employee_events USING btree (employee_id);
 
 
 --
--- Name: index_employee_id_presence_policy_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: index_employee_id_presence_policy_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE INDEX index_employee_id_presence_policy_id ON employee_presence_policies USING btree (presence_policy_id, employee_id);
@@ -863,28 +863,28 @@ CREATE INDEX index_employee_id_time_off_policy_id ON employee_time_off_policies 
 
 
 --
--- Name: index_employee_id_working_place_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: index_employee_id_working_place_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE UNIQUE INDEX index_employee_id_working_place_id ON employee_working_places USING btree (working_place_id, employee_id, effective_at);
 
 
 --
--- Name: index_employee_presence_policies_on_employee_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: index_employee_presence_policies_on_employee_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE INDEX index_employee_presence_policies_on_employee_id ON employee_presence_policies USING btree (employee_id);
 
 
 --
--- Name: index_employee_presence_policies_on_presence_policy_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: index_employee_presence_policies_on_presence_policy_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE INDEX index_employee_presence_policies_on_presence_policy_id ON employee_presence_policies USING btree (presence_policy_id);
 
 
 --
--- Name: index_employee_presence_policy_effective_at; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: index_employee_presence_policy_effective_at; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE UNIQUE INDEX index_employee_presence_policy_effective_at ON employee_presence_policies USING btree (employee_id, presence_policy_id, effective_at);
@@ -905,21 +905,21 @@ CREATE INDEX index_employee_time_off_policies_on_time_off_policy_id ON employee_
 
 
 --
--- Name: index_employee_time_off_policy_effective_at; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: index_employee_time_off_policy_effective_at; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE UNIQUE INDEX index_employee_time_off_policy_effective_at ON employee_time_off_policies USING btree (employee_id, time_off_policy_id, effective_at);
 
 
 --
--- Name: index_employees_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: index_employees_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE INDEX index_employees_on_account_id ON employees USING btree (account_id);
 
 
 --
--- Name: index_employees_on_id_and_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: index_employees_on_id_and_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE UNIQUE INDEX index_employees_on_id_and_account_id ON employees USING btree (id, account_id);
@@ -1045,7 +1045,7 @@ CREATE INDEX index_working_place_time_off_policies_on_working_place_id ON workin
 
 
 --
--- Name: index_working_place_time_off_policy_effective_at; Type: INDEX; Schema: public; Owner: -; Tablespace:
+-- Name: index_working_place_time_off_policy_effective_at; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE UNIQUE INDEX index_working_place_time_off_policy_effective_at ON working_place_time_off_policies USING btree (working_place_id, time_off_policy_id, effective_at);
@@ -1479,8 +1479,6 @@ INSERT INTO schema_migrations (version) VALUES ('20160324094939');
 
 INSERT INTO schema_migrations (version) VALUES ('20160401084042');
 
-INSERT INTO schema_migrations (version) VALUES ('20160401104731');
-
 INSERT INTO schema_migrations (version) VALUES ('20160412122041');
 
 INSERT INTO schema_migrations (version) VALUES ('20160418142554');
@@ -1490,12 +1488,6 @@ INSERT INTO schema_migrations (version) VALUES ('20160419101614');
 INSERT INTO schema_migrations (version) VALUES ('20160419103050');
 
 INSERT INTO schema_migrations (version) VALUES ('20160419142848');
-
-INSERT INTO schema_migrations (version) VALUES ('20160502065212');
-
-INSERT INTO schema_migrations (version) VALUES ('20160502104901');
-
-INSERT INTO schema_migrations (version) VALUES ('20160502132953');
 
 INSERT INTO schema_migrations (version) VALUES ('20160506084601');
 
@@ -1510,3 +1502,6 @@ INSERT INTO schema_migrations (version) VALUES ('20160512142051');
 INSERT INTO schema_migrations (version) VALUES ('20160515174339');
 
 INSERT INTO schema_migrations (version) VALUES ('20160516121616');
+
+INSERT INTO schema_migrations (version) VALUES ('20160520093525');
+
