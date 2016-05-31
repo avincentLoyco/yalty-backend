@@ -95,7 +95,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
           { effective_at: Time.now - 1.month, validity_date: (Time.now + 1.month).to_s }
         end
         let!(:other_working_place_policy) do
-          create(:working_place_time_off_policy, time_off_policy: other_policy,
+          create(:employee_time_off_policy, time_off_policy: other_policy,
             effective_at: Time.zone.now - 1.month
           )
         end

@@ -504,19 +504,6 @@ CREATE TABLE time_offs (
 
 
 --
--- Name: working_place_time_off_policies; Type: TABLE; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE TABLE working_place_time_off_policies (
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
-    working_place_id uuid NOT NULL,
-    time_off_policy_id uuid NOT NULL,
-    effective_at timestamp without time zone,
-    time_off_category_id uuid
-);
-
-
---
 -- Name: working_places; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -725,14 +712,6 @@ ALTER TABLE ONLY time_off_policies
 
 ALTER TABLE ONLY time_offs
     ADD CONSTRAINT time_offs_pkey PRIMARY KEY (id);
-
-
---
--- Name: working_place_time_off_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
---
-
-ALTER TABLE ONLY working_place_time_off_policies
-    ADD CONSTRAINT working_place_time_off_policies_pkey PRIMARY KEY (id);
 
 
 --
@@ -1024,34 +1003,6 @@ CREATE INDEX index_time_offs_on_time_off_category_id ON time_offs USING btree (t
 
 
 --
--- Name: index_working_place_id_time_off_policy_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE INDEX index_working_place_id_time_off_policy_id ON working_place_time_off_policies USING btree (time_off_policy_id, working_place_id);
-
-
---
--- Name: index_working_place_time_off_policies_on_time_off_policy_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE INDEX index_working_place_time_off_policies_on_time_off_policy_id ON working_place_time_off_policies USING btree (time_off_policy_id);
-
-
---
--- Name: index_working_place_time_off_policies_on_working_place_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE INDEX index_working_place_time_off_policies_on_working_place_id ON working_place_time_off_policies USING btree (working_place_id);
-
-
---
--- Name: index_working_place_time_off_policy_effective_at; Type: INDEX; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE UNIQUE INDEX index_working_place_time_off_policy_effective_at ON working_place_time_off_policies USING btree (working_place_id, time_off_policy_id, effective_at);
-
-
---
 -- Name: index_working_places_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -1079,14 +1030,6 @@ ALTER TABLE ONLY employee_working_places
 
 ALTER TABLE ONLY employee_time_off_policies
     ADD CONSTRAINT fk_rails_06c847ea6d FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE;
-
-
---
--- Name: fk_rails_09864faa3a; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY working_place_time_off_policies
-    ADD CONSTRAINT fk_rails_09864faa3a FOREIGN KEY (working_place_id) REFERENCES working_places(id) ON DELETE CASCADE;
 
 
 --
@@ -1215,14 +1158,6 @@ ALTER TABLE ONLY holidays
 
 ALTER TABLE ONLY presence_policies
     ADD CONSTRAINT fk_rails_95b0b0db67 FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE;
-
-
---
--- Name: fk_rails_aa3331fb5e; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY working_place_time_off_policies
-    ADD CONSTRAINT fk_rails_aa3331fb5e FOREIGN KEY (time_off_policy_id) REFERENCES time_off_policies(id) ON DELETE CASCADE;
 
 
 --
@@ -1504,4 +1439,6 @@ INSERT INTO schema_migrations (version) VALUES ('20160515174339');
 INSERT INTO schema_migrations (version) VALUES ('20160516121616');
 
 INSERT INTO schema_migrations (version) VALUES ('20160520093525');
+
+INSERT INTO schema_migrations (version) VALUES ('20160531093150');
 

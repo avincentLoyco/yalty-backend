@@ -35,8 +35,7 @@ module API
       end
 
       def destroy
-        if resource.employee_time_off_policies.empty? &&
-            resource.working_place_time_off_policies.empty?
+        if resource.employee_time_off_policies.empty?
           resource.destroy!
           render_no_content
         else

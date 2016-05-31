@@ -119,17 +119,6 @@ RSpec.describe RelatedPolicyPeriod do
     end
   end
 
-  context 'for working place time off policy' do
-    let(:related_policy) do
-      build(:working_place_time_off_policy,
-        time_off_policy: time_off_policy,
-        effective_at: effective_at
-      )
-    end
-
-    it_behaves_like 'helper methods for related records'
-  end
-
   context 'for employee time off policy' do
     let(:related_policy) do
       build(:employee_time_off_policy,

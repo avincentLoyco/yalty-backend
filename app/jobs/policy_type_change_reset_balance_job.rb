@@ -2,7 +2,7 @@ require 'employee_category_policy_finder'
 
 class PolicyTypeChangeResetBalanceJob < ActiveJob::Base
   queue_as :policies_and_balances
-
+  # TO DO
   def perform
     today = Time.zone.today
     finder = EmployeeCategoryPolicyFinder.new

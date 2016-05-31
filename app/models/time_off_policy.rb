@@ -2,8 +2,6 @@ class TimeOffPolicy < ActiveRecord::Base
   belongs_to :time_off_category
   has_many :employee_time_off_policies
   has_many :employees, through: :employee_time_off_policies
-  has_many :working_place_time_off_policies
-  has_many :working_places, through: :working_place_time_off_policies
   validate :correct_dates
   validates :start_day,
     :start_month,
