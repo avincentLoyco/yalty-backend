@@ -17,7 +17,7 @@ class RelatedPolicyPeriod
   end
 
   def policy_length
-    years_to_effect > 1 ? years_to_effect : 1
+    years_to_effect && years_to_effect > 1 ? years_to_effect : 1
   end
 
   def first_start_date
@@ -40,17 +40,17 @@ class RelatedPolicyPeriod
   end
 
   def last_validity_date
-    return nil unless end_month && end_day
+    return nil unless end_month && end_day && years_to_effect
     Date.new(last_start_date.year + years_to_effect, end_month, end_day)
   end
 
   def first_validity_date
-    return nil unless end_month && end_day
+    return nil unless end_month && end_day && years_to_effect
     Date.new(first_start_date.year + years_to_effect, end_month, end_day)
   end
 
   def validity_date_for(date)
-    return nil unless end_day && end_month
+    return nil unless end_day && end_month && years_to_effect
     validity_date = Date.new(date.year + years_to_effect, end_month, end_day)
 
     validity_date < date ? validity_date + 1.year : validity_date

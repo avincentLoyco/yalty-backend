@@ -159,5 +159,23 @@ RSpec.describe TimeOffPolicy, type: :model do
       it { expect(subject).not_to be_valid }
       it { expect(subject.errors[:end_month]).to include "Must be after start month" }
     end
+
+    context 'when end month and end day given' do
+      let(:years) { 1 }
+      subject { build(:time_off_policy, end_day: 1, end_month: 4, years_to_effect: years) }
+
+      it { expect(subject.valid?).to eq true }
+      it { expect { subject.valid? }.to_not change { subject.errors.messages.count } }
+
+      context 'and years to effect equal nil' do
+        let(:years) { nil }
+
+        it { expect(subject.valid?).to eq false }
+        it { expect { subject.valid? }.to change { subject.errors.messages[:end_month] }
+          .to include 'Must be empty when years to effect not given'}
+        it { expect { subject.valid? }.to change { subject.errors.messages[:end_day] }
+          .to include 'Must be empty when years to effect not given'}
+      end
+    end
   end
 end

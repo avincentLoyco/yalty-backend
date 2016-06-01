@@ -25,6 +25,12 @@ RSpec.describe RelatedPolicyPeriod do
         it { expect(subject).to eq 2 }
       end
 
+      context 'when years to effect eq nil' do
+        let(:years_to_effect) { nil }
+
+        it { expect(subject).to eq 1 }
+      end
+
       context 'when years to effect eq 0 or 1' do
         let(:years_to_effect) { 0 }
 
@@ -64,6 +70,63 @@ RSpec.describe RelatedPolicyPeriod do
 
           it { expect(subject).to eq '01/04/2006'.to_date }
         end
+
+        context 'when years to effect eq nil' do
+          let(:years_to_effect) { nil }
+
+          it { expect(subject).to eq '01/01/2006'.to_date }
+        end
+      end
+
+      context '.validity_date_for' do
+        subject { RelatedPolicyPeriod.new(related_policy).validity_date_for(date) }
+        let(:effective_at) { Date.today - 10.years }
+        let(:date) { RelatedPolicyPeriod.new(related_policy).first_start_date  }
+        let(:end_day) { 1 }
+        let(:end_month) { 4 }
+
+        context 'validity date in the same year' do
+          context 'when years to effect equal nil' do
+            let(:years_to_effect) { nil }
+
+            it { expect(subject).to eq nil }
+          end
+
+          context 'when years to effect eqal 0' do
+            let(:years_to_effect) { 0 }
+
+            it { expect(subject).to eq '01/04/2006'.to_date }
+          end
+
+          context 'when years to effect equal 1 or more' do
+            let(:years_to_effect) { 1 }
+
+            it { expect(subject).to eq '01/04/2007'.to_date }
+          end
+        end
+
+        context 'validity date in the next year' do
+          let(:start_month) { 5 }
+
+          context 'when years to effect equal nil' do
+            let(:years_to_effect) { nil }
+
+            it { expect(subject).to eq nil }
+          end
+
+          context 'when years to effect eqal 0' do
+            let(:years_to_effect) { 0 }
+
+            it { expect(subject).to eq '1/4/2007'.to_date }
+          end
+
+          context 'when years to effect equal 1 or more' do
+            let(:years_to_effect) { 1 }
+
+            it { expect(subject).to eq '1/4/2007'.to_date }
+          end
+        end
+
       end
 
       context 'effective_at later than start date' do
@@ -84,13 +147,19 @@ RSpec.describe RelatedPolicyPeriod do
       let(:effective_at) { Date.today - 7.years }
       subject { RelatedPolicyPeriod.new(related_policy).last_start_date }
 
-      context 'policy length bigger than 1 year' do
+      context 'years to effect eq nil' do
+        let(:years_to_effect) { nil }
+
+        it { expect(subject).to eq '01/01/2016'.to_date }
+      end
+
+      context 'years to effect eq 1' do
         let(:years_to_effect) { 0 }
 
         it { expect(subject).to eq '01/01/2016'.to_date }
       end
 
-      context 'policy length eql 1 year' do
+      context 'years to effect bigger than 1' do
         let(:years_to_effect) { 3 }
 
         it { expect(subject).to eq '01/01/2015'.to_date }
@@ -100,7 +169,27 @@ RSpec.describe RelatedPolicyPeriod do
     context '.end_date' do
       subject { RelatedPolicyPeriod.new(related_policy).end_date }
 
-      it { expect(subject).to eq '1/1/2018'.to_date }
+      context 'when years to effect eq nil' do
+        let(:years_to_effect) { nil }
+
+        it { expect(subject).to eq '1/1/2017'.to_date }
+      end
+
+      context 'when years to effect eq 0' do
+        let(:years_to_effect) { 0 }
+
+        it { expect(subject).to eq '1/1/2017'.to_date }
+      end
+
+      context 'when years to effect eq 1' do
+        let(:years_to_effect) { 1 }
+
+        it { expect(subject).to eq '1/1/2017'.to_date }
+      end
+
+      context 'when years to effect eq 2 or more' do
+        it { expect(subject).to eq '1/1/2018'.to_date }
+      end
     end
 
     context '.last_validity_date' do

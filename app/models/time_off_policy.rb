@@ -24,6 +24,7 @@ class TimeOffPolicy < ActiveRecord::Base
     if: "(end_day.present? || end_month.present?) && policy_type == 'balancer'"
   validate :no_end_dates, if: "policy_type == 'counter'"
   validate :end_date_after_start_date, if: [:start_day, :start_month, :end_day, :end_month]
+  validate :no_end_date_when_years_to_effect_nil, if: [:end_day, :end_month]
 
   scope :for_account_and_category, lambda { |account_id, time_off_category_id|
     joins(:time_off_category).where(
@@ -62,6 +63,12 @@ class TimeOffPolicy < ActiveRecord::Base
     errors.add(day_symbol, '29 of February is not an allowed day') if day == 29 && month == 2
   end
 
+  def no_end_date_when_years_to_effect_nil
+    return unless years_to_effect.blank?
+    errors.add(:end_month, 'Must be empty when years to effect not given')
+    errors.add(:end_day, 'Must be empty when years to effect not given')
+  end
+
   def no_end_dates
     errors.add(:end_day, 'Should be null for this type of policy') if end_day.present?
     errors.add(:end_month, 'Should be null for this type of policy') if end_month.present?
@@ -70,7 +77,7 @@ class TimeOffPolicy < ActiveRecord::Base
   def end_date_after_start_date
     return unless errors.blank?
     start_date =  Date.new(Time.zone.today.year, start_month, start_day)
-    end_date = Date.new(Time.zone.today.year, end_month, end_day) + years_to_effect.years
+    end_date = Date.new(Time.zone.today.year, end_month, end_day) + years_to_effect.to_i.years
     errors.add(:end_month, 'Must be after start month') if end_date <= start_date
   end
 end
