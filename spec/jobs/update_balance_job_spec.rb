@@ -252,7 +252,6 @@ RSpec.describe UpdateBalanceJob do
         Employee::Balance.update_all(being_processed: true)
       end
 
-      let(:pp) { create(:presence_policy, :with_time_entries) }
       let(:category) { create(:time_off_category, account: account) }
       let(:existing_balances) { Employee::Balance.where.not(id: balance.id).order(:effective_at) }
       let(:top_first) do
@@ -262,7 +261,7 @@ RSpec.describe UpdateBalanceJob do
       let(:ewp_first) { employee.first_employee_working_place }
       let(:ewp_second) do
         create(:employee_working_place,
-          effective_at: Date.new(2015,9,26), employee: employee, working_place: wps.last)
+          effective_at: Date.new(2015,9,24), employee: employee, working_place: wps.last)
       end
       let(:hps) do
         ['ai', 'ow'].map { |region| create(:holiday_policy, region: region, country: 'ch') }
@@ -277,11 +276,6 @@ RSpec.describe UpdateBalanceJob do
           create(:employee_time_off_policy,
             employee: employee, time_off_policy: top, effective_at: date)
         end.flatten
-      end
-      let!(:epps) do
-        [Time.now - 2.years, Time.now - 1.years].each do |date|
-          create(:employee_presence_policy, employee: employee, effective_at: date)
-        end
       end
 
       context 'when employee balance is updated' do
@@ -388,7 +382,48 @@ RSpec.describe UpdateBalanceJob do
         end
 
         context 'with time off' do
+          before { allow_any_instance_of(EmployeePresencePolicy).to receive(:valid?) { true } }
+          subject { UpdateBalanceJob.perform_now(balance.id, options) }
+          let(:pp) { create(:presence_policy, :with_time_entries) }
+          let(:balance) do
+            time_off.employee_balance.tap { |balance| balance.update!(being_processed: true) }
+          end
+          let!(:time_off) do
+            create(:time_off,
+              start_time: '21 Sep 2015 13:00:00', end_time: '29 Sep 2015 15:00:00',
+              time_off_category: category, employee: employee
+            )
+          end
+          let(:epps) do
+            ['21/09/2015', '27/09/2015'].map do |date|
+              create(:employee_presence_policy, employee: employee, effective_at: date)
+            end
+          end
 
+          context 'and there are no time entries in time off period' do
+            it { expect { subject }.to change { balance.reload.amount }.to 0 }
+            it { expect { subject }.to change { balance.reload.being_processed } }
+          end
+
+          context 'and there are time entries in time off period' do
+            before { epps.first.update!(presence_policy: pp) }
+
+            context 'when only one policy has time entries' do
+              it { expect { subject }.to change { balance.reload.amount }.to -240 }
+              it { expect { subject }.to change { balance.reload.being_processed } }
+              it { expect { subject }.to change { existing_balances.last.reload.being_processed } }
+              it { expect { subject }.to_not change { existing_balances.first.reload.being_processed } }
+            end
+
+            context 'when two policies have time entries' do
+              before { epps.last.update!(presence_policy: pp) }
+
+              it { expect { subject }.to change { balance.reload.amount }.to -1080 }
+              it { expect { subject }.to change { balance.reload.being_processed } }
+              it { expect { subject }.to change { existing_balances.last.reload.being_processed } }
+              it { expect { subject }.to_not change { existing_balances.first.reload.being_processed } }
+            end
+          end
         end
 
         context 'without removal and time off' do

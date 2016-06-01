@@ -11,7 +11,11 @@ FactoryGirl.define do
           .time_off_policy.time_off_category
       end
 
-      time_off.employee_balance = create(:employee_balance, employee: time_off.employee, time_off_category: time_off.time_off_category)
+      time_off.employee_balance = create(:employee_balance,
+        employee: time_off.employee,
+        time_off_category: time_off.time_off_category,
+        effective_at: time_off.start_time
+      )
     end
 
     trait :without_balance do
