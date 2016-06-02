@@ -12,7 +12,7 @@ RSpec.describe NewslettersController, type: :controller do
 
     subject { post :create, params }
 
-    context 'with valid params' do
+    context 'with valid params', :intercom_required do
       it { is_expected.to have_http_status(:no_content) }
     end
 
