@@ -37,7 +37,7 @@ class ExportWptopsToEtops < ActiveRecord::Migration
         hire_date = employee.events.where(event_type: "hired").first.effective_at.to_date
         EmployeeTimeOffPolicy.create(
           employee: employee,
-          time_off_policy: wptop.time_off_policy_id,
+          time_off_policy_id: wptop.time_off_policy_id,
           effective_at: hire_date
         )
       end
