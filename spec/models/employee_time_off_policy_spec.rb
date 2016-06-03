@@ -19,6 +19,43 @@ RSpec.describe EmployeeTimeOffPolicy, type: :model do
     expect(etop.time_off_category_id).to eq(etop.time_off_policy.time_off_category_id)
   end
 
+  describe '#verify_not_change_of_policy_type_in_category' do
+    let(:category) { create(:time_off_category, account: account) }
+    let(:account) { create(:account) }
+    let(:employee) {create(:employee, account: account) }
+    context 'when there are existing etops' do
+      let(:topBalancer) { create(:time_off_policy, time_off_category: category) }
+      let!(:etopBalancer) do
+        create(:employee_time_off_policy, employee: employee, time_off_policy: topBalancer)
+      end
+
+      context 'in the same category' do
+        let(:topCounter) { create(:time_off_policy, :as_counter, time_off_category: category) }
+        let(:etopCounter) do
+          build(:employee_time_off_policy, employee: employee, time_off_policy: topCounter)
+        end
+
+        it '' do
+          etopCounter.valid?
+          expected_message = 'The employee has an existing policy of different type in the category'
+          expect(etopCounter.errors.messages[:policy_type]).to eq([expected_message])
+        end
+      end
+
+      context 'but not in this category' do
+        let(:other_category) { create(:time_off_category, account: account) }
+        let(:topCounter) { create(:time_off_policy, :as_counter, time_off_category: other_category) }
+        let(:etopCounter) do
+          build(:employee_time_off_policy, employee: employee, time_off_policy: topCounter)
+        end
+
+        it '' do
+          expect(etopCounter).to be_valid
+        end
+      end
+    end
+  end
+
   describe 'custom validations' do
     context '#no_balances_after_effective_at' do
       let(:employee) { create(:employee) }
