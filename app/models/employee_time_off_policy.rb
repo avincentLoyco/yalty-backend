@@ -59,12 +59,4 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
   def add_category_id
     self.time_off_category_id = time_off_policy.time_off_category_id
   end
-
-  def effective_at_newer_than_previous_start_date
-    category_id = time_off_policy.time_off_category_id
-    active_policy = employee.active_policy_in_category_at_date(category_id)
-    return unless active_policy &&
-        EmployeePolicyPeriod.new(employee, category_id).previous_start_date > effective_at
-    errors.add(:effective_at, 'Must be after current policy previous perdiod start date')
-  end
 end
