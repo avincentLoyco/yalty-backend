@@ -1,11 +1,56 @@
+require 'employee_policy_period'
+
 class EmployeeTimeOffPolicy < ActiveRecord::Base
+  attr_accessor :effective_till
+
   belongs_to :employee
   belongs_to :time_off_policy
+  belongs_to :time_off_category
 
-  validates :employee_id, :time_off_policy_id, presence: true
-  validates :time_off_policy_id, uniqueness: { scope: :employee_id }
+  validates :employee_id, :time_off_policy_id, :effective_at, presence: true
+  validates :effective_at, uniqueness: { scope: [:employee_id, :time_off_policy_id] }
+  validate :no_balances_after_effective_at, on: :create, if: :time_off_policy
 
-  scope :affected_employees, lambda { |policy_id|
-    where(time_off_policy_id: policy_id).pluck(:employee_id)
+  before_create :add_category_id
+
+  scope :not_assigned_at, -> (date) { where(['effective_at > ?', date]) }
+  scope :assigned_at, -> (date) { where(['effective_at <= ?', date]) }
+  scope :by_employee_in_category, lambda { |employee_id, category_id|
+    joins(:time_off_policy)
+      .where(time_off_policies: { time_off_category_id: category_id }, employee_id: employee_id)
+      .order(effective_at: :desc)
   }
+
+  def effective_till
+    next_effective_at =
+      self
+      .class
+      .by_employee_in_category(employee_id, time_off_category_id)
+      .where('effective_at > ?', effective_at)
+      .last
+      .try(:effective_at)
+    next_effective_at - 1.day if next_effective_at
+  end
+
+  private
+
+  def no_balances_after_effective_at
+    balances_after_effective_at =
+      Employee::Balance.employee_balances(employee_id, time_off_policy.time_off_category_id)
+                       .where('effective_at >= ?', effective_at)
+    return unless balances_after_effective_at.present?
+    errors.add(:time_off_category, 'Employee balance after effective at already exists')
+  end
+
+  def add_category_id
+    self.time_off_category_id = time_off_policy.time_off_category_id
+  end
+
+  def effective_at_newer_than_previous_start_date
+    category_id = time_off_policy.time_off_category_id
+    active_policy = employee.active_policy_in_category_at_date(category_id)
+    return unless active_policy &&
+        EmployeePolicyPeriod.new(employee, category_id).previous_start_date > effective_at
+    errors.add(:effective_at, 'Must be after current policy previous perdiod start date')
+  end
 end

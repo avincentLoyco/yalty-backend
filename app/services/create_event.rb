@@ -1,21 +1,23 @@
 class CreateEvent
   include API::V1::Exceptions
   attr_reader :employee_params, :attributes_params, :event_params, :employee,
-    :event, :versions
+    :event, :versions, :employee_working_place
 
   def initialize(params, employee_attributes_params)
-    @employee          = nil
-    @event             = nil
-    @versions          = []
-    @employee_params   = params[:employee]
-    @attributes_params = employee_attributes_params
-    @event_params      = build_event_params(params)
+    @employee               = nil
+    @event                  = nil
+    @versions               = []
+    @employee_params        = params[:employee]
+    @attributes_params      = employee_attributes_params
+    @event_params           = build_event_params(params)
+    @employee_working_place = nil
   end
 
   def call
     ActiveRecord::Base.transaction do
       build_event
       find_or_build_employee
+      build_employee_working_place
       build_versions
 
       save!
@@ -31,13 +33,21 @@ class CreateEvent
   def find_or_build_employee
     if employee_params.key?(:id)
       @employee = Account.current.employees.find(employee_params[:id])
-      working_place_id = employee_params[:working_place_id]
-      @employee.working_place_id = working_place_id if working_place_id.present?
     else
-      @employee = Account.current.employees.new(employee_params)
+      @employee = Account.current.employees.new(employee_params.except(:working_place_id))
+      employee.events << [event]
     end
 
     event.employee = @employee
+  end
+
+  def build_employee_working_place
+    return unless employee_params.key?(:working_place_id) && employee_params.key?(:id).blank?
+    @employee_working_place =
+      employee.employee_working_places.new(
+        effective_at: event.effective_at,
+        working_place: Account.current.working_places.find(employee_params[:working_place_id])
+      )
   end
 
   def build_event
@@ -78,7 +88,8 @@ class CreateEvent
   end
 
   def save!
-    if event.valid? && employee.valid? && unique_attribute_versions?
+    if event.valid? && employee.valid? && unique_attribute_versions? &&
+        (employee_working_place.blank? || employee_working_place.valid?)
       event.save!
       employee.save!
 
@@ -90,6 +101,7 @@ class CreateEvent
                  .merge(event.errors.messages)
                  .merge(employee.errors.messages)
                  .merge(attribute_versions_errors)
+                 .merge(employee_working_place_errors)
 
       raise InvalidResourcesError.new(event, messages)
     end
@@ -101,5 +113,10 @@ class CreateEvent
       { attr.attribute_definition.name => attr.data.errors.messages.values }
     end
     errors.reduce({}, :merge).delete_if { |_key, value| value.empty? }
+  end
+
+  def employee_working_place_errors
+    return {} unless employee_working_place
+    employee_working_place.errors.messages
   end
 end

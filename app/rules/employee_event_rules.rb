@@ -8,7 +8,7 @@ module EmployeeEventRules
       optional :comment
       required :employee, :Hash do
         optional :id, :String
-        optional :working_place_id, :String
+        optional :working_place_id
       end
       optional :employee_attributes, :Array, allow_nil: true
     end
@@ -22,7 +22,6 @@ module EmployeeEventRules
       optional :comment
       required :employee, :Hash do
         required :id, :String
-        optional :working_place_id, :String
       end
       optional :employee_attributes, :Array, allow_nil: true
     end

@@ -5,7 +5,11 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
   include_context 'shared_context_timecop_helper'
 
   let(:policy) { create(:presence_policy, account: Account.current) }
-  let(:employee) { create(:employee, :with_policy, account: account, presence_policy: policy) }
+  let(:employee) do
+    create(:employee, :with_time_off_policy, :with_presence_policy, account: account,
+      presence_policy: policy
+    )
+  end
   let(:time_off_category) do
     employee.employee_time_off_policies.first.time_off_policy.time_off_category
   end

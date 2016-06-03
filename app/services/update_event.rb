@@ -1,19 +1,21 @@
 class UpdateEvent
   include API::V1::Exceptions
   attr_reader :employee_params, :attributes_params, :event_params, :versions,
-    :event, :employee
+    :event, :employee, :updated_working_place
 
   def initialize(params, employee_attributes_params)
-    @versions           = []
-    @employee_params    = params[:employee].tap { |attr| attr.delete(:employee_attributes) }
-    @attributes_params  = employee_attributes_params
-    @event_params       = build_event_params(params)
+    @versions              = []
+    @employee_params       = params[:employee].tap { |attr| attr.delete(:employee_attributes) }
+    @attributes_params     = employee_attributes_params
+    @event_params          = build_event_params(params)
+    @updated_working_place = nil
   end
 
   def call
     ActiveRecord::Base.transaction do
       find_and_update_event
       find_employee
+      update_employee_working_place
       manage_versions
 
       save!
@@ -28,13 +30,17 @@ class UpdateEvent
 
   def find_employee
     @employee = Account.current.employees.find(employee_params[:id])
-    working_place_id = employee_params[:working_place_id]
-    @employee.working_place_id = working_place_id if working_place_id.present?
   end
 
   def find_and_update_event
     @event = Account.current.employee_events.find(event_params[:id])
     @event.attributes = event_params
+  end
+
+  def update_employee_working_place
+    return if event.event_type != 'hired'
+    @updated_working_place =
+      ManageEmployeeWorkingPlace.new(employee, event_params[:effective_at]).call
   end
 
   def manage_versions
@@ -97,7 +103,8 @@ class UpdateEvent
   end
 
   def valid?
-    event.valid? && employee.valid? && unique_attribute_versions? && attribute_version_valid?
+    event.valid? && employee.valid? && unique_attribute_versions? && attribute_version_valid? &&
+      (updated_working_place.blank? || updated_working_place.valid?)
   end
 
   def save!
@@ -114,9 +121,15 @@ class UpdateEvent
                  .merge(event.errors.messages)
                  .merge(employee.errors.messages)
                  .merge(attribute_versions_errors)
+                 .merge(employee_working_place_errors)
 
       raise InvalidResourcesError.new(event, messages)
     end
+  end
+
+  def employee_working_place_errors
+    return {} unless updated_working_place
+    updated_working_place.errors.messages
   end
 
   def attribute_versions_errors

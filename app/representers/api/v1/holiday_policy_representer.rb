@@ -12,20 +12,13 @@ module Api::V1
 
     def relationships
       {
-        working_places: working_places_json,
-        employees: employees_json
+        working_places: working_places_json
       }
     end
 
     def working_places_json
       resource.working_places.map do |working_place|
         WorkingPlaceRepresenter.new(working_place).basic
-      end
-    end
-
-    def employees_json
-      resource.employees.map do |employee|
-        EmployeeRepresenter.new(employee).basic
       end
     end
   end

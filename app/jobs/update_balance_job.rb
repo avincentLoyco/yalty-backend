@@ -16,16 +16,13 @@ class UpdateBalanceJob < ActiveJob::Base
   private
 
   def update_balances
-    employee_balances = find_balances_by_ids
+    balances_to_update = FindEmployeeBalancesToUpdate.new(@employee_balance, options).call
+    options.delete(:update_all)
+    employee_balances = Employee::Balance.where(id: balances_to_update).order(effective_at: :asc)
     UpdateEmployeeBalance.new(employee_balance, options).call
-
-    employee_balances.each do |balance|
+    employee_balances_with_removal(employee_balances).each do |balance|
       UpdateEmployeeBalance.new(balance).call
     end
-  end
-
-  def find_balances_by_ids
-    Employee::Balance.where(id: balances_to_update).order(effective_at: :asc)
   end
 
   def update_time_off_status
@@ -33,24 +30,9 @@ class UpdateBalanceJob < ActiveJob::Base
     TimeOff.find(employee_balance.time_off_id).update!(being_processed: false)
   end
 
-  def balances_to_update
-    if options[:effective_at] || options[:update_all]
-      options.delete(:update_all)
-      employee_balance.all_later_ids(earlier_date)
-    else
-      employee_balance.later_balances_ids(current_or_new_amount)
-    end
-  end
-
-  def earlier_date
-    if options[:effective_at] && options[:effective_at] < employee_balance.effective_at
-      options[:effective_at]
-    else
-      employee_balance.effective_at
-    end
-  end
-
-  def current_or_new_amount
-    options[:amount] || employee_balance.amount
+  def employee_balances_with_removal(employee_balances)
+    return employee_balances unless employee_balance.reload.balance_credit_removal
+    (employee_balances + [employee_balance.reload.balance_credit_removal])
+      .compact.uniq.sort_by { |eb| eb[:effective_at] }
   end
 end

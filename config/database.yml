@@ -10,7 +10,7 @@ development:
 
 test:
   <<: *default
-  database: yalty_test
+  database: yalty_test<%= ENV['TEST_ENV_NUMBER']%>
 
 staging:
   <<: *default

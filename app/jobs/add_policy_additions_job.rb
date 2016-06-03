@@ -1,58 +1,69 @@
+require 'employee_category_policy_finder'
+
 class AddPolicyAdditionsJob < ActiveJob::Base
   queue_as :policies_and_balances
 
   def perform
-    TimeOffPolicy.all.each do |policy|
-      if policy.starts_today?
-        policy.policy_type == 'counter' ? manage_counter(policy) : manage_balancer(policy)
-      end
+    finder = EmployeeCategoryPolicyFinder.new(Time.zone.today)
+    mixed_table_data = finder.data_from_employees_with_employee_policy_for_day_and_month
+    mixed_table_data = verified_table_data(mixed_table_data)
+    mixed_table_data.each do |hash|
+      hash['policy_type'] == 'counter' ? manage_counter(hash) : manage_balancer(hash)
     end
   end
 
   private
 
-  def manage_counter(policy)
-    employees = Employee.where(id: policy.affected_employees_ids)
+  def manage_counter(attributes_hash)
+    options = { policy_credit_addition: true }
+    CreateEmployeeBalance.new(
+      attributes_hash['time_off_category_id'],
+      attributes_hash['employee_id'],
+      attributes_hash['account_id'],
+      nil,
+      options
+    ).call
+  end
 
-    employees.each do |employee|
-      category = policy.time_off_category_id
-      account = employee.account_id
-      employee = employee.id
-      options = { policy_credit_addition: true }
+  def manage_balancer(attributes_hash)
+    options = options_for_balancer(attributes_hash)
+    CreateEmployeeBalance.new(
+      attributes_hash['time_off_category_id'],
+      attributes_hash['employee_id'],
+      attributes_hash['account_id'],
+      attributes_hash['amount'],
+      options
+    ).call
+  end
 
-      next if addition_already_exist?(policy.id, employee)
+  def options_for_balancer(attributes_hash)
+    {
+      policy_credit_addition: true,
+      validity_date: policy_end_date(
+        attributes_hash['end_day'],
+        attributes_hash['end_month'],
+        attributes_hash['years_to_effect']
+      )
+    }
+  end
 
-      CreateEmployeeBalance.new(category, employee, account, nil, options).call
+  def policy_end_date(end_day, end_month, years_to_effect)
+    return nil if end_day.blank? && end_month.blank?
+    add_years = years_to_effect.to_i > 1 ? years_to_effect.to_i : 1
+    Date.new(Time.zone.today.year + add_years, end_month.to_i, end_day.to_i)
+  end
+
+  def verified_table_data(table_data)
+    table_data.reject do |data|
+      next unless data['years_to_effect'].to_i > 1
+      first_start_date =
+        calculate_first_start_date(data['effective_at'], data['start_month'], data['start_day'])
+      (Time.zone.today.year - first_start_date.year) % data['years_to_effect'].to_i != 0
     end
   end
 
-  def manage_balancer(policy)
-    employees = Employee.where(id: policy.affected_employees_ids)
-    policy_addition = policy.amount
-
-    employees.each do |employee|
-      category = policy.time_off_category_id
-      account = employee.account_id
-      employee = employee.id
-      amount = policy_addition
-      options = { policy_credit_addition: true, validity_date: policy_end_date(policy) }
-
-      next if addition_already_exist?(policy.id, employee)
-
-      CreateEmployeeBalance.new(category, employee, account, amount, options).call
-    end
-  end
-
-  def addition_already_exist?(policy_id, employee_id)
-    additions = Employee::Balance.employee_balances(employee_id, policy_id)
-                                 .where('policy_credit_addition = true AND effective_at::date = ?',
-                                   Time.zone.today)
-                                 .count
-    additions > 0
-  end
-
-  def policy_end_date(policy)
-    return nil if policy.dates_blank?
-    policy.end_date.to_s
+  def calculate_first_start_date(effective_at, start_month, start_day)
+    start_year_date = Date.new(effective_at.to_date.year, start_month.to_i, start_day.to_i)
+    effective_at.to_date > start_year_date ? start_year_date + 1.year : start_year_date
   end
 end

@@ -15,7 +15,7 @@ RSpec.describe AddBalanceRemovalsJob do
   let!(:balance) do
     create(:employee_balance,
       employee: employee, effective_at: Date.today - 1.week, validity_date: Date.today,
-      time_off_policy: policy, time_off_category: category, amount: 100)
+      time_off_category: category, amount: 100)
   end
 
   context 'when employee balance has validity date today' do

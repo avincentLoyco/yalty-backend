@@ -11,8 +11,6 @@ RSpec.describe TimeOffPolicy, type: :model do
     .with_options(null: true) }
   it { is_expected.to have_db_column(:years_to_effect).of_type(:integer)
     .with_options(null: true) }
-  it { is_expected.to have_db_column(:years_passed).of_type(:integer)
-    .with_options(null: false, default: 0) }
 
   it { is_expected.to have_db_index(:time_off_category_id) }
 
@@ -23,7 +21,6 @@ RSpec.describe TimeOffPolicy, type: :model do
   it { is_expected.to validate_presence_of(:time_off_category) }
   it { is_expected.to validate_inclusion_of(:policy_type).in_array(%w(counter balancer)) }
   it { is_expected.to validate_numericality_of(:years_to_effect).is_greater_than_or_equal_to(0) }
-  it { is_expected.to validate_numericality_of(:years_passed).is_greater_than_or_equal_to(0) }
   it { is_expected.to validate_numericality_of(:start_day).is_greater_than_or_equal_to(1) }
   it { is_expected.to validate_numericality_of(:start_month).is_greater_than_or_equal_to(1) }
 
@@ -44,7 +41,6 @@ RSpec.describe TimeOffPolicy, type: :model do
     )
   end
   context "with valid arguments" do
-
     context "for balancer policies" do
       context "without end dates" do
         let(:end_day) { nil }
@@ -156,99 +152,29 @@ RSpec.describe TimeOffPolicy, type: :model do
       it { expect(subject.errors[:end_day]).to include "Should be null for this type of policy" }
       it { expect(subject.errors[:end_month]).to include "Should be null for this type of policy" }
     end
-  end
 
-  describe '#helper period methods' do
-    let(:year) { Date.today.year }
-    let(:starts) { Date.new(year, subject.start_month, subject.start_day).strftime('%m-%d') }
+    context 'when start date is after end date' do
+      let(:start_month) { 10 }
 
-    context 'when policy has end month and end day' do
-      let(:ends) { Date.new(year, subject.end_month, subject.end_day).strftime('%m-%d') }
-
-      context '#one_year_policy' do
-        subject { build(:time_off_policy, :with_end_date, start_month: 10, end_month: 4) }
-
-        it { expect(subject.valid?).to eq false }
-        it { expect(subject.current_period.to_s)
-          .to eq "#{year}-#{starts}...#{year}-#{ends}" }
-        it { expect(subject.previous_period.to_s)
-          .to eq "#{year - 1}-#{starts}...#{year - 1}-#{ends}" }
-        it { expect(subject.next_period.to_s)
-          .to eq "#{year + 1}-#{starts}...#{year + 1}-#{ends}" }
-      end
-
-      context '#two_years_policy' do
-        subject { build(:time_off_policy, :with_end_date, years_to_effect: 1) }
-
-        it { expect(subject.valid?).to eq true }
-        it { expect(subject.current_period.to_s)
-          .to eq "#{year}-#{starts}...#{year + 1}-#{ends}"  }
-        it { expect(subject.previous_period.to_s)
-          .to eq "#{year - 1}-#{starts}...#{year}-#{ends}" }
-        it { expect(subject.next_period.to_s)
-          .to eq "#{year + 1}-#{starts}...#{year + 2}-#{ends}" }
-      end
-
-      context '#three_years_policy' do
-        subject { build(:time_off_policy, :with_end_date, years_to_effect: 2) }
-
-        it { expect(subject.valid?).to eq true }
-        it { expect(subject.current_period.to_s)
-          .to eq "#{year}-#{starts}...#{year + 2}-#{ends}"  }
-        it { expect(subject.previous_period.to_s)
-          .to eq "#{year - 2}-#{starts}...#{year}-#{ends}" }
-        it { expect(subject.next_period.to_s)
-          .to eq "#{year + 2}-#{starts}...#{year + 4}-#{ends}" }
-
-        context 'years passed eq 1' do
-          subject { build(:time_off_policy, :with_end_date, years_to_effect: 2, years_passed: 1) }
-
-          it { expect(subject.valid?).to eq true }
-          it { expect(subject.current_period.to_s)
-            .to eq "#{year - 1}-#{starts}...#{year + 1}-#{ends}"  }
-          it { expect(subject.previous_period.to_s)
-            .to eq "#{year - 3}-#{starts}...#{year - 1}-#{ends}" }
-          it { expect(subject.next_period.to_s)
-            .to eq "#{year + 1}-#{starts}...#{year + 3}-#{ends}" }
-        end
-      end
+      it { expect(subject).not_to be_valid }
+      it { expect(subject.errors[:end_month]).to include "Must be after start month" }
     end
 
-    context 'when policy does not have end month and day' do
-      context 'one year policy' do
-        subject { build(:time_off_policy) }
+    context 'when end month and end day given' do
+      let(:years) { 1 }
+      subject { build(:time_off_policy, end_day: 1, end_month: 4, years_to_effect: years) }
 
-        it { expect(subject.valid?).to eq true }
-        it { expect(subject.current_period.to_s)
-          .to eq "#{year}-#{starts}...#{year + 1}-#{starts}"  }
-        it { expect(subject.previous_period.to_s)
-          .to eq "#{year - 1}-#{starts}...#{year}-#{starts}" }
-        it { expect(subject.next_period.to_s)
-          .to eq "#{year + 1}-#{starts}...#{year + 2}-#{starts}" }
-      end
+      it { expect(subject.valid?).to eq true }
+      it { expect { subject.valid? }.to_not change { subject.errors.messages.count } }
 
-      context 'two year policy' do
-        subject { build(:time_off_policy, years_to_effect: 1) }
+      context 'and years to effect equal nil' do
+        let(:years) { nil }
 
-        it { expect(subject.valid?).to eq true }
-        it { expect(subject.current_period.to_s)
-          .to eq "#{year}-#{starts}...#{year + 2}-#{starts}"  }
-        it { expect(subject.previous_period.to_s)
-          .to eq "#{year - 2}-#{starts}...#{year}-#{starts}" }
-        it { expect(subject.next_period.to_s)
-          .to eq "#{year + 2}-#{starts}...#{year + 4}-#{starts}" }
-      end
-
-      context 'three years policy' do
-        subject { build(:time_off_policy, years_to_effect: 2) }
-
-        it { expect(subject.valid?).to eq true }
-        it { expect(subject.current_period.to_s)
-          .to eq "#{year}-#{starts}...#{year + 3}-#{starts}"  }
-        it { expect(subject.previous_period.to_s)
-          .to eq "#{year - 3}-#{starts}...#{year}-#{starts}" }
-        it { expect(subject.next_period.to_s)
-          .to eq "#{year + 3}-#{starts}...#{year + 6}-#{starts}" }
+        it { expect(subject.valid?).to eq false }
+        it { expect { subject.valid? }.to change { subject.errors.messages[:end_month] }
+          .to include 'Must be empty when years to effect not given'}
+        it { expect { subject.valid? }.to change { subject.errors.messages[:end_day] }
+          .to include 'Must be empty when years to effect not given'}
       end
     end
   end

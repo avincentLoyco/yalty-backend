@@ -3,14 +3,14 @@ require 'rails_helper'
 RSpec.describe UpdateEventAttributeValidator, type: :service do
   let(:user) { create(:account_user, account_manager: false) }
   let(:account) { user.account }
+  let(:hired_event) do
+    create(:employee_event, event_type: 'hired', effective_at: 2.days.from_now.at_beginning_of_day)
+  end
   let!(:employee) do
     create(:employee, :with_attributes,
       account: account,
       account_user_id: user.id,
-      event: {
-        event_type: 'hired',
-        effective_at: 2.days.from_now.at_beginning_of_day
-      },
+      events: [hired_event],
       employee_attributes: {
         firstname: employee_first_name,
         annual_salary: employee_annual_salary

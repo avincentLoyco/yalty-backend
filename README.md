@@ -166,6 +166,22 @@ bin/rspec
 guard
 ```
 
+Running faster RSpec tests
+-------------
+
+Instead of running `rspec spec` run `rake parallel:spec` to have a faster development test time by using [parallel_tests](https://github.com/grosser/parallel_tests)
+
+Run this commands once:
+```bash
+rake parallel:create
+rake parallel:prepare
+rake parallel:setup
+```
+
+Run each time:
+```bash
+rake parallel:spec
+```
 
 How to deploy
 -------------

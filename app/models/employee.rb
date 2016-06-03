@@ -1,7 +1,5 @@
 class Employee < ActiveRecord::Base
   belongs_to :account, inverse_of: :employees, required: true
-  belongs_to :working_place, inverse_of: :employees
-  belongs_to :holiday_policy
   belongs_to :presence_policy
   belongs_to :user, class_name: 'Account::User'
   has_many :employee_attribute_versions,
@@ -16,27 +14,41 @@ class Employee < ActiveRecord::Base
   has_many :employee_time_off_policies
   has_many :time_off_policies, through: :employee_time_off_policies
   has_many :time_off_categories, through: :employee_balances
+  has_many :employee_working_places
+  has_many :working_places, through: :employee_working_places
+  has_many :employee_presence_policies
+  has_many :presence_policies, through: :employee_presence_policies
 
-  validates :working_place_id, presence: true
+  validates :employee_working_places, length: { minimum: 1 }
+  validate :hired_event_presence, on: :create
 
-  def active_presence_policy
-    return presence_policy if presence_policy.present?
-    working_place.presence_policy
+  scope :affected_by_presence_policy, lambda { |presence_policy_id|
+    joins(:employee_presence_policies)
+      .where(employee_presence_policies: { presence_policy_id: presence_policy_id })
+  }
+
+  def first_employee_working_place
+    employee_working_places.find_by(effective_at: employee_working_places.pluck(:effective_at).min)
   end
 
-  def active_holiday_policy
-    return holiday_policy if holiday_policy.present?
-    working_place.holiday_policy
+  def first_employee_event
+    events.find_by(event_type: 'hired')
   end
 
-  def active_policy_in_category(category_id)
-    employee_policy = time_off_policy_in_category(category_id)
-    return employee_policy if employee_policy
-    working_place.time_off_policy_in_category(category_id)
+  def active_policy_in_category_at_date(category_id, date = Time.zone.today)
+    assigned_time_off_policies_in_category(category_id, date).first
   end
 
-  def last_balance_in_policy(policy_id)
-    employee_balances.where(time_off_policy_id: policy_id).order('effective_at').last
+  def active_presence_policy(date = Time.zone.today)
+    PresencePolicy.active_for_employee(id, date)
+  end
+
+  def active_holiday_policy_at(date)
+    active_working_place_at(date).holiday_policy
+  end
+
+  def active_working_place_at(date = Time.zone.today)
+    WorkingPlace.active_for_employee(id, date)
   end
 
   def last_balance_in_category(category_id)
@@ -47,15 +59,18 @@ class Employee < ActiveRecord::Base
     time_off_categories.distinct
   end
 
-  def first_balance_in_policy(policy_id)
-    employee_balances.where(time_off_policy_id: policy_id).order(effective_at: :asc).first
+  def assigned_time_off_policies_in_category(category_id, date = Time.zone.today)
+    EmployeeTimeOffPolicy.assigned_at(date).by_employee_in_category(id, category_id).limit(3)
+  end
+
+  def not_assigned_time_off_policies_in_category(category_id, date = Time.zone.today)
+    EmployeeTimeOffPolicy.not_assigned_at(date).by_employee_in_category(id, category_id).limit(2)
   end
 
   private
 
-  def time_off_policy_in_category(category_id)
-    employee_time_off_policies.joins(:time_off_policy)
-                              .find_by(time_off_policies: { time_off_category_id: category_id })
-                              .try(:time_off_policy)
+  def hired_event_presence
+    return if events && events.map(&:event_type).include?('hired')
+    errors.add(:events, 'Employee must have hired event')
   end
 end
