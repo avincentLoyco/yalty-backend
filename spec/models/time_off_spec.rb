@@ -82,5 +82,84 @@ RSpec.describe TimeOff, type: :model do
         it { expect { subject.valid? }.to change { subject.errors.messages[:employee] } }
       end
     end
+
+    context '#does_not_overlap_with_other_users_time_offs' do
+      let(:employee) { create(:employee) }
+      subject do
+        build(:time_off, start_time: '1/1/2016', end_time: '5/1/2016', employee_id: employee.id)
+      end
+
+      context 'when there are no another time offs' do
+        it { expect(subject.valid?).to eq true }
+        it { expect { subject.valid? }.to_not change { subject.errors.messages.count } }
+      end
+
+      context 'when there is another time off' do
+        let(:start_time) { '6/1/2016' }
+        let(:end_time) { '10/1/2016' }
+        let!(:time_off) do
+          create(:time_off, start_time: start_time, end_time: end_time, employee: employee)
+        end
+
+        context 'and it does not overlaps' do
+          let(:start_time) { '6/1/2016' }
+
+          it { expect(subject.valid?).to eq true }
+          it { expect { subject.valid? }.to_not change { subject.errors.messages.count } }
+
+          context 'end_time eqal existing time off start_time' do
+            let(:start_time) { '5/1/2016' }
+
+            it { expect(subject.valid?).to eq true }
+            it { expect { subject.valid? }.to_not change { subject.errors.messages.count } }
+          end
+
+          context 'start_time equal existing time off end_time' do
+            let(:start_time) { '31/12/2015' }
+            let(:end_time) { '1/1/2016' }
+
+            it { expect(subject.valid?).to eq true }
+            it { expect { subject.valid? }.to_not change { subject.errors.messages.count } }
+          end
+        end
+
+        context 'and it overlaps' do
+          context 'start_time and end_time are in existing time off period' do
+            let(:start_time) { '2/1/2016' }
+            let(:end_time) { '4/1/2016' }
+
+            it { expect(subject.valid?).to eq false }
+            it { expect { subject.valid? }.to change { subject.errors.messages[:start_time] }
+              .to include 'Time off in period already exist' }
+          end
+
+          context 'start_time and end_time are in existing time off period' do
+            let(:start_time) { '1/1/2016' }
+            let(:end_time) { '5/1/2016' }
+
+            it { expect(subject.valid?).to eq false }
+            it { expect { subject.valid? }.to change { subject.errors.messages[:start_time] }
+              .to include 'Time off in period already exist' }
+          end
+
+          context 'start_time in exsiting time off period' do
+            let(:start_time) { '3/1/2016' }
+
+            it { expect(subject.valid?).to eq false }
+            it { expect { subject.valid? }.to change { subject.errors.messages[:start_time] }
+              .to include 'Time off in period already exist' }
+          end
+
+          context 'end_time in existing time off period' do
+            let(:start_time) { '31/12/2015' }
+            let(:end_time) { '3/1/2016' }
+
+            it { expect(subject.valid?).to eq false }
+            it { expect { subject.valid? }.to change { subject.errors.messages[:start_time] }
+              .to include 'Time off in period already exist' }
+          end
+        end
+      end
+    end
   end
 end

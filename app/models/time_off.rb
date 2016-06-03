@@ -7,7 +7,8 @@ class TimeOff < ActiveRecord::Base
   validate :end_time_after_start_time
   validate :time_off_policy_presence, if: 'employee.present?'
   validates :employee_balance, presence: true, on: :update
-  validate :start_time_after_employee_start_date, if: :employee
+  validate :start_time_after_employee_start_date, if: [:employee, :start_time, :end_time]
+  validate :does_not_overlap_with_other_users_time_offs, if: [:employee, :time_off_category_id]
 
   def balance
     - CalculateTimeOffBalance.new(self).call
@@ -28,5 +29,18 @@ class TimeOff < ActiveRecord::Base
   def start_time_after_employee_start_date
     return unless start_time < employee.first_employee_event.effective_at
     errors.add(:start_time, 'Can not be added before employee start date')
+  end
+
+  def does_not_overlap_with_other_users_time_offs
+    employee_time_offs_in_period =
+      employee
+      .time_offs
+      .where(
+        '(start_time >= ? AND start_time < ?) OR (end_time > ? AND end_time <= ?)',
+        start_time, end_time, start_time, end_time
+      )
+    return if (employee_time_offs_in_period - [self]).blank?
+    errors.add(:start_time, 'Time off in period already exist')
+    errors.add(:end_time, 'Time off in period already exist')
   end
 end

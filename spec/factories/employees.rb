@@ -82,20 +82,24 @@ FactoryGirl.define do
         create(:no_category_assigned_time_off,
           time_off_category: first_policy.time_off_category,
           employee: employee,
+          start_time: Date.today,
+          end_time: Date.today + 2.days,
           employee_balance: first_balance
         )
 
         create(:no_category_assigned_time_off,
           time_off_category: second_policy.time_off_category,
           employee: employee,
-          start_time: Date.today,
+          start_time: Date.today + 2.days,
+          end_time: Date.today + 4.days,
           employee_balance: second_balance
         )
 
         create(:no_category_assigned_time_off,
           time_off_category: second_policy.time_off_category,
           employee: employee,
-          start_time: Date.today + 1.day,
+          start_time: Date.today + 4.days,
+          end_time: Date.today + 6.days,
           employee_balance: third_balance
         )
       end
