@@ -26,5 +26,19 @@ FactoryGirl.define do
     trait :with_time_off do
       time_off { create(:time_off, time_off_category: time_off_category) }
     end
+
+    trait :with_balance_credit_addition do
+      after(:build) do |employee_balance|
+        balance_addition = build(:employee_balance,
+          balance_credit_removal: employee_balance,
+          employee: employee_balance.employee,
+          time_off_category: employee_balance.time_off_category,
+          effective_at: Time.now - 2.weeks,
+          validity_date: Time.now - 1.week
+        )
+
+        employee_balance.balance_credit_addition = balance_addition
+      end
+    end
   end
 end

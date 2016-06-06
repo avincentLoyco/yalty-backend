@@ -198,7 +198,8 @@ RSpec.describe CreateEmployeeBalance, type: :service do
       context 'balance credit addition given' do
         let!(:employee_balance) do
           create(:employee_balance,
-            time_off_category: category, employee: employee, amount: 1000
+            time_off_category: category, employee: employee, amount: 1000,
+            policy_credit_addition: true
           )
         end
 

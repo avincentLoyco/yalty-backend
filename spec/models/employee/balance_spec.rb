@@ -70,6 +70,28 @@ RSpec.describe Employee::Balance, type: :model do
         end
       end
 
+      context 'policy credit removal flag set up' do
+        subject { build(:employee_balance) }
+
+        context 'when balance does not have balance credit addition assigned' do
+          it { expect { subject.valid? }.to_not change { subject.policy_credit_removal } }
+        end
+
+        context 'when balance has balance credit addition assigned' do
+          subject { build(:employee_balance, :with_balance_credit_addition) }
+
+          context 'and it is not policy credit addition' do
+            it { expect { subject.valid? }.to_not change { subject.policy_credit_removal } }
+          end
+
+          context 'and it is policy credit addition' do
+            before { subject.balance_credit_addition.policy_credit_addition = true }
+
+            it { expect { subject.valid? }.to change { subject.policy_credit_removal }.to true }
+          end
+        end
+      end
+
       context 'effective at set up' do
         context 'when effective at nil' do
           it { expect { subject.valid? }.to change { subject.effective_at }.to be_kind_of(Time) }
