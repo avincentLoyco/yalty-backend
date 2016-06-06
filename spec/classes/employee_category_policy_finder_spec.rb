@@ -94,7 +94,7 @@ RSpec.describe EmployeeCategoryPolicyFinder do
             .new(three_months_from_now)
             .data_from_employees_with_employee_policy_with_previous_policy_of_different_type
         end
-        it 'returns the data of for the employees that have a employee time off policy' do
+        xit 'returns the data of for the employees that have a employee time off policy' do
           expected_result =
             {
               employee_id: employee.id,
@@ -113,7 +113,7 @@ RSpec.describe EmployeeCategoryPolicyFinder do
             .data_from_employees_with_employee_policy_with_previous_policy_of_different_type
         end
 
-        it { expect(subject.size).to eq 0 }
+        xit { expect(subject.size).to eq 0 }
       end
 
       context 'when the effective_at matches but there are no employee with previous policy' do
@@ -123,7 +123,7 @@ RSpec.describe EmployeeCategoryPolicyFinder do
             .data_from_employees_with_employee_policy_with_previous_policy_of_different_type
         end
 
-        it { expect(subject.size).to eq 0 }
+        xit { expect(subject.size).to eq 0 }
 
         context 'with different  type' do
           subject do
@@ -132,7 +132,7 @@ RSpec.describe EmployeeCategoryPolicyFinder do
               .data_from_employees_with_employee_policy_with_previous_policy_of_different_type
           end
 
-          it { expect(subject.size).to eq 0 }
+          xit { expect(subject.size).to eq 0 }
         end
       end
     end

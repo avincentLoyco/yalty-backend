@@ -5,7 +5,6 @@ class CreateEmployeeWorkingPlaces < ActiveRecord::Migration
       t.uuid :working_place_id, null: false
       t.datetime :effective_at, null: false
 
-      t.timestamps null: false
     end
     add_foreign_key :employee_working_places,
                     :employees,
