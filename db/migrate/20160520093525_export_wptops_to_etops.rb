@@ -27,6 +27,7 @@ class ExportWptopsToEtops < ActiveRecord::Migration
   end
 
   def change
+    EmployeeTimeOffPolicy.reset_column_information
     EmployeeTimeOffPolicy.all.each do |etop|
       hire_date =
         etop.employee.events.where(event_type: "hired").first.effective_at.to_date
