@@ -11,7 +11,7 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
   validates :effective_at, uniqueness: { scope: [:employee_id, :time_off_policy_id] }
   validate :no_balances_after_effective_at, on: :create, if: :time_off_policy
   validate :verify_not_change_of_policy_type_in_category, if: [:employee, :time_off_policy]
-  before_create :add_category_id
+  before_save :add_category_id
 
   scope :not_assigned_at, -> (date) { where(['effective_at > ?', date]) }
   scope :assigned_at, -> (date) { where(['effective_at <= ?', date]) }
