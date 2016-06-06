@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe API::V1::EmployeesController, type: :controller do
   include_examples 'example_authorization',
-    resource_name: 'employee'
+    resource_name: 'employee', create: false , update: false, delete: false
   include_context 'shared_context_headers'
 
   let(:attribute_definition) {
@@ -15,10 +15,49 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
 
   context 'GET #show' do
     let(:employee) { create(:employee, :with_attributes, account: account) }
+    let(:employee_working_place) { employee.first_employee_working_place }
+    let(:first_working_place) { employee_working_place.working_place }
+    let(:future_working_place) { future_employee_working_place.working_place }
+    let!(:future_employee_working_place) do
+      create(:employee_working_place, employee: employee, effective_at: Time.now + 1.month)
+    end
+
     subject { get :show, id: employee.id }
 
     context 'with valid data' do
       it { is_expected.to have_http_status(200) }
+
+      context 'when the first policy is active one' do
+        before { subject }
+
+        it 'have active policy in json' do
+          expect_json('working_place',
+            id: first_working_place.id,
+            type: 'working_place',
+            assignation_id: employee_working_place.id
+          )
+        end
+      end
+
+      context 'when future policy is now active one' do
+        before do
+          Timecop.freeze(Time.now + 1.month)
+          employee.reload.employee_working_places
+          subject
+        end
+
+        after do
+          Timecop.return
+        end
+
+        it 'have future policy in json' do
+          expect_json('working_place',
+            id: future_working_place.id,
+            type: 'working_place',
+            assignation_id: future_employee_working_place.id
+          )
+        end
+      end
 
       context 'response' do
         before { subject }
@@ -30,7 +69,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
 
       context 'when employee has multiple attributes' do
         let!(:definition) { create(:employee_attribute_definition, multiple: true) }
-        let!(:new_employee) { create(:employee, account: account) }
+        let!(:new_employee) { build(:employee, account: account, events: [employee_event]) }
         let!(:employee_attribute_versions) do
           create_list(:employee_attribute, 2,
             employee: new_employee,
@@ -45,7 +84,6 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
         context 'when employee is not effective at' do
           let!(:employee_event) do
             create(:employee_event,
-              employee: new_employee,
               effective_at: Time.now + 1.week,
               event_type: 'hired'
             )
@@ -69,7 +107,6 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
         context 'when employee event is effective at' do
           let!(:employee_event) do
             create(:employee_event,
-              employee: new_employee,
               effective_at: Time.now - 1.week,
               event_type: 'hired'
             )
@@ -125,11 +162,9 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
     end
 
     context 'effective at date' do
-      let!(:future_employee) { create(:employee, account: account) }
+      let!(:future_employee) { create(:employee, account: account, events: [event]) }
       let!(:attribute) { create(:employee_attribute, event: event, employee: future_employee) }
-      let!(:event) do
-        create(:employee_event, employee: future_employee, effective_at: date, event_type: 'hired')
-      end
+      let!(:event) { create(:employee_event, effective_at: date, event_type: 'hired') }
       let(:employee_body) do
         JSON.parse(response.body).select { |record| record['id'] == future_employee.id }.first
       end
@@ -189,119 +224,6 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
         before { subject }
 
         it { expect_json_sizes(0) }
-      end
-    end
-  end
-
-  context 'PUT #update' do
-    let(:employee) { create(:employee, account: account) }
-    let(:presence_policy) { create(:presence_policy, account: account) }
-    let(:holiday_policy) { create(:holiday_policy, account: account) }
-    let(:id) { employee.id }
-    let(:holiday_policy_id) { holiday_policy.id }
-    let(:presence_policy_id) { presence_policy.id }
-    let(:time_off_policy_id) { create(:time_off_policy).id }
-    let(:valid_params_json) do
-      {
-        id: id,
-        type: 'employee',
-        presence_policy: {
-          id: presence_policy_id,
-          type: 'presence_policy'
-        },
-        holiday_policy: {
-          id: holiday_policy_id,
-          type: 'holiday_policy'
-        },
-        time_off_policies: [
-          {
-            id: time_off_policy_id,
-            type: 'time_off_policy'
-          }
-        ]
-      }
-    end
-    subject { put :update, valid_params_json }
-
-    context 'with valid data' do
-      it { expect { subject }.to change { employee.reload.holiday_policy_id } }
-      it { expect { subject }.to change { employee.reload.presence_policy_id } }
-      it { expect { subject }.to change { employee.reload.employee_time_off_policies.count }.by(1) }
-
-      it { is_expected.to have_http_status(204) }
-
-      context 'when presence policy param send' do
-        let(:employee_with_time_offs) { create(:employee, :with_time_offs, account: account) }
-        let(:id) { employee_with_time_offs.id }
-        let(:first_time_off) { employee_with_time_offs.time_offs.first.employee_balance }
-        let(:second_time_off) { employee_with_time_offs.time_offs.second.employee_balance }
-        let(:third_time_off) { employee_with_time_offs.time_offs.last.employee_balance }
-
-        context 'and equas employee current presence policy' do
-          before { employee_with_time_offs.update!(presence_policy: presence_policy) }
-
-          it { expect { subject }.to_not change { first_time_off.reload.being_processed } }
-          it { expect { subject }.to_not change { second_time_off.reload.being_processed } }
-          it { expect { subject }.to_not change { third_time_off.reload.being_processed } }
-
-          it { is_expected.to have_http_status(204) }
-        end
-
-        context 'and it is different than employee presence policy' do
-          it { expect { subject }.to change { first_time_off.reload.being_processed } }
-          it { expect { subject }.to change { second_time_off.reload.being_processed } }
-          it { expect { subject }.to change { third_time_off.reload.being_processed } }
-
-          it { is_expected.to have_http_status(204) }
-        end
-      end
-    end
-
-    context 'with invalid data' do
-      context 'invalid records ids' do
-        context 'invalid presence policy id' do
-          let(:presence_policy_id) { '1' }
-
-          it { expect { subject }.to_not change { employee.reload.holiday_policy_id } }
-          it { expect { subject }.to_not change { employee.reload.presence_policy_id } }
-          it { expect { subject }.to_not change {
-            employee.reload.employee_time_off_policies.count } }
-
-          it { is_expected.to have_http_status(404) }
-        end
-
-        context 'invalid holiday policy id' do
-          let(:holiday_policy_id) { '1' }
-
-          it { expect { subject }.to_not change { employee.reload.holiday_policy_id } }
-          it { expect { subject }.to_not change { employee.reload.presence_policy_id } }
-          it { expect { subject }.to_not change {
-            employee.reload.employee_time_off_policies.count } }
-
-          it { is_expected.to have_http_status(404) }
-        end
-
-        context 'invalid employee id' do
-          let(:id) { '1' }
-
-          it { expect { subject }.to_not change { employee.reload.holiday_policy_id } }
-          it { expect { subject }.to_not change { employee.reload.presence_policy_id } }
-          it { expect { subject }.to_not change {
-            employee.reload.employee_time_off_policies.count } }
-
-          it { is_expected.to have_http_status(404) }
-        end
-
-        context 'invalid time off policy id' do
-          let(:time_off_policy_id) { '1' }
-
-          it { expect { subject }.to_not change { employee.reload.holiday_policy_id } }
-          it { expect { subject }.to_not change { employee.reload.presence_policy_id } }
-          it { expect { subject }.to_not change {
-            employee.reload.employee_time_off_policies.count } }
-
-          it { is_expected.to have_http_status(422) }
-        end
       end
     end
   end

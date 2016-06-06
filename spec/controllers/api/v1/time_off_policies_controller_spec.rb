@@ -10,8 +10,53 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
 
 
   describe 'GET #index' do
+    subject { get :index }
     let!(:time_off_policies) do
       create_list(:time_off_policy, 3, time_off_category: time_off_category)
+    end
+
+    context 'response body' do
+      before { subject }
+
+      it { is_expected.to have_http_status(200) }
+
+      it '' do
+        expect_json_keys(
+          '?',
+          [
+            :id,
+            :type,
+            :name,
+            :start_day,
+            :end_day,
+            :start_month,
+            :end_month,
+            :amount,
+            :policy_type,
+            :years_to_effect,
+            :time_off_category,
+            :assigned_employees
+          ]
+        )
+      end
+    end
+
+    context 'with employee time off policies' do
+      let!(:first_etop) do
+        create(:employee_time_off_policy,
+          employee: employee, time_off_policy: time_off_policies.first
+        )
+      end
+      let!(:second_etop) do
+        create(:employee_time_off_policy,
+          employee: employee, time_off_policy: time_off_policies.first,
+          effective_at: Time.now + 2.days
+        )
+      end
+
+      before { subject }
+
+      it { expect(response.body).to include(first_etop.id, second_etop.id) }
     end
 
     context "without params" do
@@ -91,10 +136,8 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
               :amount,
               :policy_type,
               :years_to_effect,
-              :years_passed,
               :time_off_category,
-              :employees,
-              :working_places
+              :assigned_employees
             ]
           )
         end
@@ -113,6 +156,33 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
         let(:id) { policy.id }
 
         it { is_expected.to have_http_status(404) }
+      end
+    end
+
+    context 'when has employees' do
+      let(:id) { policy.id }
+
+      before do
+        create(:employee_time_off_policy, time_off_policy_id: policy.id)
+      end
+
+      it { is_expected.to have_http_status(200) }
+
+      context 'response body' do
+        before { subject }
+
+        it '' do
+          expect_json_keys(
+            'assigned_employees.*',
+            [
+              :id,
+              :assignation_id,
+              :assignation_type,
+              :effective_at,
+              :effective_till
+            ]
+          )
+        end
       end
     end
   end
@@ -173,9 +243,7 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
               :amount,
               :policy_type,
               :years_to_effect,
-              :time_off_category,
-              :employees,
-              :working_places
+              :time_off_category
             ]
           )
         end
@@ -355,13 +423,8 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
         it { is_expected.to have_http_status(404) }
       end
 
-      context 'when time off policy has an employee balance' do
-        let!(:employee_balance) do
-          create(:employee_balance,
-            time_off_category: time_off_category,
-            time_off_policy: policy
-          )
-        end
+      context 'when time off policy has an related time off policy' do
+        before { create(:employee_time_off_policy, time_off_policy_id: policy.id) }
 
         it { expect { subject }.to_not change { TimeOffPolicy.count } }
         it { is_expected.to have_http_status(423) }

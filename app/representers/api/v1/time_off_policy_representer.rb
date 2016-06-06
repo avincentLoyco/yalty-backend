@@ -9,34 +9,23 @@ module Api::V1
         end_month: resource.end_month,
         amount: resource.amount,
         policy_type: resource.policy_type,
-        years_to_effect: resource.years_to_effect,
-        years_passed: resource.years_passed
+        years_to_effect: resource.years_to_effect
       }
         .merge(basic)
-        .merge(relationships)
+        .merge(time_off_category: time_off_category_json)
     end
 
-    def relationships
-      {
-        time_off_category: time_off_category_json,
-        employees: employees_json,
-        working_places: working_places_json
-      }
+    def with_relationships
+      complete.merge(assigned_employees: assigned_employees_json)
     end
 
     def time_off_category_json
       TimeOffCategoryRepresenter.new(resource.time_off_category).basic
     end
 
-    def employees_json
-      resource.employees.map do |employee|
-        EmployeeRepresenter.new(employee).basic
-      end
-    end
-
-    def working_places_json
-      resource.working_places.map do |working_place|
-        WorkingPlaceRepresenter.new(working_place).basic
+    def assigned_employees_json
+      related_resources(EmployeeTimeOffPolicy, resource.id).map do |employee_time_off_policy|
+        EmployeeTimeOffPolicyRepresenter.new(employee_time_off_policy).complete
       end
     end
   end

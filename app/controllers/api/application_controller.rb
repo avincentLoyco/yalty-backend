@@ -33,16 +33,36 @@ class API::ApplicationController < ApplicationController
       ::Api::V1::ErrorsRepresenter.new(nil, message: 'User unauthorized').complete, status: 401
   end
 
-  def assign_join_table_collection(resource, collection, collection_name)
-    AssignJoinTableCollection.new(resource, collection, collection_name).call
-  end
-
   def assign_collection(resource, collection, collection_name)
     AssignCollection.new(resource, collection, collection_name).call
   end
 
   def assign_member(resource, member, member_name)
     AssignMember.new(resource, member, member_name).call
+  end
+
+  def update_affected_balances(presence_policy, employees = [])
+    UpdateAffectedEmployeeBalances.new(presence_policy, employees).call
+  end
+
+  def prepare_balances_to_update(resource, attributes = {})
+    PrepareEmployeeBalancesToUpdate.new(resource, attributes).call
+  end
+
+  def update_balances_job(resource, attributes = {})
+    UpdateBalanceJob.perform_later(resource, attributes)
+  end
+
+  def next_balance(resource)
+    RelativeEmployeeBalancesFinder.new(resource).next_balance
+  end
+
+  def resources_with_effective_till(join_table, join_table_id, related_id = nil, employee_id = nil)
+    resources =
+      JoinTableWithEffectiveTill
+      .new(join_table, Account.current.id, related_id, employee_id, join_table_id)
+      .call
+    resources.map { |join_hash| join_table.new(join_hash) }
   end
 
   def transactions

@@ -5,21 +5,21 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
   include ActiveJob::TestHelper
   include_context 'shared_context_headers'
 
-  let(:previous_start) { policy.start_date - time_off_policy.years_to_effect.years }
-  let(:previous_end) { policy.end_date - policy.years_to_effect.years }
-  let(:employee) { create(:employee, :with_policy, account: account) }
+  let(:previous_start) { related_period.first_start_date - policy.years_to_effect.years }
+  let(:previous_end) { previous_start + policy.years_to_effect.years }
+  let(:employee) { create(:employee, :with_time_off_policy, account: account) }
   let(:policy_category) do
     employee.employee_time_off_policies.first.time_off_policy.time_off_category.tap do |c|
       c.update!(account: account)
     end
   end
   let(:policy) { employee.employee_time_off_policies.first.time_off_policy }
+  let(:related_period) { RelatedPolicyPeriod.new(employee.employee_time_off_policies.first) }
   let(:employee_balance) do
     create(:employee_balance,
       employee: employee,
       amount: 200,
       time_off_category: policy_category,
-      time_off_policy: policy,
       effective_at: previous_end + 1.week
     )
   end
@@ -37,7 +37,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
 
         it { expect_json_keys(
           [
-            :id, :balance, :amount, :employee, :time_off_category, :time_off_policy, :effective_at,
+            :id, :balance, :amount, :employee, :time_off_category, :effective_at,
             :being_processed, :policy_credit_removal, :time_off
           ]
         )}
@@ -172,6 +172,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
         let(:amount) { -100 }
 
         context 'and policy type is counter' do
+          let(:effective_at_date) { previous_balance.effective_at + 2.months }
           include_context 'shared_context_balances',
             type: 'counter',
             years_to_effect: 0
@@ -213,14 +214,14 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
             context 'and there is a balance with validity date' do
               let(:amount) { -500 }
               let!(:prev_mid_add) do
-                create(:employee_balance, employee: employee, time_off_policy: policy,
+                create(:employee_balance, employee: employee,
                   time_off_category: category, amount: 1000, effective_at: previous.first + 1.week,
-                  validity_date: previous.first + 3.months
+                  validity_date: previous.first + 3.months, policy_credit_addition: true
                 )
               end
 
               let!(:prev_mid_removal) do
-                create(:employee_balance, employee: employee, time_off_policy: policy,
+                create(:employee_balance, employee: employee,
                   time_off_category: category, amount: -1000, balance_credit_addition: prev_mid_add,
                   policy_credit_removal: true
                 )
@@ -302,13 +303,13 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
             let(:amount) { 1000 }
             let(:effective_at_date) { previous.first + 1.week }
             let!(:positive_balance) do
-              create(:employee_balance, employee: employee, time_off_policy: policy,
-                time_off_category: category, amount: 500, effective_at: previous.first + 1.month,
+              create(:employee_balance, employee: employee,
+                time_off_category: category, amount: 500, effective_at: previous.first + 1.month
               )
             end
             let!(:negative_balance) do
-              create(:employee_balance, employee: employee, time_off_policy: policy,
-                time_off_category: category, amount: -500, effective_at: previous.first + 2.months,
+              create(:employee_balance, employee: employee,
+                time_off_category: category, amount: -500, effective_at: previous.first + 2.months
               )
             end
 
@@ -323,12 +324,6 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
             it { expect { subject }.to_not change { previous_add.reload.being_processed } }
 
             it { is_expected.to have_http_status(201) }
-
-            context 'response body' do
-              before { subject }
-
-              it { expect(response.body).to include('1000', '-500', '500') }
-            end
           end
         end
       end
@@ -392,8 +387,6 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
           it { expect { subject }.to change { balance_add.reload.being_processed }.to true }
 
           it { expect { subject }.to_not change { balance.reload.being_processed } }
-
-          it { expect { subject } }
         end
       end
 

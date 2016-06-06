@@ -11,7 +11,11 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
   let!(:time_entry) { create(:time_entry, presence_day: presence_day) }
 
   shared_examples 'Employee Balance Update' do
-    let(:employee) { create(:employee, :with_time_offs, account: account, presence_policy: presence_policy) }
+    let(:employee) do
+      create(:employee, :with_presence_policy, :with_time_offs, account: account,
+        presence_policy: presence_policy
+      )
+    end
     let(:f_time_off) { employee.time_offs.first }
     let(:s_time_off) { employee.time_offs.second }
     let(:t_time_off) { employee.time_offs.last }
