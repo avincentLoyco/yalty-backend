@@ -29,12 +29,14 @@ class Employee::Balance < ActiveRecord::Base
   scope :employee_balances, lambda  { |employee_id, time_off_category_id|
     where(employee_id: employee_id, time_off_category_id: time_off_category_id)
   }
-  scope :editable, -> { where(policy_credit_removal: false, policy_credit_addition: false) }
+  scope :editable, lambda {
+    where(policy_credit_removal: false, policy_credit_addition: false, time_off_id: nil)
+  }
   scope :additions, -> { where(policy_credit_addition: true).order(:effective_at) }
   scope :removals, -> { where(policy_credit_removal: true).order(:effective_at) }
 
   def last_in_category?
-    last_balance_id =  employee.last_balance_in_category(time_off_category_id).try(:id)
+    last_balance_id = employee.last_balance_in_category(time_off_category_id).try(:id)
     id == last_balance_id || last_balance_id.blank?
   end
 
