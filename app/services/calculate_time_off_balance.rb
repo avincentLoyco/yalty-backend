@@ -57,16 +57,7 @@ class CalculateTimeOffBalance
   end
 
   def time_off_holidays
-    all_holidays = []
-    active_ewps = active_join_table_for_time_off(EmployeeWorkingPlace)
-    active_ewps.each do |ewp|
-      holiday_policy = ewp.working_place.holiday_policy
-      next unless holiday_policy
-      start_date = ewp == active_ewps.first ? time_off_start_date : ewp.effective_at.to_date
-      end_date = ewp == active_ewps.last ? time_off_end_date : ewp.effective_till.to_date
-      all_holidays += holiday_policy.holidays_in_period(start_date, end_date)
-    end
-    all_holidays
+    HolidaysForEmployeeInRange.new(employee, time_off_start_date, time_off_end_date).call
   end
 
   def holidays_dates_in_time_off(time_off_holidays)
