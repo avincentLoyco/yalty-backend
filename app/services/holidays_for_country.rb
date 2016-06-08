@@ -12,12 +12,11 @@ class HolidaysForCountry
     regions_holidays = {}
     holidays = []
     Holidays.between(beginning_of_year, end_of_year, country).each do |holiday|
-      holiday_name = HolidaysCodeName.get_name_code(holiday[:name])
-      holidays << { date: holiday[:date], code: holiday_name }
+      holidays << { date: holiday[:date], code: holiday[:name] }
       holiday[:regions].each do |region_code|
         next unless region_code.to_s.starts_with?(country_code)
         regions_holidays[region_code] ||= { code: region_code, holidays: [] }
-        regions_holidays[region_code][:holidays] << holiday_name
+        regions_holidays[region_code][:holidays] << holiday[:name]
       end
     end
     [holidays, regions_holidays.values]

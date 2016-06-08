@@ -19,5 +19,4 @@ RSpec.describe HolidaysForCountry, type: :service do
         expect(regions_with_holidays.size).to eq(27)
     end
   end
-
 end
