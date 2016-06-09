@@ -32,7 +32,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                 :type => "time_off",
                 :name => category_name,
                 :start_time => "23:00:00",
-                :end_time => "00:00:00"
+                :end_time => "23:59:59"
               },
             ],
             "2016-01-01" => [
@@ -40,7 +40,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                 :type => "time_off",
                 :name => category_name,
                 :start_time => "00:00:00",
-                :end_time => "00:00:00"
+                :end_time => "23:59:59"
               }
             ],
             "2016-01-02" => [
@@ -48,7 +48,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                 :type => "time_off",
                 :name => category_name,
                 :start_time => "00:00:00",
-                :end_time => "00:00:00"
+                :end_time => "23:59:59"
               }
             ],
             "2016-01-03" => [
@@ -122,7 +122,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                     :type => "time_off",
                     :name => category_name,
                     :start_time => "07:00:00",
-                    :end_time => "24:00:00"
+                    :end_time => "23:59:59"
                   }
                 ]
               }
@@ -148,7 +148,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                   :type => "time_off",
                   :name => category_name,
                   :start_time => "01:00:00",
-                  :end_time => "00:00:00"
+                  :end_time => "23:59:59"
                 },
               ],
               "2016-01-02" => [
@@ -162,46 +162,8 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                   :type => "time_off",
                   :name => category_name,
                   :start_time => "07:00:00",
-                  :end_time => "00:00:00"
+                  :end_time => "23:59:59"
                 }
-              ],
-              "2016-01-03" => [
-                {
-                  :type => "time_off",
-                  :name => category_name,
-                  :start_time => "00:00:00",
-                  :end_time => "12:00:00"
-                },
-              ]
-            }
-          )
-        end
-      end
-
-      context 'and they are longer than two days' do
-        let(:time_offs_in_range) do
-          [create(:time_off, start_time: Time.now + 5.hours, end_time: Time.now + 4.days + 19.hours)]
-        end
-
-        it { expect(subject.size).to eq 3 }
-        it 'should have valid format' do
-          expect(subject).to eq(
-            {
-              "2016-01-01" => [
-                {
-                  :type => "time_off",
-                  :name => category_name,
-                  :start_time => "05:00:00",
-                  :end_time => "00:00:00"
-                },
-              ],
-              "2016-01-02" => [
-                {
-                  :type => "time_off",
-                  :name => category_name,
-                  :start_time => "00:00:00",
-                  :end_time => "00:00:00"
-                },
               ],
               "2016-01-03" => [
                 {
