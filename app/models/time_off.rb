@@ -18,6 +18,7 @@ class TimeOff < ActiveRecord::Base
         (end_time > ? AND start_time < ?))',
         start_date, end_date, start_date, end_date, end_date, start_date
       )
+      .order(:start_time)
   }
 
   def balance
