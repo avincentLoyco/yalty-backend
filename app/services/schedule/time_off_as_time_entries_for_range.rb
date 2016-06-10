@@ -32,7 +32,7 @@ class TimeOffAsTimeEntriesForRange
       time_off.end_time < range_end_date ? time_off.end_time : Time.zone.parse(range_end_date.to_s)
 
     return end_time unless end_time.strftime('%H:%M:%S') == '00:00:00'
-    DateTime.new(end_time.year, end_time.month, (end_time - 1).day, 23, 59, 59, 0)
+    end_time - 1.second
   end
 
   def prepare_single_day_hash(single_day_start_time = start_time, single_day_end_time = end_time)

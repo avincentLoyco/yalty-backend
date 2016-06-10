@@ -95,6 +95,51 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
               }
             )
           end
+
+          context 'and they are more than two time offs in one day' do
+            let!(:time_offs_in_range) do
+              [[Time.now + 1.hour, Time.now + 4.hours],
+               [Time.now + 5.hours, Time.now + 8.hours],
+               [Time.now + 9.hours, Time.now + 12.hours],
+               [Time.now + 13.hours, Time.now + 16.hours]].map do |start_time, end_time|
+                 create(:time_off, employee: employee, start_time: start_time, end_time: end_time)
+              end
+            end
+
+            it { expect(subject.size).to eq 1 }
+            it 'should have valid format' do
+              expect(subject).to eq (
+                {
+                  "2016-01-01" => [
+                    {
+                      :type => "time_off",
+                      :name => category_name,
+                      :start_time => "01:00:00",
+                      :end_time => "04:00:00"
+                    },
+                    {
+                      :type => "time_off",
+                      :name => category_name,
+                      :start_time => "05:00:00",
+                      :end_time => "08:00:00"
+                    },
+                    {
+                      :type => "time_off",
+                      :name => category_name,
+                      :start_time => "09:00:00",
+                      :end_time => "12:00:00"
+                    },
+                    {
+                      :type => "time_off",
+                      :name => category_name,
+                      :start_time => "13:00:00",
+                      :end_time => "16:00:00"
+                    }
+                  ]
+                }
+              )
+            end
+          end
         end
 
         context 'and they are in different days' do

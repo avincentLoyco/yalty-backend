@@ -19,7 +19,7 @@ class TimeOffForEmployeeSchedule
   def populate_time_offs_hash
     time_offs_in_range.each do |time_off|
       time_offs_hash.merge!(generate_hash_for_time_off(time_off)) do |_key, val1, val2|
-        [val1.first, val2.first]
+        val1.to_a.push(val2.first)
       end
     end
   end
