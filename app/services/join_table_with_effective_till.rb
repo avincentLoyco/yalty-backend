@@ -34,8 +34,6 @@ class JoinTableWithEffectiveTill
     ).to_ary
   end
 
-  private
-
   def sql(extra_join_conditions, extra_where_conditions)
     " SELECT B.*
       FROM(
@@ -60,6 +58,8 @@ class JoinTableWithEffectiveTill
         #{effective_at_before_date_sql}
       ORDER BY B.effective_at;"
   end
+
+  private
 
   def category_condition_sql
     'AND A.time_off_category_id = B.time_off_category_id'
