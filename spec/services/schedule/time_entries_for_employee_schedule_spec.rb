@@ -1,10 +1,10 @@
 require 'rails_helper'
 
-RSpec.describe HolidaysForEmployeeSchedule, type: :service do
+RSpec.describe TimeEntriesForEmployeeSchedule, type: :service do
   include_context 'shared_context_account_helper'
   include_context 'shared_context_timecop_helper'
 
-  subject { described_class.new(employee, Time.now.today , Time.now.today + 1.days ).call }
+  subject { described_class.new(employee, Time.zone.today , Time.zone.today + 1.days ).call }
 
   let (:account) { create(:account) }
   let (:presence_policy) { create(:presence_policy, account: account) }
@@ -23,11 +23,11 @@ RSpec.describe HolidaysForEmployeeSchedule, type: :service do
       end
 
       context 'and the presence policies have related time entries' do
-        let(:second_epp) do
+        let!(:second_epp) do
           create(:employee_presence_policy,
             presence_policy: second_presence_presence_policy,
             employee: employee,
-            effective_at: Time.now.today + 1.day
+            effective_at: Time.zone.today + 1.day
           )
         end
         let(:presence_days) do
@@ -40,13 +40,10 @@ RSpec.describe HolidaysForEmployeeSchedule, type: :service do
             create(:presence_day, order: i, presence_policy: second_presence_presence_policy)
           end
         end
-        let!(:time_entries) do
-          presence_days.map do |presence_day|
-            create(:time_entry, presence_day: presence_second_policy, start_time: '1:00', end_time: '2:00')
+        before(:each) do
+          presence_second_policy.map do |presence_day|
+            create(:time_entry, presence_day: presence_day, start_time: '1:00', end_time: '2:00')
           end
-        end
-
-        let!(:time_entries) do
           presence_days.map do |presence_day|
             create(:time_entry, presence_day: presence_day, start_time: '8:00', end_time: '9:00')
           end
@@ -76,13 +73,13 @@ RSpec.describe HolidaysForEmployeeSchedule, type: :service do
     end
 
     context 'when a policy repeats days with same day order' do
-      subject { described_class.new(employee, Time.now.today , Time.now.today + 7.days ).call }
+      subject { described_class.new(employee, Time.zone.today , Time.zone.today + 7.days ).call }
 
       let(:presence_day) do
         create(:presence_day, order: 5, presence_policy: presence_policy)
       end
       let!(:time_entry) do
-        create(:time_entry, presence_day: presence_policy, start_time: '1:00', end_time: '2:00')
+        create(:time_entry, presence_day: presence_day, start_time: '8:00', end_time: '9:00')
       end
 
       it '' do
