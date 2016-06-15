@@ -16,18 +16,14 @@ RSpec.describe TimeEntriesForEmployeeSchedule, type: :service do
   describe '#call' do
 
     context 'when the employee has many presence policies active during the period given' do
-      let (:second_employee) do
-         create(:employee ,:with_presence_policy,
-           presence_policy: second_presence_presence_policy, account: account
-         )
-      end
 
       context 'and the presence policies have related time entries' do
+        let(:effective_at) { Time.zone.today + 1.day}
         let!(:second_epp) do
           create(:employee_presence_policy,
             presence_policy: second_presence_presence_policy,
             employee: employee,
-            effective_at: Time.zone.today + 1.day
+            effective_at: effective_at
           )
         end
         let(:presence_days) do
@@ -43,13 +39,13 @@ RSpec.describe TimeEntriesForEmployeeSchedule, type: :service do
         before(:each) do
           presence_second_policy.map do |presence_day|
             create(:time_entry, presence_day: presence_day, start_time: '1:00', end_time: '2:00')
+            create(:time_entry, presence_day: presence_day, start_time: '2:00', end_time: '3:00')
           end
           presence_days.map do |presence_day|
             create(:time_entry, presence_day: presence_day, start_time: '8:00', end_time: '9:00')
           end
         end
-
-        it '' do
+        it 'and the period is smaller than a week' do
           expect( subject).to eq(
              {
                '2016-01-01' => [
@@ -62,9 +58,15 @@ RSpec.describe TimeEntriesForEmployeeSchedule, type: :service do
                '2016-01-02' => [
                  {
                    :type => "working_hours",
+                   :start_time => '02:00:00',
+                   :end_time => '03:00:00'
+                 },
+                 {
+                   :type => "working_hours",
                    :start_time => '01:00:00',
                    :end_time => '02:00:00'
                  },
+
                ]
              }
           )
@@ -72,68 +74,110 @@ RSpec.describe TimeEntriesForEmployeeSchedule, type: :service do
       end
     end
 
-    context 'when a policy repeats days with same day order' do
-      subject { described_class.new(employee, Time.zone.today , Time.zone.today + 7.days ).call }
+    context 'when the employee has one one presence policy during the period' do
 
-      let(:presence_day) do
-        create(:presence_day, order: 5, presence_policy: presence_policy)
+      context 'when a policy is longer than one week' do
+        subject { described_class.new(employee, Time.zone.today , Time.zone.today + 7.days ).call }
+
+        let(:presence_days) do
+          [5,6].map do |i|
+            create(:presence_day, order: i, presence_policy: presence_policy)
+          end
+        end
+        before(:each) do
+          create(:time_entry, presence_day: presence_days[0], start_time: '8:00', end_time: '9:00')
+          create(:time_entry, presence_day: presence_days[0], start_time: '6:00', end_time: '7:00')
+          create(:time_entry, presence_day: presence_days[1], start_time: '1:00', end_time: '2:00')
+
+        end
+
+        it '' do
+          expect( subject).to eq(
+             {
+               '2016-01-01' => [
+                 {
+                   :type => "working_hours",
+                   :start_time => '06:00:00',
+                   :end_time => '07:00:00'
+                 },
+                 {
+                   :type => "working_hours",
+                   :start_time => '08:00:00',
+                   :end_time => '09:00:00'
+                 }
+               ],
+               '2016-01-02' => [
+                 {
+                   :type => "working_hours",
+                   :start_time => '01:00:00',
+                   :end_time => '02:00:00'
+                 }
+               ],
+               '2016-01-03' => [
+
+               ],
+               '2016-01-04' => [
+
+               ],
+               '2016-01-05' => [
+
+               ],
+               '2016-01-06' => [
+
+               ],
+               '2016-01-07' => [
+
+               ],
+               '2016-01-08' => [
+                 {
+                   :type => "working_hours",
+                   :start_time => '06:00:00',
+                   :end_time => '07:00:00'
+                 },
+                 {
+                   :type => "working_hours",
+                   :start_time => '08:00:00',
+                   :end_time => '09:00:00'
+                 }
+
+               ],
+             }
+          )
+        end
       end
-      let!(:time_entry) do
-        create(:time_entry, presence_day: presence_day, start_time: '8:00', end_time: '9:00')
-      end
 
-      it '' do
-        expect( subject).to eq(
-           {
-             '2016-01-01' => [
-               {
-                 :type => "working_hours",
-                 :start_time => '08:00:00',
-                 :end_time => '09:00:00'
-               }
-             ],
-             '2016-01-02' => [
+      context 'when the employee time entries that are present and some that are not in the requested range' do
 
-             ],
-             '2016-01-03' => [
+        let(:presence_day) do
+          create(:presence_day, order: 1, presence_policy: presence_policy)
+        end
+        let(:second_presence_day) do
+          create(:presence_day, order: 5, presence_policy: presence_policy)
+        end
 
-             ],
-             '2016-01-04' => [
+        before(:each) do
+          create(:time_entry, presence_day: presence_day, start_time: '1:00', end_time: '2:00')
+          create(:time_entry, presence_day: second_presence_day, start_time: '8:00', end_time: '9:00')
+        end
 
-             ],
-             '2016-01-05' => [
-
-             ],
-             '2016-01-06' => [
-
-             ],
-             '2016-01-07' => [
-
-             ],
-             '2016-01-08' => [
-               {
-                 :type => "working_hours",
-                 :start_time => '08:00:00',
-                 :end_time => '09:00:00'
-               }
-             ],
-           }
-        )
+        it '' do
+          expect( subject).to eq(
+             {
+               '2016-01-01' => [
+                 {
+                   :type => "working_hours",
+                   :start_time => '08:00:00',
+                   :end_time => '09:00:00'
+                 }
+               ],
+               '2016-01-02' => [
+               ]
+             }
+          )
+        end
       end
     end
 
-    context 'when there employee have no associated time entries' do
-      it '' do
-        expect( subject).to eq(
-           {
-             '2016-01-01' => [
 
-             ],
-             '2016-01-02' => [
-             ]
-           }
-        )
-      end
-    end
   end
 end
