@@ -1,8 +1,8 @@
 class HolidaysForEmployeeSchedule
   attr_reader :holidays_in_range, :holidays_hash
 
-  def initialize(holidays_in_range)
-    @holidays_in_range = holidays_in_range
+  def initialize(employee, range_start, range_end)
+    @holidays_in_range = HolidaysForEmployeeInRange.new(employee, range_start, range_end).call
     @holidays_hash = {}
   end
 

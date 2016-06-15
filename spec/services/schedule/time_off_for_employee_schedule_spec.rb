@@ -4,7 +4,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
   include_context 'shared_context_account_helper'
   include_context 'shared_context_timecop_helper'
 
-  subject { described_class.new(time_offs_in_range, start_date, end_date).call }
+  subject { described_class.new(employee, start_date, end_date).call }
   let(:start_date) { Time.now - 1.hour }
   let(:end_date) { Time.now + 2.days + 12.hours }
   let(:employee) { create(:employee) }
@@ -19,8 +19,9 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
 
   context 'when employee has time offs in given range' do
     context 'when their start time or end time is outside given range' do
-      let(:time_offs_in_range) do
-        [create(:time_off, start_time: Time.now - 2.days, end_time: Time.now + 5.days)]
+      let!(:time_offs_in_range) do
+        [create(:time_off,
+          start_time: Time.now - 2.days, end_time: Time.now + 5.days, employee: employee)]
       end
 
       it { expect(subject.size).to eq 4 }

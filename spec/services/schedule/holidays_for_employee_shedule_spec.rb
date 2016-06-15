@@ -11,10 +11,11 @@ RSpec.describe HolidaysForEmployeeSchedule, type: :service do
   let(:employee) { create(:employee) }
   let(:policy) { create(:holiday_policy, country: 'ch', region: 'zh') }
 
-  subject { described_class.new(holidays_list).call }
+  subject { described_class.new(employee, range_start, range_end).call }
 
   context 'when employee has holidays in given range' do
-    let(:holidays_list) { HolidaysForEmployeeInRange.new(employee, '24/12/2015', '1/1/2016').call }
+    let(:range_start) { '24/12/2015' }
+    let(:range_end) { '1/1/2016' }
 
     context 'when all holodays have names' do
       it { expect(subject.size).to eq 3 }
@@ -64,7 +65,8 @@ RSpec.describe HolidaysForEmployeeSchedule, type: :service do
   end
 
   context 'when employee does not have holodays in given range' do
-    let(:holidays_list) { HolidaysForEmployeeInRange.new(employee, '2/2/2015', '8/2/2015').call }
+    let(:range_start) { '2/2/2015' }
+    let(:range_end) { '8/2/2015' }
 
     it { expect(subject.size).to eq 0 }
     it { expect(subject).to eq({}) }
