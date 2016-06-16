@@ -1,10 +1,10 @@
 class TimeOffAsTimeEntriesForRange
   attr_reader :time_off, :start_time, :end_time, :day_range, :time_off_hash
 
-  def initialize(range_start_date, range_end_date, time_off)
+  def initialize(start_time, end_time, time_off)
     @time_off = time_off
-    @start_time = start_time_for_range(range_start_date)
-    @end_time = end_time_for_range(range_end_date)
+    @start_time = start_time_for_range(start_time)
+    @end_time = end_time_for_range(end_time)
     @day_range = nil
     @time_off_hash = {}
   end
@@ -22,14 +22,14 @@ class TimeOffAsTimeEntriesForRange
     @day_range = (start_time.to_date - end_time.to_date).to_i.abs
   end
 
-  def start_time_for_range(range_start_date)
-    return time_off.start_time if time_off.start_time > range_start_date
-    Time.zone.parse(range_start_date.to_s)
+  def start_time_for_range(start_time)
+    return time_off.start_time if time_off.start_time > start_time
+    start_time
   end
 
-  def end_time_for_range(range_end_date)
+  def end_time_for_range(end_time)
     end_time =
-      time_off.end_time < range_end_date ? time_off.end_time : Time.zone.parse(range_end_date.to_s)
+      time_off.end_time < end_time ? time_off.end_time : end_time
 
     return end_time unless end_time.strftime('%H:%M:%S') == '00:00:00'
     end_time - 1.second
