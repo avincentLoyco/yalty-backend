@@ -75,7 +75,7 @@ class TimeEntriesForEmployeeSchedule
 
   def create_time_entry_hash(query_hash)
     {
-      type: 'working_hours',
+      type: 'working_time',
       start_time: query_hash['start_time'],
       end_time: query_hash['end_time']
     }

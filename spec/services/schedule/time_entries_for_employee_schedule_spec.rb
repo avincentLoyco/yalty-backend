@@ -50,19 +50,19 @@ RSpec.describe TimeEntriesForEmployeeSchedule, type: :service do
              {
                '2016-01-01' => [
                  {
-                   :type => "working_hours",
+                   :type => "working_time",
                    :start_time => '08:00:00',
                    :end_time => '09:00:00'
                  },
                ],
                '2016-01-02' => [
                  {
-                   :type => "working_hours",
+                   :type => "working_time",
                    :start_time => '02:00:00',
                    :end_time => '03:00:00'
                  },
                  {
-                   :type => "working_hours",
+                   :type => "working_time",
                    :start_time => '01:00:00',
                    :end_time => '02:00:00'
                  },
@@ -96,19 +96,19 @@ RSpec.describe TimeEntriesForEmployeeSchedule, type: :service do
              {
                '2016-01-01' => [
                  {
-                   :type => "working_hours",
+                   :type => "working_time",
                    :start_time => '06:00:00',
                    :end_time => '07:00:00'
                  },
                  {
-                   :type => "working_hours",
+                   :type => "working_time",
                    :start_time => '08:00:00',
                    :end_time => '09:00:00'
                  }
                ],
                '2016-01-02' => [
                  {
-                   :type => "working_hours",
+                   :type => "working_time",
                    :start_time => '01:00:00',
                    :end_time => '02:00:00'
                  }
@@ -130,12 +130,12 @@ RSpec.describe TimeEntriesForEmployeeSchedule, type: :service do
                ],
                '2016-01-08' => [
                  {
-                   :type => "working_hours",
+                   :type => "working_time",
                    :start_time => '06:00:00',
                    :end_time => '07:00:00'
                  },
                  {
-                   :type => "working_hours",
+                   :type => "working_time",
                    :start_time => '08:00:00',
                    :end_time => '09:00:00'
                  }
@@ -165,7 +165,7 @@ RSpec.describe TimeEntriesForEmployeeSchedule, type: :service do
              {
                '2016-01-01' => [
                  {
-                   :type => "working_hours",
+                   :type => "working_time",
                    :start_time => '08:00:00',
                    :end_time => '09:00:00'
                  }
