@@ -20,6 +20,7 @@ class Ability
       can [:read, :show, :update], Employee::Event do |event|
         event.employee_id = user.employee.try(:id)
       end
+      can :schedule_for_employee, Employee, id: user.employee.try(:id)
     end
   end
 end
