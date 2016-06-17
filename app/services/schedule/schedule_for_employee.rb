@@ -75,13 +75,14 @@ class ScheduleForEmployee
       if to_start_time <= te_start_time && to_end_time >= te_end_time
         time_entry_in_progress = nil
         break
-      elsif to_start_time < te_start_time && to_end_time < te_end_time &&
+      elsif to_start_time <= te_start_time && to_end_time < te_end_time &&
           to_end_time > te_start_time
         time_entry_in_progress = [to_end_time, te_end_time]
-      elsif to_start_time > te_start_time && to_end_time > te_end_time &&
+      elsif to_start_time > te_start_time && to_end_time >= te_end_time &&
           to_start_time < te_end_time
         result.push([te_start_time, to_start_time])
         time_entry_in_progress = nil
+        break
       elsif to_start_time > te_start_time && to_end_time < te_end_time
         result.push([te_start_time, to_start_time])
         time_entry_in_progress = [to_end_time, te_end_time]

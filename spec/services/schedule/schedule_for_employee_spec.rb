@@ -21,6 +21,13 @@ RSpec.describe ScheduleForEmployee, type: :service do
     let(:account) { employee.account }
     let(:start_date) { Date.new(2015, 12, 26) }
     let(:end_date) { Date.new(2015, 12, 30) }
+    let!(:epp) do
+      create(:employee_presence_policy,
+        presence_policy: presence_policy,
+        employee: employee,
+        effective_at: start_date
+      )
+    end
     let(:presence_days)  do
       [1,2,3,5,6,7].map do |i|
         create(:presence_day, order: i, presence_policy: presence_policy)
@@ -28,13 +35,6 @@ RSpec.describe ScheduleForEmployee, type: :service do
     end
 
     context 'when they are holidays, time offs and time entries in the range' do
-      let!(:epp) do
-        create(:employee_presence_policy,
-          presence_policy: presence_policy,
-          employee: employee,
-          effective_at: start_date
-        )
-      end
       let!(:time_offs) do
         time = Time.now - 2.days
         time_offs_dates =
@@ -131,7 +131,98 @@ RSpec.describe ScheduleForEmployee, type: :service do
       end
     end
 
+    context 'when there are time offs after already processed time entry' do
+      let(:start_date) { Date.new(2015, 12, 29) }
+      let(:end_date) { Date.new(2015, 12, 29) }
+      let!(:time_offs) do
+        time = Time.now - 3.days
+        time_offs_dates =
+          [
+            [time + 5.hours, time + 6.hours],
+            [time + 7.hours, time + 10.hours],
+          ]
+        time_offs_dates.map do |start_time, end_time|
+           create(:time_off, employee: employee, start_time: start_time, end_time: end_time)
+        end
+      end
+
+      it 'should have valid response' do
+        expect(subject).to eq (
+          [
+            {
+               date: "2015-12-29",
+               time_entries: [
+                 {
+                   type: "time_off",
+                   name: time_offs.first.time_off_category.name,
+                   start_time: "05:00:00",
+                   end_time: "06:00:00"
+                 },
+                 {
+                   type: "time_off",
+                   name: time_offs.first.time_off_category.name,
+                   start_time: "07:00:00",
+                   end_time: "10:00:00"
+                 },
+                 {
+                   type: "working_time",
+                   start_time: "01:00:00",
+                   end_time: "05:00:00"
+                 }
+               ]
+             }
+          ]
+        )
+      end
+    end
+
+    context 'when there are time offs before already processed time entry' do
+      let(:start_date) { Date.new(2015, 12, 29) }
+      let(:end_date) { Date.new(2015, 12, 29) }
+      let!(:time_offs) do
+        time = Time.now - 3.days
+        time_offs_dates =
+          [
+            [time + 1.hour, time + 2.hours],
+            [time + 7.hours, time + 10.hours],
+          ]
+        time_offs_dates.map do |start_time, end_time|
+           create(:time_off, employee: employee, start_time: start_time, end_time: end_time)
+        end
+      end
+
+      it 'should have valid response' do
+        expect(subject).to eq (
+          [
+            {
+               date: "2015-12-29",
+               time_entries: [
+                 {
+                   type: "time_off",
+                   name: time_offs.first.time_off_category.name,
+                   start_time: "01:00:00",
+                   end_time: "02:00:00"
+                 },
+                 {
+                   type: "time_off",
+                   name: time_offs.first.time_off_category.name,
+                   start_time: "07:00:00",
+                   end_time: "10:00:00"
+                 },
+                 {
+                   type: "working_time",
+                   start_time: "02:00:00",
+                   end_time: "06:00:00"
+                 }
+               ]
+             }
+          ]
+        )
+      end
+    end
+
     context 'when there are no time entries, time off and holidays' do
+      before { epp.destroy! }
       let(:start_date) { Date.new(2015, 12, 27) }
 
       it { expect(subject.size).to eq 4 }
