@@ -176,6 +176,147 @@ RSpec.describe TimeEntriesForEmployeeSchedule, type: :service do
           )
         end
       end
+
+      context 'when the start day order is' do
+        let(:presence_days) do
+          [1,4,5].map do |i|
+            create(:presence_day, order: i, presence_policy: presence_policy)
+          end
+        end
+        before(:each) do
+          presence_days.each do |presence_day|
+            create(:time_entry, presence_day: presence_day, start_time: '1:00', end_time: '2:00')
+          end
+
+        end
+        context 'bigger than the end day order' do
+          let(:start_date) { Date.new(2016,1,6) }
+          subject { described_class.new(employee, start_date , start_date + 6.days ).call }
+
+          it '' do
+            expect( subject).to eq(
+               {
+                 '2016-01-06' => [],
+                 '2016-01-07' => [
+                   {
+                     :type => "working_time",
+                     :start_time => '01:00:00',
+                     :end_time => '02:00:00'
+                   }
+                 ],
+                 '2016-01-08' => [
+                   {
+                     :type => "working_time",
+                     :start_time => '01:00:00',
+                     :end_time => '02:00:00'
+                   }
+                 ],
+                 '2016-01-09' => [],
+                 '2016-01-10' => [],
+                 '2016-01-11' => [
+                   {
+                     :type => "working_time",
+                     :start_time => '01:00:00',
+                     :end_time => '02:00:00'
+                   }
+                 ],
+                 '2016-01-12' => []
+               }
+            )
+          end
+        end
+
+        context 'smaller than the end day order' do
+          let(:start_date) { Date.new(2016,1,8) }
+          subject { described_class.new(employee, start_date , start_date + 8.days ).call }
+
+          it '' do
+            expect( subject).to eq(
+              {
+                '2016-01-08' => [
+                  {
+                    :type => "working_time",
+                    :start_time => '01:00:00',
+                    :end_time => '02:00:00'
+                  }
+                ],
+                '2016-01-09' => [],
+                '2016-01-10' => [],
+                '2016-01-11' => [
+                  {
+                    :type => "working_time",
+                    :start_time => '01:00:00',
+                    :end_time => '02:00:00'
+                  }
+                ],
+                '2016-01-12' => [],
+                '2016-01-13' => [],
+                '2016-01-14' => [
+                  {
+                    :type => "working_time",
+                    :start_time => '01:00:00',
+                    :end_time => '02:00:00'
+                  }
+                ],
+                '2016-01-15' => [
+                  {
+                    :type => "working_time",
+                    :start_time => '01:00:00',
+                    :end_time => '02:00:00'
+                  }
+                ],
+                '2016-01-16' => []
+              }
+            )
+          end
+        end
+
+        context 'equal than the day order' do
+          let(:start_date) { Date.new(2016,1,4) }
+          subject { described_class.new(employee, start_date , start_date + 7 .days ).call }
+
+          it '' do
+            expect( subject).to eq(
+               {
+                 '2016-01-04' => [
+                   {
+                     :type => "working_time",
+                     :start_time => '01:00:00',
+                     :end_time => '02:00:00'
+                   }
+                 ],
+                 '2016-01-05' => [],
+                 '2016-01-06' => [],
+                 '2016-01-07' => [
+                   {
+                     :type => "working_time",
+                     :start_time => '01:00:00',
+                     :end_time => '02:00:00'
+                   }
+                 ],
+                 '2016-01-08' => [
+                   {
+                     :type => "working_time",
+                     :start_time => '01:00:00',
+                     :end_time => '02:00:00'
+                   }
+                 ],
+                 '2016-01-09' => [],
+                 '2016-01-10' => [],
+                 '2016-01-11' => [
+                   {
+                     :type => "working_time",
+                     :start_time => '01:00:00',
+                     :end_time => '02:00:00'
+                   }
+                 ]
+
+               }
+            )
+          end
+        end
+
+      end
     end
 
 
