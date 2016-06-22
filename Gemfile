@@ -31,6 +31,7 @@ end
 
 # Development environment dependencies (also needed by test environement)
 group :development, :test do
+  gem 'yard', '~> 0.8.7'
   gem 'factory_girl_rails'
   gem 'faker'
   gem 'dotenv-rails'

@@ -64,6 +64,16 @@ class ScheduleForEmployee
     not_overlapped_time_entries
   end
 
+  # Verifies if a time entry is overlapped or contained by any time off in the range given to
+  # ScheduleForEmployee and if they are overlapped removes the overlapped parts and generates the
+  # new time entries of the not overlapped parts.
+  #
+  # @param start_time [Time] start time of the time entry
+  # @param end_time [Time] end time of the time entry
+  #
+  # @return [Array[Array[Time,Time]]] Every array is a time entry. The first time is the start_time
+  #  of the time entry and the second time in the array is the end_time of the time entry.
+  #
   def splitted_time_entries(start_time, end_time, date)
     result = []
     time_entry_in_progress = [start_time, end_time]
