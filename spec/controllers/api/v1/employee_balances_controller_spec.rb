@@ -24,12 +24,17 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
     )
   end
 
+  shared_examples 'Not Account Manager' do
+    before { Account::User.current.update!(account_manager: false) }
+
+    it { is_expected.to have_http_status(403) }
+  end
+
   describe 'GET #show' do
+    let(:id) { employee_balance.id }
     subject { get :show, id: id }
 
     context 'with valid params' do
-      let(:id) { employee_balance.id }
-
       it { is_expected.to have_http_status(200) }
 
       context 'response body' do
@@ -42,6 +47,12 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
           ]
         )}
       end
+    end
+
+    context 'when employee is a balance owner' do
+      before { Account::User.current.update!(account_manager: false, employee: employee) }
+
+      it { is_expected.to have_http_status(200) }
     end
 
     context 'with invalid params' do
@@ -57,6 +68,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
 
         it { is_expected.to have_http_status(404) }
       end
+      it_behaves_like 'Not Account Manager'
     end
   end
 
@@ -109,6 +121,8 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
 
         it { is_expected.to have_http_status(404) }
       end
+
+      it_behaves_like 'Not Account Manager'
     end
   end
 
@@ -345,6 +359,8 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
         it { expect { subject }.to_not change { Employee::Balance.count } }
         it { is_expected.to have_http_status(422) }
       end
+
+      it_behaves_like 'Not Account Manager'
     end
   end
 
@@ -556,6 +572,8 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
 
         it { is_expected.to have_http_status(404) }
       end
+
+      it_behaves_like 'Not Account Manager'
     end
   end
 
@@ -567,9 +585,9 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
         type: 'counter',
         years_to_effect: 0
 
-      context 'balance is current or next policy period' do
-        let(:id) { balance.id }
+      let(:id) { balance.id }
 
+      context 'balance is current or next policy period' do
         it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
 
         it { expect { subject }.to_not change { previous_balance.reload.being_processed } }
@@ -593,13 +611,27 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
       end
 
       context 'not editable balance id send' do
-        let(:id) { balance_add.id }
+        context 'balance is an addition' do
+          let(:id) { balance_add.id }
 
-        it { expect { subject }.to_not change { Employee::Balance.count } }
-        it { expect { subject }.to_not change { enqueued_jobs.size } }
+          it { expect { subject }.to_not change { Employee::Balance.count } }
+          it { expect { subject }.to_not change { enqueued_jobs.size } }
 
-        it { is_expected.to have_http_status(404) }
+          it { is_expected.to have_http_status(404) }
+        end
+
+        context 'balance is an time off\'s balance' do
+          let!(:time_off) { create(:time_off, employee: employee) }
+          let(:id) { time_off.employee_balance.id }
+
+          it { expect { subject }.to_not change { Employee::Balance.count } }
+          it { expect { subject }.to_not change { enqueued_jobs.size } }
+
+          it { is_expected.to have_http_status(404) }
+        end
       end
+
+      it_behaves_like 'Not Account Manager'
     end
 
     context 'employee balance time off policy is a balancer type' do

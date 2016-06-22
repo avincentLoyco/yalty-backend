@@ -42,15 +42,23 @@ RSpec.describe EmployeeWorkingPlace, type: :model do
           )
         end
 
-        context 'and new effective_at after first effetive at' do
+        context 'and new effective_at after first effective at' do
           let(:effective_at) { employee_working_place.effective_at + 1.week }
 
           it { expect(subject.valid?).to eq true }
           it { expect { subject.valid? }.to_not change { subject.errors.messages.count } }
         end
 
-        context 'and new effective at before first effetive at' do
+        context 'and new effective at before first effective at' do
           let(:effective_at) { employee_working_place.effective_at - 1.week }
+
+          it { expect(subject.valid?).to eq false }
+          it { expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
+            .to include 'Must be after first employee working place effective_at' }
+        end
+
+        context 'and new effective at is the same like first effective at' do
+          let(:effective_at) { employee_working_place.effective_at }
 
           it { expect(subject.valid?).to eq false }
           it { expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
