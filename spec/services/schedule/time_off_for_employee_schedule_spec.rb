@@ -41,7 +41,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                 :type => "time_off",
                 :name => category_name,
                 :start_time => "00:00:00",
-                :end_time => "23:59:59"
+                :end_time => "24:00:00"
               }
             ],
             "2016-01-02" => [
@@ -49,7 +49,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                 :type => "time_off",
                 :name => category_name,
                 :start_time => "00:00:00",
-                :end_time => "23:59:59"
+                :end_time => "24:00:00"
               }
             ],
             "2016-01-03" => [
@@ -57,7 +57,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                 :type => "time_off",
                 :name => category_name,
                 :start_time => "00:00:00",
-                :end_time => "23:59:59"
+                :end_time => "24:00:00"
               }
             ]
           }
@@ -172,7 +172,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                     :type => "time_off",
                     :name => category_name,
                     :start_time => "07:00:00",
-                    :end_time => "23:59:59"
+                    :end_time => "24:00:00"
                   }
                 ],
                 "2016-01-03" => []
@@ -199,7 +199,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                   :type => "time_off",
                   :name => category_name,
                   :start_time => "01:00:00",
-                  :end_time => "23:59:59"
+                  :end_time => "24:00:00"
                 },
               ],
               "2016-01-02" => [
@@ -213,7 +213,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                   :type => "time_off",
                   :name => category_name,
                   :start_time => "07:00:00",
-                  :end_time => "23:59:59"
+                  :end_time => "24:00:00"
                 }
               ],
               "2016-01-03" => [

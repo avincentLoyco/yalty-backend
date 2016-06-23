@@ -12,11 +12,11 @@ RSpec.describe ScheduleForEmployee, type: :service do
     end
   end
 
+  let(:policy) { create(:holiday_policy, country: 'ch', region: 'zh') }
   let(:employee) { create(:employee) }
   subject { described_class.new(employee, start_date, end_date).call }
 
   describe '#call' do
-    let(:policy) { create(:holiday_policy, country: 'ch', region: 'zh') }
     let(:presence_policy) { create(:presence_policy, account: account) }
     let(:account) { employee.account }
     let(:start_date) { Date.new(2015, 12, 26) }
@@ -171,6 +171,49 @@ RSpec.describe ScheduleForEmployee, type: :service do
                  }
                ]
              }
+          ]
+        )
+      end
+    end
+
+    context 'when time off starts at the beggining of the day and ends at the end' do
+      before { TimeEntry.destroy_all }
+      let(:start_date) { Time.zone.today + 3.days }
+      let(:end_date) { Time.zone.today + 5.days }
+      let!(:time_off) do
+        create(:time_off, employee: employee, start_time: Time.now + 3.days, end_time: Time.now + 5.days)
+      end
+
+      it { expect(subject.size).to eq 3 }
+      it 'should have valid response' do
+        expect(subject).to eq(
+          [
+            {
+              date: '2016-01-04',
+              time_entries: [
+                {
+                  type: 'time_off',
+                  name: time_off.time_off_category.name,
+                  start_time: '00:00:00',
+                  end_time: '24:00:00'
+                }
+              ]
+            },
+            {
+              date: '2016-01-05',
+              time_entries: [
+                {
+                  type: 'time_off',
+                  name: time_off.time_off_category.name,
+                  start_time: '00:00:00',
+                  end_time: '24:00:00'
+                }
+              ]
+            },
+            {
+              date: '2016-01-06',
+              time_entries: []
+            }
           ]
         )
       end

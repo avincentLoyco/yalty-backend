@@ -42,7 +42,8 @@ class TimeOffAsTimeEntriesForRange
           type: 'time_off',
           name: time_off.time_off_category.name,
           start_time: single_day_start_time.strftime('%H:%M:%S'),
-          end_time: single_day_end_time.strftime('%H:%M:%S')
+          end_time: day_end_time(single_day_end_time)
+
         }
       ]
     }
@@ -59,5 +60,9 @@ class TimeOffAsTimeEntriesForRange
     (((start_time + 1.day).to_date)..((end_time - 1.day).to_date)).map do |date|
       prepare_single_day_hash(date.beginning_of_day, date.end_of_day)
     end
+  end
+
+  def day_end_time(end_time)
+    end_time.strftime('%H:%M:%S') == '23:59:59' ? '24:00:00' : end_time.strftime('%H:%M:%S')
   end
 end
