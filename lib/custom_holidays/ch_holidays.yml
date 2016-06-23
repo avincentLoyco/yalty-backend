@@ -6,7 +6,7 @@ months:
     function: easter(year)
     function_modifier: -2
   - name: easter_monday
-    regions: [ch_zh, ch_be, ch_lu, ch_ur, ch_sz, ch_ow, ch_nw, ch_gl, ch_zg, ch_fr, ch_so, ch_bs, ch_bl, ch_sh, ch_ar, ch_ai, ch_sg, ch_gr, ch_ag, ch_tg, ch_ti, ch_vd, ch_vs, ch_ge, ch_ju]
+    regions: [ch_zh, ch_be, ch_lu, ch_ur, ch_sz, ch_ow, ch_nw, ch_gl, ch_zg, ch_fr, ch_so, ch_bs, ch_bl, ch_sh, ch_ar, ch_ai, ch_sg, ch_gr, ch_ag, ch_tg, ch_ti, ch_vd, ch_ge, ch_ju]
     function: easter(year)
     function_modifier: 1
     # State holiday but observed in all the states
@@ -15,7 +15,7 @@ months:
     function: easter(year)
     function_modifier: 39
   - name: whit_monday
-    regions: [ch_zh, ch_be, ch_lu, ch_ur, ch_sz, ch_ow, ch_nw, ch_gl, ch_zg, ch_fr, ch_so, ch_bs, ch_bl, ch_sh, ch_ar, ch_ai, ch_sg, ch_gr, ch_ag, ch_tg, ch_ti, ch_vd, ch_vs, ch_ge, ch_ju]
+    regions: [ch_zh, ch_be, ch_lu, ch_ur, ch_sz, ch_ow, ch_nw, ch_gl, ch_zg, ch_fr, ch_so, ch_bs, ch_bl, ch_sh, ch_ar, ch_ai, ch_sg, ch_gr, ch_ag, ch_tg, ch_ti, ch_vd, ch_ge, ch_ju]
     function: easter(year)
     function_modifier: 50
   - name: corpus_christi
@@ -33,7 +33,7 @@ months:
     regions: [ch_zh, ch_be, ch_lu, ch_ur, ch_sz, ch_ow, ch_nw, ch_gl, ch_zg, ch_fr, ch_so, ch_bs, ch_bl, ch_sh, ch_ar, ch_ai, ch_sg, ch_gr, ch_ag, ch_tg, ch_vd, ch_vs, ch_ne, ch_ge, ch_ju, ch_ti]
     mday: 1
   - name: saint_berchtold
-    regions: [ch_zh, ch_be, ch_lu, ch_ow, ch_nw, ch_gl, ch_zg, ch_fr, ch_so, ch_sh, ch_sg, ch_ag, ch_tg, ch_vd, ch_vs, ch_ne, ch_ju]
+    regions: [ch_zh, ch_be, ch_lu, ch_ow, ch_nw, ch_gl, ch_zg, ch_fr, ch_so, ch_sh, ch_sg, ch_ag, ch_tg, ch_vd, ch_ne, ch_ju]
     mday: 2
   - name: epiphany
     regions: [ch_ur, ch_sz, ch_ti]
@@ -88,7 +88,7 @@ months:
     regions: [ch]
     mday: 25
   - name: st_stephens_day
-    regions: [ch_zh, ch_be, ch_lu, ch_ur, ch_sz, ch_ow, ch_nw, ch_gl, ch_zg, ch_fr, ch_so, ch_bs, ch_bl, ch_sh, ch_ar, ch_ai, ch_sg, ch_gr, ch_ag, ch_tg, ch_ti, ch_vs, ch_ne]
+    regions: [ch_zh, ch_be, ch_lu, ch_ur, ch_sz, ch_ow, ch_nw, ch_gl, ch_zg, ch_fr, ch_so, ch_bs, ch_bl, ch_sh, ch_ar, ch_ai, ch_sg, ch_gr, ch_ag, ch_tg, ch_ti, ch_ne]
     mday: 26
   - name: restoration_republic_geneva
     regions: [ch_ge]
