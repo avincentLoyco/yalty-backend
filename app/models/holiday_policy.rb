@@ -17,6 +17,8 @@ class HolidayPolicy < ActiveRecord::Base
   before_save :unset_region, unless: :region_required?
   before_validation :downcase, if: :local?
 
+  COUNTRIES_WITH_CODES = %w(ch).freeze
+
   COUNTRIES_WITHOUT_REGIONS = %w(ar at be br cl cr cz dk el fr je gg im hr hu ie is it li lt nl no
                                  pl pt ro sk si fi jp ma ph se sg ve vi za).freeze
   HolidayStruct = Struct.new(:date, :name)
@@ -35,8 +37,7 @@ class HolidayPolicy < ActiveRecord::Base
     from ||= Time.zone.now.beginning_of_year
     to ||= Time.zone.now.end_of_year
     Holidays.between(from, to, country_with_region).map do |holiday|
-      holiday_name = HolidaysCodeName.get_name_code(holiday[:name])
-      HolidayStruct.new(holiday[:date], holiday_name)
+      HolidayStruct.new(holiday[:date], holiday[:name])
     end
   end
 
