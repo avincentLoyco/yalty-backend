@@ -120,8 +120,8 @@ class CalculateTimeOffBalance
   def start_entries
     return 0 unless day_order_in_period_and_not_holiday?(start_order, @epp_start_date)
     day_entries(start_order).map do |entry|
-      shift_start = entry.start_time_tod > starts ? entry.start_time_tod : starts
-      shift_end = entry.end_time_tod >= starts ? entry.end_time_tod : midnight
+      shift_start = entry.start_time_as_time > starts ? entry.start_time_as_time : starts
+      shift_end = entry.end_time_as_time >= starts ? entry.end_time_as_time : midnight
       check_shift(shift_start, shift_end, entry)
     end
   end
@@ -129,8 +129,8 @@ class CalculateTimeOffBalance
   def end_entries
     return 0 unless day_order_in_period_and_not_holiday?(end_order, @epp_end_date)
     day_entries(end_order).map do |entry|
-      shift_start = entry.start_time_tod > ends ? ends : entry.start_time_tod
-      shift_end = entry.end_time_tod > ends ? ends : entry.end_time_tod
+      shift_start = entry.start_time_as_time > ends ? ends : entry.start_time_as_time
+      shift_end = entry.end_time_as_time > ends ? ends : entry.end_time_as_time
       check_shift(shift_start, shift_end, entry)
     end
   end
@@ -138,19 +138,24 @@ class CalculateTimeOffBalance
   def common_entries
     return 0 unless day_order_in_period_and_not_holiday?(start_order, @epp_start_date)
     day_entries(start_order).map do |entry|
-      shift_start = starts > entry.start_time_tod ? starts : entry.start_time_tod
-      shift_end = ends < entry.end_time_tod ? ends : entry.end_time_tod
+      shift_start = starts > entry.start_time_as_time ? starts : entry.start_time_as_time
+      shift_end = ends < entry.end_time_as_time ? ends : entry.end_time_as_time
       check_shift(shift_start, shift_end, entry)
     end
   end
 
   def check_shift(shift_start, shift_end, entry)
-    return 0 unless shift(shift_start, shift_end).overlaps?(entry.tod_shift) &&
-        shift_start < shift_end
-    if shift(shift_start, shift_end).contains?(entry.tod_shift)
+    return 0 unless
+        TimeEntry.overlaps?(
+          shift_start,
+          shift_end,
+          entry.start_time_as_time,
+          entry.end_time_as_time
+        ) && shift_start < shift_end
+    if TimeEntry.contains?(shift_start, shift_end, entry.start_time_as_time, entry.end_time_as_time)
       entry.duration
     else
-      shift(shift_start, shift_end).duration / 60
+      (shift_end - shift_start) / 60
     end
   end
 
@@ -200,19 +205,15 @@ class CalculateTimeOffBalance
   end
 
   def starts
-    Tod::TimeOfDay.parse(@epp_start_datetime.strftime('%H:%M'))
+    TimeEntry.hour_as_time(@epp_start_datetime.strftime('%H:%M:%S'))
   end
 
   def ends
-    Tod::TimeOfDay.parse(@epp_end_datetime.strftime('%H:%M'))
+    TimeEntry.hour_as_time(@epp_end_datetime.strftime('%H:%M:%S'))
   end
 
   def midnight
-    Tod::TimeOfDay.parse('00:00')
-  end
-
-  def shift(shift_start, shift_end)
-    Tod::Shift.new(shift_start, shift_end)
+     TimeEntry.midnight
   end
 
   def day_entries(order)

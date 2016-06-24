@@ -4,20 +4,54 @@ class TimeEntry < ActiveRecord::Base
   validates :start_time, :end_time, :presence_day_id, :duration, presence: true
   validate :time_entry_not_reserved, if: [:times_parsable?, 'presence_day.present?']
   validate :start_time_format, :end_time_format
+  validate :longer_than_one_day?, if: :times_parsable?
 
-  before_validation :convert_time_to_hours, :calculate_duration, if: :times_parsable?
+  before_validation :calculate_duration, if: :times_parsable?
   after_save :update_presence_day_minutes!
 
   TOD = Tod::TimeOfDay
   TODS = Tod::Shift
+  DATE = '1900-01-01'.freeze
 
-  def ends_next_day?
-    start_time_tod > end_time_tod
+  def start_time_as_time
+    TimeEntry.hour_as_time(start_time)
   end
 
-  def tod_shift
-    TODS.new(start_time_tod, end_time_tod, true)
+  def end_time_as_time
+    TimeEntry.hour_as_time(end_time)
   end
+
+  def self.midnight
+    TimeEntry.hour_as_time('24:00:00')
+  end
+
+  def self.hour_as_time(entry_hour)
+    "#{DATE} #{entry_hour}".to_time(:utc)
+  end
+
+  def self.overlaps?(first_start_time, first_end_time, second_start_time, second_end_time)
+    if first_start_time <= second_start_time && first_end_time >= second_end_time
+      true
+    elsif first_start_time <= second_start_time && first_end_time < second_end_time &&
+        first_end_time > second_start_time
+      true
+    elsif first_start_time > second_start_time && first_end_time >= second_end_time &&
+        first_start_time < second_end_time
+      true
+    elsif first_start_time > second_start_time && first_end_time < second_end_time
+      true
+    end
+  end
+
+  def self.contains?(first_start_time, first_end_time, second_start_time, second_end_time)
+    if first_start_time <= second_start_time && first_end_time >= second_end_time
+      true
+    else
+      false
+    end
+  end
+
+  private
 
   def start_time_tod
     TOD.parse(start_time)
@@ -27,42 +61,28 @@ class TimeEntry < ActiveRecord::Base
     TOD.parse(end_time)
   end
 
-  private
 
   def update_presence_day_minutes!
     presence_day.update_minutes!
   end
 
-  def convert_time_to_hours
-    self.start_time = start_time_tod
-    self.end_time = end_time_tod
-  end
-
   def calculate_duration
-    self.duration = TODS.new(start_time_tod, end_time_tod).duration / 60
+    self.duration = (TimeEntry.hour_as_time(end_time) - TimeEntry.hour_as_time(start_time)) / 60
   end
 
   def day_entries_overlap?
     (presence_day.try(:time_entries).to_a.select(&:persisted?) - [self]).map do |time_entry|
-      tod_shift.overlaps?(time_entry.tod_shift)
+      TimeEntry.overlaps?(
+        TimeEntry.hour_as_time(start_time),
+        TimeEntry.hour_as_time(end_time),
+        TimeEntry.hour_as_time(time_entry.start_time),
+        TimeEntry.hour_as_time(time_entry.end_time)
+      )
     end.any?
   end
 
-  def overlaps_with_next?
-    next_entry && ends_next_day? && split_entry(tod_shift).overlaps?(next_entry.tod_shift)
-  end
-
-  def overlaps_with_previous?
-    previous_entry.try(:ends_next_day?) &&
-      split_entry(previous_entry.tod_shift).overlaps?(tod_shift)
-  end
-
-  def previous_entry
-    presence_day.previous_day.try(:last_day_entry)
-  end
-
-  def next_entry
-    presence_day.next_day.try(:first_day_entry)
+  def self.hour_as_time(entry_hour)
+    "#{DATE} #{entry_hour}".to_time(:utc)
   end
 
   def times_parsable?
@@ -74,12 +94,17 @@ class TimeEntry < ActiveRecord::Base
   end
 
   def end_time_parsable?
-    TOD.parsable?(end_time)
+     end_time == '24:00' || end_time == '24:00:00' || TOD.parsable?(end_time)
   end
 
   def time_entry_not_reserved
-    return unless overlaps_with_previous? || day_entries_overlap? || overlaps_with_next?
+    return unless day_entries_overlap?
     errors.add(:start_time, 'time_entries can not overlap')
+  end
+
+  def longer_than_one_day?
+    return unless start_time_as_time > end_time_as_time
+    errors.add(:start_time, 'time_entries can not be longer than one day')
   end
 
   def start_time_format
@@ -88,13 +113,5 @@ class TimeEntry < ActiveRecord::Base
 
   def end_time_format
     errors.add(:end_time, 'Invalid format: Time format required.') unless end_time_parsable?
-  end
-
-  def split_entry(entry)
-    if entry.beginning > entry.ending
-      TODS.new(TOD.new(0), entry.ending, true)
-    else
-      entry
-    end
   end
 end
