@@ -6,11 +6,11 @@ class TimeEntry < ActiveRecord::Base
   validate :start_time_format, :end_time_format
   validate :longer_than_one_day?, if: :times_parsable?
 
-  before_validation :calculate_duration, if: :times_parsable?
+  before_validation :convert_time_to_hours, :calculate_duration, if: :times_parsable?
   after_save :update_presence_day_minutes!
 
   TOD = Tod::TimeOfDay
-  TODS = Tod::Shift
+
   DATE = '1900-01-01'.freeze
 
   def start_time_as_time
@@ -53,12 +53,9 @@ class TimeEntry < ActiveRecord::Base
 
   private
 
-  def start_time_tod
-    TOD.parse(start_time)
-  end
-
-  def end_time_tod
-    TOD.parse(end_time)
+  def convert_time_to_hours
+    self.start_time = start_time_as_time.strftime('%H:%M:%S')
+    self.end_time = is_midnight? ? '24:00:00' : end_time_as_time.strftime('%H:%M:%S')
   end
 
 
@@ -94,9 +91,12 @@ class TimeEntry < ActiveRecord::Base
   end
 
   def end_time_parsable?
-     end_time == '24:00' || end_time == '24:00:00' || TOD.parsable?(end_time)
+      is_midnight? || TOD.parsable?(end_time)
   end
 
+  def is_midnight?
+    end_time == '24:00' || end_time == '24:00:00'
+  end
   def time_entry_not_reserved
     return unless day_entries_overlap?
     errors.add(:start_time, 'time_entries can not overlap')

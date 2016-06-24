@@ -50,44 +50,7 @@ RSpec.describe HolidaysForEmployeeSchedule, type: :service do
         )
       end
     end
-
-    context 'when some of the holidays do not have names' do
-      let(:policy) { create(:holiday_policy, country: 'pl') }
-
-      it { expect(subject.size).to eq 9 }
-      it 'should have valid format' do
-        expect(subject).to eq(
-          {
-            "2015-12-24" => [],
-            "2015-12-25" => [
-              {
-                :type=>"holiday",
-                :name=> nil
-              }
-            ],
-            "2015-12-26" => [
-              {
-                :type=>"holiday",
-                :name=> nil
-              }
-            ],
-            "2015-12-27" => [],
-            "2015-12-28" => [],
-            "2015-12-29" => [],
-            "2015-12-30" => [],
-            "2015-12-31" => [],
-            "2016-01-01" => [
-              {
-                :type=>"holiday",
-                :name=> nil
-              }
-            ],
-          }
-        )
-      end
-    end
   end
-
   context 'when employee does not have holodays in given range' do
     let(:range_start) { Date.new(2015, 2, 2) }
     let(:range_end) { Date.new(2015, 2, 5) }

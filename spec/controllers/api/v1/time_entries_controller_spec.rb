@@ -130,8 +130,8 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
         let(:start_time) { '00:00' }
         let(:end_time) { '12:00' }
 
-        before do
-          TimeEntry.create(
+        before(:each) do
+          time_entry.update_attributes(
             start_time: '10:00', end_time: '24:00', presence_day: presence_day
           )
         end
