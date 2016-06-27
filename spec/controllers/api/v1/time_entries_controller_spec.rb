@@ -7,7 +7,6 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
 
   let(:presence_policy) { create(:presence_policy, account: account) }
   let!(:presence_day) { create(:presence_day, presence_policy: presence_policy, order: 1) }
-  let!(:next_presence_day) { create(:presence_day, presence_policy: presence_policy, order: 2) }
   let!(:time_entry) { create(:time_entry, presence_day: presence_day) }
 
   shared_examples 'Employee Balance Update' do
@@ -131,9 +130,9 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
         let(:start_time) { '00:00' }
         let(:end_time) { '12:00' }
 
-        before do
-          TimeEntry.create(
-            start_time: '22:00', end_time: '2:00', presence_day: next_presence_day
+        before(:each) do
+          time_entry.update_attributes(
+            start_time: '10:00', end_time: '24:00', presence_day: presence_day
           )
         end
 

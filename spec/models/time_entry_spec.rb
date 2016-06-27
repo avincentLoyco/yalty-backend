@@ -50,9 +50,8 @@ RSpec.describe TimeEntry, type: :model do
     context '#time_entry_not_reserved' do
       let(:policy) { create(:presence_policy) }
       let(:first_day) { create(:presence_day, order: 1, presence_policy: policy) }
-      let(:second_day) { create(:presence_day, order: 2, presence_policy: policy) }
       let!(:time_entry) do
-        create(:time_entry, presence_day: day, start_time: '4:00', end_time: '2:00')
+        create(:time_entry, presence_day: day, start_time: '4:00', end_time: '6:00')
       end
       subject do
         build(:time_entry, presence_day: sub_day, start_time: sub_start, end_time: sub_end)
@@ -60,7 +59,6 @@ RSpec.describe TimeEntry, type: :model do
 
       before(:each) do
         first_day.reload
-        second_day.reload
       end
 
       shared_examples 'Time Entries Do Not Overlap' do
@@ -104,19 +102,6 @@ RSpec.describe TimeEntry, type: :model do
           end
         end
 
-        context 'with previous day entry' do
-          let(:day) { first_day }
-          let(:sub_day) { second_day }
-
-          it_behaves_like 'Time Entries Do Not Overlap'
-        end
-
-        context 'with next day entry' do
-          let(:day) { second_day }
-          let(:sub_day) { first_day }
-
-          it_behaves_like 'Time Entries Do Not Overlap'
-        end
       end
 
       context 'when time entry overlap' do
@@ -129,41 +114,6 @@ RSpec.describe TimeEntry, type: :model do
           let(:sub_end) { '6:00' }
 
           it_behaves_like 'Time Entries Overlap'
-        end
-
-        context 'with previous day entry' do
-          context 'and new entry day order is 1' do
-            let(:sub_day) { first_day }
-            let(:day) { second_day }
-
-            it_behaves_like 'Time Entries Overlap'
-          end
-
-          context 'and new entry order not 1' do
-            let(:sub_day) { second_day }
-            let(:day) { first_day }
-
-            it_behaves_like 'Time Entries Overlap'
-          end
-        end
-
-        context 'with next day entry' do
-          let(:sub_start) { '15:00' }
-          let(:sub_end) { '5:00' }
-
-          context 'and new entry order is last in policy' do
-            let(:sub_day) { second_day }
-            let(:day) { first_day }
-
-            it_behaves_like 'Time Entries Overlap'
-          end
-
-          context 'and new entry order is not last in policy' do
-            let(:sub_day) { first_day }
-            let(:day) { second_day }
-
-            it_behaves_like 'Time Entries Overlap'
-          end
         end
       end
     end

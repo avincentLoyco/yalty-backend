@@ -14,5 +14,4 @@ class WorkingPlace < ActiveRecord::Base
       .order('employee_working_places.effective_at desc')
       .first
   }
-
 end

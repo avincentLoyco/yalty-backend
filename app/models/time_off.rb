@@ -10,6 +10,17 @@ class TimeOff < ActiveRecord::Base
   validate :start_time_after_employee_start_date, if: [:employee, :start_time, :end_time]
   validate :does_not_overlap_with_other_users_time_offs, if: [:employee, :time_off_category_id]
 
+  scope :for_employee_in_period, lambda { |employee_id, start_date, end_date|
+    where(employee_id: employee_id)
+      .where(
+        '((start_time::date BETWEEN ? AND ?) OR
+        (end_time::date BETWEEN ? AND ?) OR
+        (end_time::date > ? AND start_time::date < ?))',
+        start_date, end_date, start_date, end_date, end_date, start_date
+      )
+      .order(:start_time)
+  }
+
   def balance
     - CalculateTimeOffBalance.new(self).call
   end

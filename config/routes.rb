@@ -16,7 +16,7 @@ Rails.application.routes.draw do
       resources :employees, only: [:index, :show] do
         resources :employee_events, only: :index
         resources :employee_balances, only: :index
-
+        get '/schedule', to: 'schedules#schedule_for_employee'
         get '/working_places', to: "employee_working_places#index"
       end
       resources :employee_events, only: [:show, :create, :update]

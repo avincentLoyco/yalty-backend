@@ -13,7 +13,7 @@ class PresencePolicy < ActiveRecord::Base
     joins(:employee_presence_policies)
       .where("employee_presence_policies.employee_id= ? AND
               employee_presence_policies.effective_at <= ?", employee_id, date)
-      .order("employee_presence_policies.effective_at desc")
+      .order('employee_presence_policies.effective_at desc')
       .first
   }
 

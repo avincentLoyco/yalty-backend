@@ -23,11 +23,11 @@ class UserMailer < ApplicationMailer
     @email = email
     @accounts = Account.where(id: account_ids).readonly
 
-    if @accounts.present?
-      locale = @accounts.first.default_locale
-    else
-      locale = I18n.default_locale
-    end
+    locale = if @accounts.present?
+               @accounts.first.default_locale
+             else
+               I18n.default_locale
+             end
 
     I18n.with_locale(locale) do
       mail to: @email

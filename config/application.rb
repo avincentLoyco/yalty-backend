@@ -25,7 +25,8 @@ module Yalty
     config.autoload_once_paths << config.root.join('lib', 'middlewares')
     config.autoload_once_paths << config.root.join('lib', 'attributes')
 
-    config.autoload_once_paths << config.root.join('app', 'services', 'employee_balances_related')
+    config.autoload_once_paths << config.root.join('app', 'services', 'employee_balance')
+    config.autoload_once_paths << config.root.join('app', 'services', 'schedule')
 
     # Genrators
     config.generators do |g|
