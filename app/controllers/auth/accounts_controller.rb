@@ -21,11 +21,11 @@ class Auth::AccountsController < ApplicationController
     verified_params(get_rules) do |attributes|
       users = Account::User.includes(:account).where(email: attributes[:email])
 
-      if users.present?
-        account_ids = users.map { |user| user.account.id }
-      else
-        account_ids = []
-      end
+      account_ids = if users.present?
+                      users.map { |user| user.account.id }
+                    else
+                      []
+                    end
 
       UserMailer.accounts_list(attributes[:email], account_ids).deliver_later
       render_no_content

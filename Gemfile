@@ -11,7 +11,7 @@ gem 'virtus',             '~> 1.0.5'
 gem 'request_store',      '~> 1.3.0'
 gem 'scenic',             '~> 1.1.0'
 gem 'countries',          '~> 1.2.5'
-gem 'holidays',           '~> 3.1.2'
+gem 'holidays',           '~> 4.0'
 gem 'gate',               '~> 0.4.1'
 gem 'newrelic_rpm',       '~> 3.14.2'
 gem 'resque',             '~> 1.25.2'
@@ -31,6 +31,7 @@ end
 
 # Development environment dependencies (also needed by test environement)
 group :development, :test do
+  gem 'yard', '~> 0.8.7'
   gem 'factory_girl_rails'
   gem 'faker'
   gem 'dotenv-rails'

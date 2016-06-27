@@ -2,10 +2,11 @@ module API
   module V1
     class EmployeeBalancesController < API::ApplicationController
       include EmployeeBalanceRules
-
       before_action :verifiy_effective_at_and_validity_date, only: :update
+      authorize_resource except: :show, class: 'Employee::Balance'
 
       def show
+        authorize! :show, resource
         render_resource(resource)
       end
 

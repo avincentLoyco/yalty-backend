@@ -14,7 +14,7 @@ module API
       end
 
       def country_has_codes_for_holidays
-        HolidaysCodeName::COUNTRIES_WITH_CODES.include?(params[:id])
+        HolidayPolicy::COUNTRIES_WITH_CODES.include?(params[:id])
       end
     end
   end

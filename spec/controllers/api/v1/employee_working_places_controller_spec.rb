@@ -47,6 +47,40 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
         it { expect(response.body).to_not include(employee_related.id) }
       end
     end
+
+    context 'with invalid params' do
+      context 'when employee_id given' do
+        let(:params) {{ employee_id: employee.id }}
+
+        context 'when employee does not belong to current account' do
+          before { Account.current = create(:account) }
+
+          it { is_expected.to have_http_status(404) }
+        end
+
+        context 'when account user is not account manager' do
+          before { Account::User.current.update!(account_manager: false ) }
+
+          it { is_expected.to have_http_status(403) }
+        end
+      end
+
+      context 'when working_place_id given' do
+        let(:params) {{ working_place_id: employee_working_place.working_place.id }}
+
+        context 'when working_place does not belong to current account' do
+          before { Account.current = create(:account) }
+
+          it { is_expected.to have_http_status(404) }
+        end
+
+        context 'when account user is not account manager' do
+          before { Account::User.current.update!(account_manager: false ) }
+
+          it { is_expected.to have_http_status(403) }
+        end
+      end
+    end
   end
 
   describe 'post #CREATE' do

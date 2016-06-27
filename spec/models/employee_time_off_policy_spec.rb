@@ -85,38 +85,5 @@ RSpec.describe EmployeeTimeOffPolicy, type: :model do
           .to include('Employee balance after effective at already exists') }
       end
     end
-
-    context '#effective_at_newer_than_previous_start_date' do
-      let(:employee_policy) { build(:employee_time_off_policy, effective_at: effective_at) }
-      let(:effective_at) { Time.now }
-      subject { employee_policy.valid? }
-
-      context 'when employee does not have other policies' do
-        it { expect(subject).to eq true }
-        it { expect { subject }.to_not change { employee_policy.errors.messages.count } }
-      end
-
-      context 'when employee does have other policies' do
-        let(:category) { employee_policy.time_off_policy.time_off_category }
-        let(:old_policy) { create(:time_off_policy, time_off_category: category) }
-        let!(:previous_employee_policy) do
-          create(:employee_time_off_policy,
-            employee: employee_policy.employee, time_off_policy: old_policy
-          )
-        end
-
-        context 'and new policy dates are valid' do
-          it { expect(subject).to eq true }
-          it { expect { subject }.to_not change { employee_policy.errors.messages.count } }
-        end
-
-        context 'and new policy dates outside current next and previous period are valid' do
-          let(:effective_at) { '31.12.2014'.to_date }
-
-          it { expect(subject).to eq true }
-          it { expect { subject }.to_not change { employee_policy.errors.messages.count } }
-        end
-      end
-    end
   end
 end

@@ -34,6 +34,15 @@ module API
           @message = message
         end
       end
+
+      class InvalidParamTypeError < StandardError
+        attr_reader :resource, :message
+
+        def initialize(resource, message)
+          @resource = resource
+          @message = message
+        end
+      end
     end
   end
 end

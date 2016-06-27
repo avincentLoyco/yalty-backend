@@ -247,9 +247,7 @@ CREATE TABLE employee_working_places (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
     employee_id uuid NOT NULL,
     working_place_id uuid NOT NULL,
-    effective_at date NOT NULL,
-    created_at timestamp without time zone NOT NULL,
-    updated_at timestamp without time zone NOT NULL
+    effective_at date NOT NULL
 );
 
 
