@@ -5,6 +5,7 @@ class CreateRegisteredWorkingTime < ActiveRecord::Migration
       t.boolean :schedule_generated, null: false, default: false
       t.date :date, null: false
       t.json :time_entries, default: {}, null: false
+      t.timestamps null: false
     end
 
     add_foreign_key :registered_working_times, :employees

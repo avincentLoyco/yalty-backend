@@ -436,7 +436,9 @@ CREATE TABLE registered_working_times (
     employee_id uuid NOT NULL,
     schedule_generated boolean DEFAULT false NOT NULL,
     date date NOT NULL,
-    time_entries json DEFAULT '{}'::json NOT NULL
+    time_entries json DEFAULT '{}'::json NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL
 );
 
 

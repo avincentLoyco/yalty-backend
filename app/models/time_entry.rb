@@ -58,7 +58,6 @@ class TimeEntry < ActiveRecord::Base
     self.end_time = is_midnight? ? '24:00:00' : end_time_as_time.strftime('%H:%M:%S')
   end
 
-
   def update_presence_day_minutes!
     presence_day.update_minutes!
   end
@@ -91,12 +90,13 @@ class TimeEntry < ActiveRecord::Base
   end
 
   def end_time_parsable?
-      is_midnight? || TOD.parsable?(end_time)
+    is_midnight? || TOD.parsable?(end_time)
   end
 
   def is_midnight?
     end_time == '24:00' || end_time == '24:00:00'
   end
+
   def time_entry_not_reserved
     return unless day_entries_overlap?
     errors.add(:start_time, 'time_entries can not overlap')

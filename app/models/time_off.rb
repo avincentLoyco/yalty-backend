@@ -21,6 +21,11 @@ class TimeOff < ActiveRecord::Base
       .order(:start_time)
   }
 
+  scope :for_employee_at_date, lambda { |employee_id, date|
+    where(employee_id: employee_id)
+      .where('? between start_time::date AND end_time::date', date)
+  }
+
   def balance
     - CalculateTimeOffBalance.new(self).call
   end
