@@ -13,6 +13,15 @@ RSpec.describe RegisteredWorkingTime, type: :model do
 
   it { is_expected.to belong_to(:employee) }
 
+  shared_examples 'Schedule generated' do
+    let(:registered_working_time) do
+      build(:registered_working_time, :schedule_generated, time_entries: time_entries)
+    end
+
+    it { expect(subject).to eq true }
+    it { expect { subject }.to_not change { registered_working_time.errors.messages.count } }
+  end
+
   context 'validations' do
     subject { registered_working_time.valid? }
 
@@ -34,7 +43,9 @@ RSpec.describe RegisteredWorkingTime, type: :model do
 
         it { expect(subject).to eq false  }
         it { expect { subject }.to change { registered_working_time.errors.messages[:time_entries] }
-          .to include('start_time and end_time must be valid times') }
+          .to include('time entries must be array of hashes, with start_time and end_time as times') }
+
+        it_behaves_like 'Schedule generated'
       end
     end
 
@@ -52,6 +63,8 @@ RSpec.describe RegisteredWorkingTime, type: :model do
         it { expect(subject).to eq false  }
         it { expect { subject }.to change { registered_working_time.errors.messages[:time_entries] }
           .to include('time_entries can not be longer than one day') }
+
+        it_behaves_like 'Schedule generated'
       end
     end
 
@@ -74,6 +87,8 @@ RSpec.describe RegisteredWorkingTime, type: :model do
           it { expect(subject).to eq false  }
           it { expect { subject }.to change { registered_working_time.errors.messages[:time_entries] }
             .to include('time_entries can not overlap') }
+
+          it_behaves_like 'Schedule generated'
         end
 
         context 'time entry included in the other' do
@@ -88,6 +103,8 @@ RSpec.describe RegisteredWorkingTime, type: :model do
           it { expect(subject).to eq false  }
           it { expect { subject }.to change { registered_working_time.errors.messages[:time_entries] }
             .to include('time_entries can not overlap') }
+
+          it_behaves_like 'Schedule generated'
         end
       end
     end
@@ -105,6 +122,8 @@ RSpec.describe RegisteredWorkingTime, type: :model do
         it { expect(subject).to eq false  }
         it { expect { subject }.to change { registered_working_time.errors.messages[:time_entries] }
           .to include('time_entries must be uniq') }
+
+        it_behaves_like 'Schedule generated'
       end
     end
 
@@ -133,7 +152,7 @@ RSpec.describe RegisteredWorkingTime, type: :model do
 
         context 'when time off ends in given date' do
           let(:start_time) { '30/4/2016' }
-          let(:end_time)  { '1/5/2016' }
+          let(:end_time)  { DateTime.new(2016, 5, 1, 15, 0, 0) }
 
           it { expect(subject).to eq false  }
           it { expect { subject }.to change { registered_working_time.errors.messages[:date] }
@@ -147,6 +166,32 @@ RSpec.describe RegisteredWorkingTime, type: :model do
           it { expect(subject).to eq false  }
           it { expect { subject }.to change { registered_working_time.errors.messages[:date] }
             .to include('working time day can not overlap with existing time off') }
+
+          context 'and it overlaps time entries' do
+            let(:start_time) { DateTime.new(2016, 5, 1, 0, 0) }
+            let(:end_time)  { DateTime.new(2016, 5, 1, 11, 0) }
+
+            it { expect(subject).to eq false  }
+            it { expect { subject }.to change { registered_working_time.errors.messages[:date] }
+              .to include('working time day can not overlap with existing time off') }
+          end
+
+          context 'and it has the same params as time time entries' do
+            let(:start_time) { DateTime.new(2016, 5, 1, 10, 0) }
+            let(:end_time)  { DateTime.new(2016, 5, 1, 14, 0) }
+
+            it { expect(subject).to eq false  }
+            it { expect { subject }.to change { registered_working_time.errors.messages[:date] }
+              .to include('working time day can not overlap with existing time off') }
+          end
+
+          context 'and it does not overlaps time entries' do
+            let(:start_time) { DateTime.new(2016, 5, 1, 0, 0) }
+            let(:end_time)  { DateTime.new(2016, 5, 1, 1, 0) }
+
+            it { expect(subject).to eq true }
+            it { expect { subject }.to_not change { registered_working_time.errors.messages.count } }
+          end
         end
 
         context 'when day is in the middle of time off' do

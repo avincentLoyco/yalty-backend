@@ -30,25 +30,12 @@ class TimeEntry < ActiveRecord::Base
   end
 
   def self.overlaps?(first_start_time, first_end_time, second_start_time, second_end_time)
-    if first_start_time <= second_start_time && first_end_time >= second_end_time
-      true
-    elsif first_start_time <= second_start_time && first_end_time < second_end_time &&
-        first_end_time > second_start_time
-      true
-    elsif first_start_time > second_start_time && first_end_time >= second_end_time &&
-        first_start_time < second_end_time
-      true
-    elsif first_start_time > second_start_time && first_end_time < second_end_time
-      true
-    end
+    !((first_start_time < second_start_time && first_end_time <= second_start_time) ||
+      (first_end_time > second_end_time && first_start_time >= second_end_time))
   end
 
   def self.contains?(first_start_time, first_end_time, second_start_time, second_end_time)
-    if first_start_time <= second_start_time && first_end_time >= second_end_time
-      true
-    else
-      false
-    end
+    first_start_time <= second_start_time && first_end_time >= second_end_time
   end
 
   private
@@ -75,10 +62,6 @@ class TimeEntry < ActiveRecord::Base
         TimeEntry.hour_as_time(time_entry.end_time)
       )
     end.any?
-  end
-
-  def self.hour_as_time(entry_hour)
-    "#{DATE} #{entry_hour}".to_time(:utc)
   end
 
   def times_parsable?
