@@ -85,6 +85,80 @@ RSpec.describe TimeOff, type: :model do
       end
     end
 
+    context '#does_not_overlap_with_registered_working_times' do
+      let(:employee) { create(:employee) }
+      let!(:registered_working_time) { create(:registered_working_time, time_entries: time_entries , date: date, employee: employee) }
+      let(:time_entries) {[{ start_time: '10:00', end_time: '14:00' }, { start_time: '15:00', end_time: '20:00' }]}
+      let(:date) { Date.new(2016,1,1) }
+
+      subject do
+        build(:time_off, start_time: Time.new(2016,1,1,2,0,0), end_time: Time.new(2016,1,3,4,0,0) , employee_id: employee.id)
+      end
+
+      shared_examples 'TimeOff overlaps with RegisteredWorkingTime' do
+        it { expect(subject.valid?).to eq false }
+        it { expect { subject.valid? }.to change { subject.errors.messages[:start_time] }
+          .to include "Overlaps with registered working time on #{date}" }
+        it { expect { subject.valid? }.to change { subject.errors.messages[:end_time] }
+          .to include "Overlaps with registered working time on #{date}" }
+      end
+
+      context 'when overlapping occurs on the' do
+        context 'in the middle day of time off' do
+          let(:date) { Date.new(2016,1,2) }
+          let(:time_entries) { [{ start_time: '1:00', end_time: '2:00' }] }
+
+          it_behaves_like 'TimeOff overlaps with RegisteredWorkingTime'
+        end
+
+        context 'first day of time off' do
+          let(:time_entries) { [{ start_time: '00:00', end_time: '24:00' }] }
+
+          it_behaves_like 'TimeOff overlaps with RegisteredWorkingTime'
+        end
+
+        context 'on the last day of time off' do
+          let(:date) { Date.new(2016,1,3) }
+          let(:time_entries) { [{ start_time: '0:00', end_time: '24:00' }] }
+
+          it_behaves_like 'TimeOff overlaps with RegisteredWorkingTime'
+        end
+      end
+
+      context 'when more than one time entry overlaps in one day' do
+        subject do
+          build(:time_off, start_time: Time.new(2016,1,1,2,0,0), end_time: Time.new(2016,1,1,5,0,0) , employee_id: employee.id)
+        end
+        let(:time_entries) {[{ start_time: '1:00', end_time: '3:00' }, { start_time: '4:00', end_time: '6:00' }]}
+
+        it_behaves_like 'TimeOff overlaps with RegisteredWorkingTime'
+      end
+
+      context 'when time off duration is of one day' do
+        subject do
+          build(:time_off, start_time: Time.new(2016,1,1,2,0,0), end_time: Time.new(2016,1,1,4,0,0) , employee_id: employee.id)
+        end
+        let(:time_entries) { [{ start_time: '1:00', end_time: '2:00' }] }
+
+        it_behaves_like 'TimeOff overlaps with RegisteredWorkingTime'
+      end
+
+      context 'when they do not overlap' do
+
+        context 'before the time entry'  do
+          let(:time_entries) { [{ start_time: '0:00', end_time: '1:00' }] }
+          it { subject.does_not_overlap_with_registered_working_times }
+          it { expect(subject.valid?).to eq true }
+        end
+        context 'after the time entry'  do
+          let(:date) { Date.new(2016,1,3) }
+          let(:time_entries) { [{ start_time: '4:00', end_time: '5:00' }] }
+          it { subject.does_not_overlap_with_registered_working_times }
+          it { expect(subject.valid?).to eq true }
+        end
+      end
+    end
+
     context '#does_not_overlap_with_other_users_time_offs' do
       let(:employee) { create(:employee) }
       subject do

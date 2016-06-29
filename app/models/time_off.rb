@@ -9,6 +9,7 @@ class TimeOff < ActiveRecord::Base
   validates :employee_balance, presence: true, on: :update
   validate :start_time_after_employee_start_date, if: [:employee, :start_time, :end_time]
   validate :does_not_overlap_with_other_users_time_offs, if: [:employee, :time_off_category_id]
+  validate :does_not_overlap_with_registered_working_times, if: [:employee]
 
   scope :for_employee_in_period, lambda { |employee_id, start_date, end_date|
     where(employee_id: employee_id)
@@ -30,7 +31,7 @@ class TimeOff < ActiveRecord::Base
     - CalculateTimeOffBalance.new(self).call
   end
 
-  private
+  #private
 
   def end_time_after_start_time
     return unless start_time && end_time
@@ -45,6 +46,76 @@ class TimeOff < ActiveRecord::Base
   def start_time_after_employee_start_date
     return unless start_time < employee.first_employee_event.effective_at
     errors.add(:start_time, 'Can not be added before employee start date')
+  end
+
+  def does_not_overlap_with_registered_working_times
+    registered_working_times =
+      employee.registered_working_times.in_day_range(start_time.to_date, end_time.to_date)
+    registered_working_times.each do |registered_working_time|
+      if registered_working_time.date == start_time.to_date
+        first_day_overlaps?(registered_working_time, registered_working_times.size)
+      elsif registered_working_time.date == end_time.to_date
+        last_day_overlaps?(registered_working_time, registered_working_times.size)
+      else
+        overlaps_with_middle_days?(registered_working_time)
+      end
+    end
+  end
+
+  def first_day_overlaps?(registered_working_time, lenght)
+    first_day_start_time = TimeEntry.hour_as_time(start_time.strftime('%H:%M:%S'))
+    first_day_end_time =
+      if lenght > 1
+        TimeEntry.hour_as_time('24:00:00')
+      else
+        TimeEntry.hour_as_time(end_time.strftime('%H:%M:%S'))
+      end
+    overlaps_with_registered_working_time?(
+      registered_working_time,
+      first_day_start_time,
+      first_day_end_time
+    )
+  end
+
+  def last_day_overlaps?(registered_working_time, lenght)
+    last_day_start_time =
+      if lenght > 1
+        TimeEntry.hour_as_time('00:00:00')
+      else
+        TimeEntry.hour_as_time(end_time.strftime('%H:%M:%S'))
+      end
+
+    last_day_end_time = TimeEntry.hour_as_time(end_time.strftime('%H:%M:%S'))
+    overlaps_with_registered_working_time?(
+      registered_working_time,
+      last_day_start_time,
+      last_day_end_time
+    )
+  end
+
+  def overlaps_with_registered_working_time?(registered_working_time, to_start_time, to_end_time)
+    registered_working_time.time_entries.each do |time_entry|
+      next unless
+      TimeEntry.overlaps?(
+        to_start_time,
+        to_end_time,
+        TimeEntry.hour_as_time(time_entry['start_time']),
+        TimeEntry.hour_as_time(time_entry['end_time'])
+      )
+      add_overlaping_with_working_time_errors(registered_working_time)
+      break
+    end
+  end
+
+  def overlaps_with_middle_days?(registered_working_time)
+    return if registered_working_time.time_entries.empty?
+    add_overlaping_with_working_time_errors(registered_working_time)
+  end
+
+  def add_overlaping_with_working_time_errors(registered_working_time)
+    message = "Overlaps with registered working time on #{registered_working_time.date}"
+    errors.add(:start_time, message)
+    errors.add(:end_time, message)
   end
 
   def does_not_overlap_with_other_users_time_offs

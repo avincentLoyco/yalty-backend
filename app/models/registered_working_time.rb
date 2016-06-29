@@ -7,6 +7,10 @@ class RegisteredWorkingTime < ActiveRecord::Base
   validate :time_entries_does_not_overlaps_with_time_off
   validates :date, uniqueness: { scope: :employee }
 
+  scope :in_day_range, lambda { |start_date, end_date|
+      where("date >= ? AND date <= ?", start_date, end_date)
+  }
+
   DATE = '1900-01-01'.freeze
 
   def self.hour_as_time(entry_hour)
