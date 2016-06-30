@@ -33,24 +33,49 @@ class ScheduleForEmployee
   end
 
   def populate_schedule_response
-    @holidays_in_range = HolidaysForEmployeeSchedule.new(@employee, @start_date, @end_date).call
     @time_off_in_range = TimeOffForEmployeeSchedule.new(@employee, @start_date, @end_date).call
-    @time_entries_in_range = TimeEntriesForEmployeeSchedule.new(@employee, @start_date, @end_date).call
+    @working_times_in_range =
+      RegisteredWorkingTimeForEmployeeSchedule.new(@employee, @start_date, @end_date).call
 
     @calculated_schedule.each do |day_hash|
-      day_hash[:time_entries] = @holidays_in_range[day_hash[:date]]
+      day_hash[:time_entries] = day_hash_for_holidays(day_hash[:date]) || []
       next unless day_hash[:time_entries].empty?
-
       day_hash[:time_entries] = @time_off_in_range[day_hash[:date]]
+      prepare_working_time_entries(day_hash)
+    end
+  end
 
-      if day_hash[:time_entries].empty?
-        day_hash[:time_entries] = @time_entries_in_range[day_hash[:date]]
-      else
-        day_hash[:time_entries] +=
-          format_time_entries(
-            time_entries_not_overlapped_by_time_offs(day_hash[:date])
-          )
-      end
+  def day_hash_for_holidays(date)
+    @holidays_in_range = HolidaysForEmployeeSchedule.new(@employee, @start_date, @end_date).call
+
+    return unless @holidays_in_range[date].present?
+    @holidays_in_range[date]
+      .push(@time_off_in_range[date])
+      .push(@working_times_in_range[date])
+      .flatten
+      .uniq
+  end
+
+  def prepare_working_time_entries(day_hash)
+    if @working_times_in_range[day_hash[:date]].present?
+      day_hash[:time_entries] =
+        day_hash[:time_entries].push(@working_times_in_range[day_hash[:date]]).flatten.uniq
+    else
+      prepare_working_time_from_presence_policy(day_hash)
+    end
+  end
+
+  def prepare_working_time_from_presence_policy(day_hash)
+    @time_entries_in_range =
+      TimeEntriesForEmployeeSchedule.new(@employee, @start_date, @end_date).call
+
+    if day_hash[:time_entries].empty?
+      day_hash[:time_entries] = @time_entries_in_range[day_hash[:date]]
+    else
+      day_hash[:time_entries] +=
+        format_time_entries(
+          time_entries_not_overlapped_by_time_offs(day_hash[:date])
+        )
     end
   end
 

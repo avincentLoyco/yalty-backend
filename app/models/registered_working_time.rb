@@ -11,6 +11,10 @@ class RegisteredWorkingTime < ActiveRecord::Base
     where('date >= ? AND date <= ?', start_date, end_date)
   }
 
+  scope :for_employee_in_day_range, lambda { |employee_id, start_date, end_date|
+    in_day_range(start_date, end_date).where(employee_id: employee_id)
+  }
+
   private
 
   def time_entries_present?

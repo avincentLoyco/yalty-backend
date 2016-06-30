@@ -204,4 +204,37 @@ RSpec.describe RegisteredWorkingTime, type: :model do
       end
     end
   end
+
+  context '#scopes' do
+    context '.not_schedule_generated_in_day_range' do
+      let(:employee) { create(:employee) }
+      let(:end_date) { Date.new(2015, 1, 6) }
+      let!(:time_entries) do
+        ['1/1/2015', '3/1/2015', '4/1/2015'].map do |date|
+          create(:registered_working_time, date: date, employee: employee)
+        end
+      end
+
+      subject { RegisteredWorkingTime.for_employee_in_day_range(employee.id, start_date, end_date) }
+
+      context 'when there are time entries in date range' do
+        let(:start_date) { Date.new(2014, 12, 30) }
+        let(:end_date) { Date.new(2015, 1, 3) }
+
+        it { expect(subject).to_not include(time_entries.last) }
+        it { expect(subject).to include(time_entries.first) }
+        it { expect(subject).to include(time_entries.second) }
+
+        it { expect(subject.length).to eq 2 }
+      end
+
+      context 'when there is no time entries in date range' do
+        let(:start_date) { Date.new(2015, 1, 5) }
+
+        it { expect(subject).to eq([]) }
+
+        it { expect(subject.length).to eq 0 }
+      end
+    end
+  end
 end
