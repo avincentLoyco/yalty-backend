@@ -39,9 +39,33 @@ class TimeOff < ActiveRecord::Base
     TimeEntry.hour_as_time(end_time.strftime('%H:%M'))
   end
 
+  private
+
   def does_not_overlap_with_registered_working_times
+
     registered_working_times =
       employee.registered_working_times.in_day_range(start_time.to_date, end_time.to_date)
+    if lenght > 1
+      overlap_check_for_longer_than_one_day_time_off(registered_working_times)
+    else
+      overlap_check_for_one_day_time_off(registered_working_times)
+    end
+  end
+
+  def overlap_check_for_one_day_time_off(registered_working_times)
+    day_start_time = TimeEntry.hour_as_time(start_time.strftime('%H:%M:%S'))
+    day_end_time = TimeEntry.hour_as_time(end_time.strftime('%H:%M:%S'))
+
+    registered_working_times.each do |registered_working_time|
+      overlaps_with_registered_working_time?(
+        registered_working_time,
+        day_start_time,
+        day_end_time
+      )
+    end
+  end
+
+  def overlap_check_for_longer_than_one_day_time_off(registered_working_times)
     registered_working_times.each do |registered_working_time|
       if registered_working_time.date == start_time.to_date
         first_day_overlaps?(registered_working_time, registered_working_times.size)
@@ -53,7 +77,9 @@ class TimeOff < ActiveRecord::Base
     end
   end
 
-  private
+  def lenght
+    (end_time.to_date - start_time.to_date).to_i + 1
+  end
 
   def end_time_after_start_time
     return unless start_time && end_time
@@ -90,7 +116,7 @@ class TimeOff < ActiveRecord::Base
       if lenght > 1
         TimeEntry.hour_as_time('00:00:00')
       else
-        TimeEntry.hour_as_time(end_time.strftime('%H:%M:%S'))
+        TimeEntry.hour_as_time(start_time.strftime('%H:%M:%S'))
       end
 
     last_day_end_time = TimeEntry.hour_as_time(end_time.strftime('%H:%M:%S'))
