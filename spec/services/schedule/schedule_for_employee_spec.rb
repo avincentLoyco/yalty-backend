@@ -88,15 +88,16 @@ RSpec.describe ScheduleForEmployee, type: :service do
               date: '2015-12-26',
               time_entries: [
                 {
-                  type: 'holiday',
-                  name: 'st_stephens_day'
-                },
-                {
                   type: 'time_off',
                   name: time_offs.first.time_off_category.name,
                   start_time: '12:00:00',
                   end_time: '24:00:00'
+                },
+                {
+                  type: 'holiday',
+                  name: 'st_stephens_day'
                 }
+
               ]
             },
             {
