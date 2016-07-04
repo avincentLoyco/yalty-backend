@@ -43,22 +43,25 @@ RSpec.describe UpdateEventAttributeValidator, type: :service do
 
   let(:employee_attributes_payload) do
     [
-      { id: first_name_attribute_id,
+      {
+        id: first_name_attribute_id,
         value: new_first_name_value,
         attribute_name: first_name_attribute_definition
       },
-      { id: annual_salary_attribute_id,
+      {
+        id: annual_salary_attribute_id,
         value: new_annual_salary_value,
         attribute_name: annual_salary_attribute_definition
-
       }
     ]
   end
 
   describe '#call' do
-    subject { described_class.new(employee_attributes_payload, event).call }
+    subject { described_class.new(employee_attributes_payload).call }
 
     context 'when there are no unauthorized attributes being updated' do
+      before { employee_attributes_payload.pop }
+
       it {  expect { subject }.not_to raise_error }
       it {  expect { subject }.not_to raise_error(CanCan::AccessDenied, 'Not authorized!') }
     end
@@ -75,24 +78,10 @@ RSpec.describe UpdateEventAttributeValidator, type: :service do
       it {  expect { subject }.to raise_error(CanCan::AccessDenied, 'Not authorized!') }
     end
 
-    context 'whent there is a unauthorized attribute being removed' do
-      let(:employee_attributes_payload) do
-        [
-          { id: first_name_attribute_id,
-            value: new_first_name_value,
-            attribute_name: first_name_attribute_definition
-          }
-        ]
-      end
-
-      it {  expect { subject }.to raise_error(CanCan::AccessDenied, 'Not authorized!') }
-    end
-
     context 'when the attribute trying to being added does not belong to the event' do
       let(:annual_salary_attribute_id) { "44070cae-0f86-456f-9b3d-17a801db64bf" }
 
       it {  expect { subject }.to raise_error(CanCan::AccessDenied, 'Not authorized!') }
     end
   end
-
 end
