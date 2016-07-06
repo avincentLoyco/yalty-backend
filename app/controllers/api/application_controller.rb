@@ -57,6 +57,10 @@ class API::ApplicationController < ApplicationController
     RelativeEmployeeBalancesFinder.new(resource).next_balance
   end
 
+  def create_join_table(join_table_class, resource_class, attributes)
+    CreateJoinTableService.new(join_table_class, resource_class, attributes).call
+  end
+
   def resources_with_effective_till(join_table, join_table_id, related_id = nil, employee_id = nil)
     resources =
       JoinTableWithEffectiveTill
