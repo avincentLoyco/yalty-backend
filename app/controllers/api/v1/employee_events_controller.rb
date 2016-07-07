@@ -1,9 +1,9 @@
 module API
   module V1
     class EmployeeEventsController < ApplicationController
-      include EmployeeEventRules
+      include EmployeeEventSchemas
 
-      GateResult = Struct.new(:attributes, :errors)
+      DryValidationResult = Struct.new(:attributes, :errors)
 
       def show
         authorize! :show, Account.current
@@ -16,7 +16,7 @@ module API
       end
 
       def create
-        verified_params(gate_rules) do |event_attributes, employee_attributes|
+        verified_dry_params(dry_validation_schema) do |event_attributes, employee_attributes|
           resource = CreateEvent.new(event_attributes, employee_attributes).call
           authorize! :create, resource
           render_resource(resource, status: :created)
@@ -24,7 +24,7 @@ module API
       end
 
       def update
-        verified_params(gate_rules) do |event_attributes, employee_attributes|
+        verified_dry_params(dry_validation_schema) do |event_attributes, employee_attributes|
           authorize! :update, resource
           UpdateEventAttributeValidator.new(employee_attributes).call unless
             current_user.account_manager
@@ -52,12 +52,11 @@ module API
         ::Api::V1::EmployeeEventRepresenter
       end
 
-      def verified_params(rules)
-        event_result = rules.verify(params)
+      def verified_dry_params(schema)
+        event_result = schema.call(params)
         attributes_results, attributes_errors = verify_employee_attributes
-
-        if event_result.valid? && attributes_errors.blank?
-          yield(event_result.attributes, attributes_results)
+        if event_result.messages.empty? && attributes_errors.blank?
+          yield(event_result.output, attributes_results)
         else
           result_errors = merge_errors(event_result, attributes_errors)
           resource_invalid_error(result_errors)
@@ -65,10 +64,10 @@ module API
       end
 
       def merge_errors(base, results_errors)
-        new_result = GateResult.new(base.attributes, base.errors)
+        new_result = DryValidationResult.new(base.output, base.errors)
         results_errors.each do |result|
           new_result.attributes = new_result.attributes.merge(result.try(:attributes) || {})
-          new_result.errors = new_result.errors.merge(result.errors)
+          new_result.errors = new_result.errors.push(result.errors)
         end
         new_result
       end
@@ -81,12 +80,12 @@ module API
         results = []
         errors = []
 
-        nested_gate_rules = EmployeeAttributeVersionRules.new.gate_rules(request)
+        nested_gate_rules = EmployeeAttributeVersionSchemas.new.dry_validation_schema(request)
         params[:employee_attributes].each do |employee_attribute|
-          attribute_result = nested_gate_rules.verify(employee_attribute)
+          attribute_result = nested_gate_rules.call(employee_attribute)
           value_result = VerifyEmployeeAttributeValues.new(employee_attribute)
-          if attribute_result.valid? && value_result.valid?
-            results << attribute_result.attributes
+          if attribute_result.messages.empty? && value_result.valid?
+            results << attribute_result.output
           else
             errors << attribute_result
             errors << value_result

@@ -113,7 +113,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
         context 'response' do
           before { subject }
 
-          it { expect_json(regex("can't be blank")) }
+          it { expect_json(regex("must be filled")) }
         end
       end
 
@@ -206,7 +206,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
           context 'response' do
             before { subject }
 
-            it { expect_json(regex("can't be blank")) }
+            it { expect_json(regex("must be filled")) }
           end
         end
 

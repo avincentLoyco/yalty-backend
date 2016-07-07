@@ -190,7 +190,7 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
           before { subject }
 
           it { is_expected.to have_http_status(422) }
-          it { expect_json(regex("can't be blank")) }
+          it { expect_json(regex("must be filled")) }
         end
       end
     end
@@ -283,7 +283,7 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
           before { subject }
 
           it { is_expected.to have_http_status(422) }
-          it { expect_json(regex("can't be blank")) }
+          it { expect_json(regex("must be filled")) }
         end
       end
     end

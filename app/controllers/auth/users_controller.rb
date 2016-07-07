@@ -1,10 +1,10 @@
 class Auth::UsersController < ApplicationController
-  include UserPasswordRules
+  include UserPasswordSchemas
 
   before_action :authenticate_account!, only: :reset_password
 
   def reset_password
-    verified_params(gate_rules) do |attributes|
+    verified_dry_params(dry_validation_schema) do |attributes|
       user = resource_from_email(attributes[:email])
       user.generate_reset_password_token
       user.save!
@@ -14,7 +14,7 @@ class Auth::UsersController < ApplicationController
   end
 
   def new_password
-    verified_params(gate_rules) do |attributes|
+    verified_dry_params(dry_validation_schema) do |attributes|
       resource = resource_from_token(attributes.delete(:reset_password_token))
       resource.update!(attributes)
       render_no_content

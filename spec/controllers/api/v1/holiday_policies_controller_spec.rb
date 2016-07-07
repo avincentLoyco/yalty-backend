@@ -60,6 +60,12 @@ RSpec.describe API::V1::HolidayPoliciesController, type: :controller do
           it { is_expected.to have_http_status(201) }
         end
       end
+
+      context 'region is nil' do
+        let(:region) { nil }
+        it { expect { subject }.to change { HolidayPolicy.count }.by(1) }
+        it { is_expected.to have_http_status(201) }
+      end
     end
 
     context 'with invalid data' do
@@ -126,6 +132,12 @@ RSpec.describe API::V1::HolidayPoliciesController, type: :controller do
 
           it { expect { subject }.to change { holiday_policy.reload.working_places.count }.by(-1) }
         end
+      end
+
+      context 'region is nil' do
+        let(:region) { nil }
+        it { expect { subject }.to change { HolidayPolicy.count }.by(1) }
+        it { is_expected.to have_http_status(204) }
       end
     end
 

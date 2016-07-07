@@ -1,7 +1,7 @@
 module API
   module V1
     class SettingsController < API::ApplicationController
-      include SettingsRules
+      include SettingsSchemas
       include DoorkeeperAuthorization
       before_action :subdomain_access!, only: :show
       skip_action_callback :authenticate!, only: :show
@@ -16,7 +16,7 @@ module API
       end
 
       def update
-        verified_params(gate_rules) do |attributes|
+        verified_dry_params(dry_validation_schema) do |attributes|
           if attributes.key?(:holiday_policy)
             holiday_policy = attributes.delete(:holiday_policy)
             assign_holiday_policy(holiday_policy)

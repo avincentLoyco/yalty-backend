@@ -1,7 +1,7 @@
 module API
   module V1
     class EmployeeBalancesController < API::ApplicationController
-      include EmployeeBalanceRules
+      include EmployeeBalanceSchemas
       before_action :verifiy_effective_at_and_validity_date, only: :update
       authorize_resource except: :show, class: 'Employee::Balance'
 
@@ -19,7 +19,7 @@ module API
       end
 
       def create
-        verified_params(gate_rules) do |attributes|
+        verified_dry_params(dry_validation_schema) do |attributes|
           category, employee, account, amount, options = params_from_attributes(attributes)
 
           resources = CreateEmployeeBalance.new(category, employee, account, amount, options).call
@@ -28,7 +28,7 @@ module API
       end
 
       def update
-        verified_params(gate_rules) do |attributes|
+        verified_dry_params(dry_validation_schema) do |attributes|
           validity_date = attributes[:validity_date]
 
           transactions do

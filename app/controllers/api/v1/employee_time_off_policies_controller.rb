@@ -1,7 +1,7 @@
 module API
   module V1
     class EmployeeTimeOffPoliciesController < ApplicationController
-      include EmployeeTimeOffPoliciesRules
+      include EmployeeTimeOffPoliciesSchemas
 
       def index
         authorize! :index, time_off_policy
@@ -9,7 +9,7 @@ module API
       end
 
       def create
-        verified_params(gate_rules) do |attributes|
+        verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :create, time_off_policy
 
           transactions do

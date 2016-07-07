@@ -1,7 +1,7 @@
 module API
   module V1
     class EmployeeWorkingPlacesController < ApplicationController
-      include EmployeeWorkingPlacesRules
+      include EmployeeWorkingPlacesSchemas
 
       def index
         authorize! :index, EmployeeWorkingPlace.new
@@ -16,7 +16,7 @@ module API
       end
 
       def create
-        verified_params(gate_rules) do |attributes|
+        verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :create, working_place
           resource = create_join_table(EmployeeWorkingPlace, WorkingPlace, attributes)
           render_resource(resource, status: 201)
