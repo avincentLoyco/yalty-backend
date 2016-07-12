@@ -30,7 +30,8 @@ class AddRegisteredWorkingTimes < ActiveJob::Base
         '',
         true
       ).call
-    insert_employees_registered_working_times(employees_splitted_entries)
+    binding.pry
+    insert_employees_registered_working_times(employees_splitted_entries, employees_ids)
   end
 
   def active_time_entries_per_employee(employees_ids)
@@ -82,9 +83,11 @@ class AddRegisteredWorkingTimes < ActiveJob::Base
       .tr(';', '')
   end
 
-  def insert_employees_registered_working_times(time_entries_employee_hash)
-    time_entries_employee_hash.each do |employee_id, time_entries_array |
-      RegisteredWorkingTime.create(
+  def insert_employees_registered_working_times(time_entries_employee_hash, employees_ids)
+    employees_ids.each do |employee_id |
+      time_entries_array = time_entries_employee_hash.with_indifferent_access[employee_id]
+      time_entries_array ||= []
+      a = RegisteredWorkingTime.create(
         employee_id: employee_id,
         schedule_generated: true,
         date: @today,

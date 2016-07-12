@@ -185,7 +185,8 @@ RSpec.describe AddRegisteredWorkingTimes do
     end
   end
 
-    context 'when the employees have presence days without time entries' do
+    context 'when the employees have no presence days with time entries' do
+
       it ' ' do
         expect { subject }.to change { RegisteredWorkingTime.count }.from(0).to(2)
         first_employee_rwt = RegisteredWorkingTime.find_by(employee_id: first_employee.id)

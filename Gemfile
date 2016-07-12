@@ -53,7 +53,7 @@ end
 
 group :test do
   gem 'timecop'
-  gem 'rspec-rails'
+  gem 'rspec-rails', '3.4.0'
   gem 'shoulda-matchers'
   gem 'airborne'
   gem 'temping'
