@@ -15,7 +15,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
 
     it { expect(subject.size).to eq 3 }
     it 'should have valid format' do
-      expect(subject).to eq (
+      expect(subject).to  match_hash(
         {
           "2016-01-01" => [],
           "2016-01-02" => [],
@@ -34,7 +34,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
 
       it { expect(subject.size).to eq 3 }
       it 'should have valid format' do
-        expect(subject).to eq (
+        expect(subject).to match_hash(
           {
             "2016-01-01" => [
               {
@@ -77,7 +77,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
 
           it { expect(subject.size).to eq 3 }
           it 'should have valid format' do
-            expect(subject).to eq (
+            expect(subject).to match_hash(
               {
                 "2016-01-01" => [
                   {
@@ -111,7 +111,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
 
             it { expect(subject.size).to eq 3 }
             it 'should have valid format' do
-              expect(subject).to eq (
+              expect(subject).to match_hash(
                 {
                   "2016-01-01" => [
                     {
@@ -157,7 +157,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
 
           it { expect(subject.size).to eq 3 }
           it 'should have valid format' do
-            expect(subject).to eq (
+            expect(subject).to match_hash(
               {
                 "2016-01-01" => [
                   {
@@ -192,7 +192,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
 
         it { expect(subject.size).to eq 3 }
         it 'should have valid format' do
-          expect(subject).to eq(
+          expect(subject).to match_hash(
             {
               "2016-01-01" => [
                 {

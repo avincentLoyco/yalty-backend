@@ -20,7 +20,7 @@ RSpec.describe HolidaysForEmployeeSchedule, type: :service do
     context 'when all holodays have names' do
       it { expect(subject.size).to eq 9 }
       it 'should have valid format' do
-        expect(subject).to eq(
+        expect(subject).to match_hash(
           {
             "2015-12-24" => [],
             "2015-12-25" => [
@@ -57,7 +57,7 @@ RSpec.describe HolidaysForEmployeeSchedule, type: :service do
 
     it { expect(subject.size).to eq 4 }
     it 'should have valid format' do
-      expect(subject).to eq(
+      expect(subject).to match_hash(
         {
           "2015-02-02" => [],
           "2015-02-03" => [],
