@@ -30,7 +30,6 @@ class AddRegisteredWorkingTimes < ActiveJob::Base
         '',
         true
       ).call
-    binding.pry
     insert_employees_registered_working_times(employees_splitted_entries, employees_ids)
   end
 
