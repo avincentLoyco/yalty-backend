@@ -43,7 +43,7 @@ RSpec.describe API::V1::RegisteredWorkingTimesController, type: :controller do
       end
 
       context 'when data for time entries is empty' do
-        let(:time_entries_params) { [{}] }
+        let(:time_entries_params) { nil }
 
         it { expect { subject }.to change { RegisteredWorkingTime.count }.by(1) }
         it { expect { subject }.to change { employee.registered_working_times.count }.by(1) }

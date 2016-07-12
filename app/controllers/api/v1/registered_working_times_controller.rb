@@ -14,6 +14,7 @@ module API
       private
 
       def filtered_attributes(attributes)
+        return [] if attributes[:time_entries].nil?
         attributes[:time_entries].map do |entry|
           next unless entry.is_a?(Hash)
           entry.except('type')

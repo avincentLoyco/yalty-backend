@@ -5,7 +5,7 @@ module RegisteredWorkingTimeRules
     Gate.rules do
       required :date
       required :employee_id
-      required :time_entries, :Array
+      required :time_entries, :Array , allow_nil: true
     end
   end
 
