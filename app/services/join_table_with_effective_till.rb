@@ -1,12 +1,12 @@
 class JoinTableWithEffectiveTill
-  attr_reader :join_table, :join_table_class, :account_id, :employee_id, :join_table_id,
+  attr_reader :join_table, :join_table_class, :account_id, :employees_ids, :join_table_id,
     :resource_id, :effective_till_from_date, :effective_at_till_date
 
   def initialize(
     join_table_class,
-    account_id,
+    account_id = nil,
     resource_id = nil,
-    employee_id = nil,
+    employees_ids = nil,
     join_table_id = nil,
     effective_till_from_date = Time.zone.today,
     effective_at_till_date = nil
@@ -15,7 +15,7 @@ class JoinTableWithEffectiveTill
     @join_table = join_table_class.to_s.tableize
     @account_id = account_id
     @join_table_id = join_table_id
-    @employee_id = employee_id
+    @employees_ids = employees_ids.present? ? process_employee_input(employees_ids) : nil
     @resource_id = resource_id
     @effective_till_from_date = effective_till_from_date
     @effective_at_till_date = effective_at_till_date
@@ -46,10 +46,10 @@ class JoinTableWithEffectiveTill
             #{extra_join_conditions}
           INNER JOIN employees
             ON employees.id = A.employee_id
-            AND employees.account_id = '#{account_id}'
-          #{specific_employee_sql}
-          #{specific_join_table_instance_sql}
-          #{extra_where_conditions}
+            #{specific_account_sql}
+        #{specific_employee_sql}
+        #{specific_join_table_instance_sql}
+        #{extra_where_conditions}
         GROUP BY  A.id
       ) AS B
       WHERE ( B.effective_till is null
@@ -61,12 +61,25 @@ class JoinTableWithEffectiveTill
 
   private
 
+  def process_employee_input(input)
+    input.is_a?(Array) ? convert_array_to_sql(input): convert_array_to_sql([input])
+  end
+
+  def convert_array_to_sql(array)
+
+    "('#{array.join('\',\'')}')"
+  end
+
   def category_condition_sql
     'AND A.time_off_category_id = B.time_off_category_id'
   end
 
   def effective_at_before_date_sql
     effective_at_till_date.present? ? "AND B.effective_at <= '#{effective_at_till_date}'" : ''
+  end
+
+  def specific_account_sql
+    account_id.present? ? "AND employees.account_id = '#{account_id}'" : ''
   end
 
   def specific_presence_policy_sql
@@ -82,7 +95,7 @@ class JoinTableWithEffectiveTill
   end
 
   def specific_employee_sql
-    employee_id.present? ? "WHERE A.employee_id = '#{employee_id}'" : ''
+    employees_ids.present? ? "WHERE A.employee_id IN #{employees_ids}" : ''
   end
 
   def specific_join_table_instance_sql

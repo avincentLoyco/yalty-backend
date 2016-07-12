@@ -28,6 +28,15 @@ class Employee < ActiveRecord::Base
       .where(employee_presence_policies: { presence_policy_id: presence_policy_id })
   }
 
+  scope :employees_with_time_off_in_range, lambda { |start_date, end_date|
+    joins(:time_offs).where(
+      '((time_offs.start_time::date BETWEEN ? AND ?) OR
+      (time_offs.end_time::date BETWEEN ? AND ?) OR
+      (time_offs.end_time::date > ? AND time_offs.start_time::date < ?))',
+      start_date, end_date, start_date, end_date, end_date, start_date
+    )
+  }
+
   def first_employee_working_place
     employee_working_places.find_by(effective_at: employee_working_places.pluck(:effective_at).min)
   end
