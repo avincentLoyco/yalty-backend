@@ -248,7 +248,7 @@ RSpec.describe ScheduleForEmployee, type: :service do
 
       it { expect(subject.size).to eq 3 }
       it 'should have valid response' do
-        expect(subject).to eq(
+        expect(subject).to match_hash(
           [
             {
               date: '2016-01-04',
@@ -297,7 +297,7 @@ RSpec.describe ScheduleForEmployee, type: :service do
       end
 
       it 'should have valid response' do
-        expect(subject).to eq (
+        expect(subject).to match_hash(
           [
             {
                date: "2015-12-29",
@@ -332,7 +332,7 @@ RSpec.describe ScheduleForEmployee, type: :service do
 
       it { expect(subject.size).to eq 5 }
       it 'should have valid response' do
-        expect(subject).to eq(
+        expect(subject).to match_hash(
           [
             {
               date: '2015-12-27',

@@ -64,24 +64,8 @@ RSpec.describe TimeOffAsTimeEntriesForRange, type: :service do
 
       it { expect(subject.size).to eq 3 }
       it 'should have valid format' do
-        expect(subject).to eq(
+        expect(subject).to match_hash(
           {
-            "2016-01-01" => [
-              {
-                :type => "time_off",
-                :name => category_name,
-                :start_time => "05:00:00",
-                :end_time => "24:00:00"
-              },
-            ],
-            "2016-01-02" => [
-              {
-                :type => "time_off",
-                :name => category_name,
-                :start_time => "00:00:00",
-                :end_time => "24:00:00"
-              },
-            ],
             "2016-01-03" => [
               {
                 :type => "time_off",
@@ -89,7 +73,23 @@ RSpec.describe TimeOffAsTimeEntriesForRange, type: :service do
                 :start_time => "00:00:00",
                 :end_time => "12:00:00"
               },
-            ]
+            ],
+            "2016-01-01" => [
+              {
+                :start_time => "05:00:00",
+                :end_time => "24:00:00",
+                :type => "time_off",
+                :name => category_name
+              },
+            ],
+            "2016-01-02" => [
+              {
+                :start_time => "00:00:00",
+                :end_time => "24:00:00",
+                :type => "time_off",
+                :name => category_name,
+              },
+            ],
           }
         )
       end
@@ -104,7 +104,7 @@ RSpec.describe TimeOffAsTimeEntriesForRange, type: :service do
 
       it { expect(subject.size).to eq 1 }
       it 'should have valid format' do
-        expect(subject).to eq(
+        expect(subject).to match_hash(
           {
             "2016-01-01" => {
               employee_id =>
@@ -127,7 +127,7 @@ RSpec.describe TimeOffAsTimeEntriesForRange, type: :service do
 
       it { expect(subject.size).to eq 2 }
       it 'should have valid format' do
-        expect(subject).to eq(
+        expect(subject).to match_hash(
           {
             "2016-01-01" => {
               employee_id =>
@@ -161,7 +161,7 @@ RSpec.describe TimeOffAsTimeEntriesForRange, type: :service do
 
       it { expect(subject.size).to eq 3 }
       it 'should have valid format' do
-        expect(subject).to eq(
+        expect(subject).to match_hash(
           {
             "2016-01-01" => {
               employee_id =>

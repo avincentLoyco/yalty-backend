@@ -68,7 +68,7 @@ RSpec.describe SplitTimeEntriesByTimeEntriesAndEmployeesForDate, type: :service 
 
       context 'when there are time entries to split and to be split by' do
         it '' do
-          expect(subject).to eql(
+          expect(subject).to match_hash(
             { :employeeIdnumberOne =>
                 [
                   {
@@ -103,7 +103,7 @@ RSpec.describe SplitTimeEntriesByTimeEntriesAndEmployeesForDate, type: :service 
       context 'when there are no time entries to split by' do
         let(:time_entries_to_base_the_split) { {} }
         it '' do
-          expect(subject).to eql(
+          expect(subject).to match_hash(
             { :employeeIdnumberOne =>
                 [
                   {

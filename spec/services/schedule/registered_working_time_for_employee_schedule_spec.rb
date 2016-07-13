@@ -24,7 +24,7 @@ RSpec.describe RegisteredWorkingTimeForEmployeeSchedule, type: :service do
 
         it { expect(subject.size).to eq 1 }
         it 'returns valid hash' do
-          expect(subject).to eq(
+          expect(subject).to match_hash(
             {
               "2015-01-01" => [
                 {
@@ -46,7 +46,7 @@ RSpec.describe RegisteredWorkingTimeForEmployeeSchedule, type: :service do
       context 'range is longer than one day' do
         it { expect(subject.size).to eq 3 }
         it 'returns valid hash' do
-          expect(subject).to eq(
+          expect(subject).to match_hash(
             {
               "2015-01-01" => [
                 {
@@ -82,7 +82,7 @@ RSpec.describe RegisteredWorkingTimeForEmployeeSchedule, type: :service do
     context 'when there are no time entries in day range' do
       it { expect(subject.size).to eq 3 }
       it 'returns valid hash' do
-        expect(subject).to eq(
+        expect(subject).to match_hash(
           {
             "2015-01-01" => [],
             "2015-01-02" => [],
