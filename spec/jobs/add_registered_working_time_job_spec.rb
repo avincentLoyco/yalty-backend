@@ -9,8 +9,8 @@ RSpec.describe AddRegisteredWorkingTimes do
   let(:account) { create(:account) }
   let(:first_employee) { create(:employee, account: account) }
   let(:second_employee) { create(:employee, account: account) }
-  let(:presence_policy_a) { create(:presence_policy, account: account) }
-  let(:presence_policy_b) { create(:presence_policy, account: account) }
+  let(:presence_policy_a) { create(:presence_policy, :with_presence_day, account: account) }
+  let(:presence_policy_b) { create(:presence_policy, :with_presence_day, account: account) }
   let!(:epp_a) do
     create(:employee_presence_policy,
       presence_policy: presence_policy_a,

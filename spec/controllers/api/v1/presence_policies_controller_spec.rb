@@ -13,7 +13,7 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
 
   describe 'GET #show' do
     let(:presence_policy) do
-      create(:presence_policy,
+      create(:presence_policy, :with_presence_day,
         account: account,
       )
     end
@@ -54,7 +54,9 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
 
   describe 'GET #index' do
     subject { get :index }
-    let!(:presence_policies) { create_list(:presence_policy, 3, account: account) }
+    let!(:presence_policies) do
+      create_list(:presence_policy, 3, :with_presence_day, account: account)
+    end
 
     before do
       create(:employee_presence_policy, presence_policy: presence_policies.first, employee: first_employee)
@@ -288,13 +290,14 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
 
   describe 'DELETE #destroy' do
     let!(:presence_policy) { create(:presence_policy, account: account) }
-
     subject { delete :destroy, id: presence_policy.id }
 
     context 'valid data' do
       it { expect { subject }.to change { PresencePolicy.count }.by(-1) }
       it { is_expected.to have_http_status(204) }
+
       context 'if it has an employee associated' do
+        before { presence_policy.update!(presence_days: [create(:presence_day)]) }
         let(:employee) { create(:employee, account: account) }
         let!(:epp) do
           create(:employee_presence_policy, presence_policy: presence_policy, employee: employee)

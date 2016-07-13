@@ -19,22 +19,22 @@ RSpec.describe TimeEntriesForEmployeeSchedule, type: :service do
 
       context 'and the presence policies have related time entries' do
         let(:effective_at) { Time.zone.today + 1.day}
+        let!(:presence_days) do
+          [5,6].map do |i|
+            create(:presence_day, order: i, presence_policy: presence_policy)
+          end
+        end
+        let!(:presence_second_policy) do
+          [6,7].map do |i|
+            create(:presence_day, order: i, presence_policy: second_presence_presence_policy)
+          end
+        end
         let!(:second_epp) do
           create(:employee_presence_policy,
             presence_policy: second_presence_presence_policy,
             employee: employee,
             effective_at: effective_at
           )
-        end
-        let(:presence_days) do
-          [5,6].map do |i|
-            create(:presence_day, order: i, presence_policy: presence_policy)
-          end
-        end
-        let(:presence_second_policy) do
-          [6,7].map do |i|
-            create(:presence_day, order: i, presence_policy: second_presence_presence_policy)
-          end
         end
         before(:each) do
           presence_second_policy.map do |presence_day|

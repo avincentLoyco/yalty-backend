@@ -6,7 +6,7 @@ RSpec.describe CalculateTimeOffBalance, type: :service do
 
   subject { CalculateTimeOffBalance.new(time_off).call }
 
-  let(:policy) { create(:presence_policy) }
+  let(:policy) { create(:presence_policy, :with_presence_day) }
   let(:employee) do
     create(:employee, :with_time_off_policy, :with_presence_policy,
       presence_policy: policy
@@ -21,6 +21,8 @@ RSpec.describe CalculateTimeOffBalance, type: :service do
   end
 
   context 'when the time off is long' do
+    before { policy.presence_days.map(&:destroy!) }
+
     let(:time_off) do
       create(:time_off,
         employee: employee, time_off_category: category, start_time:  Date.new(2016,6,12),
@@ -105,7 +107,10 @@ RSpec.describe CalculateTimeOffBalance, type: :service do
     end
 
     context 'and there is more than one presence policy involved' do
-      before { time_off.update!(start_time: Date.today, end_time: Date.today + 8.days) }
+      before do
+        time_off.update!(start_time: Date.today, end_time: Date.today + 8.days)
+        second_policy.presence_days.map(&:destroy!)
+      end
 
       let!(:second_epp) { create(:employee_presence_policy, employee: employee, effective_at: Date.today + 5.days) }
       let!(:second_policy) { second_epp.presence_policy }

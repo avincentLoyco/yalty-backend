@@ -13,17 +13,19 @@ RSpec.describe EmployeePresencePolicy, type: :model do
   it { is_expected.to have_db_index([:presence_policy_id, :employee_id]) }
   it { is_expected.to have_db_index([:employee_id, :presence_policy_id, :effective_at]).unique }
 
-  describe 'custom validations' do
+  describe 'validations' do
     context '#no_balances_after_effective_at' do
       let(:employee) { create(:employee, created_at: Time.now - 12.years) }
-      let!(:balance) { create(:employee_balance, time_off_category: category, employee: employee, time_off: time_off) }
       let!(:policy) { create(:time_off_policy, time_off_category: category) }
       let(:category) { create(:time_off_category, account_id: employee.account_id) }
-      let(:presence_policy) { create(:presence_policy, account_id: employee.account_id) }
-      let(:time_off) { create(:time_off, :without_balance, employee: employee, time_off_category: category) }
+      let(:balance) { time_off.employee_balance }
+      let(:time_off) do
+        create(:time_off, employee: employee, time_off_category: category)
+      end
       let(:new_policy) do
         build(:employee_presence_policy,
-          employee: balance.employee, presence_policy: presence_policy, effective_at: Time.now - 4.years
+          employee: balance.employee,
+          effective_at: Time.now - 4.years
         )
       end
 
@@ -46,6 +48,37 @@ RSpec.describe EmployeePresencePolicy, type: :model do
         it { expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
           .to include('Employee balance after effective at already exists') }
       end
+    end
+  end
+
+  context 'order_of_start_day numericality' do
+    let(:presence_policy) { create(:presence_policy, presence_days: [end_day]) }
+    let(:end_day) { build(:presence_day, order: 4) }
+    subject do
+      build(:employee_presence_policy, presence_policy: presence_policy, order_of_start_day: order)
+    end
+
+    context 'with valid params' do
+      let(:order) { 1 }
+
+      it { expect(subject.valid?).to eq true }
+      it { expect { subject.valid? }.to_not change { subject.errors.messages.count } }
+    end
+
+    context 'when order_of_start_day is too small' do
+      let(:order) { 0 }
+
+      it { expect(subject.valid?).to eq false }
+      it { expect { subject.valid? }.to change { subject.errors.messages[:order_of_start_day] }
+        .to include('must be greater than 0') }
+    end
+
+    context 'when order_of_start_day is bigger than last assigned day' do
+      let(:order) { 6 }
+
+      it { expect(subject.valid?).to eq false }
+      it { expect { subject.valid? }.to change { subject.errors.messages[:order_of_start_day] }
+        .to include('Must be smaller than last presence day order') }
     end
   end
 end

@@ -238,7 +238,9 @@ RSpec.describe JoinTableWithEffectiveTill, type: :service do
       subject { described_class.new(EmployeePresencePolicy, account_id).call }
 
       context 'and there are employee presence policies' do
-        let(:presence_policy) { create(:presence_policy, account: accounts.first) }
+        let(:presence_policy) do
+          create(:presence_policy, :with_presence_day, account: accounts.first)
+        end
         let!(:epp_zero) do
           create(
             :employee_presence_policy,
