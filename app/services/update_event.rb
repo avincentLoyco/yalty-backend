@@ -99,7 +99,6 @@ class UpdateEvent
   end
 
   def find_editable_versions
-    return event.employee_attribute_versions if Account::User.current.account_manager
     event.employee_attribute_versions - not_editable_versions
   end
 
