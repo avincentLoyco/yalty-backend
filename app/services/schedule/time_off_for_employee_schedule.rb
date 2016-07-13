@@ -7,13 +7,13 @@ class TimeOffForEmployeeSchedule
     @start_date = start_date
     @end_date = end_date
     @time_offs_hash = {}
-    @single_employee = employee.kind_of?(Employee)
+    @single_employee = employee.is_a?(Employee)
   end
 
   def call
     create_time_offs_hash_structure
     if @single_employee
-       populate_time_offs_hash_for_one_employee
+      populate_time_offs_hash_for_one_employee
     else
       populate_time_offs_hash_for_many_employees
     end
@@ -25,7 +25,7 @@ class TimeOffForEmployeeSchedule
   def create_time_offs_hash_structure
     calculate_time_range.times do |i|
       date = (start_date + i.days)
-      time_offs_hash[date.to_s] = @single_employee  ? [] : {}
+      time_offs_hash[date.to_s] = @single_employee ? [] : {}
     end
   end
 
@@ -50,8 +50,6 @@ class TimeOffForEmployeeSchedule
       end
     end
   end
-
-
 
   def generate_hash_for_time_off(time_off, grouped_by_employee)
     start_time = Time.zone.local(start_date.to_s)

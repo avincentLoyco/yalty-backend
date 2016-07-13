@@ -50,11 +50,11 @@ class ScheduleForEmployee
       day_hash[:time_entries] = @time_entries_in_range[date]
     else
       day_hash[:time_entries] +=
-      SplitTimeEntriesByTimeEntriesForDate.new(
-        @time_entries_in_range[date],
-        @time_off_in_range[date],
-        'working_time'
-      ).call
+        SplitTimeEntriesByTimeEntriesForDate.new(
+          @time_entries_in_range[date],
+          @time_off_in_range[date],
+          'working_time'
+        ).call
     end
   end
 end

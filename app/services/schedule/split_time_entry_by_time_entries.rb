@@ -1,5 +1,4 @@
 class SplitTimeEntryByTimeEntries
-
   def initialize(time_entry, time_entries)
     @time_entry = time_entry
     @time_entries = time_entries

@@ -11,13 +11,12 @@ class AddRegisteredWorkingTimes < ActiveJob::Base
     @today = Time.zone.today - 1
     employees_with_working_hours_ids =
       Employee
-        .joins(:registered_working_times)
-        .where( registered_working_times: { date: @today })
-        .pluck(:id)
+      .joins(:registered_working_times)
+      .where(registered_working_times: { date: @today })
+      .pluck(:id)
     employees_ids = Employee.where.not(id: employees_with_working_hours_ids).pluck(:id)
     process_employees(employees_ids)
   end
-
 
   def process_employees(employees_ids)
     time_offs_time_entries =
@@ -38,6 +37,7 @@ class AddRegisteredWorkingTimes < ActiveJob::Base
       active_time_entries_with_day_order_and_effective_dates_sql(employees_ids)
     ).to_ary
   end
+
   # For the future instead of ((( to_date('#{today}', 'YYYY-MM_DD') - r.effective_at  ) % 7)
   # replace the 7 with
   # replace (INNER JOIN  presence_days AS p)  with
@@ -83,10 +83,10 @@ class AddRegisteredWorkingTimes < ActiveJob::Base
   end
 
   def insert_employees_registered_working_times(time_entries_employee_hash, employees_ids)
-    employees_ids.each do |employee_id |
+    employees_ids.each do |employee_id|
       time_entries_array = time_entries_employee_hash.with_indifferent_access[employee_id]
       time_entries_array ||= []
-      a = RegisteredWorkingTime.create(
+      RegisteredWorkingTime.create(
         employee_id: employee_id,
         schedule_generated: true,
         date: @today,

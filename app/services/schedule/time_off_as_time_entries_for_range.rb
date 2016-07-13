@@ -37,7 +37,7 @@ class TimeOffAsTimeEntriesForRange
   end
 
   def prepare_single_day_hash(single_day_start_time = start_time, single_day_end_time = end_time)
-     time_off_hashes =
+    time_off_hashes =
       [
         {
           type: 'time_off',
@@ -68,12 +68,11 @@ class TimeOffAsTimeEntriesForRange
 
   def nested_merge_into_result_hash(new_time_entry)
     time_off_hash.merge!(new_time_entry) do |_key, employe_hash_1, employe_hash_2|
-        employe_hash_1.merge!(employe_hash_2) do |_key, val1, val2|
+      employe_hash_1.merge!(employe_hash_2) do |_key, val1, val2|
         val1.push(val2.first)
       end
     end
   end
-
 
   def middle_days_hash
     (((start_time + 1.day).to_date)..((end_time - 1.day).to_date)).map do |date|

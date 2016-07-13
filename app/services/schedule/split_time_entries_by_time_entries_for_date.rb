@@ -1,5 +1,4 @@
 class SplitTimeEntriesByTimeEntriesForDate
-
   def initialize(time_entries_to_split, time_entries_to_base_the_split, time_entries_to_split_type)
     @time_entries_to_split = time_entries_to_split
     @time_entries_to_base_the_split = time_entries_to_base_the_split
@@ -26,5 +25,4 @@ class SplitTimeEntriesByTimeEntriesForDate
       }
     end
   end
-
 end

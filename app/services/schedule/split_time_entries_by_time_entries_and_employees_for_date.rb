@@ -1,5 +1,4 @@
 class SplitTimeEntriesByTimeEntriesAndEmployeesForDate
-
   # @param time_entries_to_split
   #   [Array<Hash{start_time => String, end_time => String, employee => Employee}>]
   # @param time_entries_to_split

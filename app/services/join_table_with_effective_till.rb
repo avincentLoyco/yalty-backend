@@ -62,11 +62,10 @@ class JoinTableWithEffectiveTill
   private
 
   def process_employee_input(input)
-    input.is_a?(Array) ? convert_array_to_sql(input): convert_array_to_sql([input])
+    input.is_a?(Array) ? convert_array_to_sql(input) : convert_array_to_sql([input])
   end
 
   def convert_array_to_sql(array)
-
     "('#{array.join('\',\'')}')"
   end
 

@@ -42,7 +42,6 @@ class TimeOff < ActiveRecord::Base
   private
 
   def does_not_overlap_with_registered_working_times
-
     registered_working_times =
       employee.registered_working_times.in_day_range(start_time.to_date, end_time.to_date)
     if lenght > 1
