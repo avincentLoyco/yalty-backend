@@ -46,7 +46,7 @@ RSpec.describe TimeEntriesForEmployeeSchedule, type: :service do
           end
         end
         it 'and the period is smaller than a week' do
-          expect( subject).to eq(
+          expect( subject).to match_hash(
              {
                '2016-01-01' => [
                  {
@@ -92,7 +92,7 @@ RSpec.describe TimeEntriesForEmployeeSchedule, type: :service do
         end
 
         it '' do
-          expect( subject).to eq(
+          expect( subject).to match_hash(
              {
                '2016-01-01' => [
                  {
@@ -161,7 +161,7 @@ RSpec.describe TimeEntriesForEmployeeSchedule, type: :service do
         end
 
         it '' do
-          expect( subject).to eq(
+          expect( subject).to match_hash(
              {
                '2016-01-01' => [
                  {
@@ -194,7 +194,7 @@ RSpec.describe TimeEntriesForEmployeeSchedule, type: :service do
           subject { described_class.new(employee, start_date , start_date + 6.days ).call }
 
           it '' do
-            expect( subject).to eq(
+            expect( subject).to match_hash(
                {
                  '2016-01-06' => [],
                  '2016-01-07' => [
@@ -231,7 +231,7 @@ RSpec.describe TimeEntriesForEmployeeSchedule, type: :service do
           subject { described_class.new(employee, start_date , start_date + 8.days ).call }
 
           it '' do
-            expect( subject).to eq(
+            expect( subject).to match_hash(
               {
                 '2016-01-08' => [
                   {
@@ -276,7 +276,7 @@ RSpec.describe TimeEntriesForEmployeeSchedule, type: :service do
           subject { described_class.new(employee, start_date , start_date + 7 .days ).call }
 
           it '' do
-            expect( subject).to eq(
+            expect( subject).to match_hash(
                {
                  '2016-01-04' => [
                    {

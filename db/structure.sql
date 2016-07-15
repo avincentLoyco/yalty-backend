@@ -428,6 +428,21 @@ CREATE TABLE presence_policies (
 
 
 --
+-- Name: registered_working_times; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE registered_working_times (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    employee_id uuid NOT NULL,
+    schedule_generated boolean DEFAULT false NOT NULL,
+    date date NOT NULL,
+    time_entries json DEFAULT '{}'::json NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL
+);
+
+
+--
 -- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -678,6 +693,14 @@ ALTER TABLE ONLY presence_days
 
 ALTER TABLE ONLY presence_policies
     ADD CONSTRAINT presence_policies_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: registered_working_times_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY registered_working_times
+    ADD CONSTRAINT registered_working_times_pkey PRIMARY KEY (id);
 
 
 --
@@ -966,6 +989,13 @@ CREATE INDEX index_presence_policies_on_account_id ON presence_policies USING bt
 
 
 --
+-- Name: index_registered_working_times_on_employee_id_and_date; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE UNIQUE INDEX index_registered_working_times_on_employee_id_and_date ON registered_working_times USING btree (employee_id, date);
+
+
+--
 -- Name: index_time_entries_on_presence_day_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -1156,6 +1186,14 @@ ALTER TABLE ONLY holidays
 
 ALTER TABLE ONLY presence_policies
     ADD CONSTRAINT fk_rails_95b0b0db67 FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE;
+
+
+--
+-- Name: fk_rails_a2016e0f0d; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY registered_working_times
+    ADD CONSTRAINT fk_rails_a2016e0f0d FOREIGN KEY (employee_id) REFERENCES employees(id);
 
 
 --
@@ -1447,4 +1485,8 @@ INSERT INTO schema_migrations (version) VALUES ('20160516121616');
 INSERT INTO schema_migrations (version) VALUES ('20160520093525');
 
 INSERT INTO schema_migrations (version) VALUES ('20160531093150');
+
+INSERT INTO schema_migrations (version) VALUES ('20160627122241');
+
+INSERT INTO schema_migrations (version) VALUES ('20160711103240');
 

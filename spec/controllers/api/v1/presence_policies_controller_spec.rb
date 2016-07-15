@@ -117,12 +117,49 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
       subject { post :create, valid_data_json }
 
       it { expect { subject }.to change { PresencePolicy.count }.by(1) }
+      it { expect { subject }.to change { PresenceDay.where(order: 7).count }.by(1) }
 
       context 'response' do
         before { subject }
 
         it { is_expected.to have_http_status(201) }
         it { expect_json_keys( [ :id, :type, :name, :presence_days, :assigned_employees ] ) }
+      end
+
+      context 'when days params are present' do
+        subject { post :create, valid_data_json.merge(presence_days: days_params) }
+        let(:days_params) do
+          [
+            {
+              time_entries: [{ start_time: '12:00:00', end_time: '16:00:00' }],
+              minutes: 40,
+              order: 1
+            },
+            {
+              time_entries: [{ start_time: '12:00:00', end_time: '16:00:00' }],
+              minutes: 40,
+              order: 7
+            }
+          ]
+        end
+
+        context 'and there is day with order 7' do
+          it { expect { subject }.to change { PresencePolicy.count }.by(1) }
+          it { expect { subject }.to change { PresenceDay.count }.by(2) }
+          it { expect { subject }.to change { TimeEntry.count }.by(2) }
+
+          it { is_expected.to have_http_status(201) }
+        end
+
+        context 'and there is no day with order 7' do
+          before { days_params.pop }
+
+          it { expect { subject }.to change { PresencePolicy.count }.by(1) }
+          it { expect { subject }.to change { PresenceDay.count }.by(2) }
+          it { expect { subject }.to change { TimeEntry.count }.by(1) }
+
+          it { is_expected.to have_http_status(201) }
+        end
       end
     end
 

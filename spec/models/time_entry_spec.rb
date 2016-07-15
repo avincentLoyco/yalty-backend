@@ -100,6 +100,22 @@ RSpec.describe TimeEntry, type: :model do
 
             it_behaves_like 'Time Entries Do Not Overlap'
           end
+          context 'and end hours overlap' do
+            let(:day) { first_day }
+            let(:sub_day) { first_day }
+            let(:sub_start) { '3:00' }
+            let(:sub_end) { '4:00' }
+
+            it_behaves_like 'Time Entries Do Not Overlap'
+          end
+          context 'specific hours' do
+            let(:day) { first_day }
+            let(:sub_day) { first_day }
+            let(:sub_start) { '6:00' }
+            let(:sub_end) { '7:00' }
+
+            it_behaves_like 'Time Entries Do Not Overlap'
+          end
         end
 
       end
@@ -112,6 +128,30 @@ RSpec.describe TimeEntry, type: :model do
           let(:day) { first_day }
           let(:sub_day) { first_day }
           let(:sub_end) { '6:00' }
+
+          it_behaves_like 'Time Entries Overlap'
+        end
+        context 'with current day entry' do
+          let(:day) { first_day }
+          let(:sub_day) { first_day }
+          let(:sub_start) { '4:00' }
+          let(:sub_end) { '6:00' }
+
+          it_behaves_like 'Time Entries Overlap'
+        end
+        context 'specific hours' do
+          let(:day) { first_day }
+          let(:sub_day) { first_day }
+          let(:sub_start) { '3:00' }
+          let(:sub_end) { '6:00' }
+
+          it_behaves_like 'Time Entries Overlap'
+        end
+        context 'specific hours' do
+          let(:day) { first_day }
+          let(:sub_day) { first_day }
+          let(:sub_start) { '4:00' }
+          let(:sub_end) { '7:00' }
 
           it_behaves_like 'Time Entries Overlap'
         end

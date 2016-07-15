@@ -21,6 +21,9 @@ class Ability
         event.employee_id = user.employee.try(:id)
       end
       can :schedule_for_employee, Employee, id: user.employee.try(:id)
+      can [:create], RegisteredWorkingTime do |registered_working_time|
+        registered_working_time.employee_id = user.employee.try(:id)
+      end
     end
   end
 end
