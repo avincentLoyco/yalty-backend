@@ -27,6 +27,7 @@ module API
             save!(resource, related)
             CreateCompletePresencePolicy.new(resource.reload, days_params).call if
               days_params.present?
+            create_day_with_biggest_order(resource)
           end
 
           render_resource_with_relationships(resource, status: :created)
@@ -54,6 +55,11 @@ module API
       end
 
       private
+
+      def create_day_with_biggest_order(resource)
+        return if resource.presence_days.pluck(:order).include?(7)
+        resource.presence_days.create!(order: 7)
+      end
 
       def related_params(attributes)
         related = {}

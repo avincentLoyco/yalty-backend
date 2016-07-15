@@ -18,6 +18,7 @@ class Employee < ActiveRecord::Base
   has_many :working_places, through: :employee_working_places
   has_many :employee_presence_policies
   has_many :presence_policies, through: :employee_presence_policies
+  has_many :registered_working_times
 
   validates :employee_working_places, length: { minimum: 1 }
   validate :hired_event_presence, on: :create
@@ -25,6 +26,15 @@ class Employee < ActiveRecord::Base
   scope :affected_by_presence_policy, lambda { |presence_policy_id|
     joins(:employee_presence_policies)
       .where(employee_presence_policies: { presence_policy_id: presence_policy_id })
+  }
+
+  scope :employees_with_time_off_in_range, lambda { |start_date, end_date|
+    joins(:time_offs).where(
+      '((time_offs.start_time::date BETWEEN ? AND ?) OR
+      (time_offs.end_time::date BETWEEN ? AND ?) OR
+      (time_offs.end_time::date > ? AND time_offs.start_time::date < ?))',
+      start_date, end_date, start_date, end_date, end_date, start_date
+    )
   }
 
   def first_employee_working_place

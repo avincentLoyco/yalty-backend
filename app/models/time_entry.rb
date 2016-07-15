@@ -30,25 +30,12 @@ class TimeEntry < ActiveRecord::Base
   end
 
   def self.overlaps?(first_start_time, first_end_time, second_start_time, second_end_time)
-    if first_start_time <= second_start_time && first_end_time >= second_end_time
-      true
-    elsif first_start_time <= second_start_time && first_end_time < second_end_time &&
-        first_end_time > second_start_time
-      true
-    elsif first_start_time > second_start_time && first_end_time >= second_end_time &&
-        first_start_time < second_end_time
-      true
-    elsif first_start_time > second_start_time && first_end_time < second_end_time
-      true
-    end
+    !((first_start_time < second_start_time && first_end_time <= second_start_time) ||
+      (first_end_time > second_end_time && first_start_time >= second_end_time))
   end
 
   def self.contains?(first_start_time, first_end_time, second_start_time, second_end_time)
-    if first_start_time <= second_start_time && first_end_time >= second_end_time
-      true
-    else
-      false
-    end
+    first_start_time <= second_start_time && first_end_time >= second_end_time
   end
 
   private
@@ -57,7 +44,6 @@ class TimeEntry < ActiveRecord::Base
     self.start_time = start_time_as_time.strftime('%H:%M:%S')
     self.end_time = is_midnight? ? '24:00:00' : end_time_as_time.strftime('%H:%M:%S')
   end
-
 
   def update_presence_day_minutes!
     presence_day.update_minutes!
@@ -78,10 +64,6 @@ class TimeEntry < ActiveRecord::Base
     end.any?
   end
 
-  def self.hour_as_time(entry_hour)
-    "#{DATE} #{entry_hour}".to_time(:utc)
-  end
-
   def times_parsable?
     start_time_parsable? && end_time_parsable?
   end
@@ -91,12 +73,13 @@ class TimeEntry < ActiveRecord::Base
   end
 
   def end_time_parsable?
-      is_midnight? || TOD.parsable?(end_time)
+    is_midnight? || TOD.parsable?(end_time)
   end
 
   def is_midnight?
     end_time == '24:00' || end_time == '24:00:00'
   end
+
   def time_entry_not_reserved
     return unless day_entries_overlap?
     errors.add(:start_time, 'time_entries can not overlap')

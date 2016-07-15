@@ -213,7 +213,7 @@ class CalculateTimeOffBalance
   end
 
   def midnight
-     TimeEntry.midnight
+    TimeEntry.midnight
   end
 
   def day_entries(order)
