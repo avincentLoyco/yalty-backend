@@ -7,7 +7,7 @@ every_midnight:
 
 every_midnight:
   cron: "0 0 * * *"
-  class: "AddPolicyAdditionsJob"
+  class: "AddRegisteredWorkingTimes"
   args:
   queue: registered_working_times
   description: "Adds the user registered working time from previous day"
