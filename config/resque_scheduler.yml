@@ -1,13 +1,14 @@
-every_midnight:
+every_midnight_policy_add:
   cron: "0 0 * * *"
   class: "AddPolicyAdditionsJob"
   args:
   queue: policies_and_balances
   description: "Check policies start dates and create addition balances if policy start date is today"
 
-every_midnight:
+
+every_midnight_add_working_time:
   cron: "0 0 * * *"
-  class: "AddPolicyAdditionsJob"
+  class: "AddRegisteredWorkingTimes"
   args:
   queue: registered_working_times
   description: "Adds the user registered working time from previous day"
