@@ -11,6 +11,11 @@ class EmployeePresencePolicy < ActiveRecord::Base
   validate :presence_days_presence, if: :presence_policy
   validate :order_smaller_than_last_presence_day_order, if: [:presence_policy, :order_of_start_day]
 
+  def policy_length
+    return 0 unless presence_policy.presence_days.present?
+    presence_policy.presence_days.pluck(:order).max
+  end
+
   private
 
   def presence_days_presence
@@ -19,8 +24,7 @@ class EmployeePresencePolicy < ActiveRecord::Base
   end
 
   def order_smaller_than_last_presence_day_order
-    max_order = presence_policy.presence_days.pluck(:order).max
-    return unless max_order.present? && order_of_start_day > max_order
+    return unless policy_length != 0 && order_of_start_day > policy_length
     errors.add(:order_of_start_day, 'Must be smaller than last presence day order')
   end
 

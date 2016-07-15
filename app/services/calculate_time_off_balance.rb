@@ -2,9 +2,6 @@ class CalculateTimeOffBalance
   attr_reader :time_off, :employee, :balane, :presence_policy, :time_off_start_date,
     :time_off_end_date, :holidays_dates_hash
 
-  END_ORDER = 7
-  START_ORDER = 1
-
   def initialize(time_off)
     @time_off = time_off
     @time_off_start_date = time_off.start_time
@@ -20,7 +17,7 @@ class CalculateTimeOffBalance
       next if epp.presence_policy.try(:time_entries).blank?
       calculate_start_date_for_epp(epp, active_epps)
       calculate_end_date_for_epp(epp, active_epps)
-      @presence_policy = epp.presence_policy
+      @epp = epp
       minutes_in_time_off += calculate_minutes_from_entries
     end
     minutes_in_time_off
@@ -75,7 +72,7 @@ class CalculateTimeOffBalance
   def middle_holidays_order_number
     oder_hash_counter = Hash.new(0)
     holidays_dates_hash[:middle_days].each do |holiday_date|
-      holiday_day_order = holiday_date.wday.to_s.sub('0', '7').to_i
+      holiday_day_order = order_for_date(holiday_date)
       oder_hash_counter[holiday_day_order.to_s] += 1
     end
     oder_hash_counter
@@ -90,11 +87,22 @@ class CalculateTimeOffBalance
   end
 
   def start_order
-    @epp_start_date.wday.to_s.sub('0', '7').to_i
+    order_for_date(@epp_start_date)
   end
 
   def end_order
-    (start_order + num_of_days_in_time_off - 1) % END_ORDER
+    ends = (start_order + num_of_days_in_time_off - 1) % @epp.policy_length
+    ends == 0 ? @epp.policy_length : ends
+  end
+
+  def order_for_date(date)
+    order_difference = ((date - @epp.effective_at) % @epp.policy_length).to_i
+    new_order = @epp.order_of_start_day + order_difference
+    if new_order > @epp.policy_length
+      new_order - @epp.policy_length
+    else
+      new_order
+    end
   end
 
   def num_of_days_in_time_off
@@ -102,7 +110,7 @@ class CalculateTimeOffBalance
   end
 
   def presence_days_with_entries_duration
-    PresenceDay.with_entries(@presence_policy.id).each_with_object({}) do |day, total|
+    PresenceDay.with_entries(@epp.presence_policy.id).each_with_object({}) do |day, total|
       total[day.order] = day.time_entries.pluck(:duration).sum
       total
     end
@@ -163,17 +171,17 @@ class CalculateTimeOffBalance
     if start_order < end_order
       (start_order..end_order).to_a
     else
-      (start_order..END_ORDER).to_a + (START_ORDER..end_order).to_a
+      (start_order..@epp.policy_length).to_a + (TimeEntry::START_ORDER..end_order).to_a
     end
   end
 
   def orders_occurrences_time_off_longer_than_policy
-    orders_ordered_by_occurence = (start_order..END_ORDER).to_a
-    second_period = (START_ORDER..end_order).to_a
+    orders_ordered_by_occurence = (start_order..@epp.policy_length).to_a
+    second_period = (TimeEntry::START_ORDER..end_order).to_a
     i = 0
-    week_days = (START_ORDER..END_ORDER).to_a
+    week_days = (TimeEntry::START_ORDER..@epp.policy_length).to_a
     while (orders_ordered_by_occurence.size + second_period.size) < num_of_days_in_time_off
-      orders_ordered_by_occurence << week_days[i % 7]
+      orders_ordered_by_occurence << week_days[i % @epp.policy_length]
       i += 1
     end
     orders_ordered_by_occurence + second_period
@@ -181,7 +189,7 @@ class CalculateTimeOffBalance
 
   def orders_occurances
     order_ocurrences =
-      if num_of_days_in_time_off <= END_ORDER
+      if num_of_days_in_time_off <= @epp.policy_length
         orders_occurrences_time_off_not_longer_than_policy
       else
         orders_occurrences_time_off_longer_than_policy
@@ -217,6 +225,6 @@ class CalculateTimeOffBalance
   end
 
   def day_entries(order)
-    @presence_policy.presence_days.find_by(order: order).try(:time_entries)
+    @epp.presence_policy.presence_days.find_by(order: order).try(:time_entries)
   end
 end
