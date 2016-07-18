@@ -70,7 +70,7 @@ class RegisteredWorkingTime < ActiveRecord::Base
   def time_entries_does_not_overlaps_with_time_off
     time_offs_for_day = TimeOff.for_employee_at_date(employee_id, date)
     return unless time_offs_for_day.map do |time_off|
-      date_in_time_off_range?(time_off) || time_off_entries_overlap?(time_off)
+      time_off_entries_overlap?(time_off)
     end.flatten.include?(true)
     errors.add(:date, 'working time day can not overlap with existing time off')
   end
@@ -80,7 +80,7 @@ class RegisteredWorkingTime < ActiveRecord::Base
       entries_overlap?(time_off.start_hour, time_off.end_hour)
     else
       starts = starts_at_date?(time_off) ? time_off.start_hour : TimeEntry.hour_as_time('00:00')
-      ends = starts_at_date?(time_off) ? TimeEntry.midnight : time_off.end_hour
+      ends = ends_at_date?(time_off) ? time_off.end_hour : TimeEntry.midnight
       entries_overlap?(starts, ends)
     end
   end
@@ -95,6 +95,10 @@ class RegisteredWorkingTime < ActiveRecord::Base
 
   def starts_at_date?(time_off)
     time_off.start_time.to_date == date
+  end
+
+  def ends_at_date?(time_off)
+    time_off.end_time.to_date == date
   end
 
   def date_in_time_off_range?(time_off)

@@ -197,9 +197,18 @@ RSpec.describe RegisteredWorkingTime, type: :model do
         context 'when day is in the middle of time off' do
           let(:start_time) { '30/4/2016' }
 
-          it { expect(subject).to eq false  }
-          it { expect { subject }.to change { registered_working_time.errors.messages[:date] }
-            .to include('working time day can not overlap with existing time off') }
+          context ' and the time off overlaps a time entry' do
+            it { expect(subject).to eq false  }
+            it { expect { subject }.to change { registered_working_time.errors.messages[:date] }
+              .to include('working time day can not overlap with existing time off') }
+          end
+
+          context 'and the time off does not overlaps a time entry' do
+            let(:time_entries) { [] }
+
+            it { expect(subject).to eq true  }
+            it { expect { subject }.to_not change { registered_working_time.errors.messages.count } }
+          end
         end
       end
     end
