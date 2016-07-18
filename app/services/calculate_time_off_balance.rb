@@ -72,7 +72,7 @@ class CalculateTimeOffBalance
   def middle_holidays_order_number
     oder_hash_counter = Hash.new(0)
     holidays_dates_hash[:middle_days].each do |holiday_date|
-      holiday_day_order = order_for_date(holiday_date)
+      holiday_day_order = @epp.order_for(holiday_date)
       oder_hash_counter[holiday_day_order.to_s] += 1
     end
     oder_hash_counter
@@ -87,22 +87,12 @@ class CalculateTimeOffBalance
   end
 
   def start_order
-    order_for_date(@epp_start_date)
+    @epp.order_for(@epp_start_date)
   end
 
   def end_order
     ends = (start_order + num_of_days_in_time_off - 1) % @epp.policy_length
     ends == 0 ? @epp.policy_length : ends
-  end
-
-  def order_for_date(date)
-    order_difference = ((date - @epp.effective_at) % @epp.policy_length).to_i
-    new_order = @epp.order_of_start_day + order_difference
-    if new_order > @epp.policy_length
-      new_order - @epp.policy_length
-    else
-      new_order
-    end
   end
 
   def num_of_days_in_time_off

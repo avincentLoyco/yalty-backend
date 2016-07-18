@@ -36,13 +36,12 @@ RSpec.describe API::V1::SchedulesController , type: :controller do
         )
       end
       let(:presence_days)  do
-        [1,2,3,5,6,7].map do |i|
+        [1,2,3,4,5,6,7].map do |i|
           create(:presence_day, order: i, presence_policy: presence_policy)
         end
       end
 
       it { is_expected.to have_http_status(200) }
-
       it 'should have valid response body' do
         subject
         expect(JSON.parse(response.body)).to eq(

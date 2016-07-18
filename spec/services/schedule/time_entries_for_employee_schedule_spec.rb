@@ -16,16 +16,15 @@ RSpec.describe TimeEntriesForEmployeeSchedule, type: :service do
   describe '#call' do
 
     context 'when the employee has many presence policies active during the period given' do
-
       context 'and the presence policies have related time entries' do
         let(:effective_at) { Time.zone.today + 1.day}
         let!(:presence_days) do
-          [5,6].map do |i|
+          [1,2].map do |i|
             create(:presence_day, order: i, presence_policy: presence_policy)
           end
         end
         let!(:presence_second_policy) do
-          [6,7].map do |i|
+          [1,2].map do |i|
             create(:presence_day, order: i, presence_policy: second_presence_presence_policy)
           end
         end
@@ -77,10 +76,10 @@ RSpec.describe TimeEntriesForEmployeeSchedule, type: :service do
     context 'when the employee has one one presence policy during the period' do
 
       context 'when a policy is longer than one week' do
-        subject { described_class.new(employee, Time.zone.today , Time.zone.today + 7.days ).call }
+        subject { described_class.new(employee, Time.zone.today , Time.zone.today + 7.days).call }
 
         let(:presence_days) do
-          [5,6].map do |i|
+          [1,2,7].map do |i|
             create(:presence_day, order: i, presence_policy: presence_policy)
           end
         end
@@ -88,66 +87,152 @@ RSpec.describe TimeEntriesForEmployeeSchedule, type: :service do
           create(:time_entry, presence_day: presence_days[0], start_time: '8:00', end_time: '9:00')
           create(:time_entry, presence_day: presence_days[0], start_time: '6:00', end_time: '7:00')
           create(:time_entry, presence_day: presence_days[1], start_time: '1:00', end_time: '2:00')
-
         end
 
-        it '' do
-          expect( subject).to match_hash(
-             {
-               '2016-01-01' => [
-                 {
-                   :type => "working_time",
-                   :start_time => '06:00:00',
-                   :end_time => '07:00:00'
-                 },
-                 {
-                   :type => "working_time",
-                   :start_time => '08:00:00',
-                   :end_time => '09:00:00'
-                 }
-               ],
-               '2016-01-02' => [
-                 {
-                   :type => "working_time",
-                   :start_time => '01:00:00',
-                   :end_time => '02:00:00'
-                 }
-               ],
-               '2016-01-03' => [
+        context 'and policy is seven days long' do
+          it '' do
+            expect( subject).to match_hash(
+               {
+                 '2016-01-01' => [
+                   {
+                     :type => "working_time",
+                     :start_time => '08:00:00',
+                     :end_time => '09:00:00'
+                   },
+                   {
+                     :type => "working_time",
+                     :start_time => '06:00:00',
+                     :end_time => '07:00:00'
+                   }
+                 ],
+                 '2016-01-02' => [
+                   {
+                     :type => "working_time",
+                     :start_time => '01:00:00',
+                     :end_time => '02:00:00'
+                   }
+                 ],
+                 '2016-01-03' => [
 
-               ],
-               '2016-01-04' => [
+                 ],
+                 '2016-01-04' => [
 
-               ],
-               '2016-01-05' => [
+                 ],
+                 '2016-01-05' => [
 
-               ],
-               '2016-01-06' => [
+                 ],
+                 '2016-01-06' => [
 
-               ],
-               '2016-01-07' => [
+                 ],
+                 '2016-01-07' => [
 
-               ],
-               '2016-01-08' => [
-                 {
-                   :type => "working_time",
-                   :start_time => '06:00:00',
-                   :end_time => '07:00:00'
-                 },
-                 {
-                   :type => "working_time",
-                   :start_time => '08:00:00',
-                   :end_time => '09:00:00'
-                 }
+                 ],
+                 '2016-01-08' => [
+                   {
+                     :type => "working_time",
+                     :start_time => '08:00:00',
+                     :end_time => '09:00:00'
+                   },
+                   {
+                     :type => "working_time",
+                     :start_time => '06:00:00',
+                     :end_time => '07:00:00'
+                   }
+                 ],
+               }
+            )
+          end
+        end
 
-               ],
-             }
-          )
+        context 'and policy is two days long' do
+          before { PresenceDay.where(order: 7).first.destroy! }
+
+          it '' do
+            expect( subject).to match_hash(
+               {
+                 '2016-01-02' => [
+                   {
+                     :type => "working_time",
+                     :start_time => '01:00:00',
+                     :end_time => '02:00:00'
+                   }
+                 ],
+                 '2016-01-01' => [
+                   {
+                     :type => "working_time",
+                     :start_time => '06:00:00',
+                     :end_time => '07:00:00'
+                   },
+                   {
+                     :type => "working_time",
+                     :start_time => '08:00:00',
+                     :end_time => '09:00:00'
+                   }
+                 ],
+                 '2016-01-03' => [
+                   {
+                     :type => "working_time",
+                     :start_time => '06:00:00',
+                     :end_time => '07:00:00'
+                   },
+                   {
+                     :type => "working_time",
+                     :start_time => '08:00:00',
+                     :end_time => '09:00:00'
+                   }
+                 ],
+                 '2016-01-04' => [
+                   {
+                     :type => "working_time",
+                     :start_time => '01:00:00',
+                     :end_time => '02:00:00'
+                   }
+                 ],
+                 '2016-01-05' => [
+                   {
+                     :type => "working_time",
+                     :start_time => '06:00:00',
+                     :end_time => '07:00:00'
+                   },
+                   {
+                     :type => "working_time",
+                     :start_time => '08:00:00',
+                     :end_time => '09:00:00'
+                   }
+                 ],
+                 '2016-01-06' => [
+                   {
+                     :type => "working_time",
+                     :start_time => '01:00:00',
+                     :end_time => '02:00:00'
+                   }
+                 ],
+                 '2016-01-07' => [
+                   {
+                     :type => "working_time",
+                     :start_time => '06:00:00',
+                     :end_time => '07:00:00'
+                   },
+                   {
+                     :type => "working_time",
+                     :start_time => '08:00:00',
+                     :end_time => '09:00:00'
+                   }
+                 ],
+                 '2016-01-08' => [
+                   {
+                     :type => "working_time",
+                     :start_time => '01:00:00',
+                     :end_time => '02:00:00'
+                   }
+                 ],
+               }
+            )
+          end
         end
       end
 
       context 'when the employee time entries that are present and some that are not in the requested range' do
-
         let(:presence_day) do
           create(:presence_day, order: 1, presence_policy: presence_policy)
         end
@@ -166,8 +251,8 @@ RSpec.describe TimeEntriesForEmployeeSchedule, type: :service do
                '2016-01-01' => [
                  {
                    :type => "working_time",
-                   :start_time => '08:00:00',
-                   :end_time => '09:00:00'
+                   :start_time => '01:00:00',
+                   :end_time => '02:00:00'
                  }
                ],
                '2016-01-02' => [
@@ -179,7 +264,7 @@ RSpec.describe TimeEntriesForEmployeeSchedule, type: :service do
 
       context 'when the start day order is' do
         let(:presence_days) do
-          [1,4,5].map do |i|
+          [1,4,6].map do |i|
             create(:presence_day, order: i, presence_policy: presence_policy)
           end
         end
@@ -191,12 +276,18 @@ RSpec.describe TimeEntriesForEmployeeSchedule, type: :service do
         end
         context 'bigger than the end day order' do
           let(:start_date) { Date.new(2016,1,6) }
-          subject { described_class.new(employee, start_date , start_date + 6.days ).call }
+          subject { described_class.new(employee, start_date , start_date + 5.days ).call }
 
           it '' do
             expect( subject).to match_hash(
                {
-                 '2016-01-06' => [],
+                 '2016-01-06' => [
+                   {
+                     :type => "working_time",
+                     :start_time => '01:00:00',
+                     :end_time => '02:00:00'
+                   }
+                 ],
                  '2016-01-07' => [
                    {
                      :type => "working_time",
@@ -204,23 +295,16 @@ RSpec.describe TimeEntriesForEmployeeSchedule, type: :service do
                      :end_time => '02:00:00'
                    }
                  ],
-                 '2016-01-08' => [
-                   {
-                     :type => "working_time",
-                     :start_time => '01:00:00',
-                     :end_time => '02:00:00'
-                   }
-                 ],
+                 '2016-01-08' => [],
                  '2016-01-09' => [],
-                 '2016-01-10' => [],
-                 '2016-01-11' => [
+                 '2016-01-10' => [
                    {
                      :type => "working_time",
                      :start_time => '01:00:00',
                      :end_time => '02:00:00'
-                   }
-                 ],
-                 '2016-01-12' => []
+                    }
+                  ],
+                 '2016-01-11' => []
                }
             )
           end
@@ -233,47 +317,47 @@ RSpec.describe TimeEntriesForEmployeeSchedule, type: :service do
           it '' do
             expect( subject).to match_hash(
               {
-                '2016-01-08' => [
-                  {
-                    :type => "working_time",
-                    :start_time => '01:00:00',
-                    :end_time => '02:00:00'
-                  }
-                ],
+                '2016-01-08' => [],
                 '2016-01-09' => [],
-                '2016-01-10' => [],
-                '2016-01-11' => [
+                '2016-01-10' => [
                   {
                     :type => "working_time",
                     :start_time => '01:00:00',
                     :end_time => '02:00:00'
                   }
                 ],
-                '2016-01-12' => [],
-                '2016-01-13' => [],
-                '2016-01-14' => [
+                '2016-01-11' => [],
+                '2016-01-12' => [
                   {
                     :type => "working_time",
                     :start_time => '01:00:00',
                     :end_time => '02:00:00'
                   }
                 ],
-                '2016-01-15' => [
+                '2016-01-13' => [
                   {
                     :type => "working_time",
                     :start_time => '01:00:00',
                     :end_time => '02:00:00'
                   }
                 ],
-                '2016-01-16' => []
+                '2016-01-14' => [],
+                '2016-01-15' => [],
+                '2016-01-16' => [
+                  {
+                    :type => "working_time",
+                    :start_time => '01:00:00',
+                    :end_time => '02:00:00'
+                  }
+                ]
               }
             )
           end
         end
 
-        context 'equal than the day order' do
+        context 'equal than the end day order' do
           let(:start_date) { Date.new(2016,1,4) }
-          subject { described_class.new(employee, start_date , start_date + 7 .days ).call }
+          subject { described_class.new(employee, start_date , start_date + 6.days ).call }
 
           it '' do
             expect( subject).to match_hash(
@@ -286,7 +370,13 @@ RSpec.describe TimeEntriesForEmployeeSchedule, type: :service do
                    }
                  ],
                  '2016-01-05' => [],
-                 '2016-01-06' => [],
+                 '2016-01-06' => [
+                   {
+                     :type => "working_time",
+                     :start_time => '01:00:00',
+                     :end_time => '02:00:00'
+                   }
+                 ],
                  '2016-01-07' => [
                    {
                      :type => "working_time",
@@ -294,31 +384,20 @@ RSpec.describe TimeEntriesForEmployeeSchedule, type: :service do
                      :end_time => '02:00:00'
                    }
                  ],
-                 '2016-01-08' => [
+                 '2016-01-08' => [],
+                 '2016-01-09' => [],
+                 '2016-01-10' => [
                    {
                      :type => "working_time",
                      :start_time => '01:00:00',
                      :end_time => '02:00:00'
                    }
                  ],
-                 '2016-01-09' => [],
-                 '2016-01-10' => [],
-                 '2016-01-11' => [
-                   {
-                     :type => "working_time",
-                     :start_time => '01:00:00',
-                     :end_time => '02:00:00'
-                   }
-                 ]
-
                }
             )
           end
         end
-
       end
     end
-
-
   end
 end

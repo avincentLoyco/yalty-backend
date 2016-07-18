@@ -11,6 +11,16 @@ class EmployeePresencePolicy < ActiveRecord::Base
   validate :presence_days_presence, if: :presence_policy
   validate :order_smaller_than_last_presence_day_order, if: [:presence_policy, :order_of_start_day]
 
+  def order_for(date)
+    order_difference = ((date - effective_at) % policy_length).to_i
+    new_order = order_of_start_day + order_difference
+    if new_order > policy_length
+      new_order - policy_length
+    else
+      new_order
+    end
+  end
+
   def policy_length
     return 0 unless presence_policy.presence_days.present?
     presence_policy.presence_days.pluck(:order).max
