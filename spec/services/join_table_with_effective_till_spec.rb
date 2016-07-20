@@ -430,6 +430,7 @@ RSpec.describe JoinTableWithEffectiveTill, type: :service do
         let(:working_place_second)  { employee_third.employee_working_places.first.working_place }
         let!(:ewp_first) do
           employee_first.employee_working_places.first.tap do |ewp|
+            employee_first.first_employee_event.update!(effective_at: Time.now - 2.days)
             ewp.update!(effective_at: Time.now - 2.days)
           end
         end
@@ -533,6 +534,7 @@ RSpec.describe JoinTableWithEffectiveTill, type: :service do
           let(:employee_second) { create(:employee, account: accounts.first) }
           let!(:ewp_from_employee_second) do
             employee_second.employee_working_places.first.tap do |ewp|
+              employee_second.first_employee_event.update!(effective_at: Time.now)
               ewp.update(effective_at: Time.now)
             end
           end

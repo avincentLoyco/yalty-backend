@@ -4,6 +4,7 @@ RSpec.describe HolidaysForEmployeeSchedule, type: :service do
   include_context 'shared_context_account_helper'
 
   before do
+    employee.first_employee_event.update!(effective_at: '1/1/2015')
     employee.first_employee_working_place.update!(effective_at: '1/1/2015')
     employee.first_employee_working_place.working_place.update!(holiday_policy: policy)
   end

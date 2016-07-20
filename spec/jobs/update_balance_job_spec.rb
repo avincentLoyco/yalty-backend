@@ -246,7 +246,8 @@ RSpec.describe UpdateBalanceJob do
     context 'when emplyee has few time off policies, working places, holidays, presence policies' do
       before do
         allow_any_instance_of(EmployeeTimeOffPolicy).to receive(:valid?) { true }
-        ewp_first.update!(effective_at:Time.now - 4.years, working_place: wps.first)
+        employee.first_employee_event.update!(effective_at: Time.now - 4.years)
+        ewp_first.update!(effective_at: Time.now - 4.years, working_place: wps.first)
         ManageEmployeeBalanceAdditions.new(etops.first).call
         ManageEmployeeBalanceAdditions.new(etops.second).call
         Employee::Balance.update_all(being_processed: true)

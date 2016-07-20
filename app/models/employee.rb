@@ -45,6 +45,10 @@ class Employee < ActiveRecord::Base
     events.find_by(event_type: 'hired')
   end
 
+  def hired_date
+    (first_employee_event || events.first).try(:effective_at).try(:to_date)
+  end
+
   def active_policy_in_category_at_date(category_id, date = Time.zone.today)
     assigned_time_off_policies_in_category(category_id, date).first
   end

@@ -88,6 +88,7 @@ RSpec.describe CalculateTimeOffBalance, type: :service do
     context 'when time off period is 2 days long' do
       before do
         time_off.update!(start_time: Date.today - 1.day + 23.hours , end_time: Date.today + 11.hour)
+        employee.first_employee_event.update!(effective_at: Time.now - 2.years)
         employee.employee_working_places.first.update!(effective_at: Time.now - 2.years)
       end
 

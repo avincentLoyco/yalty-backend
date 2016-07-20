@@ -29,7 +29,7 @@ class ManageEmployeeWorkingPlace
   end
 
   def update_working_place(working_place = oldest_working_place)
-    working_place.update(effective_at: new_effective_at)
+    working_place.assign_attributes(effective_at: new_effective_at)
     working_place
   end
 

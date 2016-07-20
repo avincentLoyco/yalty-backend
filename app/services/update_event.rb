@@ -103,14 +103,14 @@ class UpdateEvent
   end
 
   def valid?
-    event.valid? && employee.valid? && unique_attribute_versions? && attribute_version_valid? &&
-      (updated_working_place.blank? || updated_working_place.valid?)
+    event.valid? && employee.valid? && unique_attribute_versions? && attribute_version_valid?
   end
 
   def save!
     if valid?
       event.save!
       employee.save!
+      updated_working_place.try(:save!)
       event.employee_attribute_versions.each(&:save!)
 
       event
@@ -121,7 +121,6 @@ class UpdateEvent
                  .merge(event.errors.messages)
                  .merge(employee.errors.messages)
                  .merge(attribute_versions_errors)
-                 .merge(employee_working_place_errors)
 
       raise InvalidResourcesError.new(event, messages)
     end

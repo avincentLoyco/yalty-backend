@@ -11,6 +11,7 @@ RSpec.describe ScheduleForEmployee, type: :service do
   end
 
   before do
+    employee.first_employee_event.update!(effective_at: '1/1/2015')
     employee.first_employee_working_place.update!(effective_at: '1/1/2015')
     employee.first_employee_working_place.working_place.update!(holiday_policy: policy)
     presence_days.map do |presence_day|

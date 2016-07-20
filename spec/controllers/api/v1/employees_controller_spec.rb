@@ -164,7 +164,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
     context 'effective at date' do
       let!(:future_employee) { create(:employee, account: account, events: [event]) }
       let!(:attribute) { create(:employee_attribute, event: event, employee: future_employee) }
-      let!(:event) { create(:employee_event, effective_at: date, event_type: 'hired') }
+      let(:event) { create(:employee_event, effective_at: date, event_type: 'hired') }
       let(:employee_body) do
         JSON.parse(response.body).select { |record| record['id'] == future_employee.id }.first
       end
