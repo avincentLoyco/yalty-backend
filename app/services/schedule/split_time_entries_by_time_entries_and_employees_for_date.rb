@@ -46,12 +46,20 @@ class SplitTimeEntriesByTimeEntriesAndEmployeesForDate
         time_entries_in_time_format.map do |time_entry|
           formatted_entry = {
             start_time: time_entry.first.strftime('%H:%M:%S'),
-            end_time: time_entry.last.strftime('%H:%M:%S')
+            end_time: format_end_time(time_entry.last)
           }
           formatted_entry[:type] = @time_entries_to_split_type unless @without_type
           formatted_entry
         end
     end
     hash_response
+  end
+
+  def format_end_time(time_entry)
+    if time_entry.strftime('%H:%M:%S') == '00:00:00'
+      '24:00:00'
+    else
+      time_entry.strftime('%H:%M:%S')
+    end
   end
 end

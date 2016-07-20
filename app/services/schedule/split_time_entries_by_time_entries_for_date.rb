@@ -21,8 +21,16 @@ class SplitTimeEntriesByTimeEntriesForDate
       {
         type: @time_entries_to_split_type,
         start_time: time_entry.first.strftime('%H:%M:%S'),
-        end_time: time_entry.last.strftime('%H:%M:%S')
+        end_time: format_end_time(time_entry.last)
       }
+    end
+  end
+
+  def format_end_time(time_entry)
+    if time_entry.strftime('%H:%M:%S') == '00:00:00'
+      '24:00:00'
+    else
+      time_entry.strftime('%H:%M:%S')
     end
   end
 end

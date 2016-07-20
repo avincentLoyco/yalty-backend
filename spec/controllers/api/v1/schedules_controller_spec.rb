@@ -21,7 +21,7 @@ RSpec.describe API::V1::SchedulesController , type: :controller do
     context 'with valid params' do
       before do
         presence_days.map do |presence_day|
-          create(:time_entry, presence_day: presence_day, start_time: '1:00', end_time: '6:00')
+          create(:time_entry, presence_day: presence_day, start_time: '1:00', end_time: '24:00')
         end
         create(:employee_presence_policy,
           presence_policy: presence_policy, employee: employee, effective_at: '1/1/2015')
@@ -82,7 +82,7 @@ RSpec.describe API::V1::SchedulesController , type: :controller do
                 {
                   'type' => 'working_time',
                   'start_time' => '05:00:00',
-                  'end_time' => '06:00:00'
+                  'end_time' => '24:00:00'
                 }
               ]
             }
