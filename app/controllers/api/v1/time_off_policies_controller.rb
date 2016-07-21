@@ -46,19 +46,17 @@ module API
       private
 
       def resource
-        @resource ||= resources.find(params[:id])
+        @resource ||= Account.current.time_off_policies.find(params[:id])
       end
 
       def resources
         if params[:time_off_category_id]
           vefiry_category_belongs_to_current_account(params[:time_off_category_id])
           @resources ||=
-            TimeOffPolicy.for_account_and_category(
-              Account.current.id,
-              params[:time_off_category_id]
-            )
+            resources_by_status(TimeOffPolicy, EmployeeTimeOffPolicy)
+            .where(time_off_category_id: params[:time_off_category_id])
         else
-          @resources ||= Account.current.time_off_policies
+          @resources ||= resources_by_status(TimeOffPolicy, EmployeeTimeOffPolicy)
         end
       end
 

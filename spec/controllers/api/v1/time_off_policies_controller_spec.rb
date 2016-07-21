@@ -2,12 +2,14 @@ require 'rails_helper'
 
 RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
   include_context 'shared_context_headers'
+  include_context 'shared_context_active_and_inactive_resources',
+    resource_class: TimeOffPolicy.model_name,
+    join_table_class: EmployeeTimeOffPolicy.model_name
 
   let(:time_off_category) { create(:time_off_category, account: account) }
   let!(:policy) { create(:time_off_policy, time_off_category: time_off_category) }
   let(:working_place) { create(:working_place) }
   let(:employee) { create(:employee, account: account) }
-
 
   describe 'GET #index' do
     subject { get :index }
