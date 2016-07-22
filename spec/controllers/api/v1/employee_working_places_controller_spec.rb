@@ -142,10 +142,10 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
         it { is_expected.to have_http_status(403) }
       end
 
-      context 'when effective already taken' do
+      context 'when effective already taken and the same resource send' do
         let(:effective_at) { employee_working_place.effective_at }
+        let(:working_place_id) { employee_working_place.working_place_id }
 
-        it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
         it { is_expected.to have_http_status(422) }
       end
 

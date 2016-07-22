@@ -11,15 +11,13 @@ module API
       def create
         verified_params(gate_rules) do |attributes|
           authorize! :create, time_off_policy
-          resource = employee.employee_time_off_policies.new(attributes.except(:id))
 
           transactions do
-            resource.save!
-            ManageEmployeeBalanceAdditions.new(resource).call
+            @resource = create_join_table(EmployeeTimeOffPolicy, TimeOffPolicy, attributes)
+            ManageEmployeeBalanceAdditions.new(@resource).call
           end
 
-          resource = resources_with_effective_till(EmployeeTimeOffPolicy, resource.id).first
-          render_resource(resource, status: 201)
+          render_resource(@resource, status: 201)
         end
       end
 

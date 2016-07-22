@@ -1,6 +1,5 @@
 class Employee < ActiveRecord::Base
   belongs_to :account, inverse_of: :employees, required: true
-  belongs_to :presence_policy
   belongs_to :user, class_name: 'Account::User'
   has_many :employee_attribute_versions,
     class_name: 'Employee::AttributeVersion',

@@ -6,11 +6,7 @@ module API
       def create
         verified_params(gate_rules) do |attributes|
           authorize! :create, presence_policy
-          resource = employee.employee_presence_policies.new(attributes.except(:id))
-          transactions do
-            resource.save!
-          end
-          resource = resources_with_effective_till(EmployeePresencePolicy, resource.id).first
+          resource = create_join_table(EmployeePresencePolicy, PresencePolicy, attributes)
           render_resource(resource, status: 201)
         end
       end

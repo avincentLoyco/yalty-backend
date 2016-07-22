@@ -52,8 +52,7 @@ class UpdateEvent
       end
     end
     remove_absent_versions
-
-    event.employee_attribute_versions = versions
+    event.employee_attribute_versions = versions + not_editable_versions
   end
 
   def update_version(attribute)
@@ -93,9 +92,19 @@ class UpdateEvent
   end
 
   def remove_absent_versions
-    return unless event.employee_attribute_versions.size > versions.size
-    versions_to_remove = event.employee_attribute_versions - versions
+    editable_versions = find_editable_versions
+    return unless editable_versions.size > versions.size
+    versions_to_remove = editable_versions - versions
     versions_to_remove.map(&:destroy!)
+  end
+
+  def find_editable_versions
+    event.employee_attribute_versions - not_editable_versions
+  end
+
+  def not_editable_versions
+    return [] if Account::User.current.account_manager
+    Employee::AttributeVersion.not_editable.where(employee_event_id: event.id)
   end
 
   def attribute_version_valid?

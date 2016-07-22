@@ -12,6 +12,9 @@ class Employee::AttributeVersion < ActiveRecord::Base
   validates :attribute_definition_id,
     uniqueness: { allow_nil: true, scope: [:employee, :event] },
     if: '!multiple?'
+  validates :order,
+    uniqueness: { allow_nil: true, scope: [:employee, :attribute_definition] },
+    if: 'multiple?'
 
   validates :order, presence: true, if: 'multiple?'
 
