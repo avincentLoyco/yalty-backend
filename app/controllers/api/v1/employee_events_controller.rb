@@ -26,7 +26,7 @@ module API
       def update
         verified_params(gate_rules) do |event_attributes, employee_attributes|
           authorize! :update, resource
-          UpdateEventAttributeValidator.new(employee_attributes, resource).call unless
+          UpdateEventAttributeValidator.new(employee_attributes).call unless
             current_user.account_manager
           UpdateEvent.new(event_attributes, employee_attributes).call
 

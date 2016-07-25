@@ -12,6 +12,7 @@ class TimeEntry < ActiveRecord::Base
   TOD = Tod::TimeOfDay
 
   DATE = '1900-01-01'.freeze
+  START_ORDER = 1
 
   def start_time_as_time
     TimeEntry.hour_as_time(start_time)

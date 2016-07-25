@@ -1,30 +1,33 @@
 FactoryGirl.define do
   factory :employee do
     account
-
     after(:build) do |employee|
+      effective_at = Time.zone.now - 6.years
       if employee.employee_working_places.empty?
         working_place = build(:working_place, account: employee.account)
+        date = employee.events.empty? ? effective_at : employee.events.first.effective_at
         employee_working_place = build(
           :employee_working_place,
           employee: employee,
-          working_place: working_place
+          working_place: working_place,
+          effective_at: date
         )
         employee.employee_working_places << employee_working_place
       end
 
       if employee.events.empty?
+        date = employee.employee_working_places.empty? ? effective_at : employee.employee_working_places.first.effective_at
+
         hired_event = build(:employee_event,
           event_type: 'hired',
           employee: employee,
-          effective_at: Time.zone.now - 6.years
+          effective_at: date
         )
         employee.events << hired_event
       end
     end
 
     trait :with_presence_policy do
-
       transient do
         presence_policy nil
       end
@@ -43,6 +46,7 @@ FactoryGirl.define do
       end
 
       after(:build) do |employee|
+        employee.valid?
         policy = build(:employee_time_off_policy)
         employee.employee_time_off_policies << policy
         policy.save!
@@ -137,8 +141,8 @@ FactoryGirl.define do
             event.employee_attribute_versions << attribute
           end
         end
-
-        employee.events << event
+        employee.events << event if employee.events.blank?
+        employee.valid?
       end
     end
   end

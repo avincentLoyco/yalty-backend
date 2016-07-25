@@ -18,8 +18,7 @@ module API
       def create
         verified_params(gate_rules) do |attributes|
           authorize! :create, working_place
-          resource = employee.employee_working_places.create!(attributes.except(:id))
-          resource = resources_with_effective_till(EmployeeWorkingPlace, resource.id).first
+          resource = create_join_table(EmployeeWorkingPlace, WorkingPlace, attributes)
           render_resource(resource, status: 201)
         end
       end

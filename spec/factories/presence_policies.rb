@@ -3,6 +3,13 @@ FactoryGirl.define do
     account
     name { Faker::Lorem.word }
 
+    trait :with_presence_day do
+      after(:create) do |presence_policy|
+        presence_day = create(:presence_day, order: 3, presence_policy: presence_policy)
+        presence_policy.presence_days << presence_day
+      end
+    end
+
     trait :with_time_entries do
       transient do
         number_of_days 2

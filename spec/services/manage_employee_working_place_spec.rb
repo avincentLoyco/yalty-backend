@@ -13,14 +13,16 @@ RSpec.describe ManageEmployeeWorkingPlace, type: :service do
         context 'and effective at moved to past' do
           let(:effective_at) { Time.now - 5.days }
 
-          it { expect { subject }.to change { first_working_place.reload.effective_at } }
+          it { expect(subject.effective_at).to eq effective_at.to_date }
+          
           it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
         end
 
         context 'and effective at moved to future' do
           let(:effective_at) { Time.now + 5.days }
 
-          it { expect { subject }.to change { first_working_place.reload.effective_at } }
+          it { expect(subject.effective_at).to eq effective_at.to_date }
+
           it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
         end
       end
@@ -31,7 +33,8 @@ RSpec.describe ManageEmployeeWorkingPlace, type: :service do
           create(:employee_working_place, employee: employee, effective_at: Time.now + 1.week)
         end
 
-        it { expect { subject }.to change { first_working_place.reload.effective_at } }
+        it { expect(subject.effective_at).to eq effective_at.to_date }
+
         it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
       end
     end
@@ -47,14 +50,18 @@ RSpec.describe ManageEmployeeWorkingPlace, type: :service do
       context 'and effective at moved to past' do
         let(:effective_at) { Time.now - 5.days }
 
-        it { expect { subject }.to change { first_working_place.reload.effective_at } }
+        it { expect(subject.id).to eq first_working_place.id }
+        it { expect(subject.effective_at).to eq effective_at.to_date }
+
         it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
       end
 
       context 'and effective at moved to future' do
         let(:effective_at) { Time.now + 3.weeks }
 
-        it { expect { subject }.to change { third_working_place.reload.effective_at } }
+        it { expect(subject.effective_at).to eq effective_at.to_date }
+        it { expect(subject.id).to eq third_working_place.reload.id }
+
         it { expect { subject }.to change { EmployeeWorkingPlace.count }.by(-2) }
         it { expect { subject }.to change { EmployeeWorkingPlace.exists?(second_working_place.id) } }
         it { expect { subject }.to change { EmployeeWorkingPlace.exists?(first_working_place.id) } }

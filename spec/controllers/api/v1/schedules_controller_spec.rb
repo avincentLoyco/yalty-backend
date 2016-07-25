@@ -5,23 +5,23 @@ RSpec.describe API::V1::SchedulesController , type: :controller do
   include_context 'shared_context_timecop_helper'
 
   describe 'GET #show' do
-    before do
-      employee.first_employee_working_place.update!(effective_at: '1/1/2015')
-      employee.first_employee_working_place.working_place.update!(holiday_policy: policy)
-    end
-
-    let(:employee) { create(:employee, account: account) }
+    let(:working_place) { create(:working_place, account: account, holiday_policy: policy) }
+    let(:employee) { create(:employee, account: account, employee_working_places: [ewp]) }
     let(:policy) { create(:holiday_policy, country: 'ch', region: 'zh', ) }
     let(:employee_id) { employee.id }
     let(:from) { '25.12.2015' }
     let(:to) { '27.12.2015' }
     let(:params) {{ employee_id: employee_id, from: from, to: to }}
+    let(:ewp) do
+      create(:employee_working_place, working_place: working_place, effective_at: '1/1/2015')
+    end
+
     subject { get :schedule_for_employee, params }
 
     context 'with valid params' do
       before do
         presence_days.map do |presence_day|
-          create(:time_entry, presence_day: presence_day, start_time: '1:00', end_time: '6:00')
+          create(:time_entry, presence_day: presence_day, start_time: '1:00', end_time: '24:00')
         end
         create(:employee_presence_policy,
           presence_policy: presence_policy, employee: employee, effective_at: '1/1/2015')
@@ -36,13 +36,12 @@ RSpec.describe API::V1::SchedulesController , type: :controller do
         )
       end
       let(:presence_days)  do
-        [1,2,3,5,6,7].map do |i|
+        [1,2,3,4,5,6,7].map do |i|
           create(:presence_day, order: i, presence_policy: presence_policy)
         end
       end
 
       it { is_expected.to have_http_status(200) }
-
       it 'should have valid response body' do
         subject
         expect(JSON.parse(response.body)).to eq(
@@ -82,7 +81,7 @@ RSpec.describe API::V1::SchedulesController , type: :controller do
                 {
                   'type' => 'working_time',
                   'start_time' => '05:00:00',
-                  'end_time' => '06:00:00'
+                  'end_time' => '24:00:00'
                 }
               ]
             }

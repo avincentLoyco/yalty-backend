@@ -3,13 +3,16 @@ require 'rails_helper'
 RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
   include_context 'shared_context_headers'
 
-  let!(:employee) { create(:employee, account: Account.current) }
+  let(:working_place) { create(:working_place, account: Account.current) }
   let(:new_employee) { create(:employee, account: Account.current) }
-  let!(:employee_working_place) { employee.first_employee_working_place }
+  let!(:employee) do
+    create(:employee, account: Account.current, employee_working_places: [employee_working_place])
+  end
+  let!(:employee_working_place) do
+    create(:employee_working_place, effective_at: Time.now + 1.day, working_place: working_place)
+  end
 
   describe 'get #INDEX' do
-    before { employee_working_place.update!(effective_at: Time.now + 1.day) }
-
     let!(:working_place_related) do
       create(:employee_working_place,
         working_place: employee_working_place.working_place, effective_at: Time.now + 1.week,
@@ -85,10 +88,10 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
 
   describe 'post #CREATE' do
     subject { post :create, params }
-    let(:working_place) { create(:working_place, account: Account.current) }
+    let(:new_working_place) { create(:working_place, account: Account.current) }
     let(:effective_at) { Time.zone.now + 1.month }
     let(:employee_id) { employee.id }
-    let(:working_place_id) { working_place.id }
+    let(:working_place_id) { new_working_place.id }
     let(:params) do
       {
         id: employee_id,
@@ -142,10 +145,10 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
         it { is_expected.to have_http_status(403) }
       end
 
-      context 'when effective already taken' do
+      context 'when effective already taken and the same resource send' do
         let(:effective_at) { employee_working_place.effective_at }
+        let(:working_place_id) { employee_working_place.working_place_id }
 
-        it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
         it { is_expected.to have_http_status(422) }
       end
 

@@ -10,8 +10,6 @@ RSpec.describe Auth::AccountsController, type: :controller do
   end
 
   describe 'POST #create' do
-    let(:registration_key) { create(:registration_key) }
-    let(:token) { registration_key.token }
     let(:password) { '12345678' }
     let(:company_name) { 'The Company' }
     let(:params) do
@@ -25,10 +23,6 @@ RSpec.describe Auth::AccountsController, type: :controller do
           {
             email: 'test@test.com',
             password: password
-          },
-        registration_key:
-          {
-            token: token
           }
       }
     end
@@ -38,7 +32,6 @@ RSpec.describe Auth::AccountsController, type: :controller do
     context 'with valid params' do
       it { expect { subject }.to change(Account, :count).by(1)  }
       it { expect { subject }.to change(Account::User, :count).by(1)  }
-      it { expect { subject }.to change { registration_key.reload.account } }
 
       it { is_expected.to have_http_status(:found) }
 
@@ -52,14 +45,10 @@ RSpec.describe Auth::AccountsController, type: :controller do
 
       context 'should create account when user has no password' do
         let(:password) { '' }
-        let(:registration_key) { create(:registration_key) }
-        let(:token) { registration_key.token }
         let(:company_name) { 'New Company' }
-
 
         it { expect { subject }.to change(Account, :count).by(1)  }
         it { expect { subject }.to change(Account::User, :count).by(1)  }
-        it { expect { subject }.to change { registration_key.reload.account } }
 
         it { is_expected.to have_http_status(:found) }
 
@@ -71,35 +60,12 @@ RSpec.describe Auth::AccountsController, type: :controller do
     end
 
     context 'with invalid params' do
-      context 'when token used' do
-        let!(:used_key) { create(:registration_key, :with_account) }
-        let!(:token) { used_key.token }
-
-        it { is_expected.to have_http_status(404) }
-        it { expect { subject }.to_not change { Account.count } }
-        it { expect { subject }.to_not change { Account::User.count } }
-      end
-
-      context 'when token invalid' do
-        let(:token) { 'abc' }
-
-        it { is_expected.to have_http_status(404) }
-        it { expect { subject }.to_not change { Account.count } }
-        it { expect { subject }.to_not change { Account::User.count } }
-      end
-
       context 'when params are missing' do
         shared_examples 'Missing param' do
           it { expect { subject }.to_not change { Account.count } }
           it { expect { subject }.to_not change { Account::User.count } }
 
           it { is_expected.to have_http_status(422) }
-        end
-
-        context 'when token not send' do
-          before { params.tap { |param| param.delete(:registration_key) } }
-
-          it_behaves_like 'Missing param'
         end
 
         context 'when user params not send' do

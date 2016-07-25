@@ -11,6 +11,7 @@ RSpec.describe ScheduleForEmployee, type: :service do
   end
 
   before do
+    employee.first_employee_event.update!(effective_at: '1/1/2015')
     employee.first_employee_working_place.update!(effective_at: '1/1/2015')
     employee.first_employee_working_place.working_place.update!(holiday_policy: policy)
     presence_days.map do |presence_day|
@@ -158,12 +159,6 @@ RSpec.describe ScheduleForEmployee, type: :service do
                 {
                   type: 'time_off',
                   name: time_offs.first.time_off_category.name,
-                  start_time: '03:00:00',
-                  end_time: '04:00:00'
-                },
-                {
-                  type: 'time_off',
-                  name: time_offs.first.time_off_category.name,
                   start_time: '05:00:00',
                   end_time: '07:00:00'
                 },
@@ -171,6 +166,12 @@ RSpec.describe ScheduleForEmployee, type: :service do
                   type: 'working_time',
                   start_time: '02:00:00',
                   end_time: '03:00:00'
+                },
+                {
+                  type: 'time_off',
+                  name: time_offs.first.time_off_category.name,
+                  start_time: '03:00:00',
+                  end_time: '04:00:00'
                 },
                 {
                   type: 'working_time',

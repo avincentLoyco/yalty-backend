@@ -1,6 +1,5 @@
 class Employee < ActiveRecord::Base
   belongs_to :account, inverse_of: :employees, required: true
-  belongs_to :presence_policy
   belongs_to :user, class_name: 'Account::User'
   has_many :employee_attribute_versions,
     class_name: 'Employee::AttributeVersion',
@@ -43,6 +42,10 @@ class Employee < ActiveRecord::Base
 
   def first_employee_event
     events.find_by(event_type: 'hired')
+  end
+
+  def hired_date
+    (first_employee_event || events.first).try(:effective_at).try(:to_date)
   end
 
   def active_policy_in_category_at_date(category_id, date = Time.zone.today)

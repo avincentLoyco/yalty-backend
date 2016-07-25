@@ -705,11 +705,11 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           it { expect { subject }.to_not change { Employee.count } }
           it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
 
-          it { expect { subject }.to change { event.reload.comment }.to('change comment') }
-          it { expect { subject }.to change { event.reload.effective_at }.to(effective_at) }
+          it { expect { subject }.to_not change { event.reload.comment } }
+          it { expect { subject }.to_not change { event.reload.effective_at } }
 
-          it { expect { subject }.to change { first_name_attribute.reload.value }.to(first_name) }
-          it { expect { subject }.to change { last_name_attribute.reload.value }.to(last_name) }
+          it { expect { subject }.to_not change { first_name_attribute.reload.value } }
+          it { expect { subject }.to_not change { last_name_attribute.reload.value } }
           it { expect { subject }.to_not change { annual_salary_attribute.reload.value } }
         end
       end
@@ -949,7 +949,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           attribute_definition: multiple_attribute_definition,
           employee_event_id: event_id,
           multiple: true,
-          order: 1
+          order: 4
         )
         av.value = "ABC"
         av.save!
@@ -958,7 +958,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           attribute_definition: multiple_attribute_definition,
           employee_event_id: event_id,
           multiple: true,
-          order: 2
+          order: 5
         )
         av.value = "CDE"
         av.save!

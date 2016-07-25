@@ -246,7 +246,8 @@ RSpec.describe UpdateBalanceJob do
     context 'when emplyee has few time off policies, working places, holidays, presence policies' do
       before do
         allow_any_instance_of(EmployeeTimeOffPolicy).to receive(:valid?) { true }
-        ewp_first.update!(effective_at:Time.now - 4.years, working_place: wps.first)
+        employee.first_employee_event.update!(effective_at: Time.now - 4.years)
+        ewp_first.update!(effective_at: Time.now - 4.years, working_place: wps.first)
         ManageEmployeeBalanceAdditions.new(etops.first).call
         ManageEmployeeBalanceAdditions.new(etops.second).call
         Employee::Balance.update_all(being_processed: true)
@@ -406,7 +407,12 @@ RSpec.describe UpdateBalanceJob do
           end
 
           context 'and there are time entries in time off period' do
-            before { epps.first.update!(presence_policy: pp) }
+            before do
+              epps.first.update!(presence_policy: pp)
+              create(:presence_day, order: 7, presence_policy: pp)
+              create(:presence_day, order: 7, presence_policy: epps.last.presence_policy)
+              epps.last.update!(order_of_start_day: 7)
+            end
 
             context 'when only one policy has time entries' do
               it { expect { subject }.to change { balance.reload.amount }.to -240 }

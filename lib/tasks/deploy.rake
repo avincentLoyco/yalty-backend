@@ -17,7 +17,7 @@ namespace :deploy do
     options.ref  = `git rev-parse #{options.branch}`.chomp
     options.user = `git config user.email`.chomp
 
-    options.scalingo_cmd = "scalingo --remote #{options.remote}"
+    options.scalingo_cmd = "scalingo --app yalty-api-server-#{options.remote} --remote #{options.remote}"
 
     options
   end
@@ -44,7 +44,7 @@ namespace :deploy do
   end
 
   def postgresql_for(target_env)
-    pg_env = `scalingo -r #{target_env} env | grep SCALINGO_POSTGRESQL_URL=`
+    pg_env = `scalingo --app yalty-api-server-#{target_env} --remote #{target_env} env | grep SCALINGO_POSTGRESQL_URL=`
 
     if result = pg_env.match(/SCALINGO_POSTGRESQL_URL=(postgres:\/\/([^:]+):([^@]+)@[^\/]+\/(.+))/)
       {
@@ -60,7 +60,7 @@ namespace :deploy do
   end
 
   def postgresql_tunnel_to(options)
-    pid = spawn "scalingo -r #{options[:env]} db-tunnel --port 10000 #{options[:url]}"
+    pid = spawn "scalingo --app yalty-api-server-#{options[:env]} --remote #{options[:env]} db-tunnel --port 10000 #{options[:url]}"
     sleep 5
     pid
   end
@@ -73,6 +73,17 @@ namespace :deploy do
       deploy_to(options)
       migrate_on(options)
       announce_deployment(options)
+    end
+
+    namespace target_env do
+      desc "dump #{target_env} database "
+      task dump: [:environment] do
+        db = postgresql_for(target_env.to_sym)
+        tunnel = postgresql_tunnel_to(db)
+        puts "dump #{target_env} database to ./tmp/dump.sql"
+        system "PGPASSWORD=#{db[:password]} pg_dump --clean --if-exists --no-acl --no-owner -n public -U #{db[:user]} -h 127.0.0.1 -p 10000 #{db[:database]} > tmp/dump.sql"
+        Process.kill('SIGTERM', tunnel)
+      end
     end
   end
 
@@ -96,14 +107,6 @@ namespace :deploy do
         Process.kill('SIGTERM', tunnel)
 
         system "#{options.scalingo_cmd} run \"rake setup\"" || raise
-      end
-
-      task dump: [:environment] do
-        db = postgresql_for(target_env)
-        tunnel = postgresql_tunnel_to(db)
-        puts "dump #{target_env} database to ./tmp/dump.sql"
-        system "PGPASSWORD=#{db[:password]} pg_dump --clean --if-exists --no-acl --no-owner -n public -U #{db[:user]} -h 127.0.0.1 -p 10000 #{db[:database]} > tmp/dump.sql"
-        Process.kill('SIGTERM', tunnel)
       end
     end
   end

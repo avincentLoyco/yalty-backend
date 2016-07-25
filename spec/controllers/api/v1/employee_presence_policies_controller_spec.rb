@@ -4,7 +4,7 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
   include_context 'shared_context_headers'
   include_context 'shared_context_timecop_helper'
 
-  let(:presence_policy) { create(:presence_policy, account: account) }
+  let(:presence_policy) { create(:presence_policy, :with_presence_day, account: account) }
   let(:employee) { create(:employee, account: Account.current) }
 
   describe 'GET #index' do
