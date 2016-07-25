@@ -11,9 +11,6 @@ module AccountRules
         optional :password, :String, allow_nil: true
         required :email
       end
-      required :registration_key do
-        required :token
-      end
     end
   end
 
