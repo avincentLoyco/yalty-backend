@@ -88,10 +88,10 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
 
   describe 'post #CREATE' do
     subject { post :create, params }
-    let(:working_place) { create(:working_place, account: Account.current) }
+    let(:new_working_place) { create(:working_place, account: Account.current) }
     let(:effective_at) { Time.zone.now + 1.month }
     let(:employee_id) { employee.id }
-    let(:working_place_id) { working_place.id }
+    let(:working_place_id) { new_working_place.id }
     let(:params) do
       {
         id: employee_id,
