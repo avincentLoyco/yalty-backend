@@ -4,7 +4,13 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
   include_context 'shared_context_headers'
   include_context 'shared_context_timecop_helper'
 
-  let(:policy) { create(:presence_policy, account: Account.current) }
+  before do
+    time_off_category.update!(account: Account.current)
+    create(:presence_day, order: 7, presence_policy: policy)
+    EmployeePresencePolicy.first.update!(order_of_start_day: 5)
+  end
+
+  let(:policy) { create(:presence_policy, :with_presence_day, account: Account.current) }
   let(:employee) do
     create(:employee, :with_time_off_policy, :with_presence_policy, account: account,
       presence_policy: policy
@@ -13,7 +19,6 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
   let(:time_off_category) do
     employee.employee_time_off_policies.first.time_off_policy.time_off_category
   end
-  before { time_off_category.update!(account: Account.current) }
   let!(:time_off) do
     create(:time_off, time_off_category_id: time_off_category.id, employee: employee)
   end

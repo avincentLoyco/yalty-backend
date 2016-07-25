@@ -28,7 +28,6 @@ FactoryGirl.define do
     end
 
     trait :with_presence_policy do
-
       transient do
         presence_policy nil
       end

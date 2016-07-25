@@ -177,8 +177,8 @@ RSpec.describe CreateJoinTableService, type: :service do
     end
 
     context 'for EmployeePresencePolicy' do
-      let(:resource) { create(:presence_policy, account: Account.current) }
-      let(:resource_params) { { presence_policy_id: resource.id, order_of_start_day: 5 } }
+      let(:resource) { create(:presence_policy, :with_presence_day, account: Account.current) }
+      let(:resource_params) { { presence_policy_id: resource.id, order_of_start_day: 3 } }
       let(:resource_class) { PresencePolicy }
       let(:join_table_class) { EmployeePresencePolicy }
       let!(:existing_join_table) do

@@ -3,14 +3,14 @@ require 'rails_helper'
 RSpec.describe AddRegisteredWorkingTimes do
   include_context 'shared_context_timecop_helper'
 
-    subject { described_class.perform_now }
+  subject { described_class.perform_now }
 
   let(:date) { Time.zone.today - 1.day }
   let(:account) { create(:account) }
   let(:first_employee) { create(:employee, account: account) }
   let(:second_employee) { create(:employee, account: account) }
-  let(:presence_policy_a) { create(:presence_policy, account: account) }
-  let(:presence_policy_b) { create(:presence_policy, account: account) }
+  let(:presence_policy_a) { create(:presence_policy, :with_presence_day, account: account) }
+  let(:presence_policy_b) { create(:presence_policy, :with_presence_day, account: account) }
   let!(:epp_a) do
     create(:employee_presence_policy,
       presence_policy: presence_policy_a,
@@ -26,7 +26,6 @@ RSpec.describe AddRegisteredWorkingTimes do
     )
   end
 
-
   context 'when the employees have presence days with time entries' do
     before(:each)  do
       day_a = create(:presence_day, order: 1, presence_policy: presence_policy_a)
@@ -39,6 +38,34 @@ RSpec.describe AddRegisteredWorkingTimes do
     context 'when there are days without registered working hours to add' do
 
       context 'and no time offs' do
+        context 'when policy has length different than 7' do
+          before do
+            Timecop.freeze(2016, 1, 14, 0, 0)
+            day = create(:presence_day, order: 2, presence_policy: presence_policy_b)
+            create(:time_entry, presence_day: day, start_time: '2:00', end_time: '10:00')
+          end
+          after { Timecop.return }
+
+          it 'should create registered working time with proper time entries' do
+            expect { subject }.to change { RegisteredWorkingTime.count }.from(0).to(2)
+            first_employee_rwt = RegisteredWorkingTime.find_by(employee_id: first_employee.id)
+            expect(first_employee_rwt.date).to eq(Date.new(2016, 1, 13))
+            expect(first_employee_rwt.employee_id).to eq(first_employee.id)
+            expect(first_employee_rwt.time_entries).to match_array([])
+            first_employee_rwt = RegisteredWorkingTime.find_by(employee_id: second_employee.id)
+            expect(first_employee_rwt.date).to eq(Date.new(2016, 1, 13))
+            expect(first_employee_rwt.employee_id).to eq(second_employee.id)
+            expect(first_employee_rwt.time_entries).to match_array(
+              [
+                {
+                  'start_time' => "02:00:00",
+                  'end_time' => "10:00:00"
+                }
+              ]
+            )
+          end
+        end
+
         it ' ' do
           expect { subject }.to change { RegisteredWorkingTime.count }.from(0).to(2)
           first_employee_rwt = RegisteredWorkingTime.find_by(employee_id: first_employee.id)
@@ -161,7 +188,6 @@ RSpec.describe AddRegisteredWorkingTimes do
         it '' do
           expect { subject }
             .to change { RegisteredWorkingTime.where(employee_id: second_employee.id).count }.by(1)
-
           second_employee_rwt = RegisteredWorkingTime.find_by(employee_id: second_employee.id)
           expect(second_employee_rwt.date).to eq(date)
           expect(second_employee_rwt.employee_id).to eq(second_employee.id)
@@ -179,8 +205,6 @@ RSpec.describe AddRegisteredWorkingTimes do
           )
           expect(second_employee_rwt.schedule_generated).to eq(true)
         end
-
-
       end
     end
   end

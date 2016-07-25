@@ -13,7 +13,7 @@ RSpec.describe UpdateAffectedEmployeeBalances, type: :service do
   end
 
   context 'when presence policy send but not employees' do
-    let(:presence_policy) { create(:presence_policy) }
+    let(:presence_policy) { create(:presence_policy, :with_presence_day) }
 
     context 'and there is no employees who are using policy' do
       it { expect { subject }.to_not change { enqueued_jobs.size } }
@@ -38,7 +38,7 @@ RSpec.describe UpdateAffectedEmployeeBalances, type: :service do
   end
 
   context 'when employees send but not policy' do
-    let(:policy) { create(:presence_policy) }
+    let(:policy) { create(:presence_policy, :with_presence_day) }
     context 'when employees do not have time offs' do
       let(:employees) { create_list(:employee, 2, :with_presence_policy, presence_policy: presence_policy) }
 

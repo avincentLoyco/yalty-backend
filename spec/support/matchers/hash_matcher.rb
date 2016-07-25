@@ -4,35 +4,47 @@ RSpec::Matchers.define :match_hash do |expected|
   @errors = nil
 
   match do |actual|
-    @values_array = actual.is_a?(Array) ? actual.map { |a| a.values + a.keys }.flatten : nil
+    @worked_actual = actual
     hash_or_array_of_hashes? && type_match? && length_match? && keys_and_values_match?
   end
 
   def keys_and_values_match?
-    result = expected.is_a?(Hash) ? compare_expected_hash : check_for_array_of_hashes
+    result = expected.is_a?(Hash) ? check_for_hash : check_for_array_of_hashes
     @errors = 'keys and values do not match' unless result
     result
   end
 
-  def compare_expected_hash(target_hash = expected)
-    target_hash.map do |key, value|
-      if actual.is_a?(Hash)
-        actual.has_key?(key) && actual[key] == value
-      else
-        [value, key].flatten.map do |v|
-          index = @values_array.find_index(v)
-          return false unless index
-          @values_array.delete_at(index)
-          true
+  def compare_expected_hash(target_hash)
+    results = find_target_keys(target_hash)
+    return false unless results.uniq.size == 1 && results.uniq.first.size == target_hash.size
+    @worked_actual = @worked_actual - results.uniq
+    true
+  end
+
+  def find_target_keys(target_hash)
+    target_hash.keys.map do |target_key|
+      if target_hash[target_key].is_a?(Array)
+        @worked_actual.find do |values|
+          (values[:time_entries] & target_hash[:time_entries]).size ==
+            target_hash[:time_entries].size
         end
+      else
+        @worked_actual.find { |values| values[target_key] == target_hash[target_key] }
       end
-    end.flatten
+    end
+  end
+
+  def check_for_hash(expect = expected)
+    expect.map do |key, value|
+      actual.has_key?(key) && actual[key] == value ||
+        (actual[key].is_a?(Array) && (actual[key] & value).size == value.size)
+    end.exclude?(false)
   end
 
   def check_for_array_of_hashes
     expected.map do |single_expected|
       compare_expected_hash(single_expected.to_h)
-    end.exclude?(false) && @values_array.blank?
+    end.exclude?(false)
   end
 
   def length_match?
