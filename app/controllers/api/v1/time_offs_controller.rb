@@ -15,6 +15,7 @@ module API
       end
 
       def create
+        convert_times_to_utc
         verified_params(gate_rules) do |attributes|
           resource = resources.new(time_off_attributes(attributes))
           authorize! :create, resource
@@ -29,6 +30,7 @@ module API
       end
 
       def update
+        convert_times_to_utc
         verified_params(gate_rules) do |attributes|
           transactions do
             resource.update!(attributes)
@@ -105,6 +107,12 @@ module API
 
       def balance_attributes
         { amount: resource.balance, effective_at: resource.start_time.to_s }
+      end
+
+      def convert_times_to_utc
+        return unless params[:start_time].present? && params[:end_time].present?
+        params[:start_time] = params.delete(:start_time) + '+00:00'
+        params[:end_time] = params.delete(:end_time) + '+00:00'
       end
     end
   end

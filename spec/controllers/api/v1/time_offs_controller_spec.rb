@@ -118,8 +118,8 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
   describe 'POST #create' do
     before { Employee::Balance.destroy_all }
 
-    let(:start_time) { '15:00:00'.to_time  }
-    let(:end_time) { start_time + 1.week }
+    let(:start_time) { '2016-10-11T13:00:00'  }
+    let(:end_time) { '2016-10-18T15:00:00' }
     let(:employee_id) { employee.id }
     let(:time_off_category_id) { time_off_category.id }
     let(:params) do
@@ -191,7 +191,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
       end
 
       context 'with params that do not pass validation' do
-        let(:end_time) { start_time - 1.week }
+        let(:end_time) { '2016-10-4T13:00:00' }
 
         it_behaves_like 'Invalid Data'
 
