@@ -3,13 +3,16 @@ require 'rails_helper'
 RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
   include_context 'shared_context_headers'
 
-  let!(:employee) { create(:employee, account: Account.current) }
+  let(:working_place) { create(:working_place, account: Account.current) }
   let(:new_employee) { create(:employee, account: Account.current) }
-  let!(:employee_working_place) { employee.first_employee_working_place }
+  let!(:employee) do
+    create(:employee, account: Account.current, employee_working_places: [employee_working_place])
+  end
+  let!(:employee_working_place) do
+    create(:employee_working_place, effective_at: Time.now + 1.day, working_place: working_place)
+  end
 
   describe 'get #INDEX' do
-    before { employee_working_place.update!(effective_at: Time.now + 1.day) }
-
     let!(:working_place_related) do
       create(:employee_working_place,
         working_place: employee_working_place.working_place, effective_at: Time.now + 1.week,
