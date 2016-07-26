@@ -17,12 +17,15 @@ RSpec.describe RegisteredWorkingTimeForEmployeeSchedule, type: :service do
       let!(:second_working_time) do
         create(:registered_working_time, employee: employee, date: '2/1/2015')
       end
+      let!(:empty_working_time) do
+        create(:registered_working_time, employee: employee, date: '3/1/2015', time_entries: [])
+      end
 
       context 'range equal one day' do
         let(:start_date) { Date.new(2015, 1, 1) }
-        let(:end_date) { Date.new(2015, 1, 1) }
+        let(:end_date) { Date.new(2015, 1, 3) }
 
-        it { expect(subject.size).to eq 1 }
+        it { expect(subject.size).to eq 3 }
         it 'returns valid hash' do
           expect(subject).to match_hash(
             {
@@ -37,7 +40,20 @@ RSpec.describe RegisteredWorkingTimeForEmployeeSchedule, type: :service do
                   :start_time => '15:00:00',
                   :end_time => '20:00:00'
                 }
-              ]
+              ],
+              "2015-01-02" => [
+                {
+                  :type => 'working_time',
+                  :start_time => '10:00:00',
+                  :end_time => '14:00:00'
+                },
+                {
+                  :type => 'working_time',
+                  :start_time => '15:00:00',
+                  :end_time => '20:00:00'
+                }
+              ],
+              "2015-01-03" => [{}]
             }
           )
         end
