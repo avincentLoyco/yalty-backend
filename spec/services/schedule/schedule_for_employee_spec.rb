@@ -61,6 +61,9 @@ RSpec.describe ScheduleForEmployee, type: :service do
           create(:registered_working_time, employee: employee, date: date)
         end
       end
+      let!(:working_time) do
+        create(:registered_working_time, employee: employee, date: Time.now + 3.day, time_entries: [])
+      end
 
       it { expect(subject.size).to eq 7 }
       it 'should have valid response' do
@@ -182,11 +185,7 @@ RSpec.describe ScheduleForEmployee, type: :service do
             },
             {
               date: '2015-12-31',
-              time_entries: [
-                type: 'working_time',
-                start_time: '01:00:00',
-                end_time: '06:00:00'
-              ]
+              time_entries: []
             }
           ]
         )

@@ -38,9 +38,13 @@ class ScheduleForEmployee
     @time_entries_in_range = TimeEntriesForEmployeeSchedule.new(@employee, @start_date, @end_date).call
     @calculated_schedule.each do |day_hash|
       date = day_hash[:date]
-      working_times_and_holidays = @holidays_in_range[date] + @working_times_in_range[date]
+      day_registered_working_times = @working_times_in_range[date]
+      working_times_and_holidays =
+        @holidays_in_range[date] + day_registered_working_times.reject(&:empty?)
       day_hash[:time_entries] += @time_off_in_range[date] + working_times_and_holidays
-      prepare_working_time_from_presence_policy(day_hash) if working_times_and_holidays.empty?
+      if working_times_and_holidays.empty? && day_registered_working_times.empty?
+        prepare_working_time_from_presence_policy(day_hash)
+      end
     end
   end
 
