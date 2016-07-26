@@ -44,6 +44,7 @@ class RegisteredWorkingTimeForEmployeeSchedule
   end
 
   def single_day_time_entires_hash(time_entries)
+    return [{}] unless time_entries.any?
     time_entries.map do |time_entry|
       {
         type: 'working_time',
