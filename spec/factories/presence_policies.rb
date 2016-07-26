@@ -15,6 +15,7 @@ FactoryGirl.define do
         number_of_days 2
         working_days [1, 2]
         hours_per_day 8
+        hours nil
       end
 
       after(:create) do |presence_policy, evaluator|
@@ -24,16 +25,27 @@ FactoryGirl.define do
           presence_day = create(:presence_day, order: order + 1, presence_policy: presence_policy)
 
           if evaluator.working_days.include?(presence_day.order)
-            presence_day.time_entries << create(:time_entry,
-              presence_day: presence_day,
-              start_time: Tod::TimeOfDay.new(12) - hours_per_time_entry,
-              end_time: '12:00'
-            )
-            presence_day.time_entries << create(:time_entry,
-              presence_day: presence_day,
-              start_time: '13:00',
-              end_time: Tod::TimeOfDay.new(13) + hours_per_time_entry
-            )
+
+            if evaluator.hours.nil?
+              presence_day.time_entries << create(:time_entry,
+                presence_day: presence_day,
+                start_time: Tod::TimeOfDay.new(12) - hours_per_time_entry,
+                end_time: '12:00'
+              )
+              presence_day.time_entries << create(:time_entry,
+                presence_day: presence_day,
+                start_time: '13:00',
+                end_time: Tod::TimeOfDay.new(13) + hours_per_time_entry
+              )
+            else
+              evaluator.hours.each do |hours|
+                presence_day.time_entries << create(:time_entry,
+                  presence_day: presence_day,
+                  start_time: hours[0],
+                  end_time: hours[1]
+                )
+              end
+            end
           end
 
           presence_policy.presence_days << presence_day

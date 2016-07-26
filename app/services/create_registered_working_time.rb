@@ -53,7 +53,7 @@ class CreateRegisteredWorkingTime
           ON t.presence_day_id = p.id
           INNER JOIN (#{active_employee_presence_policies_for_range_query_sql(employees_ids)}) AS r
             ON p.presence_policy_id = r.presence_policy_id
-      WHERE p.order = (((to_date('#{@today}', 'YYYY-MM_DD') - r.effective_at) % p.max_order) + 1);
+      WHERE p.order = (((to_date('#{@today}', 'YYYY-MM-DD') - r.effective_at) % p.max_order) + 1);
     "
   end
 
