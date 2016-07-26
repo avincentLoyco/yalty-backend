@@ -67,7 +67,7 @@ RSpec.describe CreateRegisteredWorkingTime do
 
         it 'should create registred working time without time entries' do
           expect { subject }.to change { employee_rwt.count }.by(1)
-          rwt = RegisteredWorkingTime.where(employee_id: employee.id).first!
+          rwt = employee_rwt.first!
 
           expect(rwt.date).to eq(date)
           expect(rwt.date.cwday).to eq(7)
@@ -80,7 +80,7 @@ RSpec.describe CreateRegisteredWorkingTime do
 
         it 'should create registred working time with time entries' do
           expect { subject }.to change { employee_rwt.count }.by(1)
-          rwt = RegisteredWorkingTime.where(employee_id: employee.id).first!
+          rwt = employee_rwt.first!
 
           expect(rwt.date).to eq(date)
           expect(rwt.date.cwday).to eq(1)
@@ -89,6 +89,100 @@ RSpec.describe CreateRegisteredWorkingTime do
             { 'start_time' => '13:00:00', 'end_time' => '17:00:00' }
           ])
         end
+      end
+
+      context 'with time-off' do
+        let(:time_off_category) do
+          account.time_off_categories.where(name: 'vacation').first!
+        end
+
+        let(:time_off_policy) do
+          create(:time_off_policy,
+            time_off_category: time_off_category,
+            policy_type: 'balancer',
+            amount: 960
+          )
+        end
+
+        let!(:employee_top) do
+          employee.employee_time_off_policies.create!(
+            time_off_policy_id: time_off_policy.id,
+            effective_at: employee.first_employee_event.effective_at
+          )
+        end
+
+        context 'full day from Friday to Monday' do
+          let!(:time_off) do
+            create(:time_off, employee: employee, time_off_category: time_off_category,
+              start_time: (Date.today.beginning_of_week - 3).at_beginning_of_day,
+              end_time: (Date.today.beginning_of_week + 1).at_beginning_of_day
+            )
+          end
+
+          context 'on Friday' do
+            let(:date) { Date.today.beginning_of_week - 3 }
+
+            it 'should create registred working time without time entries' do
+              expect { subject }.to change { employee_rwt.count }.by(1)
+              rwt = employee_rwt.first!
+
+              expect(rwt.date).to eq(date)
+              expect(rwt.date.cwday).to eq(5)
+              expect(rwt.time_entries).to match_array([])
+            end
+          end
+
+          context 'on Sunday' do
+            let(:date) { Date.today.beginning_of_week - 1 }
+
+            it 'should create registred working time without time entries' do
+              expect { subject }.to change { employee_rwt.count }.by(1)
+              rwt = employee_rwt.first!
+
+              expect(rwt.date).to eq(date)
+              expect(rwt.date.cwday).to eq(7)
+              expect(rwt.time_entries).to match_array([])
+            end
+          end
+
+          context 'on Tuesday' do
+            let(:date) { Date.today.beginning_of_week + 1 }
+
+            it 'should create registred working time without time entries' do
+              expect { subject }.to change { employee_rwt.count }.by(1)
+              rwt = employee_rwt.first!
+
+              expect(rwt.date).to eq(date)
+              expect(rwt.date.cwday).to eq(2)
+              expect(rwt.time_entries).to match_array([
+                { 'start_time' => '08:00:00', 'end_time' => '12:00:00' },
+                { 'start_time' => '13:00:00', 'end_time' => '17:00:00' }
+              ])
+            end
+          end
+        end
+
+        context 'half day on Tuesday' do
+          let(:date) { Date.today.beginning_of_week + 1 }
+
+          let!(:time_off) do
+            create(:time_off, employee: employee, time_off_category: time_off_category,
+              start_time: (Date.today.beginning_of_week + 1).at_noon - 1.hour,
+              end_time: (Date.today.beginning_of_week + 2).at_beginning_of_day
+            )
+          end
+
+            it 'should create registred working time without time entries' do
+              expect { subject }.to change { employee_rwt.count }.by(1)
+              rwt = employee_rwt.first!
+
+              expect(rwt.date).to eq(date)
+              expect(rwt.date.cwday).to eq(2)
+              expect(rwt.time_entries).to match_array([
+                { 'start_time' => '08:00:00', 'end_time' => '11:00:00' },
+              ])
+            end
+          end
       end
     end
   end
