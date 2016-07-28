@@ -32,12 +32,12 @@ class ManageEmployeeBalanceRemoval
 
   def create_removal
     return unless resource.balance_credit_removal.blank?
-    category, employee, account, amount, options = params
-    CreateEmployeeBalance.new(category, employee, account, amount, options).call
+    category, employee, account, options = params
+    CreateEmployeeBalance.new(category, employee, account, options).call
   end
 
   def params
-    [resource.time_off_category_id, resource.employee_id, resource.employee.account_id, nil,
+    [resource.time_off_category_id, resource.employee_id, resource.employee.account_id,
      { policy_credit_removal: true, skip_update: true, balance_credit_addition_id: resource.id,
        effective_at: new_date }]
   end

@@ -16,12 +16,11 @@ class PolicyTypeChangeResetBalanceJob < ActiveJob::Base
   private
 
   def create_reset_balance(attributes_hash)
-    options = { reset_balance: true }
+    options = { reset_balance: true, amount: 0 }
     CreateEmployeeBalance.new(
       attributes_hash['time_off_category_id'],
       attributes_hash['employee_id'],
       attributes_hash['account_id'],
-      0,
       options
     ).call
   end

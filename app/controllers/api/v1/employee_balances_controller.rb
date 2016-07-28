@@ -20,9 +20,8 @@ module API
 
       def create
         verified_dry_params(dry_validation_schema) do |attributes|
-          category, employee, account, amount, options = params_from_attributes(attributes)
-
-          resources = CreateEmployeeBalance.new(category, employee, account, amount, options).call
+          category, employee, account, options = params_from_attributes(attributes)
+          resources = CreateEmployeeBalance.new(category, employee, account, options).call
           render_resource(resources, status: :created)
         end
       end
@@ -60,14 +59,15 @@ module API
 
       def options(attributes)
         params = {}
-        params[:effective_at] = attributes[:effective_at] if attributes[:effective_at]
+        params[:effective_at]  = attributes[:effective_at] if attributes[:effective_at]
         params[:validity_date] = attributes[:validity_date] if attributes[:validity_date]
+        params[:amount]        = attributes[:amount]
         params
       end
 
       def params_from_attributes(attributes)
         [attributes[:time_off_category][:id], attributes[:employee][:id], Account.current.id,
-         attributes[:amount], options(attributes)]
+         options(attributes)]
       end
 
       def resource

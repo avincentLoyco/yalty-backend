@@ -16,6 +16,12 @@ RSpec.describe CreateEmployeeBalance, type: :service do
   let(:employee_policy) do
     build(:employee_time_off_policy, time_off_policy: policy, effective_at: Date.today - 5.years)
   end
+
+  subject do
+    described_class.new(
+      category.id, employee.id, Account.current.id, { amount: amount }.merge(options)
+    ).call
+  end
   let(:amount) { -100 }
 
   shared_examples 'employee balance with other employee balances after' do
@@ -41,9 +47,9 @@ RSpec.describe CreateEmployeeBalance, type: :service do
   end
 
   context 'with valid data' do
-    subject { CreateEmployeeBalance.new(category.id, employee.id, Account.current.id, amount).call }
-
     context 'only base params given' do
+      let(:options) {{}}
+
       it { expect { subject }.to change { Employee::Balance.count }.by(1) }
       it { expect { subject }.to_not change { enqueued_jobs.size } }
 
@@ -54,15 +60,10 @@ RSpec.describe CreateEmployeeBalance, type: :service do
     end
 
     context 'extra params given' do
-      subject do
-        CreateEmployeeBalance.new(
-          category.id, employee.id, Account.current.id, amount, options
-        ).call
-      end
       let(:amount) { 100 }
 
       context 'and employee balance effective at is in the future' do
-        let(:options) {{ effective_at: Time.now + 9.days }}
+        let(:options) {{ effective_at: Time.now + 9.days, amount: amount }}
 
         it { expect { subject }.to change { Employee::Balance.count }.by(1) }
         it { expect { subject }.to_not change { enqueued_jobs.size } }
@@ -133,9 +134,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
 
       context 'effective date is after an existing balance effective date from another policy' do
         let(:amount) { 100 }
-        let(:options) do
-          { effective_at: Time.now - 1.month, validity_date: Time.now + 1.month }
-        end
+        let(:options) {{ effective_at: Time.now - 1.month, validity_date: Time.now + 1.month }}
         let!(:other_working_place_policy) do
           create(:employee_time_off_policy, time_off_policy: other_policy,
             effective_at: Time.zone.now - 1.month
@@ -180,6 +179,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
 
       context 'time off given' do
         let(:options) {{ time_off_id: time_off.id }}
+        let(:amount) { time_off.balance }
         let(:time_off) do
           create(:time_off, :without_balance, employee: employee, time_off_category: category)
         end
@@ -187,7 +187,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
         it { expect { subject }.to change { Employee::Balance.count }.by(1) }
         it { expect { subject }.to_not change { enqueued_jobs.size } }
 
-        it { expect(subject.first.amount).to eq 100 }
+        it { expect(subject.first.amount).to eq time_off.balance }
         it { expect(subject.first.validity_date).to be nil }
         it { expect(subject.first.effective_at).to be_kind_of(Time) }
         it { expect(subject.first.policy_credit_removal).to be false }
@@ -253,7 +253,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
 
       context 'missing amount' do
         subject do
-          CreateEmployeeBalance.new(category.id, employee.id, Account.current.id, nil).call
+          CreateEmployeeBalance.new(category.id, employee.id, Account.current.id).call
         end
 
         it { expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }

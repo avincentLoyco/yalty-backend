@@ -15,10 +15,9 @@ class AddBalanceRemovalsJob < ActiveJob::Base
     category = balance.time_off_category_id
     employee = balance.employee_id
     account = balance.employee.account_id
-    amount = 0
-    options = { balance_credit_addition_id: balance.id }
+    options = { balance_credit_addition_id: balance.id, amount: 0 }
 
-    CreateEmployeeBalance.new(category, employee, account, amount, options).call
+    CreateEmployeeBalance.new(category, employee, account, options).call
   end
 
   def basic_params(balance)

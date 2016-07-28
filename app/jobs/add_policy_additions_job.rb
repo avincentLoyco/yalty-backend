@@ -20,7 +20,6 @@ class AddPolicyAdditionsJob < ActiveJob::Base
       attributes_hash['time_off_category_id'],
       attributes_hash['employee_id'],
       attributes_hash['account_id'],
-      nil,
       options
     ).call
   end
@@ -31,7 +30,6 @@ class AddPolicyAdditionsJob < ActiveJob::Base
       attributes_hash['time_off_category_id'],
       attributes_hash['employee_id'],
       attributes_hash['account_id'],
-      attributes_hash['amount'],
       options
     ).call
   end
@@ -39,6 +37,7 @@ class AddPolicyAdditionsJob < ActiveJob::Base
   def options_for_balancer(attributes_hash)
     {
       policy_credit_addition: true,
+      amount: attributes_hash['amount'],
       validity_date: policy_end_date(
         attributes_hash['end_day'],
         attributes_hash['end_month'],

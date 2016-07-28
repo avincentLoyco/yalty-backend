@@ -3,12 +3,11 @@ class CreateEmployeeBalance
   attr_reader :category, :employee, :amount, :employee_balance,
     :account, :time_off, :options, :balance_removal
 
-  def initialize(category_id, employee_id, account_id, amount, options = {})
+  def initialize(category_id, employee_id, account_id, options = {})
     @options = options
     @account = Account.find(account_id)
     @category = account.time_off_categories.find(category_id)
     @employee = account.employees.find(employee_id)
-    @amount = amount
     @employee_balance = nil
     @balance_removal = nil
     @time_off = time_off
@@ -50,17 +49,18 @@ class CreateEmployeeBalance
 
   def common_params
     {
-      amount: amount,
+      amount: options[:amount],
       employee: employee,
-      time_off: time_off,
-      time_off_category: category
+      time_off:  options.key?(:time_off_id) ? employee.time_offs.find(options[:time_off_id]) : nil,
+      time_off_category: category,
+      employee_time_off_policy: employee_time_off_policy
     }
   end
 
   def balance_params
     {
       validity_date: validity_date,
-      effective_at: effective_at,
+      effective_at: options[:effective_at],
       balance_credit_addition: balance_credit_addition,
       policy_credit_addition: options[:policy_credit_addition] || false,
       reset_balance: options[:reset_balance] || false
@@ -71,12 +71,9 @@ class CreateEmployeeBalance
     common_params.merge(effective_at: employee_balance.validity_date)
   end
 
-  def time_off
-    options.key?(:time_off_id) ? employee.time_offs.find(options[:time_off_id]) : nil
-  end
-
-  def effective_at
-    options[:effective_at]
+  def employee_time_off_policy
+    return nil unless options.key?(:employee_time_off_policy_id)
+    employee.employee_time_off_policies.find(options[:employee_time_off_policy_id])
   end
 
   def validity_date

@@ -94,10 +94,9 @@ module API
         category = resource.time_off_category_id
         employee_id = resource.employee_id
         account = Account.current.id
-        amount = resource.balance
-        options = { time_off_id: resource.id }
+        options = { time_off_id: resource.id, amount: resource.balance }
 
-        CreateEmployeeBalance.new(category, employee_id, account, amount, options).call
+        CreateEmployeeBalance.new(category, employee_id, account, options).call
       end
 
       def resource_representer
