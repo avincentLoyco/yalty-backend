@@ -6,6 +6,7 @@ RSpec.describe Employee::Balance, type: :model do
   it { is_expected.to have_db_column(:amount).of_type(:integer).with_options(default: 0) }
   it { is_expected.to have_db_column(:employee_id).of_type(:uuid).with_options(null: false) }
   it { is_expected.to have_db_column(:time_off_id).of_type(:uuid) }
+  it { is_expected.to have_db_column(:employee_time_off_policy_id).of_type(:uuid) }
   it { is_expected.to have_db_column(:time_off_category_id)
     .of_type(:uuid).with_options(null: false) }
   it { is_expected.to have_db_column(:validity_date).of_type(:datetime) }
@@ -209,6 +210,27 @@ RSpec.describe Employee::Balance, type: :model do
             it { expect(subject.valid?).to eq true }
             it { expect { subject.valid? }.to_not change { balance.errors.size } }
           end
+        end
+      end
+
+      context 'effective_at_equal_assignation_date' do
+        subject do
+          build(:employee_balance, :with_employee_time_off_policy, effective_at: effective_at)
+        end
+
+        context 'with valid params' do
+          let(:effective_at) { Time.now - 1.year }
+
+          it { expect(subject.valid?).to eq true }
+          it { expect { subject.valid? }.to_not change { subject.errors.size } }
+        end
+
+        context 'with invalid params' do
+          let(:effective_at) { Time.now - 1.month }
+
+          it { expect(subject.valid?).to eq false }
+          it { expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
+            .to include 'Must be at assignation effective_at' }
         end
       end
 

@@ -7,6 +7,7 @@ RSpec.describe EmployeeTimeOffPolicy, type: :model do
   it { is_expected.to have_db_column(:time_off_policy_id).of_type(:uuid) }
   it { is_expected.to have_db_column(:time_off_category_id).of_type(:uuid) }
   it { is_expected.to have_db_column(:effective_at).of_type(:date) }
+  it { is_expected.to have_one(:employee_balance) }
   it { is_expected.to validate_presence_of(:employee_id) }
   it { is_expected.to validate_presence_of(:time_off_policy_id) }
     it { is_expected.to validate_presence_of(:effective_at) }

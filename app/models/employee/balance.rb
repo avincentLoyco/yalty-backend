@@ -4,6 +4,7 @@ class Employee::Balance < ActiveRecord::Base
   belongs_to :employee
   belongs_to :time_off_category
   belongs_to :time_off
+  belongs_to :employee_time_off_policy
 
   belongs_to :balance_credit_addition, class_name: 'Employee::Balance'
   has_one :balance_credit_removal, class_name: 'Employee::Balance',
@@ -16,11 +17,13 @@ class Employee::Balance < ActiveRecord::Base
     presence: true
   validates :effective_at, uniqueness: { scope: [:time_off_category, :employee] }
   validates :amount, numericality: { greater_than_or_equal_to: 0 }, if: :validity_date
+  validates :employee_time_off_policy_id, uniqueness: true, allow_nil: true
   validate :removal_effective_at_date, if: [:balance_credit_addition, :time_off_policy]
   validate :validity_date_later_than_effective_at, if: [:effective_at, :validity_date]
   validate :counter_validity_date_blank
   validate :time_off_policy_presence
   validate :effective_after_employee_start_date, if: :employee
+  validate :effective_at_equal_assignation_date, if: :employee_time_off_policy_id
 
   before_validation :calculate_and_set_balance, if: :attributes_present?
   before_validation :find_effective_at
@@ -108,5 +111,10 @@ class Employee::Balance < ActiveRecord::Base
   def effective_after_employee_start_date
     return unless effective_at < employee.first_employee_event.effective_at
     errors.add(:effective_at, 'Can not be added before employee start date')
+  end
+
+  def effective_at_equal_assignation_date
+    return unless effective_at.to_date != employee_time_off_policy.effective_at.to_date
+    errors.add(:effective_at, 'Must be at assignation effective_at')
   end
 end

@@ -40,5 +40,9 @@ FactoryGirl.define do
         employee_balance.balance_credit_addition = balance_addition
       end
     end
+
+    trait :with_employee_time_off_policy do
+      employee_time_off_policy { create(:employee_time_off_policy, employee: employee) }
+    end
   end
 end
