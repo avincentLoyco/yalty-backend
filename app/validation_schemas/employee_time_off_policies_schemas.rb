@@ -6,6 +6,7 @@ module EmployeeTimeOffPoliciesSchemas
       required(:time_off_policy_id).filled(:str?)
       required(:id).filled(:str?)
       required(:effective_at).filled
+      optional(:employee_balance_amount).maybe(:str?)
     end
   end
 end

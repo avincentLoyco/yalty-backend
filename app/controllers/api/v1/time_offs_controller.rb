@@ -91,12 +91,12 @@ module API
       end
 
       def create_new_employee_balance(resource)
-        category = resource.time_off_category_id
-        employee_id = resource.employee_id
-        account = Account.current.id
-        options = { time_off_id: resource.id, amount: resource.balance }
-
-        CreateEmployeeBalance.new(category, employee_id, account, options).call
+        CreateEmployeeBalance.new(
+          resource.time_off_category_id,
+          resource.employee_id,
+          Account.current.id,
+          time_off_id: resource.id, amount: resource.balance
+        ).call
       end
 
       def resource_representer

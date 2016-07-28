@@ -20,8 +20,7 @@ module API
 
       def create
         verified_dry_params(dry_validation_schema) do |attributes|
-          category, employee, account, options = params_from_attributes(attributes)
-          resources = CreateEmployeeBalance.new(category, employee, account, options).call
+          resources = CreateEmployeeBalance.new(*params_from_attributes(attributes)).call
           render_resource(resources, status: :created)
         end
       end

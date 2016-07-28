@@ -32,8 +32,7 @@ class ManageEmployeeBalanceRemoval
 
   def create_removal
     return unless resource.balance_credit_removal.blank?
-    category, employee, account, options = params
-    CreateEmployeeBalance.new(category, employee, account, options).call
+    CreateEmployeeBalance.new(*params).call
   end
 
   def params

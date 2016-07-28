@@ -11,9 +11,11 @@ module API
       def create
         verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :create, time_off_policy
+          employee_balance_amount = attributes.delete(:employee_balance_amount)
 
           transactions do
             @resource = create_join_table(EmployeeTimeOffPolicy, TimeOffPolicy, attributes)
+            create_new_employee_balance(@resource) if employee_balance_amount
             ManageEmployeeBalanceAdditions.new(@resource).call
           end
 
@@ -33,6 +35,23 @@ module API
 
       def time_off_policy
         @time_off_policy ||= Account.current.time_off_policies.find(params[:time_off_policy_id])
+      end
+
+      def create_new_employee_balance(resource)
+        CreateEmployeeBalance.new(
+          resource.time_off_category_id,
+          resource.employee_id,
+          Account.current.id,
+          options_for(resource)
+        ).call
+      end
+
+      def options_for(resource)
+        {
+          employee_time_off_policy_id: resource.id,
+          amount: params[:employee_balance_amount],
+          effective_at: resource.effective_at
+        }
       end
 
       def resource_representer

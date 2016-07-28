@@ -72,7 +72,7 @@ class CreateEmployeeBalance
   end
 
   def employee_time_off_policy
-    return nil unless options.key?(:employee_time_off_policy_id)
+    return unless options.key?(:employee_time_off_policy_id)
     employee.employee_time_off_policies.find(options[:employee_time_off_policy_id])
   end
 
@@ -83,7 +83,7 @@ class CreateEmployeeBalance
   end
 
   def balance_credit_addition
-    return nil unless options[:balance_credit_addition_id]
+    return unless options[:balance_credit_addition_id]
     Employee::Balance.find(options[:balance_credit_addition_id])
   end
 

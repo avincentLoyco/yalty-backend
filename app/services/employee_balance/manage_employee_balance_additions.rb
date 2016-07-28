@@ -21,8 +21,7 @@ class ManageEmployeeBalanceAdditions
     policy_length = RelatedPolicyPeriod.new(resource).policy_length
 
     while date <= effective_till
-      category, employee, account, options = employee_balance_params(date)
-      balances << CreateEmployeeBalance.new(category, employee, account, options).call
+      balances << CreateEmployeeBalance.new(*employee_balance_params(date)).call
       date += policy_length.years
     end
   end
