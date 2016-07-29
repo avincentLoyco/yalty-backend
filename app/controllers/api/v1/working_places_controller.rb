@@ -5,7 +5,7 @@ module API
       include WorkingPlaceRules
 
       def index
-        render_resource(resources)
+        render_resource(resources_by_status(WorkingPlace, EmployeeWorkingPlace))
       end
 
       def show
@@ -64,12 +64,8 @@ module API
         related.merge(holiday_policy.to_h)
       end
 
-      def resources
-        @resources ||= Account.current.working_places
-      end
-
       def resource
-        @resource ||= resources.find(params[:id])
+        @resource ||= Account.current.working_places.find(params[:id])
       end
 
       def resource_representer

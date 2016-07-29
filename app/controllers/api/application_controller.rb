@@ -69,6 +69,13 @@ class API::ApplicationController < ApplicationController
     resources.map { |join_hash| join_table.new(join_hash) }
   end
 
+  def resources_by_status(resource_class, join_table_class)
+    status = params[:status] == 'inactive' ? 'inactive' : 'active'
+    ActiveAndInactiveJoinTableFinders
+      .new(resource_class, join_table_class, Account.current.id)
+      .send(status)
+  end
+
   def transactions
     ActiveRecord::Base.transaction do
       yield

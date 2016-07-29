@@ -1,25 +1,30 @@
 require 'rails_helper'
 
 RSpec.describe API::V1::WorkingPlacesController, type: :controller do
-  include_examples 'example_authorization',
+  include_context 'example_authorization',
     resource_name: 'working_place'
   include_examples 'example_crud_resources',
     resource_name: 'working_place'
+  include_examples 'shared_context_active_and_inactive_resources',
+    resource_class: WorkingPlace.model_name,
+    join_table_class: EmployeeWorkingPlace.model_name
 
+  let(:first_working_place) { create(:working_place, account: account) }
   let(:holiday_policy) { create(:holiday_policy, account: account) }
   let(:presence_policy) { create(:presence_policy, account: account) }
-  let(:employee) { create(:employee, account: Account.current) }
-  let!(:employee_working_place) { employee.first_employee_working_place }
+  let!(:employee) { create(:employee, account: Account.current, employee_working_places: [ewp]) }
+  let(:ewp) do
+    create(:employee_working_place,
+      working_place: first_working_place, effective_at: Time.now - 6.months)
+  end
 
   context 'GET #index' do
     subject { get :index }
-    let!(:working_places) { create_list(:working_place, 3, account: Account.current) }
-
     before { subject }
 
-    it { expect_json_sizes(4) }
-    it { expect(response.body).to include employee.id }
-    it { expect_json_keys('*', [:id, :type, :name, :holiday_policy, :employees]) }
+    it { is_expected.to have_http_status(200) }
+    it { expect_json_sizes(1) }
+    it { expect_json_keys('*', [:id, :type, :name, :employees, :holiday_policy]) }
   end
 
   context 'GET #show' do
@@ -34,12 +39,12 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
 
     context 'when working place has assigned employee working places' do
       before do
-        employee_working_place.update!(working_place: working_place)
+        ewp.update!(working_place: working_place)
         subject
       end
 
       it { expect_json('employees.0',
-        id: employee.id, type: 'employee', assignation_id: employee_working_place.id)
+        id: employee.id, type: 'employee', assignation_id: ewp.id)
       }
     end
   end

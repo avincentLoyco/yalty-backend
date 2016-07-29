@@ -14,7 +14,6 @@ FactoryGirl.define do
         )
         employee.employee_working_places << employee_working_place
       end
-
       if employee.events.empty?
         date = employee.employee_working_places.empty? ? effective_at : employee.employee_working_places.first.effective_at
 
