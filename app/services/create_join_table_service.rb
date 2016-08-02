@@ -59,7 +59,7 @@ class CreateJoinTableService
 
   def return_new_current_with_efective_till
     JoinTableWithEffectiveTill
-      .new(join_table_class, Account.current.id, nil, nil, current_join_table.id)
+      .new(join_table_class, Account.current.id, nil, nil, current_join_table.id, nil)
       .call
       .map { |join_hash| join_table_class.new(join_hash) }
       .first
