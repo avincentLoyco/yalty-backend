@@ -1,7 +1,8 @@
 class CreateRegisteredWorkingTime
-  def initialize(today, employees_ids = [])
+  def initialize(today, employees_ids = [], create_with_empty_time_entries = false)
     @today = today
     @employees_ids = employees_ids
+    @create_with_empty_time_entries = create_with_empty_time_entries
   end
 
   def call
@@ -18,16 +19,19 @@ class CreateRegisteredWorkingTime
   end
 
   def process_employees(employees_ids)
-    time_offs_time_entries =
-      TimeOffForEmployeeSchedule.new(employees_ids, @today, @today).call
-    employees_time_entries = active_time_entries_per_employee(employees_ids)
-    employees_splitted_entries =
-      SplitTimeEntriesByTimeEntriesAndEmployeesForDate.new(
-        employees_time_entries,
-        time_offs_time_entries[@today.to_s],
-        '',
-        true
-      ).call
+    employees_splitted_entries = {}
+    unless @create_with_empty_time_entries
+      time_offs_time_entries =
+        TimeOffForEmployeeSchedule.new(employees_ids, @today, @today).call
+      employees_time_entries = active_time_entries_per_employee(employees_ids)
+      employees_splitted_entries =
+        SplitTimeEntriesByTimeEntriesAndEmployeesForDate.new(
+          employees_time_entries,
+          time_offs_time_entries[@today.to_s],
+          '',
+          true
+        ).call
+    end
     insert_employees_registered_working_times(employees_splitted_entries, employees_ids)
   end
 

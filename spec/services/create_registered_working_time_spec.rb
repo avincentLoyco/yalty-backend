@@ -184,6 +184,20 @@ RSpec.describe CreateRegisteredWorkingTime do
             end
           end
       end
+
+      context 'when is requested to assign an empty time entry even if the employee has some' do
+        let(:date) { Date.today.beginning_of_week }
+        subject { described_class.new(date, employees_ids, true).call }
+
+        it 'should create registred working time with time entries' do
+          expect { subject }.to change { employee_rwt.count }.by(1)
+          rwt = employee_rwt.first!
+
+          expect(rwt.date).to eq(date)
+          expect(rwt.date.cwday).to eq(1)
+          expect(rwt.time_entries).to match_array([])
+        end
+      end
     end
   end
 end
