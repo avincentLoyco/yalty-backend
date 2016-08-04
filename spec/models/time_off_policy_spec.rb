@@ -178,4 +178,43 @@ RSpec.describe TimeOffPolicy, type: :model do
       end
     end
   end
+
+  context 'scopes' do
+    let(:account) { create(:account) }
+    let(:first_category)  { create(:time_off_category, account: account) }
+    let(:second_category) { create(:time_off_category, account: account) }
+    let(:other_category)  { create(:time_off_category) }
+    let!(:time_off_policies_for_first_category) do
+      create_list(:time_off_policy, 3, time_off_category: first_category)
+    end
+    let!(:time_off_policies_for_second_category) do
+      create_list(:time_off_policy, 3, time_off_category: second_category)
+    end
+    let!(:other_time_off_policies) do
+      create_list(:time_off_policy, 3, time_off_category: other_category)
+    end
+
+    context '.for_account_and_category' do
+      subject(:for_account_and_category) do
+        described_class.for_account_and_category(account.id, first_category.id)
+      end
+
+      it 'returns time_off policies for given account and category' do
+        expect(for_account_and_category.count).to eq(3)
+        expect(for_account_and_category).to match_array(time_off_policies_for_first_category)
+      end
+    end
+
+    context '.for_account' do
+      subject(:for_account) do
+        described_class.for_account(account.id)
+      end
+
+      it 'returns time_off policies for given account' do
+        expect(for_account.count).to eq(6)
+        expect(for_account)
+          .to match_array(time_off_policies_for_first_category + time_off_policies_for_second_category)
+      end
+    end
+  end
 end

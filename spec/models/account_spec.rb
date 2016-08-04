@@ -155,4 +155,22 @@ RSpec.describe Account, type: :model do
       expect(account).to_not be_valid
     end
   end
+
+  describe 'intercom integration' do
+    include_context 'shared_context_intercom_attributes'
+    let(:account) { create(:account) }
+
+    it 'is of type :companies' do
+      expect(account.intercom_type).to eq(:companies)
+    end
+
+    it 'includes proper attributes' do
+      expect(account.intercom_attributes).to eq(proper_account_intercom_attributes)
+    end
+
+    it 'returns proper data' do
+      data_keys = account.intercom_data.keys + account.intercom_data[:custom_attributes].keys
+      expect(data_keys).to match_array(proper_account_data_keys)
+    end
+  end
 end

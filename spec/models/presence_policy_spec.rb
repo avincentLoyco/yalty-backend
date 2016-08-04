@@ -13,15 +13,30 @@ RSpec.describe PresencePolicy, type: :model do
   it { is_expected.to validate_presence_of(:account_id) }
   it { is_expected.to validate_presence_of(:name) }
 
-  context '.active_for_employee' do
-    let(:presence_policy) { create(:presence_policy) }
+  context 'scopes' do
+    context '.active_for_employee' do
+      let(:presence_policy) { create(:presence_policy) }
 
-    subject { described_class.active_for_employee(employee.id, Time.now) }
+      subject { described_class.active_for_employee(employee.id, Time.now) }
 
-    it { expect(subject.valid?).to eq true }
+      it { expect(subject.valid?).to eq true }
 
-    it { expect(subject.account_id).to eq employee.account_id }
-    it { expect(subject.id).not_to eq presence_policy.id }
+      it { expect(subject.account_id).to eq employee.account_id }
+      it { expect(subject.id).not_to eq presence_policy.id }
+    end
+
+    context '.for_account' do
+      let(:account) { create(:account) }
+      let!(:presence_policies) { create_list(:presence_policy, 3, account: account) }
+      let!(:other_presence_policies) { create_list(:presence_policy, 3) }
+
+      subject(:for_account_scope) { described_class.for_account(account.id) }
+
+      it 'returns presence policies only for given account' do
+        expect(for_account_scope.count).to eq(3)
+        expect(for_account_scope).to match_array(presence_policies)
+      end
+    end
   end
 
   context 'helper methods' do

@@ -48,4 +48,62 @@ RSpec.describe Employee, type: :model do
       end
     end
   end
+
+  context 'scopes' do
+    let(:account) { create(:account) }
+    let(:employee) { create(:employee, account: account) }
+    let!(:account_user) { create(:account_user, account: account, employee: employee) }
+
+    before 'create employees' do
+      create_list(:employee, 3, account: account)
+      create_list(:employee, 3, account: account)
+    end
+
+    context '.active_by_account' do
+      subject(:active_by_account_scope) { described_class.active_by_account(account.id) }
+
+      it 'returns only employees with users / active employees' do
+        expect(active_by_account_scope.count).to eq(1)
+        expect(active_by_account_scope.first.id).to eq(employee.id)
+      end
+    end
+
+    context 'active_employee_ratio_per_account' do
+      subject(:active_employee_ratio) do
+        described_class.active_employee_ratio_per_account(account.id)
+      end
+
+      it 'returns proper ratio' do
+        expect(active_employee_ratio).to eq(14.29)
+      end
+    end
+  end
+
+  context 'callbacks' do
+    context '.trigger_intercom_update' do
+      let(:account) { create(:account) }
+
+      it 'should trigger intercom update on account' do
+        expect(account).to receive(:create_or_update_on_intercom).with(true)
+        create(:employee, account: account)
+      end
+
+      context 'with user' do
+        let(:user) { create(:account_user, account: account) }
+
+        it 'should trigger intercom update on user' do
+          expect(user).to receive(:create_or_update_on_intercom).with(true)
+          create(:employee, account: account, user: user)
+        end
+      end
+
+      context 'without user' do
+        it 'should not trigger intercom update on user' do
+          expect_any_instance_of(Account::User)
+            .not_to receive(:create_or_update_on_intercom).with(true)
+          create(:employee, account: account)
+        end
+      end
+    end
+  end
 end
