@@ -18,12 +18,25 @@ module API
       def create
         verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :create, working_place
-          resource = create_join_table(EmployeeWorkingPlace, WorkingPlace, attributes)
+          resource = create_or_update_join_table(EmployeeWorkingPlace, WorkingPlace, attributes)
           render_resource(resource, status: 201)
         end
       end
 
+      def update
+        verified_params(gate_rules) do |attributes|
+          authorize! :update, resource
+          actual_resource =
+            create_or_update_join_table(EmployeeWorkingPlace, WorkingPlace, attributes, resource)
+          render_resource(actual_resource)
+        end
+      end
+
       private
+
+      def resource
+        @resource ||= Account.current.employee_working_places.find(params[:id])
+      end
 
       def working_place
         @working_place ||= Account.current.working_places.find(params[:working_place_id])

@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe CreateJoinTableService, type: :service do
+RSpec.describe CreateOrUpdateJoinTable, type: :service do
   include_context 'shared_context_account_helper'
   before { Account.current = create(:account) }
 

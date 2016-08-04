@@ -2,6 +2,7 @@ require 'rails_helper'
 
 RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
   include_context 'shared_context_headers'
+  include_context 'shared_context_timecop_helper'
 
   let(:working_place) { create(:working_place, account: Account.current) }
   let(:new_employee) { create(:employee, account: Account.current) }
@@ -9,7 +10,7 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
     create(:employee, account: Account.current, employee_working_places: [employee_working_place])
   end
   let!(:employee_working_place) do
-    create(:employee_working_place, effective_at: Time.now + 1.day, working_place: working_place)
+    create(:employee_working_place, effective_at: Time.now - 5.years, working_place: working_place)
   end
 
   describe 'get #INDEX' do
@@ -157,6 +158,76 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
 
         it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
         it { is_expected.to have_http_status(422) }
+      end
+    end
+  end
+
+  describe 'put #UPDATE' do
+    subject { put :update, { effective_at: effective_at, id: id } }
+    let(:effective_at) { Time.now - 1.days }
+    let(:id) { new_employee_working_place.id }
+    let(:new_employee_working_place) do
+      create(:employee_working_place, employee: employee, effective_at: Time.now - 2.days)
+    end
+
+    context 'with valid params' do
+      context 'when there are no employee_working_places with the same resource' do
+        it { expect { subject }.to change { new_employee_working_place.reload.effective_at } }
+
+        it { is_expected.to have_http_status(200) }
+        it 'should have valid data in response body' do
+          subject
+
+          expect_json(effective_at: effective_at.to_date.to_s)
+          expect_json_keys(:effective_at, :effective_at, :id, :employee)
+        end
+      end
+
+      context 'when there are other employee working places with the same resource' do
+        context 'after and before update' do
+          let(:second_working_place) { create(:working_place, account: account) }
+          let!(:first_resource_ewps) do
+            [Time.now - 4.years, Time.now - 2.years, Time.now + 1.year].map do |date|
+              create(:employee_working_place, effective_at: date, employee: employee,
+                working_place: second_working_place)
+            end
+          end
+          let!(:second_resource_ewps) do
+            [Time.now - 3.years, Time.now].map do |date|
+              create(:employee_working_place, effective_at: date, employee: employee,
+                working_place: working_place)
+            end
+          end
+
+          let(:id) { second_resource_ewps.last.id }
+          let(:effective_at) { Time.now - 4.years }
+
+          it { expect { subject }.to change { EmployeeWorkingPlace.count }.by(-4) }
+          it { expect { subject }.to change {
+            EmployeeWorkingPlace.exists?(first_resource_ewps.first.id) }.to false }
+          it { expect { subject }.to change {
+            EmployeeWorkingPlace.exists?(first_resource_ewps.last.id) }.to false }
+          it { expect { subject }.to change {
+            EmployeeWorkingPlace.exists?(second_resource_ewps.first.id) }.to false }
+          it { expect { subject }.to change {
+            EmployeeWorkingPlace.exists?(second_resource_ewps.last.id) }.to false }
+
+          it 'should have valid response body' do
+            subject
+
+            expect_json(assignation_id: employee_working_place.id)
+            expect_json(effective_till: (first_resource_ewps.second.effective_at - 1.day).to_s)
+          end
+        end
+      end
+    end
+
+    context 'with invalid params' do
+      context 'when account user is not an account manager' do
+        before { Account::User.current.update!(account_manager: false ) }
+
+        it { expect { subject }.to_not change { employee_working_place.reload.effective_at } }
+        it { is_expected.to have_http_status(403) }
       end
     end
   end

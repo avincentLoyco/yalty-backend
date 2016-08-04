@@ -9,6 +9,7 @@ Rails.application.routes.draw do
         post '/employees', to: "employee_working_places#create"
         get '/employees', to: "employee_working_places#index"
       end
+      resources :employee_working_places, only: :update
       resources :holiday_policies, except: [:edit, :new]
       resources :countries, only: [:show]
       resource :settings, only: [:show, :update]

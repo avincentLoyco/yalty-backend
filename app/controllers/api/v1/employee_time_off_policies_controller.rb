@@ -14,7 +14,8 @@ module API
           join_table_params = attributes.except(:employee_balance_amount)
 
           transactions do
-            @resource = create_join_table(EmployeeTimeOffPolicy, TimeOffPolicy, join_table_params)
+            @resource =
+              create_or_update_join_table(EmployeeTimeOffPolicy, TimeOffPolicy, join_table_params)
             @balance = create_new_employee_balance(@resource) if resource_newly_created?(@resource)
             ManageEmployeeBalanceAdditions.new(@resource).call if resource_newly_created?(@resource)
           end

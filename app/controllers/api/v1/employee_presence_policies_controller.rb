@@ -6,7 +6,7 @@ module API
       def create
         verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :create, presence_policy
-          resource = create_join_table(EmployeePresencePolicy, PresencePolicy, attributes)
+          resource = create_or_update_join_table(EmployeePresencePolicy, PresencePolicy, attributes)
           render_resource(resource, status: 201)
         end
       end
