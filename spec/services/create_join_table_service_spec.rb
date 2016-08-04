@@ -54,6 +54,24 @@ RSpec.describe CreateJoinTableService, type: :service do
       it { expect(subject.id).to eq same_resources.first.id }
     end
 
+    shared_examples 'Join Table update with different resource after and effective till in past' do
+      it { expect { subject }.to_not raise_error }
+
+      it { expect { subject }.to change { join_table_class.count }.by(1) }
+
+      it { expect(subject.effective_till.to_s)
+        .to eq (existing_join_table.effective_at - 1.day).to_s }
+    end
+
+    shared_examples 'Join Table update with different resource after, after Time now' do
+      it { expect { subject }.to_not raise_error }
+
+      it { expect { subject }.to change { join_table_class.count }.by(1) }
+
+      it { expect(subject.effective_till.to_s)
+        .to eq (existing_join_table.effective_at - 1.day).to_s }
+    end
+
     shared_examples 'Duplicated Join Table' do
       it 'should raise error with proper message' do
          expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError)
@@ -125,16 +143,33 @@ RSpec.describe CreateJoinTableService, type: :service do
 
         it_behaves_like 'Join Table update with the same resource after and before'
       end
+
+      context 'when there is table with other resource and effective till is in the past' do
+        before { params[:effective_at] = (Time.now - 2.years).to_s }
+
+        it_behaves_like 'Join Table update with different resource after and effective till in past'
+      end
+
+      context 'when there is table with other resource and effective till is in the future' do
+        before do
+          params[:effective_at] = (Time.now - 2.years).to_s
+          existing_join_table.update!(effective_at: Time.now + 2.years)
+        end
+
+        it_behaves_like 'Join Table update with different resource after, after Time now'
+      end
     end
 
     context 'for EmployeeTimeOffPolicy' do
       let(:category) { create(:time_off_category, account: Account.current) }
       let(:resource) { create(:time_off_policy, time_off_category: category) }
+      let(:existing_resource) { create(:time_off_policy, time_off_category: category) }
       let(:resource_params) { { time_off_policy_id: resource.id } }
       let(:resource_class) { TimeOffPolicy }
       let(:join_table_class) { EmployeeTimeOffPolicy }
       let!(:existing_join_table) do
-        create(:employee_time_off_policy, effective_at: '1/4/2015', employee: employee)
+        create(:employee_time_off_policy,
+          effective_at: '1/4/2015', employee: employee, time_off_policy: existing_resource)
       end
 
       it_behaves_like 'Join Table update'
@@ -173,6 +208,21 @@ RSpec.describe CreateJoinTableService, type: :service do
         end
 
         it_behaves_like 'Join Table update with the same resource after and before'
+      end
+
+      context 'when there is table with other resource and effective till is in the past' do
+        before { params[:effective_at] = (Time.now - 2.years).to_s }
+
+        it_behaves_like 'Join Table update with different resource after and effective till in past'
+      end
+
+      context 'when there is table with other resource and effective till is in the future' do
+        before do
+          params[:effective_at] = (Time.now - 2.years).to_s
+          existing_join_table.update!(effective_at: Time.now + 2.years)
+        end
+
+        it_behaves_like 'Join Table update with different resource after, after Time now'
       end
     end
 
@@ -221,6 +271,21 @@ RSpec.describe CreateJoinTableService, type: :service do
         end
 
         it_behaves_like 'Join Table update with the same resource after and before'
+      end
+
+      context 'when there is table with other resource and effective till is in the past' do
+        before { params[:effective_at] = (Time.now - 2.years).to_s }
+
+        it_behaves_like 'Join Table update with different resource after and effective till in past'
+      end
+
+      context 'when there is table with other resource and effective till is in the future' do
+        before do
+          params[:effective_at] = (Time.now - 2.years).to_s
+          existing_join_table.update!(effective_at: Time.now + 2.years)
+        end
+
+        it_behaves_like 'Join Table update with different resource after, after Time now'
       end
     end
   end
