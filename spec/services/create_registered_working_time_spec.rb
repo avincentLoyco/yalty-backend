@@ -52,7 +52,7 @@ RSpec.describe CreateRegisteredWorkingTime do
     context 'working from Monday to Friday' do
       let!(:employee_presence_policy) do
         # To be sure we don't assign it on Monday
-        effective_at = 3.months.ago.to_date.beginning_of_week + 1
+        effective_at = 10.months.ago.to_date.beginning_of_week + 1
 
         create(:employee_presence_policy,
           presence_policy: pp_one_week_work_from_mon_to_fri,
@@ -192,9 +192,10 @@ RSpec.describe CreateRegisteredWorkingTime do
       let!(:holiday_policy) do
         create(:holiday_policy, account: account, country: 'ch', region: 'vd')
       end
+
       let!(:employee_presence_policy) do
         # To be sure we don't assign it on Monday
-        effective_at = 3.months.ago.to_date.beginning_of_week + 1
+        effective_at = 10.months.ago.to_date.beginning_of_week + 1
 
         create(:employee_presence_policy,
                presence_policy: pp_one_week_work_from_mon_to_fri,
@@ -231,7 +232,7 @@ RSpec.describe CreateRegisteredWorkingTime do
             rwt = employee_rwt.first!
 
             expect(rwt.date).to eq(date)
-            expect(rwt.date.cwday).to eq(5)
+            expect(rwt.date.cwday).to eq(1)
             expect(rwt.time_entries).to match_array([])
           end
         end
