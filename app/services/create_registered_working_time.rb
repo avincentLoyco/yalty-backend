@@ -5,17 +5,10 @@ class CreateRegisteredWorkingTime
   end
 
   def call
-    process_employees(@employees_ids - employees_with_working_hours_ids)
+    process_employees(@employees_ids)
   end
 
   private
-
-  def employees_with_working_hours_ids
-    Employee
-      .joins(:registered_working_times)
-      .where(registered_working_times: { date: @today })
-      .pluck(:id)
-  end
 
   def process_employees(employees_ids)
     employees_splitted_entries = {}
