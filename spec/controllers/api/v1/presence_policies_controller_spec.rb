@@ -1,6 +1,9 @@
 require 'rails_helper'
 
 RSpec.describe API::V1::PresencePoliciesController, type: :controller do
+  include_context 'shared_context_active_and_inactive_resources',
+    resource_class: PresencePolicy.model_name,
+    join_table_class: EmployeePresencePolicy.model_name
   include_examples 'example_authorization',
     resource_name: 'presence_policy'
   include_context 'shared_context_headers'
@@ -8,8 +11,6 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
   let(:first_employee) { create(:employee, account: account) }
   let(:second_employee) { create(:employee, account: account) }
   let(:working_place) { create(:working_place, account: account) }
-  let!(:second_presence_policy) { create(:presence_policy, account: account) }
-  let(:presence_day) { create(:presence_day, presence_policy: second_presence_policy) }
 
   describe 'GET #show' do
     let(:presence_policy) do
@@ -66,7 +67,7 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
     context 'with account presence policy' do
       before { subject }
 
-      it { expect_json_sizes(4) }
+      it { expect_json_sizes(3) }
       it { is_expected.to have_http_status(200) }
       it { expect_json_keys( '*', [ :id, :type, :name, :presence_days, :assigned_employees ] ) }
       it { expect(response.body).to include(
