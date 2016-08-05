@@ -13,7 +13,8 @@ class ActiveAndInactiveJoinTableFinders
   end
 
   def inactive
-    resource_class.where('id NOT IN (?)', active.pluck(:id))
+    return inactive_for_account_related if resource_class.attribute_names.include?('account_id')
+    inactive_for_non_account_related
   end
 
   def without_join_tables_assigned
@@ -39,5 +40,16 @@ class ActiveAndInactiveJoinTableFinders
       .joins(:time_off_category)
       .where(time_off_categories: { account_id: account_id })
       .where(id: assigned_ids + without_join_tables_assigned)
+  end
+
+  def inactive_for_account_related
+    resource_class.where('id NOT IN (?) AND account_id = ?', active.pluck(:id), account_id)
+  end
+
+  def inactive_for_non_account_related
+    resource_class
+      .joins(:time_off_category)
+      .where(time_off_categories: { account_id: account_id })
+      .where.not(id: active.pluck(:id))
   end
 end
