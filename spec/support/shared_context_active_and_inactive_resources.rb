@@ -9,13 +9,16 @@ RSpec.shared_context 'shared_context_active_and_inactive_resources' do |settings
       let(:resource) { create(resource_sym, time_off_category: category) }
       let(:new_resource) { create(resource_sym, time_off_category: category) }
       let!(:not_assigned_resources) { create_list(resource_sym, 2, time_off_category: category) }
+      let!(:other_account_resource) { create(resource_sym) }
     elsif settings[:resource_class].name == 'PresencePolicy'
       let(:resource) { create(resource_sym, :with_presence_day, account: account) }
       let(:new_resource) { create(resource_sym, :with_presence_day, account: account) }
+      let!(:other_account_resource) { create(resource_sym) }
       let!(:not_assigned_resources) do
         create_list(resource_sym, 2, :with_presence_day, account: account)
       end
     else
+      let!(:other_account_resource) { create(resource_sym) }
       let(:resource) { create(resource_sym, account: account) }
       let(:new_resource) { create(resource_sym, account: account) }
       let!(:not_assigned_resources) { create_list(resource_sym, 2, account: account) }
@@ -53,6 +56,7 @@ RSpec.shared_context 'shared_context_active_and_inactive_resources' do |settings
         it { expect(response.body).to include not_assigned_resources.first.id }
         it { expect(response.body).to include not_assigned_resources.last.id }
         it { expect(response.body).to include resource.id }
+        it { expect(response.body).to_not include other_account_resource.id }
       end
 
       context 'when not all resources are active' do
@@ -75,6 +79,7 @@ RSpec.shared_context 'shared_context_active_and_inactive_resources' do |settings
           it { expect(response.body).to include not_assigned_resources.last.id }
           it { expect(response.body).to include resource.id }
           it { expect(response.body).to include new_resource.id }
+          it { expect(response.body).to_not include other_account_resource.id }
         end
 
         context 'when resource is inactive for all employees' do
@@ -87,6 +92,7 @@ RSpec.shared_context 'shared_context_active_and_inactive_resources' do |settings
           it { expect(response.body).to include new_resource.id }
 
           it { expect(response.body).to_not include resource.id }
+          it { expect(response.body).to_not include other_account_resource.id }
         end
       end
     end
@@ -100,6 +106,7 @@ RSpec.shared_context 'shared_context_active_and_inactive_resources' do |settings
         it { is_expected.to have_http_status(200) }
 
         it { expect(response.body).to_not include resource.id }
+        it { expect(response.body).to_not include other_account_resource.id }
       end
 
       context 'when there are inactive resources' do
@@ -113,6 +120,7 @@ RSpec.shared_context 'shared_context_active_and_inactive_resources' do |settings
 
         it { expect(response.body).to include resource.id }
         it { expect(response.body).to_not include new_resource.id }
+        it { expect(response.body).to_not include other_account_resource.id }
       end
     end
   end

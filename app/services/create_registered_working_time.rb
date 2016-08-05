@@ -100,11 +100,12 @@ class CreateRegisteredWorkingTime
     countries = HolidayPolicy.all.pluck(:country).uniq
     countries_and_regions_hash = {}
     countries.each do |country|
-      countries_and_regions_hash[country.to_sym] = []
       holiday_today = Holidays.between(@today, @today, "#{country}_".to_sym).first
+      next unless holiday_today
+      countries_and_regions_hash[country.to_sym] = []
       country_plus_regions = holiday_today.present? ? holiday_today[:regions] : []
       country_plus_regions.each do |country_plus_region|
-        countries_and_regions_hash[country.to_sym] << country_plus_region.to_s.split('_').last
+        countries_and_regions_hash[country.to_sym] << country_plus_region.to_s.split('_')[1]
       end
       countries_and_regions_hash[country.to_sym].compact!
     end
