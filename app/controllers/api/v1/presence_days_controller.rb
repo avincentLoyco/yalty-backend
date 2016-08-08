@@ -2,7 +2,7 @@ module API
   module V1
     class PresenceDaysController < ApplicationController
       authorize_resource except: :create
-      include PresenceDayRules
+      include PresenceDaySchemas
 
       def show
         render_resource(resource)
@@ -13,7 +13,7 @@ module API
       end
 
       def create
-        verified_params(gate_rules) do |attributes|
+        verified_dry_params(dry_validation_schema) do |attributes|
           resource = presence_policy.presence_days.new(presence_day_params(attributes))
           authorize! :create, resource
 
@@ -23,7 +23,7 @@ module API
       end
 
       def update
-        verified_params(gate_rules) do |attributes|
+        verified_dry_params(dry_validation_schema) do |attributes|
           previous_order = resource.order
 
           transactions do

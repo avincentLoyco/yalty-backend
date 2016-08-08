@@ -131,7 +131,7 @@ RSpec.describe VerifyEmployeeAttributeValues, type: :service do
       it 'should return error' do
         subject.valid?
 
-        expect(subject.errors[:value]).to eq(:coercion_error)
+        expect(subject.errors[:value]).to eq(["must be a string"])
       end
     end
 
@@ -154,7 +154,7 @@ RSpec.describe VerifyEmployeeAttributeValues, type: :service do
       it 'should return error' do
         subject.valid?
 
-        expect(subject.errors[:value]).to eq(:coercion_error)
+        expect(subject.errors[:value]).to eq(["must be a string"])
       end
     end
 
@@ -166,7 +166,7 @@ RSpec.describe VerifyEmployeeAttributeValues, type: :service do
       it 'should return error' do
         subject.valid?
 
-        expect(subject.errors[:value]).to eq(:coercion_error)
+        expect(subject.errors[:value]).to eq(["must be a decimal"])
       end
     end
 
@@ -178,20 +178,20 @@ RSpec.describe VerifyEmployeeAttributeValues, type: :service do
       it 'should not return error' do
         subject.valid?
 
-        expect(subject.errors[:value]).to eq(:coercion_error)
+        expect(subject.errors[:value]).to eq(["must be boolean"])
       end
     end
 
     context 'value has missing params' do
-      let(:gate_rules) do
-        Gate.rules do
-          required :foo
+      let(:schema) do
+        Dry::Validation.Form do
+          required(:foo).filled
         end
       end
 
       before do
-        allow_any_instance_of(Attributes::AddressRules).to receive(:address_rules)
-          .and_return(gate_rules)
+        allow_any_instance_of(Attributes::AddressSchema).to receive(:address_schema)
+          .and_return(schema)
       end
 
       let(:attribute_name) { address_definition.name }
@@ -201,7 +201,7 @@ RSpec.describe VerifyEmployeeAttributeValues, type: :service do
       it 'should return error' do
         subject.valid?
 
-        expect(subject.errors[:foo]).to eq(:missing)
+        expect(subject.errors[:foo]).to eq(["is missing"])
       end
     end
   end

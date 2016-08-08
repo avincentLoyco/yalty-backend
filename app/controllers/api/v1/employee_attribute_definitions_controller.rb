@@ -2,7 +2,7 @@ module API
   module V1
     class EmployeeAttributeDefinitionsController < API::ApplicationController
       authorize_resource class: 'Employee::AttributeDefinition', except: :create
-      include EmployeeAttributeDefinitionRules
+      include EmployeeAttributeDefinitionSchemas
 
       def index
         render_resource(resources)
@@ -13,7 +13,7 @@ module API
       end
 
       def create
-        verified_params(gate_rules) do |attributes|
+        verified_dry_params(dry_validation_schema) do |attributes|
           @resource = Account.current.employee_attribute_definitions.new(attributes)
           authorize! :create, resource
 
@@ -23,7 +23,7 @@ module API
       end
 
       def update
-        verified_params(gate_rules) do |attributes|
+        verified_dry_params(dry_validation_schema) do |attributes|
           resource.update!(attributes)
           render_no_content
         end

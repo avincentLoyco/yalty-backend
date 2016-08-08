@@ -167,7 +167,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         context 'response body' do
           before { subject }
 
-          it { expect(response.body).to include 'coercion_error'}
+          it { expect(response.body).to include 'must be a string'}
         end
       end
     end
@@ -553,7 +553,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       context 'response body' do
         before { subject }
 
-        it { expect(response.body).to include 'coercion_error'}
+        it { expect(response.body).to include 'must be a string'}
       end
     end
 

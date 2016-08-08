@@ -2,7 +2,7 @@ module API
   module V1
     class TimeOffsController < ApplicationController
       authorize_resource except: [:create, :index, :show]
-      include TimeOffsRules
+      include TimeOffsSchemas
 
       def show
         authorize! :show, resource
@@ -16,10 +16,9 @@ module API
 
       def create
         convert_times_to_utc
-        verified_params(gate_rules) do |attributes|
+        verified_dry_params(dry_validation_schema) do |attributes|
           resource = resources.new(time_off_attributes(attributes))
           authorize! :create, resource
-
           transactions do
             resource.save! &&
               create_new_employee_balance(resource)
@@ -31,7 +30,7 @@ module API
 
       def update
         convert_times_to_utc
-        verified_params(gate_rules) do |attributes|
+        verified_dry_params(dry_validation_schema) do |attributes|
           transactions do
             resource.update!(attributes)
             prepare_balances_to_update(resource.employee_balance, balance_attributes)

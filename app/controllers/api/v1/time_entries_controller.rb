@@ -2,7 +2,7 @@ module API
   module V1
     class TimeEntriesController < API::ApplicationController
       authorize_resource except: :create
-      include TimeEntriesRules
+      include TimeEntriesSchemas
 
       def show
         render_resource(resource)
@@ -13,7 +13,7 @@ module API
       end
 
       def create
-        verified_params(gate_rules) do |attributes|
+        verified_dry_params(dry_validation_schema) do |attributes|
           resource = resources.new(time_entry_params(attributes))
           authorize! :create, resource
 
@@ -26,7 +26,7 @@ module API
       end
 
       def update
-        verified_params(gate_rules) do |attributes|
+        verified_dry_params(dry_validation_schema) do |attributes|
           transactions do
             resource.update!(attributes)
             update_affected_balances(resource.presence_day.presence_policy)

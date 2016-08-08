@@ -172,7 +172,7 @@ RSpec.describe API::V1::SettingsController, type: :controller do
         context 'with empty holiday policy id' do
           let(:holiday_policy_id) { '' }
 
-          it { is_expected.to have_http_status(404) }
+          it { is_expected.to have_http_status(422) }
         end
       end
     end

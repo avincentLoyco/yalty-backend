@@ -1,7 +1,7 @@
 module API
   module V1
     class TimeOffCategoriesController < ApplicationController
-      include TimeOffCategoriesRules
+      include TimeOffCategoriesSchemas
 
       def show
         authorize! :show, Account.current
@@ -14,7 +14,7 @@ module API
       end
 
       def create
-        verified_params(gate_rules) do |attributes|
+        verified_dry_params(dry_validation_schema) do |attributes|
           resource = Account.current.time_off_categories.new(attributes)
           authorize! :create, resource
 
@@ -25,7 +25,7 @@ module API
 
       def update
         authorize! :create, editable_resource
-        verified_params(gate_rules) do |attributes|
+        verified_dry_params(dry_validation_schema) do |attributes|
           editable_resource.update!(attributes)
           render_no_content
         end

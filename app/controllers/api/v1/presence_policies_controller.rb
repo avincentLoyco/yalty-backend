@@ -2,7 +2,7 @@ module API
   module V1
     class PresencePoliciesController < ApplicationController
       authorize_resource except: :create
-      include PresencePolicyRules
+      include PresencePolicySchemas
 
       def show
         render_resource_with_relationships(resource)
@@ -17,7 +17,7 @@ module API
       end
 
       def create
-        verified_params(gate_rules) do |attributes|
+        verified_dry_params(dry_validation_schema) do |attributes|
           days_params = attributes.delete(:presence_days) if attributes.key?(:presence_days)
           related = related_params(attributes).compact
           resource = Account.current.presence_policies.new(attributes)
@@ -35,7 +35,7 @@ module API
       end
 
       def update
-        verified_params(gate_rules) do |attributes|
+        verified_dry_params(dry_validation_schema) do |attributes|
           transactions do
             resource.attributes = attributes
             save!(resource, {})

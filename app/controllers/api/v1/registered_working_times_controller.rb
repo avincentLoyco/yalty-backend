@@ -1,10 +1,10 @@
 module API
   module V1
     class RegisteredWorkingTimesController < ApplicationController
-      include RegisteredWorkingTimeRules
+      include RegisteredWorkingTimeSchemas
 
       def create
-        verified_params(gate_rules) do |attributes|
+        verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :create, resource
           resource.update!(time_entries: filtered_attributes(attributes))
           render_no_content
