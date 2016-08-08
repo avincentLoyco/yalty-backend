@@ -5,7 +5,7 @@ RSpec.describe FindJoinTablesToDelete, type: :service do
 
   subject do
     described_class.new(
-      join_tables, new_effective_at, resource, resource_class, join_table_resource
+      join_tables, new_effective_at, resource, join_table_resource
     ).call
   end
 
@@ -109,15 +109,99 @@ RSpec.describe FindJoinTablesToDelete, type: :service do
         let!(:same_resource_tables) do
           [Time.now - 4.years, Time.now - 2.years].map do |date|
             create(:employee_working_place,
-              employee: employee, effective_at: date, working_place: related_resource.working_place)
+              employee: employee, effective_at: date, working_place: other_working_place)
           end
         end
 
         context 'and the same resource is after and before new effective_at' do
+          let(:other_working_place) { create(:working_place, account: account) }
+
           it_behaves_like 'The same resource is after and before new effective_at'
         end
 
         context 'and the same resource is after and before new effective_at with reasign' do
+          let(:other_working_place) { related_resource.working_place }
+          let(:new_effective_at) { Time.now - 3.years }
+
+          it_behaves_like 'The same resource is after and before new effective_at with reasign'
+        end
+      end
+    end
+  end
+
+  context 'For EmployeeTimeOffPolicy' do
+    let(:resource_class) { 'time_off_policy_id' }
+    let(:category) { create(:time_off_category, account: account) }
+    let(:resource) { create(:time_off_policy, time_off_category: category) }
+    let(:join_tables) { employee.employee_time_off_policies }
+
+    context 'when there are EmployeeWorkingPlaces with the same resource' do
+      it_behaves_like 'No employee join tables'
+    end
+
+    context 'when EmployeeWorkingPlace is created' do
+      let!(:related_resource) do
+        create(:employee_time_off_policy,
+          time_off_policy: resource, employee: employee, effective_at: effective_at)
+      end
+
+      context 'when there is EmployeeWorking Place with the same resource after' do
+        let(:effective_at) { Time.now - 1.year }
+
+        it_behaves_like 'The same resource after effective at in create'
+      end
+
+      context 'when there is EmployeeWorkingPlace with the same resource before' do
+        let(:effective_at) { Time.now - 3.years }
+
+        it_behaves_like 'The same resource before effective at in create'
+      end
+
+      context 'and the same resource is after and before new effective_at' do
+        let(:effective_at) { Time.now - 3.years }
+        let!(:newest_resource) do
+          related_resource.dup.tap { |resource| resource.update!(effective_at: Time.now ) }
+        end
+
+        it_behaves_like 'The same resource after and before effective at in create'
+      end
+    end
+
+    context 'when EmployeeWorkingPlace is updated' do
+      let(:new_policy) { create(:time_off_policy, time_off_category: category) }
+      let(:join_table_resource) { related_resource }
+      let(:join_tables) { employee.employee_time_off_policies.where('id != ?', related_resource.id) }
+      let!(:new_resources) do
+        [Time.now - 3.years, Time.now - 1.year, Time.now + 1.year].map do |date|
+          create(:employee_time_off_policy,
+            employee: employee, effective_at: date, time_off_policy: new_policy)
+        end
+      end
+      let!(:related_resource) do
+        create(:employee_time_off_policy,
+          time_off_policy: resource, employee: employee, effective_at: Time.now)
+      end
+
+      context 'and the same resource is after old effective_at' do
+        it_behaves_like 'The same resource after previous effective_at'
+      end
+
+      context 'the same resources in new effective_at' do
+        let!(:same_resource_tables) do
+          [Time.now - 4.years, Time.now - 2.years].map do |date|
+            create(:employee_time_off_policy,
+              employee: employee, effective_at: date, time_off_policy: other_policy)
+          end
+        end
+
+        context 'and the same resource is after and before new effective_at' do
+          let(:other_policy) { create(:time_off_policy, time_off_category: category) }
+
+          it_behaves_like 'The same resource is after and before new effective_at'
+        end
+
+        context 'and the same resource is after and before new effective_at with reasign' do
+          let(:other_policy) { related_resource.time_off_policy }
           let(:new_effective_at) { Time.now - 3.years }
 
           it_behaves_like 'The same resource is after and before new effective_at with reasign'

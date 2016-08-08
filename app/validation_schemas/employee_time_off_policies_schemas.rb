@@ -9,4 +9,11 @@ module EmployeeTimeOffPoliciesSchemas
       optional(:employee_balance_amount).maybe(:str?)
     end
   end
+
+  def put_schema
+    Dry::Validation.Form do
+      required :id
+      required :effective_at
+    end
+  end
 end

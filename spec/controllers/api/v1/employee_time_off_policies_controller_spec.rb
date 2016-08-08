@@ -238,4 +238,57 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
       it { expect(response.body).to include 'can\'t be set before employee hired date' }
     end
   end
+
+  context 'PUT #update' do
+    let(:id) { join_table_resource.id }
+    let(:effective_at) { Date.new(2016, 1, 1) }
+    let!(:join_table_resource) do
+      create(:employee_time_off_policy, time_off_policy: time_off_policy, employee: employee)
+    end
+
+    subject { put :update, { id: id, effective_at: effective_at }}
+
+    context 'with valid params' do
+      it { expect { subject }.to change { join_table_resource.reload.effective_at } }
+
+      it { is_expected.to have_http_status(200) }
+
+      context 'when there is resource in the same date but in different time off category' do
+        let(:second_category) { create(:time_off_category, account: Account.current) }
+        let(:second_time_off_policy) { create(:time_off_policy, time_off_category: second_category) }
+        let!(:existing_table) do
+          create(:employee_time_off_policy,
+            time_off_policy: second_time_off_policy, employee: employee, effective_at: '1/1/2016')
+        end
+
+        it { expect { subject }.to_not change { EmployeeTimeOffPolicy.count } }
+        it { expect { subject }.to change { join_table_resource.reload.effective_at } }
+      end
+    end
+
+    context 'with invalid params' do
+      context 'when effective at is not valid' do
+        let(:effective_at) { '123' }
+
+        it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
+        it { is_expected.to have_http_status(422) }
+      end
+
+      context 'when resource is duplicated' do
+        let!(:existing_resource) do
+          join_table_resource.dup.tap { |resource| resource.update!(effective_at: effective_at) }
+        end
+
+        it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
+        it { is_expected.to have_http_status(422) }
+      end
+
+      context 'when user is not account manager' do
+        before { Account::User.current.update!(account_manager: false, employee: employee) }
+
+        it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
+        it { is_expected.to have_http_status(403) }
+      end
+    end
+  end
 end

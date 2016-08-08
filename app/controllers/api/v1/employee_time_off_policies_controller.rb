@@ -24,12 +24,25 @@ module API
         end
       end
 
+      def update
+        verified_params(gate_rules) do |attributes|
+          authorize! :update, resource
+          actual_resource =
+            create_or_update_join_table(EmployeeTimeOffPolicy, TimeOffPolicy, attributes, resource)
+          render_resource(actual_resource)
+        end
+      end
+
       private
 
       def resource_newly_created?(resource)
         @resource_newly_created ||=
           resource.effective_at == params[:effective_at].to_date &&
           resource.employee_balances.blank?
+      end
+
+      def resource
+        @resource ||= Account.current.employee_time_off_policies.find(params[:id])
       end
 
       def resources

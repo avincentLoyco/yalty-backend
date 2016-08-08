@@ -2,12 +2,13 @@ class CreateOrUpdateJoinTable
   include API::V1::Exceptions
 
   attr_reader :join_table_class, :params, :employee_join_tables, :join_table,
-    :resource_class, :join_table_resource
+    :resource_class, :resource_class_id, :join_table_resource
 
   def initialize(join_table_class, resource_class, params, join_table_resource = nil)
     @join_table_class = join_table_class
     @params = params
-    @resource_class = resource_class.model_name.singular + '_id'
+    @resource_class = resource_class
+    @resource_class_id = resource_class.model_name.singular + '_id'
     @join_table_resource = join_table_resource
   end
 
@@ -34,7 +35,10 @@ class CreateOrUpdateJoinTable
 
   def remove_duplicated_resources_join_tables
     FindJoinTablesToDelete.new(
-      employee_join_tables, params[:effective_at], resource, resource_class, join_table_resource
+      employee_join_tables,
+      params[:effective_at],
+      resource_class.find(resource_id),
+      join_table_resource
     ).call.map(&:destroy!)
   end
 
@@ -43,12 +47,13 @@ class CreateOrUpdateJoinTable
     Account.current.employees.find(params.delete(:id))
   end
 
-  def resource
-    join_table_resource ? join_table_resource.send(resource_class) : params[resource_class.to_sym]
+  def resource_id
+    return params[resource_class_id.to_sym] unless join_table_resource
+    join_table_resource.send(resource_class_id)
   end
 
   def new_current_join_table
-    if previous_join_table && previous_join_table.send(resource_class) == resource
+    if previous_join_table && previous_join_table.send(resource_class_id) == resource_id
       join_table_resource.try(:destroy!)
       previous_join_table
     else
