@@ -3,6 +3,11 @@ module API
     class EmployeePresencePoliciesController < ApplicationController
       include EmployeePresencePoliciesSchemas
 
+      def index
+        authorize! :index, presence_policy
+        render_resource(resources)
+      end
+
       def create
         verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :create, presence_policy
@@ -11,12 +16,22 @@ module API
         end
       end
 
-      def index
-        authorize! :index, presence_policy
-        render_resource(resources)
+      def update
+        verified_dry_params(dry_validation_schema) do |attributes|
+          authorize! :update, resource
+          actual_resource =
+            create_or_update_join_table(
+              EmployeePresencePolicy, PresencePolicy, attributes, resource
+            )
+          render_resource(actual_resource)
+        end
       end
 
       private
+
+      def resource
+        @resource ||= Account.current.employee_presence_policies.find(params[:id])
+      end
 
       def employee
         @employee ||= Account.current.employees.find(params[:id])

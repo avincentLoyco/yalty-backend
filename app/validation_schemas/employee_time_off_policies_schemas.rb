@@ -12,8 +12,8 @@ module EmployeeTimeOffPoliciesSchemas
 
   def put_schema
     Dry::Validation.Form do
-      required :id
-      required :effective_at
+      required(:id).filled(:str?)
+      required(:effective_at).filled
     end
   end
 end

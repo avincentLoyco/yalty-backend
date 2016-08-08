@@ -11,6 +11,7 @@ Rails.application.routes.draw do
       end
       resources :employee_working_places, only: :update
       resources :employee_time_off_policies, only: :update
+      resources :employee_presence_policies, only: :update
       resources :holiday_policies, except: [:edit, :new]
       resources :countries, only: [:show]
       resource :settings, only: [:show, :update]

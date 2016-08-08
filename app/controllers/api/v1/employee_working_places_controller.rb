@@ -24,7 +24,7 @@ module API
       end
 
       def update
-        verified_params(gate_rules) do |attributes|
+        verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :update, resource
           actual_resource =
             create_or_update_join_table(EmployeeWorkingPlace, WorkingPlace, attributes, resource)

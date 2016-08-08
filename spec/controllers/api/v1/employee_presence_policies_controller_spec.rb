@@ -147,4 +147,46 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
       end
     end
   end
+
+  context 'PUT #update' do
+    let(:id) { join_table_resource.id }
+    let(:effective_at) { Date.new(2016, 1, 1) }
+    let!(:join_table_resource) do
+      create(:employee_presence_policy,
+        presence_policy: presence_policy, employee: employee, effective_at: Time.now + 10.days)
+    end
+
+    subject { put :update, { id: id, effective_at: effective_at }}
+
+    context 'with valid params' do
+      it { expect { subject }.to change { join_table_resource.reload.effective_at } }
+
+      it { is_expected.to have_http_status(200) }
+    end
+
+    context 'with invalid params' do
+      context 'when effective at is not valid' do
+        let(:effective_at) { '123' }
+
+        it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
+        it { is_expected.to have_http_status(422) }
+      end
+
+      context 'when resource is duplicated' do
+        let!(:existing_resource) do
+          join_table_resource.dup.tap { |resource| resource.update!(effective_at: '1/1/2016') }
+        end
+
+        it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
+        it { is_expected.to have_http_status(422) }
+      end
+
+      context 'when user is not account manager' do
+        before { Account::User.current.update!(account_manager: false, employee: employee) }
+
+        it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
+        it { is_expected.to have_http_status(403) }
+      end
+    end
+  end
 end

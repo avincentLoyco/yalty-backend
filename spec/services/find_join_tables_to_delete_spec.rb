@@ -135,23 +135,23 @@ RSpec.describe FindJoinTablesToDelete, type: :service do
     let(:resource) { create(:time_off_policy, time_off_category: category) }
     let(:join_tables) { employee.employee_time_off_policies }
 
-    context 'when there are EmployeeWorkingPlaces with the same resource' do
+    context 'when there are EmployeeTimeOffPolicy with the same resource' do
       it_behaves_like 'No employee join tables'
     end
 
-    context 'when EmployeeWorkingPlace is created' do
+    context 'when EmployeeTimeOffPolicy is created' do
       let!(:related_resource) do
         create(:employee_time_off_policy,
           time_off_policy: resource, employee: employee, effective_at: effective_at)
       end
 
-      context 'when there is EmployeeWorking Place with the same resource after' do
+      context 'when there is EmployeeTimeOffPolicy with the same resource after' do
         let(:effective_at) { Time.now - 1.year }
 
         it_behaves_like 'The same resource after effective at in create'
       end
 
-      context 'when there is EmployeeWorkingPlace with the same resource before' do
+      context 'when there is EmployeeTimeOffPolicy with the same resource before' do
         let(:effective_at) { Time.now - 3.years }
 
         it_behaves_like 'The same resource before effective at in create'
@@ -167,7 +167,7 @@ RSpec.describe FindJoinTablesToDelete, type: :service do
       end
     end
 
-    context 'when EmployeeWorkingPlace is updated' do
+    context 'when EmployeeTimeOffPolicy is updated' do
       let(:new_policy) { create(:time_off_policy, time_off_category: category) }
       let(:join_table_resource) { related_resource }
       let(:join_tables) { employee.employee_time_off_policies.where('id != ?', related_resource.id) }
@@ -202,6 +202,85 @@ RSpec.describe FindJoinTablesToDelete, type: :service do
 
         context 'and the same resource is after and before new effective_at with reasign' do
           let(:other_policy) { related_resource.time_off_policy }
+          let(:new_effective_at) { Time.now - 3.years }
+
+          it_behaves_like 'The same resource is after and before new effective_at with reasign'
+        end
+      end
+    end
+  end
+
+  context 'For EmployeePresencePolicy' do
+    let(:resource) { create(:presence_policy, :with_presence_day, account: account) }
+    let(:join_tables) { employee.employee_presence_policies }
+
+    context 'when there are EmployeePresencePolicies with the same resource' do
+      it_behaves_like 'No employee join tables'
+    end
+
+    context 'when EmployeePresencePolicy is created' do
+      let!(:related_resource) do
+        create(:employee_presence_policy,
+          presence_policy: resource, employee: employee, effective_at: effective_at)
+      end
+
+      context 'when there is EmployeePresencePolicy with the same resource after' do
+        let(:effective_at) { Time.now - 1.year }
+
+        it_behaves_like 'The same resource after effective at in create'
+      end
+
+      context 'when there is EmployeePresencePolicy with the same resource before' do
+        let(:effective_at) { Time.now - 3.years }
+
+        it_behaves_like 'The same resource before effective at in create'
+      end
+
+      context 'and the same resource is after and before new effective_at' do
+        let(:effective_at) { Time.now - 3.years }
+        let!(:newest_resource) do
+          related_resource.dup.tap { |resource| resource.update!(effective_at: Time.now ) }
+        end
+
+        it_behaves_like 'The same resource after and before effective at in create'
+      end
+    end
+
+    context 'when EmployeePresencePolicy is updated' do
+      let(:new_policy) { create(:presence_policy, :with_presence_day, account: account) }
+      let(:join_table_resource) { related_resource }
+      let(:join_tables) { employee.employee_presence_policies.where('id != ?', related_resource.id) }
+      let!(:new_resources) do
+        [Time.now - 3.years, Time.now - 1.year, Time.now + 1.year].map do |date|
+          create(:employee_presence_policy,
+            employee: employee, effective_at: date, presence_policy: new_policy)
+        end
+      end
+      let!(:related_resource) do
+        create(:employee_presence_policy,
+          presence_policy: resource, employee: employee, effective_at: Time.now)
+      end
+
+      context 'and the same resource is after old effective_at' do
+        it_behaves_like 'The same resource after previous effective_at'
+      end
+
+      context 'the same resources in new effective_at' do
+        let!(:same_resource_tables) do
+          [Time.now - 4.years, Time.now - 2.years].map do |date|
+            create(:employee_presence_policy,
+              employee: employee, effective_at: date, presence_policy: other_policy)
+          end
+        end
+
+        context 'and the same resource is after and before new effective_at' do
+          let(:other_policy) { create(:presence_policy, :with_presence_day, account: account) }
+
+          it_behaves_like 'The same resource is after and before new effective_at'
+        end
+
+        context 'and the same resource is after and before new effective_at with reasign' do
+          let(:other_policy) { related_resource.presence_policy }
           let(:new_effective_at) { Time.now - 3.years }
 
           it_behaves_like 'The same resource is after and before new effective_at with reasign'
