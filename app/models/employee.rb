@@ -19,7 +19,6 @@ class Employee < ActiveRecord::Base
   has_many :presence_policies, through: :employee_presence_policies
   has_many :registered_working_times
 
-  validates :employee_working_places, length: { minimum: 1 }
   validate :hired_event_presence, on: :create
 
   scope :affected_by_presence_policy, lambda { |presence_policy_id|
@@ -37,6 +36,7 @@ class Employee < ActiveRecord::Base
   }
 
   def first_employee_working_place
+    return unless employee_working_places.present?
     employee_working_places.find_by(effective_at: employee_working_places.pluck(:effective_at).min)
   end
 

@@ -34,7 +34,7 @@ RSpec.describe EmployeeWorkingPlace, type: :model do
         context 'with different than hired event\'s effective_at' do
           it { expect(subject).to eq false }
           it { expect { subject }.to change { employee_working_place.errors.messages[:effective_at] }
-            .to include 'First EmployeeWorkingPlace must have effective at hired date' }
+            .to include 'can\'t be set before employee hired_date' }
         end
       end
 
@@ -51,7 +51,7 @@ RSpec.describe EmployeeWorkingPlace, type: :model do
 
           it { expect(subject.valid?).to eq false }
           it { expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
-            .to include 'First EmployeeWorkingPlace must have effective at hired date' }
+            .to include 'can\'t be set before employee hired_date' }
         end
       end
     end

@@ -15,7 +15,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
   end
 
   let!(:employee) do
-    create(:employee, :with_attributes,
+    create(:employee_with_working_place, :with_attributes,
       account: account,
       account_user_id: user.id,
       employee_attributes: {
@@ -213,7 +213,20 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       it { expect { subject }.to change { Employee::Event.count }.by(1) }
       it { expect { subject }.to change { Employee.count }.by(1) }
       it { expect { subject }.to change { Employee::AttributeVersion.count }.by(2) }
-      it { expect { subject }.to change { EmployeeWorkingPlace.count }.by(1) }
+
+      context 'when there is working place' do
+        it { expect { subject }.to change { EmployeeWorkingPlace.count }.by(1) }
+      end
+
+      context 'without working place' do
+        before { json_payload[:employee] = { type: 'employee' } }
+        it { expect { subject }.not_to change { EmployeeWorkingPlace.count } }
+      end
+
+      context 'with working_place_id nil' do
+        before { json_payload[:employee][:working_place_id] = nil }
+        it { expect { subject }.not_to change { EmployeeWorkingPlace.count } }
+      end
 
       it 'should respond with success' do
         expect(subject).to have_http_status(201)

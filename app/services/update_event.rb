@@ -38,7 +38,7 @@ class UpdateEvent
   end
 
   def update_employee_working_place
-    return if event.event_type != 'hired'
+    return if event.event_type != 'hired' || employee.employee_working_places.empty?
     @updated_working_place =
       ManageEmployeeWorkingPlace.new(employee, event_params[:effective_at]).call
   end

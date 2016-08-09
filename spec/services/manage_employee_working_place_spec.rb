@@ -4,7 +4,7 @@ RSpec.describe ManageEmployeeWorkingPlace, type: :service do
   include_context 'shared_context_account_helper'
   subject { ManageEmployeeWorkingPlace.new(employee, effective_at).call }
 
-  let(:employee) { create(:employee) }
+  let(:employee) { create(:employee_with_working_place) }
   let!(:first_working_place) { employee.first_employee_working_place }
 
   context 'with valid effective at' do
@@ -14,7 +14,6 @@ RSpec.describe ManageEmployeeWorkingPlace, type: :service do
           let(:effective_at) { Time.now - 5.days }
 
           it { expect(subject.effective_at).to eq effective_at.to_date }
-          
           it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
         end
 

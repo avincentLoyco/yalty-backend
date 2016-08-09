@@ -187,6 +187,10 @@ RSpec.describe CreateRegisteredWorkingTime do
     end
 
     context 'and have bank holidays' do
+      let!(:employee_working_place) do
+        create(:employee_working_place, employee: employee, effective_at: date)
+      end
+
       let(:working_place) { employee.active_working_place_at(date) }
 
       let!(:holiday_policy) do
