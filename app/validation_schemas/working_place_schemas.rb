@@ -4,8 +4,10 @@ module WorkingPlaceSchemas
   def post_schema
     Dry::Validation.Form do
       required(:name).filled(:str?)
-      optional(:holiday_policy).schema do
-        required(:id).filled(:str?)
+      optional(:holiday_policy).maybe do
+        schema do
+          required(:id).filled(:str?)
+        end
       end
     end
   end
