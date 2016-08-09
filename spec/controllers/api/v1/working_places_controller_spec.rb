@@ -85,6 +85,15 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
 
         it { expect_json_types(name: :string, id: :string, type: :string) }
       end
+
+      context 'null holiday policy' do
+        before { valid_data_json[:holiday_policy] = nil }
+
+        it { expect { subject }.to change { WorkingPlace.count }.by(1) }
+        it { expect { subject }.to change { account.reload.working_places.count }.by(1) }
+        it { expect { subject }.not_to change { holiday_policy.working_places.count } }
+        it { is_expected.to have_http_status(201) }
+      end
     end
 
     context 'with invalid params' do
