@@ -14,26 +14,17 @@ class FindJoinTablesToDelete
   def call
     return [] unless join_tables.present?
     verify_if_resource_not_duplicated
-    join_tables_to_remove = []
-    join_tables_to_remove.push(current_join_table, next_join_table)
-    join_tables_to_remove.push(duplicated_at_previous_effective_at) if join_table_resource
-    join_tables_to_remove.compact
+    [current_join_table, next_join_table, duplicated_at_previous_effective_at].compact
   end
 
   def duplicated_at_previous_effective_at
+    return unless join_table_resource
     previous = previous_join_table(join_table_resource.effective_at).try(:send, resource_class)
-    return next_join_table(join_table_resource.effective_at, previous) if previous
+    next_join_table(join_table_resource.effective_at, previous) if previous
   end
 
   def current_join_table
-    @current_join_table ||=
-      if join_tables.first.class.column_names.include?('time_off_category_id')
-        join_tables.find_by(
-          effective_at: new_effective_at, time_off_category: resource.time_off_category
-        )
-      else
-        join_tables.find_by(effective_at: new_effective_at)
-      end
+    @current_join_table ||= find_by_effective_at_and_category
   end
 
   def next_join_table(effective_at = new_effective_at, current_resource = resource)
@@ -48,6 +39,13 @@ class FindJoinTablesToDelete
       .where('effective_at < ?', effective_at)
       .order(:effective_at)
       .last
+  end
+
+  def find_by_effective_at_and_category
+    return join_tables.find_by(effective_at: new_effective_at) unless resource.is_a?(TimeOffPolicy)
+    join_tables.find_by(
+      effective_at: new_effective_at, time_off_category: resource.time_off_category
+    )
   end
 
   def verify_if_resource_not_duplicated

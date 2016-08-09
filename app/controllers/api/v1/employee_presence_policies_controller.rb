@@ -11,7 +11,7 @@ module API
       def create
         verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :create, presence_policy
-          resource = create_or_update_join_table(EmployeePresencePolicy, PresencePolicy, attributes)
+          resource = create_or_update_join_table(PresencePolicy, attributes)
           render_resource(resource, status: 201)
         end
       end
@@ -19,11 +19,8 @@ module API
       def update
         verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :update, resource
-          actual_resource =
-            create_or_update_join_table(
-              EmployeePresencePolicy, PresencePolicy, attributes, resource
-            )
-          render_resource(actual_resource)
+          updated_resource = create_or_update_join_table(PresencePolicy, attributes, resource)
+          render_resource(updated_resource)
         end
       end
 

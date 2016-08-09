@@ -10,7 +10,7 @@ RSpec.describe FindJoinTablesToDelete, type: :service do
   end
 
   let(:account) { create(:account) }
-  let(:new_effective_at) { Time.now - 2.years }
+  let(:new_effective_at) { 2.years.ago }
   let(:join_table_resource) { nil }
   let(:employee) { create(:employee, account: account) }
 
@@ -65,19 +65,19 @@ RSpec.describe FindJoinTablesToDelete, type: :service do
       end
 
       context 'when there is EmployeeWorking Place with the same resource after' do
-        let(:effective_at) { Time.now - 1.year }
+        let(:effective_at) { 1.year.ago }
 
         it_behaves_like 'The same resource after effective at in create'
       end
 
       context 'when there is EmployeeWorkingPlace with the same resource before' do
-        let(:effective_at) { Time.now - 3.years }
+        let(:effective_at) { 3.years.ago }
 
         it_behaves_like 'The same resource before effective at in create'
       end
 
       context 'and the same resource is after and before new effective_at' do
-        let(:effective_at) { Time.now - 3.years }
+        let(:effective_at) { 3.years.ago }
         let!(:newest_resource) do
           related_resource.dup.tap { |resource| resource.update!(effective_at: Time.now ) }
         end
@@ -91,7 +91,7 @@ RSpec.describe FindJoinTablesToDelete, type: :service do
       let(:join_table_resource) { related_resource }
       let(:join_tables) { employee.employee_working_places.where('id != ?', related_resource.id) }
       let!(:new_resources) do
-        [Time.now - 3.years, Time.now - 1.year, Time.now + 1.year].map do |date|
+        [3.years.ago, 1.year.ago, 1.year.since].map do |date|
           create(:employee_working_place,
             employee: employee, effective_at: date, working_place: new_working_place)
         end
@@ -107,7 +107,7 @@ RSpec.describe FindJoinTablesToDelete, type: :service do
 
       context 'the same resources in new effective_at' do
         let!(:same_resource_tables) do
-          [Time.now - 4.years, Time.now - 2.years].map do |date|
+          [4.years.ago, 2.years.ago].map do |date|
             create(:employee_working_place,
               employee: employee, effective_at: date, working_place: other_working_place)
           end
@@ -121,7 +121,7 @@ RSpec.describe FindJoinTablesToDelete, type: :service do
 
         context 'and the same resource is after and before new effective_at with reasign' do
           let(:other_working_place) { related_resource.working_place }
-          let(:new_effective_at) { Time.now - 3.years }
+          let(:new_effective_at) { 3.years.ago }
 
           it_behaves_like 'The same resource is after and before new effective_at with reasign'
         end
@@ -146,19 +146,19 @@ RSpec.describe FindJoinTablesToDelete, type: :service do
       end
 
       context 'when there is EmployeeTimeOffPolicy with the same resource after' do
-        let(:effective_at) { Time.now - 1.year }
+        let(:effective_at) { 1.year.ago }
 
         it_behaves_like 'The same resource after effective at in create'
       end
 
       context 'when there is EmployeeTimeOffPolicy with the same resource before' do
-        let(:effective_at) { Time.now - 3.years }
+        let(:effective_at) { 3.years.ago }
 
         it_behaves_like 'The same resource before effective at in create'
       end
 
       context 'and the same resource is after and before new effective_at' do
-        let(:effective_at) { Time.now - 3.years }
+        let(:effective_at) { 3.years.ago }
         let!(:newest_resource) do
           related_resource.dup.tap { |resource| resource.update!(effective_at: Time.now ) }
         end
@@ -172,7 +172,7 @@ RSpec.describe FindJoinTablesToDelete, type: :service do
       let(:join_table_resource) { related_resource }
       let(:join_tables) { employee.employee_time_off_policies.where('id != ?', related_resource.id) }
       let!(:new_resources) do
-        [Time.now - 3.years, Time.now - 1.year, Time.now + 1.year].map do |date|
+        [3.years.ago, 1.year.ago, 1.year.since].map do |date|
           create(:employee_time_off_policy,
             employee: employee, effective_at: date, time_off_policy: new_policy)
         end
@@ -188,7 +188,7 @@ RSpec.describe FindJoinTablesToDelete, type: :service do
 
       context 'the same resources in new effective_at' do
         let!(:same_resource_tables) do
-          [Time.now - 4.years, Time.now - 2.years].map do |date|
+          [4.years.ago, 2.years.ago].map do |date|
             create(:employee_time_off_policy,
               employee: employee, effective_at: date, time_off_policy: other_policy)
           end
@@ -202,7 +202,7 @@ RSpec.describe FindJoinTablesToDelete, type: :service do
 
         context 'and the same resource is after and before new effective_at with reasign' do
           let(:other_policy) { related_resource.time_off_policy }
-          let(:new_effective_at) { Time.now - 3.years }
+          let(:new_effective_at) { 3.years.ago }
 
           it_behaves_like 'The same resource is after and before new effective_at with reasign'
         end
@@ -225,19 +225,19 @@ RSpec.describe FindJoinTablesToDelete, type: :service do
       end
 
       context 'when there is EmployeePresencePolicy with the same resource after' do
-        let(:effective_at) { Time.now - 1.year }
+        let(:effective_at) { 1.year.ago }
 
         it_behaves_like 'The same resource after effective at in create'
       end
 
       context 'when there is EmployeePresencePolicy with the same resource before' do
-        let(:effective_at) { Time.now - 3.years }
+        let(:effective_at) { 3.years.ago }
 
         it_behaves_like 'The same resource before effective at in create'
       end
 
       context 'and the same resource is after and before new effective_at' do
-        let(:effective_at) { Time.now - 3.years }
+        let(:effective_at) { 3.years.ago }
         let!(:newest_resource) do
           related_resource.dup.tap { |resource| resource.update!(effective_at: Time.now ) }
         end
@@ -251,7 +251,7 @@ RSpec.describe FindJoinTablesToDelete, type: :service do
       let(:join_table_resource) { related_resource }
       let(:join_tables) { employee.employee_presence_policies.where('id != ?', related_resource.id) }
       let!(:new_resources) do
-        [Time.now - 3.years, Time.now - 1.year, Time.now + 1.year].map do |date|
+        [3.years.ago, 1.year.ago, 1.year.since].map do |date|
           create(:employee_presence_policy,
             employee: employee, effective_at: date, presence_policy: new_policy)
         end
@@ -267,7 +267,7 @@ RSpec.describe FindJoinTablesToDelete, type: :service do
 
       context 'the same resources in new effective_at' do
         let!(:same_resource_tables) do
-          [Time.now - 4.years, Time.now - 2.years].map do |date|
+          [4.years.ago, 2.years.ago].map do |date|
             create(:employee_presence_policy,
               employee: employee, effective_at: date, presence_policy: other_policy)
           end
@@ -281,7 +281,7 @@ RSpec.describe FindJoinTablesToDelete, type: :service do
 
         context 'and the same resource is after and before new effective_at with reasign' do
           let(:other_policy) { related_resource.presence_policy }
-          let(:new_effective_at) { Time.now - 3.years }
+          let(:new_effective_at) { 3.years.ago }
 
           it_behaves_like 'The same resource is after and before new effective_at with reasign'
         end

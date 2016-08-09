@@ -15,7 +15,7 @@ module API
 
           transactions do
             @resource =
-              create_or_update_join_table(EmployeeTimeOffPolicy, TimeOffPolicy, join_table_params)
+              create_or_update_join_table(TimeOffPolicy, join_table_params)
             @balance = create_new_employee_balance(@resource) if resource_newly_created?(@resource)
             ManageEmployeeBalanceAdditions.new(@resource).call if resource_newly_created?(@resource)
           end
@@ -27,9 +27,11 @@ module API
       def update
         verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :update, resource
-          actual_resource =
-            create_or_update_join_table(EmployeeTimeOffPolicy, TimeOffPolicy, attributes, resource)
-          render_resource(actual_resource)
+          transactions do
+            @updated_resource = create_or_update_join_table(TimeOffPolicy, attributes, resource)
+            ManageEmployeeBalanceAdditions.new(@updated_resource).call
+          end
+          render_resource(@updated_resource)
         end
       end
 

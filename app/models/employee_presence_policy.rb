@@ -9,7 +9,7 @@ class EmployeePresencePolicy < ActiveRecord::Base
 
   validates :employee_id, :presence_policy_id, :effective_at, presence: true
   validates :effective_at, uniqueness: { scope: [:employee_id, :presence_policy_id] }
-  validate :no_balances_after_effective_at, on: :create, if: :employee_id
+  validate :no_balances_after_effective_at, if: [:employee_id, :effective_at]
   validates :order_of_start_day, numericality: { greater_than: 0 }
   validate :presence_days_presence, if: :presence_policy
   validate :order_smaller_than_last_presence_day_order, if: [:presence_policy, :order_of_start_day]
@@ -42,10 +42,12 @@ class EmployeePresencePolicy < ActiveRecord::Base
   end
 
   def no_balances_after_effective_at
+    older = effective_at_was && effective_at_was < effective_at ? effective_at_was : effective_at
     balances_after_effective_at =
       employee
-      .employee_balances.where('effective_at >= ? AND time_off_id IS NOT NULL', effective_at)
-    return unless balances_after_effective_at.any?
+      .employee_balances.where('effective_at >= ? AND time_off_id IS NOT NULL', older)
+
+    return unless balances_after_effective_at.present?
     errors.add(:effective_at, 'Employee balance after effective at already exists')
   end
 end

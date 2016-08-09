@@ -10,18 +10,18 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
     create(:employee, account: Account.current, employee_working_places: [employee_working_place])
   end
   let!(:employee_working_place) do
-    create(:employee_working_place, effective_at: Time.now - 5.years, working_place: working_place)
+    create(:employee_working_place, effective_at: 5.years.ago, working_place: working_place)
   end
 
   describe 'get #INDEX' do
     let!(:working_place_related) do
       create(:employee_working_place,
-        working_place: employee_working_place.working_place, effective_at: Time.now + 1.week,
+        working_place: employee_working_place.working_place, effective_at: 1.week.since,
         employee: new_employee
       )
     end
     let!(:employee_related) do
-      create(:employee_working_place, employee: employee, effective_at: Time.now + 1.week)
+      create(:employee_working_place, employee: employee, effective_at: 1.week.since)
     end
 
     subject { get :index, params }
@@ -90,7 +90,7 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
   describe 'post #CREATE' do
     subject { post :create, params }
     let(:new_working_place) { create(:working_place, account: Account.current) }
-    let(:effective_at) { Time.zone.now + 1.month }
+    let(:effective_at) { 1.month.since }
     let(:employee_id) { employee.id }
     let(:working_place_id) { new_working_place.id }
     let(:params) do
@@ -164,10 +164,10 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
 
   describe 'put #UPDATE' do
     subject { put :update, { effective_at: effective_at, id: id } }
-    let(:effective_at) { Time.now - 1.days }
+    let(:effective_at) { 1.day.ago }
     let(:id) { new_employee_working_place.id }
-    let(:new_employee_working_place) do
-      create(:employee_working_place, employee: employee, effective_at: Time.now - 2.days)
+    let!(:new_employee_working_place) do
+      create(:employee_working_place, employee: employee, effective_at: 2.days.ago)
     end
 
     context 'with valid params' do
@@ -190,6 +190,41 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
 
         it { expect { subject }.to_not change { employee_working_place.reload.effective_at } }
         it { is_expected.to have_http_status(403) }
+      end
+
+      context 'when there is employee balance' do
+        before do
+          create(:employee_balance, :with_time_off,
+            employee: employee, effective_at: balance_effective_at)
+        end
+
+        context 'after old effective_at' do
+          let(:effective_at) { 5.years.since }
+          let(:balance_effective_at) { 2.days.since }
+
+          it { expect { subject }.to_not change { new_employee_working_place.reload.effective_at } }
+          it { is_expected.to have_http_status(422) }
+
+          it 'has valid error in response body' do
+            subject
+
+            expect(response.body).to include 'Employee balance after effective at already exists'
+          end
+        end
+
+        context 'after new effective_at' do
+          let(:effective_at) { 5.years.ago }
+          let(:balance_effective_at) { 5.days.ago }
+
+          it { expect { subject }.to_not change { new_employee_working_place.reload.effective_at } }
+          it { is_expected.to have_http_status(422) }
+
+          it 'has valid error in response body' do
+            subject
+
+            expect(response.body).to include 'Employee balance after effective at already exists'
+          end
+        end
       end
     end
   end

@@ -12,7 +12,7 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
 
   validates :employee_id, :time_off_policy_id, :effective_at, presence: true
   validates :effective_at, uniqueness: { scope: [:employee_id, :time_off_category_id] }
-  validate :no_balances_after_effective_at, on: :create, if: :time_off_policy
+  validate :no_balances_after_effective_at, if: [:time_off_policy, :effective_at]
   validate :verify_not_change_of_policy_type_in_category, if: [:employee, :time_off_policy]
   before_save :add_category_id
 
@@ -69,9 +69,12 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
   end
 
   def no_balances_after_effective_at
+    older = effective_at_was && effective_at_was < effective_at ? effective_at_was : effective_at
     balances_after_effective_at =
-      Employee::Balance.employee_balances(employee_id, time_off_policy.time_off_category_id)
-                       .where('effective_at >= ?', effective_at)
+      Employee::Balance
+      .employee_balances(employee_id, time_off_policy.time_off_category_id)
+      .where('effective_at >= ?', older)
+
     return unless balances_after_effective_at.present?
     errors.add(:time_off_category, 'Employee balance after effective at already exists')
   end

@@ -15,8 +15,7 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
       create(:employee_presence_policy, employee: employee, effective_at: Date.today)
     end
     let!(:employee_presence_policies) do
-      today = Date.today
-      [today + 3.days, today + 4.days, today + 5.days].map do |day|
+      [3.days.since, 4.days.since, 5.days.since].map do |day|
         create(:employee_presence_policy,
           presence_policy: presence_policy, employee: employee, effective_at: day
         )
@@ -116,7 +115,7 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
       context 'when there is employee balance after effective at' do
         let!(:balance) do
           create(:employee_balance,
-            employee: employee, effective_at: Time.zone.today + 1.year, time_off_category: category,
+            employee: employee, effective_at: 1.year.ago, time_off_category: category,
             time_off: time_off
           )
         end
@@ -153,7 +152,7 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
     let(:effective_at) { Date.new(2016, 1, 1) }
     let!(:join_table_resource) do
       create(:employee_presence_policy,
-        presence_policy: presence_policy, employee: employee, effective_at: Time.now + 10.days)
+        presence_policy: presence_policy, employee: employee, effective_at: 10.days.ago)
     end
 
     subject { put :update, { id: id, effective_at: effective_at }}
@@ -171,6 +170,41 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
     end
 
     context 'with invalid params' do
+      context 'when there is employee balance' do
+        before do
+          create(:employee_balance, :with_time_off,
+            employee: employee, effective_at: balance_effective_at)
+        end
+
+        context 'after old effective_at' do
+          let(:effective_at) { 5.years.ago }
+          let(:balance_effective_at) { 2.days.ago }
+
+          it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
+          it { is_expected.to have_http_status(422) }
+
+          it 'has valid error in response body' do
+            subject
+
+            expect(response.body).to include 'Employee balance after effective at already exists'
+          end
+        end
+
+        context 'after new effective_at' do
+          let(:effective_at) { 5.years.ago }
+          let(:balance_effective_at) { 5.days.ago }
+
+          it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
+          it { is_expected.to have_http_status(422) }
+
+          it 'has valid error in response body' do
+            subject
+
+            expect(response.body).to include 'Employee balance after effective at already exists'
+          end
+        end
+      end
+
       context 'when effective at is not valid' do
         let(:effective_at) { '123' }
 

@@ -14,7 +14,7 @@ class CreateOrUpdateJoinTable
 
   def call
     verify_effective_at_format
-    find_employees_join_tables
+    @employee_join_tables = find_employees_join_tables
     ActiveRecord::Base.transaction do
       remove_duplicated_resources_join_tables
       return_new_current_with_efective_till
@@ -24,13 +24,9 @@ class CreateOrUpdateJoinTable
   private
 
   def find_employees_join_tables
-    @employee_join_tables =
-      if join_table_resource
-        employee.send(join_table_class.model_name.route_key)
-                .where('id != ?', join_table_resource.id)
-      else
-        employee.send(join_table_class.model_name.route_key)
-      end
+    join_tables_class = join_table_class.model_name.route_key
+    return employee.send(join_tables_class) unless join_table_resource
+    employee.send(join_tables_class).where('id != ?', join_table_resource.id)
   end
 
   def remove_duplicated_resources_join_tables
