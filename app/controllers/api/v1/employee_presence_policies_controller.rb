@@ -33,10 +33,6 @@ module API
         @resource ||= Account.current.employee_presence_policies.find(params[:id])
       end
 
-      def employee
-        @employee ||= Account.current.employees.find(params[:id])
-      end
-
       def presence_policy
         @presence_policy ||= Account.current.presence_policies.find(params[:presence_policy_id])
       end

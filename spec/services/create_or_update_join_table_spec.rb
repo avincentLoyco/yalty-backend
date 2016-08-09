@@ -52,10 +52,10 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
 
       it { expect { subject }.to change { join_table_class.count }.by(-2) }
       it { expect { subject }.to change { join_table_class.exists?(existing_join_table.id) } }
-      it { expect { subject }.to change { join_table_class.exists?(same_resources.last.id) } }
+      it { expect { subject }.to change { join_table_class.exists?(same_resource_after.id) } }
 
-      it { expect(subject.effective_at).to eq same_resources.first.effective_at }
-      it { expect(subject.id).to eq same_resources.first.id }
+      it { expect(subject.effective_at).to eq same_resource_before.effective_at }
+      it { expect(subject.id).to eq same_resource_before.id }
     end
 
     shared_examples 'Join Table create with different resource after and effective till in past' do
@@ -157,39 +157,36 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
           it_behaves_like 'Join Table create with the same resource before'
         end
 
-        context 'when there is JoinTable with the same reosurce assigned after' do
+        context 'when there is JoinTable with the same resource assigned' do
           let!(:same_resource_after) do
             create(:employee_working_place,
               effective_at: '1/5/2015', employee: employee, working_place: resource)
           end
 
-          it_behaves_like 'Join Table create with the same resource after'
-        end
-
-        context 'when there is JoinTable with the same reosurce assigned before and after' do
-          let!(:same_resources) do
-            ['1/3/2015', '1/5/2015'].map do |date|
-              create(:employee_working_place,
-                employee: employee, working_place: resource, effective_at: date)
-            end
+          context 'after effective_at' do
+            it_behaves_like 'Join Table create with the same resource after'
           end
 
-          it_behaves_like 'Join Table create with the same resource after and before'
+          context 'before and after effective_at' do
+            let!(:same_resource_before) do
+              create(:employee_working_place,
+                employee: employee, working_place: resource, effective_at: '1/3/2015')
+            end
+
+            it_behaves_like 'Join Table create with the same resource after and before'
+          end
         end
 
-        context 'when there is table with other resource and effective till is in the past' do
+        context 'when there is table with other resource' do
           before { params[:effective_at] = (Time.now - 2.years).to_s }
 
           it_behaves_like 'Join Table create with different resource after and effective till in past'
-        end
 
-        context 'when there is table with other resource and effective till is in the future' do
-          before do
-            params[:effective_at] = (Time.now - 2.years).to_s
-            existing_join_table.update!(effective_at: Time.now + 2.years)
+          context 'and effective till is in the future' do
+            before { existing_join_table.update!(effective_at: Time.now + 2.years) }
+
+            it_behaves_like 'Join Table create with different resource after, after Time now'
           end
-
-          it_behaves_like 'Join Table create with different resource after, after Time now'
         end
       end
 
@@ -266,45 +263,39 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
           it_behaves_like 'Join Table create with the same resource before'
         end
 
-        context 'when there is JoinTable with the same reosurce assigned after' do
+        context 'when there is JoinTable with the same resource assigned' do
           let!(:same_resource_after) do
             create(:employee_time_off_policy,
               effective_at: '1/5/2015', employee: employee, time_off_policy: resource)
           end
 
           it_behaves_like 'Join Table create with the same resource after'
-        end
 
-        context 'when there is JoinTable with the same reosurce assigned before and after' do
-          let!(:same_resources) do
-            ['1/3/2015', '1/5/2015'].map do |date|
+          context 'before and after effective_at' do
+            let!(:same_resource_before) do
               create(:employee_time_off_policy,
-                employee: employee, time_off_policy: resource, effective_at: date)
+                employee: employee, time_off_policy: resource, effective_at: '1/3/2015')
             end
-          end
 
-          it_behaves_like 'Join Table create with the same resource after and before'
+            it_behaves_like 'Join Table create with the same resource after and before'
+          end
         end
 
-        context 'when there is table with other resource and effective till is in the past' do
+        context 'when there is table with other resource' do
           before { params[:effective_at] = (Time.now - 2.years).to_s }
 
           it_behaves_like 'Join Table create with different resource after and effective till in past'
-        end
 
-        context 'when there is table with other resource and effective till is in the future' do
-          before do
-            params[:effective_at] = (Time.now - 2.years).to_s
-            existing_join_table.update!(effective_at: Time.now + 2.years)
+          context 'and effective till is in the future' do
+            before { existing_join_table.update!(effective_at: Time.now + 2.years) }
+
+            it_behaves_like 'Join Table create with different resource after, after Time now'
           end
-
-          it_behaves_like 'Join Table create with different resource after, after Time now'
         end
       end
 
       context 'Join Table Update' do
         before { existing_join_table.update!(effective_at: Time.now - 4.years) }
-        let(:third_resource) { create(:time_off_policy, time_off_category: category) }
         let(:join_table_resource) { first_resource_tables.last }
         let(:resource_params) {{}}
         let(:second_resource) do
@@ -325,7 +316,7 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
         end
         let!(:third_resource_table) do
           create(:employee_time_off_policy, employee: employee, effective_at: Time.now - 3.years,
-            time_off_policy: third_resource)
+            time_off_policy: create(:time_off_policy, time_off_category: category))
         end
 
         context 'when after old effective at is the same resource' do
@@ -376,39 +367,33 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
           it_behaves_like 'Join Table create with the same resource before'
         end
 
-        context 'when there is JoinTable with the same reosurce assigned after' do
+        context 'when there is JoinTable with the same reosurce assigned' do
           let!(:same_resource_after) do
             create(:employee_presence_policy,
               effective_at: '1/5/2015', employee: employee, presence_policy: resource)
           end
 
           it_behaves_like 'Join Table create with the same resource after'
-        end
 
-        context 'when there is JoinTable with the same reosurce assigned before and after' do
-          let!(:same_resources) do
-            ['1/3/2015', '1/5/2015'].map do |date|
-              create(:employee_presence_policy,
-                employee: employee, presence_policy: resource, effective_at: date)
+          context 'before and after effective_at' do
+            let!(:same_resource_before) do create(:employee_presence_policy,
+              employee: employee, presence_policy: resource, effective_at: '1/3/2015')
             end
-          end
 
-          it_behaves_like 'Join Table create with the same resource after and before'
+            it_behaves_like 'Join Table create with the same resource after and before'
+          end
         end
 
-        context 'when there is table with other resource and effective till is in the past' do
+        context 'when there is table with other resource' do
           before { params[:effective_at] = (Time.now - 2.years).to_s }
 
           it_behaves_like 'Join Table create with different resource after and effective till in past'
-        end
 
-        context 'when there is table with other resource and effective till is in the future' do
-          before do
-            params[:effective_at] = (Time.now - 2.years).to_s
-            existing_join_table.update!(effective_at: Time.now + 2.years)
+          context 'and effective_till is in the future' do
+            before { existing_join_table.update!(effective_at: Time.now + 2.years) }
+
+            it_behaves_like 'Join Table create with different resource after, after Time now'
           end
-
-          it_behaves_like 'Join Table create with different resource after, after Time now'
         end
       end
 

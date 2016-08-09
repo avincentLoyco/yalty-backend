@@ -162,6 +162,12 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
       it { expect { subject }.to change { join_table_resource.reload.effective_at } }
 
       it { is_expected.to have_http_status(200) }
+      it 'should have valid data in response body' do
+        subject
+
+        expect_json(effective_at: effective_at.to_date.to_s)
+        expect_json_keys([:effective_at, :effective_till, :id, :assignation_id])
+      end
     end
 
     context 'with invalid params' do

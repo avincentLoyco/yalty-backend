@@ -179,45 +179,7 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
           subject
 
           expect_json(effective_at: effective_at.to_date.to_s)
-          expect_json_keys(:effective_at, :effective_at, :id, :employee)
-        end
-      end
-
-      context 'when there are other employee working places with the same resource' do
-        context 'after and before update' do
-          let(:second_working_place) { create(:working_place, account: account) }
-          let!(:first_resource_ewps) do
-            [Time.now - 4.years, Time.now - 2.years, Time.now + 1.year].map do |date|
-              create(:employee_working_place, effective_at: date, employee: employee,
-                working_place: second_working_place)
-            end
-          end
-          let!(:second_resource_ewps) do
-            [Time.now - 3.years, Time.now].map do |date|
-              create(:employee_working_place, effective_at: date, employee: employee,
-                working_place: working_place)
-            end
-          end
-
-          let(:id) { second_resource_ewps.last.id }
-          let(:effective_at) { Time.now - 4.years }
-
-          it { expect { subject }.to change { EmployeeWorkingPlace.count }.by(-4) }
-          it { expect { subject }.to change {
-            EmployeeWorkingPlace.exists?(first_resource_ewps.first.id) }.to false }
-          it { expect { subject }.to change {
-            EmployeeWorkingPlace.exists?(first_resource_ewps.last.id) }.to false }
-          it { expect { subject }.to change {
-            EmployeeWorkingPlace.exists?(second_resource_ewps.first.id) }.to false }
-          it { expect { subject }.to change {
-            EmployeeWorkingPlace.exists?(second_resource_ewps.last.id) }.to false }
-
-          it 'should have valid response body' do
-            subject
-
-            expect_json(assignation_id: employee_working_place.id)
-            expect_json(effective_till: (first_resource_ewps.second.effective_at - 1.day).to_s)
-          end
+          expect_json_keys([:effective_at, :effective_till, :id, :assignation_id])
         end
       end
     end

@@ -49,10 +49,6 @@ module API
         resources_with_effective_till(EmployeeTimeOffPolicy, nil, time_off_policy.id)
       end
 
-      def employee
-        @employee ||= Account.current.employees.find(params[:id])
-      end
-
       def time_off_policy
         @time_off_policy ||= Account.current.time_off_policies.find(params[:time_off_policy_id])
       end
