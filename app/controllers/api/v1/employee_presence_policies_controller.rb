@@ -24,6 +24,15 @@ module API
         end
       end
 
+      def destroy
+        authorize! :destroy, resource
+        transactions do
+          resource.destroy!
+          destroy_join_tables_with_duplicated_resources
+        end
+        render_no_content
+      end
+
       private
 
       def resource
@@ -36,6 +45,12 @@ module API
 
       def resources
         resources_with_effective_till(EmployeePresencePolicy, nil, presence_policy.id)
+      end
+
+      def destroy_join_tables_with_duplicated_resources
+        FindJoinTablesToDelete.new(
+          resource.employee.employee_presence_policies, nil, resource.presence_policy, resource
+        ).call.map(&:destroy!)
       end
 
       def resource_representer

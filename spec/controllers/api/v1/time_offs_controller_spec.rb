@@ -202,6 +202,21 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
           it { expect(Employee::Balance.order(:effective_at).last.amount).to eq (-480) }
         end
       end
+
+      context 'when employee does not have employee presence policy' do
+        before { EmployeePresencePolicy.destroy_all }
+
+        it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+        it { expect { subject }.to change { TimeOff.count }.by(1) }
+
+        it { is_expected.to have_http_status(201) }
+
+        context 'new employee balance amount' do
+          before { subject }
+
+          it { expect(Employee::Balance.last.amount).to eq 0 }
+        end
+      end
     end
 
     context 'with invalid params' do

@@ -229,4 +229,84 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
       end
     end
   end
+
+  describe 'DELETE #destroy' do
+    let(:id) { employee_presence_policy.id }
+    let!(:employee_presence_policy) do
+      create(:employee_presence_policy,
+        employee: employee, presence_policy: presence_policy, effective_at: Time.now)
+    end
+    subject { delete :destroy, { id: id } }
+
+    context 'with valid params' do
+      context 'when they are no join tables with the same resources before and after' do
+        it { expect { subject }.to change { EmployeePresencePolicy.count }.by(-1) }
+
+        it { is_expected.to have_http_status(204) }
+      end
+
+      context 'when they are join tables with the same resources before and after' do
+        let!(:same_resource_tables) do
+          [Time.now - 1.week, Time.now + 1.week].map do |date|
+            create(:employee_presence_policy,
+              employee: employee, presence_policy: presence_policy, effective_at: date)
+          end
+        end
+
+        it { expect { subject }.to change { EmployeePresencePolicy.count }.by(-2) }
+
+        it { is_expected.to have_http_status(204) }
+      end
+
+      context 'when there is employee balance but its effective at is before resource\'s' do
+        let(:employee_balance) do
+          create(:employee_balance, :with_time_off, employee: employee,
+            effective_at: employee_presence_policy.effective_at - 5.days)
+        end
+
+        it { expect { subject }.to change { EmployeePresencePolicy.count }.by(-1) }
+
+        it { is_expected.to have_http_status(204) }
+      end
+    end
+
+    context 'with invalid params' do
+      context 'with invalid id' do
+        let(:id) { '1ab' }
+
+        it { expect { subject }.to_not change { EmployeePresencePolicy.count } }
+        it { is_expected.to have_http_status(404) }
+      end
+
+      context 'when EmployeePresencePolicy belongs to other account' do
+        before { employee_presence_policy.employee.update!(account: create(:account)) }
+
+        it { expect { subject }.to_not change { EmployeePresencePolicy.count } }
+        it { is_expected.to have_http_status(404) }
+      end
+
+      context 'when they are employee balances after employee_presence_policy effective at' do
+        let!(:employee_balance) do
+          create(:employee_balance, :with_time_off, employee: employee,
+            effective_at: employee_presence_policy.effective_at + 5.days)
+        end
+
+        it { expect { subject }.to_not change { EmployeePresencePolicy.count } }
+        it { is_expected.to have_http_status(403) }
+      end
+
+      context 'when user is not an account manager' do
+        before { Account::User.current.update!(account_manager: false, employee: employee) }
+
+        it { expect { subject }.to_not change { EmployeePresencePolicy.count } }
+        it { is_expected.to have_http_status(403) }
+
+        it 'have valid error message' do
+          subject
+
+          expect(response.body).to include 'You are not authorized to access this page.'
+        end
+      end
+    end
+  end
 end

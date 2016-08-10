@@ -50,7 +50,7 @@ module API
       def assign_related(related_records)
         return true if related_records.empty?
         related_records.each do |key, value|
-          assign_member(resource, value.try(:[], :id), key.to_s)
+          AssignMember.new(resource, value.try(:[], :id), key.to_s).call
         end
       end
 

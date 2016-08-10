@@ -5,7 +5,7 @@ class FindJoinTablesToDelete
 
   def initialize(join_tables, new_effective_at, resource, join_table_resource)
     @join_tables = join_tables
-    @new_effective_at = new_effective_at.to_date
+    @new_effective_at = new_effective_at.try(:to_date)
     @join_table_resource = join_table_resource
     @resource = resource
     @resource_class = resource.class.model_name.singular + '_id'
@@ -14,7 +14,10 @@ class FindJoinTablesToDelete
   def call
     return [] unless join_tables.present?
     verify_if_resource_not_duplicated
-    [current_join_table, next_join_table, duplicated_at_previous_effective_at].compact
+    join_tables_to_delete = []
+    join_tables_to_delete.push(current_join_table, next_join_table) if new_effective_at
+    join_tables_to_delete.push(duplicated_at_previous_effective_at)
+    join_tables_to_delete.compact
   end
 
   def duplicated_at_previous_effective_at
@@ -42,10 +45,14 @@ class FindJoinTablesToDelete
   end
 
   def find_by_effective_at_and_category
-    return join_tables.find_by(effective_at: new_effective_at) unless resource.is_a?(TimeOffPolicy)
-    join_tables.find_by(
-      effective_at: new_effective_at, time_off_category: resource.time_off_category
-    )
+    return unless new_effective_at
+    if resource.is_a?(TimeOffPolicy)
+      join_tables.find_by(
+        effective_at: new_effective_at, time_off_category: resource.time_off_category
+      )
+    else
+      join_tables.find_by(effective_at: new_effective_at)
+    end
   end
 
   def verify_if_resource_not_duplicated

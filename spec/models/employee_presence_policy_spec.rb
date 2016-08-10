@@ -133,5 +133,28 @@ RSpec.describe EmployeePresencePolicy, type: :model do
         end
       end
     end
+
+    context 'employee balance presence validation on destroy' do
+      subject { epp.destroy! }
+      before do
+        create(:time_off, employee: epp.employee, start_time: start_time, end_time: end_time)
+        epp.employee.employee_balances.reload
+      end
+
+      context 'when employee does not have employee balances after join table effective_at' do
+        let(:start_time) { epp.effective_at - 7.months }
+        let(:end_time) { epp.effective_at - 6.months }
+
+        it { expect { subject }.to change { EmployeePresencePolicy.count }.by(-1) }
+        it { expect { subject }.to change { EmployeePresencePolicy.exists?(epp.id) }.to false }
+      end
+
+      context 'when employee has employee balances after join table effective at' do
+        let(:start_time) { epp.effective_at + 7.months }
+        let(:end_time) { epp.effective_at + 8.months }
+
+        it { expect { subject }.to raise_exception(ActiveRecord::RecordNotDestroyed) }
+      end
+    end
   end
 end
