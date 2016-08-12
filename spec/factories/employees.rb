@@ -3,17 +3,6 @@ FactoryGirl.define do
     account
     after(:build) do |employee|
       effective_at = Time.zone.now - 6.years
-      if employee.employee_working_places.empty?
-        working_place = build(:working_place, account: employee.account)
-        date = employee.events.empty? ? effective_at : employee.events.first.effective_at
-        employee_working_place = build(
-          :employee_working_place,
-          employee: employee,
-          working_place: working_place,
-          effective_at: date
-        )
-        employee.employee_working_places << employee_working_place
-      end
       if employee.events.empty?
         date = employee.employee_working_places.empty? ? effective_at : employee.employee_working_places.first.effective_at
 
@@ -25,6 +14,23 @@ FactoryGirl.define do
         employee.events << hired_event
       end
     end
+
+    trait :with_working_place do
+      after(:build) do |employee|
+        effective_at = Time.zone.now - 6.years
+        working_place = build(:working_place, account: employee.account)
+        date = employee.events.empty? ? effective_at : employee.events.first.effective_at
+        employee_working_place = build(
+          :employee_working_place,
+          employee: employee,
+          working_place: working_place,
+          effective_at: date
+        )
+        employee.employee_working_places << employee_working_place
+      end
+    end
+
+    factory :employee_with_working_place, traits: [:with_working_place]
 
     trait :with_presence_policy do
       transient do

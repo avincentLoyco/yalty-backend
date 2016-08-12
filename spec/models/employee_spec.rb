@@ -19,7 +19,7 @@ RSpec.describe Employee, type: :model do
   it { is_expected.to have_many(:registered_working_times) }
 
   context '#validations' do
-    let(:employee) { build(:employee) }
+    let(:employee) { build(:employee_with_working_place) }
     subject { employee }
 
     context '#employee working places presence' do
@@ -30,9 +30,9 @@ RSpec.describe Employee, type: :model do
       context 'without employee working place' do
         before { employee.employee_working_places = [] }
 
-        it { expect(subject.valid?).to eq false }
+        it { expect(subject.valid?).to eq true }
         it { expect { subject.valid? }
-          .to change { subject.errors.messages[:employee_working_places] } }
+          .not_to change { subject.errors.messages[:employee_working_places] } }
       end
     end
 

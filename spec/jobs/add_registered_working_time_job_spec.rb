@@ -66,7 +66,7 @@ RSpec.describe AddRegisteredWorkingTimes do
           end
         end
 
-        it ' ' do
+        it do
           expect { subject }.to change { RegisteredWorkingTime.count }.from(0).to(2)
           first_employee_rwt = RegisteredWorkingTime.find_by(employee_id: first_employee.id)
           expect(first_employee_rwt.date).to eq(date)
@@ -112,7 +112,7 @@ RSpec.describe AddRegisteredWorkingTimes do
             end_time: date + 5.hours + 40.minutes,
           )
         end
-        it ' ' do
+        it do
           expect { subject }.to change { RegisteredWorkingTime.count }.from(0).to(2)
           first_employee_rwt = RegisteredWorkingTime.find_by(employee_id: first_employee.id)
           expect(first_employee_rwt.date).to eq(date)
@@ -155,11 +155,11 @@ RSpec.describe AddRegisteredWorkingTimes do
     end
     context 'when there is a registered working time on that day for one empoyee' do
       let!(:rwt) { create(:registered_working_time, employee: first_employee , date: date) }
-      it ' ' do
+      it do
         expect { subject }
           .not_to change { RegisteredWorkingTime.where(employee_id: first_employee.id).count }
       end
-      it ' ' do
+      it do
         expect { subject }
           .to change { RegisteredWorkingTime.where(employee_id: second_employee.id).count }.by(1)
         second_employee_rwt = RegisteredWorkingTime.find_by(employee_id: second_employee.id)
@@ -185,7 +185,7 @@ RSpec.describe AddRegisteredWorkingTimes do
           )
         end
 
-        it '' do
+        it do
           expect { subject }
             .to change { RegisteredWorkingTime.where(employee_id: second_employee.id).count }.by(1)
           second_employee_rwt = RegisteredWorkingTime.find_by(employee_id: second_employee.id)
@@ -230,9 +230,12 @@ RSpec.describe AddRegisteredWorkingTimes do
     after { Timecop.return }
 
     context 'and there is a registered working time for another' do
-      let(:working_place) { second_employee.employee_working_places.last.working_place }
+      let(:working_place) { employee_working_place.working_place }
+      let(:employee_working_place) do
+        create(:employee_working_place, employee: second_employee, effective_at: 6.years.ago)
+      end
       let!(:rwt) { create(:registered_working_time, employee: first_employee , date: date_of_job_run) }
-      it ' ' do
+      it do
         expect { subject }
           .not_to change { RegisteredWorkingTime.where(employee_id: first_employee.id).count }
         first_employee_rwt = RegisteredWorkingTime.find_by(employee_id: first_employee.id)
@@ -252,7 +255,7 @@ RSpec.describe AddRegisteredWorkingTimes do
         )
         expect(first_employee_rwt.schedule_generated).to eq(false)
       end
-      it ' ' do
+      it do
         expect { subject }
           .to change { RegisteredWorkingTime.where(employee_id: second_employee.id).count }.by(1)
         second_employee_rwt = RegisteredWorkingTime.find_by(employee_id: second_employee.id)
@@ -264,9 +267,12 @@ RSpec.describe AddRegisteredWorkingTimes do
     end
 
     context 'and a normal day for the other employee' do
-      let(:working_place) { second_employee.employee_working_places.last.working_place }
+      let(:working_place) { employee_working_place.working_place }
+      let(:employee_working_place) do
+        create(:employee_working_place, employee: second_employee, effective_at: 6.years.ago)
+      end
 
-      it ' ' do
+      it do
         expect { subject }
           .to change { RegisteredWorkingTime.where(employee_id: first_employee.id).count }.by(1)
         first_employee_rwt = RegisteredWorkingTime.find_by(employee_id: first_employee.id)
@@ -283,7 +289,7 @@ RSpec.describe AddRegisteredWorkingTimes do
         expect(first_employee_rwt.schedule_generated).to eq(true)
       end
 
-      it '' do
+      it do
         expect { subject }
           .to change { RegisteredWorkingTime.where(employee_id: second_employee.id).count }.by(1)
         second_employee_rwt = RegisteredWorkingTime.find_by(employee_id: second_employee.id)
@@ -295,9 +301,14 @@ RSpec.describe AddRegisteredWorkingTimes do
     end
 
     context 'and also the same employee a registered woring time also  ' do
-      let(:working_place) { first_employee.employee_working_places.last.working_place }
+      let(:working_place) { employee_working_place.working_place }
+      let(:employee_working_place) do
+        create(:employee_working_place, employee: first_employee, effective_at: 6.years.ago)
+      end
+
       let!(:rwt) { create(:registered_working_time, employee: first_employee , date: date_of_job_run) }
-      it ' ' do
+
+      it do
         expect { subject }
           .not_to change { RegisteredWorkingTime.where(employee_id: first_employee.id).count }
         first_employee_rwt = RegisteredWorkingTime.find_by(employee_id: first_employee.id)
@@ -318,7 +329,7 @@ RSpec.describe AddRegisteredWorkingTimes do
         expect(first_employee_rwt.schedule_generated).to eq(false)
       end
 
-      it ' ' do
+      it do
         expect { subject }
           .to change { RegisteredWorkingTime.where(employee_id: second_employee.id).count }.by(1)
         second_employee_rwt = RegisteredWorkingTime.find_by(employee_id: second_employee.id)
@@ -338,8 +349,7 @@ RSpec.describe AddRegisteredWorkingTimes do
   end
 
   context 'when the employees have no presence days with time entries' do
-
-    it ' ' do
+    it do
       expect { subject }.to change { RegisteredWorkingTime.count }.from(0).to(2)
       first_employee_rwt = RegisteredWorkingTime.find_by(employee_id: first_employee.id)
       expect(first_employee_rwt.date).to eq(date)

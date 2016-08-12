@@ -5,8 +5,8 @@ RSpec.describe JoinTableWithEffectiveTill, type: :service do
 
   describe '#call' do
     let(:accounts) { create_list(:account, 2) }
-    let(:employee_first) { create(:employee, account: accounts.first) }
-    let(:employee_third) { create(:employee, account: accounts.second) }
+    let(:employee_first) { create(:employee_with_working_place, account: accounts.first) }
+    let(:employee_third) { create(:employee_with_working_place, account: accounts.second) }
     let(:account_id) { accounts.first.id }
     let(:from_date) { nil }
     let(:till_date) { nil }
@@ -533,7 +533,7 @@ RSpec.describe JoinTableWithEffectiveTill, type: :service do
         end
 
         context 'and employees have multiple employee working places on the same account' do
-          let(:employee_second) { create(:employee, account: accounts.first) }
+          let(:employee_second) { create(:employee_with_working_place, account: accounts.first) }
           let!(:ewp_from_employee_second) do
             employee_second.employee_working_places.first.tap do |ewp|
               employee_second.first_employee_event.update!(effective_at: Time.now)

@@ -93,9 +93,8 @@ RSpec.describe CreateJoinTableService, type: :service do
 
     context 'for EmployeeWorkingPlace' do
       before do
-        employee.employee_working_places.first.update!(
-          effective_at: employee.events.first.effective_at
-        )
+        create(:employee_working_place,
+          employee: employee, effective_at: employee.events.first.effective_at)
       end
 
       let(:resource_class) { WorkingPlace }

@@ -109,9 +109,11 @@ RSpec.describe CreateEvent do
           account: employee.account, name: attribute_name_second, multiple: true, validation: nil)
       end
 
+      let(:working_place) { create(:working_place, account: Account.current) }
+
       before do
         definition.update(name: attribute_name)
-        params[:employee] = { working_place_id: Account.current.working_places.first.id }
+        params[:employee] = { working_place_id: working_place.id }
       end
 
       it { expect { subject }.to change { EmployeeWorkingPlace.count }.by(1) }
