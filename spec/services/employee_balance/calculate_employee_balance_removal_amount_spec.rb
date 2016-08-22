@@ -18,7 +18,7 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount, type: :service do
       let(:balance) { balance_add }
 
       context 'and their balance bigger than 0' do
-        before { previous_removal.update!(amount: 5000) }
+        before { previous_removal.update!(resource_amount: 5000) }
         it { expect(subject).to eq -4000 }
       end
 
@@ -27,7 +27,7 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount, type: :service do
       end
 
       context 'and their balance equal 0' do
-        before { previous_removal.update!(amount: 1000) }
+        before { previous_removal.update!(resource_amount: 1000) }
 
         it { expect(subject).to eq 0 }
       end
@@ -51,7 +51,7 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount, type: :service do
     let(:addition) { previous_add }
     let!(:negative_balance) do
       create(:employee_balance,
-        employee: employee, time_off_category: category, amount: -600,
+        employee: employee, time_off_category: category, resource_amount: -600,
         effective_at: previous.first + 4.months
       )
     end
@@ -63,7 +63,7 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount, type: :service do
     context 'positive balances in balance period' do
       let!(:positive_balance) do
         create(:employee_balance,
-          employee: employee, time_off_category: category, amount: 600,
+          employee: employee, time_off_category: category, resource_amount: 600,
           effective_at: previous.first + 5.months
         )
       end
@@ -73,7 +73,7 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount, type: :service do
       end
 
       context 'and amount is positive' do
-        before { positive_balance.update!(amount: 1500) }
+        before { positive_balance.update!(resource_amount: 1500) }
 
         it { expect(subject).to eq -300 }
       end
@@ -82,7 +82,7 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount, type: :service do
     context 'employee balances with validity dates in balance period' do
       let!(:positive_balance) do
         create(:employee_balance,
-          employee: employee, time_off_category: category, amount: 600,
+          employee: employee, time_off_category: category, resource_amount: 600,
           effective_at: previous.first + 5.months, validity_date: Time.now + 2.months
         )
       end

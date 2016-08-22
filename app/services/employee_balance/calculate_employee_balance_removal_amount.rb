@@ -51,7 +51,7 @@ class CalculateEmployeeBalanceRemovalAmount
   end
 
   def positive_amounts
-    positive_balance_after_addition + active_balances.pluck(:amount).sum
+    positive_balance_after_addition + active_balances.map(&:amount).sum
   end
 
   def amount_difference
@@ -72,7 +72,8 @@ class CalculateEmployeeBalanceRemovalAmount
       .new(employee_balance)
       .previous_balances
       .where(
-        'amount <= ? AND effective_at > ? AND balance_credit_addition_id IS NULL',
+        'resource_amount + manual_amount <= ? AND
+          effective_at > ? AND balance_credit_addition_id IS NULL',
         0, addition.effective_at
       )
       .last
@@ -84,9 +85,9 @@ class CalculateEmployeeBalanceRemovalAmount
       .balances_related_by_category_and_employee
       .where(
         effective_at: addition.effective_at..employee_balance.now_or_effective_at,
-        amount: 1..Float::INFINITY,
         validity_date: nil
       )
-      .pluck(:amount).sum
+      .where('resource_amount + manual_amount >= 1')
+      .pluck(:resource_amount).sum
   end
 end

@@ -58,9 +58,9 @@ module API
 
       def options(attributes)
         params = {}
-        params[:effective_at]  = attributes[:effective_at] if attributes[:effective_at]
-        params[:validity_date] = attributes[:validity_date] if attributes[:validity_date]
-        params[:amount]        = attributes[:amount]
+        params[:effective_at]    = attributes[:effective_at] if attributes[:effective_at]
+        params[:validity_date]   = attributes[:validity_date] if attributes[:validity_date]
+        params[:resource_amount] = attributes[:amount]
         params
       end
 

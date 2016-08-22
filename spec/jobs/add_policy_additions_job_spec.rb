@@ -25,7 +25,7 @@ RSpec.describe AddPolicyAdditionsJob do
     let!(:employee_balance) do
       create(:employee_balance,
         employee: employees.first, time_off_category: category,
-        amount: -100, effective_at: Time.now + 1.week
+        resource_amount: -100, effective_at: Time.now + 1.week
       )
     end
 

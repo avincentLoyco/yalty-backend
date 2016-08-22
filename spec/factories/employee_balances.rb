@@ -2,7 +2,7 @@ FactoryGirl.define do
   factory :employee_balance, :class => 'Employee::Balance' do
     employee
     time_off_category { create(:time_off_category, account: employee.account) }
-    amount { Faker::Number.number(5) }
+    resource_amount { Faker::Number.number(5) }
 
     after(:build) do |employee_balance|
       if employee_balance.employee.active_policy_in_category_at_date(employee_balance.time_off_category_id).blank?

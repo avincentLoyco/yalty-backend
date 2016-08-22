@@ -95,7 +95,7 @@ module API
           resource.time_off_category_id,
           resource.employee_id,
           Account.current.id,
-          time_off_id: resource.id, amount: resource.balance
+          time_off_id: resource.id, resource_amount: resource.balance
         ).call
       end
 

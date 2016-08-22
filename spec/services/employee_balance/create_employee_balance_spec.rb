@@ -19,7 +19,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
 
   subject do
     described_class.new(
-      category.id, employee.id, Account.current.id, { amount: amount }.merge(options)
+      category.id, employee.id, Account.current.id, { resource_amount: amount }.merge(options)
     ).call
   end
   let(:amount) { -100 }
@@ -63,7 +63,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
       let(:amount) { 100 }
 
       context 'and employee balance effective at is in the future' do
-        let(:options) {{ effective_at: Time.now + 9.days, amount: amount }}
+        let(:options) {{ effective_at: Time.now + 9.days, resource_amount: amount }}
 
         it { expect { subject }.to change { Employee::Balance.count }.by(1) }
         it { expect { subject }.to_not change { enqueued_jobs.size } }
@@ -123,7 +123,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
             let(:options) {{ effective_at: Time.now - 1.year, validity_date: Time.now - 1.month }}
             let!(:employee_balance) do
               create(:employee_balance, employee: employee, time_off_category: category,
-                effective_at: Time.now - 2.month, amount: -amount)
+                effective_at: Time.now - 2.month, resource_amount: -amount)
             end
             it { expect { subject }.to change { employee_balance.reload.being_processed } }
             it { expect { subject }.to change { enqueued_jobs.size } }
@@ -146,7 +146,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
           let!(:employee_balance) do
             create(:employee_balance,
               employee: employee, effective_at: Time.now - 2.month, time_off_category: category,
-              amount: 100
+              resource_amount: 100
             )
           end
 
@@ -168,7 +168,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
             create(:employee_balance,
               employee: employee, effective_at: Time.now - 2.month,
               time_off_category: new_category,
-              amount: 100
+              resource_amount: 100
             )
           end
 
@@ -198,7 +198,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
       context 'balance credit addition given' do
         let!(:employee_balance) do
           create(:employee_balance,
-            time_off_category: category, employee: employee, amount: 1000,
+            time_off_category: category, employee: employee, resource_amount: 1000,
             policy_credit_addition: true
           )
         end

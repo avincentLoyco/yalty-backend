@@ -38,6 +38,11 @@ class Employee::Balance < ActiveRecord::Base
   scope :additions, -> { where(policy_credit_addition: true).order(:effective_at) }
   scope :removals, -> { where(policy_credit_removal: true).order(:effective_at) }
 
+  def amount
+    return unless resource_amount && manual_amount
+    resource_amount + manual_amount
+  end
+
   def last_in_category?
     last_balance_id = employee.last_balance_in_category(time_off_category_id).try(:id)
     id == last_balance_id || last_balance_id.blank?
@@ -55,7 +60,7 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   def calculate_removal_amount(addition = balance_credit_addition)
-    self.amount = CalculateEmployeeBalanceRemovalAmount.new(self, addition).call
+    self.resource_amount = CalculateEmployeeBalanceRemovalAmount.new(self, addition).call
   end
 
   def time_off_policy

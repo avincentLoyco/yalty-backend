@@ -1,6 +1,6 @@
 class CreateEmployeeBalance
   include API::V1::Exceptions
-  attr_reader :category, :employee, :amount, :employee_balance,
+  attr_reader :category, :employee, :resource_amount, :employee_balance,
     :account, :time_off, :options, :balance_removal
 
   def initialize(category_id, employee_id, account_id, options = {})
@@ -49,7 +49,7 @@ class CreateEmployeeBalance
 
   def common_params
     {
-      amount: options[:amount],
+      resource_amount: options[:resource_amount],
       employee: employee,
       time_off:  options.key?(:time_off_id) ? employee.time_offs.find(options[:time_off_id]) : nil,
       time_off_category: category,

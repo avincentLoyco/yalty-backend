@@ -37,7 +37,7 @@ class AddPolicyAdditionsJob < ActiveJob::Base
   def options_for_balancer(attributes_hash)
     {
       policy_credit_addition: true,
-      amount: attributes_hash['amount'],
+      resource_amount: attributes_hash['amount'],
       validity_date: policy_end_date(
         attributes_hash['end_day'],
         attributes_hash['end_month'],

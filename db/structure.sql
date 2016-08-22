@@ -197,7 +197,7 @@ CREATE VIEW employee_attributes AS
 CREATE TABLE employee_balances (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
     balance integer DEFAULT 0,
-    amount integer DEFAULT 0,
+    resource_amount integer DEFAULT 0,
     time_off_id uuid,
     employee_id uuid NOT NULL,
     time_off_category_id uuid NOT NULL,
@@ -210,7 +210,8 @@ CREATE TABLE employee_balances (
     policy_credit_addition boolean DEFAULT false,
     balance_credit_addition_id uuid,
     reset_balance boolean DEFAULT false,
-    employee_time_off_policy_id uuid
+    employee_time_off_policy_id uuid,
+    manual_amount integer DEFAULT 0
 );
 
 
@@ -833,7 +834,7 @@ CREATE INDEX index_employee_balances_on_employee_id ON employee_balances USING b
 -- Name: index_employee_balances_on_employee_time_off_policy_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
-CREATE UNIQUE INDEX index_employee_balances_on_employee_time_off_policy_id ON employee_balances USING btree (employee_time_off_policy_id);
+CREATE INDEX index_employee_balances_on_employee_time_off_policy_id ON employee_balances USING btree (employee_time_off_policy_id);
 
 
 --
@@ -1523,3 +1524,5 @@ INSERT INTO schema_migrations (version) VALUES ('20160725134153');
 INSERT INTO schema_migrations (version) VALUES ('20160921075423');
 
 INSERT INTO schema_migrations (version) VALUES ('20160727144502');
+
+INSERT INTO schema_migrations (version) VALUES ('20160818122718');

@@ -3,7 +3,6 @@ require 'rails_helper'
 RSpec.describe Employee::Balance, type: :model do
   it { is_expected.to have_db_column(:id).of_type(:uuid) }
   it { is_expected.to have_db_column(:balance).of_type(:integer).with_options(default: 0) }
-  it { is_expected.to have_db_column(:amount).of_type(:integer).with_options(default: 0) }
   it { is_expected.to have_db_column(:employee_id).of_type(:uuid).with_options(null: false) }
   it { is_expected.to have_db_column(:time_off_id).of_type(:uuid) }
   it { is_expected.to have_db_column(:employee_time_off_policy_id).of_type(:uuid) }
@@ -23,7 +22,7 @@ RSpec.describe Employee::Balance, type: :model do
   it { is_expected.to validate_presence_of(:balance) }
 
   context 'callbacks and helper methods' do
-    let(:balance) { build(:employee_balance, amount: 200) }
+    let(:balance) { build(:employee_balance, resource_amount: 200) }
     let(:policy) { create(:time_off_policy, time_off_category: subject.time_off_category) }
     let(:employee_policy) do
       build(:employee_time_off_policy,
@@ -52,7 +51,7 @@ RSpec.describe Employee::Balance, type: :model do
           before do
             create(:employee_time_off_policy, time_off_policy: policy, employee: employee)
             create(:employee_balance,
-              amount: 100, employee: employee, time_off_category: subject.time_off_category,
+              resource_amount: 100, employee: employee, time_off_category: subject.time_off_category,
               effective_at: Date.today - 1.week
             )
           end
@@ -118,7 +117,7 @@ RSpec.describe Employee::Balance, type: :model do
         end
 
         context 'when effective at already set' do
-          subject { build(:employee_balance, amount: 200, effective_at: Time.now - 1.week) }
+          subject { build(:employee_balance, resource_amount: 200, effective_at: Time.now - 1.week) }
 
           it { expect { subject.valid? }.to_not change { subject.effective_at } }
         end
@@ -273,7 +272,7 @@ RSpec.describe Employee::Balance, type: :model do
 
         context 'when invalid amount' do
           before do
-            balance.amount =  -100
+            balance.resource_amount =  -100
             balance.validity_date = Date.today + 1.week
           end
 

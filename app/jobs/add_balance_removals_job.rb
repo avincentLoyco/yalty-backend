@@ -16,7 +16,7 @@ class AddBalanceRemovalsJob < ActiveJob::Base
       balance.time_off_category_id,
       balance.employee_id,
       balance.employee.account_id,
-      balance_credit_addition_id: balance.id, amount: 0
+      balance_credit_addition_id: balance.id
     ).call
   end
 

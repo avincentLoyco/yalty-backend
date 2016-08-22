@@ -18,7 +18,7 @@ RSpec.describe UpdateEmployeeBalance, type: :service do
   end
   let!(:previous_balance) do
     create(:employee_balance, :processing,
-      effective_at: Time.now - 3.weeks, time_off_category: category, employee: employee, amount: 0
+      effective_at: Time.now - 3.weeks, time_off_category: category, employee: employee, resource_amount: 0
     )
   end
   let(:employee_balance) { previous_balance.dup }
@@ -30,19 +30,19 @@ RSpec.describe UpdateEmployeeBalance, type: :service do
   end
 
   context 'when amount not given' do
-    let(:options) {{ amount: nil }}
+    let(:options) {{ resource_amount: nil }}
 
     context 'and employee balance is removal' do
       let!(:addition) do
         create(:employee_balance,
           validity_date: validity_date, effective_at: Time.now - 2.weeks, time_off_category: category,
-          employee: previous_balance.employee, amount: 600
+          employee: previous_balance.employee, resource_amount: 600
         )
       end
       let!(:employee_balance) do
         create(:employee_balance, :processing,
           balance_credit_addition: addition, time_off_category: category,
-          employee: previous_balance.employee, amount: -100
+          employee: previous_balance.employee, resource_amount: -100
         )
       end
       let(:validity_date) { Time.now - 1.weeks }
@@ -59,7 +59,7 @@ RSpec.describe UpdateEmployeeBalance, type: :service do
         let(:amount) { 1000 }
 
         before do
-          addition.update!(amount: amount)
+          addition.update!(resource_amount: amount)
           subject
         end
 
@@ -72,7 +72,7 @@ RSpec.describe UpdateEmployeeBalance, type: :service do
         let!(:balance_in_the_middle) do
           create(:employee_balance,
             effective_at: Time.now - 9.days, time_off_category: category,
-            employee: previous_balance.employee, amount: amount
+            employee: previous_balance.employee, resource_amount: amount
           )
         end
 
@@ -132,7 +132,7 @@ RSpec.describe UpdateEmployeeBalance, type: :service do
   end
 
   context 'when amount given' do
-    let(:options) {{ amount: 100 }}
+    let(:options) {{ resource_amount: 100 }}
 
     it { expect { subject }.to change { employee_balance.reload.being_processed }.to false }
     it { expect { subject }.to_not change { Employee::Balance.count } }

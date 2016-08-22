@@ -95,21 +95,21 @@ RSpec.describe FindEmployeeBalancesToUpdate, type: :service do
       let(:resource) { previous_balance }
 
       context 'when new amount bigger than removal' do
-        let(:options) { { amount: -900 } }
+        let(:options) { { resource_amount: -900 } }
 
         it { expect(subject).to include(previous_balance.id, previous_removal.id) }
         it { expect(subject).to_not include(balance_add.id) }
       end
 
       context 'when new amount eq removal' do
-        let(:options) { { amount: -1000 } }
+        let(:options) { { resource_amount: -1000 } }
 
         it { expect(subject).to include(previous_balance.id, previous_removal.id) }
         it { expect(subject).to_not include(balance_add.id) }
       end
 
       context 'when new amount smaller than removal' do
-        let(:options) { { amount: -1100 } }
+        let(:options) { { resource_amount: -1100 } }
 
         it { expect(subject).to include(previous_balance.id, previous_removal.id, balance_add.id) }
       end

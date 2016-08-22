@@ -34,7 +34,7 @@ RSpec.describe ManageEmployeeBalanceAdditions, type: :service do
       context 'created balances params' do
         before { subject }
 
-        it { expect(Employee::Balance.additions.pluck(:amount).uniq).to eq [0] }
+        it { expect(Employee::Balance.additions.map(&:amount).uniq).to eq [0] }
 
         it 'has valid effective_at' do
           expect(Employee::Balance.additions.pluck(:effective_at).map(&:to_date))
@@ -164,7 +164,7 @@ RSpec.describe ManageEmployeeBalanceAdditions, type: :service do
         context 'created balances params' do
           before { subject }
 
-          it { expect(Employee::Balance.additions.pluck(:amount).uniq).to eq [1000] }
+          it { expect(Employee::Balance.additions.map(&:amount).uniq).to eq [1000] }
 
           it 'has valid effective_at' do
             expect(Employee::Balance.additions.pluck(:effective_at).map(&:to_date))

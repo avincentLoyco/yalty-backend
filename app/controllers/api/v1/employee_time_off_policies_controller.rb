@@ -49,7 +49,7 @@ module API
       def options_for(resource)
         {
           employee_time_off_policy_id: resource.id,
-          amount: params[:employee_balance_amount],
+          resource_amount: params[:employee_balance_amount],
           effective_at: resource.effective_at
         }
       end

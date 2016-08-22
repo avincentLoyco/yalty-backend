@@ -5,6 +5,6 @@ class AddEmployeeTimeOffPolicyAssociationToEmployeeBalance < ActiveRecord::Migra
     add_foreign_key :employee_balances,
                     :employee_time_off_policies,
                     column: :employee_time_off_policy_id
-    add_index :employee_balances, :employee_time_off_policy_id, unique: true
+    add_index :employee_balances, :employee_time_off_policy_id
   end
 end

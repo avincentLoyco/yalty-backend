@@ -18,7 +18,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
   let(:employee_balance) do
     create(:employee_balance,
       employee: employee,
-      amount: 200,
+      resource_amount: 200,
       time_off_category: policy_category,
       effective_at: previous_end + 1.week
     )
@@ -229,14 +229,14 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
               let(:amount) { -500 }
               let!(:prev_mid_add) do
                 create(:employee_balance, employee: employee,
-                  time_off_category: category, amount: 1000, effective_at: previous.first + 1.week,
+                  time_off_category: category, resource_amount: 1000, effective_at: previous.first + 1.week,
                   validity_date: previous.first + 3.months, policy_credit_addition: true
                 )
               end
 
               let!(:prev_mid_removal) do
                 create(:employee_balance, employee: employee,
-                  time_off_category: category, amount: -1000, balance_credit_addition: prev_mid_add,
+                  time_off_category: category, resource_amount: -1000, balance_credit_addition: prev_mid_add,
                   policy_credit_removal: true
                 )
               end
@@ -318,12 +318,12 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
             let(:effective_at_date) { previous.first + 1.week }
             let!(:positive_balance) do
               create(:employee_balance, employee: employee,
-                time_off_category: category, amount: 500, effective_at: previous.first + 1.month
+                time_off_category: category, resource_amount: 500, effective_at: previous.first + 1.month
               )
             end
             let!(:negative_balance) do
               create(:employee_balance, employee: employee,
-                time_off_category: category, amount: -500, effective_at: previous.first + 2.months
+                time_off_category: category, resource_amount: -500, effective_at: previous.first + 2.months
               )
             end
 
