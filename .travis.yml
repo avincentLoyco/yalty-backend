@@ -16,7 +16,7 @@ script: bundle exec rake ci
 cache:
   - bundler
 addons:
-  postgresql: '9.3'
+  postgresql: '9.4'
   code_climate:
     repo_token:
       secure: "ZDY9DVPlB9Qy2tWHq1Ix1G+7VD0fV/DUvy9Y//odiFbGh1jwfS9m4MDqjZsDA7mUKLSZilpjBOjGNzGtNHtZS1IGf2Pidr9yWq1qONN11GBnza5/WjP3VFSCMH/S4a2ZupotidQBp8SAdEi89V6YHpIR9Wn+oSMt9lJKATY5hHk="

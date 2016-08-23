@@ -12,6 +12,10 @@ test:
   <<: *default
   database: yalty_test<%= ENV['TEST_ENV_NUMBER']%>
 
+e2e-testing:
+  <<: *default
+  database: yalty_e2e_testing
+
 staging:
   <<: *default
   database: yalty_staging

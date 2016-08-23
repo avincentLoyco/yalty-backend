@@ -29,6 +29,11 @@ development:
   # It doesn't make sense to report to New Relic from development environment.
   monitor_mode: false
 
+e2e-testing:
+  <<: *default_settings
+  # It doesn't make sense to report to New Relic from automated test runs.
+  monitor_mode: false
+
 test:
   <<: *default_settings
   # It doesn't make sense to report to New Relic from automated test runs.
