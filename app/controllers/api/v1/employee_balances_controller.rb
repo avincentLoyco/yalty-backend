@@ -27,15 +27,7 @@ module API
 
       def update
         verified_dry_params(dry_validation_schema) do |attributes|
-          validity_date = attributes[:validity_date]
-
-          transactions do
-            if attributes.key?(:validity_date)
-              ManageEmployeeBalanceRemoval.new(validity_date, resource).call
-            end
-            prepare_balances_to_update(editable_resource, attributes)
-          end
-
+          prepare_balances_to_update(editable_resource, attributes)
           update_balances_job(editable_resource.id, attributes)
           render_no_content
         end
@@ -56,17 +48,20 @@ module API
 
       private
 
-      def options(attributes)
-        params = {}
-        params[:effective_at]    = attributes[:effective_at] if attributes[:effective_at]
-        params[:validity_date]   = attributes[:validity_date] if attributes[:validity_date]
-        params[:resource_amount] = attributes[:amount]
-        params
+      def params_from_attributes(attributes)
+        [
+          attributes[:time_off_category][:id],
+          attributes[:employee][:id],
+          Account.current.id,
+          options(attributes)
+        ]
       end
 
-      def params_from_attributes(attributes)
-        [attributes[:time_off_category][:id], attributes[:employee][:id], Account.current.id,
-         options(attributes)]
+      def options(attributes)
+        attributes.reduce({}) do |options, (key, value)|
+          options[key] = value if value.present?
+          options
+        end
       end
 
       def resource

@@ -19,7 +19,10 @@ RSpec.describe CreateEmployeeBalance, type: :service do
 
   subject do
     described_class.new(
-      category.id, employee.id, Account.current.id, { resource_amount: amount }.merge(options)
+      category.id,
+      employee.id,
+      Account.current.id,
+      { resource_amount: amount, manual_amount: 0 }.merge(options)
     ).call
   end
   let(:amount) { -100 }
@@ -253,7 +256,13 @@ RSpec.describe CreateEmployeeBalance, type: :service do
 
       context 'missing amount' do
         subject do
-          CreateEmployeeBalance.new(category.id, employee.id, Account.current.id).call
+          CreateEmployeeBalance.new(
+            category.id,
+            employee.id,
+            Account.current.id,
+            manual_amount: nil,
+            resource_amount: nil
+          ).call
         end
 
         it { expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }

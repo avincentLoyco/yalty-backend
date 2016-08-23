@@ -10,11 +10,8 @@ class Employee::Balance < ActiveRecord::Base
   has_one :balance_credit_removal, class_name: 'Employee::Balance',
                                    foreign_key: 'balance_credit_addition_id', dependent: :destroy
 
-  validates :employee,
-    :time_off_category,
-    :balance, :amount,
-    :effective_at,
-    presence: true
+  validates :employee, :time_off_category, :balance, :effective_at, :resource_amount,
+    :manual_amount, presence: true
   validates :effective_at, uniqueness: { scope: [:time_off_category, :employee] }
   validates :amount, numericality: { greater_than_or_equal_to: 0 }, if: :validity_date
   validates :employee_time_off_policy_id, uniqueness: true, allow_nil: true

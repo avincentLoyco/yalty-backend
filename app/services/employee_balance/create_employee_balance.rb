@@ -48,13 +48,16 @@ class CreateEmployeeBalance
   end
 
   def common_params
-    {
-      resource_amount: options[:resource_amount],
-      employee: employee,
-      time_off:  options.key?(:time_off_id) ? employee.time_offs.find(options[:time_off_id]) : nil,
-      time_off_category: category,
-      employee_time_off_policy: employee_time_off_policy
-    }
+    [
+      {
+        employee: employee,
+        time_off:  options.key?(:time_off_id) ? employee.time_offs.find(options[:time_off_id]) : nil,
+        time_off_category: category,
+        employee_time_off_policy: employee_time_off_policy
+      },
+      manual_amount_param,
+      resource_amount_param
+    ].inject(:merge)
   end
 
   def balance_params
@@ -65,6 +68,16 @@ class CreateEmployeeBalance
       policy_credit_addition: options[:policy_credit_addition] || false,
       reset_balance: options[:reset_balance] || false
     }.merge(common_params)
+  end
+
+  def manual_amount_param
+    return {} unless options.key?(:manual_amount)
+    { manual_amount: options[:manual_amount] }
+  end
+
+  def resource_amount_param
+    return {} unless options.key?(:resource_amount)
+    { resource_amount: options[:resource_amount] }
   end
 
   def balance_removal_params

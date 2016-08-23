@@ -132,7 +132,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
     let(:employee_id) { employee.id }
     let(:params) do
       {
-        amount: amount,
+        manual_amount: amount,
         effective_at: effective_at_date,
         time_off_category: {
           id: category_id
@@ -309,36 +309,6 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
               it { is_expected.to have_http_status(201) }
             end
           end
-          context 'and validity date is in past' do
-            include_context 'shared_context_balances',
-              type: 'balancer',
-              years_to_effect: 1
-
-            let(:amount) { 1000 }
-            let(:effective_at_date) { previous.first + 1.week }
-            let!(:positive_balance) do
-              create(:employee_balance, employee: employee,
-                time_off_category: category, resource_amount: 500, effective_at: previous.first + 1.month
-              )
-            end
-            let!(:negative_balance) do
-              create(:employee_balance, employee: employee,
-                time_off_category: category, resource_amount: -500, effective_at: previous.first + 2.months
-              )
-            end
-
-            before { params.merge!({ validity_date: previous.last - 1.day }) }
-
-            it { expect { subject }.to change { Employee::Balance.count }.by(2) }
-            it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
-            it { expect { subject }.to change { previous_balance.reload.being_processed } }
-            it { expect { subject }.to change { balance_add.reload.being_processed } }
-            it { expect { subject }.to change { balance.reload.being_processed } }
-
-            it { expect { subject }.to_not change { previous_add.reload.being_processed } }
-
-            it { is_expected.to have_http_status(201) }
-          end
         end
       end
     end
@@ -347,7 +317,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
       let(:category_id) { policy_category.id }
 
       context 'params are missing' do
-        before { params.delete(:amount) }
+        before { params.delete(:manual_amount) }
 
         it { expect { subject }.to_not change { Employee::Balance.count } }
         it { is_expected.to have_http_status(422) }
@@ -371,7 +341,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
     let(:params) do
       {
         id: id,
-        amount: amount
+        manual_amount: amount
       }
     end
 
@@ -405,140 +375,6 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
           it { expect { subject }.to_not change { balance.reload.being_processed } }
         end
       end
-
-      context 'employee balance policy of type balancer' do
-        context 'in current policy period' do
-          context 'and do not have validity date' do
-            include_context 'shared_context_balances',
-              type: 'balancer',
-              years_to_effect: 0
-
-            context 'and now have it in the past' do
-              let(:id) { balance.id }
-              before do
-                params.merge!(
-                  {
-                    validity_date: previous.last - 2.months,
-                    effective_at: previous.last - 4.months
-                  }
-                )
-              end
-
-              it { expect { subject }.to change { Employee::Balance.count }.by(1) }
-              it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
-              it { expect { subject }.to change { balance.reload.being_processed }.to true }
-              it { expect { subject }.to change { balance_add.reload.being_processed }.to true }
-              it { expect { subject }.to change { previous_balance.reload.being_processed } }
-
-              it { is_expected.to have_http_status(204) }
-            end
-
-            context 'and have it in the future' do
-              include_context 'shared_context_balances',
-                type: 'balancer',
-                years_to_effect: 0
-
-              let(:id) { balance.id }
-              before do
-                params.merge!(
-                  {
-                    validity_date: current.last - 4.days,
-                  }
-                )
-              end
-
-              it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
-              it { expect { subject }.to change { balance.reload.being_processed }.to true }
-
-              it { expect { subject }.to_not change { Employee::Balance.count } }
-              it { expect { subject }.to_not change { balance_add.reload.being_processed } }
-              it { expect { subject }.to_not change { previous_balance.reload.being_processed } }
-
-              it { is_expected.to have_http_status(204) }
-            end
-          end
-
-          context 'have validity date' do
-            include_context 'shared_context_balances',
-              type: 'balancer',
-              years_to_effect: 1,
-              end_day: 1,
-              end_month: 4
-
-            before { previous_add.update!(validity_date: Time.now - 1.month) }
-
-            context 'validity date in past' do
-              let(:id) { previous_add.id }
-
-              it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
-              it { expect { subject }.to change { balance_add.reload.being_processed } }
-              it { expect { subject }.to change { balance.reload.being_processed } }
-              it { expect { subject }.to change { previous_add.reload.being_processed } }
-              it { expect { subject }.to change { previous_balance.reload.being_processed } }
-              it { expect { subject }.to change { previous_removal.reload.being_processed } }
-
-              it { expect { subject }.to_not change { Employee::Balance.count } }
-
-              it { is_expected.to have_http_status(204) }
-            end
-
-            context 'validity date in future' do
-              let(:id) { balance_add.id }
-
-              it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
-              it { expect { subject }.to change { balance_add.reload.being_processed } }
-              it { expect { subject }.to change { balance.reload.being_processed } }
-
-              it { expect { subject }.to_not change { Employee::Balance.count } }
-              it { expect { subject }.to_not change { previous_removal.reload.being_processed } }
-
-              it { is_expected.to have_http_status(204) }
-
-              context 'and moved to today or earlier' do
-                before { params.merge!({ validity_date: Time.now, effective_at: Time.now - 1.week }) }
-                let(:id) { balance_add.id }
-
-                it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
-                it { expect { subject }.to change { balance_add.reload.being_processed } }
-                it { expect { subject }.to change { balance.reload.being_processed } }
-                it { expect { subject }.to change { Employee::Balance.count }.by(1) }
-
-                it { is_expected.to have_http_status(204) }
-              end
-            end
-
-            context 'validity date in past moved to future' do
-              before { params.merge!({ validity_date: current.last }) }
-              let(:id) { previous_add.id }
-              let(:removal_id) { previous_removal.id }
-
-              it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
-              it { expect { subject }.to change { balance_add.reload.being_processed } }
-              it { expect { subject }.to change { balance.reload.being_processed } }
-              it { expect { subject }.to change { previous_balance.reload.being_processed } }
-              it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
-              it { expect { subject }.to change { Employee::Balance.exists?(id: removal_id) } }
-
-              it { is_expected.to have_http_status(204) }
-            end
-
-            context 'validity date in past moved to today' do
-              before { params.merge!({ validity_date: Time.now }) }
-              let(:id) { previous_add.id }
-
-              it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
-              it { expect { subject }.to change { balance_add.reload.being_processed } }
-              it { expect { subject }.to change { balance.reload.being_processed } }
-              it { expect { subject }.to change { previous_balance.reload.being_processed } }
-              it { expect { subject }.to change { previous_removal.reload.being_processed } }
-
-              it { expect { subject }.to_not change { Employee::Balance.count } }
-
-              it { is_expected.to have_http_status(204) }
-            end
-          end
-        end
-      end
     end
 
     context 'with invalid params' do
@@ -548,7 +384,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
       let(:id) { balance.id }
 
       context 'when param is missing' do
-        before { params.delete(:amount) }
+        before { params.delete(:manual_amount) }
 
         it { expect { subject }.to_not change { balance.reload.being_processed } }
         it { is_expected.to have_http_status(422) }
