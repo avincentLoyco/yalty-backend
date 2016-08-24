@@ -245,5 +245,125 @@ RSpec.describe RegisteredWorkingTime, type: :model do
         it { expect(subject.length).to eq 0 }
       end
     end
+
+    context 'registered working times by employee and by account' do
+      let(:account)         { create(:account) }
+      let(:first_employee)  { create(:employee, account: account) }
+      let(:second_employee) { create(:employee, account: account) }
+
+      before 'create registered working times' do
+        [Time.zone.now, 3.days.from_now, 2.days.from_now].each do |date|
+          create(:registered_working_time, employee: first_employee, date: date)
+        end
+
+        [Time.zone.now, 3.days.from_now, 2.days.from_now].each do |date|
+          create(:registered_working_time, employee: second_employee, date: date)
+        end
+      end
+
+      context '.manually_created_by_employee_ordered' do
+        let(:registered_working_times_from_scope) do
+          described_class.manually_created_by_employee_ordered(first_employee.id)
+        end
+
+        let(:employee_ids_from_scope) do
+          registered_working_times_from_scope.pluck(:employee_id).uniq
+        end
+
+        it 'returns only registered_working_times for an employee' do
+          expect(registered_working_times_from_scope.size).to eq(3)
+          expect(employee_ids_from_scope.size).to eq(1)
+          expect(employee_ids_from_scope.first).to eq(first_employee.id)
+        end
+      end
+
+      context '.manually_created_by_account_ordered' do
+        let(:registered_working_times_from_scope) do
+          described_class.manually_created_by_account_ordered(account.id)
+        end
+
+        let(:account_ids_from_scope) { registered_working_times_from_scope.pluck(:account_id).uniq }
+
+        it 'returns only registered_working_times for an account' do
+          expect(registered_working_times_from_scope.size).to eq(6)
+          expect(account_ids_from_scope.size).to eq(1)
+          expect(account_ids_from_scope.first).to eq(account.id)
+        end
+      end
+
+      context 'manually_created_ratio_per_employee' do
+        subject(:manually_created_ratio_per_employee) do
+          described_class.manually_created_ratio_per_employee(first_employee.id)
+        end
+
+        context 'when all registered_working_times are created manually' do
+          it { expect(manually_created_ratio_per_employee).to eq(100.0) }
+        end
+
+        context 'when half of registered_working_times are created from schedule' do
+          before 'create registered_working_times from schedule' do
+            [4.days.from_now, 5.days.from_now, 6.days.from_now].each do |date|
+              create(:schedule_generated_working_time, employee: first_employee, date: date)
+            end
+          end
+
+          it { expect(manually_created_ratio_per_employee).to eq(50.0) }
+        end
+      end
+
+      context 'manually_created_ratio_per_account' do
+        subject(:manually_created_ratio_per_account) do
+          described_class.manually_created_ratio_per_account(account.id)
+        end
+
+        context 'when all registered_working_times are created manually' do
+          it { expect(manually_created_ratio_per_account).to eq(100.0) }
+        end
+
+        context 'when some of registered_working_times are created from schedule' do
+          before 'create registered_working_times from schedule' do
+            [4.days.from_now, 5.days.from_now, 6.days.from_now].each do |date|
+              create(:schedule_generated_working_time, employee: first_employee, date: date)
+            end
+          end
+
+          it { expect(manually_created_ratio_per_account).to eq(66.67) }
+        end
+      end
+    end
+  end
+
+  context 'callbacks' do
+    context '.trigger_intercom_update' do
+      let(:account) { create(:account) }
+      let(:employee) { create(:employee, account: account) }
+
+      subject(:create_registered_working_time) do
+        create(:registered_working_time, employee: employee)
+      end
+
+      it 'should trigger intercom update on account' do
+        expect(account).to receive(:create_or_update_on_intercom).with(true)
+        create_registered_working_time
+      end
+
+      context 'with user' do
+        let(:user) { create(:account_user, account: account) }
+        let(:employee) { create(:employee, account: account, user: user) }
+
+        it 'should trigger intercom update on user' do
+          expect(user).to receive(:create_or_update_on_intercom).with(true)
+          create_registered_working_time
+        end
+      end
+
+      context 'without user' do
+        it 'should not trigger intercom update on user' do
+          expect_any_instance_of(Account::User)
+            .not_to receive(:create_or_update_on_intercom).with(true)
+          create_registered_working_time
+        end
+      end
+    end
   end
 end

@@ -1,6 +1,8 @@
 class Employee < ActiveRecord::Base
+  include ActsAsIntercomTrigger
+
   belongs_to :account, inverse_of: :employees, required: true
-  belongs_to :user, class_name: 'Account::User'
+  belongs_to :user, class_name: 'Account::User', foreign_key: :account_user_id
   has_many :employee_attribute_versions,
     class_name: 'Employee::AttributeVersion',
     inverse_of: :employee
@@ -21,19 +23,31 @@ class Employee < ActiveRecord::Base
 
   validate :hired_event_presence, on: :create
 
-  scope :affected_by_presence_policy, lambda { |presence_policy_id|
+  scope(:active_by_account, lambda do |account_id|
+    joins('INNER JOIN account_users ON employees.account_user_id = account_users.id')
+      .where(account_id: account_id)
+  end)
+
+  scope(:affected_by_presence_policy, lambda do |presence_policy_id|
     joins(:employee_presence_policies)
       .where(employee_presence_policies: { presence_policy_id: presence_policy_id })
-  }
+  end)
 
-  scope :employees_with_time_off_in_range, lambda { |start_date, end_date|
+  scope(:employees_with_time_off_in_range, lambda do |start_date, end_date|
     joins(:time_offs).where(
       '((time_offs.start_time::date BETWEEN ? AND ?) OR
       (time_offs.end_time::date BETWEEN ? AND ?) OR
       (time_offs.end_time::date > ? AND time_offs.start_time::date < ?))',
       start_date, end_date, start_date, end_date, end_date, start_date
     )
-  }
+  end)
+
+  def self.active_employee_ratio_per_account(account_id)
+    employee_count = Employee.where(account_id: account_id).count
+    return if employee_count == 0
+    active_employee_count = Employee.active_by_account(account_id).count
+    ((active_employee_count * 100.0) / employee_count).round(2)
+  end
 
   def first_employee_working_place
     return unless employee_working_places.present?

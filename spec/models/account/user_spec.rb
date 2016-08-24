@@ -79,4 +79,22 @@ RSpec.describe Account::User, type: :model do
 
     expect { second_user.save }.to change { second_user.errors.messages[:reset_password_token] }
   end
+
+  describe 'intercom integration' do
+    include_context 'shared_context_intercom_attributes'
+    let(:user) { create(:account_user) }
+
+    it 'is of type :users' do
+      expect(user.intercom_type).to eq(:users)
+    end
+
+    it 'includes proper attributes' do
+      expect(user.intercom_attributes).to eq(proper_user_intercom_attributes)
+    end
+
+    it 'returns proper data' do
+      data_keys = user.intercom_data.keys + user.intercom_data[:custom_attributes].keys
+      expect(data_keys).to match_array(proper_user_data_keys)
+    end
+  end
 end

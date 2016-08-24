@@ -1,17 +1,20 @@
 namespace :intercom do
   desc 'import users to intercom'
   task import: [:environment] do
-    Account.all.each do |account|
-      puts "import  #{account.company_name}"
-      account.create_or_update_on_intercom(true)
+    import_data
+  end
 
-      account.users.each do |user|
-        puts "import #{user.email}"
-        user.create_or_update_on_intercom(true)
-      end
+  def import_data
+    return puts 'No intercom_client' unless intercom_client.present?
 
-      puts ''
-    end
+    puts 'import accounts'
+    intercom_client.companies.submit_bulk_job(create_items: Account.all.map(&:intercom_data))
+    puts 'import users'
+    intercom_client.users.submit_bulk_job(create_items: Account::User.all.map(&:intercom_data))
+  end
+
+  def intercom_client
+    @intercom_service ||= IntercomService.new.client
   end
 
   namespace :invite do
@@ -30,6 +33,8 @@ namespace :intercom do
 
     desc 'Add registration key to choosen leads'
     task email: [:environment] do
+      return unless intercom_client.present?
+
       STDOUT.puts 'List of email to invite (coma separator):'
       emails = STDIN.gets.chomp.split(',').map(&:strip)
 
@@ -51,13 +56,6 @@ namespace :intercom do
       add_registration_keys(beta_requests)
     end
 
-    def intercom_client
-      @intercom_client ||= Intercom::Client.new(
-        app_id: ENV['INTERCOM_APP_ID'],
-        api_key: ENV['INTERCOM_API_KEY']
-      )
-    end
-
     def beta_requests
       @beta_requests ||= begin
         intercom_client.contacts
@@ -74,6 +72,8 @@ namespace :intercom do
     end
 
     def add_registration_keys(leads)
+      return unless intercom_client.present?
+
       leads.each do |lead|
         registration_key = Account::RegistrationKey.create
         lead.custom_attributes['beta_invitation_key'] = registration_key.token

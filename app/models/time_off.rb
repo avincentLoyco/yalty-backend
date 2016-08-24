@@ -11,8 +11,23 @@ class TimeOff < ActiveRecord::Base
   validate :does_not_overlap_with_other_users_time_offs, if: [:employee, :time_off_category_id]
   validate :does_not_overlap_with_registered_working_times, if: [:employee]
 
-  scope :for_employee_in_period, lambda { |employee_id, start_date, end_date|
-    where(employee_id: employee_id)
+  scope :for_employee, -> (employee_id) { where(employee_id: employee_id) }
+
+  scope(:for_account, lambda do |account_id|
+    joins(:time_off_category)
+      .where(time_off_categories: { account_id: account_id }).order(:created_at)
+  end)
+
+  scope(:vacations, lambda do
+    joins(:time_off_category).where(time_off_categories: { name: 'vacation' })
+  end)
+
+  scope(:not_vacations, lambda do
+    joins(:time_off_category).where.not(time_off_categories: { name: 'vacation' })
+  end)
+
+  scope(:for_employee_in_period, lambda do |employee_id, start_date, end_date|
+    for_employee(employee_id)
       .where(
         '((start_time::date BETWEEN ? AND ?) OR
         (end_time::date BETWEEN ? AND ?) OR
@@ -20,12 +35,11 @@ class TimeOff < ActiveRecord::Base
         start_date, end_date, start_date, end_date, end_date, start_date
       )
       .order(:start_time)
-  }
+  end)
 
-  scope :for_employee_at_date, lambda { |employee_id, date|
-    where(employee_id: employee_id)
-      .where('? between start_time::date AND end_time::date', date)
-  }
+  scope(:for_employee_at_date, lambda do |employee_id, date|
+    for_employee(employee_id).where('? between start_time::date AND end_time::date', date)
+  end)
 
   def balance
     - CalculateTimeOffBalance.new(self).call

@@ -7,13 +7,40 @@ class RegisteredWorkingTime < ActiveRecord::Base
   validate :time_entries_does_not_overlaps_with_time_off
   validates :date, uniqueness: { scope: :employee }, on: :create
 
-  scope :in_day_range, lambda { |start_date, end_date|
+  scope(:in_day_range, lambda do |start_date, end_date|
     where('date >= ? AND date <= ?', start_date, end_date)
-  }
+  end)
 
-  scope :for_employee_in_day_range, lambda { |employee_id, start_date, end_date|
+  scope(:manually_created_by_employee_ordered, lambda do |employee_id|
+    where(employee_id: employee_id, schedule_generated: false).order(:created_at)
+  end)
+
+  scope(:manually_created_by_account_ordered, lambda do |account_id|
+    joins(:employee)
+      .where(employees: { account_id: account_id }, schedule_generated: false)
+      .order(:created_at)
+  end)
+
+  scope(:for_employee_in_day_range, lambda do |employee_id, start_date, end_date|
     in_day_range(start_date, end_date).where(employee_id: employee_id)
-  }
+  end)
+
+  def self.manually_created_ratio_per_employee(employee_id)
+    all_rwt_for_employee = RegisteredWorkingTime.where(employee_id: employee_id).count
+    return if all_rwt_for_employee == 0
+    manually_created_rwt_for_employee =
+      RegisteredWorkingTime.manually_created_by_employee_ordered(employee_id).count
+    ((manually_created_rwt_for_employee * 100.0) / all_rwt_for_employee).round(2)
+  end
+
+  def self.manually_created_ratio_per_account(account_id)
+    all_rwt_for_account =
+      RegisteredWorkingTime.joins(:employee).where(employees: { account_id: account_id }).count
+    return if all_rwt_for_account == 0
+    manually_created_rwt_for_account =
+      RegisteredWorkingTime.manually_created_by_account_ordered(account_id).count
+    ((manually_created_rwt_for_account * 100.0) / all_rwt_for_account).round(2)
+  end
 
   private
 

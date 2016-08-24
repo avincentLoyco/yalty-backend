@@ -9,5 +9,7 @@ FactoryGirl.define do
     trait :schedule_generated do
       schedule_generated true
     end
+
+    factory :schedule_generated_working_time, traits: [:schedule_generated]
   end
 end
