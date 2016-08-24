@@ -165,6 +165,19 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
         it { expect_json_keys([:id, :type, :employee, :time_off_category, :start_time, :end_time]) }
       end
 
+      context 'with manual_amount' do
+        let(:params_with_manual_amount) { params.merge!(manual_amount: 200) }
+        subject(:create_with_manual_amount) { post :create, params_with_manual_amount }
+
+        it { expect { create_with_manual_amount }.to change { TimeOff.count }.by(1) }
+        it { expect { create_with_manual_amount }.to change { Employee::Balance.count }.by(1) }
+
+        it 'properly assigns manual_amount' do
+          create_with_manual_amount
+          expect(Employee::Balance.last.manual_amount).to eq(200)
+        end
+      end
+
       context 'when time off has time entries in its period' do
         let(:first_day) { create(:presence_day, order: 5, presence_policy: policy) }
         let(:second_day) { create(:presence_day, order: 2, presence_policy: policy) }
@@ -266,6 +279,22 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
       it { expect { subject }.to change { employee_balance.reload.being_processed } }
 
       it { is_expected.to have_http_status(204) }
+
+      context 'with manual_amount' do
+        let(:params_with_manual_amount) { params.merge!(manual_amount: 200) }
+        subject(:update_with_manual_amount) { put :update, params_with_manual_amount }
+
+        before do
+          ActiveJob::Base.queue_adapter = :inline
+          update_with_manual_amount
+        end
+
+        after { ActiveJob::Base.queue_adapter = :resque }
+
+        it do
+          expect(employee_balance.reload.manual_amount).to eq(200)
+        end
+      end
     end
 
     context 'with invalid params' do
