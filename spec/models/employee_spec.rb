@@ -56,14 +56,14 @@ RSpec.describe Employee, type: :model do
 
     before 'create employees' do
       create_list(:employee, 3, account: account)
-      create_list(:employee, 3, account: account)
+      create_list(:employee, 3)
     end
 
     context '.active_by_account' do
       subject(:active_by_account_scope) { described_class.active_by_account(account.id) }
 
       it 'returns only employees with users / active employees' do
-        expect(active_by_account_scope.count).to eq(1)
+        expect(active_by_account_scope.count).to eq(4)
         expect(active_by_account_scope.first.id).to eq(employee.id)
       end
     end
@@ -74,7 +74,7 @@ RSpec.describe Employee, type: :model do
       end
 
       it 'returns proper ratio' do
-        expect(active_employee_ratio).to eq(14.29)
+        expect(active_employee_ratio).to eq(25.00)
       end
     end
   end

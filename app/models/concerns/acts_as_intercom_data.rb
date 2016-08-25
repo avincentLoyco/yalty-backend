@@ -42,6 +42,6 @@ module ActsAsIntercomData
 
   def delayed_jobs
     @delayed_jobs ||= Resque.redis.keys('timestamps:*')
-      .select_if {|key| key =~ /"queue":"intercom"/ && key =~ /"#{self.class.name}"/ }
+      .select {|key| key =~ /"queue":"intercom"/ && key =~ /"#{self.class.name}"/ }
   end
 end
