@@ -5,7 +5,7 @@ class SendDataToIntercom
     return unless intercom_client.present?
 
     resource = resource_class.constantize.find(resource_id)
-    intercom_service.client.send(resource.intercom_type.to_sym).create(resource.intercom_data)
+    intercom_client.send(resource.intercom_type.to_sym).create(resource.intercom_data)
   end
 
   private
