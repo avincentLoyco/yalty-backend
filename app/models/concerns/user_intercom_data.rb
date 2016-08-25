@@ -8,9 +8,12 @@ module UserIntercomData
   end
 
   def intercom_attributes
-    %w( id created_at email account_manager employee last_time_off_vacation_date
-        last_no_vacation_time_off_date last_manual_working_time_creation working_time_ratio
-        last_vacation_time_off_date)
+    %w(
+      id created_at email account_manager
+      employee_id
+      last_vacation_created_at last_other_time_off_created_at
+      last_manual_working_time_created_at manual_working_time_ratio
+    )
   end
 
   def intercom_data
@@ -18,31 +21,37 @@ module UserIntercomData
       user_id: id,
       email: email,
       signed_up_at: created_at,
-      custom_attributes: {
-        account_manager: account_manager,
-        employee_id: intercom_employee_data[:employee_id],
-        last_vacation_time_off_date: intercom_employee_data[:last_vacation_time_off_date],
-        last_no_vacation_time_off_date: intercom_employee_data[:last_no_vacation_time_off_date],
-        last_manual_working_time_creation:
-          intercom_employee_data[:last_manual_working_time_creation],
-        working_time_ratio: intercom_employee_data[:working_time_ratio]
-      },
       companies: [{
         company_id: account.id
-      }]
+      }],
+      custom_attributes: [
+        {
+          account_manager: account_manager,
+        },
+        intercom_employee_data
+      ].inject(:merge)
     }
   end
 
   def intercom_employee_data
-    return {} unless employee.present?
-    @intercom_employee_data ||= {
-      employee_id: employee.id,
-      last_vacation_time_off_date: TimeOff.vacations.for_employee(employee.id).last,
-      last_no_vacation_time_off_date: TimeOff.not_vacations.for_employee(employee.id).last,
-      last_manual_working_time_creation:
-        RegisteredWorkingTime.manually_created_by_employee_ordered(employee.id).last,
-      working_time_ratio: RegisteredWorkingTime.manually_created_ratio_per_employee(employee.id)
-    }
+    unless employee.present?
+      {
+        employee_id: nil,
+        last_vacation_created_at: nil,
+        last_other_time_off_created_at: nil,
+        last_manual_working_time_created_at: nil,
+        manual_working_time_ratio: nil,
+      }
+    else
+      {
+        employee_id: employee.id,
+        last_vacation_created_at: TimeOff.vacations.for_employee(employee.id).pluck(:created_at).last,
+        last_other_time_off_created_at: TimeOff.not_vacations.for_employee(employee.id).pluck(:created_at).last,
+        last_manual_working_time_created_at:
+          RegisteredWorkingTime.manually_created_by_employee_ordered(employee.id).pluck(:created_at).last,
+        manual_working_time_ratio: RegisteredWorkingTime.manually_created_ratio_per_employee(employee.id)
+      }
+    end
   end
 
   def intercom_user
