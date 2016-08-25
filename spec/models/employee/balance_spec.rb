@@ -1,6 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe Employee::Balance, type: :model do
+  include_context 'shared_context_timecop_helper'
   it { is_expected.to have_db_column(:id).of_type(:uuid) }
   it { is_expected.to have_db_column(:balance).of_type(:integer).with_options(default: 0) }
   it { is_expected.to have_db_column(:employee_id).of_type(:uuid).with_options(null: false) }
@@ -131,7 +132,7 @@ RSpec.describe Employee::Balance, type: :model do
           context 'effective_at date value' do
             before { subject.valid? }
 
-            it { expect(subject.effective_at).to eq time_off.start_time }
+            it { expect(subject.effective_at).to eq time_off.end_time }
           end
         end
       end
@@ -212,24 +213,83 @@ RSpec.describe Employee::Balance, type: :model do
         end
       end
 
-      context 'effective_at_equal_assignation_date' do
+      context 'effective_at_equal_time_off_end_date' do
         subject do
-          build(:employee_balance, :with_employee_time_off_policy, effective_at: effective_at)
+          build(:employee_balance, :with_time_off)
         end
 
-        context 'with valid params' do
-          let(:effective_at) { Time.now - 1.year }
+        it { expect(subject.valid?).to eq true }
+        it { expect { subject.valid? }.to_not change { subject.errors.size } }
 
-          it { expect(subject.valid?).to eq true }
-          it { expect { subject.valid? }.to_not change { subject.errors.size } }
+      end
+      context 'effective_at_equal_time_off_policy_dates' do
+        subject do
+          build(:employee_balance, employee_time_off_policy: employee_policy, effective_at: effective_at)
+        end
+
+        context 'with valid params when the effective at' do
+          context ' matches the assignation date of the ETOP' do
+            let(:effective_at) { employee_policy.effective_at }
+
+
+            it { expect(subject.valid?).to eq true }
+            it { expect { subject.valid? }.to_not change { subject.errors.size } }
+          end
+
+          context ' matches the day before the TOP start date' do
+
+            let(:effective_at) do
+              top = employee_policy.time_off_policy
+              Date.new(Time.now.year, top.start_month, top.start_day) - 1.day
+            end
+
+            it { expect(subject.valid?).to eq true }
+            it { expect { subject.valid? }.to_not change { subject.errors.size } }
+          end
+
+          context ' matches the TOP start date' do
+
+            let(:effective_at) do
+              top = employee_policy.time_off_policy
+              Date.new(Time.now.year, top.start_month, top.start_day)
+            end
+
+            it { expect(subject.valid?).to eq true }
+            it { expect { subject.valid? }.to_not change { subject.errors.size } }
+          end
+
+          context ' matches the TOP end date' do
+
+            let(:policy) { create(:time_off_policy, :with_end_date) }
+
+            let(:effective_at) do
+              Date.new(Time.now.year, policy.end_month, policy.end_day)
+            end
+
+            it { expect(subject.valid?).to eq true }
+            it { expect { subject.valid? }.to_not change { subject.errors.size } }
+          end
         end
 
         context 'with invalid params' do
+          let(:policy) { create(:time_off_policy) }
+
+          let(:employee_policy) do
+            create(:employee_time_off_policy,
+              employee: balance.employee, time_off_policy: policy, effective_at: Date.today - 6.years
+            )
+          end
+
+          subject do
+            build(:employee_balance, employee_time_off_policy: employee_policy, effective_at: effective_at)
+          end
+
           let(:effective_at) { Time.now - 1.month }
 
           it { expect(subject.valid?).to eq false }
           it { expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
-            .to include 'Must be at assignation effective_at' }
+            .to include 'Must be at TimeOffPolicy  assignations date, end date, start date'\
+            ' or the previous day to start date' }
         end
       end
 

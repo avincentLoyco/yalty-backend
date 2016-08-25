@@ -25,6 +25,7 @@ FactoryGirl.define do
 
     trait :with_time_off do
       time_off { create(:time_off, time_off_category: time_off_category) }
+      effective_at { time_off.end_time.to_date}
     end
 
     trait :with_balance_credit_addition do

@@ -20,8 +20,8 @@ class Employee::Balance < ActiveRecord::Base
   validate :counter_validity_date_blank
   validate :time_off_policy_presence
   validate :effective_after_employee_start_date, if: :employee
-  validate :effective_at_equal_assignation_date, if: :employee_time_off_policy_id
-
+  validate :effective_at_equal_time_off_policy_dates, if: :employee_time_off_policy_id
+  validate :effective_at_equal_time_off_end_date, if: :time_off_id
   before_validation :calculate_and_set_balance, if: :attributes_present?
   before_validation :find_effective_at
   before_validation :check_if_credit_removal, if: :balance_credit_addition
@@ -71,7 +71,7 @@ class Employee::Balance < ActiveRecord::Base
     if balance_credit_addition.try(:validity_date)
       balance_credit_addition.validity_date
     else
-      time_off.try(:start_time) || Time.zone.now
+      time_off.try(:end_time) || Time.zone.now
     end
   end
 
@@ -115,8 +115,59 @@ class Employee::Balance < ActiveRecord::Base
     errors.add(:effective_at, 'Can not be added before employee start date')
   end
 
-  def effective_at_equal_assignation_date
-    return unless effective_at.to_date != employee_time_off_policy.effective_at.to_date
-    errors.add(:effective_at, 'Must be at assignation effective_at')
+  def effective_at_equal_time_off_policy_dates
+    time_off_policy = employee_time_off_policy.time_off_policy
+    etop_hash = employee_time_off_policy_with_effective_till
+    etop_effective_at_year = etop_hash['effective_at'].to_date.year
+    etop_effective_till_year =
+      etop_hash['effective_till'] ? etop_hash['effective_till'].to_date.year : nil
+    matches_end_or_start_top_date = compare_effective_at_with_time_off_polices_related_dates(
+      time_off_policy,
+      etop_effective_at_year,
+      etop_effective_till_year
+    )
+    matches_effective_at = effective_at.to_date == employee_time_off_policy.effective_at.to_date
+    return unless !matches_end_or_start_top_date && !matches_effective_at
+    message = 'Must be at TimeOffPolicy  assignations date, end date, start date or the previous'\
+      ' day to start date'
+    errors.add(:effective_at, message)
+  end
+
+  def employee_time_off_policy_with_effective_till
+    JoinTableWithEffectiveTill.new(
+      EmployeeTimeOffPolicy,
+      nil,
+      employee_time_off_policy.time_off_policy_id
+    ).call.first
+  end
+
+  def compare_effective_at_with_time_off_polices_related_dates(
+    time_off_policy,
+    etop_effective_at_year,
+    etop_effective_till_year
+  )
+    start_day = time_off_policy.start_day
+    start_month = time_off_policy.start_month
+    end_day = time_off_policy.end_day
+    end_month = time_off_policy.end_month
+    day = effective_at.to_date.day
+    month = effective_at.to_date.month
+    year = effective_at.to_date.year
+    previous_date = Date.new(year, start_month, start_day) - 1
+    check_year = (year >= etop_effective_at_year &&
+      (etop_effective_till_year.nil? || year <= etop_effective_till_year))
+    check_start_day_related = (day == start_day && month == start_month) ||
+      (day == previous_date.day && month == previous_date.month)
+    check_end_day = (day == end_day && month == end_month)
+    if end_day.present? && end_month.present?
+      check_year && check_start_day_related
+    else
+      check_year && (check_start_day_related || check_end_day)
+    end
+  end
+
+  def effective_at_equal_time_off_end_date
+    return unless effective_at.to_date != time_off.end_time.to_date
+    errors.add(:effective_at, "Must be at time off's end date")
   end
 end
