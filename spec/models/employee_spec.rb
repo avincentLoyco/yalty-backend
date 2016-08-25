@@ -64,7 +64,7 @@ RSpec.describe Employee, type: :model do
 
       it 'returns only employees with users / active employees' do
         expect(active_by_account_scope.count).to eq(4)
-        expect(active_by_account_scope.first.id).to eq(employee.id)
+        expect(active_by_account_scope).to include(employee)
       end
     end
 
