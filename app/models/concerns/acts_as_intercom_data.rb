@@ -53,10 +53,12 @@ module ActsAsIntercomData
   def intercom_jobs
     return unless delayed_jobs.present?
 
-    @intercom_jobs ||= delayed_jobs.flatten.map { |job| job if job =~ /intercom/ }
+    @intercom_jobs ||= delayed_jobs.map { |job| job if job =~ /intercom/ }
   end
 
   def delayed_jobs
-    @delayed_jobs ||= Resque.redis.keys('delayed:*').map { |key| Resque.redis.lrange(key, 0, -1) }
+    @delayed_jobs ||= Resque.redis.keys('delayed:[0-9]*')
+      .map { |key| Resque.redis.lrange(key, 0, -1) }
+      .flatten
   end
 end
