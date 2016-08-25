@@ -391,7 +391,7 @@ RSpec.describe TimeOff, type: :model do
       end
 
       it 'should trigger intercom update on account' do
-        expect(account).to receive(:create_or_update_on_intercom).with(true)
+        expect(account).to receive(:create_or_update_on_intercom).with(true).at_least(:once)
         create_time_off
       end
 

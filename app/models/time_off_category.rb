@@ -1,4 +1,6 @@
 class TimeOffCategory < ActiveRecord::Base
+  include ActsAsIntercomTrigger
+
   DEFAULT = %w(sickness vacation accident maternity civil_service other).freeze
 
   belongs_to :account

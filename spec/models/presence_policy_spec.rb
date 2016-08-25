@@ -55,4 +55,19 @@ RSpec.describe PresencePolicy, type: :model do
       it { expect(subject).not_to eq smaller_order }
     end
   end
+
+  context 'callbacks' do
+    context '.trigger_intercom_update' do
+      let(:account) { create(:account) }
+
+      subject(:create_policy) do
+        create(:presence_policy, account: account)
+      end
+
+      it 'should trigger intercom update on account' do
+        expect(account).to receive(:create_or_update_on_intercom).with(true)
+        create_policy
+      end
+    end
+  end
 end

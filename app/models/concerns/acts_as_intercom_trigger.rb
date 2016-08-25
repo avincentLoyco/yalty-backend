@@ -8,7 +8,7 @@ module ActsAsIntercomTrigger
   end
 
   def trigger_intercom_update
-    user.create_or_update_on_intercom(true) if user.present?
-    account.create_or_update_on_intercom(true) if account.present?
+    user.create_or_update_on_intercom(true) if try(:user).present?
+    account.create_or_update_on_intercom(true) if try(:account).present?
   end
 end
