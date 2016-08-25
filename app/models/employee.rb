@@ -24,8 +24,11 @@ class Employee < ActiveRecord::Base
   validate :hired_event_presence, on: :create
 
   scope(:active_by_account, lambda do |account_id|
-    joins('INNER JOIN account_users ON employees.account_user_id = account_users.id')
-      .where(account_id: account_id)
+    where(account_id: account_id)
+  end)
+
+  scope(:active_user_by_account, lambda do |account_id|
+    active_by_account(account_id).where('account_user_id IS NOT NULL')
   end)
 
   scope(:affected_by_presence_policy, lambda do |presence_policy_id|
@@ -43,10 +46,10 @@ class Employee < ActiveRecord::Base
   end)
 
   def self.active_employee_ratio_per_account(account_id)
-    employee_count = Employee.where(account_id: account_id).count
-    return if employee_count == 0
     active_employee_count = Employee.active_by_account(account_id).count
-    ((active_employee_count * 100.0) / employee_count).round(2)
+    return if active_employee_count == 0
+    active_user_count = Employee.active_user_by_account(account_id).count
+    ((active_user_count * 100.0) / active_employee_count).round(2)
   end
 
   def first_employee_working_place
