@@ -60,7 +60,7 @@ FactoryGirl.define do
           validity_date: Time.now - 1.week
         )
 
-        employee_balance.balance_credit_addition = balance_addition
+        employee_balance.balance_credit_additions << balance_addition
       end
     end
 

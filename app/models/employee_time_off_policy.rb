@@ -8,7 +8,7 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
   belongs_to :employee
   belongs_to :time_off_policy
   belongs_to :time_off_category
-  has_one :employee_balance, class_name: 'Employee::Balance'
+  has_many :employee_balances, class_name: 'Employee::Balance'
 
   validates :employee_id, :time_off_policy_id, :effective_at, presence: true
   validates :effective_at, uniqueness: { scope: [:employee_id, :time_off_policy_id] }

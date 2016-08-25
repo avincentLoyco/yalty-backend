@@ -28,7 +28,8 @@ class UpdateEmployeeBalance
   end
 
   def recalculate_amount
-    return unless employee_balance.balance_credit_addition || counter_and_addition? || time_off
+    return unless employee_balance.balance_credit_additions.present? || counter_and_addition? ||
+        time_off
     if time_off
       employee_balance.resource_amount = time_off.balance
     else

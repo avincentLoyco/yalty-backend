@@ -6,7 +6,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
   let(:category) { create(:time_off_category, account: Account.current) }
   let(:employee) { create(:employee, account: Account.current) }
-  let(:time_off_policy) { create(:time_off_policy, time_off_category: category) }
+  let(:time_off_policy) { create(:time_off_policy, :with_end_date, time_off_category: category) }
   let(:time_off_policy_id) { time_off_policy.id }
 
   describe 'GET #index' do
@@ -63,6 +63,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
   describe 'POST #create' do
     subject { post :create, params }
+    let(:assignation_adjustments) { Employee::Balance.where.not(employee_time_off_policy_id: nil) }
     let(:effective_at) { Time.now }
     let(:params) do
       {
@@ -74,7 +75,9 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
     context 'with valid params' do
       it { expect { subject }.to change { employee.employee_time_off_policies.count }.by(1) }
-      it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+      it { expect { subject }.to change { Employee::Balance.additions.count }.by(1) }
+      it { expect { subject }.to change { assignation_adjustments.count }.by(1) }
+
       it { is_expected.to have_http_status(201) }
 
       context 'response body' do
@@ -90,7 +93,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
         let(:effective_at) { Time.now - 3.years }
 
         it { expect { subject }.to change { employee.employee_time_off_policies.count }.by(1) }
-        it { expect { subject }.to change { Employee::Balance.count }.by(6) }
+        it { expect { subject }.to change { assignation_adjustments.count }.by(1) }
         it { expect { subject }.to change { employee.employee_balances.additions.count }.by(4) }
         it { expect { subject }.to change { employee.employee_balances.removals.count }.by(2) }
 
@@ -115,6 +118,58 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
           it { expect_json_keys([:id, :type, :assignation_type, :effective_at, :assignation_id]) }
           it { expect_json(id: employee.id, effective_till: nil) }
+        end
+
+        context 'when there is join table with the same resource and balance' do
+          let!(:related_balance) do
+            create(:employee_balance,
+              effective_at: related_effective_at, employee_time_off_policy: related_resource)
+          end
+          let(:related_resource) do
+            create(:employee_time_off_policy,
+              time_off_policy: time_off_policy, employee: employee,
+              effective_at: related_effective_at)
+          end
+
+          context 'after effective at' do
+            let!(:related_effective_at) { 3.years.since }
+
+            it { is_expected.to have_http_status(201) }
+            it do
+              expect { subject }.to change { EmployeeTimeOffPolicy.exists?(related_resource.id) }
+            end
+            it do
+              expect { subject }.to change { Employee::Balance.exists?(related_balance.id) }
+            end
+
+            it 'should have proper data in response body' do
+              subject
+
+              expect_json_keys(
+                :effective_at, :effective_till, :id, :assignation_id, :assignation_type
+              )
+            end
+          end
+
+          context 'before effective at' do
+            let(:related_effective_at) { 3.years.ago }
+
+            it { is_expected.to have_http_status(200) }
+
+            it { expect { subject }.to_not change { Employee::Balance.count } }
+            it { expect { subject }.to_not change { EmployeeTimeOffPolicy.count } }
+
+            context 'should have proper data in response body' do
+              before { subject }
+
+              it { expect(response.body).to include (related_resource.id) }
+              it do
+                expect_json_keys(
+                  :effective_at, :effective_till, :id, :assignation_id, :assignation_type
+                )
+              end
+            end
+          end
         end
       end
     end

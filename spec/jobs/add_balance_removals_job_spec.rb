@@ -26,18 +26,7 @@ RSpec.describe AddBalanceRemovalsJob do
     context 'and balance credit addition is not policy addition' do
       before { subject }
 
-      it { expect(balance.balance_credit_removal.amount).to eq -balance.amount }
-      it { expect(balance.balance_credit_removal.policy_credit_removal).to eq false }
-    end
-
-    context 'and balance credit addition is policy addition' do
-      before do
-        balance.update!(policy_credit_addition: true)
-        subject
-      end
-
-      it { expect(balance.balance_credit_removal.amount).to eq -balance.amount }
-      it { expect(balance.balance_credit_removal.policy_credit_removal).to eq true }
+      it { expect(balance.reload.balance_credit_removal.amount).to eq -balance.amount }
     end
   end
 

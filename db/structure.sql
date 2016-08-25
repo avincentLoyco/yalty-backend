@@ -206,12 +206,11 @@ CREATE TABLE employee_balances (
     being_processed boolean DEFAULT false,
     effective_at timestamp without time zone,
     validity_date timestamp without time zone,
-    policy_credit_removal boolean DEFAULT false,
     policy_credit_addition boolean DEFAULT false,
-    balance_credit_addition_id uuid,
     reset_balance boolean DEFAULT false,
     employee_time_off_policy_id uuid,
-    manual_amount integer DEFAULT 0
+    manual_amount integer DEFAULT 0,
+    balance_credit_removal_id uuid
 );
 
 
@@ -817,10 +816,14 @@ CREATE INDEX index_employee_attribute_versions_on_employee_id ON employee_attrib
 
 
 --
+<<<<<<< 2716d3e2dee94a38444c6e822ad6ef20f533af03
 -- Name: index_employee_balances_on_balance_credit_addition_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+=======
+-- Name: index_employee_balances_on_balance_credit_removal_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+>>>>>>> [YWA-671][WIP] Change associations between BalanceCreditRemovals and BalanceCreditAdditions
 --
 
-CREATE INDEX index_employee_balances_on_balance_credit_addition_id ON employee_balances USING btree (balance_credit_addition_id);
+CREATE INDEX index_employee_balances_on_balance_credit_removal_id ON employee_balances USING btree (balance_credit_removal_id);
 
 
 --
@@ -1526,3 +1529,5 @@ INSERT INTO schema_migrations (version) VALUES ('20160921075423');
 INSERT INTO schema_migrations (version) VALUES ('20160727144502');
 
 INSERT INTO schema_migrations (version) VALUES ('20160818122718');
+
+INSERT INTO schema_migrations (version) VALUES ('20160824112602');

@@ -116,7 +116,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
             it { expect(subject.first.effective_at).to be_kind_of(Time) }
             it { expect(subject.size).to eq 2 }
             it { expect(subject.first.balance_credit_removal).to be_kind_of(Employee::Balance) }
-            it { expect(subject.last.balance_credit_addition).to eq subject.first }
+            it { expect(subject.last.balance_credit_additions).to include subject.first }
 
             it_behaves_like 'employee balance without any employee balances after'
             it_behaves_like 'employee balance with other employee balances after'
@@ -193,7 +193,6 @@ RSpec.describe CreateEmployeeBalance, type: :service do
         it { expect(subject.first.amount).to eq time_off.balance }
         it { expect(subject.first.validity_date).to be nil }
         it { expect(subject.first.effective_at).to be_kind_of(Time) }
-        it { expect(subject.first.policy_credit_removal).to be false }
         it { expect(subject.first.time_off).to be_kind_of(TimeOff) }
         it { expect(subject.first.time_off.id).to eq time_off.id }
       end
@@ -202,11 +201,10 @@ RSpec.describe CreateEmployeeBalance, type: :service do
         let!(:employee_balance) do
           create(:employee_balance,
             time_off_category: category, employee: employee, resource_amount: 1000,
-            policy_credit_addition: true
+            policy_credit_addition: true, effective_at: 1.month.ago, validity_date: 1.month.since
           )
         end
-
-        let(:options) {{ balance_credit_addition_id: employee_balance.id }}
+        let(:options) {{ balance_credit_addition_id: employee_balance.id, resource_amount: 0 }}
 
         it { expect { subject }.to change { Employee::Balance.count }.by(1) }
         it { expect { subject }.to_not change { enqueued_jobs.size } }
@@ -214,8 +212,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
         it { expect(subject.first.amount).to eq -1000 }
         it { expect(subject.first.validity_date).to be nil }
         it { expect(subject.first.effective_at).to be_kind_of(Time) }
-        it { expect(subject.first.policy_credit_removal).to be true }
-        it { expect(subject.first.balance_credit_addition_id).to eq(employee_balance.id) }
+        it { expect(subject.first.balance_credit_addition_ids).to include(employee_balance.id) }
       end
     end
 
@@ -228,7 +225,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
       it { expect(subject.first.validity_date).to eq nil }
       it { expect(subject.first.effective_at).to be_kind_of(Time) }
       it { expect(subject.first.balance_credit_removal).to eq nil }
-      it { expect(subject.first.balance_credit_addition_id).to eq nil }
+      it { expect(subject.first.balance_credit_additions).to eq([]) }
     end
   end
 

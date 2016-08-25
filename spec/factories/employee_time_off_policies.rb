@@ -10,10 +10,12 @@ FactoryGirl.define do
         time_off_policy = policy.time_off_policy
         amount = time_off_policy.counter? ? 0 : time_off_policy.amount
         create(:employee_balance,
-          amount: amount,
+          resource_amount: amount,
           employee: policy.employee,
           time_off_category: policy.time_off_policy.time_off_category,
-          policy_credit_addition: true
+          policy_credit_addition: true,
+          employee_time_off_policy: policy,
+          effective_at: policy.effective_at
         )
       end
     end

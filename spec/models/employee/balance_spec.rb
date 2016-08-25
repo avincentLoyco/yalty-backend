@@ -10,13 +10,12 @@ RSpec.describe Employee::Balance, type: :model do
   it { is_expected.to have_db_column(:time_off_category_id)
     .of_type(:uuid).with_options(null: false) }
   it { is_expected.to have_db_column(:validity_date).of_type(:datetime) }
-  it { is_expected.to have_db_column(:policy_credit_removal).of_type(:boolean)
-    .with_options(default: false) }
-  it { is_expected.to have_db_column(:balance_credit_addition_id).of_type(:uuid) }
+  it { is_expected.to have_db_column(:balance_credit_removal_id).of_type(:uuid) }
 
   it { is_expected.to have_db_index(:time_off_id) }
   it { is_expected.to have_db_index(:time_off_category_id) }
   it { is_expected.to have_db_index(:employee_id) }
+  it { is_expected.to have_db_index(:balance_credit_removal_id) }
 
   it { is_expected.to validate_presence_of(:employee) }
   it { is_expected.to validate_presence_of(:time_off_category) }
@@ -72,34 +71,13 @@ RSpec.describe Employee::Balance, type: :model do
         end
       end
 
-      context 'policy credit removal flag set up' do
-        subject { build(:employee_balance) }
-
-        context 'when balance does not have balance credit addition assigned' do
-          it { expect { subject.valid? }.to_not change { subject.policy_credit_removal } }
-        end
-
-        context 'when balance has balance credit addition assigned' do
-          subject { build(:employee_balance, :with_balance_credit_addition) }
-
-          context 'and it is not policy credit addition' do
-            it { expect { subject.valid? }.to_not change { subject.policy_credit_removal } }
-          end
-
-          context 'and it is policy credit addition' do
-            before { subject.balance_credit_addition.policy_credit_addition = true }
-
-            it { expect { subject.valid? }.to change { subject.policy_credit_removal }.to true }
-          end
-        end
-      end
-
       context 'effective at set up' do
         context 'when effective at nil' do
           xit { expect { subject.valid? }.to change { subject.effective_at }.to be_kind_of(Time) }
         end
 
          context 'when balance is removal' do
+          before { balance.balance_credit_additions << addition }
           let(:addition) do
             create(:employee_balance,
               employee: subject.employee,
@@ -107,7 +85,6 @@ RSpec.describe Employee::Balance, type: :model do
               validity_date: Time.now + 1.week
             )
           end
-          before { balance.balance_credit_addition = addition }
 
           it { expect { subject.valid? }.to change { subject.effective_at } }
 
@@ -164,6 +141,22 @@ RSpec.describe Employee::Balance, type: :model do
 
           it { expect(subject.valid?).to eq true }
           it { expect { subject.valid? }.to_not change { subject.errors.messages.count } }
+        end
+      end
+
+      context 'validity date presence' do
+        subject { balance.valid? }
+
+        context 'when employee balance has removal' do
+          before { balance.balance_credit_removal = create(:employee_balance) }
+
+          it { expect(subject).to eq false }
+          it { expect { subject }.to change { balance.errors.messages.count }.by(1) }
+        end
+
+        context 'when employee balance does not have removal' do
+          it { expect(subject).to eq true }
+          it { expect { subject }.to_not change { balance.errors.messages.count } }
         end
       end
 
@@ -304,13 +297,15 @@ RSpec.describe Employee::Balance, type: :model do
       end
 
       context 'removal effective at date' do
+        subject { balance }
+
         before do
           allow_any_instance_of(Employee::Balance).to receive(:find_effective_at) { true }
-          balance.balance_credit_addition = balance_addition
+          balance.balance_credit_additions << balance_addition
           balance.effective_at = Date.today
         end
 
-        let(:balance_addition) do
+        let!(:balance_addition) do
           create(:employee_balance,
             validity_date: Date.today,
             effective_at: Date.today - 1.week,

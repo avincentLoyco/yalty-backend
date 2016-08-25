@@ -63,21 +63,15 @@ class FindEmployeeBalancesToUpdate
 
   def no_removals_or_removals_bigger_than_amount?
     options[:resource_amount] && options[:resource_amount] > 0 && resource.validity_date.blank? ||
-      resource.current_or_next_period && active_balances_with_removals.blank? ||
       next_removals_smaller_than_amount? || active_balances_with_removals.blank?
   end
 
-  def active_balances
-    related_balances.where('effective_at < ? AND validity_date > ?', effective_at, effective_at)
-  end
-
   def active_balances_with_removals
-    balance_additions_ids =
-      related_balances
-      .where(balance_credit_addition_id: active_balances.pluck(:id))
-      .pluck(:balance_credit_addition_id)
-
-    related_balances.where(id: balance_additions_ids)
+    related_balances
+      .where(
+        'effective_at < ? AND validity_date > ? AND balance_credit_removal_id IS NOT NULL',
+        effective_at, effective_at
+      )
   end
 
   def next_removals_smaller_than_amount?
@@ -86,8 +80,11 @@ class FindEmployeeBalancesToUpdate
   end
 
   def ids_to_removal
-    removals = related_balances.where(balance_credit_addition_id: active_balances.pluck(:id))
-                               .order(effective_at: :asc)
+    removals =
+      related_balances
+      .where(id: active_balances_with_removals.pluck(:balance_credit_removal_id).uniq)
+      .order(effective_at: :asc)
+
     operation_amount = amount
     ids_till_removal = []
 

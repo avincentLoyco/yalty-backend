@@ -27,15 +27,22 @@ class CreateEmployeeBalance
 
   def build_employee_balance
     @employee_balance = Employee::Balance.new(balance_params)
+    return unless options[:balance_credit_addition_id]
+    employee_balance.balance_credit_additions <<
+      Employee::Balance.find(options[:balance_credit_addition_id])
   end
 
   def build_employee_balance_removal
-    @balance_removal = employee_balance.build_balance_credit_removal(balance_removal_params)
+    @balance_removal =
+      Employee::Balance
+      .removal_at_date(employee.id, category.id, employee_balance.validity_date.to_date)
+      .first_or_initialize
+    balance_removal.balance_credit_additions << [employee_balance]
   end
 
   def save!
     employee_balance.save!
-    employee_balance.balance_credit_addition.save! if employee_balance.policy_credit_removal
+    employee_balance.balance_credit_additions.map(&:save!) if employee_balance.balance_credit_additions.present?
     balance_removal.try(:save!)
   end
 
@@ -64,7 +71,6 @@ class CreateEmployeeBalance
     {
       validity_date: validity_date,
       effective_at: options[:effective_at],
-      balance_credit_addition: balance_credit_addition,
       policy_credit_addition: options[:policy_credit_addition] || false,
       reset_balance: options[:reset_balance] || false
     }.merge(common_params)
@@ -80,10 +86,6 @@ class CreateEmployeeBalance
     { resource_amount: options[:resource_amount] }
   end
 
-  def balance_removal_params
-    common_params.merge(effective_at: employee_balance.validity_date)
-  end
-
   def employee_time_off_policy
     return unless options.key?(:employee_time_off_policy_id)
     employee.employee_time_off_policies.find(options[:employee_time_off_policy_id])
@@ -95,15 +97,15 @@ class CreateEmployeeBalance
     nil
   end
 
-  def balance_credit_addition
+  def balance_credit_additions
     return unless options[:balance_credit_addition_id]
-    Employee::Balance.find(options[:balance_credit_addition_id])
+    [Employee::Balance.find(options[:balance_credit_addition_id])]
   end
 
   def calculate_amount
-    return unless balancer_removal? || counter_addition?
+    return unless employee_balance.balance_credit_additions.present? || counter_addition?
     if balance_removal
-      balance_removal.calculate_removal_amount(employee_balance)
+      balance_removal.calculate_removal_amount([employee_balance])
     else
       employee_balance.calculate_removal_amount
     end
@@ -122,7 +124,7 @@ class CreateEmployeeBalance
   end
 
   def balancer_removal?
-    balance_removal || employee_balance.balance_credit_addition.present?
+    balance_removal || employee_balance.balance_credit_additions.present?
   end
 
   def counter_addition?

@@ -7,6 +7,7 @@ class CalculateEmployeeBalanceRemovalAmount
   end
 
   def call
+    return 0
     return calculate_counter_amount if balance_belongs_to_counter_policy?
     calculate_balancer_amount
   end

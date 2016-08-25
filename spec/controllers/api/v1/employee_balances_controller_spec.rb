@@ -43,7 +43,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
         it { expect_json_keys(
           [
             :id, :balance, :amount, :employee, :time_off_category, :effective_at,
-            :being_processed, :policy_credit_removal, :time_off
+            :being_processed, :time_off
           ]
         )}
       end
@@ -236,8 +236,8 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
 
               let!(:prev_mid_removal) do
                 create(:employee_balance, employee: employee,
-                  time_off_category: category, resource_amount: -1000, balance_credit_addition: prev_mid_add,
-                  policy_credit_removal: true
+                  time_off_category: category, resource_amount: -1000,
+                  balance_credit_additions: [prev_mid_add],
                 )
               end
 

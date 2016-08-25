@@ -41,7 +41,7 @@ RSpec.describe UpdateEmployeeBalance, type: :service do
       end
       let!(:employee_balance) do
         create(:employee_balance, :processing,
-          balance_credit_addition: addition, time_off_category: category,
+          balance_credit_additions: [addition], time_off_category: category,
           employee: previous_balance.employee, resource_amount: -100
         )
       end
@@ -149,8 +149,7 @@ RSpec.describe UpdateEmployeeBalance, type: :service do
         create(:employee_balance,
           employee: employee_balance.employee,
           time_off_category: employee_balance.time_off_category,
-          balance_credit_addition: employee_balance,
-          policy_credit_removal: true
+          balance_credit_additions: [employee_balance]
         )
       end
 

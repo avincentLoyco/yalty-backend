@@ -11,19 +11,24 @@ module API
       def create
         verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :create, time_off_policy
-          employee_balance_amount = attributes.delete(:employee_balance_amount)
+          join_table_params = attributes.except(:employee_balance_amount)
 
           transactions do
-            @resource = create_join_table(EmployeeTimeOffPolicy, TimeOffPolicy, attributes)
-            create_new_employee_balance(@resource) if employee_balance_amount
-            ManageEmployeeBalanceAdditions.new(@resource).call
+            @resource = create_join_table(EmployeeTimeOffPolicy, TimeOffPolicy, join_table_params)
+            @balance = create_new_employee_balance(@resource) if resource_newly_created?(@resource)
+            ManageEmployeeBalanceAdditions.new(@resource).call if resource_newly_created?(@resource)
           end
 
-          render_resource(@resource, status: 201)
+          render_resource(@resource, status: @balance ? 201 : 200)
         end
       end
 
       private
+
+      def resource_newly_created?(resource)
+        resource.effective_at == params[:effective_at].to_date &&
+          resource.employee_balances.blank?
+      end
 
       def resources
         resources_with_effective_till(EmployeeTimeOffPolicy, nil, time_off_policy.id)
@@ -49,8 +54,9 @@ module API
       def options_for(resource)
         {
           employee_time_off_policy_id: resource.id,
-          resource_amount: params[:employee_balance_amount],
-          effective_at: resource.effective_at
+          manual_amount: params[:employee_balance_amount] || 0,
+          effective_at: resource.effective_at,
+          validity_date: RelatedPolicyPeriod.new(resource).validity_date_for(resource.effective_at)
         }
       end
 
