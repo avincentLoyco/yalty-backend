@@ -10,7 +10,9 @@ namespace :intercom do
     puts 'import accounts'
     Account.all.each { |account| intercom_client.companies.create(account.intercom_data) }
     puts 'import users'
-    intercom_client.users.submit_bulk_job(create_items: Account::User.all.map(&:intercom_data))
+    Account::User.find_in_batches(batch_size: 100) do |users|
+      intercom_client.users.submit_bulk_job(create_items: users.map(&:intercom_data))
+    end
   end
 
   def intercom_client
