@@ -1,4 +1,6 @@
 class TimeOffPolicy < ActiveRecord::Base
+  include ActsAsIntercomTrigger
+
   belongs_to :time_off_category
   has_many :employee_time_off_policies
   has_many :employees, through: :employee_time_off_policies

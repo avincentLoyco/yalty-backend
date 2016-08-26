@@ -58,15 +58,17 @@ RSpec.describe PresencePolicy, type: :model do
 
   context 'callbacks' do
     context '.trigger_intercom_update' do
-      let(:account) { create(:account) }
+      let!(:account) { create(:account) }
+      let(:policy) { build(:presence_policy, account: account) }
 
-      subject(:create_policy) do
-        create(:presence_policy, account: account)
+      it 'should invoke trigger_intercom_update method' do
+        expect(policy).to receive(:trigger_intercom_update)
+        policy.save!
       end
 
-      it 'should trigger intercom update on account' do
+      it 'should trigger create_or_update_on_intercom on account' do
         expect(account).to receive(:create_or_update_on_intercom).with(true)
-        create_policy
+        policy.save!
       end
     end
   end
