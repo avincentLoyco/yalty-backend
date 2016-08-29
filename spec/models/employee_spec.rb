@@ -81,19 +81,26 @@ RSpec.describe Employee, type: :model do
 
   context 'callbacks' do
     context '.trigger_intercom_update' do
-      let(:account) { create(:account) }
+      let!(:account) { create(:account) }
+      let(:employee) { build(:employee, account: account) }
 
-      it 'should trigger intercom update on account' do
+      it 'should invoke trigger_intercom_update on account' do
+        expect(employee).to receive(:trigger_intercom_update)
+        employee.save!
+      end
+
+      it 'should trigger create_or_update_on_intercom on account' do
         expect(account).to receive(:create_or_update_on_intercom).with(true)
-        create(:employee, account: account)
+        employee.save!
       end
 
       context 'with user' do
-        let(:user) { create(:account_user, account: account) }
+        let!(:user) { create(:account_user, account: account) }
+        let!(:employee) { build(:employee, account: account, user: user) }
 
         it 'should trigger intercom update on user' do
           expect(user).to receive(:create_or_update_on_intercom).with(true)
-          create(:employee, account: account, user: user)
+          employee.save!
         end
       end
 
@@ -101,7 +108,7 @@ RSpec.describe Employee, type: :model do
         it 'should not trigger intercom update on user' do
           expect_any_instance_of(Account::User)
             .not_to receive(:create_or_update_on_intercom).with(true)
-          create(:employee, account: account)
+          employee.save!
         end
       end
     end

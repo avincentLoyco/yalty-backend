@@ -1,4 +1,6 @@
 class TimeOff < ActiveRecord::Base
+  include ActsAsIntercomTrigger
+
   belongs_to :employee
   belongs_to :time_off_category
   has_one :employee_balance, class_name: 'Employee::Balance'

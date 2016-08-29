@@ -335,25 +335,27 @@ RSpec.describe RegisteredWorkingTime, type: :model do
 
   context 'callbacks' do
     context '.trigger_intercom_update' do
-      let(:account) { create(:account) }
-      let(:employee) { create(:employee, account: account) }
+      let!(:account) { create(:account) }
+      let!(:employee) { create(:employee, account: account) }
+      let(:rwt) { build(:registered_working_time, employee: employee) }
 
-      subject(:create_registered_working_time) do
-        create(:registered_working_time, employee: employee)
+      it 'should invoke trigger_intercom_update' do
+        expect(rwt).to receive(:trigger_intercom_update)
+        rwt.save!
       end
 
       it 'should trigger intercom update on account' do
         expect(account).to receive(:create_or_update_on_intercom).with(true)
-        create_registered_working_time
+        rwt.save!
       end
 
       context 'with user' do
-        let(:user) { create(:account_user, account: account) }
-        let(:employee) { create(:employee, account: account, user: user) }
+        let!(:user) { create(:account_user, account: account) }
+        let!(:employee) { create(:employee, account: account, user: user) }
 
         it 'should trigger intercom update on user' do
           expect(user).to receive(:create_or_update_on_intercom).with(true)
-          create_registered_working_time
+          rwt.save!
         end
       end
 
@@ -361,7 +363,7 @@ RSpec.describe RegisteredWorkingTime, type: :model do
         it 'should not trigger intercom update on user' do
           expect_any_instance_of(Account::User)
             .not_to receive(:create_or_update_on_intercom).with(true)
-          create_registered_working_time
+          rwt.save!
         end
       end
     end
