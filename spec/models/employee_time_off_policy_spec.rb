@@ -86,4 +86,42 @@ RSpec.describe EmployeeTimeOffPolicy, type: :model do
       end
     end
   end
+
+  context 'callbacks' do
+    context '.trigger_intercom_update' do
+      let!(:account) { create(:account) }
+      let!(:category) { create(:time_off_category, account: account) }
+      let!(:employee) { create(:employee, account: account) }
+      let!(:policy) { create(:time_off_policy, time_off_category: category) }
+      let(:etop) { build(:employee_time_off_policy, employee: employee, time_off_policy: policy) }
+
+      it 'should invoke trigger_intercom_update' do
+        expect(etop).to receive(:trigger_intercom_update)
+        etop.save!
+      end
+
+      it 'should trigger intercom update on account' do
+        expect(account).to receive(:create_or_update_on_intercom).with(true)
+        etop.save!
+      end
+
+      context 'with user' do
+        let!(:user) { create(:account_user, account: account) }
+        let!(:employee) { create(:employee, account: account, user: user) }
+
+        it 'should trigger intercom update on user' do
+          expect(user).to receive(:create_or_update_on_intercom).with(true)
+          etop.save!
+        end
+      end
+
+      context 'without user' do
+        it 'should not trigger intercom update on user' do
+          expect_any_instance_of(Account::User)
+            .not_to receive(:create_or_update_on_intercom).with(true)
+          etop.save!
+        end
+      end
+    end
+  end
 end

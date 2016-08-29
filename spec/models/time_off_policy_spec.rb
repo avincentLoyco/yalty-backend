@@ -217,4 +217,22 @@ RSpec.describe TimeOffPolicy, type: :model do
       end
     end
   end
+
+  context 'callbacks' do
+    context '.trigger_intercom_update' do
+      let!(:account) { create(:account) }
+      let!(:category) { create(:time_off_category, account: account) }
+      let(:policy) { build(:time_off_policy, time_off_category: category) }
+
+      it 'should invoke trigger_intercom_update' do
+        expect(policy).to receive(:trigger_intercom_update)
+        policy.save!
+      end
+
+      it 'should trigger intercom update on account' do
+        expect(account).to receive(:create_or_update_on_intercom).with(true)
+        policy.save!
+      end
+    end
+  end
 end

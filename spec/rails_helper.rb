@@ -49,12 +49,13 @@ RSpec.configure do |config|
   config.infer_spec_type_from_file_location!
 
   config.before(:suite) do
+    Resque.redis.client.reconnect
+
     FactoryGirl.lint
+
     DatabaseCleaner.strategy = :transaction
     DatabaseCleaner.clean_with(:truncation)
-  end
 
-  config.before(:all) do
     client = FactoryGirl.create(:oauth_client)
     ENV['YALTY_OAUTH_ID'] = client.uid
     ENV['YALTY_OAUTH_SECRET'] = client.secret

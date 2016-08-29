@@ -56,15 +56,15 @@ RSpec.describe Employee, type: :model do
 
     before 'create employees' do
       create_list(:employee, 3, account: account)
-      create_list(:employee, 3, account: account)
+      create_list(:employee, 3)
     end
 
     context '.active_by_account' do
       subject(:active_by_account_scope) { described_class.active_by_account(account.id) }
 
       it 'returns only employees with users / active employees' do
-        expect(active_by_account_scope.count).to eq(1)
-        expect(active_by_account_scope.first.id).to eq(employee.id)
+        expect(active_by_account_scope.count).to eq(4)
+        expect(active_by_account_scope).to include(employee)
       end
     end
 
@@ -74,26 +74,33 @@ RSpec.describe Employee, type: :model do
       end
 
       it 'returns proper ratio' do
-        expect(active_employee_ratio).to eq(14.29)
+        expect(active_employee_ratio).to eq(25.00)
       end
     end
   end
 
   context 'callbacks' do
     context '.trigger_intercom_update' do
-      let(:account) { create(:account) }
+      let!(:account) { create(:account) }
+      let(:employee) { build(:employee, account: account) }
 
-      it 'should trigger intercom update on account' do
+      it 'should invoke trigger_intercom_update on account' do
+        expect(employee).to receive(:trigger_intercom_update)
+        employee.save!
+      end
+
+      it 'should trigger create_or_update_on_intercom on account' do
         expect(account).to receive(:create_or_update_on_intercom).with(true)
-        create(:employee, account: account)
+        employee.save!
       end
 
       context 'with user' do
-        let(:user) { create(:account_user, account: account) }
+        let!(:user) { create(:account_user, account: account) }
+        let!(:employee) { build(:employee, account: account, user: user) }
 
         it 'should trigger intercom update on user' do
           expect(user).to receive(:create_or_update_on_intercom).with(true)
-          create(:employee, account: account, user: user)
+          employee.save!
         end
       end
 
@@ -101,7 +108,7 @@ RSpec.describe Employee, type: :model do
         it 'should not trigger intercom update on user' do
           expect_any_instance_of(Account::User)
             .not_to receive(:create_or_update_on_intercom).with(true)
-          create(:employee, account: account)
+          employee.save!
         end
       end
     end

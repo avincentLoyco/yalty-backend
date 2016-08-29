@@ -1,4 +1,6 @@
 class RegisteredWorkingTime < ActiveRecord::Base
+  include ActsAsIntercomTrigger
+
   belongs_to :employee
 
   validate :time_entries_smaller_than_one_day, :time_entries_does_not_overlap, :unique_time_entries,

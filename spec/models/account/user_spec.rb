@@ -82,6 +82,7 @@ RSpec.describe Account::User, type: :model do
 
   describe 'intercom integration' do
     include_context 'shared_context_intercom_attributes'
+    let(:account) { user.account }
     let(:user) { create(:account_user) }
 
     it 'is of type :users' do
@@ -92,9 +93,22 @@ RSpec.describe Account::User, type: :model do
       expect(user.intercom_attributes).to eq(proper_user_intercom_attributes)
     end
 
-    it 'returns proper data' do
-      data_keys = user.intercom_data.keys + user.intercom_data[:custom_attributes].keys
-      expect(data_keys).to match_array(proper_user_data_keys)
+    context 'as user only' do
+      it 'returns proper data' do
+        data_keys = user.intercom_data.keys + user.intercom_data[:custom_attributes].keys
+        expect(data_keys).to match_array(proper_user_data_keys)
+      end
+    end
+
+    context 'as employee' do
+      before do
+        create(:employee, account: account, user: user)
+      end
+
+      it 'returns proper data' do
+        data_keys = user.intercom_data.keys + user.intercom_data[:custom_attributes].keys
+        expect(data_keys).to match_array(proper_user_data_keys)
+      end
     end
   end
 end
