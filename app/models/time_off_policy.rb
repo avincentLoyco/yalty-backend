@@ -1,4 +1,6 @@
 class TimeOffPolicy < ActiveRecord::Base
+  include ActsAsIntercomTrigger
+
   belongs_to :time_off_category
   has_many :employee_time_off_policies
   has_many :employees, through: :employee_time_off_policies
@@ -26,11 +28,15 @@ class TimeOffPolicy < ActiveRecord::Base
   validate :end_date_after_start_date, if: [:start_day, :start_month, :end_day, :end_month]
   validate :no_end_date_when_years_to_effect_nil, if: [:end_day, :end_month]
 
-  scope :for_account_and_category, lambda { |account_id, time_off_category_id|
+  scope(:for_account, lambda do |account_id|
+    joins(:time_off_category).where(time_off_categories: { account_id: account_id })
+  end)
+
+  scope(:for_account_and_category, lambda do |account_id, time_off_category_id|
     joins(:time_off_category).where(
       time_off_categories: { account_id: account_id, id: time_off_category_id }
     )
-  }
+  end)
 
   def counter?
     policy_type == 'counter'

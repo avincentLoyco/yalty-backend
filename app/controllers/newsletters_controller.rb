@@ -1,9 +1,9 @@
 class NewslettersController < ApplicationController
   protect_from_forgery with: :null_session
-  include NewsletterRules
+  include NewsletterSchemas
 
   def create
-    verified_params(gate_rules) do |attributes|
+    verified_dry_params(dry_validation_schema) do |attributes|
       lead = intercom_client.contacts.find_all(email: attributes[:email]).first
 
       if lead

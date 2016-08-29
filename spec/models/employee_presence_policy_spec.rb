@@ -81,4 +81,41 @@ RSpec.describe EmployeePresencePolicy, type: :model do
         .to include('Must be smaller than last presence day order') }
     end
   end
+
+  context 'callbacks' do
+    context '.trigger_intercom_update' do
+      let!(:account) { create(:account) }
+      let!(:employee) { create(:employee, account: account) }
+      let!(:policy) { create(:presence_policy, :with_time_entries, account: account) }
+      let(:epp) { build(:employee_presence_policy, employee: employee, presence_policy: policy) }
+
+      it 'should invoke trigger_intercom_update' do
+        expect(epp).to receive(:trigger_intercom_update)
+        epp.save!
+      end
+
+      it 'should trigger intercom update on account' do
+        expect(account).to receive(:create_or_update_on_intercom).with(true)
+        epp.save!
+      end
+
+      context 'with user' do
+        let!(:user) { create(:account_user, account: account) }
+        let!(:employee) { create(:employee, account: account, user: user) }
+
+        it 'should trigger intercom update on user' do
+          expect(user).to receive(:create_or_update_on_intercom).with(true)
+          epp.save!
+        end
+      end
+
+      context 'without user' do
+        it 'should not trigger intercom update on user' do
+          expect_any_instance_of(Account::User)
+            .not_to receive(:create_or_update_on_intercom).with(true)
+          epp.save!
+        end
+      end
+    end
+  end
 end

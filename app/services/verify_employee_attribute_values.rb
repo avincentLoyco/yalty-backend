@@ -1,7 +1,7 @@
 class VerifyEmployeeAttributeValues
-  include Attributes::PersonRules, Attributes::StringRules, Attributes::NumberRules,
-    Attributes::AddressRules, Attributes::BooleanRules, Attributes::ChildRules,
-    Attributes::CurrencyRules, Attributes::DateRules, Attributes::LineRules
+  include Attributes::PersonSchema, Attributes::StringSchema, Attributes::NumberSchema,
+    Attributes::AddressSchema, Attributes::BooleanSchema, Attributes::ChildSchema,
+    Attributes::CurrencySchema, Attributes::DateSchema, Attributes::LineSchema
 
   attr_reader :value, :errors, :type
 
@@ -21,19 +21,19 @@ class VerifyEmployeeAttributeValues
   private
 
   def verify_value
-    result = verify_rules
+    result = verify_schema
     return unless result.try(:errors)
-    errors.merge!(result.errors)
+    errors.merge!(result.messages)
   end
 
-  def type_rules
-    send("#{type.downcase}_rules")
+  def type_schema
+    send("#{type.downcase}_schema")
   end
 
-  def verify_rules
-    rules = type_rules
-    return errors.merge!(value: 'Invalid type') unless rules.class == Gate::Guard
-    rules.verify(value)
+  def verify_schema
+    schema = type_schema
+    return errors.merge!(value: 'Invalid type') unless !schema.nil?
+    schema.call(value)
   end
 
   def attribute_type(name)

@@ -1,5 +1,6 @@
 class Account::User < ActiveRecord::Base
   include ActsAsIntercomData
+  include UserIntercomData
 
   has_secure_password
 
@@ -40,58 +41,5 @@ class Account::User < ActiveRecord::Base
 
   def generate_password
     self.password ||= SecureRandom.urlsafe_base64(12)
-  end
-
-  def intercom_type
-    :users
-  end
-
-  def intercom_attributes
-    %w(id created_at email account_manager employee)
-  end
-
-  def intercom_data
-    {
-      user_id: id,
-      email: email,
-      signed_up_at: created_at,
-      custom_attributes: {
-        employee_id: employee ? employee.id : nil,
-        account_manager: account_manager
-      },
-      companies: [{
-        company_id: account.id
-      }]
-    }
-  end
-
-  def intercom_user
-    @intercom_user ||= intercom_client.users.find(user_id: id)
-  end
-
-  def intercom_leads
-    @intercom_leads ||= begin
-      beta_invitation_key = account.registration_key.try(:token)
-
-      if beta_invitation_key.present?
-        lead = intercom_client.contacts.all.find do |lead|
-          lead.custom_attributes['beta_invitation_key'] == beta_invitation_key
-        end
-      end
-      leads = intercom_client.contacts.find_all(email: email) if lead.nil?
-
-      leads || [lead]
-    end
-  end
-
-  def convert_intercom_leads
-    return unless intercom_enabled?
-    return unless intercom_user.present?
-
-    intercom_leads.each do |lead|
-      intercom_client.contacts.convert(lead, intercom_user)
-    end
-  rescue Intercom::IntercomError
-    Rails.logger.error "An error occur on when '#{email}' lead is converted to user '#{id}'"
   end
 end

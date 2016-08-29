@@ -12,8 +12,6 @@ module Api::V1
       if @messages.blank?
         @messages = if resource.is_a?(ActiveRecord::Base)
                       resource.errors.messages
-                    elsif resource.is_a?(Gate::Result)
-                      resource.errors
                     elsif resource.is_a?(Struct)
                       resource.errors
                     else

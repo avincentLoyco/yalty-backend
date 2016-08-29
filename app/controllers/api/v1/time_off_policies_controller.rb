@@ -2,7 +2,7 @@ module API
   module V1
     class TimeOffPoliciesController < ApplicationController
       authorize_resource
-      include TimeOffPoliciesRules
+      include TimeOffPoliciesSchemas
 
       def show
         render json: resource_representer.new(resource, current_user).with_relationships
@@ -14,7 +14,7 @@ module API
       end
 
       def create
-        verified_params(gate_rules) do |attributes|
+        verified_dry_params(dry_validation_schema) do |attributes|
           vefiry_category_belongs_to_current_account(attributes[:time_off_category][:id])
           obligatory_params = get_obligatory_params(attributes)
           @resource = TimeOffPolicy.new(obligatory_params)
@@ -26,7 +26,7 @@ module API
       end
 
       def update
-        verified_params(gate_rules) do |attributes|
+        verified_dry_params(dry_validation_schema) do |attributes|
           transactions do
             resource.update!(attributes)
           end

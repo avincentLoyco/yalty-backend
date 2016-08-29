@@ -23,22 +23,25 @@ module ActsAsIntercomData
   end
 
   def create_or_update_on_intercom(force = false)
-    return unless intercom_data_changed? || force
-    return unless intercom_enabled?
+    return unless (intercom_data_changed? || force) && job_not_on_queue
 
-    intercom_client.send(intercom_type.to_sym).create(intercom_data)
-  end
-
-  def intercom_client
-    return unless intercom_enabled?
-
-    @intercom_client ||= Intercom::Client.new(
-      app_id: ENV['INTERCOM_APP_ID'],
-      api_key: ENV['INTERCOM_API_KEY']
+    Resque.enqueue_at_with_queue(
+      'intercom',
+      3.minutes.from_now,
+      SendDataToIntercom,
+      id,
+      self.class.name
     )
   end
 
-  def intercom_enabled?
-    !Rails.env.test? && ENV['INTERCOM_APP_ID'].present? && ENV['INTERCOM_API_KEY'].present?
+  private
+
+  def job_not_on_queue
+    delayed_jobs.none? { |job| job.match(id) }
+  end
+
+  def delayed_jobs
+    @delayed_jobs ||= Resque.redis.keys('timestamps:*')
+      .select {|key| key =~ /"queue":"intercom"/ && key =~ /"#{self.class.name}"/ }
   end
 end

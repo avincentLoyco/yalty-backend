@@ -1,10 +1,10 @@
 module API
   module V1
     class SchedulesController < ApplicationController
-      include SchedulesRules
+      include SchedulesSchemas
 
       def schedule_for_employee
-        verified_params(gate_rules) do |attributes|
+        verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :schedule_for_employee, employee
           from, to = parsed_attributes(attributes)
           schedule = ScheduleForEmployee.new(employee, from, to).call

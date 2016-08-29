@@ -148,6 +148,11 @@ RSpec.describe do
     end
 
     context 'when effective at changes' do
+      before 'assign employee_working_place to employee' do
+        create(:employee_working_place, employee: employee)
+        employee.reload
+      end
+
       context 'and this is event hired' do
         it { expect { subject }.to change { event.reload.effective_at } }
         it { expect { subject }

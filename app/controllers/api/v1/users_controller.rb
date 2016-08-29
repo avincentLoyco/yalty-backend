@@ -3,7 +3,7 @@ module API
     class UsersController < ApplicationController
       authorize_resource class: 'Account::User', except: :create
 
-      include UserRules
+      include UserSchemas
 
       def index
         render_resource(resources)
@@ -14,7 +14,7 @@ module API
       end
 
       def create
-        verified_params(gate_rules) do |attributes|
+        verified_dry_params(dry_validation_schema) do |attributes|
           load_related_employee(attributes)
 
           @resource = Account.current.users.new(attributes)
@@ -27,7 +27,7 @@ module API
       end
 
       def update
-        verified_params(gate_rules) do |attributes|
+        verified_dry_params(dry_validation_schema) do |attributes|
           load_related_employee(attributes)
 
           authorize! :update, attributes[:employee] if attributes[:employee]

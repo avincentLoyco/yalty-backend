@@ -52,7 +52,8 @@ RSpec.describe ActiveAndInactiveJoinTableFinders do
 
   context 'WorkingPlace' do
     before do
-      employee.first_employee_working_place.update!(working_place: resources.third)
+      create(:employee_working_place,
+        employee: employee, working_place: resources.third, effective_at: Time.now - 6.years)
       create(:employee_working_place,
         employee: employee, working_place: resources.last, effective_at: Time.now - 1.day)
     end

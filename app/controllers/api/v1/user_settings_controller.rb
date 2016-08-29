@@ -2,7 +2,7 @@ module API
   module V1
     class UserSettingsController < ApplicationController
       authorize_resource class: 'Account::User'
-      include UserSettingsRules
+      include UserSettingsSchemas
       include Exceptions
 
       def show
@@ -10,7 +10,7 @@ module API
       end
 
       def update
-        verified_params(gate_rules) do |attributes|
+        verified_dry_params(dry_validation_schema) do |attributes|
           check_old_password(attributes[:password_params]) if attributes[:password_params]
           params = prepare_attributes(attributes)
           resource.update!(params)

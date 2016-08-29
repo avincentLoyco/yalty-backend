@@ -1,6 +1,8 @@
 require 'employee_policy_period'
 
 class EmployeeTimeOffPolicy < ActiveRecord::Base
+  include ActsAsIntercomTrigger
+
   attr_accessor :effective_till
 
   belongs_to :employee

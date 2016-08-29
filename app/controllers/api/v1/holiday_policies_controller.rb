@@ -2,7 +2,7 @@ module API
   module V1
     class HolidayPoliciesController < ApplicationController
       authorize_resource except: :create
-      include HolidayPolicyRules
+      include HolidayPolicySchemas
 
       def show
         render_resource(resource)
@@ -13,7 +13,7 @@ module API
       end
 
       def create
-        verified_params(gate_rules) do |attributes|
+        verified_dry_params(dry_validation_schema) do |attributes|
           related = related_params(attributes).compact
           resource = Account.current.holiday_policies.new(attributes)
           authorize! :create, resource
@@ -27,7 +27,7 @@ module API
       end
 
       def update
-        verified_params(gate_rules) do |attributes|
+        verified_dry_params(dry_validation_schema) do |attributes|
           related = related_params(attributes)
           transactions do
             resource.update!(attributes)

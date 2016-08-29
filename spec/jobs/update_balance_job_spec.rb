@@ -247,7 +247,6 @@ RSpec.describe UpdateBalanceJob do
       before do
         allow_any_instance_of(EmployeeTimeOffPolicy).to receive(:valid?) { true }
         employee.first_employee_event.update!(effective_at: Time.now - 4.years)
-        ewp_first.update!(effective_at: Time.now - 4.years, working_place: wps.first)
         ManageEmployeeBalanceAdditions.new(etops.first).call
         ManageEmployeeBalanceAdditions.new(etops.second).call
         Employee::Balance.update_all(being_processed: true)
@@ -259,7 +258,10 @@ RSpec.describe UpdateBalanceJob do
         create(:time_off_policy, :with_end_date, time_off_category: category, amount: 1000)
       end
       let(:top_second) { create(:time_off_policy, time_off_category: category, amount: 2000) }
-      let(:ewp_first) { employee.first_employee_working_place }
+      let!(:ewp_first) do
+        create(:employee_working_place,
+          effective_at: Time.now - 4.years, employee: employee, working_place: wps.first)
+      end
       let(:ewp_second) do
         create(:employee_working_place,
           effective_at: Date.new(2015,9,24), employee: employee, working_place: wps.last)

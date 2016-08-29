@@ -1,10 +1,10 @@
 class Auth::AccountsController < ApplicationController
   protect_from_forgery with: :null_session
   include DoorkeeperAuthorization
-  include AccountRules
+  include AccountSchemas
 
   def create
-    verified_params(gate_rules) do |attributes|
+    verified_dry_params(dry_validation_schema) do |attributes|
       account, user = build_account_and_user(attributes)
 
       ActiveRecord::Base.transaction do
@@ -18,7 +18,7 @@ class Auth::AccountsController < ApplicationController
   end
 
   def list
-    verified_params(get_rules) do |attributes|
+    verified_dry_params(dry_validation_schema) do |attributes|
       users = Account::User.includes(:account).where(email: attributes[:email])
 
       account_ids = if users.present?

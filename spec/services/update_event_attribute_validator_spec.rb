@@ -63,7 +63,6 @@ RSpec.describe UpdateEventAttributeValidator, type: :service do
       before { employee_attributes_payload.pop }
 
       it {  expect { subject }.not_to raise_error }
-      it {  expect { subject }.not_to raise_error(CanCan::AccessDenied, 'Not authorized!') }
     end
 
     context 'when an unauthorized attribute tries to be updated' do

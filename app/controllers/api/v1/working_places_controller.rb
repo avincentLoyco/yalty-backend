@@ -2,7 +2,7 @@ module API
   module V1
     class WorkingPlacesController < ApplicationController
       authorize_resource except: :create
-      include WorkingPlaceRules
+      include WorkingPlaceSchemas
 
       def index
         render_resource(resources_by_status(WorkingPlace, EmployeeWorkingPlace))
@@ -13,7 +13,7 @@ module API
       end
 
       def create
-        verified_params(gate_rules) do |attributes|
+        verified_dry_params(dry_validation_schema) do |attributes|
           related = related_params(attributes)
           @resource = Account.current.working_places.new(attributes)
           authorize! :create, resource
@@ -26,7 +26,7 @@ module API
       end
 
       def update
-        verified_params(gate_rules) do |attributes|
+        verified_dry_params(dry_validation_schema) do |attributes|
           related = related_params(attributes)
           transactions do
             resource.update(attributes)

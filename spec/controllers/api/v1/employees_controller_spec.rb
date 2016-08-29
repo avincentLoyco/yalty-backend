@@ -14,7 +14,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
   }
 
   context 'GET #show' do
-    let(:employee) { create(:employee, :with_attributes, account: account) }
+    let(:employee) { create(:employee_with_working_place, :with_attributes, account: account) }
     let(:employee_working_place) { employee.first_employee_working_place }
     let(:first_working_place) { employee_working_place.working_place }
     let(:future_working_place) { future_employee_working_place.working_place }
@@ -69,7 +69,9 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
 
       context 'when employee has multiple attributes' do
         let!(:definition) { create(:employee_attribute_definition, multiple: true) }
-        let!(:new_employee) { build(:employee, account: account, events: [employee_event]) }
+        let!(:new_employee) do
+          build(:employee_with_working_place, account: account, events: [employee_event])
+        end
         let!(:employee_attribute_versions) do
           create_list(:employee_attribute, 2,
             employee: new_employee,
@@ -147,7 +149,9 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
   end
 
   context 'GET #index' do
-    let!(:employees) { create_list(:employee, 3, :with_attributes, account: account) }
+    let!(:employees) do
+      create_list(:employee_with_working_place, 3, :with_attributes, account: account)
+    end
     subject { get :index }
 
     it { is_expected.to have_http_status(200) }
@@ -162,7 +166,9 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
     end
 
     context 'effective at date' do
-      let!(:future_employee) { create(:employee, account: account, events: [event]) }
+      let!(:future_employee) do
+        create(:employee_with_working_place, account: account, events: [event])
+      end
       let!(:attribute) { create(:employee_attribute, event: event, employee: future_employee) }
       let(:event) { create(:employee_event, effective_at: date, event_type: 'hired') }
       let(:employee_body) do

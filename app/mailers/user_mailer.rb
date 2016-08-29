@@ -45,6 +45,10 @@ class UserMailer < ApplicationMailer
   private
 
   def subdomain_url_for(account)
-    "https://#{account.subdomain}.#{ENV['YALTY_APP_DOMAIN']}"
+    url = ''
+    url << (Rails.configuration.force_ssl ? 'https://' : 'http://')
+    url << "#{account.subdomain}.#{ENV['YALTY_APP_DOMAIN']}"
+    url << ":#{ENV['EMBER_PORT']}" if Rails.env == 'e2e-testing'
+    url
   end
 end

@@ -298,5 +298,124 @@ RSpec.describe TimeOff, type: :model do
         end
       end
     end
+
+    context 'vacations and not_vacations' do
+      let(:vacation_category) { create(:time_off_category, name: 'vacation') }
+
+      let!(:vacation_time_off_first) { create(:time_off, time_off_category: vacation_category) }
+      let!(:vacation_time_off_second) { create(:time_off, time_off_category: vacation_category) }
+
+      let!(:different_time_off_first) { create(:time_off) }
+      let!(:different_time_off_second) { create(:time_off) }
+
+      let(:vacation_time_offs_ids) { [vacation_time_off_first.id, vacation_time_off_second.id] }
+      let(:different_time_offs_ids) { [different_time_off_first.id, different_time_off_second.id] }
+
+      context '.vacations' do
+        it 'return time_off with \'vacation\' category' do
+          expect(described_class.vacations.pluck(:id)).to match_array(vacation_time_offs_ids)
+        end
+      end
+
+      context '.not_vacations' do
+        it 'return time_off without \'vacation\' category' do
+          expect(described_class.not_vacations.pluck(:id)).to match_array(different_time_offs_ids)
+        end
+      end
+    end
+
+    context '.last_for_employee' do
+      let(:employee) { create(:employee) }
+
+      before 'create time_offs in order' do
+        Timecop.travel(2016, 1, 1, 0, 0)
+        create(:time_off, employee: employee, start_time: Time.zone.now, end_time: 1.day.from_now)
+        Timecop.travel(2016, 4, 4, 0, 0)
+        create(:time_off, employee: employee, start_time: Time.zone.now, end_time: 1.day.from_now)
+      end
+
+      it 'returns last created time_off for an employee' do
+        expect(described_class.for_employee(employee.id).count).to eq(2)
+      end
+    end
+
+    context '.for_account' do
+      let(:account) { create(:account) }
+      let(:category) { create(:time_off_category, account: account) }
+      let(:employee_first) { create(:employee, account: account) }
+      let(:employee_second) { create(:employee, account: account) }
+
+      before 'create time_offs in order' do
+        create(
+          :time_off,
+          employee: employee_first,
+          start_time: Time.zone.now,
+          end_time: 1.day.from_now,
+          time_off_category: category,
+        )
+        create(
+          :time_off,
+          employee: employee_first,
+          start_time: 1.day.from_now,
+          end_time: 2.day.from_now,
+          time_off_category: category,
+        )
+        create(
+          :time_off,
+          employee: employee_second,
+          start_time: Time.zone.now,
+          end_time: 1.day.from_now,
+        )
+        create(
+          :time_off,
+          employee: employee_second,
+          start_time: 1.day.from_now,
+          end_time: 2.day.from_now,
+        )
+      end
+
+      it 'returns last created time_off for an employee' do
+        expect(described_class.for_account(account.id).count).to eq(2)
+      end
+    end
+  end
+
+  context 'callbacks' do
+    context '.trigger_intercom_update' do
+      let!(:account) { create(:account) }
+      let!(:category) { create(:time_off_category, account: account) }
+      let!(:policy) { create(:time_off_policy, time_off_category: category) }
+      let!(:employee) { create(:employee, account: account) }
+      let!(:etop) { create(:employee_time_off_policy, employee: employee, time_off_policy: policy) }
+      let(:time_off) { build(:time_off, employee: employee, time_off_category: category) }
+
+      it 'should invoke trigger_intercom_update' do
+        expect(time_off).to receive(:trigger_intercom_update)
+        time_off.save!
+      end
+
+      it 'should trigger intercom update on account' do
+        expect(account).to receive(:create_or_update_on_intercom).with(true)
+        time_off.save!
+      end
+
+      context 'with user' do
+        let!(:user) { create(:account_user, account: account) }
+        let!(:employee) { create(:employee, account: account, user: user) }
+
+        it 'should trigger intercom update on user' do
+          expect(user).to receive(:create_or_update_on_intercom).with(true)
+          time_off.save!
+        end
+      end
+
+      context 'without user' do
+        it 'should not trigger intercom update on user' do
+          expect_any_instance_of(Account::User)
+            .not_to receive(:create_or_update_on_intercom).with(true)
+          time_off.save!
+        end
+      end
+    end
   end
  end

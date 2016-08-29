@@ -19,7 +19,7 @@ RSpec.describe Employee, type: :model do
   it { is_expected.to have_many(:registered_working_times) }
 
   context '#validations' do
-    let(:employee) { build(:employee) }
+    let(:employee) { build(:employee_with_working_place) }
     subject { employee }
 
     context '#employee working places presence' do
@@ -30,9 +30,9 @@ RSpec.describe Employee, type: :model do
       context 'without employee working place' do
         before { employee.employee_working_places = [] }
 
-        it { expect(subject.valid?).to eq false }
+        it { expect(subject.valid?).to eq true }
         it { expect { subject.valid? }
-          .to change { subject.errors.messages[:employee_working_places] } }
+          .not_to change { subject.errors.messages[:employee_working_places] } }
       end
     end
 
@@ -45,6 +45,71 @@ RSpec.describe Employee, type: :model do
         before { employee.events = [] }
 
         it { expect(subject.valid?).to eq false }
+      end
+    end
+  end
+
+  context 'scopes' do
+    let(:account) { create(:account) }
+    let(:employee) { create(:employee, account: account) }
+    let!(:account_user) { create(:account_user, account: account, employee: employee) }
+
+    before 'create employees' do
+      create_list(:employee, 3, account: account)
+      create_list(:employee, 3)
+    end
+
+    context '.active_by_account' do
+      subject(:active_by_account_scope) { described_class.active_by_account(account.id) }
+
+      it 'returns only employees with users / active employees' do
+        expect(active_by_account_scope.count).to eq(4)
+        expect(active_by_account_scope).to include(employee)
+      end
+    end
+
+    context 'active_employee_ratio_per_account' do
+      subject(:active_employee_ratio) do
+        described_class.active_employee_ratio_per_account(account.id)
+      end
+
+      it 'returns proper ratio' do
+        expect(active_employee_ratio).to eq(25.00)
+      end
+    end
+  end
+
+  context 'callbacks' do
+    context '.trigger_intercom_update' do
+      let!(:account) { create(:account) }
+      let(:employee) { build(:employee, account: account) }
+
+      it 'should invoke trigger_intercom_update on account' do
+        expect(employee).to receive(:trigger_intercom_update)
+        employee.save!
+      end
+
+      it 'should trigger create_or_update_on_intercom on account' do
+        expect(account).to receive(:create_or_update_on_intercom).with(true)
+        employee.save!
+      end
+
+      context 'with user' do
+        let!(:user) { create(:account_user, account: account) }
+        let!(:employee) { build(:employee, account: account, user: user) }
+
+        it 'should trigger intercom update on user' do
+          expect(user).to receive(:create_or_update_on_intercom).with(true)
+          employee.save!
+        end
+      end
+
+      context 'without user' do
+        it 'should not trigger intercom update on user' do
+          expect_any_instance_of(Account::User)
+            .not_to receive(:create_or_update_on_intercom).with(true)
+          employee.save!
+        end
       end
     end
   end

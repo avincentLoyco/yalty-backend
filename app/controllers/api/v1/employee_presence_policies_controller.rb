@@ -1,10 +1,10 @@
 module API
   module V1
     class EmployeePresencePoliciesController < ApplicationController
-      include EmployeePresencePoliciesRules
+      include EmployeePresencePoliciesSchemas
 
       def create
-        verified_params(gate_rules) do |attributes|
+        verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :create, presence_policy
           resource = create_join_table(EmployeePresencePolicy, PresencePolicy, attributes)
           render_resource(resource, status: 201)
