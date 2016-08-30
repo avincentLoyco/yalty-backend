@@ -306,11 +306,31 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
     let(:id) { time_off.id }
 
     context 'with valid data' do
-      let(:id) { time_off.id }
 
-      it { expect { subject }.to change { TimeOff.count }.by(-1) }
-      it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
-      it { is_expected.to have_http_status(204) }
+      context 'when there are balances to be updated' do
+        let(:id) { time_off.id }
+
+        it { expect { subject }.to change { TimeOff.count }.by(-1) }
+        it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
+        it { is_expected.to have_http_status(204) }
+      end
+
+      context 'when there are no balances to be updated' do
+        let(:id) { time_off.id }
+        let!(:later_time_off) do
+          create(:time_off,
+            time_off_category_id: time_off_category.id,
+            employee: employee,
+            start_time: time_off.end_time + 2.days,
+            end_time: time_off.end_time + 7.days,
+            )
+        end
+
+        it { expect { subject }.to change { TimeOff.count }.by(-1) }
+        it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
+        it { is_expected.to have_http_status(204) }
+      end
+
     end
 
     context 'with invalid data' do
