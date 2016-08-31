@@ -5,16 +5,18 @@ FactoryGirl.define do
     employee
     time_off_category
 
-    before(:create) do |time_off|
+    after(:create) do |time_off|
       if time_off.employee.employee_time_off_policies.present?
         time_off.time_off_category = time_off.employee.employee_time_off_policies.first
           .time_off_policy.time_off_category
       end
 
-      time_off.employee_balance = create(:employee_balance,
+      time_off.employee_balance = build(:employee_balance,
         employee: time_off.employee,
         time_off_category: time_off.time_off_category,
-        effective_at: time_off.end_time
+        effective_at: time_off.end_time,
+        time_off: time_off,
+        resource_amount: time_off.balance
       )
     end
 

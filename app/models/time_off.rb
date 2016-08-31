@@ -43,8 +43,8 @@ class TimeOff < ActiveRecord::Base
     for_employee(employee_id).where('? between start_time::date AND end_time::date', date)
   end)
 
-  def balance
-    - CalculateTimeOffBalance.new(self).call
+  def balance(starts = start_time, ends = end_time)
+    - CalculateTimeOffBalance.new(self, starts, ends).call
   end
 
   def start_hour

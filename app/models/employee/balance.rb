@@ -14,8 +14,6 @@ class Employee::Balance < ActiveRecord::Base
     :manual_amount, presence: true
   validates :validity_date, presence: true, if: :balance_credit_removal_id
   validates :effective_at, uniqueness: { scope: [:time_off_category, :employee] }
-  validates :amount, numericality: { greater_than_or_equal_to: 0 }, if: :validity_date
-  validate :removal_effective_at_date, if: [:balance_credit_addition, :time_off_policy]
   validate :validity_date_later_than_effective_at, if: [:effective_at, :validity_date]
   validate :counter_validity_date_blank
   validate :time_off_policy_presence
@@ -23,9 +21,11 @@ class Employee::Balance < ActiveRecord::Base
   validate :effective_at_equal_time_off_policy_dates, if: :employee_time_off_policy_id
   validate :effective_at_equal_time_off_end_date, if: :time_off_id
   validate :balance_should_have_resource
+  validate :removal_effective_at_date
 
-  before_validation :calculate_and_set_balance, if: :attributes_present?
   before_validation :find_effective_at
+  before_validation :calculate_amount_from_time_off, if: :time_off_id
+  before_validation :calculate_and_set_balance, if: :attributes_present?
 
   scope :employee_balances, (lambda do |employee_id, time_off_category_id|
     where(employee_id: employee_id, time_off_category_id: time_off_category_id)
@@ -61,11 +61,10 @@ class Employee::Balance < ActiveRecord::Base
     self.balance = (previous && previous.id != id ? previous.balance + amount : amount)
   end
 
-  def calculate_removal_amount(additions = balance_credit_additions)
-    self.resource_amount =
-      additions.map do |addition|
-        CalculateEmployeeBalanceRemovalAmount.new(self, addition).call
-      end.sum
+  def calculate_removal_amount
+    return unless balance_credit_additions.present? ||
+        (policy_credit_addition && time_off_policy.counter?)
+    self.resource_amount = CalculateEmployeeBalanceRemovalAmount.new(self).call
   end
 
   def time_off_policy
@@ -91,6 +90,10 @@ class Employee::Balance < ActiveRecord::Base
 
   def find_effective_at
     self.effective_at = now_or_effective_at
+  end
+
+  def calculate_amount_from_time_off
+    self.resource_amount = time_off.balance
   end
 
   def counter_validity_date_blank
@@ -167,8 +170,8 @@ class Employee::Balance < ActiveRecord::Base
     check_start_day_related = (day == start_day && month == start_month) ||
       (day == previous_date.day && month == previous_date.month)
     check_end_day = (day == end_day && month == end_month)
-    if end_day.present? && end_month.present?
-      check_year && check_start_day_related
+    unless end_day.present? && end_month.present?
+      check_year && (check_start_day_related)
     else
       check_year && (check_start_day_related || check_end_day)
     end

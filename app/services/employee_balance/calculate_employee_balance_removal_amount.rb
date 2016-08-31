@@ -1,94 +1,84 @@
 class CalculateEmployeeBalanceRemovalAmount
-  attr_reader :employee_balance, :addition
-
-  def initialize(employee_balance, addition)
-    @employee_balance = employee_balance
-    @addition = addition
+  def initialize(removal)
+    @removal = removal
+    @additions = removal.balance_credit_additions
+    @amount_to_expire = calculate_amount_to_expire
+    @first_addition = additions.order(:effective_at).first
   end
 
   def call
-    return 0
-    return calculate_counter_amount if balance_belongs_to_counter_policy?
-    calculate_balancer_amount
+    return 0 unless removal.present? && additions.present?
+    if removal.employee_time_off_policy.time_off_policy.counter?
+      calculate_amount_for_counter
+    else
+      calculate_amount_for_balancer
+    end
   end
 
   private
 
-  def balance_belongs_to_counter_policy?
-    join_model_time_off_policy =
-      employee_balance
-      .employee
-      .active_policy_in_category_at_date(
-        employee_balance.time_off_category_id, employee_balance.now_or_effective_at
-      )
-    return false unless join_model_time_off_policy
-    join_model_time_off_policy.time_off_policy.counter?
-  end
+  attr_reader :removal, :additions, :amount_to_expire, :first_addition
 
-  def calculate_counter_amount
+  def calculate_amount_for_counter
+    previous_balance =
+      RelativeEmployeeBalancesFinder.new(removal).previous_balances.last.try(:balance).to_i
     0 - previous_balance.to_i
   end
 
-  def calculate_balancer_amount
-    if last_balance_after_addition.blank?
-      amount_from_addition
-    else
-      amount_from_previous_balances
-    end
+  def calculate_amount_for_balancer
+    # if last_balance_after_addition.blank?
+    #   amount_from_addition
+    # else
+    amount_from_previous_balances
+    # end
+    # return 0 unless amount_to_expire > used_amounts
+    # - (amount_to_expire - used_amounts)
+  end
+
+  def calculate_amount_to_expire
+    additions.pluck(:manual_amount, :resource_amount).flatten.select { |value| value > 0 }.sum
   end
 
   def amount_from_addition
-    return -addition.balance if addition.amount > addition.balance && addition.balance >= 0
-    -addition.amount
+    0
   end
 
   def amount_from_previous_balances
-    return 0 unless sum > 0 && sum < addition.amount
-    - (addition.amount - sum)
+    return 0 unless sum > 0 && sum < amount_to_expire
+    - (amount_to_expire - sum)
   end
 
   def sum
-    addition.amount - (previous_balance - positive_amounts - amount_difference)
+    amount_to_expire -
+      (previous_balance - positive_amounts - amount_difference - time_off_in_period_amount)
   end
 
   def positive_amounts
-    positive_balance_after_addition + active_balances.map(&:amount).sum
+    additions =
+      Employee::Balance
+      .where(time_off_category_id: removal.time_off_category, employee: removal.employee)
+      .where('effective_at BETWEEN ? AND ? AND validity_date > ?',
+              first_addition.effective_at, removal.effective_at, removal.effective_at
+      )
+    additions.pluck(:resource_amount, :manual_amount).flatten.select { |value| value > 0 }.sum
   end
 
   def amount_difference
-    return 0 unless addition.amount < addition.balance
-    addition.balance - addition.amount
+    return 0 unless first_addition.amount < first_addition.balance
+    first_addition.balance - first_addition.amount
   end
 
-  def active_balances
-    RelativeEmployeeBalancesFinder.new(employee_balance).active_balances
+  def time_off_in_period_amount
+    time_off_in_period =
+      TimeOff
+      .where(employee: removal.employee, time_off_category: removal.time_off_category)
+      .where('start_time < ? AND end_time > ?', removal.effective_at, removal.effective_at)
+      .first
+    return 0 unless time_off_in_period.present?
+    - time_off_in_period.balance(nil, removal.effective_at.end_of_day)
   end
 
   def previous_balance
-    RelativeEmployeeBalancesFinder.new(employee_balance).previous_balances.last.try(:balance).to_i
-  end
-
-  def last_balance_after_addition
-    RelativeEmployeeBalancesFinder
-      .new(employee_balance)
-      .previous_balances
-      .where(
-        'resource_amount + manual_amount <= ? AND
-          effective_at > ? AND balance_credit_addition_id IS NULL',
-        0, addition.effective_at
-      )
-      .last
-  end
-
-  def positive_balance_after_addition
-    RelativeEmployeeBalancesFinder
-      .new(employee_balance)
-      .balances_related_by_category_and_employee
-      .where(
-        effective_at: addition.effective_at..employee_balance.now_or_effective_at,
-        validity_date: nil
-      )
-      .where('resource_amount + manual_amount >= 1')
-      .pluck(:resource_amount).sum
+    RelativeEmployeeBalancesFinder.new(removal).previous_balances.last.try(:balance).to_i
   end
 end

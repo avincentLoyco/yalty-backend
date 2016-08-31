@@ -328,25 +328,6 @@ RSpec.describe Employee::Balance, type: :model do
             .to include('Removal effective at must equal addition validity date') }
         end
       end
-
-      context 'amount numericallty' do
-        context 'when valid amount' do
-          it { expect { subject.valid? }.to_not change { balance.errors.size } }
-          it { expect(subject.valid?).to eq true }
-        end
-
-        context 'when invalid amount' do
-          before do
-            balance.resource_amount =  -100
-            balance.validity_date = Date.today + 1.week
-          end
-
-          it { expect(subject.valid?).to eq false }
-          it { expect { subject.valid? }.to change { balance.errors.size } }
-          it { expect { subject.valid? }.to change { balance.errors.messages[:amount] }
-            .to include('must be greater than or equal to 0') }
-        end
-      end
     end
   end
 end

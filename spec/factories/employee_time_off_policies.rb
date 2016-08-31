@@ -15,7 +15,8 @@ FactoryGirl.define do
           time_off_category: policy.time_off_policy.time_off_category,
           policy_credit_addition: true,
           employee_time_off_policy: policy,
-          effective_at: policy.effective_at
+          effective_at: policy.effective_at,
+          validity_date: RelatedPolicyPeriod.new(policy).validity_date_for(policy.effective_at)
         )
       end
     end

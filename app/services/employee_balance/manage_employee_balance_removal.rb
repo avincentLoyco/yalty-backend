@@ -9,14 +9,38 @@ class ManageEmployeeBalanceRemoval
 
   def call
     return unless !resource.time_off_policy.counter? && validity_date_changed?
-    if new_date.blank? || moved_to_future?
-      resource.balance_credit_removal.try(:destroy!)
-    else
-      create_removal unless resource.balance_credit_removal.present?
-    end
+    new_date.blank? || moved_to_future? ? unassign_from_removal : create_or_assign_to_new_removal
   end
 
   private
+
+  def unassign_from_removal
+    resource_removal = resource.balance_credit_removal
+    return unless resource_removal
+    if resource_removal.balance_credit_additions.count > 1
+      resource.update!(balance_credit_removal_id: nil)
+    else
+      resource_removal.destroy!
+    end
+  end
+
+  def create_or_assign_to_new_removal
+    resource_removal = resource.balance_credit_removal
+    new_removal = find_or_create_new_removal
+    new_removal.balance_credit_additions << resource
+    return unless resource_removal
+    resource_removal.destroy! if resource_removal.balance_credit_additions.count == 0
+  end
+
+  def find_or_create_new_removal
+    new_removal =
+      Employee::Balance
+      .removal_at_date(resource.employee_id, resource.time_off_category_id, new_date)
+
+    new_removal.first_or_create do |removal|
+      removal.effective_at = new_date
+    end
+  end
 
   def validity_date_changed?
     ((new_date.blank? || moved_to_past? || moved_to_future?)) || new_date != current_date
@@ -28,16 +52,5 @@ class ManageEmployeeBalanceRemoval
 
   def moved_to_future?
     new_date > Time.zone.today
-  end
-
-  def create_removal
-    return unless resource.balance_credit_removal.blank?
-    CreateEmployeeBalance.new(*params).call
-  end
-
-  def params
-    [resource.time_off_category_id, resource.employee_id, resource.employee.account_id,
-     { policy_credit_removal: true, skip_update: true, balance_credit_addition_id: resource.id,
-       effective_at: new_date }]
   end
 end
