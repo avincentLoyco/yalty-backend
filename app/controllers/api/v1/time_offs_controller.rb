@@ -50,7 +50,7 @@ module API
           prepare_balances_to_update(resource.employee_balance, balance_attributes)
         end
 
-        update_balances_job(next_balance.id, balance_attributes) if next_balance
+        update_balances_job(next_balance, balance_attributes) if next_balance
         render_no_content
       end
 
