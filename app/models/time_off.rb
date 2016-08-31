@@ -102,7 +102,7 @@ class TimeOff < ActiveRecord::Base
   end
 
   def time_off_policy_presence
-    return if employee.active_policy_in_category_at_date(time_off_category_id).try(:time_off_policy)
+    return if employee.active_policy_in_category_at_date(time_off_category_id, end_time).try(:time_off_policy)
     errors.add(:employee, 'Time off policy in category required')
   end
 

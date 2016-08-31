@@ -52,10 +52,7 @@ class JoinTableWithEffectiveTill
         #{extra_where_conditions}
         GROUP BY  A.id
       ) AS B
-      WHERE ( B.effective_till is null
-              OR B.effective_till >= to_date('#{effective_till_from_date}', 'YYYY-MM_DD')
-            )
-        #{effective_at_before_date_sql}
+      #{conditional}
       ORDER BY B.effective_at;"
   end
 
@@ -69,12 +66,29 @@ class JoinTableWithEffectiveTill
     "('#{array.join('\',\'')}')"
   end
 
+  def conditional
+    conditions = [effective_till_after_date_sql,effective_at_before_date_sql].compact
+    return '' if conditions.empty?
+    conditional_string = " WHERE #{conditions.first}"
+    return conditional_string if conditions.size == 1
+    conditional_string += " AND  #{conditions.last}"
+  end
+
+  def effective_till_after_date_sql
+    if effective_till_from_date
+      "B.effective_till is null
+       OR B.effective_till >= to_date('#{effective_till_from_date}', 'YYYY-MM_DD')"
+    else
+      nil
+    end
+  end
+
   def category_condition_sql
     'AND A.time_off_category_id = B.time_off_category_id'
   end
 
   def effective_at_before_date_sql
-    effective_at_till_date.present? ? "AND B.effective_at <= '#{effective_at_till_date}'" : ''
+    effective_at_till_date.present? ? " B.effective_at <= '#{effective_at_till_date}'" : nil
   end
 
   def specific_account_sql

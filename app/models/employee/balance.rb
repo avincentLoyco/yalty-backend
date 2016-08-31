@@ -14,7 +14,6 @@ class Employee::Balance < ActiveRecord::Base
     :manual_amount, presence: true
   validates :effective_at, uniqueness: { scope: [:time_off_category, :employee] }
   validates :amount, numericality: { greater_than_or_equal_to: 0 }, if: :validity_date
-  validates :employee_time_off_policy_id, uniqueness: true, allow_nil: true
   validate :removal_effective_at_date, if: [:balance_credit_addition, :time_off_policy]
   validate :validity_date_later_than_effective_at, if: [:effective_at, :validity_date]
   validate :counter_validity_date_blank
@@ -22,6 +21,7 @@ class Employee::Balance < ActiveRecord::Base
   validate :effective_after_employee_start_date, if: :employee
   validate :effective_at_equal_time_off_policy_dates, if: :employee_time_off_policy_id
   validate :effective_at_equal_time_off_end_date, if: :time_off_id
+  validate :balance_should_have_resource
   before_validation :calculate_and_set_balance, if: :attributes_present?
   before_validation :find_effective_at
   before_validation :check_if_credit_removal, if: :balance_credit_addition
@@ -116,6 +116,7 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   def effective_at_equal_time_off_policy_dates
+    return if time_off_id
     time_off_policy = employee_time_off_policy.time_off_policy
     etop_hash = employee_time_off_policy_with_effective_till
     etop_effective_at_year = etop_hash['effective_at'].to_date.year
@@ -137,7 +138,10 @@ class Employee::Balance < ActiveRecord::Base
     JoinTableWithEffectiveTill.new(
       EmployeeTimeOffPolicy,
       nil,
-      employee_time_off_policy.time_off_policy_id
+      employee_time_off_policy.time_off_policy_id,
+      nil,
+      nil,
+      nil
     ).call.first
   end
 
@@ -164,6 +168,15 @@ class Employee::Balance < ActiveRecord::Base
     else
       check_year && (check_start_day_related || check_end_day)
     end
+  end
+
+  def balance_should_have_resource
+    return unless employee_time_off_policy.nil? && time_off.nil?
+    errors.add(
+      :employee_time_off_policy_id,
+      'Balance should have a employee_time_off_policy or time off'
+    )
+    errors.add(:time_off_id, 'Balance should have a employee_time_off_policy or time off')
   end
 
   def effective_at_equal_time_off_end_date
