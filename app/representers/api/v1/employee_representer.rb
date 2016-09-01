@@ -22,6 +22,7 @@ module Api::V1
     end
 
     def working_place_json
+      return {} unless active_employee_working_place.present?
       EmployeeWorkingPlaceRepresenter.new(active_employee_working_place).working_place_json
     end
 
@@ -37,7 +38,8 @@ module Api::V1
     end
 
     def active_employee_working_place
-      related_resources(EmployeeWorkingPlace, nil, resource.id).first
+      @active_employee_working_place ||=
+        related_resources(EmployeeWorkingPlace, nil, resource.id).first
     end
   end
 end
