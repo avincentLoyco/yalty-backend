@@ -208,7 +208,6 @@ CREATE TABLE employee_balances (
     validity_date timestamp without time zone,
     policy_credit_addition boolean DEFAULT false,
     reset_balance boolean DEFAULT false,
-    employee_time_off_policy_id uuid,
     manual_amount integer DEFAULT 0,
     balance_credit_removal_id uuid
 );
@@ -834,6 +833,7 @@ CREATE INDEX index_employee_balances_on_employee_id ON employee_balances USING b
 
 
 --
+<<<<<<< ca8bfe9be731d68b92b32ac53ee7c180640a05ad
 -- Name: index_employee_balances_on_employee_time_off_policy_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
@@ -842,6 +842,9 @@ CREATE INDEX index_employee_balances_on_employee_time_off_policy_id ON employee_
 
 --
 -- Name: index_employee_balances_on_time_off_category_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+=======
+-- Name: index_employee_balances_on_time_off_category_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+>>>>>>> [YWA-671] Remove association between Employee::Balance and EmployeeTimeOffPolicy
 --
 
 CREATE INDEX index_employee_balances_on_time_off_category_id ON employee_balances USING btree (time_off_category_id);
@@ -1281,14 +1284,6 @@ ALTER TABLE ONLY oauth_access_tokens
 
 
 --
--- Name: fk_rails_ef50385695; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY employee_balances
-    ADD CONSTRAINT fk_rails_ef50385695 FOREIGN KEY (employee_time_off_policy_id) REFERENCES employee_time_off_policies(id);
-
-
---
 -- Name: fk_rails_f5cbfdb8ce; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1531,3 +1526,5 @@ INSERT INTO schema_migrations (version) VALUES ('20160727144502');
 INSERT INTO schema_migrations (version) VALUES ('20160818122718');
 
 INSERT INTO schema_migrations (version) VALUES ('20160824112602');
+
+INSERT INTO schema_migrations (version) VALUES ('20160901084714');

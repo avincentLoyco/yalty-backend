@@ -4,7 +4,6 @@ class Employee::Balance < ActiveRecord::Base
   belongs_to :employee
   belongs_to :time_off_category
   belongs_to :time_off
-  belongs_to :employee_time_off_policy
 
   has_many :balance_credit_additions, class_name: 'Employee::Balance',
                                       foreign_key: 'balance_credit_removal_id'

@@ -22,7 +22,6 @@ FactoryGirl.define do
           effective_at: employee_balance.effective_at
         )
         employee_balance.employee.employee_time_off_policies << employee_policy
-        employee_balance.employee_time_off_policy = employee_policy
         employee_balance.effective_at = employee_policy.effective_at
       elsif employee_balance.time_off_id.blank?
         top = etop.time_off_policy
@@ -36,7 +35,6 @@ FactoryGirl.define do
         else
           balance_date = etop.effective_at
         end
-        employee_balance.employee_time_off_policy = etop
         employee_balance.effective_at = balance_date
       end
     end
