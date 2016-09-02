@@ -9,10 +9,6 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
       create(:employee_presence_policy, :with_time_entries,
         employee: employee, effective_at: Time.now - 1.year)
       create(:employee_time_off_policy, time_off_policy: policy, employee: employee)
-      create(:employee_balance_manual,
-        employee: employee, time_off_category: category, effective_at: employee_policy.effective_at,
-        validity_date: '1/4/2016', balance_credit_removal: removal, resource_amount: 0,
-        manual_amount: policy_adjustment, policy_credit_addition: true)
       time_off.employee_balance.update!(
         manual_amount: time_off_manual, validity_date: '1/4/2016',
         balance_credit_removal: time_off_removal
@@ -22,15 +18,21 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
       removal.reload.balance_credit_additions
     end
 
+    let!(:policy_balance) do
+      create(:employee_balance_manual,
+        employee: employee, time_off_category: category, effective_at: employee_policy.effective_at,
+        validity_date: '1/4/2016', resource_amount: 0,
+        manual_amount: policy_adjustment, policy_credit_addition: true)
+    end
     let(:account) { create(:account) }
     let(:category) { create(:time_off_category, account: account) }
     let(:policy) { create(:time_off_policy, :with_end_date, time_off_category: category) }
     let(:policy_adjustment) { 0 }
     let(:employee) { create(:employee, account: account) }
     let(:employee_policy) { employee.employee_time_off_policies.first }
-    let(:removal) do
+    let!(:removal) do
       create(:employee_balance_manual,
-        employee: employee, time_off_category: category, effective_at: '1/4/2016')
+        employee: employee, time_off_category: category, effective_at: '1/4/2016', balance_credit_additions: [policy_balance])
     end
     let(:time_off) do
       create(:time_off,

@@ -80,7 +80,13 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   def employee_time_off_policy
-    employee.active_policy_in_category_at_date(time_off_category_id, now_or_effective_at)
+    date =
+      if balance_credit_additions.present?
+        balance_credit_additions.first.effective_at
+      else
+        now_or_effective_at
+      end
+    employee.active_policy_in_category_at_date(time_off_category_id, date)
   end
 
   private
@@ -162,9 +168,9 @@ class Employee::Balance < ActiveRecord::Base
     start_month = time_off_policy.start_month
     end_day = time_off_policy.end_day
     end_month = time_off_policy.end_month
-    day = effective_at.to_date.day
-    month = effective_at.to_date.month
-    year = effective_at.to_date.year
+    day = now_or_effective_at.to_date.day
+    month = now_or_effective_at.to_date.month
+    year = now_or_effective_at.to_date.year
     previous_date = Date.new(year, start_month, start_day) - 1
     check_year = (year >= etop_effective_at_year &&
       (etop_effective_till_year.nil? || year <= etop_effective_till_year))

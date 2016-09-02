@@ -2,6 +2,7 @@ require 'rails_helper'
 
 RSpec.describe ManageEmployeeBalanceRemoval, type: :service do
   include_context 'shared_context_account_helper'
+  include_context 'shared_context_timecop_helper'
 
   let(:account) { create(:account) }
   let(:category) { create(:time_off_category, account: account) }
@@ -11,7 +12,6 @@ RSpec.describe ManageEmployeeBalanceRemoval, type: :service do
     create(:employee_time_off_policy,
       time_off_policy: policy, employee: employee, effective_at: 3.years.ago)
   end
-
   let!(:balance) do
     create(:employee_balance_manual,
       effective_at: 2.years.ago, validity_date: validity_date, employee: employee,
@@ -21,8 +21,8 @@ RSpec.describe ManageEmployeeBalanceRemoval, type: :service do
   describe '#call' do
     subject { ManageEmployeeBalanceRemoval.new(new_date, balance).call }
 
-    let(:validity_date) { Date.today - 1.day }
-    let(:new_date) { Date.today }
+    let(:validity_date) { Date.new(Time.now.year, 4, 1) }
+    let(:new_date) { Date.new(Time.now.year, 4, 1) }
 
     context 'when employee balance is a balancer' do
       context 'when validity date present' do
@@ -108,6 +108,8 @@ RSpec.describe ManageEmployeeBalanceRemoval, type: :service do
           let(:validity_date) { Date.today + 1.week }
 
           context 'and moved to today or earlier' do
+            let(:new_date) { Date.today }
+
             it { expect { subject }.to change { Employee::Balance.count }.by(1) }
           end
 
@@ -129,12 +131,14 @@ RSpec.describe ManageEmployeeBalanceRemoval, type: :service do
         let(:validity_date) { nil }
 
         context 'and now in future' do
-          let(:new_date) { Date.today + 1.week }
+          let(:new_date) { Date.today + 1.year }
 
           it { expect { subject }.to_not change { Employee::Balance.count } }
         end
 
         context 'and now in past' do
+          let(:new_date) { Date.new(2016, 4, 1) - 1.year }
+
           it { expect { subject }.to change { Employee::Balance.count }.by(1) }
         end
       end
