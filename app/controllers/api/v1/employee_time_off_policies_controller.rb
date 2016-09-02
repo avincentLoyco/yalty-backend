@@ -49,6 +49,7 @@ module API
           Account.current.id,
           options_for(resource)
         ).call
+
       end
 
       def options_for(resource)

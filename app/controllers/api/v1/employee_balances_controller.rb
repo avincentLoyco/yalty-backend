@@ -18,13 +18,6 @@ module API
         end
       end
 
-      def create
-        verified_dry_params(dry_validation_schema) do |attributes|
-          resources = CreateEmployeeBalance.new(*params_from_attributes(attributes)).call
-          render_resource(resources, status: :created)
-        end
-      end
-
       def update
         verified_dry_params(dry_validation_schema) do |attributes|
           prepare_balances_to_update(editable_resource, attributes)

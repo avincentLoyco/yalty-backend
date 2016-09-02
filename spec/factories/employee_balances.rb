@@ -5,11 +5,10 @@ FactoryGirl.define do
     resource_amount { Faker::Number.number(2) }
 
     after(:build) do |employee_balance|
-      ze_date = employee_balance.effective_at ? employee_balance.effective_at : Time.now
       etop =
         employee_balance
         .employee
-        .active_policy_in_category_at_date(employee_balance.time_off_category_id, ze_date)
+        .active_policy_in_category_at_date(employee_balance.time_off_category_id)
       if etop.blank? && employee_balance.time_off_id.blank?
           employee_balance.effective_at = employee_balance.employee.hired_date if employee_balance.effective_at.nil?
         policy = create(:time_off_policy,
@@ -21,7 +20,6 @@ FactoryGirl.define do
           employee: employee_balance.employee,
           effective_at: employee_balance.effective_at
         )
-        employee_balance.employee.employee_time_off_policies << employee_policy
         employee_balance.effective_at = employee_policy.effective_at
       elsif employee_balance.time_off_id.blank?
         top = etop.time_off_policy
@@ -44,8 +42,12 @@ FactoryGirl.define do
     end
 
     trait :with_time_off do
-      time_off { create(:time_off, time_off_category: time_off_category) }
-      effective_at { time_off.end_time.to_date}
+      after(:build) do |employee_balance|
+        time_off =
+          create(:time_off, :without_balance, employee: employee_balance.employee, time_off_category: employee_balance.time_off_category)
+        employee_balance.time_off = time_off
+        employee_balance.effective_at = time_off.end_time.to_date
+      end
     end
 
     trait :with_balance_credit_addition do

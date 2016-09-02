@@ -17,9 +17,8 @@ class Employee::Balance < ActiveRecord::Base
   validate :counter_validity_date_blank
   validate :time_off_policy_presence
   validate :effective_after_employee_start_date, if: :employee
-  validate :effective_at_equal_time_off_policy_dates, if: :employee_time_off_policy_id
+  validate :effective_at_equal_time_off_policy_dates, if: 'time_off_id.nil? && employee_id'
   validate :effective_at_equal_time_off_end_date, if: :time_off_id
-  validate :balance_should_have_resource
   validate :removal_effective_at_date
 
   before_validation :find_effective_at
@@ -68,8 +67,7 @@ class Employee::Balance < ActiveRecord::Base
 
   def time_off_policy
     return nil unless employee && time_off_category
-    employee.active_policy_in_category_at_date(time_off_category_id, now_or_effective_at)
-            .try(:time_off_policy)
+    employee_time_off_policy.try(:time_off_policy)
   end
 
   def now_or_effective_at
@@ -79,6 +77,10 @@ class Employee::Balance < ActiveRecord::Base
     else
       time_off.try(:end_time) || Time.zone.now
     end
+  end
+
+  def employee_time_off_policy
+    employee.active_policy_in_category_at_date(time_off_category_id, now_or_effective_at)
   end
 
   private
@@ -113,7 +115,7 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   def time_off_policy_presence
-    errors.add(:employee, 'Must have time off policy in category') unless time_off_policy
+    errors.add(:employee, 'Must have an associated time off policy in the balance category') unless time_off_policy
   end
 
   def effective_after_employee_start_date
@@ -122,9 +124,9 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   def effective_at_equal_time_off_policy_dates
-    return if time_off_id
-    time_off_policy = employee_time_off_policy.time_off_policy
-    etop_hash = employee_time_off_policy_with_effective_till
+    etop = employee_time_off_policy
+    return unless etop
+    etop_hash = employee_time_off_policy_with_effective_till(etop)
     etop_effective_at_year = etop_hash['effective_at'].to_date.year
     etop_effective_till_year =
       etop_hash['effective_till'] ? etop_hash['effective_till'].to_date.year : nil
@@ -133,20 +135,20 @@ class Employee::Balance < ActiveRecord::Base
       etop_effective_at_year,
       etop_effective_till_year
     )
-    matches_effective_at = effective_at.to_date == employee_time_off_policy.effective_at.to_date
+    matches_effective_at = effective_at.to_date == etop.effective_at.to_date
     return unless !matches_end_or_start_top_date && !matches_effective_at
     message = 'Must be at TimeOffPolicy  assignations date, end date, start date or the previous'\
       ' day to start date'
     errors.add(:effective_at, message)
   end
 
-  def employee_time_off_policy_with_effective_till
+  def employee_time_off_policy_with_effective_till(etop)
     JoinTableWithEffectiveTill.new(
       EmployeeTimeOffPolicy,
       nil,
-      employee_time_off_policy.time_off_policy_id,
       nil,
       nil,
+      etop.id,
       nil
     ).call.first
   end
@@ -170,19 +172,10 @@ class Employee::Balance < ActiveRecord::Base
       (day == previous_date.day && month == previous_date.month)
     check_end_day = (day == end_day && month == end_month)
     unless end_day.present? && end_month.present?
-      check_year && (check_start_day_related)
+      check_year && check_start_day_related
     else
       check_year && (check_start_day_related || check_end_day)
     end
-  end
-
-  def balance_should_have_resource
-    return unless employee_time_off_policy.nil? && time_off.nil?
-    errors.add(
-      :employee_time_off_policy_id,
-      'Balance should have a employee_time_off_policy or time off'
-    )
-    errors.add(:time_off_id, 'Balance should have a employee_time_off_policy or time off')
   end
 
   def effective_at_equal_time_off_end_date
