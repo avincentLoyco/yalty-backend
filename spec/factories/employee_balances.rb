@@ -74,5 +74,9 @@ FactoryGirl.define do
     time_off_category { create(:time_off_category, account: employee.account) }
     resource_amount { Faker::Number.number(2) }
     effective_at { nil }
+
+    trait :processing do
+      being_processed true
+    end
   end
 end

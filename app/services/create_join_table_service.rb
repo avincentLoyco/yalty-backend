@@ -76,7 +76,7 @@ class CreateJoinTableService
   end
 
   def remove_employee_balances(join_tables_to_remove)
-    join_tables_to_remove.map(&:employee_balances).map(&:destroy_all)
+    join_tables_to_remove.map(&:policy_assignation_balance).compact.map(&:destroy!)
   end
 
   def previous_join_table

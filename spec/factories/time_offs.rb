@@ -4,20 +4,23 @@ FactoryGirl.define do
     end_time Time.now + 1.month
     employee
     time_off_category
+    employee_balance { nil }
 
     after(:create) do |time_off|
       if time_off.employee.employee_time_off_policies.present?
         time_off.time_off_category = time_off.employee.employee_time_off_policies.first
-          .time_off_policy.time_off_category
+          .time_off_category
       end
 
-      time_off.employee_balance = build(:employee_balance,
-        employee: time_off.employee,
-        time_off_category: time_off.time_off_category,
-        effective_at: time_off.end_time,
-        time_off: time_off,
-        resource_amount: time_off.balance
-      )
+      if time_off.employee_balance.blank?
+        time_off.employee_balance = build(:employee_balance,
+          employee: time_off.employee,
+          time_off_category: time_off.time_off_category,
+          effective_at: time_off.end_time,
+          time_off: time_off,
+          resource_amount: time_off.balance
+        )
+      end
     end
 
     trait :without_balance do

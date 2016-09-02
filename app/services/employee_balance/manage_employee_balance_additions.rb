@@ -19,7 +19,6 @@ class ManageEmployeeBalanceAdditions
   def create_additions_with_removals
     date = RelatedPolicyPeriod.new(resource).first_start_date
     policy_length = RelatedPolicyPeriod.new(resource).policy_length
-
     while date <= effective_till
       balances << CreateEmployeeBalance.new(*employee_balance_params(date)).call
       date += policy_length.years

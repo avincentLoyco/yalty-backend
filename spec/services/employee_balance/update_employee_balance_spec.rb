@@ -17,7 +17,7 @@ RSpec.describe UpdateEmployeeBalance, type: :service do
     create(:employee_time_off_policy, employee: employee)
   end
   let!(:previous_balance) do
-    create(:employee_balance, :processing,
+    create(:employee_balance_manual, :processing,
       effective_at: Time.now - 3.weeks, time_off_category: category, employee: employee, resource_amount: 0
     )
   end
@@ -34,13 +34,13 @@ RSpec.describe UpdateEmployeeBalance, type: :service do
 
     context 'and employee balance is removal' do
       let!(:addition) do
-        create(:employee_balance,
+        create(:employee_balance_manual,
           validity_date: validity_date, effective_at: Time.now - 2.weeks, time_off_category: category,
           employee: previous_balance.employee, resource_amount: 600
         )
       end
       let!(:employee_balance) do
-        create(:employee_balance, :processing,
+        create(:employee_balance_manual, :processing,
           balance_credit_additions: [addition], time_off_category: category,
           employee: previous_balance.employee, resource_amount: -100
         )
@@ -70,9 +70,10 @@ RSpec.describe UpdateEmployeeBalance, type: :service do
 
       context 'and create the balance between addition and removal' do
         let!(:balance_in_the_middle) do
-          create(:employee_balance,
+          create(:employee_balance_manual,
             effective_at: Time.now - 9.days, time_off_category: category,
-            employee: previous_balance.employee, resource_amount: amount
+            employee: previous_balance.employee, resource_amount: amount,
+            validity_date: Time.now
           )
         end
 

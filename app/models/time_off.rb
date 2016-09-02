@@ -43,6 +43,10 @@ class TimeOff < ActiveRecord::Base
     for_employee(employee_id).where('? between start_time::date AND end_time::date', date)
   end)
 
+  scope :for_employee_in_category, lambda { |employee_id, time_off_category_id|
+    where(employee_id: employee_id, time_off_category_id: time_off_category_id)
+  }
+
   def balance(starts = start_time, ends = end_time)
     - CalculateTimeOffBalance.new(self, starts, ends).call
   end
@@ -102,7 +106,7 @@ class TimeOff < ActiveRecord::Base
   end
 
   def time_off_policy_presence
-    return if employee.active_policy_in_category_at_date(time_off_category_id, end_time).try(:time_off_policy)
+    return if employee.active_policy_in_category_at_date(time_off_category_id, end_time).present?
     errors.add(:employee, 'Time off policy in category required')
   end
 

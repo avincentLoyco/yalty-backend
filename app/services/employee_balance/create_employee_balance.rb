@@ -60,7 +60,6 @@ class CreateEmployeeBalance
         employee: employee,
         time_off:  options.key?(:time_off_id) ? employee.time_offs.find(options[:time_off_id]) : nil,
         time_off_category: category,
-        employee_time_off_policy: employee_time_off_policy
       },
       manual_amount_param,
       resource_amount_param
@@ -84,11 +83,6 @@ class CreateEmployeeBalance
   def resource_amount_param
     return {} unless options.key?(:resource_amount)
     { resource_amount: options[:resource_amount] }
-  end
-
-  def employee_time_off_policy
-    return unless options.key?(:employee_time_off_policy_id)
-    employee.employee_time_off_policies.find(options[:employee_time_off_policy_id])
   end
 
   def validity_date

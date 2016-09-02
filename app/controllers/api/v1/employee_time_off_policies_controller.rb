@@ -26,7 +26,8 @@ module API
       private
 
       def resource_newly_created?(resource)
-        resource.effective_at == params[:effective_at].to_date &&
+        @resource_newly_created ||=
+          resource.effective_at == params[:effective_at].to_date &&
           resource.employee_balances.blank?
       end
 
@@ -54,7 +55,6 @@ module API
 
       def options_for(resource)
         {
-          employee_time_off_policy_id: resource.id,
           manual_amount: params[:employee_balance_amount] || 0,
           effective_at: resource.effective_at,
           validity_date: RelatedPolicyPeriod.new(resource).validity_date_for(resource.effective_at)

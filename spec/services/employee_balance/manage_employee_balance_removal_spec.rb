@@ -3,8 +3,19 @@ require 'rails_helper'
 RSpec.describe ManageEmployeeBalanceRemoval, type: :service do
   include_context 'shared_context_account_helper'
 
+  let(:account) { create(:account) }
+  let(:category) { create(:time_off_category, account: account) }
+  let(:policy) { create(:time_off_policy, :with_end_date, time_off_category: category) }
+  let(:employee) { create(:employee, account: account) }
+  let!(:employee_time_off_policy) do
+    create(:employee_time_off_policy,
+      time_off_policy: policy, employee: employee, effective_at: 3.years.ago)
+  end
+
   let!(:balance) do
-    create(:employee_balance, effective_at: Date.today - 2.years, validity_date: validity_date)
+    create(:employee_balance_manual,
+      effective_at: 2.years.ago, validity_date: validity_date, employee: employee,
+      time_off_category_id: category.id)
   end
 
   describe '#call' do
@@ -54,7 +65,7 @@ RSpec.describe ManageEmployeeBalanceRemoval, type: :service do
 
             context 'when there is already removal in new validity date' do
               let!(:new_removal) do
-                create(:employee_balance,
+                create(:employee_balance_manual,
                   effective_at: new_date, employee: balance.employee,
                   time_off_category: balance.time_off_category
                 )
@@ -130,7 +141,11 @@ RSpec.describe ManageEmployeeBalanceRemoval, type: :service do
     end
 
     context 'when employee balance is a counter' do
-      before { balance.time_off_policy.update!(policy_type: 'counter', amount: nil) }
+      before do
+        balance.time_off_policy.update!(
+          policy_type: 'counter', amount: nil, end_day: nil, end_month: nil
+        )
+      end
 
       it { expect { subject }.to_not change { Employee::Balance.count } }
     end

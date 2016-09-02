@@ -63,7 +63,6 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
   describe 'POST #create' do
     subject { post :create, params }
-    let(:assignation_adjustments) { Employee::Balance.where.not(employee_time_off_policy_id: nil) }
     let(:effective_at) { Time.now }
     let(:params) do
       {
@@ -76,7 +75,6 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
     context 'with valid params' do
       it { expect { subject }.to change { employee.employee_time_off_policies.count }.by(1) }
       it { expect { subject }.to change { Employee::Balance.additions.count }.by(1) }
-      it { expect { subject }.to change { assignation_adjustments.count }.by(1) }
 
       it { is_expected.to have_http_status(201) }
 
@@ -93,9 +91,8 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
         let(:effective_at) { Time.now - 3.years }
 
         it { expect { subject }.to change { employee.employee_time_off_policies.count }.by(1) }
-        it { expect { subject }.to change { assignation_adjustments.count }.by(1) }
-        it { expect { subject }.to change { employee.employee_balances.additions.count }.by(4) }
-        it { expect { subject }.to change { employee.employee_balances.removals.count }.by(2) }
+        it { expect { subject }.to change { employee.employee_balances.additions.uniq.count }.by(4) }
+        it { expect { subject }.to change { employee.employee_balances.removals.uniq.count }.by(2) }
 
         it { is_expected.to have_http_status(201) }
       end
@@ -112,7 +109,6 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
           before { subject }
 
           it { expect(new_balances.first.amount).to eq 1000 }
-          it { expect(new_balances.first.employee_time_off_policy_id).to_not eq nil }
           it { expect(new_balances.last.amount).to eq time_off_policy.amount }
           it { expect(new_balances.last.policy_credit_addition).to eq true }
 
@@ -121,14 +117,14 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
         end
 
         context 'when there is join table with the same resource and balance' do
-          let!(:related_balance) do
-            create(:employee_balance,
-              effective_at: related_effective_at, employee_time_off_policy: related_resource)
-          end
-          let(:related_resource) do
+          let!(:related_resource) do
             create(:employee_time_off_policy,
               time_off_policy: time_off_policy, employee: employee,
               effective_at: related_effective_at)
+          end
+          let!(:related_balance) do
+            create(:employee_balance_manual, effective_at: related_effective_at, employee: employee,
+              time_off_category: time_off_policy.time_off_category)
           end
 
           context 'after effective at' do
@@ -141,6 +137,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
             it do
               expect { subject }.to change { Employee::Balance.exists?(related_balance.id) }
             end
+
 
             it 'should have proper data in response body' do
               subject
