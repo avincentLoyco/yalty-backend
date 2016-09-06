@@ -102,7 +102,7 @@ RSpec.describe FindEmployeeBalancesToUpdate, type: :service do
       end
 
       context 'when new amount eq removal' do
-        let(:options) { { resource_amount: -1000 } }
+        let(:options) { { manual_amount: -1000 } }
 
         it { expect(subject).to include(previous_balance.id, previous_removal.id) }
         it { expect(subject).to_not include(balance_add.id) }

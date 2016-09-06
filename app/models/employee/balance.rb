@@ -173,7 +173,8 @@ class Employee::Balance < ActiveRecord::Base
     year = now_or_effective_at.to_date.year
     previous_date = Date.new(year, start_month, start_day) - 1
     check_year = (year >= etop_effective_at_year &&
-      (etop_effective_till_year.nil? || year <= etop_effective_till_year))
+      (etop_effective_till_year.nil? || year <= etop_effective_till_year ||
+      balance_credit_additions.present?))
     check_start_day_related = (day == start_day && month == start_month) ||
       (day == previous_date.day && month == previous_date.month)
     check_end_day = (day == end_day && month == end_month)

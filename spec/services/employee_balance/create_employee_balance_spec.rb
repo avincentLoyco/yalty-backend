@@ -2,19 +2,19 @@ require 'rails_helper'
 
 RSpec.describe CreateEmployeeBalance, type: :service do
   include_context 'shared_context_account_helper'
+  include_context 'shared_context_timecop_helper'
   include ActiveJob::TestHelper
 
   before do
     Account.current = create(:account)
-    allow_any_instance_of(Employee).to receive(:active_policy_in_category_at_date)
-      .and_return(employee_policy)
   end
 
   let(:category) { create(:time_off_category, account: Account.current) }
-  let(:policy) { create(:time_off_policy, time_off_category: category) }
+  let(:policy) { create(:time_off_policy, :with_end_date, time_off_category: category) }
   let(:employee) { create(:employee, account: Account.current) }
-  let(:employee_policy) do
-    build(:employee_time_off_policy, time_off_policy: policy, effective_at: Date.today - 5.years)
+  let!(:employee_policy) do
+    create(:employee_time_off_policy,
+      time_off_policy: policy, employee: employee, effective_at: Date.today - 5.years)
   end
 
   subject do
@@ -29,8 +29,8 @@ RSpec.describe CreateEmployeeBalance, type: :service do
 
   shared_examples 'employee balance with other employee balances after' do
     let!(:employee_balance) do
-      create(:employee_balance, employee: employee, time_off_category: category,
-        effective_at: Time.now + 10.days)
+      create(:employee_balance_manual, employee: employee, time_off_category: category,
+        effective_at: 2.years.since)
     end
 
     it { expect { subject }.to change { employee_balance.reload.being_processed }.from(false).to(true) }
@@ -66,7 +66,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
       let(:amount) { 100 }
 
       context 'and employee balance effective at is in the future' do
-        let(:options) {{ effective_at: Time.now + 9.days, resource_amount: amount }}
+        let(:options) {{ effective_at: 1.year.since, resource_amount: amount }}
 
         it { expect { subject }.to change { Employee::Balance.count }.by(1) }
         it { expect { subject }.to_not change { enqueued_jobs.size } }
@@ -108,7 +108,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
           end
 
           context 'with validity_date in the past' do
-            let(:options) {{ effective_at: Time.now - 1.year, validity_date: Time.now - 1.month }}
+            let(:options) {{ effective_at: Time.now - 1.year, validity_date: '1/4/2015' }}
 
             it { expect { subject }.to change { Employee::Balance.count }.by(2) }
             it { expect(subject.first.amount).to eq 100 }
@@ -123,11 +123,12 @@ RSpec.describe CreateEmployeeBalance, type: :service do
           end
 
           context 'and employee balance is between addition and removal' do
-            let(:options) {{ effective_at: Time.now - 1.year, validity_date: Time.now - 1.month }}
+            let(:options) {{ effective_at: Time.now - 2.years, validity_date: '1/4/2015'}}
             let!(:employee_balance) do
-              create(:employee_balance, employee: employee, time_off_category: category,
-                effective_at: Time.now - 2.month, resource_amount: -amount)
+              create(:employee_balance_manual, employee: employee, time_off_category: category,
+                effective_at: Time.now - 1.year, resource_amount: -amount)
             end
+
             it { expect { subject }.to change { employee_balance.reload.being_processed } }
             it { expect { subject }.to change { enqueued_jobs.size } }
             it { expect(subject.last.amount).to eq 0 }
@@ -137,7 +138,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
 
       context 'effective date is after an existing balance effective date from another policy' do
         let(:amount) { 100 }
-        let(:options) {{ effective_at: Time.now - 1.month, validity_date: Time.now + 1.month }}
+        let(:options) {{ effective_at: Time.now, validity_date: Time.now + 4.months }}
         let!(:other_working_place_policy) do
           create(:employee_time_off_policy, time_off_policy: other_policy,
             effective_at: Time.zone.now - 1.month
@@ -147,12 +148,11 @@ RSpec.describe CreateEmployeeBalance, type: :service do
         context 'in the same category' do
           let(:other_policy) { create(:time_off_policy, time_off_category: category) }
           let!(:employee_balance) do
-            create(:employee_balance,
-              employee: employee, effective_at: Time.now - 2.month, time_off_category: category,
+            create(:employee_balance_manual,
+              employee: employee, effective_at: 1.year.ago, time_off_category: category,
               resource_amount: 100
             )
           end
-
           it { expect { subject }.not_to change { enqueued_jobs.size } }
           it { expect(subject.first.balance).to eq 200 }
         end
@@ -199,9 +199,9 @@ RSpec.describe CreateEmployeeBalance, type: :service do
 
       context 'balance credit addition given' do
         let!(:employee_balance) do
-          create(:employee_balance,
+          create(:employee_balance_manual,
             time_off_category: category, employee: employee, resource_amount: 1000,
-            policy_credit_addition: true, effective_at: 1.month.ago, validity_date: 1.month.since
+            policy_credit_addition: true, effective_at: 1.year.ago, validity_date: Time.now
           )
         end
         let(:options) {{ balance_credit_addition_id: employee_balance.id, resource_amount: 0 }}

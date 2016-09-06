@@ -3,7 +3,7 @@ class CalculateEmployeeBalanceRemovalAmount
     @removal = removal
     @additions = removal.balance_credit_additions
     @amount_to_expire = calculate_amount_to_expire
-    @first_addition = additions.order(:effective_at).first
+    @first_addition = additions.order(:effective_at).first || additions.first
   end
 
   def call

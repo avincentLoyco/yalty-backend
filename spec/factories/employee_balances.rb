@@ -78,5 +78,17 @@ FactoryGirl.define do
     trait :processing do
       being_processed true
     end
+
+    trait :with_time_off do
+      after(:build) do |employee_balance|
+        end_time = employee_balance.effective_at || 1.month.since
+        start_time = end_time - 1.day
+        time_off =
+          create(:time_off, :without_balance, employee: employee_balance.employee,
+            time_off_category: employee_balance.time_off_category, start_time: start_time,
+            end_time: end_time)
+        employee_balance.time_off = time_off
+      end
+    end
   end
 end

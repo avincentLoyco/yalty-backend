@@ -33,7 +33,10 @@ RSpec.describe UpdateBalanceJob do
 
       context 'when counter has time off' do
         before { time_off.employee_balance = balance }
-        let(:time_off) { create(:time_off, :without_balance, being_processed: true) }
+        let(:time_off) do
+          create(:time_off, :without_balance, :processed,
+            employee: employee, time_off_category: category)
+        end
         let(:balance_id) { balance.id }
 
         it { expect { subject }.to change { time_off.reload.being_processed } }
@@ -43,7 +46,7 @@ RSpec.describe UpdateBalanceJob do
 
     context 'and balance from current policy period is edited' do
       let(:balance_id) { balance.id }
-      let(:options) { { resource_amount: -100 } }
+      let(:options) { { manual_amount: -100 } }
 
       it { expect { subject }.to change { balance.reload.amount }.to(-100) }
       it { expect { subject }.to change { balance.reload.balance }.to(-100) }
@@ -54,7 +57,10 @@ RSpec.describe UpdateBalanceJob do
 
       context 'when counter has time off' do
         before { time_off.employee_balance = balance }
-        let(:time_off) { create(:time_off, :without_balance, being_processed: true) }
+        let(:time_off) do
+          create(:time_off, :without_balance, :processed,
+            employee: employee, time_off_category: category)
+        end
         let(:balance_id) { balance.id }
 
         it { expect { subject }.to change { time_off.reload.being_processed } }
@@ -75,7 +81,7 @@ RSpec.describe UpdateBalanceJob do
         before { Employee::Balance.update_all(being_processed: true) }
 
         let(:balance_id) { balance.id }
-        let(:options) { { resource_amount: -400 } }
+        let(:options) { { manual_amount: -400 } }
 
         it { expect { subject }.to change { balance.reload.amount }.to(-400) }
         it { expect { subject }.to change { balance.reload.balance }.to(600) }
@@ -85,6 +91,12 @@ RSpec.describe UpdateBalanceJob do
 
         context 'and changes to previous policy' do
           context 'and policy does have end date' do
+            before do
+              balance.time_off.update!(
+                end_time: new_effective_at, start_time: new_effective_at - 1.day)
+            end
+            let(:new_effective_at) { previous.first + 1.week }
+
             shared_examples 'Update of balances being_processed flag' do
               it { expect { subject }.to change { balance.reload.being_processed } }
               it { expect { subject }.to change { previous_removal.reload.being_processed } }
@@ -92,7 +104,7 @@ RSpec.describe UpdateBalanceJob do
             end
 
             context 'amount bigger than policy removal' do
-              let(:options) { { effective_at: previous.first + 1.week, resource_amount: -2000} }
+              let(:options) { { effective_at: new_effective_at, manual_amount: -2000} }
 
               it { expect { subject }.to change { balance.reload.amount }.to(-2000) }
               it { expect { subject }.to change { balance.reload.balance }.to(-1000) }
@@ -105,7 +117,7 @@ RSpec.describe UpdateBalanceJob do
             end
 
             context 'amount smaller or equal policy removal' do
-              let(:options) { { effective_at: previous.first + 1.week, resource_amount: -300 } }
+              let(:options) { { effective_at: new_effective_at, manual_amount: -300 } }
 
               it { expect { subject }.to change { balance.reload.amount }.to(-300) }
               it { expect { subject }.to change { balance.reload.balance }.to(700) }
@@ -137,7 +149,7 @@ RSpec.describe UpdateBalanceJob do
         end
 
         context 'amount smaller or equal policy removal' do
-          let(:options) { { resource_amount: -1000 } }
+          let(:options) { { manual_amount: -1000 } }
 
           it { expect { subject }.to change { previous_balance.reload.amount }.to(-1000) }
           it { expect { subject }.to change { previous_balance.reload.balance }.to(0) }
@@ -151,7 +163,7 @@ RSpec.describe UpdateBalanceJob do
         end
 
         context 'amount greater than policy removal' do
-          let(:options) { { resource_amount: -2000 } }
+          let(:options) { { manual_amount: -2000 } }
 
           it { expect { subject }.to change { previous_balance.reload.amount }.to(-2000) }
           it { expect { subject }.to change { previous_balance.reload.balance }.to(-1000) }
@@ -162,7 +174,7 @@ RSpec.describe UpdateBalanceJob do
         end
 
         context 'amount is addition' do
-          let(:options) { { resource_amount: 2000 } }
+          let(:options) { { manual_amount: 2000, validity_date: '1/4/2016' } }
 
           it { expect { subject }.to change { previous_balance.reload.amount }.to(2000) }
           it { expect { subject }.to change { previous_balance.reload.balance }.to(3000) }
@@ -173,12 +185,14 @@ RSpec.describe UpdateBalanceJob do
         end
 
         context 'and now in current period' do
-          let(:options) { { resource_amount: -500, effective_at: current.last - 2.weeks } }
+          before do
+            previous_balance.time_off.update!(end_time: '1/3/2017', start_time: '28/2/2017')
+          end
+          let(:options) { { manual_amount: -500, effective_at: '1/3/2017' } }
 
           it { expect { subject }.to change { previous_balance.reload.effective_at } }
           it { expect { subject }.to change { previous_balance.reload.balance }.to(500) }
           it { expect { subject }.to change { previous_removal.reload.amount }.to(-1000) }
-          it { expect { subject }.to change { balance.reload.balance }.to(0) }
 
           it { expect { subject }.to change { balance.reload.being_processed } }
           it { expect { subject }.to change { balance_add.reload.being_processed } }
@@ -212,7 +226,7 @@ RSpec.describe UpdateBalanceJob do
 
       context 'balance in current policy' do
         let(:balance_id) { balance.id }
-        let(:options) { { resource_amount: 500 } }
+        let(:options) { { manual_amount: 500 } }
 
         it { expect { subject }.to_not change { balance_add.reload.being_processed } }
         it { expect { subject }.to_not change { previous_balance.reload.being_processed } }
@@ -220,7 +234,11 @@ RSpec.describe UpdateBalanceJob do
         it_behaves_like 'Update of current period balances'
 
         context 'and now in previous' do
-          let(:options) { { effective_at: previous.first + 2.days, resource_amount: 500 } }
+          before do
+            balance.time_off.update!(
+              end_time: previous.first + 2.days, start_time: previous.first + 1.day)
+          end
+          let(:options) { { effective_at: previous.first + 2.days, manual_amount: 500 } }
 
           it { expect { subject }.to change { previous_balance.reload.balance } }
           it { expect { subject }.to change { balance_add.reload.balance } }
@@ -231,12 +249,12 @@ RSpec.describe UpdateBalanceJob do
 
       context 'balance in previous policy' do
         let(:balance_id) { previous_balance.id }
-        let(:options) { {  resource_amount: -100 } }
+        let(:options) { {  manual_amount: -100 } }
 
         it_behaves_like 'Update of previous period balances'
 
         context 'and now in current' do
-          let(:options) {{ resource_amount: -100, effective_at: current.last }}
+          let(:options) {{ manual_amount: -100, effective_at: current.last }}
 
           it_behaves_like 'Update of previous period balances'
         end
@@ -284,23 +302,25 @@ RSpec.describe UpdateBalanceJob do
       context 'when employee balance is updated' do
         subject { UpdateBalanceJob.perform_now(balance_id, options) }
         let(:effective_at) { Time.now + 1.day }
-        let!(:balance) do
+        let(:balance) do
           create(:employee_balance,
             employee: employee, effective_at: effective_at, time_off_category: category,
             being_processed: true, resource_amount: 100
           )
         end
+        context '' do
+          # before { subject }
+          let(:balance_id) { balance.id }
+          let(:options) {{ resource_amount: 50 }}
 
-        let(:balance_id) { balance.id }
-        let(:options) {{ resource_amount: 50 }}
+          it 'has proper employee balances effective_at in database' do
+            expect(existing_balances.pluck(:effective_at).map(&:to_date)).to eql(
+              ['1/1/2014', '1/1/2015', '1/4/2015', '1/1/2016'].map(&:to_date)
+            )
+          end
 
-        it 'has proper employee balances effective_at in database' do
-          expect(existing_balances.pluck(:effective_at).map(&:to_date)).to eql(
-            ['1/1/2014', '1/1/2015', '1/4/2015', '1/1/2016'].map(&:to_date)
-          )
+          it { expect(existing_balances.map(&:amount)).to eql([1000, 2000, -1000, 2000]) }
         end
-
-        it { expect(existing_balances.map(&:amount)).to eql([1000, 2000, -1000, 2000]) }
 
         context 'with removal' do
           context 'and removal is in the past' do

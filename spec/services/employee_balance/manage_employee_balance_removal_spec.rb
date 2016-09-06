@@ -27,7 +27,12 @@ RSpec.describe ManageEmployeeBalanceRemoval, type: :service do
     context 'when employee balance is a balancer' do
       context 'when validity date present' do
         context 'and in past' do
-          let!(:removal) { create(:employee_balance, balance_credit_additions: [balance]) }
+          let!(:removal) do
+            create(:employee_balance,
+              balance_credit_additions: [balance], effective_at: removal_effective_at,
+              time_off_category: category, employee: employee)
+          end
+          let(:removal_effective_at) { Date.new(2015, 4, 1) }
 
           shared_examples 'No ther balances assigned to removal' do
             it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
@@ -61,7 +66,7 @@ RSpec.describe ManageEmployeeBalanceRemoval, type: :service do
           end
 
           context 'and moved to past' do
-            let(:new_date) { Date.today - 2.weeks }
+            let(:new_date) { Date.new(2015, 4, 1) }
 
             context 'when there is already removal in new validity date' do
               let!(:new_removal) do

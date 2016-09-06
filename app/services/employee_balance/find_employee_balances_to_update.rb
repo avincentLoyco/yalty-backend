@@ -17,8 +17,9 @@ class FindEmployeeBalancesToUpdate
   private
 
   def find_amount
-    if options[:resource_amount]
-      options[:resource_amount] - resource.resource_amount
+    if options[:resource_amount] || options[:manual_amount]
+      (options[:resource_amount].to_i + options[:manual_amount].to_i) - resource.resource_amount -
+        resource.manual_amount
     else
       resource.amount
     end
@@ -62,8 +63,12 @@ class FindEmployeeBalancesToUpdate
   end
 
   def no_removals_or_removals_bigger_than_amount?
-    options[:resource_amount] && options[:resource_amount] > 0 && resource.validity_date.blank? ||
+    amounts_bigger_than_zero? && resource.validity_date.blank? ||
       next_removals_smaller_than_amount? || active_balances_with_removals.blank?
+  end
+
+  def amounts_bigger_than_zero?
+    options[:resource_amount].to_i + options[:manual_amount].to_i > 0
   end
 
   def active_balances_with_removals

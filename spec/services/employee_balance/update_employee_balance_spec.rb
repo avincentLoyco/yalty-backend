@@ -3,31 +3,22 @@ require 'rails_helper'
 RSpec.describe UpdateEmployeeBalance, type: :service do
   include_context 'shared_context_timecop_helper'
 
-  before do
-    allow_any_instance_of(Employee).to receive(:active_policy_in_category_at_date)
-      .and_return(employee_policy)
-    allow_any_instance_of(Employee).to receive(:active_policy_in_category_at_date)
-      .and_return(employee_policy)
-  end
   let(:account) { create(:account) }
   let(:category) { create(:time_off_category, account: account) }
   let(:employee) { create(:employee, account: account) }
-  let(:policy) { create(:time_off_policy, time_off_category: category, effective_at: Time.now - 1.weeks) }
-  let(:employee_policy) do
-    create(:employee_time_off_policy, employee: employee)
+  let(:policy) { create(:time_off_policy, :with_end_date, time_off_category: category) }
+  let!(:employee_policy) do
+    create(:employee_time_off_policy,
+      employee: employee, time_off_policy: policy, effective_at: 2.years.ago - 1.day)
   end
   let!(:previous_balance) do
     create(:employee_balance_manual, :processing,
-      effective_at: Time.now - 3.weeks, time_off_category: category, employee: employee, resource_amount: 0
-    )
+      effective_at: employee_policy.effective_at, time_off_category: category, employee: employee,
+      resource_amount: 0)
   end
-  let(:employee_balance) { previous_balance.dup }
+  let(:employee_balance) { previous_balance.dup.tap { |balance| balance.update!(effective_at: Time.now) } }
+
   subject { UpdateEmployeeBalance.new(employee_balance, options).call }
-  before do
-    employee_balance.effective_at = Time.now
-    employee_balance.save
-    previous_balance.save
-  end
 
   context 'when amount not given' do
     let(:options) {{ resource_amount: nil }}
@@ -35,17 +26,17 @@ RSpec.describe UpdateEmployeeBalance, type: :service do
     context 'and employee balance is removal' do
       let!(:addition) do
         create(:employee_balance_manual,
-          validity_date: validity_date, effective_at: Time.now - 2.weeks, time_off_category: category,
+          validity_date: validity_date, effective_at: 2.years.ago, time_off_category: category,
           employee: previous_balance.employee, resource_amount: 600
         )
       end
       let!(:employee_balance) do
         create(:employee_balance_manual, :processing,
           balance_credit_additions: [addition], time_off_category: category,
-          employee: previous_balance.employee, resource_amount: -100
+          employee: previous_balance.employee, resource_amount: -100, effective_at: 9.months.ago
         )
       end
-      let(:validity_date) { Time.now - 1.weeks }
+      let(:validity_date) { 9.months.ago }
 
       subject { UpdateEmployeeBalance.new(employee_balance, options).call }
 
@@ -55,7 +46,6 @@ RSpec.describe UpdateEmployeeBalance, type: :service do
       it { expect { subject }.to change { employee_balance.reload.amount } }
 
       context 'and update the last balance before removal' do
-        let(:validity_date) { Time.now - 9.days }
         let(:amount) { 1000 }
 
         before do
@@ -69,12 +59,17 @@ RSpec.describe UpdateEmployeeBalance, type: :service do
       end
 
       context 'and create the balance between addition and removal' do
+        let(:time_off) do
+          create(:time_off,
+            employee: employee, time_off_category: category, start_time: 1.year.ago,
+            end_time: 1.year.ago)
+        end
         let!(:balance_in_the_middle) do
-          create(:employee_balance_manual,
-            effective_at: Time.now - 9.days, time_off_category: category,
-            employee: previous_balance.employee, resource_amount: amount,
-            validity_date: Time.now
-          )
+          time_off.employee_balance.tap do |balance|
+            balance.update!(
+              manual_amount: amount, validity_date: employee_balance.effective_at + 1.year
+            )
+          end
         end
 
         context 'and balance amount is equals 100' do
@@ -98,7 +93,6 @@ RSpec.describe UpdateEmployeeBalance, type: :service do
         context 'and balance amount is equals -600' do
           let(:amount) { -addition.amount }
           before { subject }
-
           it { expect(employee_balance.amount).to eq 0 }
           it { expect(employee_balance.effective_at).to eq validity_date }
           it { expect(employee_balance.balance).to eq 0 }
@@ -133,6 +127,7 @@ RSpec.describe UpdateEmployeeBalance, type: :service do
   end
 
   context 'when amount given' do
+    before { employee_balance }
     let(:options) {{ resource_amount: 100 }}
 
     it { expect { subject }.to change { employee_balance.reload.being_processed }.to false }
@@ -144,46 +139,47 @@ RSpec.describe UpdateEmployeeBalance, type: :service do
   context 'when validity date given' do
     context 'and employee balance already have removal' do
       before do
-        employee_balance.update!(effective_at: Time.now - 1.month, validity_date: Time.now - 2.days)
+        employee_balance.update!(effective_at: 2.years.ago, validity_date: 1.year.ago - 9.months)
       end
       let!(:removal) do
         create(:employee_balance,
           employee: employee_balance.employee,
           time_off_category: employee_balance.time_off_category,
-          balance_credit_additions: [employee_balance]
+          balance_credit_additions: [employee_balance],
+          effective_at: 9.months.ago
         )
       end
 
       context 'and employee balance have validity date in future' do
-        let!(:options) {{ validity_date: Time.now + 2.days }}
+        let!(:options) {{ validity_date: Time.now + 4.months }}
 
         it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
         it { expect { subject }.to change { Employee::Balance.exists?(id: removal.id) } }
       end
 
       context 'and employee balance have validity date in past' do
-        let!(:options) {{ validity_date: Time.now - 1.days }}
+        let!(:options) {{ validity_date: 9.months.ago }}
 
         it { expect { subject }.to_not change { Employee::Balance.count } }
-        it { expect { subject }.to_not change { Employee::Balance.exists?(id: removal.id) } }
-        it { expect { subject }.to change { removal.reload.effective_at } }
+        it { expect { subject }.to change { Employee::Balance.exists?(id: removal.id) } }
+        it { expect { subject }.to change { employee_balance.reload.balance_credit_removal_id } }
       end
     end
 
     context 'and employee balance does not have removal' do
       before do
-        employee_balance.update!(effective_at: Time.now - 1.month)
+        employee_balance.update!(effective_at: 1.year.ago)
       end
 
       context 'and new validity date in past' do
-        let!(:options) {{ validity_date: Time.now - 2.days }}
+        let!(:options) {{ validity_date: 9.months.ago }}
 
         it { expect { subject }.to change { Employee::Balance.count }.by(1) }
         it { expect { subject }.to change { employee_balance.reload.balance_credit_removal } }
       end
 
       context 'and new validity date in future' do
-        let!(:options) {{ validity_date: Time.now + 2.days }}
+        let!(:options) {{ validity_date: 4.months.since }}
 
         it { expect { subject }.to_not change { Employee::Balance.count } }
       end

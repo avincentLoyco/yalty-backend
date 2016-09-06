@@ -23,6 +23,10 @@ FactoryGirl.define do
       end
     end
 
+    trait :processed do
+      being_processed true
+    end
+
     trait :without_balance do
       after(:create) do |time_off|
         time_off.employee_balance.destroy!
