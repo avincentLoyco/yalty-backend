@@ -3,6 +3,8 @@ module Api::V1
     def complete
       {
         amount: resource.amount,
+        manual_amount: resource.manual_amount,
+        resource_amount: resource.resource_amount,
         balance: resource.balance,
         effective_at: resource.effective_at,
         being_processed: resource.being_processed,

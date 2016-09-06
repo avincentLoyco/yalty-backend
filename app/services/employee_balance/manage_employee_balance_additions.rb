@@ -18,10 +18,9 @@ class ManageEmployeeBalanceAdditions
 
   def create_additions_with_removals
     date = RelatedPolicyPeriod.new(resource).first_start_date
-    policy_length = RelatedPolicyPeriod.new(resource).policy_length
     while date <= effective_till
       balances << CreateEmployeeBalance.new(*employee_balance_params(date)).call
-      date += policy_length.years
+      date += 1.year
     end
   end
 
@@ -36,7 +35,7 @@ class ManageEmployeeBalanceAdditions
 
   def policy_type_options(date)
     base_options =
-      { skip_update: true, policy_credit_addition: true, effective_at: date + 1.hour,
+      { skip_update: true, policy_credit_addition: true, effective_at: date,
         resource_amount: resource.time_off_policy.amount }
     return base_options if resource.time_off_policy.counter?
     base_options.merge(validity_date: RelatedPolicyPeriod.new(resource).validity_date_for(date))

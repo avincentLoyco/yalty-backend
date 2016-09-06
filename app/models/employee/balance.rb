@@ -121,7 +121,8 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   def time_off_policy_presence
-    errors.add(:employee, 'Must have an associated time off policy in the balance category') unless time_off_policy
+    return if time_off_policy
+    errors.add(:employee, 'Must have an associated time off policy in the balance category')
   end
 
   def effective_after_employee_start_date
@@ -178,10 +179,10 @@ class Employee::Balance < ActiveRecord::Base
     check_start_day_related = (day == start_day && month == start_month) ||
       (day == previous_date.day && month == previous_date.month)
     check_end_day = (day == end_day && month == end_month)
-    unless end_day.present? && end_month.present?
-      check_year && check_start_day_related
-    else
+    if end_day.present? && end_month.present?
       check_year && (check_start_day_related || check_end_day)
+    else
+      check_year && check_start_day_related
     end
   end
 

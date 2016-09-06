@@ -86,7 +86,7 @@ RSpec.describe ManageEmployeeBalanceAdditions, type: :service do
           context 'and years to effect eql 2' do
             let(:years) { 2 }
 
-            it { expect { subject }.to change { Employee::Balance.additions.count }.by(2) }
+            it { expect { subject }.to change { Employee::Balance.additions.count }.by(4) }
             it { expect { subject }.to change { Employee::Balance.removals.count }.by(1) }
 
             it 'has valid validity dates' do

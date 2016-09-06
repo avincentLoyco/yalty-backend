@@ -63,7 +63,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
   describe 'POST #create' do
     subject { post :create, params }
-    let(:effective_at) { Time.now }
+    let(:effective_at) { Time.now - 1.day }
     let(:params) do
       {
         id: employee.id,
@@ -75,34 +75,57 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
     context 'with valid params' do
       it { expect { subject }.to change { employee.employee_time_off_policies.count }.by(1) }
       it { expect { subject }.to change { Employee::Balance.additions.count }.by(1) }
+      it { expect { subject }.to change { Employee::Balance.count }.by(2) }
 
       it { is_expected.to have_http_status(201) }
 
       context 'response body' do
         before { subject }
 
-        it { expect_json_keys([:id, :type, :assignation_type, :effective_at, :assignation_id]) }
+        it do
+          expect_json_keys(
+            [:id, :type, :assignation_type, :effective_at, :assignation_id, :employee_balance])
+        end
         it { expect_json(id: employee.id, effective_till: nil) }
       end
 
       context 'when policy effective at is in the past' do
-        before { time_off_policy.update!(end_month: 4, end_day: 1, years_to_effect: 1) }
+        before { time_off_policy.update!(end_month: 4, end_day: 1, years_to_effect: 2) }
 
-        let(:effective_at) { Time.now - 3.years }
+        let(:effective_at) { 3.years.ago - 1.day }
 
         it { expect { subject }.to change { employee.employee_time_off_policies.count }.by(1) }
         it { expect { subject }.to change { employee.employee_balances.additions.uniq.count }.by(4) }
-        it { expect { subject }.to change { employee.employee_balances.removals.uniq.count }.by(2) }
+        it { expect { subject }.to change { employee.employee_balances.removals.uniq.count }.by(1) }
+        it { expect { subject }.to change { employee.reload.employee_balances.count }.by(6) }
 
         it { is_expected.to have_http_status(201) }
+
+        context 'and assignation and date is at policy start date' do
+          let(:effective_at) { 3.years.ago }
+
+          it { expect { subject }.to change { employee.employee_time_off_policies.count }.by(1) }
+          it { expect { subject }.to change { employee.employee_balances.count }.by(5) }
+
+          it { is_expected.to have_http_status(201) }
+        end
       end
 
       context 'with adjustment_balance_amount param given' do
         before { params.merge!(employee_balance_amount: 1000) }
+        let(:effective_at) { Time.now - 1.day }
 
         it { expect { subject }.to change { Employee::Balance.count }.by(2) }
         it { expect { subject }.to change { employee.employee_time_off_policies.count }.by(1) }
         it { is_expected.to have_http_status(201) }
+
+        context 'and assignation and date is at policy start date' do
+          let(:effective_at) { Time.now }
+
+          it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+          it { expect { subject }.to change { employee.employee_time_off_policies.count }.by(1) }
+          it { is_expected.to have_http_status(201) }
+        end
 
         context 'response body' do
           let(:new_balances) { Employee::Balance.all.order(:effective_at) }
@@ -143,7 +166,8 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
               subject
 
               expect_json_keys(
-                :effective_at, :effective_till, :id, :assignation_id, :assignation_type
+                :effective_at, :effective_till, :id, :assignation_id, :assignation_type,
+                :employee_balance
               )
             end
           end

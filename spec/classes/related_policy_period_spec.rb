@@ -120,13 +120,18 @@ RSpec.describe RelatedPolicyPeriod do
             it { expect(subject).to eq '1/4/2007'.to_date }
           end
 
-          context 'when years to effect equal 1 or more' do
+          context 'when years to effect equal 1' do
             let(:years_to_effect) { 1 }
 
-            it { expect(subject).to eq '1/4/2007'.to_date }
+            it { expect(subject).to eq '1/4/2008'.to_date }
+          end
+
+          context 'when years to effect equal 2 or more' do
+            let(:years_to_effect) { 2 }
+
+            it { expect(subject).to eq '1/4/2009'.to_date }
           end
         end
-
       end
 
       context 'effective_at later than start date' do

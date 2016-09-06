@@ -8,14 +8,12 @@ class CreateEmployeeBalance
     @account = Account.find(account_id)
     @category = account.time_off_categories.find(category_id)
     @employee = account.employees.find(employee_id)
-    @employee_balance = nil
-    @balance_removal = nil
     @time_off = time_off
   end
 
   def call
     ActiveRecord::Base.transaction do
-      build_employee_balance
+      assign_employee_balance
       valid_balance?
       build_employee_balance_removal if validity_date.present? && validity_date <= Time.zone.today
       calculate_amount if employee_balance.time_off_policy.present?
@@ -25,11 +23,20 @@ class CreateEmployeeBalance
     balance_removal ? [employee_balance, balance_removal] : [employee_balance]
   end
 
-  def build_employee_balance
-    @employee_balance = Employee::Balance.new(balance_params)
+  def assign_employee_balance
+    @employee_balance = build_or_update_employee_balance
     return unless options[:balance_credit_addition_id]
     employee_balance.balance_credit_additions <<
       Employee::Balance.find(options[:balance_credit_addition_id])
+  end
+
+  def build_or_update_employee_balance
+    existing_assingation_balance = find_active_assignation_balance_for_date
+    if existing_assingation_balance
+      existing_assingation_balance.tap { |balance| balance.assign_attributes(balance_params) }
+    else
+      Employee::Balance.new(balance_params)
+    end
   end
 
   def build_employee_balance_removal
@@ -42,11 +49,19 @@ class CreateEmployeeBalance
 
   def save!
     employee_balance.save!
-    employee_balance.balance_credit_additions.map(&:save!) if employee_balance.balance_credit_additions.present?
+    if employee_balance.balance_credit_additions.present?
+      employee_balance.balance_credit_additions.map(&:save!)
+    end
     balance_removal.try(:save!)
   end
 
   private
+
+  def find_active_assignation_balance_for_date
+    active_policy = employee.active_policy_in_category_at_date(category.id, options[:effective_at])
+    return unless active_policy && active_policy.effective_at == options[:effective_at].to_date
+    active_policy.policy_assignation_balance
+  end
 
   def valid_balance?
     return if employee_balance.valid? || balancer_removal? || counter_addition?
@@ -55,15 +70,13 @@ class CreateEmployeeBalance
   end
 
   def common_params
-    [
-      {
-        employee: employee,
-        time_off:  options.key?(:time_off_id) ? employee.time_offs.find(options[:time_off_id]) : nil,
-        time_off_category: category,
-      },
-      manual_amount_param,
-      resource_amount_param
-    ].inject(:merge)
+    {
+      employee: employee,
+      time_off:  options.key?(:time_off_id) ? employee.time_offs.find(options[:time_off_id]) : nil,
+      time_off_category: category,
+      manual_amount: options.key?(:manual_amount) ? options[:manual_amount] : 0,
+      resource_amount: options.key?(:resource_amount) ? options[:resource_amount] : 0
+    }
   end
 
   def balance_params
@@ -73,16 +86,6 @@ class CreateEmployeeBalance
       policy_credit_addition: options[:policy_credit_addition] || false,
       reset_balance: options[:reset_balance] || false
     }.merge(common_params)
-  end
-
-  def manual_amount_param
-    return {} unless options.key?(:manual_amount)
-    { manual_amount: options[:manual_amount] }
-  end
-
-  def resource_amount_param
-    return {} unless options.key?(:resource_amount)
-    { resource_amount: options[:resource_amount] }
   end
 
   def validity_date

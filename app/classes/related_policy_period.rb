@@ -52,7 +52,8 @@ class RelatedPolicyPeriod
   def validity_date_for(date)
     return nil unless end_day && end_month && years_to_effect
     validity_date = Date.new(date.year + years_to_effect, end_month, end_day)
-
-    validity_date < date ? validity_date + 1.year : validity_date
+    validity_date += 1.year if validity_date < date
+    return validity_date if (date.month <= end_month && date.day <= end_day) || years_to_effect == 0
+    validity_date + 1.year
   end
 end
