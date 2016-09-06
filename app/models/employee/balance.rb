@@ -28,9 +28,6 @@ class Employee::Balance < ActiveRecord::Base
   scope :employee_balances, (lambda do |employee_id, time_off_category_id|
     where(employee_id: employee_id, time_off_category_id: time_off_category_id)
   end)
-  scope :editable, (lambda do
-    where(policy_credit_addition: false, time_off_id: nil).where.not(id: removals.pluck(:id))
-  end)
   scope :additions, -> { where(policy_credit_addition: true).order(:effective_at) }
   scope :removals, -> { Employee::Balance.joins(:balance_credit_additions) }
   scope :removal_at_date, (lambda do |employee_id, time_off_category_id, date|

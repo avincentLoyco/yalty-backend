@@ -26,19 +26,6 @@ module API
         end
       end
 
-      def destroy
-        next_balance = next_balance(resource)
-
-        transactions do
-          resource_to_delete = editable_resource
-          editable_resource.destroy!
-          prepare_balances_to_update(resource_to_delete) if next_balance
-        end
-
-        update_balances_job(next_balance) if next_balance
-        render_no_content
-      end
-
       private
 
       def params_from_attributes(attributes)
@@ -62,7 +49,7 @@ module API
       end
 
       def editable_resource
-        @editable_resource = Account.current.employee_balances.editable.find(params[:id])
+        @editable_resource = Account.current.employee_balances.find(params[:id])
       end
 
       def resources

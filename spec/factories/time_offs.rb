@@ -6,7 +6,7 @@ FactoryGirl.define do
     time_off_category
     employee_balance { nil }
 
-    after(:create) do |time_off|
+    after(:build) do |time_off|
       if time_off.employee.employee_time_off_policies.present?
         time_off.time_off_category = time_off.employee.employee_time_off_policies.first
           .time_off_category
@@ -28,7 +28,7 @@ FactoryGirl.define do
     end
 
     trait :without_balance do
-      after(:create) do |time_off|
+      after(:build) do |time_off|
         time_off.employee_balance.destroy!
       end
     end
