@@ -131,13 +131,10 @@ class Employee::Balance < ActiveRecord::Base
     etop = employee_time_off_policy
     return unless etop
     etop_hash = employee_time_off_policy_with_effective_till(etop)
-    etop_effective_at_year = etop_hash['effective_at'].to_date.year
-    etop_effective_till_year =
-      etop_hash['effective_till'] ? etop_hash['effective_till'].to_date.year : nil
     matches_end_or_start_top_date = compare_effective_at_with_time_off_polices_related_dates(
       time_off_policy,
-      etop_effective_at_year,
-      etop_effective_till_year
+      etop_hash['effective_at'].to_date,
+      etop_hash['effective_till'].try(:to_date)
     )
     matches_effective_at = effective_at.to_date == etop.effective_at.to_date
     return unless !matches_end_or_start_top_date && !matches_effective_at
@@ -159,28 +156,79 @@ class Employee::Balance < ActiveRecord::Base
 
   def compare_effective_at_with_time_off_polices_related_dates(
     time_off_policy,
-    etop_effective_at_year,
-    etop_effective_till_year
+    etop_effective_at,
+    etop_effective_till
   )
-    start_day = time_off_policy.start_day
-    start_month = time_off_policy.start_month
-    end_day = time_off_policy.end_day
-    end_month = time_off_policy.end_month
+
     day = now_or_effective_at.to_date.day
     month = now_or_effective_at.to_date.month
     year = now_or_effective_at.to_date.year
-    previous_date = Date.new(year, start_month, start_day) - 1
-    check_year = (year >= etop_effective_at_year &&
-      (etop_effective_till_year.nil? || year <= etop_effective_till_year ||
-      balance_credit_additions.present?))
-    check_start_day_related = (day == start_day && month == start_month) ||
-      (day == previous_date.day && month == previous_date.month)
-    check_end_day = (day == end_day && month == end_month)
-    if end_day.present? && end_month.present?
-      check_year && (check_start_day_related || check_end_day)
-    else
-      check_year && check_start_day_related
-    end
+
+    valid_start_day_related =
+      check_start_day_related(
+        time_off_policy,
+        etop_effective_at,
+        etop_effective_till,
+        year,
+        month,
+        day
+      )
+    valid_end_date =
+      check_end_date(
+        time_off_policy,
+        etop_effective_at,
+        etop_effective_till,
+        year,
+        month,
+        day
+      )
+
+    valid_start_day_related || valid_end_date
+  end
+
+  def check_start_day_related(
+    time_off_policy,
+    etop_effective_at,
+    etop_effective_till,
+    year,
+    month,
+    day
+  )
+
+    start_day = time_off_policy.start_day
+    start_month = time_off_policy.start_month
+    date_before_start_day = Date.new(year, start_month, start_day) - 1
+    year_in_range = year >= etop_effective_at.year &&
+      (etop_effective_till.nil? || year <= etop_effective_till.year)
+    correct_day_and_month = (day == start_day && month == start_month) ||
+      (day == date_before_start_day.day && month == date_before_start_day.month)
+
+    year_in_range && correct_day_and_month
+  end
+
+  def check_end_date(
+    time_off_policy,
+    etop_effective_at,
+    etop_effective_till,
+    year,
+    month,
+    day
+  )
+    end_day = time_off_policy.end_day
+    end_month = time_off_policy.end_month
+    years_to_effect =
+      if etop_effective_till.present? &&
+          (etop_effective_till.month < month || (etop_effective_till.month == month &&
+          (etop_effective_till.day <= day)))
+        time_off_policy.years_to_effect
+      elsif etop_effective_till.present?
+        time_off_policy.years_to_effect - 1
+      end
+    year_in_range = year >= etop_effective_at.year &&
+      (etop_effective_till.nil? || year <= etop_effective_till.year + years_to_effect)
+    correct_day_and_month = (day == end_day && month == end_month)
+
+    year_in_range && correct_day_and_month
   end
 
   def effective_at_equal_time_off_end_date
