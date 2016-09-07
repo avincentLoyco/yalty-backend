@@ -11,7 +11,11 @@ class ManageEmployeeBalanceAdditions
 
   def call
     return if RelatedPolicyPeriod.new(resource).first_start_date > effective_till
-    create_additions_with_removals
+    ActiveRecord::Base.transaction do
+      create_additions_with_removals
+      PrepareEmployeeBalancesToUpdate.new(balances.flatten.first).call
+    end
+    UpdateBalanceJob.perform_later(balances.flatten.first)
   end
 
   private

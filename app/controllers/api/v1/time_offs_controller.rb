@@ -17,13 +17,12 @@ module API
       def create
         convert_times_to_utc
         verified_dry_params(dry_validation_schema) do |attributes|
-          manual_amount = attributes.delete(:manual_amount) if attributes[:manual_amount].present?
+          attributes.delete(:manual_amount)
           resource = resources.new(time_off_attributes(attributes))
           authorize! :create, resource
           transactions do
-            resource.save! && create_new_employee_balance(resource, manual_amount)
+            resource.save! && create_new_employee_balance(resource)
           end
-
           render_resource(resource, status: :created)
         end
       end
@@ -31,7 +30,7 @@ module API
       def update
         convert_times_to_utc
         verified_dry_params(dry_validation_schema) do |attributes|
-          manual_amount = attributes.delete(:manual_amount) if attributes[:manual_amount].present?
+          attributes.delete(:manual_amount)
           transactions do
             resource.update!(attributes)
             prepare_balances_to_update(resource.employee_balance, balance_attributes)
@@ -90,14 +89,14 @@ module API
         end.merge(employee: employee, being_processed: true)
       end
 
-      def create_new_employee_balance(resource, manual_amount)
+      def create_new_employee_balance(resource)
         CreateEmployeeBalance.new(
           resource.time_off_category_id,
           resource.employee_id,
           Account.current.id,
           time_off_id: resource.id,
           resource_amount: resource.balance,
-          manual_amount: manual_amount || 0
+          manual_amount: params[:manual_amount] || 0
         ).call
       end
 

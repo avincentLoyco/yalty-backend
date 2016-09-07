@@ -123,7 +123,7 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   def effective_after_employee_start_date
-    return unless effective_at && effective_at < employee.first_employee_event.effective_at
+    return unless effective_at && effective_at < employee.hired_date
     errors.add(:effective_at, 'Can not be added before employee start date')
   end
 
