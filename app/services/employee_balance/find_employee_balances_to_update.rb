@@ -18,8 +18,10 @@ class FindEmployeeBalancesToUpdate
 
   def find_amount
     if options[:resource_amount] || options[:manual_amount]
-      (options[:resource_amount].to_i + options[:manual_amount].to_i) - resource.resource_amount -
-        resource.manual_amount
+      new_amount = options[:resource_amount].to_i + options[:manual_amount].to_i
+
+      return 0 if new_amount > resource.amount && new_amount <= 0
+      new_amount - resource.amount
     else
       resource.amount
     end

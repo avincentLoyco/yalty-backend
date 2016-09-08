@@ -171,6 +171,42 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
           it { expect { subject }.to_not change { balance.reload.being_processed } }
         end
       end
+
+      context 'employee balance policy of type balancer' do
+        include_context 'shared_context_balances',
+          type: 'balancer',
+          years_to_effect: 0,
+          end_day: 1,
+          end_month: 4
+
+          let(:id) { previous_balance.id }
+
+        context 'when manual amount is negative' do
+          context 'when manual amount change is greater than removal amount' do
+            let(:amount) { -1100 }
+
+            it { expect { subject }.to change { previous_balance.reload.being_processed }.to true }
+            it { expect { subject }.to change { previous_removal.reload.being_processed }.to true }
+            it { expect { subject }.to change { balance_add.reload.being_processed }.to true }
+          end
+
+          context 'when manual amount change is smaller than removal amount' do
+            let(:amount) { -900 }
+
+            it { expect { subject }.to change { previous_balance.reload.being_processed }.to true }
+            it { expect { subject }.to change { previous_removal.reload.being_processed }.to true }
+            it { expect { subject }.to_not change { balance_add.reload.being_processed } }
+          end
+        end
+
+        context 'when manual amount is positive' do
+          let(:amount) { 1000 }
+
+          it { expect { subject }.to change { previous_balance.reload.being_processed }.to true }
+          it { expect { subject }.to change { previous_removal.reload.being_processed }.to true }
+          it { expect { subject }.to change { balance_add.reload.being_processed }.to true }
+        end
+      end
     end
 
     context 'with invalid params' do
@@ -183,15 +219,6 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
         before { params.delete(:manual_amount) }
 
         it { expect { subject }.to_not change { balance.reload.being_processed } }
-        it { is_expected.to have_http_status(422) }
-      end
-
-      context 'validity date before effective at' do
-        before { params.merge!({ validity_date: current.last - 1.month }) }
-        let(:effective_at) { current.last - 1.week }
-
-        it { expect { subject }.to_not change { balance.reload.being_processed } }
-
         it { is_expected.to have_http_status(422) }
       end
 

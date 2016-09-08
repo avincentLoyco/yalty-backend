@@ -96,7 +96,8 @@ module API
           Account.current.id,
           time_off_id: resource.id,
           resource_amount: resource.balance,
-          manual_amount: params[:manual_amount] || 0
+          manual_amount: params[:manual_amount] || 0,
+          validity_date: find_validity_date(resource)
         ).call
       end
 
@@ -105,13 +106,24 @@ module API
       end
 
       def balance_attributes
-        { manual_amount: params[:manual_amount], effective_at: resource.end_time.to_s }
+        {
+          manual_amount: params[:manual_amount],
+          resource_amount: resource.balance,
+          effective_at: resource.end_time.to_s
+        }
       end
 
       def convert_times_to_utc
         return unless params[:start_time].present? && params[:end_time].present?
         params[:start_time] = params.delete(:start_time) + '+00:00'
         params[:end_time] = params.delete(:end_time) + '+00:00'
+      end
+
+      def find_validity_date(resource)
+        active_policy =
+          employee.active_policy_in_category_at_date(time_off_category.id, resource.end_time)
+
+        RelatedPolicyPeriod.new(active_policy).validity_date_for(resource.end_time)
       end
     end
   end
