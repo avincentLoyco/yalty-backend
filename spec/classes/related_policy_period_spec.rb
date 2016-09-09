@@ -134,6 +134,34 @@ RSpec.describe RelatedPolicyPeriod do
         end
       end
 
+      context '.validity_date_for_time_off' do
+        before { time_off_policy.update!(end_day: 1, end_month: 4) }
+
+        subject { RelatedPolicyPeriod.new(related_policy).validity_date_for_time_off(date) }
+        let!(:related_policy) do
+          create(:employee_time_off_policy, :with_employee_balance,
+            time_off_policy: time_off_policy,
+            effective_at: 2.years.ago
+          )
+        end
+        let!(:policy_addition) do
+          create(:employee_balance_manual, effective_at: '1/1/2015', validity_date: '1/4/2016',
+            time_off_category: time_off_policy.time_off_category, employee: related_policy.employee)
+        end
+
+        context 'when there is only assignation balance before the given date' do
+          let(:date) { related_policy.effective_at + 5.months }
+
+          it { expect(subject).to eq related_policy.policy_assignation_balance.validity_date }
+        end
+
+        context 'when there are policy additions before date' do
+          let(:date) { '1/6/2015' }
+
+          it { expect(subject).to eq policy_addition.validity_date }
+        end
+      end
+
       context 'effective_at later than start date' do
         let(:effective_at) { Date.today - 9.years - 8.months }
         let(:start_month) { 3 }

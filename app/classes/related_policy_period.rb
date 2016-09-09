@@ -56,4 +56,21 @@ class RelatedPolicyPeriod
     return validity_date if (date.month <= end_month && date.day <= end_day) || years_to_effect == 0
     validity_date + 1.year
   end
+
+  def validity_date_for_time_off(date)
+    validity_date =
+      if previous_addition(date)
+        previous_addition(date).validity_date
+      else
+        related_policy.policy_assignation_balance.validity_date
+      end
+    validity_date >= date ? validity_date : validity_date_for(date)
+  end
+
+  def previous_addition(date)
+    related_policy
+      .employee_balances.additions.where('effective_at < ?', date)
+      .order(:effective_at)
+      .last
+  end
 end

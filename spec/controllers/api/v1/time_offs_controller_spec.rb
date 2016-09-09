@@ -16,8 +16,12 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
       presence_policy: policy
     )
   end
-  let(:time_off_category) do
-    employee.employee_time_off_policies.first.time_off_policy.time_off_category
+  let(:employee_time_off_policy) { employee.employee_time_off_policies.first }
+  let(:time_off_category) { employee_time_off_policy.time_off_policy.time_off_category }
+  let!(:assignation_balance) do
+    create(:employee_balance_manual, effective_at: employee_time_off_policy.effective_at,
+      time_off_category: time_off_category, employee: employee, validity_date: '1/4/2015',
+      resource_amount: 0, manual_amount: 0)
   end
   let!(:time_off) do
     create(:time_off, time_off_category_id: time_off_category.id, employee: employee)
@@ -121,7 +125,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
   end
 
   describe 'POST #create' do
-    before { Employee::Balance.destroy_all }
+    before { Employee::Balance.where.not(id: assignation_balance.id).destroy_all }
 
     let(:start_time) { '2016-10-11T13:00:00'  }
     let(:end_time) { '2016-10-18T15:00:00' }
@@ -174,7 +178,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
 
         it 'properly assigns manual_amount' do
           create_with_manual_amount
-          expect(Employee::Balance.last.manual_amount).to eq(200)
+          expect(Employee::Balance.order(:effective_at).last.manual_amount).to eq(200)
         end
       end
 
@@ -194,7 +198,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
         context 'new employee balance amount' do
           before { subject }
 
-          it { expect(Employee::Balance.last.amount).to eq -480 }
+          it { expect(Employee::Balance.order(:effective_at).last.amount).to eq -480 }
         end
       end
     end

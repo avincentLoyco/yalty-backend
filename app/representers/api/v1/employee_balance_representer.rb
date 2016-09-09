@@ -19,6 +19,8 @@ module Api::V1
       {
         amount: resource.amount,
         balance: resource.balance,
+        manual_amount: resource.manual_amount,
+        resource_amount: resource.resource_amount,
         effective_at: resource.effective_at,
         being_processed: resource.being_processed
       }
