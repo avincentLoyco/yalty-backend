@@ -38,7 +38,9 @@ RSpec.describe ManageEmployeeBalanceAdditions, type: :service do
 
         it 'has valid effective_at' do
           expect(Employee::Balance.additions.pluck(:effective_at).map(&:to_date))
-            .to eql(['1/1/2013', '1/1/2014', '1/1/2015', '1/1/2016'].map(&:to_date))
+            .to contain_exactly(
+              '1/1/2013'.to_date, '1/1/2014'.to_date, '1/1/2015'.to_date, '1/1/2016'.to_date
+            )
         end
       end
     end
@@ -79,7 +81,7 @@ RSpec.describe ManageEmployeeBalanceAdditions, type: :service do
               subject
 
               expect(Employee::Balance.removals.pluck(:effective_at).map(&:to_date))
-                .to eql(['1/4/2013', '1/4/2014', '1/4/2015'].map(&:to_date))
+                .to contain_exactly('1/4/2013'.to_date, '1/4/2014'.to_date, '1/4/2015'.to_date)
             end
           end
 
@@ -93,7 +95,7 @@ RSpec.describe ManageEmployeeBalanceAdditions, type: :service do
               subject
 
               expect(Employee::Balance.removals.pluck(:effective_at).map(&:to_date))
-                .to eql(['1/4/2015'].map(&:to_date))
+                .to contain_exactly('1/4/2015'.to_date)
             end
           end
 
@@ -108,14 +110,16 @@ RSpec.describe ManageEmployeeBalanceAdditions, type: :service do
                 subject
 
                 expect(Employee::Balance.additions.pluck(:effective_at).map(&:to_date))
-                  .to eql(['1/1/2013', '1/1/2014', '1/1/2015', '1/1/2016'].map(&:to_date))
+                  .to contain_exactly(
+                    '1/1/2013'.to_date, '1/1/2014'.to_date, '1/1/2015'.to_date, '1/1/2016'.to_date
+                  )
               end
 
               it 'has valid removal effective at' do
                 subject
 
                 expect(Employee::Balance.removals.pluck(:effective_at).map(&:to_date))
-                  .to eql(['1/4/2014', '1/4/2015'].map(&:to_date))
+                  .to contain_exactly('1/4/2014'.to_date, '1/4/2015'.to_date)
               end
             end
 
@@ -139,14 +143,14 @@ RSpec.describe ManageEmployeeBalanceAdditions, type: :service do
                   subject
 
                   expect(Employee::Balance.additions.pluck(:effective_at).map(&:to_date))
-                    .to eql(['1/1/2013', '1/1/2014'].map(&:to_date))
+                    .to contain_exactly('1/1/2013'.to_date, '1/1/2014'.to_date)
                 end
 
                 it 'has valid removal effective at' do
                   subject
 
                   expect(Employee::Balance.removals.pluck(:effective_at).map(&:to_date))
-                    .to eql(['1/4/2014', '1/4/2015'].map(&:to_date))
+                    .to contain_exactly('1/4/2014'.to_date, '1/4/2015'.to_date)
                 end
               end
 
@@ -168,7 +172,9 @@ RSpec.describe ManageEmployeeBalanceAdditions, type: :service do
 
           it 'has valid effective_at' do
             expect(Employee::Balance.additions.pluck(:effective_at).map(&:to_date))
-              .to eql(['1/1/2013', '1/1/2014', '1/1/2015', '1/1/2016'].map(&:to_date))
+              .to contain_exactly(
+                '1/1/2013'.to_date, '1/1/2014'.to_date, '1/1/2015'.to_date, '1/1/2016'.to_date
+              )
           end
         end
       end

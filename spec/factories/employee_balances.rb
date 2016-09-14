@@ -5,15 +5,16 @@ FactoryGirl.define do
     resource_amount { Faker::Number.number(2) }
 
     after(:build) do |employee_balance|
+      effective_at = employee_balance.effective_at ? employee_balance.effective_at : Time.zone.now
       etop =
         employee_balance
         .employee
-        .active_policy_in_category_at_date(employee_balance.time_off_category_id)
+        .active_policy_in_category_at_date(employee_balance.time_off_category_id, effective_at)
       if etop.blank? && employee_balance.time_off_id.blank?
           employee_balance.effective_at = employee_balance.employee.hired_date if employee_balance.effective_at.nil?
         policy = create(:time_off_policy,
           time_off_category: employee_balance.time_off_category,
-          years_to_effect: 5
+          years_to_effect: 1
         )
         employee_policy = create(:employee_time_off_policy,
           time_off_policy: policy,

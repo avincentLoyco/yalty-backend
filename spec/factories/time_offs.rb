@@ -7,7 +7,7 @@ FactoryGirl.define do
     employee_balance { nil }
 
     after(:build) do |time_off|
-      if time_off.employee.employee_time_off_policies.present?
+      if time_off.employee.employee_time_off_policies.any?
         time_off.time_off_category = time_off.employee.employee_time_off_policies.first
           .time_off_category
       end
