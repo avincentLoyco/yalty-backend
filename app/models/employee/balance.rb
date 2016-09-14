@@ -216,19 +216,46 @@ class Employee::Balance < ActiveRecord::Base
   )
     end_day = time_off_policy.end_day
     end_month = time_off_policy.end_month
-    years_to_effect =
-      if etop_effective_till.present? &&
-          (etop_effective_till.month < month || (etop_effective_till.month == month &&
-          (etop_effective_till.day <= day)))
-        time_off_policy.years_to_effect
-      elsif etop_effective_till.present?
-        time_off_policy.years_to_effect - 1
-      end
+    return false unless end_month && end_day
+    start_day = time_off_policy.start_day
+    start_month = time_off_policy.start_month
+
+    years_to_effect = years_to_effect_for_check(
+      etop_effective_till,
+      end_month,
+      end_day,
+      start_month,
+      start_day,
+      time_off_policy
+    )
+
     year_in_range = year >= etop_effective_at.year &&
       (etop_effective_till.nil? || year <= etop_effective_till.year + years_to_effect)
     correct_day_and_month = (day == end_day && month == end_month)
 
     year_in_range && correct_day_and_month
+  end
+
+  def years_to_effect_for_check(
+    etop_effective_till,
+    end_month,
+    end_day,
+    start_month,
+    start_day,
+    time_off_policy
+  )
+    return unless etop_effective_till.present?
+    end_date_before_start_date = end_month < start_month && end_day < start_day
+    end_date_after_start_date = end_month >= start_month && end_day >= start_day
+    etop_effective_till_after_end_date = (etop_effective_till.month > end_month ||
+      (etop_effective_till.month == end_month && (etop_effective_till.day > end_day))
+    )
+
+    if end_date_before_start_date || etop_effective_till_after_end_date
+      time_off_policy.years_to_effect
+    elsif end_date_after_start_date
+      time_off_policy.years_to_effect - 1
+    end
   end
 
   def effective_at_equal_time_off_end_date

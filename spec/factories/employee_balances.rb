@@ -3,7 +3,7 @@ FactoryGirl.define do
     employee
     time_off_category { create(:time_off_category, account: employee.account) }
     resource_amount { Faker::Number.number(2) }
-
+    policy_credit_addition { true }
     after(:build) do |employee_balance|
       effective_at = employee_balance.effective_at ? employee_balance.effective_at : Time.zone.now
       etop =
@@ -11,7 +11,7 @@ FactoryGirl.define do
         .employee
         .active_policy_in_category_at_date(employee_balance.time_off_category_id, effective_at)
       if etop.blank? && employee_balance.time_off_id.blank?
-          employee_balance.effective_at = employee_balance.employee.hired_date if employee_balance.effective_at.nil?
+        employee_balance.effective_at = employee_balance.employee.hired_date if employee_balance.effective_at.nil?
         policy = create(:time_off_policy,
           time_off_category: employee_balance.time_off_category,
           years_to_effect: 1
@@ -27,7 +27,9 @@ FactoryGirl.define do
         last_balance_in_category =
           employee_balance
           .employee
-          .last_balance_in_category(top.time_off_category_id)
+          .employee_balances
+          .where(time_off_category_id: top.time_off_category_id, policy_credit_addition: true)
+          .order('effective_at').last
         if last_balance_in_category.present?
           year = last_balance_in_category.effective_at.year + 1
           balance_date = Date.new(year, top.start_month, top.start_day)
@@ -43,6 +45,7 @@ FactoryGirl.define do
     end
 
     trait :with_time_off do
+      policy_credit_addition { false }
       after(:build) do |employee_balance|
         time_off =
           create(:time_off, :without_balance, employee: employee_balance.employee, time_off_category: employee_balance.time_off_category)

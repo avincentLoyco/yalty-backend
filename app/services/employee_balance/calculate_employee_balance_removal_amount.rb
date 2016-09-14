@@ -57,7 +57,7 @@ class CalculateEmployeeBalanceRemovalAmount
 
   def positive_amounts
     balances_in_removal_period
-      .where('validity_date > ?', removal.effective_at)
+      .where('validity_date > ? OR validity_date IS NULL', removal.effective_at)
       .pluck(:resource_amount, :manual_amount).flatten.select { |value| value > 0 }.sum
   end
 
