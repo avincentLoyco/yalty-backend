@@ -245,16 +245,21 @@ class Employee::Balance < ActiveRecord::Base
     time_off_policy
   )
     return unless etop_effective_till.present?
-    end_date_before_start_date = end_month < start_month && end_day < start_day
-    end_date_after_start_date = end_month >= start_month && end_day >= start_day
-    etop_effective_till_after_end_date = (etop_effective_till.month > end_month ||
-      (etop_effective_till.month == end_month && (etop_effective_till.day > end_day))
-    )
+    end_date = Date.new(etop_effective_till.year, end_month, end_day)
+    start_date = Date.new(etop_effective_till.year, start_month, start_day)
 
-    if end_date_before_start_date || etop_effective_till_after_end_date
-      time_off_policy.years_to_effect
-    elsif end_date_after_start_date
+    end_date_before_start_date = end_date < start_date
+    end_date_after_or_equal_start_date = end_date >= start_date
+    effective_till_after_or_equal_start_date = etop_effective_till >= start_date
+    effective_till_before_start_date = etop_effective_till < start_date
+
+    case
+    when end_date_before_start_date && effective_till_after_or_equal_start_date
+      time_off_policy.years_to_effect + 1
+    when end_date_after_or_equal_start_date && effective_till_before_start_date
       time_off_policy.years_to_effect - 1
+    else
+      time_off_policy.years_to_effect
     end
   end
 
