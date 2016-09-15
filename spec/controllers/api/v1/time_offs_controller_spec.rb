@@ -126,7 +126,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
 
   describe 'POST #create' do
     before { Employee::Balance.where.not(id: assignation_balance.id).destroy_all }
-
+    let(:time_off) { nil }
     let(:start_time) { '2016-10-11T13:00:00'  }
     let(:end_time) { '2016-10-18T15:00:00' }
     let(:employee_id) { employee.id }
