@@ -22,10 +22,12 @@ RSpec.describe AddPolicyAdditionsJob do
     let(:first_employees_balances) { employees.first.reload.employee_balances }
     let(:second_employees_balances) { employees.second.reload.employee_balances }
     let(:last_employees_balances ) { employees.last.reload.employee_balances }
-    let!(:employee_balance) do
-      create(:employee_balance,
-        employee: employees.first, time_off_category: category,
-        resource_amount: -100, effective_at: Time.now + 1.week
+    let(:employee_balance) do
+      create(:employee_balance_manual, :with_time_off,
+        employee: employees.first,
+        time_off_category: category,
+        resource_amount: -100,
+        effective_at: 1.week.from_now
       )
     end
 
@@ -90,20 +92,6 @@ RSpec.describe AddPolicyAdditionsJob do
             it { expect { subject }.to_not change { first_employees_balances.count } }
           end
         end
-      end
-
-      context 'when two employee policies starts at the same day' do
-        let(:new_policy) { create(:time_off_policy, time_off_category: category) }
-        let!(:third_employee_time_off_policy) do
-          create(:employee_time_off_policy,
-            time_off_policy: new_policy, employee: employees.first,
-            effective_at: Date.today + 8.hours
-          )
-        end
-        xit { expect { subject }.to change { Employee::Balance.count }.by(2) }
-        xit { expect { subject }.to change { category.reload.employee_balances.count }.by(2) }
-
-        xit { expect { subject }.to_not change { category.reload.employee_balances } }
       end
     end
 
