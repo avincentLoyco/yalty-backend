@@ -44,8 +44,7 @@ RSpec.describe Employee::Balance, type: :model do
         context 'when balances before already exist in the category' do
           before do
             create(:employee_balance,
-              resource_amount: 100, employee: employee, time_off_category: time_off_category,
-              effective_at: Date.today - 1.week
+              resource_amount: 100, employee: employee, time_off_category: time_off_category
             )
           end
 
@@ -55,7 +54,6 @@ RSpec.describe Employee::Balance, type: :model do
           end
 
           context 'and belong to current balance employee' do
-
             it { expect { subject.valid? }.to change { subject.balance }.to(300) }
           end
         end
@@ -287,6 +285,135 @@ RSpec.describe Employee::Balance, type: :model do
           it { expect { subject.valid? }.to change { balance.errors.messages[:effective_at] }
             .to include('Removal effective at must equal addition validity date') }
         end
+      end
+    end
+
+    context 'related_amount' do
+      let(:time_off_start) { Time.zone.parse('01/01/2015') }
+      let(:time_off_end) { Time.zone.parse('10/01/2015') }
+      let(:top_start_day) { 7 }
+      let(:top_balance_effective_at) { Time.zone.parse('07/01/2015') }
+      let(:etop_effective_at) { Time.zone.parse('05/01/2015') }
+
+      let(:pp) do
+        create(:presence_policy, :with_time_entries,
+          number_of_days: 7,
+          working_days: [1, 2, 3, 4, 5],
+          hours: [%w(08:00 12:00), %w(13:00 17:00)]
+        )
+      end
+
+      let!(:epp) do
+        create(:employee_presence_policy,
+          presence_policy: pp,
+          employee: employee,
+          effective_at: 1.year.ago,
+          order_of_start_day: 1.year.ago.to_date.cwday
+        )
+      end
+
+      let(:policy) do
+        create(:time_off_policy, :with_end_date, time_off_category: time_off_category,
+          start_day: top_start_day)
+      end
+
+      let!(:etop) do
+        create(:employee_time_off_policy, employee: employee, time_off_policy: policy,
+          effective_at: etop_effective_at)
+      end
+
+      let!(:etop_balance) do
+        create(:employee_balance_manual, employee: employee, time_off_category: time_off_category,
+          effective_at: etop.effective_at, policy_credit_addition: false)
+      end
+
+      let!(:top_start_balance) do
+        create(:employee_balance_manual, employee: employee, time_off_category: time_off_category,
+          effective_at: top_balance_effective_at, policy_credit_addition: true)
+      end
+
+      let(:time_off) do
+        create(:time_off, employee: employee, time_off_category: time_off_category,
+          start_time: time_off_start, end_time: time_off_end)
+      end
+
+      let(:time_off_balance) { time_off.employee_balance }
+
+      before { Timecop.freeze('15/01/2015') }
+      after { Timecop.return }
+
+      context 'presence policy does not change' do
+        before { time_off }
+
+        context 'time off overlaps TOP start date' do
+          let(:etop_effective_at) { Time.zone.parse('01/01/2014') }
+
+          it { expect(top_start_balance.related_amount).to eq(-2400) }
+          it { expect(time_off_balance.related_amount).to eq(2400) }
+        end
+
+        context 'time off overlaps TOP start date and ETOP assignation' do
+          it { expect(etop_balance.related_amount).to eq(-1440) }
+          it { expect(top_start_balance.related_amount).to eq(-960) }
+          it { expect(time_off_balance.related_amount).to eq(2400) }
+        end
+
+        context 'ETOP assignation is on time_off start_time' do
+          let(:etop_effective_at) { time_off_start }
+          let(:top_start_day) { 15 }
+          let(:top_balance_effective_at) { time_off_end + 5.days }
+
+          it { expect(etop_balance.related_amount).to eq(-480) }
+          it { expect(time_off_balance.related_amount).to eq(480) }
+        end
+
+        context 'time_off starts middle of day' do
+          let(:etop_effective_at) { Time.zone.parse('01/01/2014') }
+          before { time_off.update!(start_time: time_off_start + 13.hours) }
+
+          it { expect(top_start_balance.related_amount).to eq(-2160) }
+          it { expect(time_off_balance.related_amount).to eq(2160) }
+        end
+      end
+
+      context 'presence policy changes during time_off' do
+        let(:half_time_pp) do
+          create(:presence_policy, :with_time_entries,
+            number_of_days: 7,
+            working_days: [1, 2, 3, 4, 5],
+            hours: [%w(08:00 12:00)]
+          )
+        end
+
+        let!(:half_time_epp) do
+          create(:employee_presence_policy,
+            presence_policy: half_time_pp,
+            employee: employee,
+            effective_at: etop_effective_at,
+            order_of_start_day: etop_effective_at.to_date.cwday
+          )
+        end
+
+        before { time_off }
+
+        it { expect(etop_balance.related_amount).to eq(-1200) }
+        it { expect(top_start_balance.related_amount).to eq(-480) }
+        it { expect(time_off_balance.related_amount).to eq(1680) }
+      end
+
+      context 'different category' do
+        let(:diff_category) { create(:time_off_category, account: account,  name: 'cat2') }
+
+        let!(:diff_category_policy) do
+          create(:time_off_policy, :with_end_date, time_off_category: diff_category, start_day: 4)
+        end
+
+        let(:diff_top_start_balance) do
+          create(:employee_balance, employee: employee, time_off_category: diff_category,
+            effective_at: top_balance_effective_at, policy_credit_addition: true)
+        end
+
+        it { expect(diff_top_start_balance.related_amount).to eq(0) }
       end
     end
   end

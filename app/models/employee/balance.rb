@@ -1,6 +1,8 @@
 require 'employee_policy_period'
 
 class Employee::Balance < ActiveRecord::Base
+  include RelatedAmount
+
   belongs_to :employee
   belongs_to :time_off_category
   belongs_to :time_off
@@ -34,6 +36,8 @@ class Employee::Balance < ActiveRecord::Base
     employee_balances(employee_id, time_off_category_id)
       .where("effective_at::date = to_date('#{date}', 'YYYY-MM_DD')").uniq
   end)
+  scope :in_category, -> (category_id) { where(time_off_category_id: category_id) }
+  scope :not_time_off, -> { where(time_off_id: nil) }
 
   def amount
     return unless resource_amount && manual_amount
