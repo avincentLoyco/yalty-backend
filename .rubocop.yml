@@ -47,3 +47,6 @@ Style/BracesAroundHashParameters:
 
 Style/MultilineOperationIndentation:
   EnforcedStyle: indented
+
+Style/SingleLineBlockParams:
+  Enabled: false
