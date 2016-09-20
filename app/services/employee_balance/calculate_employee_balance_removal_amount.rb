@@ -26,11 +26,17 @@ class CalculateEmployeeBalanceRemovalAmount
   end
 
   def calculate_amount_for_balancer
-    if last_balance_after_addition.blank?
-      amount_from_first_addition
-    else
-      amount_from_previous_balances
+    amount =
+      if last_balance_after_addition.blank?
+        amount_from_first_addition
+      else
+        amount_from_previous_balances
+      end
+    if removal.manual_amount != 0 && removal.effective_at == removal.validity_date
+      amount -= removal.manual_amount
     end
+
+    amount
   end
 
   def calculate_amount_to_expire

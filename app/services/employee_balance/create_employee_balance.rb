@@ -15,7 +15,8 @@ class CreateEmployeeBalance
     ActiveRecord::Base.transaction do
       assign_employee_balance
       valid_balance?
-      build_employee_balance_removal if validity_date.present? && validity_date <= Time.zone.today
+      build_employee_balance_removal if
+        (validity_date.present? && validity_date <= Time.zone.today) && @employee_balance.balance_credit_additions.empty?
       calculate_amount if employee_balance.time_off_policy.present?
       save!
       update_next_employee_balances

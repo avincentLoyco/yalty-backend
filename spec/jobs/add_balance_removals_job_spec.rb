@@ -7,14 +7,24 @@ RSpec.describe AddBalanceRemovalsJob do
   subject { AddBalanceRemovalsJob.perform_now  }
 
   let(:employee) { create(:employee) }
-  let!(:policy) { create(:time_off_policy, time_off_category: category) }
+  let!(:policy) do
+    create(:time_off_policy,
+      time_off_category: category,
+      start_day: 1,
+      start_month: 12,
+      end_month: Date.today.month,
+      end_day: Date.today.day,
+      years_to_effect: 1
+    )
+
+  end
   let(:category) { create(:time_off_category, account: employee.account) }
   let!(:employee_policy) do
     create(:employee_time_off_policy, employee: employee, time_off_policy: policy)
   end
   let!(:balance) do
     create(:employee_balance,
-      employee: employee, effective_at: Date.today - 1.week, validity_date: Date.today,
+      employee: employee, effective_at: Date.today - 1.month, validity_date: Date.today,
       time_off_category: category, resource_amount: 100)
   end
 
@@ -22,6 +32,12 @@ RSpec.describe AddBalanceRemovalsJob do
     it { expect { subject }.to change { Employee::Balance.count }.by(1) }
     it { expect { subject }.to change { balance.reload.balance_credit_removal } }
     it { expect { subject }.to change { employee.reload.employee_balances.count }.by(1) }
+
+    it '' do
+      subject
+      removal_balance = employee.reload.employee_balances.find_by(effective_at: Date.today)
+      expect(removal_balance.validity_date ).to eq (Date.today )
+    end
 
     context 'and balance credit addition is not policy addition' do
       before { subject }
