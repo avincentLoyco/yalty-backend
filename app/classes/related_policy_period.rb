@@ -58,6 +58,7 @@ class RelatedPolicyPeriod
   end
 
   def validity_date_for_time_off(date)
+    return unless end_date?
     validity_date =
       if previous_addition(date)
         previous_addition(date).validity_date
@@ -72,5 +73,9 @@ class RelatedPolicyPeriod
       .employee_balances.additions.where('effective_at < ?', date)
       .order(:effective_at)
       .last
+  end
+
+  def end_date?
+    time_off_policy.end_day.present? && time_off_policy.end_month.present?
   end
 end

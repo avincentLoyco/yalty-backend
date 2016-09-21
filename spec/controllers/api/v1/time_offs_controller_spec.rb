@@ -20,7 +20,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
   let(:time_off_category) { employee_time_off_policy.time_off_policy.time_off_category }
   let!(:assignation_balance) do
     create(:employee_balance_manual, effective_at: employee_time_off_policy.effective_at,
-      time_off_category: time_off_category, employee: employee, validity_date: '1/4/2015',
+      time_off_category: time_off_category, employee: employee,
       resource_amount: 0, manual_amount: 0)
   end
   let!(:time_off) do
