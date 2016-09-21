@@ -314,7 +314,7 @@ RSpec.describe Employee::Balance, type: :model do
 
       let(:policy) do
         create(:time_off_policy, :with_end_date, time_off_category: time_off_category,
-          start_day: top_start_day)
+          start_day: top_start_day, amount: 4800)
       end
 
       let!(:etop) do
@@ -324,12 +324,13 @@ RSpec.describe Employee::Balance, type: :model do
 
       let!(:etop_balance) do
         create(:employee_balance_manual, employee: employee, time_off_category: time_off_category,
-          effective_at: etop.effective_at, policy_credit_addition: false)
+          effective_at: etop.effective_at, policy_credit_addition: false, resource_amount: 4800)
       end
 
       let!(:top_start_balance) do
         create(:employee_balance_manual, employee: employee, time_off_category: time_off_category,
-          effective_at: top_balance_effective_at, policy_credit_addition: true)
+          effective_at: top_balance_effective_at, policy_credit_addition: true,
+          resource_amount: 4800)
       end
 
       let(:time_off) do
@@ -343,19 +344,46 @@ RSpec.describe Employee::Balance, type: :model do
       after { Timecop.return }
 
       context 'presence policy does not change' do
-        before { time_off }
+        let!(:time_off_amount) { time_off.balance }
 
         context 'time off overlaps TOP start date' do
           let(:etop_effective_at) { Time.zone.parse('01/01/2014') }
+          before(:each) do
+            top_start_balance.calculate_and_set_balance
+            time_off_balance.calculate_and_set_balance
+            top_start_balance.save! && time_off_balance.save!
+          end
 
           it { expect(top_start_balance.related_amount).to eq(-2400) }
           it { expect(time_off_balance.related_amount).to eq(2400) }
+
+          it { expect(top_start_balance.amount).to eq(2400) }
+          it { expect(time_off_balance.amount).to eq(time_off_amount + 2400) }
+
+          it { expect(etop_balance.balance).to eq(4800) }
+          it { expect(top_start_balance.balance).to eq(7200) }
+          it { expect(time_off_balance.balance).to eq(6240) }
         end
 
         context 'time off overlaps TOP start date and ETOP assignation' do
+          before(:each) do
+            etop_balance.calculate_and_set_balance
+            top_start_balance.calculate_and_set_balance
+            time_off_balance.calculate_and_set_balance
+            top_start_balance.save! && time_off_balance.save! && etop_balance.save!
+          end
+
           it { expect(etop_balance.related_amount).to eq(-1440) }
           it { expect(top_start_balance.related_amount).to eq(-960) }
           it { expect(time_off_balance.related_amount).to eq(2400) }
+
+          it { expect(etop_balance.amount).to eq(3360) }
+          it { expect(top_start_balance.amount).to eq(3840) }
+          it { expect(time_off_balance.amount).to eq(-960) }
+
+          it { expect(etop_balance.balance).to eq(3360) }
+          it { expect(top_start_balance.balance).to eq(8640) }
+          it { expect(time_off_balance.balance).to eq(7680) }
         end
 
         context 'ETOP assignation is on time_off start_time' do
@@ -363,16 +391,44 @@ RSpec.describe Employee::Balance, type: :model do
           let(:top_start_day) { 15 }
           let(:top_balance_effective_at) { time_off_end + 5.days }
 
+          before(:each) do
+            etop_balance.calculate_and_set_balance
+            top_start_balance.calculate_and_set_balance
+            time_off_balance.calculate_and_set_balance
+            top_start_balance.save! && time_off_balance.save! && etop_balance.save!
+          end
+
           it { expect(etop_balance.related_amount).to eq(-480) }
           it { expect(time_off_balance.related_amount).to eq(480) }
+          it { expect(top_start_balance.related_amount).to eq(0) }
+
+          it { expect(etop_balance.amount).to eq(4320) }
+          it { expect(time_off_balance.amount).to eq(-2880) }
+          it { expect(top_start_balance.amount).to eq(4800) }
+
+          it { expect(etop_balance.balance).to eq(4320) }
+          it { expect(time_off_balance.balance).to eq(1920) }
+          it { expect(top_start_balance.balance).to eq(6720) }
         end
 
         context 'time_off starts middle of day' do
           let(:etop_effective_at) { Time.zone.parse('01/01/2014') }
-          before { time_off.update!(start_time: time_off_start + 13.hours) }
+          before do
+            time_off.update!(start_time: time_off_start + 13.hours)
+            etop_balance.calculate_and_set_balance
+            top_start_balance.calculate_and_set_balance
+            time_off_balance.calculate_and_set_balance
+            top_start_balance.save! && time_off_balance.save! && etop_balance.save!
+          end
 
           it { expect(top_start_balance.related_amount).to eq(-2160) }
           it { expect(time_off_balance.related_amount).to eq(2160) }
+
+          it { expect(top_start_balance.amount).to eq(2640) }
+          it { expect(time_off_balance.amount).to eq(-960) }
+
+          it { expect(top_start_balance.balance).to eq(7440) }
+          it { expect(time_off_balance.balance).to eq(6480) }
         end
       end
 
@@ -394,11 +450,25 @@ RSpec.describe Employee::Balance, type: :model do
           )
         end
 
-        before { time_off }
+        before do
+          time_off
+          etop_balance.calculate_and_set_balance
+          top_start_balance.calculate_and_set_balance
+          time_off_balance.calculate_and_set_balance
+          top_start_balance.save! && time_off_balance.save! && etop_balance.save!
+        end
 
         it { expect(etop_balance.related_amount).to eq(-1200) }
         it { expect(top_start_balance.related_amount).to eq(-480) }
         it { expect(time_off_balance.related_amount).to eq(1680) }
+
+        it { expect(etop_balance.amount).to eq(3600) }
+        it { expect(top_start_balance.amount).to eq(4320) }
+        it { expect(time_off_balance.amount).to eq(-480) }
+
+        it { expect(etop_balance.balance).to eq(3600) }
+        it { expect(top_start_balance.balance).to eq(9120) }
+        it { expect(time_off_balance.balance).to eq(8640) }
       end
 
       context 'different category' do

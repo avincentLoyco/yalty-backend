@@ -41,7 +41,7 @@ class Employee::Balance < ActiveRecord::Base
 
   def amount
     return unless resource_amount && manual_amount
-    resource_amount + manual_amount
+    resource_amount + manual_amount + related_amount
   end
 
   def last_in_category?
