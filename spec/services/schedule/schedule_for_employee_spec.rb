@@ -71,7 +71,12 @@ RSpec.describe ScheduleForEmployee, type: :service do
           end
         end
         let!(:working_time) do
-          create(:registered_working_time, employee: employee, date: Time.now + 3.day, time_entries: [])
+          create(:registered_working_time,
+            employee: employee,
+            date: Time.now + 3.day,
+            time_entries: [],
+            comment: 'Working day comment'
+          )
         end
 
         it { expect(subject.size).to eq 7 }
@@ -80,6 +85,7 @@ RSpec.describe ScheduleForEmployee, type: :service do
             [
               {
                 date: '2015-12-25',
+                comment: nil,
                 time_entries: [
                   {
                     type: 'holiday',
@@ -110,11 +116,11 @@ RSpec.describe ScheduleForEmployee, type: :service do
                     type: 'holiday',
                     name: 'st_stephens_day'
                   }
-
                 ]
               },
               {
                 date: '2015-12-27',
+                comment: nil,
                 time_entries: [
                   {
                     type: 'time_off',
@@ -136,6 +142,7 @@ RSpec.describe ScheduleForEmployee, type: :service do
               },
               {
                 date: '2015-12-28',
+                comment: nil,
                 time_entries: [
                   {
                     type: 'working_time',
@@ -194,6 +201,7 @@ RSpec.describe ScheduleForEmployee, type: :service do
               },
               {
                 date: '2015-12-31',
+                comment: 'Working day comment',
                 time_entries: []
               }
             ]
@@ -383,6 +391,7 @@ RSpec.describe ScheduleForEmployee, type: :service do
             [
               {
                 date: '2015-12-25',
+                comment: nil,
                 time_entries: [
                   { type: 'working_time', start_time: '10:00:00', end_time: '14:00:00' },
                   { type: 'working_time', start_time: '15:00:00', end_time: '20:00:00' },

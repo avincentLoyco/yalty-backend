@@ -3,9 +3,10 @@ module RegisteredWorkingTimeSchemas
 
   def post_schema
     Dry::Validation.Form do
-      required(:date).filled
+      required(:date).filled(:date?)
       required(:employee_id).filled(:str?)
       required(:time_entries).maybe(:array?)
+      required(:comment).maybe(:str?)
     end
   end
 

@@ -34,6 +34,7 @@ class ScheduleForEmployee
     @time_off_in_range = TimeOffForEmployeeSchedule.new(@employee, @start_date, @end_date).call
     @working_times_in_range =
       RegisteredWorkingTimeForEmployeeSchedule.new(@employee, @start_date, @end_date).call
+    @comments_in_range = prepare_working_day_comments
     @holidays_in_range = HolidaysForEmployeeSchedule.new(@employee, @start_date, @end_date).call
     @time_entries_in_range = TimeEntriesForEmployeeSchedule.new(@employee, @start_date, @end_date).call
     @calculated_schedule.each do |day_hash|
@@ -45,6 +46,7 @@ class ScheduleForEmployee
       if working_times_and_holidays.empty? && day_registered_working_times.empty?
         prepare_working_time_from_presence_policy(day_hash)
       end
+      day_hash[:comment] = @comments_in_range[date] if @comments_in_range.key?(date)
     end
   end
 
@@ -60,5 +62,12 @@ class ScheduleForEmployee
           'working_time'
         ).call
     end
+  end
+
+  def prepare_working_day_comments
+    RegisteredWorkingTime
+      .for_employee_in_day_range(@employee.id, @start_date, @end_date)
+      .pluck(:date, :comment)
+      .each_with_object({}) { |day, days| days[day[0].to_s] = day[1] }
   end
 end
