@@ -14,7 +14,8 @@ RSpec.describe API::V1::RegisteredWorkingTimesController, type: :controller do
       {
         employee_id: employee_id,
         date: date,
-        time_entries: time_entries_params
+        time_entries: time_entries_params,
+        comment: comment
       }
     end
     let(:time_entries_params) do
@@ -31,9 +32,7 @@ RSpec.describe API::V1::RegisteredWorkingTimesController, type: :controller do
         }
       ]
     end
-
-    shared_examples '' do
-    end
+    let(:comment) { nil }
 
     context 'with valid params' do
       shared_examples 'Authorized employee' do
@@ -81,6 +80,52 @@ RSpec.describe API::V1::RegisteredWorkingTimesController, type: :controller do
           expect(registered_working_time.reload.time_entries).to include(
             'start_time' =>'15:00', 'end_time' =>'19:00',
           )
+        end
+      end
+
+      context 'when comment field is empty' do
+        let(:comment) { '' }
+
+        it { expect { subject }.to change { RegisteredWorkingTime.count }.by(1) }
+        it { expect { subject }.to change { employee.registered_working_times.count }.by(1) }
+
+        it { is_expected.to have_http_status(204) }
+        it_behaves_like 'Authorized employee'
+      end
+
+      context 'when comment field is filled' do
+        let(:comment) { 'A comment about working day' }
+
+        it { expect { subject }.to change { RegisteredWorkingTime.count }.by(1) }
+        it { expect { subject }.to change { employee.registered_working_times.count }.by(1) }
+
+        it { is_expected.to have_http_status(204) }
+        it_behaves_like 'Authorized employee'
+
+        it 'should have new comment' do
+          subject
+
+          registered_working_time = employee.registered_working_times.where(date: Date.parse(date)).first!
+
+          expect(registered_working_time.reload.comment).to eql('A comment about working day')
+        end
+      end
+
+      context 'when comment field is updated' do
+        let!(:registered_working_time) do
+          create(:registered_working_time, employee: employee, date: date, comment: 'Old comment')
+        end
+        let(:comment) { 'A comment about working day' }
+
+        it { expect { subject }.to_not change { RegisteredWorkingTime.count } }
+
+        it { is_expected.to have_http_status(204) }
+        it_behaves_like 'Authorized employee'
+
+        it 'should have new comment' do
+          subject
+
+          expect(registered_working_time.reload.comment).to eql('A comment about working day')
         end
       end
     end
