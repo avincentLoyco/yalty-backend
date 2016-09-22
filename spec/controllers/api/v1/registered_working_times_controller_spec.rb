@@ -83,7 +83,7 @@ RSpec.describe API::V1::RegisteredWorkingTimesController, type: :controller do
         end
       end
 
-      context 'when comment field is empty' do
+      context 'when the comment param is present but empty' do
         let(:comment) { '' }
 
         it { expect { subject }.to change { RegisteredWorkingTime.count }.by(1) }
@@ -93,7 +93,7 @@ RSpec.describe API::V1::RegisteredWorkingTimesController, type: :controller do
         it_behaves_like 'Authorized employee'
       end
 
-      context 'when comment field is filled' do
+      context 'when the comment param is present and is not empty' do
         let(:comment) { 'A comment about working day' }
 
         it { expect { subject }.to change { RegisteredWorkingTime.count }.by(1) }
@@ -111,7 +111,7 @@ RSpec.describe API::V1::RegisteredWorkingTimesController, type: :controller do
         end
       end
 
-      context 'when comment field is updated' do
+      context 'when registred working time exist and we add a comment' do
         let!(:registered_working_time) do
           create(:registered_working_time, employee: employee, date: date, comment: 'Old comment')
         end
