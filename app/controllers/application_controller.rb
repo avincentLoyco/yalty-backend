@@ -5,8 +5,8 @@ class ApplicationController < ActionController::Base
   protect_from_forgery with: :null_session
   include DryParamsVerification
 
-  # rescue_from Exception, with: :render_500_error
-  # rescue_from StandardError, with: :render_500_error
+  rescue_from Exception, with: :render_500_error
+  rescue_from StandardError, with: :render_500_error
   rescue_from ActionController::RoutingError, with: :bad_request_error
   rescue_from ActiveRecord::RecordNotFound, with: :record_not_found_error
   rescue_from ActiveRecord::RecordInvalid, with: :resource_invalid_error
