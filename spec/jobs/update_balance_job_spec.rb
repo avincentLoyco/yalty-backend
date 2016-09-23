@@ -285,7 +285,10 @@ RSpec.describe UpdateBalanceJob do
         create(:time_off_policy, :with_end_date, time_off_category: category, amount: 1000)
       end
       let!(:top_second) { create(:time_off_policy, time_off_category: category, amount: 2000) }
-      let(:ewp_first) { employee.first_employee_working_place }
+      let!(:ewp_first) do
+        create(:employee_working_place,
+          effective_at: Time.now - 4.years, employee: employee, working_place: wps.first)
+      end
       let(:ewp_second) do
         create(:employee_working_place,
           effective_at: Date.new(2015,9,24), employee: employee, working_place: wps.last)
