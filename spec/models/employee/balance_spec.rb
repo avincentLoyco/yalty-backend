@@ -487,4 +487,376 @@ RSpec.describe Employee::Balance, type: :model do
       end
     end
   end
+
+  context 'effective_at_equal_time_off_policy_dates end_date edge cases' do
+    # All edge cases are provided in docs about Employee::Balance
+    # https://github.com/yalty/yalty-doc/blob/business_logic/business_logic/models/employee/balance.md#validations
+    let(:employee) { create(:employee) }
+    let!(:category) { create(:time_off_category, account: employee.account) }
+
+    let!(:top) do
+      create(:time_off_policy, time_off_category: category, start_day: start_day,
+        start_month: start_month, end_day: end_day, end_month: end_month, years_to_effect: 1)
+    end
+
+    let!(:second_top) { create(:time_off_policy, time_off_category: category) }
+
+    let!(:etop) do
+      create(:employee_time_off_policy, employee: employee, time_off_policy: top,
+        time_off_category: category, effective_at: etop_effective_at)
+    end
+
+    let!(:second_etop) do
+      create(:employee_time_off_policy, employee: employee, time_off_policy: second_top,
+        time_off_category: category, effective_at: effective_till + 1.day)
+    end
+
+    let!(:top_start_balance) do
+      create(:employee_balance_manual, employee: employee, time_off_category: category,
+        effective_at: Time.zone.parse("#{start_day}/#{start_month}/#{start_year}"),
+        policy_credit_addition: true,
+        validity_date: RelatedPolicyPeriod.new(etop).validity_date_for(Time.zone.parse("#{start_day}/#{start_month}/#{start_year}")))
+    end
+
+    let(:end_date_balance) do
+      create(:employee_balance_manual, employee: employee, time_off_category: category,
+        effective_at: Time.zone.parse("#{end_day}/#{end_month}/#{start_year}"),
+        policy_credit_addition: false)
+    end
+
+    let(:last_possible_balance) do
+      build(:employee_balance_manual, employee: employee, time_off_category: category,
+        policy_credit_addition: false, balance_credit_additions: [top_start_balance])
+    end
+
+    context 'offset +1' do
+      let(:etop_effective_at) { Time.zone.parse('01/01/2015') }
+      let(:start_year) { 2016 }
+      let(:start_day) { 10 }
+      let(:start_month) { 2 }
+      let(:end_day) { 5 }
+      let(:end_month) { 1 }
+      let(:expected_effective_at) { Time.zone.parse("#{end_day}/#{end_month}/2018") }
+      let(:in_2019) { Time.zone.parse("#{end_day}/#{end_month}/2019") }
+      let(:in_2017) { Time.zone.parse("#{end_day}/#{end_month}/2017") }
+
+      before { end_date_balance }
+
+      context 'E < S < T' do
+        let(:effective_till) { Time.zone.parse('15/02/2016') }
+
+        it 'removal is valid' do
+          expect(last_possible_balance.valid?).to be(true)
+          expect(last_possible_balance.effective_at).to eq(expected_effective_at)
+        end
+
+        context 'with invalid data' do
+          it do
+            allow(last_possible_balance).to receive(:now_or_effective_at) { in_2019 }
+            expect(last_possible_balance.valid?).to be(false)
+          end
+
+          it do
+            allow(last_possible_balance).to receive(:now_or_effective_at) { in_2017 }
+            expect(last_possible_balance.valid?).to be(false)
+          end
+        end
+      end
+
+      context 'E < S = T' do
+        let(:effective_till) { Time.zone.parse('10/02/2016') }
+
+        it 'creates removal with proper effective_at' do
+          expect(last_possible_balance.valid?).to be(true)
+          expect(last_possible_balance.effective_at).to eq(expected_effective_at)
+        end
+
+        context 'with invalid data' do
+          it do
+            allow(last_possible_balance).to receive(:now_or_effective_at) { in_2019 }
+            expect(last_possible_balance.valid?).to be(false)
+          end
+
+          it do
+            allow(last_possible_balance).to receive(:now_or_effective_at) { in_2017 }
+            expect(last_possible_balance.valid?).to be(false)
+          end
+        end
+      end
+    end
+
+    context 'offset -1' do
+      let(:etop_effective_at) { Time.zone.parse('01/01/2014') }
+      let(:effective_till) { Time.zone.parse('01/01/2016') }
+      let(:start_year) { 2015 }
+      let(:start_day) { 10 }
+      let(:start_month) { 1 }
+      let(:end_day) { 10 }
+      let(:expected_effective_at) { Time.zone.parse("#{end_day}/#{end_month}/2016") }
+      let(:in_2015) { Time.zone.parse("#{end_day}/#{end_month}/2015") }
+      let(:in_2017) { Time.zone.parse("#{end_day}/#{end_month}/2017") }
+
+      context 'T < S < E' do
+        let(:end_month) { 2 }
+        before { end_date_balance }
+
+        it 'creates removal with proper effective_at' do
+          expect(last_possible_balance.valid?).to be(true)
+          expect(last_possible_balance.effective_at).to eq(expected_effective_at)
+        end
+
+        context 'with invalid data' do
+          it do
+            allow(last_possible_balance).to receive(:now_or_effective_at) { in_2017 }
+            expect(last_possible_balance.valid?).to be(false)
+          end
+
+          it do
+            allow(last_possible_balance).to receive(:now_or_effective_at) { in_2015 }
+            expect(last_possible_balance.valid?).to be(false)
+          end
+        end
+      end
+
+      context 'T < S = E' do
+        let(:end_month) { 1 }
+
+        it 'creates removal with proper effective_at' do
+          expect(last_possible_balance.valid?).to be(true)
+          expect(last_possible_balance.effective_at).to eq(expected_effective_at)
+        end
+
+        context 'with invalid data' do
+          it do
+            allow(last_possible_balance).to receive(:now_or_effective_at) { in_2017 }
+            expect(last_possible_balance.valid?).to be(false)
+          end
+
+          it do
+            allow(last_possible_balance).to receive(:now_or_effective_at) { in_2015 }
+            expect(last_possible_balance.valid?).to be(false)
+          end
+        end
+      end
+    end
+
+    context 'offset 0' do
+      let(:etop_effective_at) { Time.zone.parse('01/01/2015') }
+      let(:start_year) { 2015 }
+      let(:expected_effective_at) { Time.zone.parse("#{end_day}/#{end_month}/2017") }
+      let(:in_2016) { Time.zone.parse("#{end_day}/#{end_month}/2016") }
+      let(:in_2018) { Time.zone.parse("#{end_day}/#{end_month}/2018") }
+
+      context 'effective_till is earliest date of the 3 in the year' do
+        let(:effective_till) { Time.zone.parse('05/01/2016') }
+        let(:start_day) { 10 }
+        let(:start_month) { 2 }
+        let(:end_month) { 1 }
+
+        context 'T < E < S' do
+          let(:end_day) { 1 }
+
+          it 'creates removal with proper effective_at' do
+            expect(last_possible_balance.valid?).to be(true)
+            expect(last_possible_balance.effective_at).to eq(expected_effective_at)
+          end
+
+          context 'with invalid data' do
+            it do
+              allow(last_possible_balance).to receive(:now_or_effective_at) { in_2016 }
+              expect(last_possible_balance.valid?).to be(false)
+            end
+
+            it do
+              allow(last_possible_balance).to receive(:now_or_effective_at) { in_2018 }
+              expect(last_possible_balance.valid?).to be(false)
+            end
+          end
+        end
+
+        context 'T = E < S' do
+          let(:end_day) { 5 }
+
+          it 'creates removal with proper effective_at' do
+            expect(last_possible_balance.valid?).to be(true)
+            expect(last_possible_balance.effective_at).to eq(expected_effective_at)
+          end
+
+          context 'with invalid data' do
+            it do
+              allow(last_possible_balance).to receive(:now_or_effective_at) { in_2016 }
+              expect(last_possible_balance.valid?).to be(false)
+            end
+
+            it do
+              allow(last_possible_balance).to receive(:now_or_effective_at) { in_2018 }
+              expect(last_possible_balance.valid?).to be(false)
+            end
+          end
+        end
+      end
+
+      context 'start_date is earliest date of the 3 in the year' do
+        let(:effective_till) { Time.zone.parse('15/02/2016') }
+        let(:start_year) { 2016 }
+        let(:start_day) { 1 }
+        let(:start_month) { 1 }
+        let(:end_month) { 2 }
+        let(:end_day) { 20 }
+
+        context 'S < T < E' do
+          it 'creates removal with proper effective_at' do
+            expect(last_possible_balance.valid?).to be(true)
+            expect(last_possible_balance.effective_at).to eq(expected_effective_at)
+          end
+
+          context 'with invalid data' do
+            it do
+              allow(last_possible_balance).to receive(:now_or_effective_at) { in_2016 }
+              expect(last_possible_balance.valid?).to be(false)
+            end
+
+            it do
+              allow(last_possible_balance).to receive(:now_or_effective_at) { in_2018 }
+              expect(last_possible_balance.valid?).to be(false)
+            end
+          end
+        end
+
+        context 'S = T < E' do
+          let(:effective_till) { Time.zone.parse('01/01/2016') }
+
+          it 'creates removal with proper effective_at' do
+            expect(last_possible_balance.valid?).to be(true)
+            expect(last_possible_balance.effective_at).to eq(expected_effective_at)
+          end
+
+          context 'with invalid data' do
+            it do
+              allow(last_possible_balance).to receive(:now_or_effective_at) { in_2016 }
+              expect(last_possible_balance.valid?).to be(false)
+            end
+
+            it do
+              allow(last_possible_balance).to receive(:now_or_effective_at) { in_2018 }
+              expect(last_possible_balance.valid?).to be(false)
+            end
+          end
+        end
+
+        context 'S < T = E' do
+          let(:effective_till) { Time.zone.parse('20/02/2016') }
+
+          it 'creates removal with proper effective_at' do
+            expect(last_possible_balance.valid?).to be(true)
+            expect(last_possible_balance.effective_at).to eq(expected_effective_at)
+          end
+
+          context 'with invalid data' do
+            it do
+              allow(last_possible_balance).to receive(:now_or_effective_at) { in_2016 }
+              expect(last_possible_balance.valid?).to be(false)
+            end
+
+            it do
+              allow(last_possible_balance).to receive(:now_or_effective_at) { in_2018 }
+              expect(last_possible_balance.valid?).to be(false)
+            end
+          end
+        end
+
+        context 'S = T = E' do
+          let(:effective_till) { Time.zone.parse('01/01/2016') }
+          let(:end_month) { 1 }
+          let(:end_day) { 1 }
+
+          it 'creates removal with proper effective_at' do
+            expect(last_possible_balance.valid?).to be(true)
+            expect(last_possible_balance.effective_at).to eq(expected_effective_at)
+          end
+
+          context 'with invalid data' do
+            it do
+              allow(last_possible_balance).to receive(:now_or_effective_at) { in_2016 }
+              expect(last_possible_balance.valid?).to be(false)
+            end
+
+            it do
+              allow(last_possible_balance).to receive(:now_or_effective_at) { in_2018 }
+              expect(last_possible_balance.valid?).to be(false)
+            end
+          end
+        end
+
+        context 'S < E < T' do
+          let(:end_day) { 5 }
+
+          it 'creates removal with proper effective_at' do
+            expect(last_possible_balance.valid?).to be(true)
+            expect(last_possible_balance.effective_at).to eq(expected_effective_at)
+          end
+
+          context 'with invalid data' do
+            it do
+              allow(last_possible_balance).to receive(:now_or_effective_at) { in_2016 }
+              expect(last_possible_balance.valid?).to be(false)
+            end
+
+            it do
+              allow(last_possible_balance).to receive(:now_or_effective_at) { in_2018 }
+              expect(last_possible_balance.valid?).to be(false)
+            end
+          end
+        end
+
+        context 'S = E < T' do
+          let(:end_month) { 1 }
+          let(:end_day) { 1 }
+
+          it 'creates removal with proper effective_at' do
+            expect(last_possible_balance.valid?).to be(true)
+            expect(last_possible_balance.effective_at).to eq(expected_effective_at)
+          end
+
+          context 'with invalid data' do
+            it do
+              allow(last_possible_balance).to receive(:now_or_effective_at) { in_2016 }
+              expect(last_possible_balance.valid?).to be(false)
+            end
+
+            it do
+              allow(last_possible_balance).to receive(:now_or_effective_at) { in_2018 }
+              expect(last_possible_balance.valid?).to be(false)
+            end
+          end
+        end
+      end
+
+      context 'E < T < S' do
+        let(:effective_till) { Time.zone.parse('10/01/2016') }
+        let(:start_year) { 2015 }
+        let(:start_day) { 10 }
+        let(:start_month) { 2 }
+        let(:end_month) { 1 }
+        let(:end_day) { 1 }
+
+        it 'creates removal with proper effective_at' do
+          expect(last_possible_balance.valid?).to be(true)
+          expect(last_possible_balance.effective_at).to eq(expected_effective_at)
+        end
+
+        context 'with invalid data' do
+          it do
+            allow(last_possible_balance).to receive(:now_or_effective_at) { in_2016 }
+            expect(last_possible_balance.valid?).to be(false)
+          end
+
+          it do
+            allow(last_possible_balance).to receive(:now_or_effective_at) { in_2018 }
+            expect(last_possible_balance.valid?).to be(false)
+          end
+        end
+      end
+    end
+  end
 end
