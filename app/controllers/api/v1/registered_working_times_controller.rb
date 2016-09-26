@@ -6,7 +6,10 @@ module API
       def create
         verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :create, resource
-          resource.update!(time_entries: filtered_attributes(attributes))
+          resource.update!(
+            comment: attributes[:comment],
+            time_entries: filtered_attributes(attributes)
+          )
           render_no_content
         end
       end

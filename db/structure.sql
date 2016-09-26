@@ -438,7 +438,8 @@ CREATE TABLE registered_working_times (
     date date NOT NULL,
     time_entries json DEFAULT '{}'::json NOT NULL,
     created_at timestamp without time zone NOT NULL,
-    updated_at timestamp without time zone NOT NULL
+    updated_at timestamp without time zone NOT NULL,
+    comment text
 );
 
 
@@ -1502,4 +1503,6 @@ INSERT INTO schema_migrations (version) VALUES ('20160711103240');
 INSERT INTO schema_migrations (version) VALUES ('20160721122247');
 
 INSERT INTO schema_migrations (version) VALUES ('20160725134153');
+
+INSERT INTO schema_migrations (version) VALUES ('20160921075423');
 
