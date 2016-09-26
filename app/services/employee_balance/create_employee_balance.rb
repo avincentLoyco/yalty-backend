@@ -25,9 +25,8 @@ class CreateEmployeeBalance
 
   def assign_employee_balance
     @employee_balance = build_or_update_employee_balance
-    return unless options[:balance_credit_addition_id]
-    employee_balance.balance_credit_additions <<
-      Employee::Balance.find(options[:balance_credit_addition_id])
+    return unless options[:balance_credit_additions]
+    employee_balance.balance_credit_additions << options[:balance_credit_additions]
   end
 
   def build_or_update_employee_balance
@@ -98,11 +97,6 @@ class CreateEmployeeBalance
     DateTime.parse(options[:validity_date].to_s).in_time_zone
   rescue
     nil
-  end
-
-  def balance_credit_additions
-    return unless options[:balance_credit_addition_id]
-    [Employee::Balance.find(options[:balance_credit_addition_id])]
   end
 
   def calculate_amount

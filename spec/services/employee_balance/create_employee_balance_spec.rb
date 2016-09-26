@@ -204,7 +204,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
             policy_credit_addition: true, effective_at: 1.year.ago, validity_date: Time.now
           )
         end
-        let(:options) {{ balance_credit_addition_id: employee_balance.id, resource_amount: 0 }}
+        let(:options) {{ balance_credit_additions: [employee_balance], resource_amount: 0 }}
 
         it { expect { subject }.to change { Employee::Balance.count }.by(1) }
         it { expect { subject }.to_not change { enqueued_jobs.size } }

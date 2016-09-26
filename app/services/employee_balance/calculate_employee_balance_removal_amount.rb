@@ -40,7 +40,9 @@ class CalculateEmployeeBalanceRemovalAmount
   end
 
   def calculate_amount_to_expire
-    additions.pluck(:manual_amount, :resource_amount).flatten.select { |value| value > 0 }.sum
+    additions_amounts =
+      additions.map { |addition| [addition[:manual_amount], addition[:resource_amount]] }
+    additions_amounts.flatten.select { |value| value > 0 }.sum
   end
 
   def amount_from_first_addition
