@@ -79,17 +79,27 @@ RSpec.describe AddPolicyAdditionsJob do
               expect(second_employees_balances.first.validity_date.to_date)
                 .to eq '1/4/2019'.to_date
             end
+
+            context 'balances should be added every year no matter the years to effect' do
+            before { Timecop.travel(Date.today + 1.year) }
+
+              it_behaves_like 'Policy called for a first time'
+            end
           end
 
-          context 'and this is not start date' do
-            before { employee_time_off_policies.first.update!(effective_at: Date.today - 1.year) }
+          context 'should be ran every year after the policy is assigned' do
+            before do
+              employee_time_off_policies.first.update!(effective_at: Date.today - 1.year)
+              employee_time_off_policies.second.update!(effective_at: Date.today - 2.year)
+              employee_time_off_policies.third.update!(effective_at: Date.today - 3.year)
+            end
 
-            it { expect { subject }.to change { Employee::Balance.count }.by(2) }
-            it { expect { subject }.to change { category.reload.employee_balances.count }.by(2) }
+            it { expect { subject }.to change { Employee::Balance.count }.by(3) }
+            it { expect { subject }.to change { category.reload.employee_balances.count }.by(3) }
+            it { expect { subject }.to change { first_employees_balances.count }.by(1) }
             it { expect { subject }.to change { second_employees_balances.count }.by(1) }
             it { expect { subject }.to change { last_employees_balances.count }.by(1) }
-            it { expect { subject }.to_not change { employee_balance.reload.being_processed } }
-            it { expect { subject }.to_not change { first_employees_balances.count } }
+            it { expect { subject }.to change { employee_balance.reload.being_processed } }
           end
         end
       end
