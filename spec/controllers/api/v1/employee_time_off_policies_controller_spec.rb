@@ -194,15 +194,21 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
         end
       end
 
-      context 'when one ETOP of a different category exsists on the past' do
+      context 'when one ETOP of a different category exsists with assignation on the same day' do
+        let!(:past_etop) do
+          top = create(:time_off_policy, time_off_category: category)
+          create(:employee_time_off_policy, employee: employee, time_off_policy: top,
+            effective_at: effective_at)
+        end
         it 'and the effective at is equal to this already existing ETOP effective_at' do
           it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(1) }
           it { expect { subject }.to change { Employee::Balance.count }.by(1) }
         end
       end
-      context 'when one ETOP of the same category already exists on the past' do
+      context 'when one ETOP of the same category already exists with assignation on the same day' do
         let!(:past_etop) do
-          create(:employee_time_off_policy, employee: employee, time_off_policy: time_off_policy)
+          create(:employee_time_off_policy, employee: employee, time_off_policy: time_off_policy,
+            effective_at: effective_at)
         end
 
 
@@ -235,7 +241,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
         context 'and the effective at is equal to the lastest ETOP effective_at' do
           let(:effective_at) { lastest_etop.effective_at }
-          context 'and the presence policy is the same as the oldest ETOP' do
+          context 'and the time off policy is the same as the oldest ETOP' do
             it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(-1) }
             it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
           end
@@ -374,6 +380,97 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
           expect_json(effective_at: effective_at.to_date.to_s)
           expect_json_keys([:effective_at, :effective_till, :id, :assignation_id])
+        end
+      end
+
+      context 'when one ETOP of a different category exsists on the past' do
+        let!(:past_etop) do
+          top = create(:time_off_policy, time_off_category: category)
+          create(:employee_time_off_policy, employee: employee, time_off_policy: top,
+            effective_at: effective_at)
+        end
+        it 'and the effective at is equal to this already existing ETOP effective_at' do
+          it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(1) }
+          it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+        end
+      end
+      context 'when one ETOP of the same category already exists on the past' do
+        let!(:past_etop) do
+          top = create(:time_off_policy, time_off_category: category)
+          create(:employee_time_off_policy, employee: employee, time_off_policy: top,
+            effective_at: effective_at)
+        end
+        let!(:past_etop) do
+          create(:employee_time_off_policy, employee: employee, time_off_policy: time_off_policy,
+            effective_at: effective_at)
+        end
+
+
+        context "and it's policy is the same as the policy as the ETOP being created" do
+          it { expect { subject }.to_not change { EmployeeTimeOffPolicy.count } }
+          it { expect { subject }.to_not change { Employee::Balance.count } }
+        end
+
+        context "and it's policy is a different one than the policy as the ETOP being created " do
+          let(:time_off_policy_id) { create(:time_off_policy, time_off_category: category).id }
+
+          it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(1) }
+          it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+        end
+
+      end
+
+      context 'when at least 2 ETOPs of the same category exist on the past' do
+        let!(:first_etop) do
+          create(:employee_time_off_policy, employee: employee, time_off_policy: time_off_policy,
+            effective_at: Date.today
+          )
+        end
+        let!(:lastest_etop) do
+          top = create(:time_off_policy, time_off_category: category)
+          create(:employee_time_off_policy, employee: employee, time_off_policy: top,
+            effective_at: Date.today + 1.week
+          )
+        end
+
+        context 'and the effective at is equal to the lastest ETOP effective_at' do
+          let(:effective_at) { lastest_etop.effective_at }
+          context 'and the time off policy is the same as the oldest ETOP' do
+            it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(-1) }
+            it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
+          end
+          context "and the time off policy is different than the exisitng ETOP's ones" do
+            let(:time_off_policy_id) { create(:time_off_policy, time_off_category: category).id }
+
+            it { expect { subject }.to_not  change { EmployeeTimeOffPolicy.count } }
+            it { expect { subject }.to_not  change { Employee::Balance.count } }
+          end
+        end
+        context 'and the effective at is before the lastest ETOP effective_at' do
+          let(:effective_at) { lastest_etop.effective_at - 2.days }
+          context 'and the time off policy is the same as the oldest ETOP' do
+            it { expect { subject }.to_not change { EmployeeTimeOffPolicy.count } }
+            it { expect { subject }.to_not change { Employee::Balance.count } }
+          end
+          context "and the time off policy is different than the exisitng ETOP's ones" do
+            let(:time_off_policy_id) { create(:time_off_policy, time_off_category: category).id }
+
+            it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(1) }
+            it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+          end
+        end
+        context 'and the effective at is after than the lastest ETOP effective_at' do
+          let(:effective_at) { lastest_etop.effective_at + 2.days }
+          context 'and the time off policy is the same as the oldest ETOP' do
+            it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(1) }
+            it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+          end
+          context "and the time off policy is different than the exisitng ETOP's ones" do
+            let(:time_off_policy_id) { create(:time_off_policy, time_off_category: category).id }
+
+            it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(1) }
+            it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+          end
         end
       end
     end
