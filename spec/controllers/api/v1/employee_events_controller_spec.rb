@@ -5,7 +5,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     resource_name: 'employee_event'
   include_context 'shared_context_headers'
 
-
   let!(:employee_eattribute_definition) do
     create(:employee_attribute_definition,
       account: Account.current,
@@ -702,6 +701,21 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     end
     context 'when the user is not an account manager'do
       before { user.account_manager = false }
+
+      context 'and he wants to update other employee attributes' do
+        before do
+          user.employee = create(:employee, account: account)
+          json_payload[:employee_attributes].pop
+        end
+
+        it { expect { subject }.to_not change { first_name_attribute.reload.value } }
+        it { expect { subject }.to_not change { last_name_attribute.reload.value } }
+        it { expect { subject }.to_not change { annual_salary_attribute.reload.value } }
+
+        it { is_expected.to have_http_status(403) }
+
+        it { expect(subject.body).to include("You are not authorized to access this page") }
+      end
 
       context 'and there is a forbidden attribute in the payload' do
         context 'and it has been updated' do
