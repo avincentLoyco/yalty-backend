@@ -21,7 +21,7 @@ module EmployeeEventSchemas
       required(:event_type).filled(:str?)
       optional(:comment).filled(:str?)
       required(:employee).schema do
-        optional(:id).filled(:str?)
+        required(:id).filled(:str?)
       end
       optional(:employee_attributes).maybe(:array?)
     end
