@@ -18,6 +18,9 @@ Metrics/AbcSize:
 Metrics/ClassLength:
   Enabled: false
 
+Metrics/CyclomaticComplexity:
+  Enabled: false
+
 Metrics/LineLength:
   Max: 100
 
@@ -25,7 +28,10 @@ Metrics/MethodLength:
   Enabled: false
 
 Metrics/ParameterLists:
-  enabled: false
+  Enabled: false
+
+Metrics/PerceivedComplexity:
+  Enabled: false
 
 Style/Documentation:
   Enabled: false
@@ -41,3 +47,6 @@ Style/BracesAroundHashParameters:
 
 Style/MultilineOperationIndentation:
   EnforcedStyle: indented
+
+Style/SingleLineBlockParams:
+  Enabled: false

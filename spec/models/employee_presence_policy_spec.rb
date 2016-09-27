@@ -19,9 +19,7 @@ RSpec.describe EmployeePresencePolicy, type: :model do
       let!(:policy) { create(:time_off_policy, time_off_category: category) }
       let(:category) { create(:time_off_category, account_id: employee.account_id) }
       let(:balance) { time_off.employee_balance }
-      let(:time_off) do
-        create(:time_off, employee: employee, time_off_category: category)
-      end
+      let(:time_off) { create(:time_off, employee: employee, time_off_category: category) }
       let(:new_policy) do
         build(:employee_presence_policy,
           employee: balance.employee,

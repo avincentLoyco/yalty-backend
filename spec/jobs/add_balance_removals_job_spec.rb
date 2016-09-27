@@ -7,37 +7,89 @@ RSpec.describe AddBalanceRemovalsJob do
   subject { AddBalanceRemovalsJob.perform_now  }
 
   let(:employee) { create(:employee) }
-  let!(:policy) { create(:time_off_policy, time_off_category: category) }
+  let!(:policy) do
+    create(:time_off_policy,
+      time_off_category: category,
+      start_day: 1,
+      start_month: 12,
+      end_month: Date.today.month,
+      end_day: Date.today.day,
+      years_to_effect: 1
+    )
+
+  end
   let(:category) { create(:time_off_category, account: employee.account) }
   let!(:employee_policy) do
     create(:employee_time_off_policy, employee: employee, time_off_policy: policy)
   end
   let!(:balance) do
     create(:employee_balance,
-      employee: employee, effective_at: Date.today - 1.week, validity_date: Date.today,
-      time_off_category: category, amount: 100)
+      employee: employee, effective_at: Date.today - 1.month, validity_date: Date.today,
+      time_off_category: category, resource_amount: 100)
   end
 
   context 'when employee balance has validity date today' do
-    it { expect { subject }.to change { Employee::Balance.count }.by(1) }
-    it { expect { subject }.to change { balance.reload.balance_credit_removal } }
-    it { expect { subject }.to change { employee.reload.employee_balances.count }.by(1) }
+    context 'and these is only balance with validity date today' do
+      it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+      it { expect { subject }.to change { balance.reload.balance_credit_removal } }
+      it { expect { subject }.to change { employee.reload.employee_balances.count }.by(1) }
 
-    context 'and balance credit addition is not policy addition' do
-      before { subject }
-
-      it { expect(balance.balance_credit_removal.amount).to eq -balance.amount }
-      it { expect(balance.balance_credit_removal.policy_credit_removal).to eq false }
-    end
-
-    context 'and balance credit addition is policy addition' do
-      before do
-        balance.update!(policy_credit_addition: true)
+      it '' do
         subject
+        removal_balance = employee.reload.employee_balances.find_by(effective_at: Date.today)
+        expect(removal_balance.validity_date ).to eq (Date.today )
       end
 
-      it { expect(balance.balance_credit_removal.amount).to eq -balance.amount }
-      it { expect(balance.balance_credit_removal.policy_credit_removal).to eq true }
+      context 'and balance credit addition is not policy addition' do
+        before { subject }
+
+        it { expect(balance.reload.balance_credit_removal.amount).to eq -balance.amount }
+      end
+    end
+
+    context 'and there are other balances with validity dates today' do
+      context 'and they are in the same time off category' do
+        let!(:same_day_balance) do
+          create(:employee_balance_manual, :with_time_off,
+            employee: balance.employee, time_off_category: balance.time_off_category,
+            effective_at: balance.effective_at + 1.month, validity_date: balance.validity_date)
+        end
+
+        it { expect { subject }.to change { Employee::Balance.removals.uniq.count }.by(1) }
+        it { expect { subject }.to change { balance.reload.balance_credit_removal_id } }
+        it { expect { subject }.to change { same_day_balance.reload.balance_credit_removal_id } }
+
+        it 'has valid additions assigned' do
+          subject
+          removal_balance = employee.reload.employee_balances.find_by(effective_at: Date.today)
+          expect(removal_balance.balance_credit_additions.pluck(:id))
+            .to contain_exactly(balance.id, same_day_balance.id)
+        end
+
+        it 'has valid amount' do
+          subject
+          removal_balance = employee.reload.employee_balances.find_by(effective_at: Date.today)
+          expect(removal_balance.resource_amount).to eq -balance.amount
+        end
+      end
+
+      context 'and they are in different time off category' do
+        let(:new_category) { create(:time_off_category, account: employee.account) }
+        let!(:same_day_balance) do
+          create(:employee_balance,
+            employee: balance.employee, time_off_category: new_category,
+            effective_at: balance.effective_at + 1.month, validity_date: balance.validity_date)
+        end
+
+        it { expect { subject }.to change { Employee::Balance.removals.uniq.count }.by(2) }
+
+        it 'additions have different removals assigned' do
+          subject
+
+          expect(same_day_balance.reload.balance_credit_removal_id)
+            .to_not eq(balance.reload.balance_credit_removal_id)
+        end
+      end
     end
   end
 

@@ -11,8 +11,12 @@ task create_balances_for_time_offs: [:environment] do
 end
 
 def setup_params(time_off)
-  [time_off.time_off_category, time_off.employee, time_off.employee.account, time_off.balance,
-   { time_off_id: time_off.id }]
+  [
+    time_off.time_off_category,
+    time_off.employee,
+    time_off.employee.account,
+    time_off_id: time_off.id, amount: time_off.balance
+  ]
 end
 
 def create_or_find_employeee_policy(employee, category)

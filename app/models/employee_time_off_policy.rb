@@ -23,6 +23,20 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
       .order(effective_at: :desc)
   }
 
+  def policy_assignation_balance
+    employee.employee_balances.where(effective_at: effective_at, time_off_id: nil).first
+  end
+
+  def employee_balances
+    if effective_till
+      Employee::Balance.employee_balances(employee.id, time_off_category.id)
+                       .where('effective_at BETWEEN ? and ?', effective_at, effective_till)
+    else
+      Employee::Balance.employee_balances(employee.id, time_off_category.id)
+                       .where('effective_at > ?', effective_at)
+    end
+  end
+
   def effective_till
     next_effective_at =
       self

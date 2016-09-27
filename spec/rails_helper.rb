@@ -51,8 +51,6 @@ RSpec.configure do |config|
   config.before(:suite) do
     Resque.redis.client.reconnect
 
-    FactoryGirl.lint
-
     DatabaseCleaner.strategy = :transaction
     DatabaseCleaner.clean_with(:truncation)
 

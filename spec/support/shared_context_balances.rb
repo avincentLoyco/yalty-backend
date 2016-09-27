@@ -28,89 +28,88 @@ RSpec.shared_context 'shared_context_balances' do |settings|
   if settings[:type] == 'balancer'
     if settings[:end_month] && settings[:end_day]
       let!(:previous_add) do
-        create(:employee_balance,
-          amount: 1000, effective_at: previous.first, employee: employee,
-          time_off_category: category, validity_date: previous.last
+        create(:employee_balance_manual,
+          resource_amount: 1000, effective_at: previous.first, employee: employee,
+          time_off_category: category, validity_date: previous.last - 1.day
         )
       end
 
       let!(:previous_balance) do
-        create(:employee_balance,
-          effective_at: previous.first + 3.months, amount: -100,
+        create(:employee_balance_manual, :with_time_off,
+          effective_at: previous.first + 3.months, manual_amount: -100,
           employee: employee, time_off_category: category
         )
       end
 
       let!(:previous_removal) do
-        create(:employee_balance,
-          policy_credit_removal: true, amount: -900, employee: employee,
-          time_off_category: category, balance_credit_addition: previous_add
+        create(:employee_balance_manual,
+          resource_amount: -900, employee: employee, time_off_category: category,
+          balance_credit_additions: [previous_add], effective_at: previous.last - 1.day
         )
       end
 
     else
       let!(:previous_add) do
-        create(:employee_balance,
-          amount: 1000, effective_at: previous.first,
+        create(:employee_balance_manual,
+          resource_amount: 1000, effective_at: previous.first,
           employee: employee, time_off_category: category
         )
       end
 
       let!(:previous_balance) do
-        create(:employee_balance,
-          amount: -900, employee: employee, time_off_category: category,
-          effective_at: previous.last
+        create(:employee_balance_manual,
+          resource_amount: -900, employee: employee, time_off_category: category,
+          effective_at: previous.last - 1.day
         )
       end
     end
 
   else
     let!(:previous_balance) do
-      create(:employee_balance,
-        effective_at: previous.first + 9.month, amount: -1000,
+      create(:employee_balance_manual,
+        effective_at: previous.first, resource_amount: -1000,
         employee: employee, time_off_category: category
       )
     end
 
     let!(:previous_removal) do
-      create(:employee_balance,
-        effective_at: previous.last, amount: -500, employee: employee,
+      create(:employee_balance_manual,
+        effective_at: previous.last - 1.day, resource_amount: -500, employee: employee,
         time_off_category: category
       )
     end
   end
 
   # balances in current policy period
-
   if settings[:end_month] && settings[:end_day] && settings[:type] == 'balancer'
     let!(:balance_add) do
-      create(:employee_balance,
-        amount: 1000, employee: employee, time_off_category: category,
-        effective_at: current.last - 1.month, validity_date: current.last
+      create(:employee_balance_manual,
+        resource_amount: 1000, employee: employee, time_off_category: category,
+        effective_at: current.first, validity_date: current.last, policy_credit_addition: true
       )
     end
   else
     if settings[:type] == 'counter'
       let!(:balance_add) do
-        create(:employee_balance,
-          amount: 1500, employee: employee, time_off_category: category,
-          effective_at: current.last - 1.month, policy_credit_addition: true
+        create(:employee_balance_manual,
+          resource_amount: 1500, employee: employee, time_off_category: category,
+          effective_at: current.first, policy_credit_addition: true
         )
       end
     else
       let!(:balance_add) do
-        create(:employee_balance,
-          amount: 1000, employee: employee, time_off_category: category,
-          effective_at: current.last - 1.month, policy_credit_addition: true
+        create(:employee_balance_manual,
+          resource_amount: 1000, employee: employee, time_off_category: category,
+          effective_at: current.first, policy_credit_addition: true
         )
       end
     end
   end
 
   let!(:balance) do
-    create(:employee_balance,
-      amount: -500, employee: employee, time_off_category: category,
-      effective_at: current.last - 1.week
+    create(:employee_balance_manual, :with_time_off,
+      resource_amount: -500, employee: employee, time_off_category: category,
+      effective_at: current.last - 1.day
     )
   end
 end

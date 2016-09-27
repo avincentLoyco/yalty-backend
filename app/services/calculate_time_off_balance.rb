@@ -2,10 +2,10 @@ class CalculateTimeOffBalance
   attr_reader :time_off, :employee, :balane, :presence_policy, :time_off_start_date,
     :time_off_end_date, :holidays_dates_hash
 
-  def initialize(time_off)
+  def initialize(time_off, start_time = nil, end_time = nil)
     @time_off = time_off
-    @time_off_start_date = time_off.start_time
-    @time_off_end_date = time_off.end_time
+    @time_off_start_date = start_time || time_off.start_time
+    @time_off_end_date = end_time || time_off.end_time
     @employee = time_off.employee
     @holidays_dates_hash = holidays_dates_in_time_off(time_off_holidays)
   end

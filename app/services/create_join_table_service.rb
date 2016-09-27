@@ -71,7 +71,12 @@ class CreateJoinTableService
     if next_join_table.try(:send, resource_class) == params[resource_class.to_sym]
       join_tables_to_remove.push(next_join_table)
     end
+    remove_employee_balances(join_tables_to_remove) if join_table_class == EmployeeTimeOffPolicy
     join_tables_to_remove.map(&:destroy!)
+  end
+
+  def remove_employee_balances(join_tables_to_remove)
+    join_tables_to_remove.map(&:policy_assignation_balance).compact.map(&:destroy!)
   end
 
   def previous_join_table

@@ -95,7 +95,9 @@ module API
       end
 
       def render_resource_with_relationships(resource, response = {})
-        render response.merge(json: resource_representer.new(resource, current_user).with_relationships)
+        render response.merge(
+          json: resource_representer.new(resource, current_user).with_relationships
+        )
       end
 
       def resource_representer

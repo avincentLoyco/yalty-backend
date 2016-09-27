@@ -197,7 +197,7 @@ CREATE VIEW employee_attributes AS
 CREATE TABLE employee_balances (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
     balance integer DEFAULT 0,
-    amount integer DEFAULT 0,
+    resource_amount integer DEFAULT 0,
     time_off_id uuid,
     employee_id uuid NOT NULL,
     time_off_category_id uuid NOT NULL,
@@ -206,10 +206,10 @@ CREATE TABLE employee_balances (
     being_processed boolean DEFAULT false,
     effective_at timestamp without time zone,
     validity_date timestamp without time zone,
-    policy_credit_removal boolean DEFAULT false,
     policy_credit_addition boolean DEFAULT false,
-    balance_credit_addition_id uuid,
-    reset_balance boolean DEFAULT false
+    reset_balance boolean DEFAULT false,
+    manual_amount integer DEFAULT 0,
+    balance_credit_removal_id uuid
 );
 
 
@@ -815,10 +815,10 @@ CREATE INDEX index_employee_attribute_versions_on_employee_id ON employee_attrib
 
 
 --
--- Name: index_employee_balances_on_balance_credit_addition_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_employee_balances_on_balance_credit_removal_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
-CREATE INDEX index_employee_balances_on_balance_credit_addition_id ON employee_balances USING btree (balance_credit_addition_id);
+CREATE INDEX index_employee_balances_on_balance_credit_removal_id ON employee_balances USING btree (balance_credit_removal_id);
 
 
 --
@@ -1503,6 +1503,16 @@ INSERT INTO schema_migrations (version) VALUES ('20160711103240');
 INSERT INTO schema_migrations (version) VALUES ('20160721122247');
 
 INSERT INTO schema_migrations (version) VALUES ('20160725134153');
+
+INSERT INTO schema_migrations (version) VALUES ('20160727144502');
+
+INSERT INTO schema_migrations (version) VALUES ('20160818122718');
+
+INSERT INTO schema_migrations (version) VALUES ('20160824112602');
+
+INSERT INTO schema_migrations (version) VALUES ('20160901084714');
+
+INSERT INTO schema_migrations (version) VALUES ('20160916062613');
 
 INSERT INTO schema_migrations (version) VALUES ('20160921075423');
 

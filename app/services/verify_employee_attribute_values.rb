@@ -32,7 +32,7 @@ class VerifyEmployeeAttributeValues
 
   def verify_schema
     schema = type_schema
-    return errors.merge!(value: 'Invalid type') unless !schema.nil?
+    return errors.merge!(value: 'Invalid type') if schema.nil?
     schema.call(value)
   end
 
