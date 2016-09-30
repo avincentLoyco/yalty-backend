@@ -39,7 +39,7 @@ class ManageEmployeeBalanceAdditions
 
   def policy_type_options(date)
     base_options =
-      { skip_update: true, policy_credit_addition: true, effective_at: date,
+      { skip_update: true, policy_credit_addition: true, effective_at: date + 5.minutes,
         resource_amount: resource.time_off_policy.amount }
     return base_options if resource.time_off_policy.counter?
     base_options.merge(validity_date: RelatedPolicyPeriod.new(resource).validity_date_for(date))

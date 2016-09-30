@@ -56,8 +56,9 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   def calculate_and_set_balance
-    previous = RelativeEmployeeBalancesFinder.new(self).previous_balances.last
-    self.balance = (previous && previous.id != id ? previous.balance + amount : amount)
+    previous = RelativeEmployeeBalancesFinder.new(self).previous_balances
+    self.balance =
+      (previous.present? && previous.last.id != id ? previous.last.balance + amount : amount)
   end
 
   def calculate_removal_amount
@@ -72,7 +73,7 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   def now_or_effective_at
-    return effective_at if effective_at && balance_credit_additions.blank? && time_off.blank?
+    return effective_at if effective_at && balance_credit_addition_ids.blank? && time_off.blank?
     if balance_credit_additions.present?
       balance_credit_additions.map(&:validity_date).first
     else
@@ -82,7 +83,7 @@ class Employee::Balance < ActiveRecord::Base
 
   def employee_time_off_policy
     date =
-      if balance_credit_additions.present?
+      if balance_credit_addition_ids.present?
         balance_credit_additions.first.effective_at
       else
         now_or_effective_at
@@ -110,9 +111,10 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   def removal_effective_at_date
+    return unless balance_credit_addition_ids.present?
     additions_validity_dates = balance_credit_additions.map(&:validity_date).uniq
-    if additions_validity_dates.present? && (additions_validity_dates.size > 1 ||
-        effective_at && effective_at.to_date != additions_validity_dates.first.to_date)
+    if additions_validity_dates.size > 1 ||
+        effective_at && effective_at.to_date != additions_validity_dates.first.to_date
       errors.add(:effective_at, 'Removal effective at must equal addition validity date')
     end
   end
