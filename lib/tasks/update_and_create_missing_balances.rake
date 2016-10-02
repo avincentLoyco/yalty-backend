@@ -3,25 +3,11 @@ namespace :update_and_create_missing_balances do
 
   task update_and_create: :environment do
     EmployeeTimeOffPolicy.all.each do |etop|
+      destroyed = remove_duplicated_employee_time_off_policies(etop) unless etop.valid?
+      next unless etop.valid? && (destroyed.nil? || destroyed.id != etop.id)
       change_effective_at_to_employee_hired_date(etop)
-      remove_duplicated_employee_time_off_policies(etop) unless etop.valid?
 
-      next if etop.destroyed?
-
-      if etop.policy_assignation_balance.present?
-        etop.policy_assignation_balance.update!(
-          validity_date: RelatedPolicyPeriod.new(etop).validity_date_for(etop.effective_at))
-      else
-        CreateEmployeeBalance.new(
-          etop.time_off_category.id,
-          etop.employee.id,
-          etop.employee.account.id,
-          effective_at: etop.effective_at + 5.minutes,
-          manual_amount: @manual_amount ? @manual_amount : 0,
-          validity_date: RelatedPolicyPeriod.new(etop).validity_date_for(etop.effective_at),
-          skip_update: true
-        ).call
-      end
+      update_or_create_assignation_balance(etop)
       create_missing_additions(etop) if etop.employee_balances.additions.blank?
     end
     ActiveRecord::Base.connection.execute("""
@@ -49,7 +35,6 @@ namespace :update_and_create_missing_balances do
       .employee
       .employee_time_off_policies
       .where(time_off_category: etop.time_off_category, effective_at: etop.effective_at)
-
     if duplicated.size > 1
       older = duplicated.map(&:time_off_policy).sort_by { |policy| policy[:created_at] }.last
       duplicated.where(time_off_policy: older).first.destroy!

@@ -15,7 +15,9 @@ class ManageEmployeeBalanceAdditions
       create_additions_with_removals
       PrepareEmployeeBalancesToUpdate.new(balances.flatten.first).call
     end
-    UpdateBalanceJob.perform_later(balances.flatten.first)
+    unless balances.flatten.map { |b| [b[:manual_amount], b[:resource_amount]] }.flatten.uniq == [0]
+      UpdateBalanceJob.perform_later(balances.flatten.first)
+    end
   end
 
   private
