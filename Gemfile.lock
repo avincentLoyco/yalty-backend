@@ -59,6 +59,8 @@ GEM
       rake (~> 10.4)
       rest-client (~> 1.8)
       thor (~> 0.19.1)
+    ar_after_transaction (0.4.0)
+      activerecord
     arel (6.0.3)
     ast (2.1.0)
     axiom-types (0.1.1)
@@ -449,6 +451,7 @@ DEPENDENCIES
   active_scheduler (~> 0.0.3)
   airborne
   apiaryio
+  ar_after_transaction (~> 0.4.0)
   bcrypt (~> 3.1.10)
   better_errors
   binding_of_caller

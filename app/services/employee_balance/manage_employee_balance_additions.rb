@@ -15,12 +15,18 @@ class ManageEmployeeBalanceAdditions
       create_additions_with_removals
       PrepareEmployeeBalancesToUpdate.new(balances.flatten.first).call
     end
-    unless balances.flatten.map { |b| [b[:manual_amount], b[:resource_amount]] }.flatten.uniq == [0]
-      UpdateBalanceJob.perform_later(balances.flatten.first)
-    end
+    check_amount_and_update_balances
   end
 
   private
+
+  def check_amount_and_update_balances
+    unless balances.flatten.map { |b| [b[:manual_amount], b[:resource_amount]] }.flatten.uniq == [0]
+      ActiveRecord::Base.after_transaction do
+        UpdateBalanceJob.perform_later(balances.flatten.first)
+      end
+    end
+  end
 
   def create_additions_with_removals
     date = RelatedPolicyPeriod.new(resource).first_start_date

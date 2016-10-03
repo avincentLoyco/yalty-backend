@@ -10,14 +10,14 @@ namespace :update_and_create_missing_balances do
       update_or_create_assignation_balance(etop)
       create_missing_additions(etop) if etop.employee_balances.additions.blank?
     end
-    ActiveRecord::Base.connection.execute("""
-      UPDATE employee_balances SET effective_at = (
-        SELECT time_offs.end_time FROM time_offs
-        WHERE time_offs.id = employee_balances.time_off_id
-      ) WHERE employee_balances.time_off_id IS NOT NULL;
-    """)
-    Employee::Balance.where.not(time_off_id: nil).each do |balance|
-      update_time_off_employee_balances(balance)
+    balances_with_time_offs =
+      Employee::Balance
+      .where.not(time_off_id: nil)
+      .order(:effective_at)
+      .group_by { |balance| [balance[:employee_id], balance[:time_off_category_id]] }
+
+    balances_with_time_offs.each do |_k, v|
+      update_time_off_employee_balances(v)
     end
   end
 
@@ -65,14 +65,25 @@ namespace :update_and_create_missing_balances do
     end
   end
 
-  def update_time_off_employee_balances(balance)
-    active_policy = balance.employee.active_policy_in_category_at_date(
-      balance.time_off_category_id,
-      balance.time_off.end_time
-    )
-    validity_date = RelatedPolicyPeriod.new(active_policy).validity_date_for_time_off(
-      balance.time_off.end_time
-    )
-    UpdateEmployeeBalance.new(balance, validity_date: validity_date).call
+  def update_time_off_employee_balances(balances)
+    balances.each do |balance|
+      new_effective_at = balance.time_off.end_time
+      active_policy = balance.employee.active_policy_in_category_at_date(
+        balance.time_off_category_id,
+        balance.time_off.end_time
+      )
+      validity_date = RelatedPolicyPeriod.new(active_policy).validity_date_for_time_off(
+        balance.time_off.end_time
+      )
+      options = { validity_date: validity_date.to_s, effective_at: new_effective_at.to_s }
+
+      if balance.id == balances.first.id
+        ActiveRecord::Base.after_transaction do
+          UpdateBalanceJob.perform_later(balance.id, options)
+        end
+      else
+        UpdateEmployeeBalance.new(balance, options).call
+      end
+    end
   end
 end
