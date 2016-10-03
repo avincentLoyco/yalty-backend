@@ -2,22 +2,22 @@ namespace :update_and_create_missing_balances do
   desc 'Create missing assignation balances, update time offs effective at and update validity date'
 
   task update_and_create: :environment do
-    EmployeeTimeOffPolicy.all.each do |etop|
-      destroyed = remove_duplicated_employee_time_off_policies(etop) unless etop.valid?
-      next unless etop.valid? && (destroyed.nil? || destroyed.id != etop.id)
-      change_effective_at_to_employee_hired_date(etop)
+    ActiveRecord::Base.transaction do
+      EmployeeTimeOffPolicy.all.each do |etop|
+        change_effective_at_to_employee_hired_date(etop)
 
-      update_or_create_assignation_balance(etop)
-      create_missing_additions(etop) if etop.employee_balances.additions.blank?
-    end
-    balances_with_time_offs =
-      Employee::Balance
-      .where.not(time_off_id: nil)
-      .order(:effective_at)
-      .group_by { |balance| [balance[:employee_id], balance[:time_off_category_id]] }
+        update_or_create_assignation_balance(etop)
+        create_missing_additions(etop) if etop.employee_balances.additions.blank?
+      end
+      balances_with_time_offs =
+        Employee::Balance
+        .where.not(time_off_id: nil)
+        .order(:effective_at)
+        .group_by { |balance| [balance[:employee_id], balance[:time_off_category_id]] }
 
-    balances_with_time_offs.each do |_k, v|
-      update_time_off_employee_balances(v)
+      balances_with_time_offs.each do |_k, v|
+        update_time_off_employee_balances(v)
+      end
     end
   end
 
@@ -44,7 +44,8 @@ namespace :update_and_create_missing_balances do
   def update_or_create_assignation_balance(etop)
     if etop.policy_assignation_balance.present?
       etop.policy_assignation_balance.update!(
-        validity_date: RelatedPolicyPeriod.new(etop).validity_date_for(etop.effective_at))
+        validity_date: RelatedPolicyPeriod.new(etop).validity_date_for(etop.effective_at)
+      )
     else
       CreateEmployeeBalance.new(
         etop.time_off_category.id,
@@ -60,7 +61,7 @@ namespace :update_and_create_missing_balances do
 
   def create_missing_additions(etop)
     first_start_date = RelatedPolicyPeriod.new(etop).first_start_date
-    if first_start_date > etop.effective_at && first_start_date <= Date.today
+    if first_start_date > etop.effective_at && first_start_date <= Time.zone.today
       ManageEmployeeBalanceAdditions.new(etop).call
     end
   end

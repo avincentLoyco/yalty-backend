@@ -222,7 +222,9 @@ CREATE TABLE employee_presence_policies (
     employee_id uuid NOT NULL,
     presence_policy_id uuid NOT NULL,
     effective_at date NOT NULL,
-    order_of_start_day integer DEFAULT 1 NOT NULL
+    order_of_start_day integer DEFAULT 1 NOT NULL,
+    created_at timestamp without time zone,
+    updated_at timestamp without time zone
 );
 
 
@@ -235,7 +237,9 @@ CREATE TABLE employee_time_off_policies (
     employee_id uuid NOT NULL,
     time_off_policy_id uuid NOT NULL,
     effective_at date NOT NULL,
-    time_off_category_id uuid
+    time_off_category_id uuid,
+    created_at timestamp without time zone,
+    updated_at timestamp without time zone
 );
 
 
@@ -247,7 +251,9 @@ CREATE TABLE employee_working_places (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
     employee_id uuid NOT NULL,
     working_place_id uuid NOT NULL,
-    effective_at date NOT NULL
+    effective_at date NOT NULL,
+    created_at timestamp without time zone,
+    updated_at timestamp without time zone
 );
 
 
@@ -899,6 +905,13 @@ CREATE UNIQUE INDEX index_employee_presence_policy_effective_at ON employee_pres
 
 
 --
+-- Name: index_employee_time_off_category_effective_at; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE UNIQUE INDEX index_employee_time_off_category_effective_at ON employee_time_off_policies USING btree (employee_id, time_off_category_id, effective_at);
+
+
+--
 -- Name: index_employee_time_off_policies_on_employee_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -910,13 +923,6 @@ CREATE INDEX index_employee_time_off_policies_on_employee_id ON employee_time_of
 --
 
 CREATE INDEX index_employee_time_off_policies_on_time_off_policy_id ON employee_time_off_policies USING btree (time_off_policy_id);
-
-
---
--- Name: index_employee_time_off_policy_effective_at; Type: INDEX; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE UNIQUE INDEX index_employee_time_off_policy_effective_at ON employee_time_off_policies USING btree (employee_id, time_off_policy_id, effective_at);
 
 
 --
@@ -1514,5 +1520,5 @@ INSERT INTO schema_migrations (version) VALUES ('20160924112602');
 
 INSERT INTO schema_migrations (version) VALUES ('20160925084714');
 
-INSERT INTO schema_migrations (version) VALUES ('20160926062613');
+INSERT INTO schema_migrations (version) VALUES ('20161003103437');
 
