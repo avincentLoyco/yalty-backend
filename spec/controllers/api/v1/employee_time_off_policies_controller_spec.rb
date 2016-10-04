@@ -161,7 +161,6 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
               expect { subject }.to change { Employee::Balance.exists?(related_balance.id) }
             end
 
-
             it 'should have proper data in response body' do
               subject
 
@@ -175,7 +174,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
           context 'before effective at' do
             let(:related_effective_at) { 3.years.ago }
 
-            it { is_expected.to have_http_status(200) }
+            it { is_expected.to have_http_status(205) }
 
             it { expect { subject }.to_not change { Employee::Balance.count } }
             it { expect { subject }.to_not change { EmployeeTimeOffPolicy.count } }
@@ -200,30 +199,34 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
           create(:employee_time_off_policy, employee: employee, time_off_policy: top,
             effective_at: effective_at)
         end
-        it 'and the effective at is equal to this already existing ETOP effective_at' do
-          it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(1) }
-          it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+
+        context 'and the effective at is equal to this already existing ETOP effective_at' do
+          it { expect { subject }.to change { EmployeeTimeOffPolicy.exists?(past_etop.id) } }
+          it { expect { subject }.to change { Employee::Balance.additions.count }.by(1) }
+          it { expect { subject }.to change { Employee::Balance.count }.by(2) }
         end
       end
+
       context 'when one ETOP of the same category already exists with assignation on the same day' do
         let!(:past_etop) do
           create(:employee_time_off_policy, employee: employee, time_off_policy: time_off_policy,
             effective_at: effective_at)
         end
 
-
         context "and it's policy is the same as the policy as the ETOP being created" do
           it { expect { subject }.to_not change { EmployeeTimeOffPolicy.count } }
           it { expect { subject }.to_not change { Employee::Balance.count } }
+
+          it { is_expected.to have_http_status(422) }
         end
 
         context "and it's policy is a different one than the policy as the ETOP being created " do
           let(:time_off_policy_id) { create(:time_off_policy, time_off_category: category).id }
 
-          it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(1) }
-          it { expect { subject }.to change { Employee::Balance.count }.by(1) }
-        end
+          it { expect { subject }.to change { EmployeeTimeOffPolicy.exists?(past_etop.id) } }
 
+          it { is_expected.to have_http_status(201) }
+        end
       end
 
       context 'when at least 2 ETOPs of the same category exist on the past' do
@@ -232,50 +235,71 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
             effective_at: Date.today
           )
         end
-        let!(:lastest_etop) do
+
+        let!(:latest_etop) do
           top = create(:time_off_policy, time_off_category: category)
-          create(:employee_time_off_policy, employee: employee, time_off_policy: top,
-            effective_at: Date.today + 1.week
+          create(:employee_time_off_policy, :with_employee_balance,
+            employee: employee, time_off_policy: top, effective_at: Date.today + 1.week
           )
         end
 
-        context 'and the effective at is equal to the lastest ETOP effective_at' do
-          let(:effective_at) { lastest_etop.effective_at }
+        context 'and the effective at is equal to the latest ETOP effective_at' do
+          let(:effective_at) { latest_etop.effective_at }
+
           context 'and the time off policy is the same as the oldest ETOP' do
             it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(-1) }
             it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
+
+            it { is_expected.to have_http_status(205) }
           end
+
           context "and the time off policy is different than the exisitng ETOP's ones" do
             let(:time_off_policy_id) { create(:time_off_policy, time_off_category: category).id }
 
-            it { expect { subject }.to_not  change { EmployeeTimeOffPolicy.count } }
-            it { expect { subject }.to_not  change { Employee::Balance.count } }
+            it { expect { subject }.to change { EmployeeTimeOffPolicy.exists?(latest_etop.id) } }
+            it { expect { subject }.to_not change { Employee::Balance.count } }
+
+            it { is_expected.to have_http_status(201) }
           end
         end
-        context 'and the effective at is before the lastest ETOP effective_at' do
-          let(:effective_at) { lastest_etop.effective_at - 2.days }
+
+        context 'and the effective at is before the latest ETOP effective_at' do
+          let(:effective_at) { latest_etop.effective_at - 2.days }
+
           context 'and the time off policy is the same as the oldest ETOP' do
             it { expect { subject }.to_not change { EmployeeTimeOffPolicy.count } }
             it { expect { subject }.to_not change { Employee::Balance.count } }
-          end
-          context "and the time off policy is different than the exisitng ETOP's ones" do
-            let(:time_off_policy_id) { create(:time_off_policy, time_off_category: category).id }
 
-            it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(1) }
-            it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+            it { is_expected.to have_http_status(205) }
+          end
+
+          context "and the time off policy is the same as the latest etop" do
+            let(:time_off_policy_id) { latest_etop.time_off_policy_id }
+
+            it { expect { subject }.to change { EmployeeTimeOffPolicy.exists?(latest_etop.id) } }
+            it { expect { subject }.to_not change { Employee::Balance.count } }
+
+            it { is_expected.to have_http_status(201) }
           end
         end
-        context 'and the effective at is after than the lastest ETOP effective_at' do
-          let(:effective_at) { lastest_etop.effective_at + 2.days }
+
+        context 'and the effective at is after than the latest ETOP effective_at' do
+          let(:effective_at) { latest_etop.effective_at + 2.days }
+
           context 'and the time off policy is the same as the oldest ETOP' do
             it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(1) }
             it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+
+            it { is_expected.to have_http_status(201) }
           end
+
           context "and the time off policy is different than the exisitng ETOP's ones" do
             let(:time_off_policy_id) { create(:time_off_policy, time_off_category: category).id }
 
             it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(1) }
             it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+
+            it { is_expected.to have_http_status(201) }
           end
         end
       end
@@ -364,7 +388,8 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
         let(:effective_at) { 2.years.ago }
 
         it { expect { subject }.to_not change { EmployeeTimeOffPolicy.count } }
-        it { expect { subject }.to change { Employee::Balance.count }.by(3) }
+        it { expect { subject }.to change { Employee::Balance.count }.by(4) }
+        it { expect { subject }.to change { Employee::Balance.additions.count }.by(3) }
 
         it { expect { subject }.to change { join_table_resource.reload.effective_at } }
 
@@ -372,7 +397,14 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
           subject
 
           expect(Employee::Balance.all.order(:effective_at).pluck(:effective_at).map(&:to_date))
-            .to eq([Date.new(2014, 1, 1), Date.new(2015, 1, 1), Date.new(2016, 1, 1)])
+            .to eq(
+              [
+                Date.new(2014, 1, 1),
+                Date.new(2015, 1, 1),
+                Date.new(2015, 4, 1),
+                Date.new(2016, 1, 1)
+              ]
+            )
         end
 
         it 'should have valid data in response body' do
@@ -389,35 +421,36 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
           create(:employee_time_off_policy, employee: employee, time_off_policy: top,
             effective_at: effective_at)
         end
-        it 'and the effective at is equal to this already existing ETOP effective_at' do
-          it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(1) }
+
+        context 'and the effective at is equal to this already existing ETOP effective_at' do
+          it { expect { subject }.to change { EmployeeTimeOffPolicy.exists?(past_etop.id) } }
+          it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(-1) }
           it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+
+          it { is_expected.to have_http_status(200) }
         end
       end
+
       context 'when one ETOP of the same category already exists on the past' do
         let!(:past_etop) do
           top = create(:time_off_policy, time_off_category: category)
           create(:employee_time_off_policy, employee: employee, time_off_policy: top,
             effective_at: effective_at)
         end
-        let!(:past_etop) do
-          create(:employee_time_off_policy, employee: employee, time_off_policy: time_off_policy,
-            effective_at: effective_at)
-        end
-
 
         context "and it's policy is the same as the policy as the ETOP being created" do
+          let(:time_off_policy) { past_etop.time_off_policy }
+
           it { expect { subject }.to_not change { EmployeeTimeOffPolicy.count } }
-          it { expect { subject }.to_not change { Employee::Balance.count } }
+
+          it { is_expected.to have_http_status(422) }
         end
 
         context "and it's policy is a different one than the policy as the ETOP being created " do
-          let(:time_off_policy_id) { create(:time_off_policy, time_off_category: category).id }
+          it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(-1) }
 
-          it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(1) }
-          it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+          it { is_expected.to have_http_status(200) }
         end
-
       end
 
       context 'when at least 2 ETOPs of the same category exist on the past' do
@@ -426,50 +459,78 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
             effective_at: Date.today
           )
         end
-        let!(:lastest_etop) do
+        let!(:latest_etop) do
           top = create(:time_off_policy, time_off_category: category)
           create(:employee_time_off_policy, employee: employee, time_off_policy: top,
             effective_at: Date.today + 1.week
           )
         end
 
-        context 'and the effective at is equal to the lastest ETOP effective_at' do
-          let(:effective_at) { lastest_etop.effective_at }
+        context 'and the effective at is equal to the latest ETOP effective_at' do
+          let(:effective_at) { latest_etop.effective_at }
+
+          context 'and the time off policy is the same as the oldest ETOP' do
+            it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(-2) }
+            it { expect { subject }.to change { EmployeeTimeOffPolicy.exists?(latest_etop.id) } }
+            it { expect { subject }.to change { EmployeeTimeOffPolicy.exists?(id) } }
+          end
+
+          context "and the time off policy is different than the exisitng ETOP's ones" do
+            before do
+              join_table_resource.update!(
+                time_off_policy: create(:time_off_policy, time_off_category: category)
+              )
+            end
+
+            it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(-1) }
+            it { expect { subject }.to change { EmployeeTimeOffPolicy.exists?(latest_etop.id) } }
+            it { expect { subject }.to_not change { EmployeeTimeOffPolicy.exists?(id) } }
+          end
+        end
+
+        context 'and the effective at is before the latest ETOP effective_at' do
+          let(:effective_at) { latest_etop.effective_at - 2.days }
+
           context 'and the time off policy is the same as the oldest ETOP' do
             it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(-1) }
-            it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
-          end
-          context "and the time off policy is different than the exisitng ETOP's ones" do
-            let(:time_off_policy_id) { create(:time_off_policy, time_off_category: category).id }
+            it { expect { subject }.to change { EmployeeTimeOffPolicy.exists?(id) } }
 
-            it { expect { subject }.to_not  change { EmployeeTimeOffPolicy.count } }
-            it { expect { subject }.to_not  change { Employee::Balance.count } }
+            it { is_expected.to have_http_status(205) }
           end
-        end
-        context 'and the effective at is before the lastest ETOP effective_at' do
-          let(:effective_at) { lastest_etop.effective_at - 2.days }
-          context 'and the time off policy is the same as the oldest ETOP' do
+
+          context "and the time off policy is different than the exisitng ETOP's ones" do
+            before do
+              join_table_resource.update!(
+                time_off_policy: create(:time_off_policy, time_off_category: category)
+              )
+            end
+
+            it { expect { subject }.to_not change { EmployeeTimeOffPolicy.exists?(id) } }
             it { expect { subject }.to_not change { EmployeeTimeOffPolicy.count } }
-            it { expect { subject }.to_not change { Employee::Balance.count } }
-          end
-          context "and the time off policy is different than the exisitng ETOP's ones" do
-            let(:time_off_policy_id) { create(:time_off_policy, time_off_category: category).id }
 
-            it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(1) }
-            it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+            it { is_expected.to have_http_status(200) }
           end
         end
-        context 'and the effective at is after than the lastest ETOP effective_at' do
-          let(:effective_at) { lastest_etop.effective_at + 2.days }
-          context 'and the time off policy is the same as the oldest ETOP' do
-            it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(1) }
-            it { expect { subject }.to change { Employee::Balance.count }.by(1) }
-          end
-          context "and the time off policy is different than the exisitng ETOP's ones" do
-            let(:time_off_policy_id) { create(:time_off_policy, time_off_category: category).id }
 
-            it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(1) }
-            it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+        context 'and the effective at is after than the latest ETOP effective_at' do
+          let(:effective_at) { latest_etop.effective_at + 2.days }
+
+          context 'and the time off policy is the same as the latest ETOP' do
+            before do
+              join_table_resource.update!(time_off_policy: latest_etop.time_off_policy)
+            end
+
+            it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(-1) }
+            it { expect { subject }.to change { EmployeeTimeOffPolicy.exists?(id) } }
+
+            it { is_expected.to have_http_status(205) }
+          end
+
+          context "and the time off policy is different than the exisitng ETOP's ones" do
+            it { expect { subject }.to_not change { EmployeeTimeOffPolicy.count } }
+            it { expect { subject }.to change { join_table_resource.reload.effective_at } }
+
+            it { is_expected.to have_http_status(200) }
           end
         end
       end

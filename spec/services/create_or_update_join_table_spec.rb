@@ -24,7 +24,8 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
 
       it { expect { subject }.to change { join_table_class.exists?(existing_join_table.id) } }
 
-      it { expect(subject.effective_at).to eq params[:effective_at].to_date }
+      it { expect(subject.first.effective_at).to eq params[:effective_at].to_date }
+      it { expect(subject.last).to eq 201 }
     end
 
     shared_examples 'Join Table create with the same resource before' do
@@ -33,8 +34,9 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
       it { expect { subject }.to change { join_table_class.exists?(existing_join_table.id) } }
       it { expect { subject }.to change { join_table_class.count }.by(-1) }
 
-      it { expect(subject.effective_at).to eq same_resource_before.effective_at }
-      it { expect(subject.id).to eq same_resource_before.id }
+      it { expect(subject.first.effective_at).to eq same_resource_before.effective_at }
+      it { expect(subject.first.id).to eq same_resource_before.id }
+      it { expect(subject.last).to eq 205 }
     end
 
     shared_examples 'Join Table create with the same resource after' do
@@ -44,7 +46,8 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
       it { expect { subject }.to change { join_table_class.exists?(existing_join_table.id) } }
       it { expect { subject }.to change { join_table_class.exists?(same_resource_after.id) } }
 
-      it { expect(subject.effective_at).to eq params[:effective_at].to_date }
+      it { expect(subject.first.effective_at).to eq params[:effective_at].to_date }
+      it { expect(subject.last).to eq 201 }
     end
 
     shared_examples 'Join Table create with the same resource after and before' do
@@ -54,8 +57,9 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
       it { expect { subject }.to change { join_table_class.exists?(existing_join_table.id) } }
       it { expect { subject }.to change { join_table_class.exists?(same_resource_after.id) } }
 
-      it { expect(subject.effective_at).to eq same_resource_before.effective_at }
-      it { expect(subject.id).to eq same_resource_before.id }
+      it { expect(subject.first.effective_at).to eq same_resource_before.effective_at }
+      it { expect(subject.first.id).to eq same_resource_before.id }
+      it { expect(subject.last).to eq 205 }
     end
 
     shared_examples 'Join Table create with different resource after and effective till in past' do
@@ -63,7 +67,8 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
 
       it { expect { subject }.to change { join_table_class.count }.by(1) }
       it do
-        expect(subject.effective_till.to_s).to eq (existing_join_table.effective_at - 1.day).to_s
+        expect(subject.first.effective_till.to_s)
+          .to eq (existing_join_table.effective_at - 1.day).to_s
       end
     end
 
@@ -72,7 +77,8 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
 
       it { expect { subject }.to change { join_table_class.count }.by(1) }
       it do
-        expect(subject.effective_till.to_s).to eq (existing_join_table.effective_at - 1.day).to_s
+        expect(subject.first.effective_till.to_s)
+          .to eq (existing_join_table.effective_at - 1.day).to_s
       end
     end
 
@@ -203,6 +209,7 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
       end
 
       context 'Join Table Update' do
+        before { employee.employee_working_places.reload }
         let(:resource_params) { {} }
         let(:second_resource) { create(:working_place, account: Account.current) }
         let(:third_resource) { create(:working_place, account: Account.current) }

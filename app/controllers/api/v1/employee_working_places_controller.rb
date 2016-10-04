@@ -18,16 +18,16 @@ module API
       def create
         verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :create, working_place
-          resource = create_or_update_join_table(WorkingPlace, attributes)
-          render_resource(resource, status: 201)
+          resource, status = create_or_update_join_table(WorkingPlace, attributes)
+          render_resource(resource, status: status)
         end
       end
 
       def update
         verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :update, resource
-          updated_resource = create_or_update_join_table(WorkingPlace, attributes, resource)
-          render_resource(updated_resource)
+          updated_resource, status = create_or_update_join_table(WorkingPlace, attributes, resource)
+          render_resource(updated_resource, status: status)
         end
       end
 

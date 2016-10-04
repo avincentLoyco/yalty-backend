@@ -52,7 +52,7 @@ RSpec.describe FindJoinTablesToDelete, type: :service do
   context 'For EmployeeWorkingPlaces' do
     let(:resource_class) { 'working_place_id' }
     let(:resource) { create(:working_place, account: account) }
-    let(:join_tables) { employee.employee_working_places }
+    let(:join_tables) { employee.employee_working_places.reload }
 
     context 'when there are EmployeeWorkingPlaces with the same resource' do
       it_behaves_like 'No employee join tables'

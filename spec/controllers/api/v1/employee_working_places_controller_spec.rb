@@ -116,51 +116,73 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
       end
 
       context 'when at least 2 EWPs exist on the past' do
-        let!(:first_epp) do
-          create(:employee_presence_policy, employee: employee, presence_policy: time_off_policy,
+        let(:new_working_place_id) { create(:working_place, account: account).id }
+        let!(:first_ewp) do
+          create(:employee_working_place, employee: employee, working_place: new_working_place,
             effective_at: Date.today
           )
         end
-        let!(:lastest_epp) do
-          create(:employee_presence_policy, employee: employee, effective_at: Date.today + 1.week)
+        let!(:latest_ewp) do
+          create(:employee_working_place, employee: employee, effective_at: Date.today + 1.week)
         end
+
         context 'and the effective at is equal to the lastest EWP effective_at' do
-          let(:effective_at) { lastest_epp.effective_at }
-          context 'and the presence policy is the same as the oldest EWP' do
+          let(:effective_at) { latest_ewp.effective_at }
+
+          context 'and the working place is the same as the oldest EWP' do
+            it { expect { subject }.to change { EmployeeWorkingPlace.exists?(latest_ewp.id) } }
             it { expect { subject }.to change { EmployeeWorkingPlace.count }.by(-1) }
-            it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
-          end
-          context "and the presence policy is different than the exisitng EWP's ones" do
-            let(:presence_policy_id) { create(:presence_policy, account: account).first }
 
+            it { is_expected.to have_http_status(205) }
+          end
+
+          context "and the working place is different than the exisitng EWP's ones" do
+            let(:working_place_id) { new_working_place_id }
+
+            it { expect { subject }.to change { EmployeeWorkingPlace.exists?(latest_ewp.id) } }
             it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
-            it { expect { subject }.to_not change { Employee::Balance.count } }
+
+            it { is_expected.to have_http_status(201) }
+          end
+
+          context 'and the working place is the same as latest EWP policy' do
+            let(:working_place_id) { latest_ewp.working_place }
+
+            it { expect { subject }.to_not change { EmployeeWorkingPlace.exists?(latest_ewp.id) } }
+            it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
+
+            it { is_expected.to have_http_status(422) }
+            it do
+              expect(subject.body)
+                .to include 'Join Table with given date and resource already exists'
+            end
           end
         end
+
         context 'and the effective at is before the lastest EWP effective_at' do
-          let(:effective_at) { lastest_epp.effective_at - 2.days }
-          context 'and the presence policy is the same as the oldest EWP' do
+          let(:effective_at) { latest_ewp.effective_at - 2.days }
+
+          context 'and the working place is the same as the latest EWP' do
             it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
-            it { expect { subject }.to_not change { Employee::Balance.count } }
+
+            it { is_expected.to have_http_status(205) }
           end
-          context "and the presence policy is different than the exisitng EWP's ones" do
-            let(:presence_policy_id) { create(:presence_policy, account: account).first }
+
+          context "and the working place is different than the exisitng EWP's ones" do
+            let(:working_place_id) { new_working_place_id }
 
             it { expect { subject }.to change { EmployeeWorkingPlace.count }.by(1) }
-            it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+            it { is_expected.to have_http_status(201) }
           end
         end
-        context 'and the effective at is after than the lastest EWP effective_at' do
-          let(:effective_at) { lastest_epp.effective_at }
-          context 'and the presence policy is the same as the oldest EWP' do
-            it { expect { subject }.to change { EmployeeWorkingPlace.count }.by(1) }
-            it { expect { subject }.to change { Employee::Balance.count }.by(1) }
-          end
-          context "and the presence policy is different than the exisitng EWP's ones" do
-            let(:presence_policy_id) { create(:presence_policy, account: account).first }
 
+        context 'and the effective at is after than the latest EWP effective_at' do
+          let(:effective_at) { latest_ewp.effective_at + 1.week }
+
+          context 'and the working place is the same as the oldest EWP' do
             it { expect { subject }.to change { EmployeeWorkingPlace.count }.by(1) }
-            it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+
+            it { is_expected.to have_http_status(201) }
           end
         end
       end
@@ -217,7 +239,8 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
     let(:effective_at) { 1.day.ago }
     let(:id) { new_employee_working_place.id }
     let!(:new_employee_working_place) do
-      create(:employee_working_place, employee: employee, effective_at: 2.days.ago)
+      create(:employee_working_place,
+        employee: employee, effective_at: 2.days.ago)
     end
 
     context 'with valid params' do
@@ -234,51 +257,69 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
       end
 
       context 'when at least 2 EWPs exist on the past' do
-        let!(:first_epp) do
-          create(:employee_presence_policy, employee: employee, presence_policy: time_off_policy,
-            effective_at: Date.today
+        let!(:first_ewp) do
+          create(:employee_working_place, employee: employee, effective_at: Date.today,
+            working_place: new_employee_working_place.working_place
           )
         end
-        let!(:lastest_epp) do
-          create(:employee_presence_policy, employee: employee, effective_at: Date.today + 1.week)
+        let!(:latest_ewp) do
+          create(:employee_working_place, employee: employee, effective_at: Date.today + 1.week)
         end
+
         context 'and the effective at is equal to the lastest EWP effective_at' do
-          let(:effective_at) { lastest_epp.effective_at }
-          context 'and the presence policy is the same as the oldest EWP' do
+          let(:effective_at) { latest_ewp.effective_at }
+
+          context 'and the working place is the same as the oldest EWP' do
+            it { expect { subject }.to change { EmployeeWorkingPlace.count }.by(-2) }
+            it { expect { subject }.to change { EmployeeWorkingPlace.exists?(latest_ewp.id) } }
+            it do
+              expect { subject }
+                .to change { EmployeeWorkingPlace.exists?(new_employee_working_place.id) }
+            end
+
+            it { is_expected.to have_http_status(205) }
+          end
+
+          context "and the working place is different than the exisitng EWP's ones" do
+            before { new_employee_working_place.update!(working_place: new_working_place) }
+            let(:new_working_place) { create(:working_place, account: account) }
+
             it { expect { subject }.to change { EmployeeWorkingPlace.count }.by(-1) }
-            it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
-          end
-          context "and the presence policy is different than the exisitng EWP's ones" do
-            let(:presence_policy_id) { create(:presence_policy, account: account).first }
+            it { expect { subject }.to change { EmployeeWorkingPlace.exists?(latest_ewp.id) } }
 
-            it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
-            it { expect { subject }.to_not change { Employee::Balance.count } }
+            it { is_expected.to have_http_status(200) }
           end
         end
+
         context 'and the effective at is before the lastest EWP effective_at' do
-          let(:effective_at) { lastest_epp.effective_at - 2.days }
-          context 'and the presence policy is the same as the oldest EWP' do
-            it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
-            it { expect { subject }.to_not change { Employee::Balance.count } }
-          end
-          context "and the presence policy is different than the exisitng EWP's ones" do
-            let(:presence_policy_id) { create(:presence_policy, account: account).first }
+          let(:effective_at) { latest_ewp.effective_at - 2.days }
 
-            it { expect { subject }.to change { EmployeeWorkingPlace.count }.by(1) }
-            it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+          context 'and the working place is the same as the oldest EWP' do
+            it { expect { subject }.to change { EmployeeWorkingPlace.count }.by(-1) }
+            it do
+              expect { subject }
+                .to change { EmployeeWorkingPlace.exists?(new_employee_working_place.id) }
+            end
+
+            it { is_expected.to have_http_status(205) }
+          end
+
+          context "and the working place is different than the exisitng EWP's ones" do
+            before { new_employee_working_place.update!(working_place: new_working_place) }
+            let(:new_working_place) { create(:working_place, account: account) }
+
+            it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
+            it { is_expected.to have_http_status(200) }
           end
         end
-        context 'and the effective at is after than the lastest EWP effective_at' do
-          let(:effective_at) { lastest_epp.effective_at }
-          context 'and the presence policy is the same as the oldest EWP' do
-            it { expect { subject }.to change { EmployeeWorkingPlace.count }.by(1) }
-            it { expect { subject }.to change { Employee::Balance.count }.by(1) }
-          end
-          context "and the presence policy is different than the exisitng EWP's ones" do
-            let(:presence_policy_id) { create(:presence_policy, account: account).first }
 
-            it { expect { subject }.to change { EmployeeWorkingPlace.count }.by(1) }
-            it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+        context 'and the effective at is after than the lastest EWP effective_at' do
+          let(:effective_at) { latest_ewp.effective_at + 2.days }
+
+          context 'and the working place is the same as the oldest EWP' do
+            it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
+
+            it { is_expected.to have_http_status(200) }
           end
         end
       end

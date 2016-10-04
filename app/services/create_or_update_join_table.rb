@@ -10,6 +10,7 @@ class CreateOrUpdateJoinTable
     @resource_class = resource_class
     @resource_class_id = resource_class.model_name.singular + '_id'
     @join_table_resource = join_table_resource
+    @status = 205
   end
 
   def call
@@ -17,7 +18,7 @@ class CreateOrUpdateJoinTable
     @employee_join_tables = find_employees_join_tables
     ActiveRecord::Base.transaction do
       remove_duplicated_resources_join_tables
-      return_new_current_with_efective_till
+      [return_new_current_with_efective_till, @status]
     end
   end
 
@@ -30,12 +31,19 @@ class CreateOrUpdateJoinTable
   end
 
   def remove_duplicated_resources_join_tables
-    FindJoinTablesToDelete.new(
+    join_tables_to_remove = FindJoinTablesToDelete.new(
       employee_join_tables,
       params[:effective_at],
       resource_class.find(resource_id),
       join_table_resource
-    ).call.map(&:destroy!)
+    ).call
+    remove_policy_assignation_balances(join_tables_to_remove)
+    join_tables_to_remove.map(&:destroy!)
+  end
+
+  def remove_policy_assignation_balances(join_tables_to_remove)
+    return unless join_table_class == EmployeeTimeOffPolicy
+    join_tables_to_remove.map(&:policy_assignation_balance).compact.map(&:destroy!)
   end
 
   def employee
@@ -58,8 +66,13 @@ class CreateOrUpdateJoinTable
   end
 
   def create_or_update_join_table
-    return employee_join_tables.create!(params) unless join_table_resource
-    join_table_resource.tap { |resource| resource.update!(params) }
+    if join_table_resource
+      @status = 200
+      join_table_resource.tap { |resource| resource.update!(params) }
+    else
+      @status = 201
+      employee_join_tables.create!(params)
+    end
   end
 
   def previous_join_table
