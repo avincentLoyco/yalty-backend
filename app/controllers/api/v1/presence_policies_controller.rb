@@ -22,12 +22,9 @@ module API
           related = related_params(attributes).compact
           resource = Account.current.presence_policies.new(attributes)
           authorize! :create, resource
-
-          transactions do
-            save!(resource, related)
-            CreateCompletePresencePolicy.new(resource.reload, days_params).call if
-              days_params.present?
-          end
+          save!(resource, related)
+          CreateCompletePresencePolicy.new(resource.reload, days_params).call if
+            days_params.present?
 
           render_resource_with_relationships(resource, status: :created)
         end
@@ -35,28 +32,24 @@ module API
 
       def update
         verified_dry_params(dry_validation_schema) do |attributes|
-          if resource.employees.empty?
-            transactions do
-              resource.attributes = attributes
-              save!(resource, {})
-            end
-            render_no_content
-          else
-            locked_error
-          end
+          return locked_error if resource_locked?
+          resource.attributes = attributes
+          save!(resource, {})
+          render_no_content
         end
       end
 
       def destroy
-        if resource.employees.empty?
-          resource.destroy!
-          render_no_content
-        else
-          locked_error
-        end
+        return locked_error if resource_locked?
+        resource.destroy!
+        render_no_content
       end
 
       private
+
+      def resource_locked?
+        resource.employees.present?
+      end
 
       def related_params(attributes)
         related = {}
