@@ -27,7 +27,6 @@ module API
             save!(resource, related)
             CreateCompletePresencePolicy.new(resource.reload, days_params).call if
               days_params.present?
-            create_day_with_biggest_order(resource)
           end
 
           render_resource_with_relationships(resource, status: :created)
@@ -36,17 +35,20 @@ module API
 
       def update
         verified_dry_params(dry_validation_schema) do |attributes|
-          transactions do
-            resource.attributes = attributes
-            save!(resource, {})
+          if resource.employees.empty?
+            transactions do
+              resource.attributes = attributes
+              save!(resource, {})
+            end
+            render_no_content
+          else
+            locked_error
           end
-
-          render_no_content
         end
       end
 
       def destroy
-        if resource.employees.empty? && resource.presence_days.empty?
+        if resource.employees.empty?
           resource.destroy!
           render_no_content
         else
@@ -55,11 +57,6 @@ module API
       end
 
       private
-
-      def create_day_with_biggest_order(resource)
-        return if resource.presence_days.pluck(:order).include?(7)
-        resource.presence_days.create!(order: 7)
-      end
 
       def related_params(attributes)
         related = {}

@@ -2,7 +2,7 @@ class PresencePolicy < ActiveRecord::Base
   include ActsAsIntercomTrigger
 
   has_many :employees
-  has_many :presence_days
+  has_many :presence_days, dependent: :destroy
   has_many :time_entries, through: :presence_days
   has_many :employee_presence_policies
   has_many :employees, through: :employee_presence_policies
