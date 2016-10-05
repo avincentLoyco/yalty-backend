@@ -6,8 +6,6 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
 
   before do
     time_off_category.update!(account: Account.current)
-    create(:presence_day, order: 7, presence_policy: policy)
-    EmployeePresencePolicy.first.update!(order_of_start_day: 5)
   end
 
   let(:policy) { create(:presence_policy, :with_presence_day, account: Account.current) }
@@ -196,9 +194,12 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
         it { is_expected.to have_http_status(201) }
 
         context 'new employee balance amount' do
-          before { subject }
-
-          it { expect(Employee::Balance.order(:effective_at).last.amount).to eq -480 }
+          before do
+            create(:presence_day, order: 7, presence_policy: policy)
+            EmployeePresencePolicy.first.update!(order_of_start_day: 5)
+            subject
+          end
+          it { expect(Employee::Balance.order(:effective_at).last.amount).to eq (-480) }
         end
       end
     end
