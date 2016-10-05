@@ -7,35 +7,6 @@ RSpec.describe API::V1::PresenceDaysController, type: :controller do
 
   let(:presence_policy) { create(:presence_policy, account: account) }
 
-  shared_examples 'Employee Balances Update' do
-    context 'when there are no employees affected by the policy' do
-      it { is_expected.to have_http_status(204) }
-    end
-
-    context 'when there is employee affected by policy' do
-      let(:employee) do
-        create(:employee, :with_presence_policy, :with_time_offs, account: account,
-          presence_policy: presence_policy
-        )
-      end
-      let(:f_time_off) { employee.time_offs.first }
-      let(:s_time_off) { employee.time_offs.second }
-      let(:t_time_off) { employee.time_offs.last }
-
-      context 'and he does not have related balances' do
-        it { is_expected.to have_http_status(204) }
-      end
-
-      context 'and he has related balances' do
-        it { expect { subject }.to change { f_time_off.employee_balance.reload.being_processed } }
-        it { expect { subject }.to change { s_time_off.employee_balance.reload.being_processed } }
-        it { expect { subject }.to change { t_time_off.employee_balance.reload.being_processed } }
-
-        it { is_expected.to have_http_status(204) }
-      end
-    end
-  end
-
   describe 'GET #show' do
     let(:presence_day) { create(:presence_day, presence_policy: presence_policy) }
     subject { get :show, params }
@@ -123,6 +94,16 @@ RSpec.describe API::V1::PresenceDaysController, type: :controller do
 
         it { expect_json_keys([:id, :type, :order, :minutes]) }
       end
+
+      context 'and the associated policy is already assigned to an employee' do
+        before do
+          presence_policy.update!(presence_days: [create(:presence_day)])
+          employee = create(:employee, account: account)
+          create(:employee_presence_policy, presence_policy: presence_policy, employee: employee)
+        end
+        it { is_expected.to have_http_status(423) }
+        it { expect { subject }.to_not change { PresenceDay.count } }
+      end
     end
 
     context 'with invalid data' do
@@ -192,7 +173,18 @@ RSpec.describe API::V1::PresenceDaysController, type: :controller do
     context 'with valid params' do
       it { expect { subject }.to change { presence_day.reload.order } }
 
-      it_behaves_like 'Employee Balances Update'
+      context 'and the associated policy is already assigned to an employee' do
+        let(:presence_policy) do
+           create(:presence_policy, account: account)
+        end
+        let(:employee) { create(:employee, account: account) }
+        before do
+          presence_policy.update!(presence_days: [presence_day])
+          create(:employee_presence_policy, presence_policy: presence_policy, employee: employee)
+        end
+        it { is_expected.to have_http_status(423) }
+        it { expect { subject }.to_not change { presence_day.order } }
+      end
     end
 
     context 'with invalid params' do
@@ -242,7 +234,27 @@ RSpec.describe API::V1::PresenceDaysController, type: :controller do
       it { expect { subject }.to change { PresenceDay.count }.by(-1) }
       it { is_expected.to have_http_status(204) }
 
-      it_behaves_like 'Employee Balances Update'
+      context 'and the associated policy is already assigned to an employee' do
+        let(:presence_policy) do
+           create(:presence_policy, account: account)
+        end
+        let(:employee) { create(:employee, account: account) }
+        before do
+          presence_policy.update!(presence_days: [presence_day])
+          create(:employee_presence_policy, presence_policy: presence_policy, employee: employee)
+        end
+        it { is_expected.to have_http_status(423) }
+        it { expect { subject }.to_not change { presence_day.order } }
+      end
+
+      context 'if the presence day has an time entry  associated' do
+        before do
+          presence_day.update!(time_entries: [create(:time_entry)])
+        end
+        it { is_expected.to have_http_status(204) }
+        it { expect { subject }.to change {TimeEntry.count}.by(-1) }
+        it { expect { subject }.to change {PresenceDay.count}.by(-1) }
+      end
     end
 
     context 'with invalid id' do
@@ -250,16 +262,6 @@ RSpec.describe API::V1::PresenceDaysController, type: :controller do
 
       it { expect { subject }.to_not change { PresenceDay.count } }
       it { is_expected.to have_http_status(404) }
-    end
-
-    context 'if it has a time entry associated' do
-      let(:params) {{ id: presence_day.id, presence_policy_id: presence_policy.id }}
-
-      let!(:time_entry) do
-        create(:time_entry, presence_day: presence_day)
-      end
-      it { is_expected.to have_http_status(423) }
-      it { expect { subject }.to_not change { PresenceDay.count } }
     end
   end
 end

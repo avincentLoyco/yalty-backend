@@ -1,7 +1,7 @@
 class CreateEmployeeBalance
   include API::V1::Exceptions
   attr_reader :category, :employee, :resource_amount, :employee_balance,
-    :account, :time_off, :options, :balance_removal
+    :account, :time_off, :options, :balance_removal, :active_balance
 
   def initialize(category_id, employee_id, account_id, options = {})
     @options = options
@@ -9,6 +9,7 @@ class CreateEmployeeBalance
     @category = account.time_off_categories.find(category_id)
     @employee = account.employees.find(employee_id)
     @time_off = time_off
+    @active_balance = find_active_assignation_balance_for_date
   end
 
   def call
@@ -30,12 +31,8 @@ class CreateEmployeeBalance
   end
 
   def build_or_update_employee_balance
-    existing_assingation_balance = find_active_assignation_balance_for_date
-    if existing_assingation_balance
-      existing_assingation_balance.tap { |balance| balance.assign_attributes(balance_params) }
-    else
-      Employee::Balance.new(balance_params)
-    end
+    return Employee::Balance.new(balance_params) unless active_balance
+    active_balance.tap { |balance| balance.assign_attributes(balance_params) }
   end
 
   def build_employee_balance_removal
@@ -79,7 +76,7 @@ class CreateEmployeeBalance
       employee: employee,
       time_off:  options.key?(:time_off_id) ? employee.time_offs.find(options[:time_off_id]) : nil,
       time_off_category: category,
-      manual_amount: options.key?(:manual_amount) ? options[:manual_amount] : 0,
+      manual_amount: manual_amount,
       resource_amount: options.key?(:resource_amount) ? options[:resource_amount] : 0
     }
   end
@@ -91,6 +88,11 @@ class CreateEmployeeBalance
       policy_credit_addition: options[:policy_credit_addition] || false,
       reset_balance: options[:reset_balance] || false
     }.merge(common_params)
+  end
+
+  def manual_amount
+    return options[:manual_amount] if options.key?(:manual_amount)
+    active_balance ? active_balance[:manual_amount] : 0
   end
 
   def validity_date
