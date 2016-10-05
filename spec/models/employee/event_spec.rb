@@ -85,4 +85,27 @@ RSpec.describe Employee::Event, type: :model do
         .to include 'Employee can have only one hired event' }
     end
   end
+
+  describe '#balances_before_hired_date' do
+    let(:employee) { create(:employee) }
+    let!(:etop) do
+      create(
+        :employee_time_off_policy,
+        :with_employee_balance,
+        employee: employee,
+        effective_at: employee.hired_date
+      )
+    end
+
+    let(:update_hired_date) do
+      employee.first_employee_event.update!(effective_at: 2.years.from_now)
+    end
+
+    it do
+      expect { update_hired_date }.to raise_error(
+        ActiveRecord::RecordInvalid,
+        'Validation failed: There can\'t be balances before hired date'
+      )
+    end
+  end
 end

@@ -1,5 +1,6 @@
 class EmployeePresencePolicy < ActiveRecord::Base
   include ActsAsIntercomTrigger
+  include ValidateEffectiveAtBeforeHired
 
   attr_accessor :effective_till
 

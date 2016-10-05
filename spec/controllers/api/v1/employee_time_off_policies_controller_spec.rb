@@ -235,7 +235,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
       let(:effective_at) { Time.now - 20.years }
 
       it { is_expected.to have_http_status(422) }
-      it { expect(response.body).to include 'Can not be added before employee start date' }
+      it { expect(response.body).to include 'can\'t be set before employee hired date' }
     end
   end
 end
