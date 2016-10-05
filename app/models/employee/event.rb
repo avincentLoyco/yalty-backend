@@ -36,6 +36,7 @@ class Employee::Event < ActiveRecord::Base
     inclusion: { in: proc { Employee::Event.event_types }, allow_nil: true }
   validate :attributes_presence, if: [:event_attributes, :employee]
   validate :only_one_hired_event_presence, if: :employee
+  validate :balances_before_hired_date, if: :employee, on: :update
 
   def self.event_types
     Employee::Event::EVENT_ATTRIBUTES.keys.map(&:to_s)
@@ -64,6 +65,15 @@ class Employee::Event < ActiveRecord::Base
   end
 
   private
+
+  def balances_before_hired_date
+    return unless event_type == 'hired' && balances_before_effective_at?
+    errors.add(:base, 'There can\'t be balances before hired date')
+  end
+
+  def balances_before_effective_at?
+    employee.employee_balances.where('effective_at < ?', effective_at).present?
+  end
 
   def only_one_hired_event_presence
     return unless event_type == 'hired'
