@@ -216,6 +216,34 @@ RSpec.describe CreateEmployeeBalance, type: :service do
       end
     end
 
+    context 'when assignation balance for this date already exist' do
+      subject do
+        described_class.new(
+          category.id, employee.id, Account.current.id, options
+        ).call
+      end
+
+      before do
+        create(:employee_balance_manual,
+          employee: employee, time_off_category: employee_policy.time_off_category,
+          manual_amount: 1000, effective_at: employee_policy.effective_at
+        )
+      end
+
+      let(:options) do
+        {
+          effective_at: employee_policy.effective_at,
+          resource_amount: 2000,
+          policy_credit_addition: true
+        }
+      end
+
+      it { expect { subject }.to_not change { Employee::Balance.count } }
+      it { expect(subject.first.manual_amount).to eq 1000 }
+      it { expect(subject.first.resource_amount).to eq 2000 }
+      it { expect(subject.first.policy_credit_addition).to eq true }
+    end
+
     context 'when the balance is a reset balance' do
       let(:amount) { 0 }
       let(:options) { { reset_balance: true } }
