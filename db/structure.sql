@@ -196,8 +196,8 @@ CREATE VIEW employee_attributes AS
 
 CREATE TABLE employee_balances (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
-    balance integer DEFAULT 0,
-    resource_amount integer DEFAULT 0,
+    balance integer DEFAULT 0 NOT NULL,
+    resource_amount integer DEFAULT 0 NOT NULL,
     time_off_id uuid,
     employee_id uuid NOT NULL,
     time_off_category_id uuid NOT NULL,
@@ -208,7 +208,7 @@ CREATE TABLE employee_balances (
     validity_date timestamp without time zone,
     policy_credit_addition boolean DEFAULT false,
     reset_balance boolean DEFAULT false,
-    manual_amount integer DEFAULT 0,
+    manual_amount integer DEFAULT 0 NOT NULL,
     balance_credit_removal_id uuid
 );
 
@@ -1521,4 +1521,6 @@ INSERT INTO schema_migrations (version) VALUES ('20160924112602');
 INSERT INTO schema_migrations (version) VALUES ('20160925084714');
 
 INSERT INTO schema_migrations (version) VALUES ('20161003103437');
+
+INSERT INTO schema_migrations (version) VALUES ('20161005143927');
 
