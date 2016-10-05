@@ -8,7 +8,6 @@ class EmployeeWorkingPlace < ActiveRecord::Base
 
   validates :employee, :working_place, :effective_at, presence: true
   validates :effective_at, uniqueness: { scope: [:employee_id, :working_place_id] }
-  validate :effective_at_cant_be_before_start_date, if: [:employee, :effective_at]
   validate :no_balances_after_effective_at, if: [:employee, :effective_at]
 
   private

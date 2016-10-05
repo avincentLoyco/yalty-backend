@@ -43,8 +43,17 @@ RSpec.describe HolidaysForEmployeeInRange, type: :service do
         let(:start_time) { '4/1/2016'.to_date }
         let(:end_time) { '4/1/2016'.to_date }
 
-        it { expect(employee.employee_working_places.size).to eq 0 }
         it { expect(subject.size).to eq 0 }
+      end
+
+      context 'and user does not have working place assigned' do
+        before { employee.employee_working_places.destroy_all }
+
+        let(:start_time) { '31/12/2015'.to_date }
+        let(:end_time) { '1/10/2016'.to_date }
+
+        it { expect(subject.size).to eq 0 }
+        it { expect(employee.employee_working_places.count).to eq 0 }
       end
     end
 
