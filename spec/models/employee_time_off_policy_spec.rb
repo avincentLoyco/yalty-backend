@@ -11,9 +11,9 @@ RSpec.describe EmployeeTimeOffPolicy, type: :model do
   it { is_expected.to validate_presence_of(:employee_id) }
   it { is_expected.to validate_presence_of(:time_off_policy_id) }
     it { is_expected.to validate_presence_of(:effective_at) }
-  it { is_expected.to have_db_index([:time_off_policy_id, :employee_id]) }
+  it { is_expected.to have_db_index([:employee_id, :time_off_category_id, :effective_at]) }
   it '' do
-    is_expected.to have_db_index([:employee_id, :time_off_policy_id, :effective_at]).unique
+    is_expected.to have_db_index([:employee_id, :time_off_category_id, :effective_at]).unique
   end
 
   it 'the category_id must be the one to whihc the policy belongs' do

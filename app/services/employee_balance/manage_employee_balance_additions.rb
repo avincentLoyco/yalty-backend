@@ -15,10 +15,18 @@ class ManageEmployeeBalanceAdditions
       create_additions_with_removals
       PrepareEmployeeBalancesToUpdate.new(balances.flatten.first).call
     end
-    UpdateBalanceJob.perform_later(balances.flatten.first)
+    check_amount_and_update_balances
   end
 
   private
+
+  def check_amount_and_update_balances
+    unless balances.flatten.map { |b| [b[:manual_amount], b[:resource_amount]] }.flatten.uniq == [0]
+      ActiveRecord::Base.after_transaction do
+        UpdateBalanceJob.perform_later(balances.flatten.first)
+      end
+    end
+  end
 
   def create_additions_with_removals
     date = RelatedPolicyPeriod.new(resource).first_start_date
@@ -39,7 +47,7 @@ class ManageEmployeeBalanceAdditions
 
   def policy_type_options(date)
     base_options =
-      { skip_update: true, policy_credit_addition: true, effective_at: date,
+      { skip_update: true, policy_credit_addition: true, effective_at: date + 5.minutes,
         resource_amount: resource.time_off_policy.amount }
     return base_options if resource.time_off_policy.counter?
     base_options.merge(validity_date: RelatedPolicyPeriod.new(resource).validity_date_for(date))
