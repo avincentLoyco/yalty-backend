@@ -22,13 +22,9 @@ module API
           related = related_params(attributes).compact
           resource = Account.current.presence_policies.new(attributes)
           authorize! :create, resource
-
-          transactions do
-            save!(resource, related)
-            CreateCompletePresencePolicy.new(resource.reload, days_params).call if
-              days_params.present?
-            create_day_with_biggest_order(resource)
-          end
+          save!(resource, related)
+          CreateCompletePresencePolicy.new(resource.reload, days_params).call if
+            days_params.present?
 
           render_resource_with_relationships(resource, status: :created)
         end
@@ -36,29 +32,23 @@ module API
 
       def update
         verified_dry_params(dry_validation_schema) do |attributes|
-          transactions do
-            resource.attributes = attributes
-            save!(resource, {})
-          end
-
+          return locked_error if resource_locked?
+          resource.attributes = attributes
+          save!(resource, {})
           render_no_content
         end
       end
 
       def destroy
-        if resource.employees.empty? && resource.presence_days.empty?
-          resource.destroy!
-          render_no_content
-        else
-          locked_error
-        end
+        return locked_error if resource_locked?
+        resource.destroy!
+        render_no_content
       end
 
       private
 
-      def create_day_with_biggest_order(resource)
-        return if resource.presence_days.pluck(:order).include?(7)
-        resource.presence_days.create!(order: 7)
+      def resource_locked?
+        resource.employees.present?
       end
 
       def related_params(attributes)
