@@ -17,8 +17,7 @@ module API
       def create
         convert_times_to_utc
         verified_dry_params(dry_validation_schema) do |attributes|
-          attributes.delete(:manual_amount)
-          resource = resources.new(time_off_attributes(attributes))
+          resource = resources.new(time_off_attributes(attributes.except(:manual_amount)))
           authorize! :create, resource
           transactions do
             resource.save! && create_new_employee_balance(resource)
@@ -30,12 +29,11 @@ module API
       def update
         convert_times_to_utc
         verified_dry_params(dry_validation_schema) do |attributes|
-          attributes.delete(:manual_amount)
           transactions do
-            resource.update!(attributes)
-            prepare_balances_to_update(resource.employee_balance, balance_attributes)
+            resource.update!(attributes.except(:manual_amount))
+            prepare_balances_to_update(resource.employee_balance, balance_attributes(attributes))
           end
-          update_balances_job(resource.employee_balance.id, balance_attributes)
+          update_balances_job(resource.employee_balance.id, balance_attributes(attributes))
           render_no_content
         end
       end
@@ -105,9 +103,9 @@ module API
         ::Api::V1::TimeOffsRepresenter
       end
 
-      def balance_attributes
+      def balance_attributes(verified_params = {})
         {
-          manual_amount: params[:manual_amount],
+          manual_amount: verified_params[:manual_amount] ? verified_params[:manual_amount] : 0,
           resource_amount: resource.balance,
           effective_at: resource.end_time.to_s
         }
