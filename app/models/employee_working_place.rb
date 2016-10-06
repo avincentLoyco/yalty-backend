@@ -10,7 +10,13 @@ class EmployeeWorkingPlace < ActiveRecord::Base
   validates :effective_at, uniqueness: { scope: [:employee_id, :working_place_id] }
   validate :no_balances_after_effective_at, if: [:employee, :effective_at]
 
+  before_destroy :verify_if_no_balances_after_effective_at
+
   private
+
+  def verify_if_no_balances_after_effective_at
+    no_balances_after_effective_at.blank?
+  end
 
   def no_balances_after_effective_at
     older = effective_at_was && effective_at_was < effective_at ? effective_at_was : effective_at

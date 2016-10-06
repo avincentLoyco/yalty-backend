@@ -335,8 +335,9 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
 
       context 'when there is employee balance' do
         before do
-          create(:employee_balance, :with_time_off,
-            employee: employee, effective_at: balance_effective_at)
+          create(:time_off,
+            employee: employee, end_time: balance_effective_at,
+            start_time: balance_effective_at - 2.days)
         end
 
         context 'after old effective_at' do
@@ -354,8 +355,8 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
         end
 
         context 'after new effective_at' do
-          let(:effective_at) { 5.years.ago }
-          let(:balance_effective_at) { 5.days.ago }
+          let(:effective_at) { 4.years.ago }
+          let(:balance_effective_at) { 4.days.ago }
 
           it { expect { subject }.to_not change { new_employee_working_place.reload.effective_at } }
           it { is_expected.to have_http_status(422) }
@@ -365,6 +366,93 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
 
             expect(response.body).to include 'Employee balance after effective at already exists'
           end
+
+          context 'and new join table date is in the existing join table date' do
+            let(:effective_at) { 5.years.ago }
+
+            it { expect { subject }.to_not change { new_employee_working_place.reload.effective_at } }
+            it { is_expected.to have_http_status(403) }
+          end
+        end
+      end
+    end
+  end
+
+  describe 'DELETE #destroy' do
+    let(:id) { join_table.id }
+    let!(:join_table) do
+      create(:employee_working_place,
+        employee: employee, working_place: working_place, effective_at: Time.now)
+    end
+    subject { delete :destroy, { id: id } }
+
+    context 'with valid params' do
+      context 'when they are no join tables with the same resources before and after' do
+        it { expect { subject }.to change { EmployeeWorkingPlace.count }.by(-1) }
+
+        it { is_expected.to have_http_status(204) }
+      end
+
+      context 'when they are join tables with the same resources before and after' do
+        let!(:same_resource_tables) do
+          [Time.now - 1.week, Time.now + 1.week].map do |date|
+            create(:employee_working_place,
+              employee: employee, working_place: working_place, effective_at: date)
+          end
+        end
+
+        it { expect { subject }.to change { EmployeeWorkingPlace.count }.by(-2) }
+
+        it { is_expected.to have_http_status(204) }
+      end
+
+      context 'when there is employee balance but its effective at is before resource\'s' do
+        let(:employee_balance) do
+          create(:employee_balance, :with_time_off, employee: employee,
+            effective_at: join_table.effective_at - 5.days)
+        end
+
+        it { expect { subject }.to change { EmployeeWorkingPlace.count }.by(-1) }
+
+        it { is_expected.to have_http_status(204) }
+      end
+    end
+
+    context 'with invalid params' do
+      context 'with invalid id' do
+        let(:id) { '1ab' }
+
+        it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
+        it { is_expected.to have_http_status(404) }
+      end
+
+      context 'when EmployeeWorkingPlace belongs to other account' do
+        before { employee_working_place.employee.update!(account: create(:account)) }
+
+        it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
+        it { is_expected.to have_http_status(404) }
+      end
+
+      context 'when they are employee balances after employee_working_place effective at' do
+        let!(:employee_balance) do
+          create(:employee_balance, :with_time_off, employee: employee,
+            effective_at: join_table.effective_at + 5.days)
+        end
+
+        it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
+        it { is_expected.to have_http_status(403) }
+      end
+
+      context 'when user is not an account manager' do
+        before { Account::User.current.update!(account_manager: false, employee: employee) }
+
+        it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
+        it { is_expected.to have_http_status(403) }
+
+        it 'have valid error message' do
+          subject
+
+          expect(response.body).to include 'You are not authorized to access this page.'
         end
       end
     end
