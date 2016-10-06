@@ -67,11 +67,13 @@ Rails.application.routes.draw do
     end
 
     post 'newsletters', to: 'newsletters#create'
+    post 'referrals',   to: 'referrals#create'
   end
 
   # ADMIN
   constraints subdomain: /^admin/ do
     mount ResqueWeb::Engine => '/resque'
+    get 'referrals/referrers', to: 'referrals#referrers_csv', defaults: { format: :csv }
   end
 
   # Catch all invalid routings

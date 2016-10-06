@@ -19,6 +19,7 @@ class Account < ActiveRecord::Base
     inclusion: { in: SUPPORTED_TIMEZONES },
     if: -> { timezone.present? }
   validates :default_locale, inclusion: { in: I18n.available_locales.map(&:to_s) }
+  validate :referrer_must_exist, if: :referred_by, on: :create
 
   # It is assigned to account holiday_policy as default
   belongs_to :holiday_policy, inverse_of: :assigned_account
@@ -45,6 +46,7 @@ class Account < ActiveRecord::Base
   has_many :employee_working_places, through: :employees
   has_many :employee_time_off_policies, through: :employees
   has_many :employee_presence_policies, through: :employees
+  belongs_to :referrer, primary_key: :token, foreign_key: :referred_by
 
   before_validation :generate_subdomain, on: :create
   after_create :update_default_attribute_definitions!
@@ -163,5 +165,10 @@ class Account < ActiveRecord::Base
         break
       end
     end
+  end
+
+  def referrer_must_exist
+    return if Referrer.where(token: referred_by).exists?
+    errors.add(:referred_by, 'must belong to existing referrer')
   end
 end

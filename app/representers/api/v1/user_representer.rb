@@ -4,7 +4,8 @@ module Api::V1
       {
         email:           resource.email,
         account_manager: resource.account_manager,
-        is_employee:        resource.employee.present?
+        is_employee:     resource.employee.present?,
+        referral_token:  resource.referrer.try(:token)
       }
         .merge(basic)
         .merge(relationships)
