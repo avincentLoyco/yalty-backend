@@ -24,7 +24,7 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
       .order(effective_at: :desc)
   }
 
-  def policy_assignation_balance
+  def policy_assignation_balance(effective_at = self.effective_at)
     employee.employee_balances.where(
       time_off_category_id: time_off_policy.time_off_category.id,
       time_off_id: nil
@@ -69,11 +69,13 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
   end
 
   def no_balances_after_effective_at
+    assignation_balance_id = policy_assignation_balance(effective_at_was).try(:id)
     older = effective_at_was && effective_at_was < effective_at ? effective_at_was : effective_at
     balances_after_effective_at =
       Employee::Balance
       .employee_balances(employee_id, time_off_policy.time_off_category_id)
       .where('effective_at >= ?', older)
+      .where.not(id: assignation_balance_id)
 
     return unless balances_after_effective_at.present?
     errors.add(:time_off_category, 'Employee balance after effective at already exists')

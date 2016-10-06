@@ -363,6 +363,29 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
       it { is_expected.to have_http_status(200) }
 
+      context 'when join table has assignation balance' do
+        let!(:employee_balance) do
+          create(:employee_balance,
+            time_off_category: category, employee: employee,
+            effective_at: join_table_resource.effective_at, manual_amount: 2000)
+        end
+
+        let(:effective_at) { Date.new(2014, 1, 1) }
+
+        it { expect { subject }.to change { employee_balance.reload.effective_at } }
+        it { expect { subject }.to change { join_table_resource.reload.effective_at } }
+        it { expect { subject }.to change { employee_balance.reload.resource_amount } }
+        it { expect { subject }.to change { Employee::Balance.count }.by(3) }
+        it do
+          expect { subject }
+            .to change { employee_balance.reload.resource_amount }.to time_off_policy.amount
+        end
+
+        it { is_expected.to have_http_status(200) }
+
+        it { expect { subject }.to_not change { employee_balance.reload.manual_amount } }
+      end
+
       context 'when there is resource in the same date but in different time off category' do
         let(:second_category) { create(:time_off_category, account: Account.current) }
         let(:second_time_off_policy) { create(:time_off_policy, time_off_category: second_category) }
@@ -539,13 +562,14 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
     context 'with invalid params' do
       context 'when there is employee balance' do
         before do
-          create(:employee_balance,
-            time_off_category: category, employee: employee, effective_at: balance_effective_at)
+          create(:time_off,
+            time_off_category: category, employee: employee, end_time: time_off_effective_at,
+            start_time: time_off_effective_at - 2.days)
         end
 
         context 'after old effective_at' do
           let(:effective_at) { 5.years.since }
-          let(:balance_effective_at) { 2.days.since }
+          let(:time_off_effective_at) { 2.days.since }
 
           it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
           it { is_expected.to have_http_status(422) }
@@ -559,7 +583,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
         context 'after new effective_at' do
           let(:effective_at) { 5.years.ago }
-          let(:balance_effective_at) { 5.days.ago }
+          let(:time_off_effective_at) { 5.days.ago }
 
           it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
           it { is_expected.to have_http_status(422) }

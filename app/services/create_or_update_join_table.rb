@@ -68,11 +68,20 @@ class CreateOrUpdateJoinTable
   def create_or_update_join_table
     if join_table_resource
       @status = 200
-      join_table_resource.tap { |resource| resource.update!(params) }
+      previous_effective_at = join_table_resource.effective_at
+      join_table_resource.update!(params)
+      update_assignation_balance(previous_effective_at)
+      join_table_resource
     else
       @status = 201
       employee_join_tables.create!(params)
     end
+  end
+
+  def update_assignation_balance(effective_at)
+    return unless join_table_class == EmployeeTimeOffPolicy && effective_at
+    assignation_balance = join_table_resource.policy_assignation_balance(effective_at)
+    assignation_balance.update!(effective_at: params[:effective_at]) if assignation_balance
   end
 
   def previous_join_table
