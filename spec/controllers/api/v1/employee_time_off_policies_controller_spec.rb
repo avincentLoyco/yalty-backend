@@ -519,6 +519,20 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
             it { expect { subject }.to change { EmployeeTimeOffPolicy.exists?(id) } }
 
             it { is_expected.to have_http_status(205) }
+
+            context 'and employee time off policy has assignation balance' do
+              let!(:employee_balance) do
+                create(:employee_balance,
+                  time_off_category: category, employee: employee,
+                  effective_at: join_table_resource.effective_at, manual_amount: 2000)
+              end
+
+              it { is_expected.to have_http_status(205) }
+
+              it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(-1) }
+              it { expect { subject }.to change { EmployeeTimeOffPolicy.exists?(id) } }
+              it { expect { subject }.to change { Employee::Balance.exists?(employee_balance.id) } }
+            end
           end
 
           context "and the time off policy is different than the exisitng ETOP's ones" do

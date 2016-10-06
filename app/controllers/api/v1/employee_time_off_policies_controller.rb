@@ -27,7 +27,8 @@ module API
         verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :update, resource
           transactions do
-            @updated_resource, @status = create_or_update_join_table(TimeOffPolicy, attributes, resource)
+            @updated_resource, @status =
+              create_or_update_join_table(TimeOffPolicy, attributes, resource)
             ManageEmployeeBalanceAdditions.new(@updated_resource).call
           end
 

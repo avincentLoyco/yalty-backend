@@ -42,7 +42,7 @@ class CreateOrUpdateJoinTable
   end
 
   def remove_policy_assignation_balances(join_tables_to_remove)
-    return unless join_table_class == EmployeeTimeOffPolicy
+    return unless employee_time_off_policy?
     join_tables_to_remove.map(&:policy_assignation_balance).compact.map(&:destroy!)
   end
 
@@ -58,7 +58,10 @@ class CreateOrUpdateJoinTable
 
   def new_current_join_table
     if previous_join_table && previous_join_table.send(resource_class_id) == resource_id
-      join_table_resource.try(:destroy!)
+      if join_table_resource
+        join_table_resource.policy_assignation_balance.try(:destroy!) if employee_time_off_policy?
+        join_table_resource.destroy!
+      end
       previous_join_table
     else
       create_or_update_join_table
@@ -79,7 +82,7 @@ class CreateOrUpdateJoinTable
   end
 
   def update_assignation_balance(effective_at)
-    return unless join_table_class == EmployeeTimeOffPolicy && effective_at
+    return unless employee_time_off_policy? && effective_at
     assignation_balance = join_table_resource.policy_assignation_balance(effective_at)
     assignation_balance.update!(effective_at: params[:effective_at]) if assignation_balance
   end
@@ -96,6 +99,10 @@ class CreateOrUpdateJoinTable
     Date.parse params[:effective_at]
   rescue
     raise InvalidParamTypeError.new(join_table_class, 'Effective_at must be a valid date')
+  end
+
+  def employee_time_off_policy?
+    join_table_class == EmployeeTimeOffPolicy
   end
 
   def return_new_current_with_efective_till
