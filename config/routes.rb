@@ -10,7 +10,7 @@ Rails.application.routes.draw do
         get '/employees', to: "employee_working_places#index"
       end
       resources :employee_working_places, only: [:update, :destroy]
-      resources :employee_time_off_policies, only: :update
+      resources :employee_time_off_policies, only: [:update, :destroy]
       resources :employee_presence_policies, only: [:update, :destroy]
       resources :holiday_policies, except: [:edit, :new]
       resources :countries, only: [:show]

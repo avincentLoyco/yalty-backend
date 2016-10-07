@@ -390,7 +390,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
         let(:second_category) { create(:time_off_category, account: Account.current) }
         let(:second_time_off_policy) { create(:time_off_policy, time_off_category: second_category) }
         let!(:existing_table) do
-          create(:employee_time_off_policy,
+          create(:employee_time_off_policy, :with_employee_balance,
             time_off_policy: second_time_off_policy, employee: employee, effective_at: '1/1/2016')
         end
 
@@ -441,14 +441,13 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
       context 'when one ETOP of a different category exsists on the past' do
         let!(:past_etop) do
           top = create(:time_off_policy, time_off_category: category)
-          create(:employee_time_off_policy, employee: employee, time_off_policy: top,
-            effective_at: effective_at)
+          create(:employee_time_off_policy, :with_employee_balance,
+            employee: employee, time_off_policy: top, effective_at: effective_at)
         end
 
         context 'and the effective at is equal to this already existing ETOP effective_at' do
           it { expect { subject }.to change { EmployeeTimeOffPolicy.exists?(past_etop.id) } }
           it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(-1) }
-          it { expect { subject }.to change { Employee::Balance.count }.by(1) }
 
           it { is_expected.to have_http_status(200) }
         end
@@ -631,6 +630,106 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
         it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
         it { is_expected.to have_http_status(403) }
+      end
+    end
+  end
+
+  describe 'DELETE #destroy' do
+    let(:employee_time_off_policy) do
+      create(:employee_time_off_policy, :with_employee_balance,
+        employee: employee, time_off_policy: time_off_policy, effective_at: Time.now)
+    end
+    let(:id) { employee_time_off_policy.id }
+
+    subject { delete :destroy, id: id }
+
+    context 'with valid params' do
+      context 'when they are no join tables with the same resources before and after' do
+        before { employee_time_off_policy }
+        it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(-1) }
+
+        it { is_expected.to have_http_status(204) }
+
+        context 'when there is employee balance but its effective at is before resource\'s' do
+          let(:employee_balance) do
+            create(:employee_balance, :with_time_off, employee: employee,
+              effective_at: join_table.effective_at - 5.days)
+          end
+
+          it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(-1) }
+
+          it { is_expected.to have_http_status(204) }
+        end
+      end
+
+      context 'when they are join tables with the same resources before and after' do
+        let!(:same_resource_tables) do
+          [Time.now - 1.week, Time.now, Time.now + 1.week].map do |date|
+            create(:employee_time_off_policy,
+              employee: employee, time_off_policy: time_off_policy, effective_at: date)
+          end
+        end
+
+        let(:id) { same_resource_tables.second }
+
+        it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(-2) }
+
+        it { is_expected.to have_http_status(204) }
+      end
+    end
+
+    context 'with invalid params' do
+      before { employee_time_off_policy }
+
+      context 'with invalid id' do
+        let(:id) { '1ab' }
+
+        it { expect { subject }.to_not change { EmployeeTimeOffPolicy.count } }
+        it { is_expected.to have_http_status(404) }
+      end
+
+      context 'when EmployeeTimeOffPolicy belongs to other account' do
+        before { employee_time_off_policy.employee.update!(account: create(:account)) }
+
+        it { expect { subject }.to_not change { EmployeeTimeOffPolicy.count } }
+        it { is_expected.to have_http_status(404) }
+      end
+
+      context 'when they are employee balances after employee_time_off_policy effective at' do
+        context 'and these are time offs balances' do
+          let!(:employee_balance) do
+            create(:employee_balance, :with_time_off, employee: employee,
+              effective_at: employee_time_off_policy.effective_at + 5.days,
+              time_off_category: category)
+          end
+
+          it { expect { subject }.to_not change { EmployeeTimeOffPolicy.count } }
+          it { is_expected.to have_http_status(403) }
+        end
+
+        context 'and these are additions balances' do
+          before do
+            employee_time_off_policy.policy_assignation_balance.destroy!
+            employee_time_off_policy.update!(effective_at: Time.now - 2.years)
+            ManageEmployeeBalanceAdditions.new(employee_time_off_policy).call
+          end
+
+          it { expect { subject }.to_not change { EmployeeTimeOffPolicy.count } }
+          it { is_expected.to have_http_status(403) }
+        end
+      end
+
+      context 'when user is not an account manager' do
+        before { Account::User.current.update!(account_manager: false, employee: employee) }
+
+        it { expect { subject }.to_not change { EmployeeTimeOffPolicy.count } }
+        it { is_expected.to have_http_status(403) }
+
+        it 'have valid error message' do
+          subject
+
+          expect(response.body).to include 'You are not authorized to access this page.'
+        end
       end
     end
   end

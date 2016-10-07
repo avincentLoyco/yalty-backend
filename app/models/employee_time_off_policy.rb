@@ -16,6 +16,8 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
   validate :verify_not_change_of_policy_type_in_category, if: [:employee, :time_off_policy]
   before_save :add_category_id
 
+  before_destroy :verify_if_no_balances_after_effective_at
+
   scope :not_assigned_at, -> (date) { where(['effective_at > ?', date]) }
   scope :assigned_at, -> (date) { where(['effective_at <= ?', date]) }
   scope :by_employee_in_category, lambda { |employee_id, category_id|
@@ -53,6 +55,10 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
   end
 
   private
+
+  def verify_if_no_balances_after_effective_at
+    no_balances_after_effective_at.blank?
+  end
 
   def verify_not_change_of_policy_type_in_category
     firts_etop =

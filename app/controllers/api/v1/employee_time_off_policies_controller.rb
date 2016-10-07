@@ -36,6 +36,16 @@ module API
         end
       end
 
+      def destroy
+        authorize! :destroy, resource
+        transactions do
+          resource.policy_assignation_balance.try(:destroy!)
+          resource.destroy!
+          destroy_join_tables_with_duplicated_resources
+        end
+        render_no_content
+      end
+
       private
 
       def resource_newly_created?(resource)
@@ -63,6 +73,12 @@ module API
           Account.current.id,
           options_for(resource)
         ).call
+      end
+
+      def destroy_join_tables_with_duplicated_resources
+        FindJoinTablesToDelete.new(
+          resource.employee.employee_time_off_policies, nil, resource.time_off_policy, resource
+        ).call.map(&:destroy!)
       end
 
       def options_for(resource)

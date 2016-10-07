@@ -393,7 +393,6 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
         end
 
         it { expect { subject }.to change { EmployeePresencePolicy.count }.by(-2) }
-
         it { is_expected.to have_http_status(204) }
       end
 
@@ -404,7 +403,6 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
         end
 
         it { expect { subject }.to change { EmployeePresencePolicy.count }.by(-1) }
-
         it { is_expected.to have_http_status(204) }
       end
     end
