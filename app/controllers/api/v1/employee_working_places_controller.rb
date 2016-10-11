@@ -2,6 +2,7 @@ module API
   module V1
     class EmployeeWorkingPlacesController < ApplicationController
       include EmployeeWorkingPlacesSchemas
+      include EmployeeBalancesPresenceVerification
 
       def index
         authorize! :index, EmployeeWorkingPlace.new
@@ -36,6 +37,7 @@ module API
         transactions do
           resource.destroy!
           destroy_join_tables_with_duplicated_resources
+          verify_if_there_are_no_balances!
         end
         render_no_content
       end
@@ -61,12 +63,6 @@ module API
 
       def employee_resources
         resources_with_effective_till(EmployeeWorkingPlace, nil, nil, employee.id)
-      end
-
-      def destroy_join_tables_with_duplicated_resources
-        FindJoinTablesToDelete.new(
-          resource.employee.employee_working_places, nil, resource.working_place, resource
-        ).call.map(&:destroy!)
       end
 
       def resource_representer

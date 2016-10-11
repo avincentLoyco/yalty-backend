@@ -3,6 +3,7 @@ require 'employee_policy_period'
 class EmployeeTimeOffPolicy < ActiveRecord::Base
   include ActsAsIntercomTrigger
   include ValidateEffectiveAtBeforeHired
+  include ValidateNoBalancesAfterJoinTableEffectiveAt
 
   attr_accessor :effective_till
 
@@ -12,11 +13,8 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
 
   validates :employee_id, :time_off_policy_id, :effective_at, presence: true
   validates :effective_at, uniqueness: { scope: [:employee_id, :time_off_category_id] }
-  validate :no_balances_after_effective_at, if: [:time_off_policy, :effective_at]
   validate :verify_not_change_of_policy_type_in_category, if: [:employee, :time_off_policy]
   before_save :add_category_id
-
-  before_destroy :verify_if_no_balances_after_effective_at
 
   scope :not_assigned_at, -> (date) { where(['effective_at > ?', date]) }
   scope :assigned_at, -> (date) { where(['effective_at <= ?', date]) }
@@ -56,10 +54,6 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
 
   private
 
-  def verify_if_no_balances_after_effective_at
-    no_balances_after_effective_at.blank?
-  end
-
   def verify_not_change_of_policy_type_in_category
     firts_etop =
       employee
@@ -72,19 +66,6 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
       :policy_type,
       'The employee has an existing policy of different type in the category'
     )
-  end
-
-  def no_balances_after_effective_at
-    assignation_balance_id = policy_assignation_balance(effective_at_was).try(:id)
-    older = effective_at_was && effective_at_was < effective_at ? effective_at_was : effective_at
-    balances_after_effective_at =
-      Employee::Balance
-      .employee_balances(employee_id, time_off_policy.time_off_category_id)
-      .where('effective_at >= ?', older)
-      .where.not(id: assignation_balance_id)
-
-    return unless balances_after_effective_at.present?
-    errors.add(:time_off_category, 'Employee balance after effective at already exists')
   end
 
   def add_category_id

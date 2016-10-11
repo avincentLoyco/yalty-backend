@@ -333,6 +333,21 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
         it { is_expected.to have_http_status(403) }
       end
 
+      context 'when existing join table has the same resource assigned' do
+        let!(:new_ewp) do
+          employee_working_place.dup.tap { |ewp| ewp.update!(effective_at: Time.now) }
+        end
+        let(:id) { new_ewp }
+        let(:effective_at) { employee_working_place.effective_at }
+
+        it { expect { subject }.to_not change { employee_working_place.reload.effective_at } }
+        it do
+          expect(subject.body).to include 'Join Table with given date and resource already exists'
+        end
+
+        it { is_expected.to have_http_status(422) }
+      end
+
       context 'when there is employee balance' do
         before do
           create(:time_off,
@@ -371,7 +386,7 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
             let(:effective_at) { 5.years.ago }
 
             it { expect { subject }.to_not change { new_employee_working_place.reload.effective_at } }
-            it { is_expected.to have_http_status(403) }
+            it { is_expected.to have_http_status(422) }
           end
         end
       end

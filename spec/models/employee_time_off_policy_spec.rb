@@ -100,7 +100,7 @@ RSpec.describe EmployeeTimeOffPolicy, type: :model do
         let(:effective_at) { Time.now - 2.years }
 
         it { expect(subject.valid?).to eq false }
-        it { expect { subject.valid? }.to change { subject.errors.messages[:time_off_category] }
+        it { expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
           .to include('Employee balance after effective at already exists') }
       end
     end

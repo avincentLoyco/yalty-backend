@@ -1,5 +1,6 @@
 class EmployeeWorkingPlace < ActiveRecord::Base
   include ValidateEffectiveAtBeforeHired
+  include ValidateNoBalancesAfterJoinTableEffectiveAt
 
   attr_accessor :effective_till
 
@@ -8,23 +9,4 @@ class EmployeeWorkingPlace < ActiveRecord::Base
 
   validates :employee, :working_place, :effective_at, presence: true
   validates :effective_at, uniqueness: { scope: [:employee_id, :working_place_id] }
-  validate :no_balances_after_effective_at, if: [:employee, :effective_at]
-
-  before_destroy :verify_if_no_balances_after_effective_at
-
-  private
-
-  def verify_if_no_balances_after_effective_at
-    no_balances_after_effective_at.blank?
-  end
-
-  def no_balances_after_effective_at
-    older = effective_at_was && effective_at_was < effective_at ? effective_at_was : effective_at
-    balances_after_effective_at =
-      employee
-      .employee_balances.where('effective_at >= ? AND time_off_id IS NOT NULL', older)
-
-    return unless balances_after_effective_at.present?
-    errors.add(:effective_at, 'Employee balance after effective at already exists')
-  end
 end

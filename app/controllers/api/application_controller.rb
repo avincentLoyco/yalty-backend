@@ -63,6 +63,15 @@ class API::ApplicationController < ApplicationController
     ).call
   end
 
+  def destroy_join_tables_with_duplicated_resources
+    employee_collection = resource.employee.send(resource.class.model_name.plural)
+    related_resource = resource.send(resource.class.model_name.element.gsub('employee_', ''))
+
+    FindJoinTablesToDelete.new(
+      employee_collection, nil, related_resource, resource
+    ).call.map(&:destroy!)
+  end
+
   def resources_with_effective_till(join_table, join_table_id, related_id = nil, employee_id = nil)
     resources =
       JoinTableWithEffectiveTill

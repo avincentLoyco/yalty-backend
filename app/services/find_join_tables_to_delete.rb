@@ -30,11 +30,14 @@ class FindJoinTablesToDelete
     @current_join_table ||= find_by_effective_at_and_category
   end
 
-  def next_join_table(effective_at = new_effective_at, current_resource = resource)
-    join_tables
-      .where("effective_at > ? AND #{resource_class} = ?", effective_at.to_date, current_resource)
+  def next_join_table(effective_at = new_effective_at, current_resource = resource.id)
+    next_table =
+      join_tables
+      .where('effective_at > ?', effective_at.to_date)
       .order(:effective_at)
       .first
+
+    return next_table if next_table.try(:send, resource_class) == current_resource
   end
 
   def previous_join_table(effective_at = new_effective_at)
@@ -46,13 +49,10 @@ class FindJoinTablesToDelete
 
   def find_by_effective_at_and_category
     return unless new_effective_at
-    if resource.is_a?(TimeOffPolicy)
-      join_tables.find_by(
-        effective_at: new_effective_at, time_off_category: resource.time_off_category
-      )
-    else
-      join_tables.find_by(effective_at: new_effective_at)
-    end
+    return join_tables.find_by(effective_at: new_effective_at) unless resource.is_a?(TimeOffPolicy)
+    join_tables.find_by(
+      effective_at: new_effective_at, time_off_category: resource.time_off_category
+    )
   end
 
   def verify_if_resource_not_duplicated

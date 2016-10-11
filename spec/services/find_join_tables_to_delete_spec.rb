@@ -49,12 +49,16 @@ RSpec.describe FindJoinTablesToDelete, type: :service do
     it { expect(subject).to include new_resources.first }
   end
 
+  shared_examples 'The same resource at new effective_at' do
+    it { expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
+  end
+
   context 'For EmployeeWorkingPlaces' do
     let(:resource_class) { 'working_place_id' }
     let(:resource) { create(:working_place, account: account) }
     let(:join_tables) { employee.employee_working_places.reload }
 
-    context 'when there are EmployeeWorkingPlaces with the same resource' do
+    context 'when there are no EmployeeWorkingPlaces with the same resource' do
       it_behaves_like 'No employee join tables'
     end
 
@@ -124,6 +128,14 @@ RSpec.describe FindJoinTablesToDelete, type: :service do
           let(:new_effective_at) { 3.years.ago }
 
           it_behaves_like 'The same resource is after and before new effective_at with reasign'
+        end
+
+        context 'and the same resource in new effective_at' do
+          let(:other_working_place) { create(:working_place, account: account) }
+          let(:join_table_resource) { same_resource_tables.first }
+          let(:resource) { same_resource_tables.first.working_place }
+
+          it_behaves_like 'The same resource at new effective_at'
         end
       end
     end
@@ -206,6 +218,14 @@ RSpec.describe FindJoinTablesToDelete, type: :service do
 
           it_behaves_like 'The same resource is after and before new effective_at with reasign'
         end
+
+        context 'and the same resource in new effective_at' do
+          let(:other_policy) { create(:time_off_policy, time_off_category: category) }
+          let(:join_table_resource) { same_resource_tables.first }
+          let(:resource) { same_resource_tables.first.time_off_policy }
+
+          it_behaves_like 'The same resource at new effective_at'
+        end
       end
     end
   end
@@ -284,6 +304,14 @@ RSpec.describe FindJoinTablesToDelete, type: :service do
           let(:new_effective_at) { 3.years.ago }
 
           it_behaves_like 'The same resource is after and before new effective_at with reasign'
+        end
+
+        context 'and the same resource in new effective_at' do
+          let(:other_policy) { create(:presence_policy, :with_presence_day, account: account) }
+          let(:join_table_resource) { same_resource_tables.first }
+          let(:resource) { same_resource_tables.first.presence_policy }
+
+          it_behaves_like 'The same resource at new effective_at'
         end
       end
     end

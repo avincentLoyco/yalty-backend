@@ -2,6 +2,7 @@ module API
   module V1
     class EmployeeTimeOffPoliciesController < ApplicationController
       include EmployeeTimeOffPoliciesSchemas
+      include EmployeeBalancesPresenceVerification
 
       def index
         authorize! :index, time_off_policy
@@ -13,10 +14,11 @@ module API
           authorize! :create, time_off_policy
           join_table_params = attributes.except(:employee_balance_amount)
           transactions do
-            @resource, @status =
-              create_or_update_join_table(TimeOffPolicy, join_table_params)
-            @balance = create_new_employee_balance(@resource) if resource_newly_created?(@resource)
-            ManageEmployeeBalanceAdditions.new(@resource).call if resource_newly_created?(@resource)
+            @resource, @status = create_or_update_join_table(TimeOffPolicy, join_table_params)
+            if @status.eql?(201)
+              @balance = create_new_employee_balance(@resource)
+              ManageEmployeeBalanceAdditions.new(@resource).call
+            end
           end
 
           render_resource(@resource, status: @status)
@@ -40,19 +42,14 @@ module API
         authorize! :destroy, resource
         transactions do
           resource.policy_assignation_balance.try(:destroy!)
-          resource.destroy!
           destroy_join_tables_with_duplicated_resources
+          verify_if_there_are_no_balances!
+          resource.destroy!
         end
         render_no_content
       end
 
       private
-
-      def resource_newly_created?(resource)
-        @resource_newly_created ||=
-          resource.effective_at == params[:effective_at].to_date &&
-          resource.employee_balances.blank?
-      end
 
       def resource
         @resource ||= Account.current.employee_time_off_policies.find(params[:id])
@@ -73,12 +70,6 @@ module API
           Account.current.id,
           options_for(resource)
         ).call
-      end
-
-      def destroy_join_tables_with_duplicated_resources
-        FindJoinTablesToDelete.new(
-          resource.employee.employee_time_off_policies, nil, resource.time_off_policy, resource
-        ).call.map(&:destroy!)
       end
 
       def options_for(resource)
