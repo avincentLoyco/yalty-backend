@@ -2,11 +2,11 @@ source 'https://rubygems.org'
 
 ruby '2.2.2'
 
-gem 'rails',                '4.2.5.1'
+gem 'rails',                '4.2.7.1'
 gem 'pg',                   '~> 0.18.4'
 gem 'bcrypt',               '~> 3.1.10'
 gem 'rack-cors',            '~> 0.4.0', require: 'rack/cors'
-gem 'doorkeeper',           '~> 3.1.0'
+gem 'doorkeeper',           '~> 4.2.0'
 gem 'virtus',               '~> 1.0.5'
 gem 'request_store',        '~> 1.3.0'
 gem 'scenic',               '~> 1.1.0'
