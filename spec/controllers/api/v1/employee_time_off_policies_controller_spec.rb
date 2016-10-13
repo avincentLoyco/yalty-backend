@@ -304,8 +304,8 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
           )
         end
 
-        it { expect { subject }.to_not change { employee.employee_time_off_policies.count } }
-        it { is_expected.to have_http_status(422) }
+        it { expect { subject }.to change { employee.employee_time_off_policies.count } }
+        it { is_expected.to have_http_status(201) }
       end
 
       context 'when employee does not belong to current account' do
@@ -580,13 +580,13 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
           let(:effective_at) { 5.years.since }
           let(:time_off_effective_at) { 2.days.since }
 
-          it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
-          it { is_expected.to have_http_status(422) }
+          it { expect { subject }.to change { join_table_resource.reload.effective_at } }
+          it { is_expected.to have_http_status(200) }
 
-          it 'has valid error in response body' do
+          it 'returns valid response' do
             subject
 
-            expect(response.body).to include 'Employee balance after effective at already exists'
+            expect(response.body).to include join_table_resource.id
           end
         end
 
@@ -594,13 +594,13 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
           let(:effective_at) { 5.years.ago }
           let(:time_off_effective_at) { 5.days.ago }
 
-          it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
-          it { is_expected.to have_http_status(422) }
+          it { expect { subject }.to change { join_table_resource.reload.effective_at } }
+          it { is_expected.to have_http_status(200) }
 
-          it 'has valid error in response body' do
+          it 'returns valid response' do
             subject
 
-            expect(response.body).to include 'Employee balance after effective at already exists'
+            expect(response.body).to include join_table_resource.id
           end
         end
       end

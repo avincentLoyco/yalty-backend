@@ -3,7 +3,6 @@ require 'employee_policy_period'
 class EmployeeTimeOffPolicy < ActiveRecord::Base
   include ActsAsIntercomTrigger
   include ValidateEffectiveAtBeforeHired
-  include ValidateNoBalancesAfterJoinTableEffectiveAt
 
   attr_accessor :effective_till
 
