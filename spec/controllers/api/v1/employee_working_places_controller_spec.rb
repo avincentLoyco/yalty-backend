@@ -373,13 +373,13 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
           let(:effective_at) { 5.years.since }
           let(:balance_effective_at) { 2.days.since }
 
-          it { expect { subject }.to_not change { new_employee_working_place.reload.effective_at } }
-          it { is_expected.to have_http_status(422) }
+          it { expect { subject }.to change { new_employee_working_place.reload.effective_at } }
+          it { is_expected.to have_http_status(200) }
 
-          it 'has valid error in response body' do
+          it 'returns valid response' do
             subject
 
-            expect(response.body).to include 'Employee balance after effective at already exists'
+            expect(response.body).to include new_employee_working_place.id
           end
         end
 
@@ -387,13 +387,13 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
           let(:effective_at) { 4.years.ago }
           let(:balance_effective_at) { 4.days.ago }
 
-          it { expect { subject }.to_not change { new_employee_working_place.reload.effective_at } }
-          it { is_expected.to have_http_status(422) }
+          it { expect { subject }.to change { new_employee_working_place.reload.effective_at } }
+          it { is_expected.to have_http_status(200) }
 
-          it 'has valid error in response body' do
+          it 'returns valid response' do
             subject
 
-            expect(response.body).to include 'Employee balance after effective at already exists'
+            expect(response.body).to include new_employee_working_place.id
           end
 
           context 'and new join table date is in the existing join table date' do

@@ -328,13 +328,12 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
           let(:effective_at) { 5.years.ago }
           let(:balance_effective_at) { 2.days.ago }
 
-          it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
-          it { is_expected.to have_http_status(422) }
+          it { expect { subject }.to change { join_table_resource.reload.effective_at } }
+          it { is_expected.to have_http_status(200) }
 
-          it 'has valid error in response body' do
+          it 'returns valid response' do
             subject
-
-            expect(response.body).to include 'Employee balance after effective at already exists'
+            expect(response.body).to include join_table_resource.id
           end
         end
 
@@ -342,13 +341,12 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
           let(:effective_at) { 5.years.ago }
           let(:balance_effective_at) { 5.days.ago }
 
-          it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
-          it { is_expected.to have_http_status(422) }
+          it { expect { subject }.to change { join_table_resource.reload.effective_at } }
+          it { is_expected.to have_http_status(200) }
 
-          it 'has valid error in response body' do
+          it 'returns valid response' do
             subject
-
-            expect(response.body).to include 'Employee balance after effective at already exists'
+            expect(response.body).to include join_table_resource.id
           end
         end
       end
