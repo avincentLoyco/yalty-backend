@@ -1,6 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
+  include ActiveJob::TestHelper
   include_context 'shared_context_headers'
   include_context 'shared_context_timecop_helper'
 
@@ -112,6 +113,121 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
           expect_json_keys(
             :id, :type, :assignation_type, :id, :assignation_id, :effective_at, :effective_till
           )
+        end
+      end
+
+      context 'when there are employee balances after employee working place effective_at' do
+        let(:holiday_policy) { create(:holiday_policy, account: account) }
+        let(:categories) { create_list(:time_off_category, 2, account: account) }
+        let(:policies) { categories.map { |cat| create(:time_off_policy, time_off_category: cat) } }
+        let!(:employee_policies) do
+          policies.map do |policy|
+            create(:employee_time_off_policy,
+              employee: employee, time_off_policy: policy, effective_at: employee.hired_date)
+          end
+        end
+        let!(:time_offs) do
+          dates_with_categories =
+            [[Time.now + 3.months, Time.now + 4.months, categories.first],
+            [Time.now + 5.months, Time.now + 6.months, categories.last]]
+          dates_with_categories.map do |starts, ends, category|
+            create(:time_off,
+              end_time: ends, start_time: ends, employee: employee, time_off_category: category)
+          end
+        end
+        let!(:balances) { TimeOff.all.map(&:employee_balance).sort_by { |b| b[:effective_at] } }
+
+        context 'when new EmployeeWorkingPlace is created' do
+          context 'and previous policy has the same holiday policy assigned' do
+            before do
+              working_place.update!(holiday_policy: holiday_policy)
+              new_working_place.update!(holiday_policy: holiday_policy)
+            end
+
+            it { expect { subject }.to_not change { balances.first.reload.being_processed } }
+            it { expect { subject }.to_not change { balances.last.reload.being_processed } }
+            it { expect { subject }.to_not change { enqueued_jobs.size } }
+
+            it { is_expected.to have_http_status(201) }
+          end
+
+          context 'when employee does not have balances with time offs after effectie at' do
+            before { balances.map(&:destroy) }
+            let!(:balance) { create(:employee_balance, employee: employee) }
+
+            it { expect { subject }.to_not change { enqueued_jobs.size } }
+
+            it { is_expected.to have_http_status(201) }
+          end
+
+          context 'when new employee working place is reassigned' do
+            before { new_working_place.update!(holiday_policy: holiday_policy) }
+            let(:effective_at) { EmployeeWorkingPlace.first.effective_at }
+
+            it { expect { subject }.to change { balances.first.reload.being_processed }.to true }
+            it { expect { subject }.to change { balances.last.reload.being_processed }.to true }
+            it { expect { subject }.to change { enqueued_jobs.size }.by(2) }
+
+            it { is_expected.to have_http_status(201) }
+          end
+
+          context 'when employee does not have previous employee working place' do
+            before { EmployeeWorkingPlace.destroy_all }
+
+            context 'and new working place does not have holiday policy assigned' do
+              it { expect { subject }.to_not change { enqueued_jobs.size } }
+
+              it { is_expected.to have_http_status(201) }
+            end
+
+            context 'and new working place has holiday policy assigned' do
+              before { new_working_place.update!(holiday_policy: holiday_policy) }
+
+              it { expect { subject }.to change { balances.first.reload.being_processed }.to true }
+              it { expect { subject }.to change { balances.last.reload.being_processed }.to true }
+              it { expect { subject }.to change { enqueued_jobs.size }.by(2) }
+
+              it { is_expected.to have_http_status(201) }
+            end
+          end
+        end
+
+        context 'when new EmployeeWorkingPlace is not created to due duplicated resource' do
+          let(:working_place_id) { employee_working_place.working_place_id }
+          let(:effective_at) { 5.months.since }
+
+          context 'when there is assignation employee working place' do
+            before do
+              create(:employee_working_place, employee: employee, effective_at: 5.month.since)
+            end
+
+            context 'and it has the same holiday policy' do
+              it { expect { subject }.to_not change { balances.last.reload.being_processed } }
+              it { expect { subject }.to_not change { balances.first.reload.being_processed } }
+              it { expect { subject }.to_not change { enqueued_jobs.size } }
+
+              it { is_expected.to have_http_status(205) }
+            end
+
+            context 'it has different holiday policy' do
+              before { WorkingPlace.first.update!(holiday_policy: holiday_policy) }
+
+              it { expect { subject }.to change { balances.last.reload.being_processed } }
+              it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+
+              it { expect { subject }.to_not change { balances.first.reload.being_processed } }
+
+              it { is_expected.to have_http_status(205) }
+            end
+          end
+
+          context 'when there is no assignation employee working place' do
+            it { expect { subject }.to_not change { balances.last.reload.being_processed } }
+            it { expect { subject }.to_not change { balances.first.reload.being_processed } }
+            it { expect { subject }.to_not change { enqueued_jobs.size } }
+
+            it { is_expected.to have_http_status(205) }
+          end
         end
       end
 
@@ -263,6 +379,71 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
         end
       end
 
+      context 'when they are balances with time offs after effective_at' do
+        let!(:newest_employee_working_place) do
+          employee_working_place.dup.tap { |ewp| ewp.update!(effective_at: 6.months.since) }
+        end
+        let(:holiday_policy) { create(:holiday_policy, account: account) }
+        let(:categories) { create_list(:time_off_category, 2, account: account) }
+        let(:policies) { categories.map { |cat| create(:time_off_policy, time_off_category: cat) } }
+        let!(:employee_policies) do
+          policies.map do |policy|
+            create(:employee_time_off_policy,
+              employee: employee, time_off_policy: policy, effective_at: employee.hired_date)
+          end
+        end
+        let!(:time_offs) do
+          dates_with_categories =
+            [[1.year.ago, 11.months.ago, categories.first],
+             [3.months.since, 4.months.since, categories.first],
+             [5.months.since, 6.months.since, categories.last]]
+          dates_with_categories.map do |starts, ends, category|
+            create(:time_off,
+              end_time: ends, start_time: ends, employee: employee, time_off_category: category)
+          end
+        end
+        let!(:balances) { TimeOff.all.map(&:employee_balance).sort_by { |b| b[:effective_at] } }
+        before do
+          new_employee_working_place.working_place.update!(holiday_policy: holiday_policy)
+        end
+
+        context 'when join table was updated' do
+          let(:effective_at) { 2.years.since }
+
+          it { expect { subject }.to change { balances.last.reload.being_processed } }
+          it { expect { subject }.to change { balances.second.reload.being_processed } }
+
+          it { expect { subject }.to_not change { balances.first.reload.being_processed } }
+
+          it { expect { subject }.to change { enqueued_jobs.size }.by(2) }
+        end
+
+        context 'when join table was destroyed' do
+          let(:id) { newest_employee_working_place.id }
+
+          context 'and there was an assignation join table' do
+            let(:effective_at) { 2.days.ago }
+
+            it { expect { subject }.to_not change { balances.first.reload.being_processed } }
+
+            it { expect { subject }.to change { balances.second.reload.being_processed } }
+            it { expect { subject }.to change { balances.last.reload.being_processed } }
+            it { expect { subject }.to change { enqueued_jobs.size }.by(2) }
+          end
+
+          context 'and there was not an assignation join table' do
+            let(:effective_at) { 1.year.ago }
+
+            it { expect { subject }.to_not change { balances.first.reload.being_processed } }
+            it { expect { subject }.to_not change { balances.second.reload.being_processed } }
+
+            it { expect { subject }.to change { balances.last.reload.being_processed } }
+
+            it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+          end
+        end
+      end
+
       context 'when at least 2 EWPs exist on the past' do
         let!(:first_ewp) do
           create(:employee_working_place, employee: employee, effective_at: Date.today,
@@ -397,6 +578,10 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
           end
 
           context 'and new join table date is in the existing join table date' do
+            before do
+              employee_working_place.update!(
+                working_place: new_employee_working_place.working_place)
+            end
             let(:effective_at) { 5.years.ago }
 
             it { expect { subject }.to_not change { new_employee_working_place.reload.effective_at } }
@@ -411,7 +596,8 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
     let(:id) { join_table.id }
     let!(:join_table) do
       create(:employee_working_place,
-        employee: employee, working_place: working_place, effective_at: Time.now)
+        employee: employee, working_place: create(:working_place, account: account),
+        effective_at: Time.now)
     end
     subject { delete :destroy, { id: id } }
 
@@ -445,6 +631,58 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
 
         it { is_expected.to have_http_status(204) }
       end
+
+      context 'when they are employee balances after resource effective at' do
+        let(:holiday_policy) { create(:holiday_policy, account: account) }
+        let(:categories) { create_list(:time_off_category, 2, account: account) }
+        let(:policies) { categories.map { |cat| create(:time_off_policy, time_off_category: cat) } }
+        let!(:employee_policies) do
+          policies.map do |policy|
+            create(:employee_time_off_policy,
+              employee: employee, time_off_policy: policy, effective_at: employee.hired_date)
+          end
+        end
+        let!(:time_offs) do
+          dates_with_categories =
+            [[Time.now + 3.months, Time.now + 4.months, categories.first],
+            [Time.now + 5.months, Time.now + 6.months, categories.last]]
+          dates_with_categories.map do |starts, ends, category|
+            create(:time_off,
+              end_time: ends, start_time: ends, employee: employee, time_off_category: category)
+          end
+        end
+        let!(:balances) { TimeOff.all.map(&:employee_balance) }
+
+        context 'when previous employee working places has the same holiday policy' do
+          before { WorkingPlace.update_all(holiday_policy_id: holiday_policy.id) }
+
+          it { expect { subject }.to_not change { balances.first.reload.being_processed } }
+          it { expect { subject }.to_not change { balances.last.reload.being_processed } }
+          it { expect { subject }.to_not change { enqueued_jobs.size } }
+
+          it { is_expected.to have_http_status(204) }
+        end
+
+        context 'when previous employee working place has different holiday policy' do
+          before { WorkingPlace.last.update!(holiday_policy_id: holiday_policy.id) }
+
+          context 'and there are no employee balances with time offs assigned' do
+            before { Employee::Balance.destroy_all }
+
+            it { expect { subject }.to_not change { enqueued_jobs.size } }
+
+            it { is_expected.to have_http_status(204) }
+          end
+
+          context 'and there are employee balances with time offs assigned' do
+            it { expect { subject }.to change { balances.first.reload.being_processed }.to true }
+            it { expect { subject }.to change { balances.last.reload.being_processed }.to true }
+            it { expect { subject }.to change { enqueued_jobs.size }.by(2) }
+
+            it { is_expected.to have_http_status(204) }
+          end
+        end
+      end
     end
 
     context 'with invalid params' do
@@ -460,16 +698,6 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
 
         it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
         it { is_expected.to have_http_status(404) }
-      end
-
-      context 'when they are employee balances after employee_working_place effective at' do
-        let!(:employee_balance) do
-          create(:employee_balance, :with_time_off, employee: employee,
-            effective_at: join_table.effective_at + 5.days)
-        end
-
-        it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
-        it { is_expected.to have_http_status(403) }
       end
 
       context 'when user is not an account manager' do

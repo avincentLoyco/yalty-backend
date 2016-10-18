@@ -19,7 +19,13 @@ module API
       def create
         verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :create, working_place
+
+          existing_resource = existing_working_place
           response = create_or_update_join_table(WorkingPlace, attributes)
+          if status == 201 || existing_resource
+            find_and_update_balances(resource, nil, existing_resource)
+          end
+
           render_resource(response[:result], status: response[:status])
         end
       end
@@ -27,7 +33,11 @@ module API
       def update
         verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :update, resource
+          previous_date = resource.effective_at
+          existing_resource = existing_working_place
           response = create_or_update_join_table(WorkingPlace, attributes, resource)
+          find_and_update_balances(resource, previous_date, existing_resource)
+
           render_resource(response[:result], status: response[:status])
         end
       end
@@ -37,12 +47,26 @@ module API
         transactions do
           resource.destroy!
           destroy_join_tables_with_duplicated_resources
-          verify_if_there_are_no_balances!
+          find_and_update_balances(resource)
         end
         render_no_content
       end
 
       private
+
+      def find_and_update_balances(resource, previous = nil, existing = nil)
+        effective_at = params[:effective_at].try(:to_date) || resource.effective_at
+        FindAndUpdateEmployeeBalancesForJoinTables.new(
+          resource, resource.employee, effective_at, previous, existing
+        ).call
+      end
+
+      def existing_working_place
+        employee
+          .employee_working_places
+          .find_by(effective_at: params[:effective_at])
+          .try(:working_place)
+      end
 
       def resource
         @resource ||= Account.current.employee_working_places.find(params[:id])
@@ -53,8 +77,13 @@ module API
       end
 
       def employee
-        id = params[:employee_id] ? params[:employee_id] : params[:id]
-        @employee ||= Account.current.employees.find(id)
+        @employee ||=
+          if request.put?
+            resource.employee
+          else
+            id = params[:employee_id] ? params[:employee_id] : params[:id]
+            Account.current.employees.find(id)
+          end
       end
 
       def working_place_resources
