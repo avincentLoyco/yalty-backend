@@ -498,8 +498,5 @@ DEPENDENCIES
   web-console (~> 2.0)
   yard (~> 0.8.7)
 
-RUBY VERSION
-   ruby 2.2.2p95
-
 BUNDLED WITH
    1.13.2

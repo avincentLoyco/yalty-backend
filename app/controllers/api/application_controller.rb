@@ -33,14 +33,6 @@ class API::ApplicationController < ApplicationController
       ::Api::V1::ErrorsRepresenter.new(nil, message: 'User unauthorized').complete, status: 401
   end
 
-  def assign_collection(resource, collection, collection_name)
-    AssignCollection.new(resource, collection, collection_name).call
-  end
-
-  def assign_member(resource, member, member_name)
-    AssignMember.new(resource, member, member_name).call
-  end
-
   def update_affected_balances(presence_policy, employees = [])
     UpdateAffectedEmployeeBalances.new(presence_policy, employees).call
   end
@@ -67,7 +59,7 @@ class API::ApplicationController < ApplicationController
     employee_collection = resource.employee.send(resource.class.model_name.plural)
     related_resource = resource.send(resource.class.model_name.element.gsub('employee_', ''))
 
-    FindJoinTablesToDelete.new(
+    FindSequenceJoinTableInTime.new(
       employee_collection, nil, related_resource, resource
     ).call.map(&:destroy!)
   end

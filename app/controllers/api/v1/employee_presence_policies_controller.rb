@@ -12,17 +12,16 @@ module API
       def create
         verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :create, presence_policy
-          resource, status = create_or_update_join_table(PresencePolicy, attributes)
-          render_resource(resource, status: status)
+          response = create_or_update_join_table(PresencePolicy, attributes)
+          render_resource(response[:result], status: response[:status])
         end
       end
 
       def update
         verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :update, resource
-          updated_resource, status =
-            create_or_update_join_table(PresencePolicy, attributes, resource)
-          render_resource(updated_resource, status: status)
+          response = create_or_update_join_table(PresencePolicy, attributes, resource)
+          render_resource(response[:result], status: response[:status])
         end
       end
 

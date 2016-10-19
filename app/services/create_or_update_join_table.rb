@@ -14,26 +14,19 @@ class CreateOrUpdateJoinTable
   end
 
   def call
-    verify_effective_at_format
     @employee_join_tables = find_employees_join_tables
     ActiveRecord::Base.transaction do
       remove_duplicated_resources_join_tables
-      [return_new_current_with_efective_till, @status]
+      { result: return_new_current_with_efective_till, status: @status }
     end
   end
 
   private
 
-  def verify_effective_at_format
-    Date.parse params[:effective_at]
-  rescue
-    raise InvalidParamTypeError.new(join_table_class, 'Effective_at must be a valid date')
-  end
-
   def find_employees_join_tables
     join_tables_class = join_table_class.model_name.route_key
     if join_table_resource
-      join_table_resource.employee.send(join_tables_class).where('id != ?', join_table_resource.id)
+      join_table_resource.employee.send(join_tables_class).where.not(id: join_table_resource.id)
     else
       Account.current.employees.find(params[:id]).send(join_tables_class)
     end
@@ -41,7 +34,7 @@ class CreateOrUpdateJoinTable
 
   def remove_duplicated_resources_join_tables
     join_tables_to_remove =
-      FindJoinTablesToDelete.new(
+      FindSequenceJoinTableInTime.new(
         employee_join_tables,
         params[:effective_at],
         resource_class.find(resource_id),
@@ -57,11 +50,12 @@ class CreateOrUpdateJoinTable
   end
 
   def return_new_current_with_efective_till
-    JoinTableWithEffectiveTill
+    join_table_hash =
+      JoinTableWithEffectiveTill
       .new(join_table_class, Account.current.id, nil, nil, new_current_join_table.id, nil)
       .call
-      .map { |join_hash| join_table_class.new(join_hash) }
       .first
+    join_table_class.new(join_table_hash)
   end
 
   def new_current_join_table

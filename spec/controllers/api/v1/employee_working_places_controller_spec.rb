@@ -203,6 +203,13 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
         it { is_expected.to have_http_status(404) }
       end
 
+      context 'when effective at is invalid format' do
+        let(:effective_at) { '**' }
+
+        it { expect { subject }.to_not change { employee.employee_presence_policies.count } }
+        it { is_expected.to have_http_status(422) }
+      end
+
       context 'when working place with given id belongs to other account' do
         let(:new_working_place) { create(:working_place) }
         let(:working_place_id) { new_working_place.id }
@@ -331,6 +338,13 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
 
         it { expect { subject }.to_not change { employee_working_place.reload.effective_at } }
         it { is_expected.to have_http_status(403) }
+      end
+
+      context 'when effective at is invalid format' do
+        let(:effective_at) { '987' }
+
+        it { expect { subject }.to_not change { employee.employee_presence_policies.count } }
+        it { is_expected.to have_http_status(422) }
       end
 
       context 'when existing join table has the same resource assigned' do

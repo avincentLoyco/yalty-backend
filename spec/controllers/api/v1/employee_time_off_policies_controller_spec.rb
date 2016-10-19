@@ -338,6 +338,13 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
         it { is_expected.to have_http_status(403) }
       end
+
+      context 'when effective at is invalid format' do
+        let(:effective_at) { '**' }
+
+        it { expect { subject }.to_not change { employee.employee_presence_policies.count } }
+        it { is_expected.to have_http_status(422) }
+      end
     end
 
     context 'when effective at is before employee start date' do
@@ -610,7 +617,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
       end
 
       context 'when effective at is not valid' do
-        let(:effective_at) { '123' }
+        let(:effective_at) { '1-a-b' }
 
         it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
         it { is_expected.to have_http_status(422) }

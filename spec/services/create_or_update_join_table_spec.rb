@@ -24,8 +24,8 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
 
       it { expect { subject }.to change { join_table_class.exists?(existing_join_table.id) } }
 
-      it { expect(subject.first.effective_at).to eq params[:effective_at].to_date }
-      it { expect(subject.last).to eq 201 }
+      it { expect(subject[:result].effective_at).to eq params[:effective_at].to_date }
+      it { expect(subject[:status]).to eq 201 }
     end
 
     shared_examples 'Join Table create with the same resource before' do
@@ -34,9 +34,9 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
       it { expect { subject }.to change { join_table_class.exists?(existing_join_table.id) } }
       it { expect { subject }.to change { join_table_class.count }.by(-1) }
 
-      it { expect(subject.first.effective_at).to eq same_resource_before.effective_at }
-      it { expect(subject.first.id).to eq same_resource_before.id }
-      it { expect(subject.last).to eq 205 }
+      it { expect(subject[:result].effective_at).to eq same_resource_before.effective_at }
+      it { expect(subject[:result].id).to eq same_resource_before.id }
+      it { expect(subject[:status]).to eq 205 }
     end
 
     shared_examples 'Join Table create with the same resource after' do
@@ -46,8 +46,8 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
       it { expect { subject }.to change { join_table_class.exists?(existing_join_table.id) } }
       it { expect { subject }.to change { join_table_class.exists?(same_resource_after.id) } }
 
-      it { expect(subject.first.effective_at).to eq params[:effective_at].to_date }
-      it { expect(subject.last).to eq 201 }
+      it { expect(subject[:result].effective_at).to eq params[:effective_at].to_date }
+      it { expect(subject[:status]).to eq 201 }
     end
 
     shared_examples 'Join Table create with the same resource after and before' do
@@ -57,9 +57,9 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
       it { expect { subject }.to change { join_table_class.exists?(existing_join_table.id) } }
       it { expect { subject }.to change { join_table_class.exists?(same_resource_after.id) } }
 
-      it { expect(subject.first.effective_at).to eq same_resource_before.effective_at }
-      it { expect(subject.first.id).to eq same_resource_before.id }
-      it { expect(subject.last).to eq 205 }
+      it { expect(subject[:result].effective_at).to eq same_resource_before.effective_at }
+      it { expect(subject[:result].id).to eq same_resource_before.id }
+      it { expect(subject[:status]).to eq 205 }
     end
 
     shared_examples 'Join Table create with different resource after and effective till in past' do
@@ -67,7 +67,7 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
 
       it { expect { subject }.to change { join_table_class.count }.by(1) }
       it do
-        expect(subject.first.effective_till.to_s)
+        expect(subject[:result].effective_till.to_s)
           .to eq (existing_join_table.effective_at - 1.day).to_s
       end
     end
@@ -77,7 +77,7 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
 
       it { expect { subject }.to change { join_table_class.count }.by(1) }
       it do
-        expect(subject.first.effective_till.to_s)
+        expect(subject[:result].effective_till.to_s)
           .to eq (existing_join_table.effective_at - 1.day).to_s
       end
     end
@@ -85,19 +85,6 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
     shared_examples 'Duplicated Join Table' do
       it 'should raise error with proper message' do
         expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError)
-      end
-    end
-
-    shared_examples 'Invalid date format' do
-      let(:params) do
-        {
-          effective_at: 'abc',
-          id: employee.id
-        }.merge(resource_params)
-      end
-
-      it 'should raise error with proper message' do
-        expect { subject }.to raise_error(API::V1::Exceptions::InvalidParamTypeError)
       end
     end
 
@@ -158,7 +145,6 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
         end
 
         it_behaves_like 'Join Table create'
-        it_behaves_like 'Invalid date format'
 
         context 'when there is Join Table with the same resource and date' do
           let(:resource_params) { { working_place_id: existing_join_table.working_place_id } }
@@ -266,7 +252,6 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
 
       context 'Join table create' do
         it_behaves_like 'Join Table create'
-        it_behaves_like 'Invalid date format'
 
         context 'when there is Join Table with the same resource and date' do
           let(:resource_params) { { time_off_policy_id: existing_join_table.time_off_policy_id } }
@@ -371,7 +356,6 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
 
       context 'Join table create' do
         it_behaves_like 'Join Table create'
-        it_behaves_like 'Invalid date format'
 
         context 'when there is Join Table with the same resource and date' do
           let(:resource_params) { { presence_policy_id: existing_join_table.presence_policy_id } }

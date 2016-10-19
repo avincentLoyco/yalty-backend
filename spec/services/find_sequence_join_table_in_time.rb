@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe FindJoinTablesToDelete, type: :service do
+RSpec.describe FindSequenceJoinTableInTime, type: :service do
   include_context 'shared_context_account_helper'
 
   subject do

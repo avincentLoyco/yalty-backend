@@ -14,14 +14,14 @@ module API
           authorize! :create, time_off_policy
           join_table_params = attributes.except(:employee_balance_amount)
           transactions do
-            @resource, @status = create_or_update_join_table(TimeOffPolicy, join_table_params)
-            if @status.eql?(201)
-              @balance = create_new_employee_balance(@resource)
-              ManageEmployeeBalanceAdditions.new(@resource).call
+            @response = create_or_update_join_table(TimeOffPolicy, join_table_params)
+            if @response[:status].eql?(201)
+              @balance = create_new_employee_balance(@response[:result])
+              ManageEmployeeBalanceAdditions.new(@response[:result]).call
             end
           end
 
-          render_resource(@resource, status: @status)
+          render_resource(@response[:result], status: @response[:status])
         end
       end
 
@@ -29,12 +29,11 @@ module API
         verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :update, resource
           transactions do
-            @updated_resource, @status =
-              create_or_update_join_table(TimeOffPolicy, attributes, resource)
-            ManageEmployeeBalanceAdditions.new(@updated_resource).call
+            @response = create_or_update_join_table(TimeOffPolicy, attributes, resource)
+            ManageEmployeeBalanceAdditions.new(@response[:result]).call
           end
 
-          render_resource(@updated_resource, status: @status)
+          render_resource(@response[:result], status: @response[:status])
         end
       end
 

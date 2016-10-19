@@ -1,21 +1,19 @@
 namespace :employee_join_tables do
   desc 'Remove duplicated join tables, update balances if any affected'
   task remove_duplicated: :environment do
-    @join_tables_to_delete = []
-
     join_tables_with_resources = [
       [EmployeeWorkingPlace, 'working_place_id'],
       [EmployeePresencePolicy, 'presence_policy_id'],
       [EmployeeTimeOffPolicy, 'time_off_policy_id']
     ]
 
-    join_tables_with_resources.each do |join_table_class, resource_class|
-      to_verify = find_join_tables_to_verify(join_table_class)
-      find_duplicated_join_tables(to_verify, resource_class)
-    end
+    join_tables_to_delete = join_tables_with_resources.map do |join_table_class, resource_class|
+      possible_repeated_joins_tables = find_join_tables_to_verify(join_table_class)
+      find_duplicated_join_tables(possible_repeated_joins_tables, resource_class)
+    end.flatten.compact
 
-    remove_and_update_balances
-    @join_tables_to_delete.map(&:destroy!)
+    remove_and_update_balances(join_tables_to_delete)
+    join_tables_to_delete.map(&:destroy!)
   end
 
   def find_join_tables_to_verify(join_table_class)
@@ -29,18 +27,18 @@ namespace :employee_join_tables do
   end
 
   def find_duplicated_join_tables(join_tables, resource_class_id)
-    join_tables.values.each do |join_tables_in_category|
-      join_tables_in_category.each_with_index do |jt, index|
+    join_tables.values.map do |join_tables_in_category|
+      join_tables_in_category.map.each_with_index do |jt, index|
         next if join_tables_in_category[index + 1].nil?
         if jt.send(resource_class_id) == join_tables_in_category[index + 1].send(resource_class_id)
-          @join_tables_to_delete << join_tables_in_category[index + 1]
+          join_tables_in_category[index + 1]
         end
       end
     end
   end
 
-  def remove_and_update_balances
-    @join_tables_to_delete.select { |jt| jt.class.eql?(EmployeeTimeOffPolicy) }.each do |jt|
+  def remove_and_update_balances(join_tables_to_delete)
+    join_tables_to_delete.select { |jt| jt.class.eql?(EmployeeTimeOffPolicy) }.each do |jt|
       assignation_balance = jt.policy_assignation_balance
       next unless assignation_balance
       next_balance_id = RelativeEmployeeBalancesFinder.new(assignation_balance).next_balance

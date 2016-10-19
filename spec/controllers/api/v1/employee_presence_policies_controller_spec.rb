@@ -185,7 +185,9 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
       let(:new_account) { create(:account) }
       let(:category) { create(:time_off_category, account_id: employee.account_id) }
       let(:presence_policy) { create(:presence_policy, account_id: employee.account_id) }
-      let(:time_off) { create(:time_off, :without_balance, employee: employee, time_off_category: category) }
+      let(:time_off) do
+        create(:time_off, :without_balance, employee: employee, time_off_category: category)
+      end
 
       context 'when there is employee balance after effective at' do
         let!(:balance) do
@@ -218,6 +220,13 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
 
         it { expect { subject }.to_not change { employee.employee_presence_policies.count } }
         it { is_expected.to have_http_status(403) }
+      end
+
+      context 'when effective at is invalid format' do
+        let(:effective_at) { 'abc' }
+
+        it { expect { subject }.to_not change { employee.employee_presence_policies.count } }
+        it { is_expected.to have_http_status(422) }
       end
     end
   end
@@ -344,13 +353,6 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
         end
       end
 
-      context 'when effective at is not valid' do
-        let(:effective_at) { '123' }
-
-        it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
-        it { is_expected.to have_http_status(422) }
-      end
-
       context 'when resource is duplicated' do
         let!(:existing_resource) do
           join_table_resource.dup.tap { |resource| resource.update!(effective_at: '1/1/2016') }
@@ -365,6 +367,13 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
 
         it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
         it { is_expected.to have_http_status(403) }
+      end
+
+      context 'when effective at is not valid' do
+        let(:effective_at) { 'abc' }
+
+        it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
+        it { is_expected.to have_http_status(422) }
       end
     end
   end

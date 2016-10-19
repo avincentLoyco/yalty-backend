@@ -1,4 +1,4 @@
-class FindJoinTablesToDelete
+class FindSequenceJoinTableInTime
   include API::V1::Exceptions
 
   attr_reader :join_tables, :new_effective_at, :join_table_resource, :resource, :resource_class
@@ -27,7 +27,7 @@ class FindJoinTablesToDelete
   end
 
   def current_join_table
-    @current_join_table ||= find_by_effective_at_and_category
+    @current_join_table ||= find_join_table_by_effective_at_and_category
   end
 
   def next_join_table(effective_at = new_effective_at, current_resource = resource.id)
@@ -47,7 +47,7 @@ class FindJoinTablesToDelete
       .last
   end
 
-  def find_by_effective_at_and_category
+  def find_join_table_by_effective_at_and_category
     return unless new_effective_at
     return join_tables.find_by(effective_at: new_effective_at) unless resource.is_a?(TimeOffPolicy)
     join_tables.find_by(
