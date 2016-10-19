@@ -68,6 +68,8 @@ class RelatedPolicyPeriod
     validity_date >= date ? validity_date : validity_date_for(date)
   end
 
+  alias_method :validity_date_for_day_before_start_date, :validity_date_for_time_off
+
   def previous_addition(date)
     related_policy
       .employee_balances.additions.where('effective_at < ?', date)

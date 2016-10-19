@@ -5,7 +5,7 @@ class EmployeePolicyPeriod
     @employee = employee
     @time_off_category_id = time_off_category_id
     @active_related_policy = employee.active_policy_in_category_at_date(time_off_category_id)
-    @active_policy_period = RelatedPolicyPeriod.new(active_related_policy)
+    @active_policy_period = RelatedPolicyPeriod.new(active_related_policy) if active_related_policy.present?
   end
 
   def previous_policy_period
@@ -13,6 +13,7 @@ class EmployeePolicyPeriod
   end
 
   def current_policy_period
+    return unless active_policy_period.present?
     (current_start_date...next_start_date)
   end
 
@@ -57,11 +58,16 @@ class EmployeePolicyPeriod
 
   def next_start_date
     next_policy_period = RelatedPolicyPeriod.new(next_related_policy) if next_related_policy
-    if next_policy_period && next_policy_period.first_start_date < active_policy_period.end_date
+    if next_policy_first_start_date?(next_policy_period)
       next_policy_period.first_start_date
     else
       active_policy_period.end_date
     end
+  end
+
+  def next_policy_first_start_date?(next_policy_period)
+    next_policy_period.present? && (active_policy_period.nil? || active_policy_period.present? &&
+      next_policy_period.first_start_date < active_policy_period.end_date)
   end
 
   def future_start_date

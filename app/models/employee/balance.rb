@@ -31,7 +31,7 @@ class Employee::Balance < ActiveRecord::Base
     where(employee_id: employee_id, time_off_category_id: time_off_category_id)
   end)
   scope :additions, -> { where(policy_credit_addition: true).order(:effective_at) }
-  scope :removals, -> { Employee::Balance.joins(:balance_credit_additions) }
+  scope :removals, -> { Employee::Balance.joins(:balance_credit_additions).distinct }
   scope :removal_at_date, (lambda do |employee_id, time_off_category_id, date|
     employee_balances(employee_id, time_off_category_id)
       .where("effective_at::date = to_date('#{date}', 'YYYY-MM_DD')").uniq
@@ -52,7 +52,7 @@ class Employee::Balance < ActiveRecord::Base
   def current_or_next_period
     [EmployeePolicyPeriod.new(employee, time_off_category_id).current_policy_period,
      EmployeePolicyPeriod.new(employee, time_off_category_id).future_policy_period]
-      .find { |r| r.include?(effective_at.to_date) }
+      .compact.find { |r| r.include?(effective_at.to_date) }
   end
 
   def calculate_and_set_balance
