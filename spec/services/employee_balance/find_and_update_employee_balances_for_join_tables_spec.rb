@@ -28,6 +28,12 @@ RSpec.describe FindAndUpdateEmployeeBalancesForJoinTables do
 
   subject { described_class.new(join_table, employee, new_date).call }
 
+  shared_examples 'Only newest balance update' do
+    it { expect { subject }.to change { balances.last.reload.being_processed } }
+    it { expect { subject }.to_not change { balances.first.reload.being_processed } }
+    it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+  end
+
   shared_examples 'All balances update' do
     it { expect { subject }.to change { balances.first.reload.being_processed }.to true }
     it { expect { subject }.to change { balances.last.reload.being_processed }.to true }
@@ -50,51 +56,15 @@ RSpec.describe FindAndUpdateEmployeeBalancesForJoinTables do
     let(:previous_date) { nil }
     let(:holiday_policy) { create(:holiday_policy, account: account) }
 
-    context 'for destroy' do
-      context 'when there is no previous join table' do
-        context 'and removed join table does not have holiday_policy' do
-          it_behaves_like 'No balances update'
-        end
-
-        context 'and removed join table has holiday policy' do
-          before { join_table.working_place.update!(holiday_policy: holiday_policy) }
-
-          it_behaves_like 'All balances update'
-        end
-      end
-
-      context 'when there is previous join table' do
-        let(:first_employee_working_place) do
-          create(:employee_working_place, employee: employee, effective_at: 4.years.ago)
-        end
-
-        context 'when previous and current join table have the same holiday policy' do
-          before { WorkingPlace.update_all(holiday_policy_id: holiday_policy.id) }
-
-          it_behaves_like 'No balances update'
-        end
-
-        context 'when previous and current join table have different holiday policies' do
-          before { join_table.working_place.update!(holiday_policy: holiday_policy) }
-
-          it_behaves_like 'All balances update'
-        end
-
-        context 'when current and previous join table do not have holiday policy' do
-          it_behaves_like 'No balances update'
-        end
-      end
-    end
-
-    context 'for create' do
+    context 'when only new date given' do
       let!(:first_employee_working_place) do
         create(:employee_working_place, employee: employee, effective_at: 4.years.ago)
       end
 
       context 'when there is reassignation join table' do
+        before { employee_working_place.update!(effective_at: new_date) }
         subject { described_class.new(join_table, employee, new_date, nil, existing_resource).call }
 
-        before { employee_working_place.update!(effective_at: new_date) }
         let(:new_date) { 3.years.ago }
         let(:existing_resource) { reassignation_join_table.working_place }
         let!(:reassignation_join_table) do
@@ -172,7 +142,7 @@ RSpec.describe FindAndUpdateEmployeeBalancesForJoinTables do
       end
     end
 
-    context 'for update' do
+    context 'when new and previous dates are given' do
       let!(:older_time_offs) do
         dates_with_categories =
           [[3.months.ago, 4.months.ago, categories.first],
@@ -188,7 +158,7 @@ RSpec.describe FindAndUpdateEmployeeBalancesForJoinTables do
         end
       end
 
-      shared_examples 'All balances for previous update' do
+      shared_examples 'Two newest balances update' do
         it { expect { subject }.to_not change { balances.first.reload.being_processed } }
         it { expect { subject }.to_not change { balances.second.reload.being_processed } }
 
@@ -253,7 +223,7 @@ RSpec.describe FindAndUpdateEmployeeBalancesForJoinTables do
                 join_table.working_place.update!(holiday_policy: holiday_policy)
               end
 
-              it_behaves_like 'All balances for previous update'
+              it_behaves_like 'Two newest balances update'
             end
 
             context 'and it is the same in the previous place' do
@@ -333,7 +303,7 @@ RSpec.describe FindAndUpdateEmployeeBalancesForJoinTables do
                 employee_working_places.last.working_place.update!(holiday_policy: holiday_policy)
               end
 
-              it_behaves_like 'All balances for previous update'
+              it_behaves_like 'Two newest balances update'
             end
 
             context 'and it is the same in the previous place' do
@@ -393,7 +363,7 @@ RSpec.describe FindAndUpdateEmployeeBalancesForJoinTables do
             end
 
             context 'and it is the same in the previous place' do
-              it_behaves_like 'All balances for previous update'
+              it_behaves_like 'Two newest balances update'
             end
           end
         end
@@ -402,40 +372,79 @@ RSpec.describe FindAndUpdateEmployeeBalancesForJoinTables do
   end
 
   describe 'For EmployeePresencePolicy' do
-    let!(:employee_presence_policy) do
+    let!(:employee_presence_policies) do
       [Time.now, 5.months.since, 7.months.since].map do |date|
         create(:employee_presence_policy, employee: employee, effective_at: date)
       end
     end
 
+    let(:join_table) { employee_presence_policies.second }
+    let(:new_date) { join_table.effective_at }
+    let(:previous_date) { nil }
+    let(:existing_resource) { nil }
+
     subject do
       described_class.new(join_table, employee, new_date, previous_date, existing_resource).call
     end
 
-    context 'for create' do
-      context 'when there was assignation join table' do
-
+    context 'when only new date is given' do
+      context 'when there are employee balances after effective at' do
+        it_behaves_like 'Only newest balance update'
       end
 
-      context 'when there was not assignation join table' do
+      context 'when there are no employee balances after effective at' do
+        let(:new_date) { 1.year.since }
 
-      end
-    end
-
-    context 'for update' do
-
-
-      context 'when there was assignation join table' do
-
-      end
-
-      context 'when there was not assignation join table' do
-
+        it_behaves_like 'No balances update'
       end
     end
 
-    context 'for destroy' do
+    context 'when new and previous dates are given' do
+      context 'previous effective_at before new one' do
+        let(:new_date) { 1.year.since }
+        let(:previous_date) { join_table.effective_at }
 
+        context 'and there are two balances after' do
+          let(:join_table) { employee_presence_policies.first }
+
+          it_behaves_like 'All balances update'
+        end
+
+        context 'and there is one balance after' do
+          let(:join_table) { employee_presence_policies.second }
+
+          it_behaves_like 'Only newest balance update'
+        end
+
+        context 'and there are no balances after' do
+          let(:join_table) { employee_presence_policies.last }
+
+          it_behaves_like 'No balances update'
+        end
+      end
+
+      context 'previous effective_at after new one' do
+        let(:previous_date) { 1.year.since }
+        let(:new_date) { join_table.effective_at }
+
+        context 'and there are two balances after' do
+          let(:join_table) { employee_presence_policies.first }
+
+          it_behaves_like 'All balances update'
+        end
+
+        context 'and there is one balance after' do
+          let(:join_table) { employee_presence_policies.second }
+
+          it_behaves_like 'Only newest balance update'
+        end
+
+        context 'and there are no balances after' do
+          let(:join_table) { employee_presence_policies.last }
+
+          it_behaves_like 'No balances update'
+        end
+      end
     end
   end
 end

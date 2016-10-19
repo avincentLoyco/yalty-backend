@@ -151,15 +151,6 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
             it { is_expected.to have_http_status(201) }
           end
 
-          context 'when employee does not have balances with time offs after effectie at' do
-            before { balances.map(&:destroy) }
-            let!(:balance) { create(:employee_balance, employee: employee) }
-
-            it { expect { subject }.to_not change { enqueued_jobs.size } }
-
-            it { is_expected.to have_http_status(201) }
-          end
-
           context 'when new employee working place is reassigned' do
             before { new_working_place.update!(holiday_policy: holiday_policy) }
             let(:effective_at) { EmployeeWorkingPlace.first.effective_at }
@@ -189,44 +180,6 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
 
               it { is_expected.to have_http_status(201) }
             end
-          end
-        end
-
-        context 'when new EmployeeWorkingPlace is not created to due duplicated resource' do
-          let(:working_place_id) { employee_working_place.working_place_id }
-          let(:effective_at) { 5.months.since }
-
-          context 'when there is assignation employee working place' do
-            before do
-              create(:employee_working_place, employee: employee, effective_at: 5.month.since)
-            end
-
-            context 'and it has the same holiday policy' do
-              it { expect { subject }.to_not change { balances.last.reload.being_processed } }
-              it { expect { subject }.to_not change { balances.first.reload.being_processed } }
-              it { expect { subject }.to_not change { enqueued_jobs.size } }
-
-              it { is_expected.to have_http_status(205) }
-            end
-
-            context 'it has different holiday policy' do
-              before { WorkingPlace.first.update!(holiday_policy: holiday_policy) }
-
-              it { expect { subject }.to change { balances.last.reload.being_processed } }
-              it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
-
-              it { expect { subject }.to_not change { balances.first.reload.being_processed } }
-
-              it { is_expected.to have_http_status(205) }
-            end
-          end
-
-          context 'when there is no assignation employee working place' do
-            it { expect { subject }.to_not change { balances.last.reload.being_processed } }
-            it { expect { subject }.to_not change { balances.first.reload.being_processed } }
-            it { expect { subject }.to_not change { enqueued_jobs.size } }
-
-            it { is_expected.to have_http_status(205) }
           end
         end
       end

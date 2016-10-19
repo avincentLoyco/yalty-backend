@@ -13,6 +13,7 @@ module API
         verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :create, presence_policy
           response = create_or_update_join_table(PresencePolicy, attributes)
+          find_and_update_balances(response[:result], attributes)
           render_resource(response[:result], status: response[:status])
         end
       end
@@ -20,7 +21,9 @@ module API
       def update
         verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :update, resource
+          previous_date = resource.effective_at
           response = create_or_update_join_table(PresencePolicy, attributes, resource)
+          find_and_update_balances(resource, attributes, previous_date)
           render_resource(response[:result], status: response[:status])
         end
       end
@@ -30,7 +33,7 @@ module API
         transactions do
           resource.destroy!
           destroy_join_tables_with_duplicated_resources
-          verify_if_there_are_no_balances!
+          find_and_update_balances(resource)
         end
         render_no_content
       end

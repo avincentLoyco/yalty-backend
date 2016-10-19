@@ -1,6 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
+  include ActiveJob::TestHelper
   include_context 'shared_context_headers'
   include_context 'shared_context_timecop_helper'
 
@@ -105,6 +106,52 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
             :order_of_start_day,
             :effective_till
           ])
+        end
+      end
+
+      context 'when there are emloyee balances with time offs assigned' do
+        let(:policy) { create(:time_off_policy) }
+        let(:employee_policy) do
+          create(:employee_time_off_policy, employee: employee, effective_at: 5.years.ago)
+        end
+        let!(:balances) do
+          [2.months.ago, 2.months.since].map do |date|
+            create(:employee_balance_manual, :with_time_off,
+              employee: employee, effective_at: date, time_off_category: policy.time_off_category)
+          end
+        end
+
+        context 'and new resource was created' do
+          context 'and there are balances after' do
+            it { expect { subject }.to change { balances.last.reload.being_processed} }
+            it { expect { subject }.to_not change { balances.first.reload.being_processed } }
+
+            it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+            it { is_expected.to have_http_status(201) }
+          end
+
+          context 'and there is no balances after' do
+            let(:effective_at) { 4.months.since }
+
+            it { expect { subject }.to_not change { balances.last.reload.being_processed } }
+            it { expect { subject }.to_not change { balances.first.reload.being_processed } }
+
+            it { expect { subject }.to_not change { enqueued_jobs.size } }
+            it { is_expected.to have_http_status(201) }
+          end
+        end
+
+        context 'and new resource was not created' do
+          before do
+            create(:employee_presence_policy,
+              employee: employee, effective_at: 4.months.ago, presence_policy: presence_policy)
+          end
+
+          it { expect { subject }.to change { balances.last.reload.being_processed } }
+          it { expect { subject }.to_not change { balances.first.reload.being_processed } }
+
+          it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+          it { is_expected.to have_http_status(205) }
         end
       end
 
@@ -240,7 +287,58 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
     end
     let(:new_presence_policy) { presence_policy }
 
-    subject { put :update, { id: id, effective_at: effective_at }}
+    subject { put :update, { id: id, effective_at: effective_at } }
+
+    context 'when there are employee balances with time offs assigned' do
+      let(:policy) { create(:time_off_policy) }
+      let(:employee_policy) do
+        create(:employee_time_off_policy, employee: employee, effective_at: 5.years.ago)
+      end
+      let!(:balances) do
+        [2.months.ago, 2.months.since, 6.months.since].map do |date|
+          create(:employee_balance_manual, :with_time_off,
+            employee: employee, effective_at: date, time_off_category: policy.time_off_category)
+        end
+      end
+
+      context 'and join table was updated' do
+        it { expect { subject }.to change { balances.second.reload.being_processed } }
+        it { expect { subject }.to change { balances.last.reload.being_processed } }
+        it { expect { subject }.to_not change { balances.first.reload.being_processed } }
+
+        it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+        it { is_expected.to have_http_status(200) }
+
+        context 'and its previous date is before new one' do
+          before { join_table_resource.update!(effective_at: 1.year.ago) }
+
+          let(:effective_at) { 1.year.since }
+
+          it { expect { subject }.to change { balances.second.reload.being_processed } }
+          it { expect { subject }.to change { balances.last.reload.being_processed } }
+          it { expect { subject }.to change { balances.first.reload.being_processed } }
+
+          it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+          it { is_expected.to have_http_status(200) }
+        end
+      end
+
+      context 'and join table was destroyed due to duplicated resource' do
+        before do
+          [4.months.ago, 4.month.since].map do |date|
+            create(:employee_presence_policy,
+              employee: employee, effective_at: date, presence_policy: presence_policy)
+          end
+        end
+
+        it { expect { subject }.to change { balances.second.reload.being_processed } }
+        it { expect { subject }.to change { balances.last.reload.being_processed } }
+        it { expect { subject }.to_not change { balances.first.reload.being_processed } }
+
+        it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+        it { is_expected.to have_http_status(205) }
+      end
+    end
 
     context 'with valid params' do
       it { expect { subject }.to change { join_table_resource.reload.effective_at } }
@@ -404,12 +502,24 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
       end
 
       context 'when there is employee balance but its effective at is before resource\'s' do
-        let(:employee_balance) do
-          create(:employee_balance, :with_time_off, employee: employee,
-            effective_at: employee_presence_policy.effective_at - 5.days)
+        let!(:time_off) do
+          create(:time_off, start_time: 3.years.ago, end_time: 2.years.ago, employee: employee)
+        end
+        it { expect { subject }.to change { EmployeePresencePolicy.count }.by(-1) }
+        it { expect { subject }.to_not change { time_off.employee_balance.reload.being_processed } }
+
+        it { expect { subject }.to_not change { enqueued_jobs.size } }
+        it { is_expected.to have_http_status(204) }
+      end
+
+      context 'when there is employee balance after' do
+        let!(:time_off) do
+          create(:time_off, start_time: 2.days.since, end_time: 4.days.since, employee: employee)
         end
 
-        it { expect { subject }.to change { EmployeePresencePolicy.count }.by(-1) }
+        it { expect { subject }.to change { time_off.employee_balance.reload.being_processed } }
+        it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+
         it { is_expected.to have_http_status(204) }
       end
     end
@@ -427,16 +537,6 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
 
         it { expect { subject }.to_not change { EmployeePresencePolicy.count } }
         it { is_expected.to have_http_status(404) }
-      end
-
-      context 'when they are employee balances after employee_presence_policy effective at' do
-        let!(:employee_balance) do
-          create(:employee_balance, :with_time_off, employee: employee,
-            effective_at: employee_presence_policy.effective_at + 5.days)
-        end
-
-        it { expect { subject }.to_not change { EmployeePresencePolicy.count } }
-        it { is_expected.to have_http_status(403) }
       end
 
       context 'when user is not an account manager' do

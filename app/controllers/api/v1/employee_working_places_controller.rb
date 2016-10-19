@@ -22,8 +22,8 @@ module API
 
           existing_resource = existing_working_place
           response = create_or_update_join_table(WorkingPlace, attributes)
-          if status == 201 || existing_resource
-            find_and_update_balances(resource, nil, existing_resource)
+          if response[:status] == 201 || existing_resource
+            find_and_update_balances(response[:result], attributes, nil, existing_resource)
           end
 
           render_resource(response[:result], status: response[:status])
@@ -35,8 +35,9 @@ module API
           authorize! :update, resource
           previous_date = resource.effective_at
           existing_resource = existing_working_place
+
           response = create_or_update_join_table(WorkingPlace, attributes, resource)
-          find_and_update_balances(resource, previous_date, existing_resource)
+          find_and_update_balances(resource, attributes, previous_date, existing_resource)
 
           render_resource(response[:result], status: response[:status])
         end
@@ -53,13 +54,6 @@ module API
       end
 
       private
-
-      def find_and_update_balances(resource, previous = nil, existing = nil)
-        effective_at = params[:effective_at].try(:to_date) || resource.effective_at
-        FindAndUpdateEmployeeBalancesForJoinTables.new(
-          resource, resource.employee, effective_at, previous, existing
-        ).call
-      end
 
       def existing_working_place
         employee
