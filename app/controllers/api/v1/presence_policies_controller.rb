@@ -72,7 +72,7 @@ module API
       def assign_related(resource, related_records)
         return true if related_records.empty?
         related_records.each do |key, values|
-          assign_collection(resource, values, key.to_s)
+          AssignCollection.new(resource, values, key.to_s).call
         end
       end
 

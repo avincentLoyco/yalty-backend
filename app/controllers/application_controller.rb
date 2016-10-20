@@ -10,6 +10,7 @@ class ApplicationController < ActionController::Base
   rescue_from ActionController::RoutingError, with: :bad_request_error
   rescue_from ActiveRecord::RecordNotFound, with: :record_not_found_error
   rescue_from ActiveRecord::RecordInvalid, with: :resource_invalid_error
+  rescue_from ActiveRecord::RecordNotDestroyed, with: :destroy_forbidden
   rescue_from InvalidParamTypeError, with: :invalid_param_type_error
   rescue_from EventTypeNotFoundError, with: :event_type_not_found
   rescue_from InvalidPasswordError, with: :invalid_password_error
@@ -82,5 +83,10 @@ class ApplicationController < ActionController::Base
     message = { message: exception.message }
     render json:
       ::Api::V1::ErrorsRepresenter.new(exception.resource, message).complete, status: 422
+  end
+
+  def destroy_forbidden
+    render json:
+      ::Api::V1::ErrorsRepresenter.new(resource, resource.errors.messages).complete, status: 403
   end
 end

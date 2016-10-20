@@ -1,6 +1,7 @@
 class EmployeePresencePolicy < ActiveRecord::Base
   include ActsAsIntercomTrigger
   include ValidateEffectiveAtBeforeHired
+  include ValidateNoBalancesAfterJoinTableEffectiveAt
 
   attr_accessor :effective_till
 
@@ -9,7 +10,6 @@ class EmployeePresencePolicy < ActiveRecord::Base
 
   validates :employee_id, :presence_policy_id, :effective_at, presence: true
   validates :effective_at, uniqueness: { scope: [:employee_id, :presence_policy_id] }
-  validate :no_balances_after_effective_at, on: :create, if: :employee_id
   validates :order_of_start_day, numericality: { greater_than: 0 }
   validate :presence_days_presence, if: :presence_policy
   validate :order_smaller_than_last_presence_day_order, if: [:presence_policy, :order_of_start_day]
@@ -39,13 +39,5 @@ class EmployeePresencePolicy < ActiveRecord::Base
   def order_smaller_than_last_presence_day_order
     return unless policy_length != 0 && order_of_start_day > policy_length
     errors.add(:order_of_start_day, 'Must be smaller than last presence day order')
-  end
-
-  def no_balances_after_effective_at
-    balances_after_effective_at =
-      employee
-      .employee_balances.where('effective_at >= ? AND time_off_id IS NOT NULL', effective_at)
-    return unless balances_after_effective_at.any?
-    errors.add(:effective_at, 'Employee balance after effective at already exists')
   end
 end

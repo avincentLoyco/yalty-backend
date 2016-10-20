@@ -33,14 +33,6 @@ class API::ApplicationController < ApplicationController
       ::Api::V1::ErrorsRepresenter.new(nil, message: 'User unauthorized').complete, status: 401
   end
 
-  def assign_collection(resource, collection, collection_name)
-    AssignCollection.new(resource, collection, collection_name).call
-  end
-
-  def assign_member(resource, member, member_name)
-    AssignMember.new(resource, member, member_name).call
-  end
-
   def update_affected_balances(presence_policy, employees = [])
     UpdateAffectedEmployeeBalances.new(presence_policy, employees).call
   end
@@ -57,8 +49,19 @@ class API::ApplicationController < ApplicationController
     RelativeEmployeeBalancesFinder.new(resource).next_balance
   end
 
-  def create_join_table(join_table_class, resource_class, attributes)
-    CreateJoinTableService.new(join_table_class, resource_class, attributes).call
+  def create_or_update_join_table(resource_class, attributes, resource = nil)
+    CreateOrUpdateJoinTable.new(
+      controller_name.classify.constantize, resource_class, attributes, resource
+    ).call
+  end
+
+  def destroy_join_tables_with_duplicated_resources
+    employee_collection = resource.employee.send(resource.class.model_name.plural)
+    related_resource = resource.send(resource.class.model_name.element.gsub('employee_', ''))
+
+    FindSequenceJoinTableInTime.new(
+      employee_collection, nil, related_resource, resource
+    ).call.map(&:destroy!)
   end
 
   def resources_with_effective_till(join_table, join_table_id, related_id = nil, employee_id = nil)

@@ -2,6 +2,7 @@ module API
   module V1
     class EmployeeWorkingPlacesController < ApplicationController
       include EmployeeWorkingPlacesSchemas
+      include EmployeeBalancesPresenceVerification
 
       def index
         authorize! :index, EmployeeWorkingPlace.new
@@ -18,12 +19,34 @@ module API
       def create
         verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :create, working_place
-          resource = create_join_table(EmployeeWorkingPlace, WorkingPlace, attributes)
-          render_resource(resource, status: 201)
+          response = create_or_update_join_table(WorkingPlace, attributes)
+          render_resource(response[:result], status: response[:status])
         end
       end
 
+      def update
+        verified_dry_params(dry_validation_schema) do |attributes|
+          authorize! :update, resource
+          response = create_or_update_join_table(WorkingPlace, attributes, resource)
+          render_resource(response[:result], status: response[:status])
+        end
+      end
+
+      def destroy
+        authorize! :destroy, resource
+        transactions do
+          resource.destroy!
+          destroy_join_tables_with_duplicated_resources
+          verify_if_there_are_no_balances!
+        end
+        render_no_content
+      end
+
       private
+
+      def resource
+        @resource ||= Account.current.employee_working_places.find(params[:id])
+      end
 
       def working_place
         @working_place ||= Account.current.working_places.find(params[:working_place_id])
