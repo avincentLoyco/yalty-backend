@@ -20,10 +20,10 @@ module API
         verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :create, working_place
 
-          existing_resource = existing_working_place
+          join_table_resource = previous_join_table_resource
           response = create_or_update_join_table(WorkingPlace, attributes)
-          if response[:status] == 201 || existing_resource
-            find_and_update_balances(response[:result], attributes, nil, existing_resource)
+          if response[:status] == 201 || join_table_resource
+            find_and_update_balances(response[:result], attributes, nil, join_table_resource)
           end
 
           render_resource(response[:result], status: response[:status])
@@ -34,10 +34,10 @@ module API
         verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :update, resource
           previous_date = resource.effective_at
-          existing_resource = existing_working_place
+          join_table_resource = previous_join_table_resource
 
           response = create_or_update_join_table(WorkingPlace, attributes, resource)
-          find_and_update_balances(resource, attributes, previous_date, existing_resource)
+          find_and_update_balances(resource, attributes, previous_date, join_table_resource)
 
           render_resource(response[:result], status: response[:status])
         end
@@ -55,7 +55,7 @@ module API
 
       private
 
-      def existing_working_place
+      def previous_join_table_resource
         employee
           .employee_working_places
           .find_by(effective_at: params[:effective_at])

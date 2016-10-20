@@ -79,10 +79,12 @@ class API::ApplicationController < ApplicationController
       .send(status)
   end
 
-  def find_and_update_balances(resource, attributes = {}, previous = nil, existing = nil)
-    effective_at = attributes[:effective_at] || resource.effective_at
+  def find_and_update_balances(join_table, attributes = {}, previous_effective_at = nil,
+    resource = nil)
+
+    new_effective_at = attributes[:effective_at] || join_table.effective_at
     FindAndUpdateEmployeeBalancesForJoinTables.new(
-      resource, resource.employee, effective_at.to_date, previous, existing
+      join_table, new_effective_at.to_date, previous_effective_at, resource
     ).call
   end
 

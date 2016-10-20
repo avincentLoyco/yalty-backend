@@ -26,7 +26,7 @@ RSpec.describe FindAndUpdateEmployeeBalancesForJoinTables do
   end
   let(:balances) { TimeOff.all.map(&:employee_balance).sort_by { |b| b[:effective_at] } }
 
-  subject { described_class.new(join_table, employee, new_date).call }
+  subject { described_class.new(join_table, new_date).call }
 
   shared_examples 'Only newest balance update' do
     it { expect { subject }.to change { balances.last.reload.being_processed } }
@@ -63,7 +63,7 @@ RSpec.describe FindAndUpdateEmployeeBalancesForJoinTables do
 
       context 'when there is reassignation join table' do
         before { employee_working_place.update!(effective_at: new_date) }
-        subject { described_class.new(join_table, employee, new_date, nil, existing_resource).call }
+        subject { described_class.new(join_table, new_date, nil, existing_resource).call }
 
         let(:new_date) { 3.years.ago }
         let(:existing_resource) { reassignation_join_table.working_place }
@@ -208,7 +208,7 @@ RSpec.describe FindAndUpdateEmployeeBalancesForJoinTables do
 
       context 'when there is reassignation join table' do
         subject do
-          described_class.new(join_table, employee, new_date, previous_date, existing_resource).call
+          described_class.new(join_table, new_date, previous_date, existing_resource).call
         end
 
         context 'when new effective_at is in the past' do
@@ -291,7 +291,7 @@ RSpec.describe FindAndUpdateEmployeeBalancesForJoinTables do
       end
 
       context 'when there is no reassignation join table' do
-        subject { described_class.new(join_table, employee, new_date, previous_date).call }
+        subject { described_class.new(join_table, new_date, previous_date).call }
 
         context 'when new effective at is in the past' do
           let(:new_date) { 5.months.ago - 5.days }
@@ -384,7 +384,7 @@ RSpec.describe FindAndUpdateEmployeeBalancesForJoinTables do
     let(:existing_resource) { nil }
 
     subject do
-      described_class.new(join_table, employee, new_date, previous_date, existing_resource).call
+      described_class.new(join_table, new_date, previous_date, existing_resource).call
     end
 
     context 'when only new date is given' do

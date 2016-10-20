@@ -105,6 +105,14 @@ RSpec.describe FindEmployeeBalancesToUpdate, type: :service do
         it { expect(subject).to include(previous_balance.id, previous_removal.id) }
         it { expect(subject).to_not include(balance_add.id) }
 
+        context 'but option update all was given' do
+          before { options.merge!(update_all: true) }
+
+          it do
+            expect(subject).to include(previous_balance.id, previous_removal.id, balance_add.id)
+          end
+        end
+
         context 'and previous amount eq removal amount' do
           before do
             previous_balance.update!(manual_amount: -500)
