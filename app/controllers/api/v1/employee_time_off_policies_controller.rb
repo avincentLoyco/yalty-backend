@@ -21,7 +21,7 @@ module API
             end
           end
 
-          render_resource(@response[:result], status: @response[:status])
+          render_join_table(@response[:result], @response[:status])
         end
       end
 
@@ -33,7 +33,7 @@ module API
             ManageEmployeeBalanceAdditions.new(@response[:result]).call
           end
 
-          render_resource(@response[:result], status: @response[:status])
+          render_join_table(@response[:result], @response[:status])
         end
       end
 

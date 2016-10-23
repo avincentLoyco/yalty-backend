@@ -178,17 +178,6 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
             it { expect { subject }.to_not change { Employee::Balance.count } }
             it { expect { subject }.to_not change { EmployeeTimeOffPolicy.count } }
-
-            context 'should have proper data in response body' do
-              before { subject }
-
-              it { expect(response.body).to include (related_resource.id) }
-              it do
-                expect_json_keys(
-                  :effective_at, :effective_till, :id, :assignation_id, :assignation_type
-                )
-              end
-            end
           end
         end
       end

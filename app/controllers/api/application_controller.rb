@@ -105,4 +105,9 @@ class API::ApplicationController < ApplicationController
 
     render options.merge(json: response)
   end
+
+  def render_join_table(resource, status)
+    return render_resource(resource, status: status) unless status.eql?(205)
+    head :reset_content
+  end
 end
