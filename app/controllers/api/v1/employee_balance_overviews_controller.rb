@@ -1,9 +1,11 @@
 module API
   module V1
-    class EmployeeBalanceOverviews < API::ApplicationController
+    class EmployeeBalanceOverviewsController < API::ApplicationController
       def show
         authorize! :show, current_user
-        render_resource('COLLECTIONS HERE')
+
+        balances_overview = GenerateBalanceOverview.new(params[:employee_id]).call
+        render json: balances_overview
       end
 
       private

@@ -21,8 +21,16 @@ module RelatedAmount
   end
 
   def calculate_related_amount
-    return calculate_time_off_balance(nil, effective_at.end_of_day) unless previous_balance.present?
-    calculate_time_off_balance(previous_balance.effective_at.end_of_day, effective_at.end_of_day)
+    time_off = time_off_containing_this_balance
+    end_date =
+      if time_off.end_time.to_date == effective_at.to_date
+        time_off.end_time
+      else
+        (effective_at + 1.day).beginning_of_day
+      end
+
+    return calculate_time_off_balance(nil, end_date) unless previous_balance.present?
+    calculate_time_off_balance((previous_balance.effective_at + 1.day).beginning_of_day, end_date)
   end
 
   def previous_balance
@@ -43,7 +51,8 @@ module RelatedAmount
       employee
       .time_offs
       .in_category(time_off_category_id)
-      .where('? BETWEEN time_offs.start_time AND time_offs.end_time', effective_at)
+      .where('? BETWEEN time_offs.start_time::date AND
+              time_offs.end_time::date', effective_at.to_date)
       .first
   end
 
