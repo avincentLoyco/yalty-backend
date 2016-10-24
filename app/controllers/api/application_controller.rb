@@ -79,6 +79,15 @@ class API::ApplicationController < ApplicationController
       .send(status)
   end
 
+  def find_and_update_balances(join_table, attributes = {}, previous_effective_at = nil,
+    resource = nil)
+
+    new_effective_at = attributes[:effective_at] || join_table.effective_at
+    FindAndUpdateEmployeeBalancesForJoinTables.new(
+      join_table, new_effective_at.to_date, previous_effective_at, resource
+    ).call
+  end
+
   def transactions
     ActiveRecord::Base.transaction do
       yield

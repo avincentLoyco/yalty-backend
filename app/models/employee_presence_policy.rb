@@ -1,7 +1,6 @@
 class EmployeePresencePolicy < ActiveRecord::Base
   include ActsAsIntercomTrigger
   include ValidateEffectiveAtBeforeHired
-  include ValidateNoBalancesAfterJoinTableEffectiveAt
 
   attr_accessor :effective_till
 

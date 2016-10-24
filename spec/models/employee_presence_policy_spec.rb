@@ -60,9 +60,8 @@ RSpec.describe EmployeePresencePolicy, type: :model do
 
         before { balance.update_attribute(:effective_at, effective_at) }
 
-        it { expect(subject.valid?).to eq false }
-        it { expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
-          .to include('Employee balance after effective at already exists') }
+        it { expect(subject.valid?).to eq true }
+        it { expect { subject.valid? }.to_not change { subject.errors.messages.count } }
       end
     end
   end

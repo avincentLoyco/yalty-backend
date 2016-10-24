@@ -1,6 +1,5 @@
 class EmployeeWorkingPlace < ActiveRecord::Base
   include ValidateEffectiveAtBeforeHired
-  include ValidateNoBalancesAfterJoinTableEffectiveAt
 
   attr_accessor :effective_till
 
