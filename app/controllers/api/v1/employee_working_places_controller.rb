@@ -26,7 +26,7 @@ module API
             find_and_update_balances(response[:result], attributes, nil, join_table_resource)
           end
 
-          render_resource(response[:result], status: response[:status])
+          render_join_table(response[:result], response[:status])
         end
       end
 
@@ -38,8 +38,7 @@ module API
 
           response = create_or_update_join_table(WorkingPlace, attributes, resource)
           find_and_update_balances(resource, attributes, previous_date, join_table_resource)
-
-          render_resource(response[:result], status: response[:status])
+          render_join_table(response[:result], response[:status])
         end
       end
 

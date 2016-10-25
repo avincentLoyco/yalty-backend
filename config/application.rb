@@ -51,6 +51,8 @@ module Yalty
     config.middleware.insert_after('MaintenanceModeMiddleware', 'CurrentUserMiddleware')
     # Set current account
     config.middleware.insert_after('CurrentUserMiddleware', 'CurrentAccountMiddleware')
+    # Remove Content-Type header in response with status 205
+    config.middleware.use('RemoveContentTypeHeader')
 
     # CORS configuration
     config.middleware.insert_before 0, 'Rack::Cors', debug: !Rails.env.production?, logger: (-> { Rails.logger }) do

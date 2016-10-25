@@ -14,7 +14,7 @@ module API
           authorize! :create, presence_policy
           response = create_or_update_join_table(PresencePolicy, attributes)
           find_and_update_balances(response[:result], attributes)
-          render_resource(response[:result], status: response[:status])
+          render_join_table(response[:result], response[:status])
         end
       end
 
@@ -24,7 +24,7 @@ module API
           previous_date = resource.effective_at
           response = create_or_update_join_table(PresencePolicy, attributes, resource)
           find_and_update_balances(resource, attributes, previous_date)
-          render_resource(response[:result], status: response[:status])
+          render_join_table(response[:result], response[:status])
         end
       end
 
