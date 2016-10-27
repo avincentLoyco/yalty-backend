@@ -53,8 +53,6 @@ RSpec.configure do |config|
   config.infer_spec_type_from_file_location!
 
   config.before(:suite) do
-    Resque.redis.client.reconnect
-
     DatabaseCleaner.strategy = :transaction
     DatabaseCleaner.clean_with(:truncation)
 
@@ -65,6 +63,10 @@ RSpec.configure do |config|
 
   config.after(:all) do
     Temping.teardown
+  end
+
+  config.before(:each) do
+    Sidekiq::Worker.clear_all
   end
 
   config.around(:each) do |example|

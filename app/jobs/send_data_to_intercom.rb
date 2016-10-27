@@ -1,7 +1,9 @@
 class SendDataToIntercom
+  include Sidekiq::Worker
+
   @queue = :intercom
 
-  def self.perform(resource_id, resource_class)
+  def perform(resource_id, resource_class)
     return unless intercom_client.present?
 
     resource = resource_class.constantize.find(resource_id)

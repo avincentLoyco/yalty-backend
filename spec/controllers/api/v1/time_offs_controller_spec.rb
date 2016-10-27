@@ -309,7 +309,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
           update_with_manual_amount
         end
 
-        after { ActiveJob::Base.queue_adapter = :resque }
+        after { ActiveJob::Base.queue_adapter = :sidekiq }
 
         it do
           expect(employee_balance.reload.manual_amount).to eq(200)

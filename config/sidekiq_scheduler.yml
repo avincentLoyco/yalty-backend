@@ -5,7 +5,6 @@ every_midnight_policy_add:
   queue: policies_and_balances
   description: "Check policies start dates and create addition balances if policy start date is today"
 
-
 every_midnight_add_working_time:
   cron: "0 0 * * *"
   class: "AddRegisteredWorkingTimes"

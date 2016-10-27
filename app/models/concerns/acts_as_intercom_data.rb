@@ -25,7 +25,7 @@ module ActsAsIntercomData
   def create_or_update_on_intercom(force = false)
     return unless (intercom_data_changed? || force) && job_not_on_queue
 
-    Resque.enqueue_at_with_queue(
+    Sidekiq::Client.enqueue_to_in(
       'intercom',
       3.minutes.from_now,
       SendDataToIntercom,
@@ -37,11 +37,19 @@ module ActsAsIntercomData
   private
 
   def job_not_on_queue
-    delayed_jobs.none? { |job| job.match(id) }
+    delayed_jobs.none? do |job|
+      job.args.to_s.match(id)
+    end
   end
 
   def delayed_jobs
-    @delayed_jobs ||= Resque.redis.keys('timestamps:*')
-      .select {|key| key =~ /"queue":"intercom"/ && key =~ /"#{self.class.name}"/ }
+    @delayed_jobs ||=
+      if Rails.env.test?
+        SendDataToIntercom.jobs.map { |job| OpenStruct.new(job) }
+      else
+        Sidekiq::ScheduledSet.new
+      end.select do |job|
+        job.queue.eql?('intercom') && job.args.include?(self.class.name)
+      end
   end
 end
