@@ -1,12 +1,23 @@
 require 'rails_helper'
 
-RSpec.describe RecreateBalances, type: :service do
+RSpec.describe RecreateBalances::AfterEtopDestroy, type: :service do
   include_context 'shared_context_timecop_helper'
   include ActiveJob::TestHelper
 
   let!(:account) { create(:account) }
   let!(:employee) { create(:employee, account: account) }
   let!(:category) { create(:time_off_category, account: account) }
+
+  let!(:second_category) { create(:time_off_category, account: account) }
+  let(:top_for_second_category) { create(:time_off_policy, time_off_category: second_category) }
+  let!(:etop_in_different_category) do
+    create(:employee_time_off_policy, employee: employee, time_off_policy: top_for_second_category,
+      effective_at: Time.zone.parse('2015-01-01'))
+  end
+  let(:existing_balances_effective_ats) do
+    employee.employee_balances.where(time_off_category: category).pluck(:effective_at)
+      .map(&:to_date)
+  end
 
   let!(:etop_to_destroy) do
     create(:employee_time_off_policy, employee: employee, time_off_policy: top_to_destroy,
@@ -22,7 +33,7 @@ RSpec.describe RecreateBalances, type: :service do
       destroyed_effective_at: destroyed_effective_at,
       time_off_category_id: category.id,
       employee_id: employee.id
-    ).after_etop_destroy
+    ).call
   end
 
   subject(:create_balances_for_existing_etops) do
@@ -44,7 +55,7 @@ RSpec.describe RecreateBalances, type: :service do
       call_service
     end
 
-    it { expect(Employee::Balance.count).to eq(0) }
+    it { expect(employee.employee_balances.where(time_off_category: category).count).to eq(0) }
   end
 
   context 'when there are no etops after one removed' do
@@ -63,7 +74,6 @@ RSpec.describe RecreateBalances, type: :service do
        '2015-12-31', '2016-01-01', '2016-12-31', '2017-01-01', '2017-12-31', '2018-01-01'
      ].map(&:to_date)
     end
-    let(:existing_balances_effective_ats) { Employee::Balance.pluck(:effective_at).map(&:to_date) }
 
     before do
       create_balances_for_existing_etops
@@ -93,7 +103,6 @@ RSpec.describe RecreateBalances, type: :service do
       ['2013-01-02', '2013-12-31', '2014-01-01', '2014-12-31', '2015-01-01', '2015-04-01',
        '2015-12-31', '2016-01-01', '2016-10-01', '2016-12-31', '2017-01-01'].map(&:to_date)
     end
-    let(:existing_balances_effective_ats) { Employee::Balance.pluck(:effective_at).map(&:to_date) }
 
     before do
       create_balances_for_existing_etops
