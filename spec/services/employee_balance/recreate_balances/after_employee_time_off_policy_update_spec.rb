@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe RecreateBalances, type: :service do
+RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyUpdate, type: :service do
   include_context 'shared_context_timecop_helper'
   include ActiveJob::TestHelper
 
@@ -8,26 +8,28 @@ RSpec.describe RecreateBalances, type: :service do
   let!(:employee) { create(:employee, account: account) }
   let!(:category) { create(:time_off_category, account: account) }
 
+  let!(:second_category) { create(:time_off_category, account: account) }
+  let(:top_for_second_category) { create(:time_off_policy, time_off_category: second_category) }
+  let!(:etop_in_different_category) do
+    create(:employee_time_off_policy, employee: employee, time_off_policy: top_for_second_category,
+      effective_at: Time.zone.parse('2015-01-01'))
+  end
+  let(:existing_balances_effective_ats) do
+    employee.employee_balances.where(time_off_category: category).pluck(:effective_at)
+      .map(&:to_date)
+  end
+
   subject(:update_etop) do
     etop_to_update.update!(effective_at: new_effective_at)
   end
 
-  subject(:call_service_to_past) do
+  subject(:call_service) do
     described_class.new(
       new_effective_at: new_effective_at,
       old_effective_at: old_effective_at,
       time_off_category_id: category.id,
       employee_id: employee.id
-    ).after_etop_update_to_past
-  end
-
-  subject(:call_service_to_future) do
-    described_class.new(
-      new_effective_at: new_effective_at,
-      old_effective_at: old_effective_at,
-      time_off_category_id: category.id,
-      employee_id: employee.id
-    ).after_etop_update_to_future
+    ).call
   end
 
   subject(:create_balances_for_existing_etops) do
@@ -53,12 +55,11 @@ RSpec.describe RecreateBalances, type: :service do
          '2015-12-31', '2016-01-01', '2016-12-31', '2017-01-01', '2017-12-31', '2018-01-01'
        ].map(&:to_date)
       end
-      let(:existing_balances_effective_ats) { Employee::Balance.pluck(:effective_at).map(&:to_date) }
 
       before do
         create_balances_for_existing_etops
         update_etop
-        call_service_to_past
+        call_service
       end
 
       it { expect(existing_balances_effective_ats).to match_array(expeted_balances_dates) }
@@ -79,7 +80,6 @@ RSpec.describe RecreateBalances, type: :service do
         create(:employee_time_off_policy, employee: employee, time_off_policy: top_a,
           effective_at: Time.zone.parse('2013-02-01'))
       end
-      let(:existing_balances_effective_ats) { Employee::Balance.pluck(:effective_at).map(&:to_date) }
 
       context 'with additions before new etop' do
         let(:old_effective_at) { Time.zone.parse('2015-06-01') }
@@ -93,7 +93,7 @@ RSpec.describe RecreateBalances, type: :service do
         before do
           create_balances_for_existing_etops
           update_etop
-          call_service_to_past
+          call_service
         end
 
         it { expect(existing_balances_effective_ats).to match_array(expeted_balances_dates) }
@@ -111,7 +111,7 @@ RSpec.describe RecreateBalances, type: :service do
         before do
           create_balances_for_existing_etops
           update_etop
-          call_service_to_past
+          call_service
         end
 
         it { expect(existing_balances_effective_ats).to match_array(expeted_balances_dates) }
@@ -137,7 +137,7 @@ RSpec.describe RecreateBalances, type: :service do
         before do
           create_balances_for_existing_etops
           update_etop
-          call_service_to_past
+          call_service
         end
 
         it { expect(existing_balances_effective_ats).to match_array(expeted_balances_dates) }
@@ -170,7 +170,7 @@ RSpec.describe RecreateBalances, type: :service do
         before do
           create_balances_for_existing_etops
           update_etop
-          call_service_to_past
+          call_service
         end
 
         it { expect(existing_balances_effective_ats).to match_array(expeted_balances_dates) }
@@ -191,12 +191,11 @@ RSpec.describe RecreateBalances, type: :service do
         ['2014-10-01', '2014-12-31', '2015-01-01', '2015-12-31', '2016-01-01', '2016-12-31',
          '2017-01-01', '2017-12-31', '2018-01-01'].map(&:to_date)
       end
-      let(:existing_balances_effective_ats) { Employee::Balance.pluck(:effective_at).map(&:to_date) }
 
       before do
         create_balances_for_existing_etops
         update_etop
-        call_service_to_future
+        call_service
       end
 
       it { expect(existing_balances_effective_ats).to match_array(expeted_balances_dates) }
@@ -222,12 +221,11 @@ RSpec.describe RecreateBalances, type: :service do
          '2015-04-01', '2015-10-01', '2016-01-31', '2016-02-01', '2017-01-31', '2017-02-01'
         ].map(&:to_date)
       end
-      let(:existing_balances_effective_ats) { Employee::Balance.pluck(:effective_at).map(&:to_date) }
 
       before do
         create_balances_for_existing_etops
         update_etop
-        call_service_to_future
+        call_service
       end
 
       it { expect(existing_balances_effective_ats).to match_array(expeted_balances_dates) }
@@ -257,12 +255,11 @@ RSpec.describe RecreateBalances, type: :service do
          '2015-04-01', '2015-10-01', '2016-01-31', '2016-02-01', '2016-06-01', '2016-12-31',
          '2017-01-01'].map(&:to_date)
       end
-      let(:existing_balances_effective_ats) { Employee::Balance.pluck(:effective_at).map(&:to_date) }
 
       before do
         create_balances_for_existing_etops
         update_etop
-        call_service_to_future
+        call_service
       end
 
       it { expect(existing_balances_effective_ats).to match_array(expeted_balances_dates) }
@@ -292,12 +289,11 @@ RSpec.describe RecreateBalances, type: :service do
          '2015-03-01', '2015-04-01', '2015-10-01', '2016-01-31', '2016-02-01', '2017-01-31',
          '2017-02-01'].map(&:to_date)
       end
-      let(:existing_balances_effective_ats) { Employee::Balance.pluck(:effective_at).map(&:to_date) }
 
       before do
         create_balances_for_existing_etops
         update_etop
-        call_service_to_future
+        call_service
       end
 
       it { expect(existing_balances_effective_ats).to match_array(expeted_balances_dates) }

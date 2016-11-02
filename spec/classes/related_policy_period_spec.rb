@@ -134,10 +134,10 @@ RSpec.describe RelatedPolicyPeriod do
         end
       end
 
-      context '.validity_date_for_time_off' do
+      context '.validity_date_for_balance_at' do
         before { time_off_policy.update!(end_day: 1, end_month: 4) }
 
-        subject { RelatedPolicyPeriod.new(related_policy).validity_date_for_time_off(date) }
+        subject { RelatedPolicyPeriod.new(related_policy).validity_date_for_balance_at(date) }
         let!(:related_policy) do
           create(:employee_time_off_policy, :with_employee_balance,
             time_off_policy: time_off_policy,

@@ -121,7 +121,7 @@ module API
         active_policy =
           employee.active_policy_in_category_at_date(time_off_category.id, resource.end_time)
 
-        RelatedPolicyPeriod.new(active_policy).validity_date_for_time_off(resource.end_time)
+        RelatedPolicyPeriod.new(active_policy).validity_date_for_balance_at(resource.end_time)
       end
     end
   end

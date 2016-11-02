@@ -1,12 +1,23 @@
 require 'rails_helper'
 
-RSpec.describe RecreateBalances, type: :service do
+RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyCreate, type: :service do
   include_context 'shared_context_timecop_helper'
   include ActiveJob::TestHelper
 
   let!(:account) { create(:account) }
   let!(:employee) { create(:employee, account: account) }
   let!(:category) { create(:time_off_category, account: account) }
+
+  let!(:second_category) { create(:time_off_category, account: account) }
+  let(:top_for_second_category) { create(:time_off_policy, time_off_category: second_category) }
+  let!(:etop_in_different_category) do
+    create(:employee_time_off_policy, employee: employee, time_off_policy: top_for_second_category,
+      effective_at: Time.zone.parse('2015-01-01'))
+  end
+  let(:existing_balances_effective_ats) do
+    employee.employee_balances.where(time_off_category: category).pluck(:effective_at)
+      .map(&:to_date)
+  end
 
   subject(:create_new_etop) do
     create(:employee_time_off_policy, employee: employee, time_off_policy: new_top,
@@ -18,7 +29,7 @@ RSpec.describe RecreateBalances, type: :service do
       new_effective_at: new_effective_at,
       time_off_category_id: category.id,
       employee_id: employee.id
-    ).after_etop_create
+    ).call
   end
 
   subject(:create_balances_for_existing_etops) do
@@ -40,7 +51,6 @@ RSpec.describe RecreateBalances, type: :service do
        '2015-04-01', '2015-12-31', '2016-01-01', '2016-12-31', '2017-01-01', '2017-12-31',
        '2018-01-01'].map(&:to_date)
     end
-    let(:existing_balances_effective_ats) { Employee::Balance.pluck(:effective_at).map(&:to_date) }
 
     before do
       create_new_etop
@@ -61,7 +71,6 @@ RSpec.describe RecreateBalances, type: :service do
        '2015-02-01', '2015-04-01', '2016-01-31', '2016-02-01', '2017-01-31', '2017-02-01'
       ].map(&:to_date)
     end
-    let(:existing_balances_effective_ats) { Employee::Balance.pluck(:effective_at).map(&:to_date) }
     let(:top_a) do
       create(:time_off_policy, :with_end_date, time_off_category: category, amount: 1000)
     end
@@ -91,7 +100,6 @@ RSpec.describe RecreateBalances, type: :service do
        '2015-12-31', '2016-01-01', '2016-12-31', '2017-01-01', '2017-12-31', '2018-01-01'
       ].map(&:to_date)
     end
-    let(:existing_balances_effective_ats) { Employee::Balance.pluck(:effective_at).map(&:to_date) }
     let(:tops) do
       create_list(:time_off_policy, 2, :with_end_date, time_off_category: category, amount: 1000)
     end
@@ -125,7 +133,6 @@ RSpec.describe RecreateBalances, type: :service do
        '2015-12-31', '2016-01-01', '2016-12-31', '2017-01-01', '2017-12-31', '2018-01-01'
       ].map(&:to_date)
     end
-    let(:existing_balances_effective_ats) { Employee::Balance.pluck(:effective_at).map(&:to_date) }
     let(:top_a) do
       create(:time_off_policy, :with_end_date, time_off_category: category, amount: 1000,
         start_month: 2)
@@ -141,7 +148,7 @@ RSpec.describe RecreateBalances, type: :service do
 
     before do
       create_balances_for_existing_etops
-      validity_date = RelatedPolicyPeriod.new(etop_a).validity_date_for_time_off(time_off.end_time)
+      validity_date =RelatedPolicyPeriod.new(etop_a).validity_date_for_balance_at(time_off.end_time)
       time_off.employee_balance.update!(validity_date: validity_date)
       create_new_etop
       call_service

@@ -57,7 +57,7 @@ class RelatedPolicyPeriod
     validity_date + 1.year
   end
 
-  def validity_date_for_time_off(date)
+  def validity_date_for_balance_at(date)
     return unless end_date?
     validity_date =
       if previous_addition(date)
@@ -67,8 +67,6 @@ class RelatedPolicyPeriod
       end
     validity_date >= date ? validity_date : validity_date_for(date)
   end
-
-  alias_method :validity_date_for_day_before_start_date, :validity_date_for_time_off
 
   def previous_addition(date)
     related_policy

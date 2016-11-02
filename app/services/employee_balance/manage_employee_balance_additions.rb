@@ -32,7 +32,7 @@ class ManageEmployeeBalanceAdditions
     date = RelatedPolicyPeriod.new(resource).first_start_date
     while date <= effective_till
       balances << CreateEmployeeBalance.new(*employee_balance_params(date)).call
-      if active_policy_at(date - 1.day).present? && balance_is_not_assignation(date)
+      if active_policy_at(date - 1.day).present? && balance_is_not_assignation?(date)
         balances << CreateEmployeeBalance.new(*employee_balance_params(date - 1.day, true)).call
       end
       date += 1.year
@@ -49,12 +49,7 @@ class ManageEmployeeBalanceAdditions
   end
 
   def policy_type_options(date, for_day_before)
-    base_options =
-      if for_day_before
-        options_for_day_before_start_date(date)
-      else
-        default_options(date)
-      end
+    base_options = for_day_before ? options_for_day_before_start_date(date) : default_options(date)
     return base_options if resource.time_off_policy.counter?
     base_options.merge(validity_date: validity_date_for_base_options(date, for_day_before))
   end
@@ -72,21 +67,21 @@ class ManageEmployeeBalanceAdditions
     {
       skip_update: true,
       policy_credit_addition: false,
-      effective_at: date,
+      effective_at: date + 5.minutes,
       resource_amount: 0
     }
   end
 
   def validity_date_for_base_options(date, for_day_before)
     return RelatedPolicyPeriod.new(resource).validity_date_for(date) unless for_day_before
-    RelatedPolicyPeriod.new(active_policy_at(date)).validity_date_for_day_before_start_date(date)
+    RelatedPolicyPeriod.new(active_policy_at(date)).validity_date_for_balance_at(date)
   end
 
   def active_policy_at(date)
     employee.active_policy_in_category_at_date(resource.time_off_category_id, date)
   end
 
-  def balance_is_not_assignation(date)
+  def balance_is_not_assignation?(date)
     date != resource.effective_at
   end
 
@@ -100,6 +95,7 @@ class ManageEmployeeBalanceAdditions
   end
 
   def future_policy_period_last_date
-    EmployeePolicyPeriod.new(employee, resource.time_off_category_id).future_policy_period.last
+    @future_policy_period_last_date ||=
+      EmployeePolicyPeriod.new(employee, resource.time_off_category_id).future_policy_period.last
   end
 end
