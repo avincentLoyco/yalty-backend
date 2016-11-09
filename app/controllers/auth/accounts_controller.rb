@@ -7,6 +7,8 @@ class Auth::AccountsController < ApplicationController
     verified_dry_params(dry_validation_schema) do |attributes|
       account, user = build_account_and_user(attributes)
 
+      verify_if_user_is_not_refering_himself!(user.email, account)
+
       ActiveRecord::Base.transaction do
         save!(account, user)
         user.convert_intercom_leads
@@ -73,5 +75,11 @@ class Auth::AccountsController < ApplicationController
       current_resource_owner.id,
       password
     ).deliver_later
+  end
+
+  def verify_if_user_is_not_refering_himself!(email, account)
+    referred_by = account.referred_by
+    return unless referred_by.present? && Referrer.find_by(email: email).try(:token) == referred_by
+    raise InvalidResourcesError.new(account, ['can\'t use own referral token'])
   end
 end

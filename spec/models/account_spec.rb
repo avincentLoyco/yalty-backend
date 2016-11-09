@@ -181,4 +181,18 @@ RSpec.describe Account, type: :model do
       expect(data_keys).to match_array(proper_account_data_keys)
     end
   end
+
+  describe 'referred_by' do
+    let(:referrer) { create(:referrer, token: '1234') }
+    let(:valid_account) { build(:account, referred_by: referrer.token) }
+    let(:invalid_account) { build(:account, referred_by: '5678') }
+
+    it { expect { valid_account.save! }.not_to raise_error }
+    it do
+      expect { invalid_account.save! }.to raise_error(
+        ActiveRecord::RecordInvalid,
+        'Validation failed: Referred by must belong to existing referrer'
+      )
+    end
+  end
 end

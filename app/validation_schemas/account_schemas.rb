@@ -6,6 +6,7 @@ module AccountSchemas
       required(:account).schema do
         required(:company_name).filled
         optional(:default_locale).maybe
+        optional(:referred_by).maybe(:str?)
       end
       required(:user).schema do
         optional(:password).maybe

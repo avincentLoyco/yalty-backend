@@ -11,9 +11,11 @@ class Account::User < ActiveRecord::Base
   validates :reset_password_token, uniqueness: true, allow_nil: true
 
   belongs_to :account, inverse_of: :users, required: true
+  belongs_to :referrer, primary_key: :email, foreign_key: :email
   has_one :employee, foreign_key: :account_user_id
 
   before_validation :generate_password, on: :create
+  after_create :create_referrer
 
   def self.current=(user)
     RequestStore.write(:current_account_user, user)
@@ -41,5 +43,12 @@ class Account::User < ActiveRecord::Base
 
   def generate_password
     self.password ||= SecureRandom.urlsafe_base64(12)
+  end
+
+  private
+
+  def create_referrer
+    return if Referrer.where(email: email).exists?
+    Referrer.create(email: email)
   end
 end
