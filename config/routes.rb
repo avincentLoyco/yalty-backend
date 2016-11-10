@@ -72,7 +72,8 @@ Rails.application.routes.draw do
 
   # ADMIN
   constraints subdomain: /^admin/ do
-    mount ResqueWeb::Engine => '/resque'
+    require 'sidekiq/web'
+    mount Sidekiq::Web => '/sidekiq'
     get 'referrals/referrers', to: 'referrals#referrers_csv', defaults: { format: :csv }
   end
 

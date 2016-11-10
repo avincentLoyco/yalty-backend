@@ -95,7 +95,7 @@ module Yalty
     }
 
     # Active Job adapter
-    config.active_job.queue_adapter = :resque
+    config.active_job.queue_adapter = :sidekiq
   end
 
   #
