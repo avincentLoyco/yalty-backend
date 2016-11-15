@@ -14,6 +14,7 @@ module EmployeePresencePoliciesSchemas
     Dry::Validation.Form do
       required(:id).filled(:str?)
       required(:effective_at).filled(:date?)
+      required(:order_of_start_day).filled(:int?)
     end
   end
 end

@@ -106,9 +106,13 @@ class API::ApplicationController < ApplicationController
     resource = nil)
 
     new_effective_at = attributes[:effective_at] || join_table.effective_at
-    FindAndUpdateEmployeeBalancesForJoinTables.new(
-      join_table, new_effective_at.to_date, previous_effective_at, resource
-    ).call
+    params_for_service = [join_table, new_effective_at.to_date, previous_effective_at, resource]
+    order_of_start_day = attributes[:order_of_start_day]
+    if order_of_start_day && order_of_start_day != join_table.order_of_start_day
+      params_for_service.push(order_of_start_day)
+    end
+
+    FindAndUpdateEmployeeBalancesForJoinTables.new(*params_for_service).call
   end
 
   def transactions
