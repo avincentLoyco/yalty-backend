@@ -377,7 +377,7 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
               time_off_category: vacation_category,
               resource_amount: vacation_balancer_policy_A_amount,
               effective_at: DateTime.new(2017, 1, 1, 0, 0, 0),
-              validity_date: DateTime.new(2018 , 4, 1, 0, 0, 0),
+              validity_date: DateTime.new(2018 , 1, 1, 0, 0, 0),
               employee_id: employee_id
             )
 
@@ -395,6 +395,9 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
               employee_id: employee_id,
               balance_credit_additions: [addition]
             )
+            Employee::Balance.all.order(:effective_at).each do |balance|
+              UpdateEmployeeBalance.new(balance).call
+            end
             subject
           end
           it do
@@ -408,7 +411,7 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
                          {
                            'type' => "balancer",
                            'start_date' => '2016-01-01',
-                           'validity_date' => '2017-04-01',
+                           'validity_date' => '2017-01-01',
                            'amount_taken' => 30,
                            'period_result' => 70,
                            'balance' => 70
@@ -416,7 +419,7 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
                          {
                            'type' => "balancer",
                            'start_date' => '2017-01-01',
-                           'validity_date' => '2018-04-01',
+                           'validity_date' => '2018-01-01',
                            'amount_taken' => 30,
                            'period_result' => 70,
                            'balance' => 70

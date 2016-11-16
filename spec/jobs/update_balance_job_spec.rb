@@ -388,9 +388,9 @@ RSpec.describe UpdateBalanceJob do
                 it { expect(existing_balances.pluck(:being_processed).count(false)).to eq 3 }
                 it { expect(existing_balances.pluck(:being_processed).count(true)).to eq 1 }
                 it { expect(Employee::Balance.order(:effective_at).map(&:amount))
-                  .to eq([1000, -4000, 0, 2000, 100]) }
+                  .to eq([1000, 4000, -1000, 2000, 100]) }
                 it { expect(Employee::Balance.order(:effective_at).pluck(:balance))
-                  .to eq([1000, -3000, -3000, -1000, -900]) }
+                  .to eq([1000, 5000, 4000, 6000, 6100]) }
               end
             end
           end

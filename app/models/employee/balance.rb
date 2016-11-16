@@ -55,6 +55,7 @@ class Employee::Balance < ActiveRecord::Base
   scope :with_time_off, -> { where.not(time_off_id: nil) }
   scope :not_time_off, -> { where(time_off_id: nil) }
   scope :from_time_offs, -> { where.not(time_off_id: nil) }
+
   def amount
     return unless resource_amount && manual_amount
     resource_amount + manual_amount + related_amount

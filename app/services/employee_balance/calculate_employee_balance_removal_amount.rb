@@ -26,12 +26,7 @@ class CalculateEmployeeBalanceRemovalAmount
   end
 
   def calculate_amount_for_balancer
-    amount =
-      if last_balance_after_addition.blank?
-        amount_from_first_addition
-      else
-        amount_from_previous_balances
-      end
+    amount = amount_from_previous_balances
     if removal.manual_amount != 0 && removal.effective_at == removal.validity_date
       amount -= removal.manual_amount
     end
@@ -43,14 +38,6 @@ class CalculateEmployeeBalanceRemovalAmount
     additions_amounts =
       additions.map { |addition| [addition[:manual_amount], addition[:resource_amount]] }
     additions_amounts.flatten.select { |value| value > 0 }.sum
-  end
-
-  def amount_from_first_addition
-    if first_addition.amount > first_addition.balance && first_addition.balance >= 0
-      -first_addition.balance
-    else
-      -first_addition.amount
-    end
   end
 
   def amount_from_previous_balances
@@ -78,7 +65,7 @@ class CalculateEmployeeBalanceRemovalAmount
     time_off_in_period =
       TimeOff
       .for_employee_in_category(removal.employee_id, removal.time_off_category_id)
-      .where('start_time < ? AND end_time > ?', removal.effective_at, removal.effective_at)
+      .where('start_time <= ? AND end_time > ?', removal.effective_at, removal.effective_at)
       .first
     return 0 unless time_off_in_period.present?
     time_off_in_period.balance(nil, removal.effective_at.end_of_day)
