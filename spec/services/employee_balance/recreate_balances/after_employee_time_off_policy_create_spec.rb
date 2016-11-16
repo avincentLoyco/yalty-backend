@@ -79,13 +79,34 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyCreate, type: :servic
         effective_at: Time.zone.parse('2013-02-01'))
     end
 
-    before do
-      create_balances_for_existing_etops
-      create_new_etop
-      call_service
+    context 'without time off' do
+      before do
+        create_balances_for_existing_etops
+        create_new_etop
+        call_service
+      end
+
+      it { expect(existing_balances_effective_ats).to match_array(expeted_balances_dates) }
     end
 
-    it { expect(existing_balances_effective_ats).to match_array(expeted_balances_dates) }
+    context 'with time off' do
+      let(:balances_dates_with_time_off) { expeted_balances_dates.push('2014-04-15'.to_date) }
+      let!(:time_off) do
+        create(:time_off, employee: employee, time_off_category: category,
+          start_time: new_effective_at - 5.days, end_time: new_effective_at)
+      end
+
+      before do
+        create_balances_for_existing_etops
+        validity_date =
+          RelatedPolicyPeriod.new(etop_a).validity_date_for_balance_at(time_off.end_time)
+        time_off.employee_balance.update!(validity_date: validity_date)
+        create_new_etop
+        call_service
+      end
+
+      it { expect(existing_balances_effective_ats).to match_array(balances_dates_with_time_off) }
+    end
   end
 
   context 'when there is etop after new one' do

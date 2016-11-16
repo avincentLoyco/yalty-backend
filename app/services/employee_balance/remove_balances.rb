@@ -1,11 +1,12 @@
 class RemoveBalances
-  attr_reader :time_off_category, :employee, :starting_date, :ending_date
+  attr_reader :time_off_category, :employee, :starting_date, :ending_date, :old_effective_at
 
-  def initialize(time_off_category, employee, starting_date, ending_date)
+  def initialize(time_off_category, employee, starting_date, ending_date, old_effective_at = nil)
     @time_off_category = time_off_category
     @employee = employee
     @starting_date = starting_date
     @ending_date = ending_date
+    @old_effective_at = old_effective_at
   end
 
   def call
@@ -58,18 +59,16 @@ class RemoveBalances
       etop_effective_ats = etops_in_category.pluck(:effective_at)
                                             .map { |date| "\'#{date}\'::date" }.join(', ')
       sql_where_clause = "effective_at::date IN (#{etop_effective_ats})"
-      if try(:old_effective_at).present?
+      if old_effective_at.present?
         sql_where_clause += " OR effective_at::date = \'#{old_effective_at.to_date}\'::date"
       end
-      employee.employee_balances.where(time_off_category: time_off_category).where(sql_where_clause)
+      balances_in_category.not_time_off.where(sql_where_clause)
     end
   end
 
   def balances_after_starting_date
     @balances_after_starting_date ||=
-      employee.employee_balances
-              .where(time_off_category: time_off_category)
-              .where('employee_balances.effective_at > ?', starting_date)
+      balances_in_category.where('employee_balances.effective_at > ?', starting_date)
   end
 
   def etops_in_category
@@ -77,5 +76,9 @@ class RemoveBalances
       .employee_time_off_policies
       .where(time_off_category: time_off_category)
       .order(:effective_at)
+  end
+
+  def balances_in_category
+    employee.employee_balances.where(time_off_category: time_off_category)
   end
 end
