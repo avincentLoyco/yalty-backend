@@ -93,7 +93,6 @@ class CalculatePeriodOverview
     additions_sum = manual_and_resource_amounts.flatten.select { |value| value > 0 }.sum
 
     return additions_sum if @period[:type].eql?('balancer')
-
     additions_sum - period_addition.resource_amount
   end
 

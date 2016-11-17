@@ -365,7 +365,7 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
               years_to_effect: 1
             )
           end
-          before do
+          before(:each) do
             addition = create(:employee_balance_manual, :addition,
               time_off_category: vacation_category,
               resource_amount: vacation_balancer_policy_A_amount,
@@ -381,53 +381,103 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
               employee_id: employee_id
             )
 
-            create(:time_off,
-              start_time: Time.zone.parse('1/1/2017 01:00:00'),
-              end_time: Time.zone.parse('1/1/2017 1:30:00'),
-              employee: employee,
-              time_off_category: vacation_category
-            )
             create(:employee_balance_manual,
               time_off_category: vacation_category,
-              resource_amount: 0,
+              resource_amount: -100,
               effective_at: DateTime.new(2017, 1, 1, 1, 0, 0),
               validity_date: DateTime.new(2017 , 1, 1, 1, 0, 0),
               employee_id: employee_id,
               balance_credit_additions: [addition]
             )
-            Employee::Balance.all.order(:effective_at).each do |balance|
-              UpdateEmployeeBalance.new(balance).call
-            end
-            subject
           end
-          it do
-             expect(JSON.parse(response.body)).to eq(
-               [
-                 {
-                   'employee' => employee_id,
-                   'category' => "vacation",
-                   'periods' =>
-                     [
-                         {
-                           'type' => "balancer",
-                           'start_date' => '2016-01-01',
-                           'validity_date' => '2017-01-01',
-                           'amount_taken' => 30,
-                           'period_result' => 70,
-                           'balance' => 70
-                         },
-                         {
-                           'type' => "balancer",
-                           'start_date' => '2017-01-01',
-                           'validity_date' => '2018-01-01',
-                           'amount_taken' => 30,
-                           'period_result' => 70,
-                           'balance' => 70
-                         }
-                     ]
-                 }
-               ]
-             )
+          context ' and the time off ends in the same day of the validity date' do
+            before do
+              t = create(:time_off,
+                start_time: Time.zone.parse('1/1/2017 00:30:00'),
+                end_time: Time.zone.parse('1/1/2017 1:30:00'),
+                employee: employee,
+                time_off_category: vacation_category
+              )
+              t.employee_balance.update_attribute(:resource_amount, 0)
+              #Employee::Balance.all.order(:effective_at).each do |balance|
+                #UpdateEmployeeBalance.new(balance).call
+              #end
+              subject
+            end
+            it do
+               expect(JSON.parse(response.body)).to eq(
+                 [
+                   {
+                     'employee' => employee_id,
+                     'category' => "vacation",
+                     'periods' =>
+                       [
+                           {
+                             'type' => "balancer",
+                             'start_date' => '2016-01-01',
+                             'validity_date' => '2017-01-01',
+                             'amount_taken' => 60,
+                             'period_result' => 40,
+                             'balance' => 100
+                           },
+                           {
+                             'type' => "balancer",
+                             'start_date' => '2017-01-01',
+                             'validity_date' => '2018-01-01',
+                             'amount_taken' => 0,
+                             'period_result' => 100,
+                             'balance' => 100
+                           }
+                       ]
+                   }
+                 ]
+               )
+            end
+          end
+          context ' and the time off ends in the same day of the validity date' do
+            before do
+              ## CHECK THE BALANCES RESOUCE AMOUNTS AND BALANCES ARE OKE.
+              t = create(:time_off,
+                start_time: Time.zone.parse('1/1/2017 23:30:00'),
+                end_time: Time.zone.parse('2/1/2017 00:30:00'),
+                employee: employee,
+                time_off_category: vacation_category
+              )
+              t.employee_balance.update_attribute(:resource_amount, 0)
+              Employee::Balance.all.order(:effective_at).each do |balance|
+                UpdateEmployeeBalance.new(balance).call
+              end
+              subject
+            end
+            it do
+               expect(JSON.parse(response.body)).to eq(
+                 [
+                   {
+                     'employee' => employee_id,
+                     'category' => "vacation",
+                     'periods' =>
+                       [
+                           {
+                             'type' => "balancer",
+                             'start_date' => '2016-01-01',
+                             'validity_date' => '2017-01-01',
+                             'amount_taken' => 30,
+                             'period_result' => 70,
+                             'balance' => 100
+                           },
+                           {
+                             'type' => "balancer",
+                             'start_date' => '2017-01-01',
+                             'validity_date' => '2018-01-01',
+                             'amount_taken' => 30,
+                             'period_result' => 70,
+                             'balance' => 70
+                           }
+                       ]
+                   }
+                 ]
+               )
+            end
           end
         end
       end

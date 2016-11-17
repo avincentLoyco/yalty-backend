@@ -22,13 +22,14 @@ module RelatedAmount
 
   def calculate_related_amount
     time_off = time_off_containing_this_balance
+    counter_adition_or_balancer_removal =
+      (time_off_policy.counter? && time_off.nil? || balance_credit_additions.any?)
     end_date =
-      if time_off.end_time.to_date == effective_at.to_date
+      if (counter_adition_or_balancer_removal) && time_off.end_time.to_date == effective_at.to_date
         time_off.end_time
       else
-        (effective_at + 1.day).beginning_of_day
+        effective_at
       end
-
     return calculate_time_off_balance(nil, end_date) unless previous_balance.present?
     calculate_time_off_balance((previous_balance.effective_at + 1.day).beginning_of_day, end_date)
   end
