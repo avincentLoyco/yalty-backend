@@ -34,10 +34,11 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyCreate, type: :servic
 
   subject(:create_balances_for_existing_etops) do
     EmployeeTimeOffPolicy.order(:effective_at).each do |etop|
-      validity_date = RelatedPolicyPeriod.new(etop).validity_date_for(etop.effective_at)
-      CreateEmployeeBalance.new(etop.time_off_category_id, etop.employee_id, account.id,
-        effective_at: etop.effective_at, validity_date: validity_date).call
-      ManageEmployeeBalanceAdditions.new(etop).call
+      RecreateBalances::AfterEmployeeTimeOffPolicyCreate.new(
+        new_effective_at: etop.effective_at,
+        time_off_category_id: etop.time_off_category_id,
+        employee_id: etop.employee_id
+      ).call
     end
   end
 

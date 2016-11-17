@@ -75,23 +75,6 @@ module API
         @time_off_policy ||= Account.current.time_off_policies.find(params[:time_off_policy_id])
       end
 
-      def create_new_employee_balance(resource)
-        CreateEmployeeBalance.new(
-          resource.time_off_category_id,
-          resource.employee_id,
-          Account.current.id,
-          options_for(resource)
-        ).call
-      end
-
-      def options_for(resource)
-        {
-          manual_amount: params[:employee_balance_amount] || 0,
-          effective_at: resource.effective_at,
-          validity_date: RelatedPolicyPeriod.new(resource).validity_date_for(resource.effective_at)
-        }
-      end
-
       def resource_representer
         ::Api::V1::EmployeeTimeOffPolicyRepresenter
       end

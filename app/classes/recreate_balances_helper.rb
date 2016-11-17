@@ -74,19 +74,14 @@ class RecreateBalancesHelper
   end
 
   def create_balance_for_new_or_updated_etop!
-    effective_at = time_off_balance? ? new_effective_at + 5.minutes : new_effective_at
     CreateEmployeeBalance.new(
       time_off_category.id,
       employee.id,
       employee.account.id,
-      effective_at: effective_at,
+      effective_at: new_effective_at,
       validity_date: RelatedPolicyPeriod.new(etop).validity_date_for(new_effective_at),
       manual_amount: manual_amount
     ).call
-  end
-
-  def time_off_balance?
-    balances_in_category.with_time_off.find_by(effective_at: new_effective_at)
   end
 
   def manage_additions!

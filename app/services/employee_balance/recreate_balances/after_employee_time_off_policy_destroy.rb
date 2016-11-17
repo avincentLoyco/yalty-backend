@@ -12,7 +12,8 @@ module RecreateBalances
         recreate_balances_helper.time_off_category,
         recreate_balances_helper.employee,
         recreate_balances_helper.starting_date,
-        recreate_balances_helper.ending_date
+        recreate_balances_helper.ending_date,
+        destroyed_effective_at
       )
     end
 

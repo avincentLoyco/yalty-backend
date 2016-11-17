@@ -38,10 +38,11 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyDestroy, type: :servi
 
   subject(:create_balances_for_existing_etops) do
     EmployeeTimeOffPolicy.order(:effective_at).each do |etop|
-      validity_date = RelatedPolicyPeriod.new(etop).validity_date_for(etop.effective_at)
-      CreateEmployeeBalance.new(etop.time_off_category_id, etop.employee_id, account.id,
-        effective_at: etop.effective_at, validity_date: validity_date).call
-      ManageEmployeeBalanceAdditions.new(etop).call
+      RecreateBalances::AfterEmployeeTimeOffPolicyCreate.new(
+        new_effective_at: etop.effective_at,
+        time_off_category_id: etop.time_off_category_id,
+        employee_id: etop.employee_id
+      ).call
     end
   end
 
@@ -69,19 +70,46 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyDestroy, type: :servi
       create(:employee_time_off_policy, employee: employee, time_off_policy: top_a,
         effective_at: Time.zone.parse('2013-01-02'))
     end
-    let(:expeted_balances_dates) do
-      ['2013-01-02', '2013-12-31', '2014-01-01', '2014-12-31', '2015-01-01', '2015-04-01',
-       '2015-12-31', '2016-01-01', '2016-12-31', '2017-01-01', '2017-12-31', '2018-01-01'
-     ].map(&:to_date)
+
+    context 'without time off' do
+      let(:expeted_balances_dates) do
+        ['2013-01-02', '2013-12-31', '2014-01-01', '2014-12-31', '2015-01-01', '2015-04-01',
+         '2015-12-31', '2016-01-01', '2016-12-31', '2017-01-01', '2017-12-31', '2018-01-01'
+       ].map(&:to_date)
+      end
+
+      before do
+        create_balances_for_existing_etops
+        remove_etop
+        call_service
+      end
+
+      it { expect(existing_balances_effective_ats).to match_array(expeted_balances_dates) }
     end
 
-    before do
-      create_balances_for_existing_etops
-      remove_etop
-      call_service
-    end
+    context 'with time off' do
+      let(:expeted_balances_dates) do
+        ['2013-01-02', '2013-12-31', '2014-01-01', '2014-12-31', '2015-01-01', '2015-04-01',
+         '2015-10-01', '2015-12-31', '2016-01-01', '2016-12-31', '2017-01-01', '2017-12-31',
+         '2018-01-01'].map(&:to_date)
+      end
+      let(:time_off_effective_at) { destroyed_effective_at }
+      let!(:time_off) do
+        create(:time_off, employee: employee, time_off_category: category,
+          start_time: time_off_effective_at - 5.days, end_time: time_off_effective_at)
+      end
 
-    it { expect(existing_balances_effective_ats).to match_array(expeted_balances_dates) }
+      before do
+        create_balances_for_existing_etops
+        validity_date =
+          RelatedPolicyPeriod.new(etop_a).validity_date_for_balance_at(time_off.end_time)
+        time_off.employee_balance.update!(validity_date: validity_date)
+        remove_etop
+        call_service
+      end
+
+      it { expect(existing_balances_effective_ats).to match_array(expeted_balances_dates) }
+    end
   end
 
   context 'when there are etop after one removed' do

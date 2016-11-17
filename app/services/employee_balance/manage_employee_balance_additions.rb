@@ -58,7 +58,7 @@ class ManageEmployeeBalanceAdditions
     {
       skip_update: true,
       policy_credit_addition: true,
-      effective_at: date + 5.minutes,
+      effective_at: date + Employee::Balance::START_DATE_OR_ASSIGNATION_SECONDS,
       resource_amount: resource.time_off_policy.amount
     }
   end
@@ -67,7 +67,7 @@ class ManageEmployeeBalanceAdditions
     {
       skip_update: true,
       policy_credit_addition: false,
-      effective_at: date + 5.minutes,
+      effective_at: date + Employee::Balance::DAY_BEFORE_START_DAY_SECONDS,
       resource_amount: 0
     }
   end

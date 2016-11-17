@@ -40,18 +40,19 @@ class RelatedPolicyPeriod
   end
 
   def last_validity_date
-    return nil unless end_month && end_day && years_to_effect
+    return unless end_month && end_day && years_to_effect
     Date.new(last_start_date.year + years_to_effect, end_month, end_day)
   end
 
   def first_validity_date
-    return nil unless end_month && end_day && years_to_effect
+    return unless end_month && end_day && years_to_effect
     Date.new(first_start_date.year + years_to_effect, end_month, end_day)
   end
 
   def validity_date_for(date)
-    return nil unless end_day && end_month && years_to_effect
-    validity_date = Date.new(date.year + years_to_effect, end_month, end_day)
+    return unless end_day && end_month && years_to_effect
+    validity_date =
+      Date.new(date.year + years_to_effect, end_month, end_day) + Employee::Balance::REMOVAL_SECONDS
     validity_date += 1.year if validity_date < date
     return validity_date if (date.month <= end_month && date.day <= end_day) || years_to_effect == 0
     validity_date + 1.year

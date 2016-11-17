@@ -34,10 +34,11 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyUpdate, type: :servic
 
   subject(:create_balances_for_existing_etops) do
     EmployeeTimeOffPolicy.order(:effective_at).each do |etop|
-      validity_date = RelatedPolicyPeriod.new(etop).validity_date_for(etop.effective_at)
-      CreateEmployeeBalance.new(etop.time_off_category_id, etop.employee_id, account.id,
-        effective_at: etop.effective_at + 5.minutes, validity_date: validity_date).call
-      ManageEmployeeBalanceAdditions.new(etop).call
+      RecreateBalances::AfterEmployeeTimeOffPolicyCreate.new(
+        new_effective_at: etop.effective_at,
+        time_off_category_id: etop.time_off_category_id,
+        employee_id: etop.employee_id
+      ).call
     end
   end
 
@@ -100,7 +101,7 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyUpdate, type: :servic
       end
 
       context 'without additions before new etop' do
-        let(:old_effective_at) { Time.zone.parse('2015-06-01 00:05:00') }
+        let(:old_effective_at) { Time.zone.parse('2015-06-01') }
         let(:new_effective_at) { Time.zone.parse('2013-06-01') }
 
         context 'with time off' do
@@ -109,7 +110,7 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyUpdate, type: :servic
              '2015-02-01', '2015-05-01', '2015-06-01', '2016-01-31', '2016-02-01', '2017-01-31',
              '2017-02-01'].map(&:to_date)
           end
-          let(:time_off_effective_at) { old_effective_at - 5.minutes }
+          let(:time_off_effective_at) { old_effective_at }
           let!(:time_off) do
             create(:time_off, employee: employee, time_off_category: category,
               start_time: time_off_effective_at - 5.days, end_time: time_off_effective_at)
