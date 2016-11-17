@@ -8,15 +8,16 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
   let(:presence_policy) { create(:presence_policy, :with_presence_day, account: account) }
   let(:employee) { create(:employee, account: Account.current) }
   let(:presence_policy_id) { presence_policy.id }
+
   describe 'GET #index' do
     subject { get :index, presence_policy_id: presence_policy.id }
 
     let(:new_policy) { create(:presence_policy, account: account) }
-    let!(:employee_presence_policy) do
-      create(:employee_presence_policy, employee: employee, effective_at: Date.today)
+    let!(:epp) do
+      create(:employee_presence_policy, employee: employee, effective_at: 7.days.since)
     end
-    let!(:employee_presence_policies) do
-      [3.days.since, 4.days.since, 5.days.since].map do |day|
+    let!(:epps) do
+      [3.days.ago, 1.day.ago, 5.days.since].map do |day|
         create(:employee_presence_policy,
           presence_policy: presence_policy, employee: employee, effective_at: day
         )
@@ -24,29 +25,70 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
     end
 
     context 'with valid params' do
-      it { is_expected.to have_http_status(200) }
+      it 'has valid keys in json' do
+        subject
 
-      context 'response' do
-        before { subject }
+        expect_json_keys(
+          '*',
+          [
+            :id,
+            :type,
+            :assignation_type,
+            :effective_at,
+            :assignation_id,
+            :order_of_start_day,
+            :effective_till
+          ]
+        )
+      end
 
-        it { expect_json_sizes(3) }
-        it { expect(response.body).to_not include (employee_presence_policy.id) }
-        it { expect_json('2', effective_till: nil, id: employee.id) }
-        it { expect_json('1', effective_till: (employee_presence_policies.last.effective_at - 1.day).to_s) }
-        it { expect_json('0', effective_till: (employee_presence_policies.second.effective_at - 1.day).to_s) }
-        it '' do
-          expect_json_keys(
-            '*',
-            [
-              :id,
-              :type,
-              :assignation_type,
-              :effective_at,
-              :assignation_id,
-              :order_of_start_day,
-              :effective_till
-            ]
-          )
+      context 'when no filter param given' do
+        it { is_expected.to have_http_status(200) }
+
+        it 'has valid employee presence policies in response' do
+          subject
+
+          expect(response.body).to include(epps.second.id, epps.last.id)
+          expect(response.body).to_not include(epps.first.id, epp.id)
+        end
+      end
+
+      context 'when filter active param given' do
+        subject { get :index, presence_policy_id: presence_policy.id, filter: 'active' }
+
+        it { is_expected.to have_http_status(200) }
+
+        it 'has valid employee presence policies in response' do
+          subject
+
+          expect(response.body).to include(epps.second.id, epps.last.id)
+          expect(response.body).to_not include(epps.first.id, epp.id)
+        end
+      end
+
+      context 'when filter inactive param given' do
+        subject { get :index, presence_policy_id: presence_policy.id, filter: 'inactive' }
+
+        it { is_expected.to have_http_status(200) }
+
+        it 'has valid employee presence policies in response' do
+          subject
+
+          expect(response.body).to include(epps.first.id)
+          expect(response.body).to_not include(epps.second.id, epps.last.id, epp.id)
+        end
+      end
+
+      context 'when filter all param given' do
+        subject { get :index, presence_policy_id: presence_policy.id, filter: 'all' }
+
+        it { is_expected.to have_http_status(200) }
+
+        it 'has valid employee presence policies in response' do
+          subject
+
+          expect(response.body).to include(epps.first.id, epps.second.id, epps.last.id)
+          expect(response.body).to_not include(epp.id)
         end
       end
     end

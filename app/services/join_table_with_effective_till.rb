@@ -50,7 +50,7 @@ class JoinTableWithEffectiveTill
         #{specific_employee_sql}
         #{specific_join_table_instance_sql}
         #{extra_where_conditions}
-        GROUP BY  A.id
+        GROUP BY A.id
       ) AS B
       #{conditional}
       ORDER BY B.effective_at;"

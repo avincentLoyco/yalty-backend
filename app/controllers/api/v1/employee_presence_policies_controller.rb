@@ -6,7 +6,7 @@ module API
 
       def index
         authorize! :index, presence_policy
-        render_resource(resources)
+        render_resource(resources_with_filters(EmployeePresencePolicy, presence_policy.id))
       end
 
       def create
@@ -46,10 +46,6 @@ module API
 
       def presence_policy
         @presence_policy ||= Account.current.presence_policies.find(params[:presence_policy_id])
-      end
-
-      def resources
-        resources_with_effective_till(EmployeePresencePolicy, nil, presence_policy.id)
       end
 
       def resource_representer

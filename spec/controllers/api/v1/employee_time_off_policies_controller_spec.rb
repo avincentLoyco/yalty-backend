@@ -12,33 +12,83 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
   describe 'GET #index' do
     subject { get :index, time_off_policy_id: time_off_policy_id }
 
-    let!(:first_employee_policy) do
-      create(:employee_time_off_policy,
-        employee: employee, effective_at: 1.year.since, time_off_policy: time_off_policy
-      )
+    let!(:etop) do
+      create(:employee_time_off_policy, employee: employee, effective_at: 7.days.since)
     end
-    let!(:second_employee_policy) do
-      create(:employee_time_off_policy,
-        employee: employee, effective_at: 5.months.since, time_off_policy: time_off_policy
-      )
+    let!(:etops) do
+      [3.days.ago, 1.day.ago, 5.days.since].map do |day|
+        create(:employee_time_off_policy,
+          time_off_policy: time_off_policy, employee: employee, effective_at: day
+        )
+      end
     end
 
-    context 'with valid time_off_policy' do
-      let(:time_off_policy_id) { time_off_policy.id }
+    context 'with valid params' do
+      it 'has valid keys in json' do
+        subject
 
-      it { is_expected.to have_http_status(200) }
+        expect_json_keys(
+          '*',
+          [
+            :id,
+            :type,
+            :assignation_type,
+            :effective_at,
+            :assignation_id,
+            :effective_till,
+            :employee_balance
+          ]
+        )
+      end
 
-      context 'response' do
-        before { subject }
+      context 'when no filter param given' do
+        it { is_expected.to have_http_status(200) }
 
-        it { expect_json_sizes(2) }
-        it { expect(response.body).to include(employee.id) }
-        it { expect(response.body).to include(first_employee_policy.id, second_employee_policy.id) }
-        it { expect_json('1', effective_till: nil, id: employee.id) }
-        it { expect_json('0', effective_till: (first_employee_policy.effective_at - 1.day).to_s) }
-        it { expect_json_keys(
-          '*', [:id, :type, :assignation_id, :assignation_type, :effective_at, :effective_till])
-        }
+        it 'has valid employee presence policies in response' do
+          subject
+
+          expect(response.body).to include(etops.second.id, etops.last.id)
+          expect(response.body).to_not include(etops.first.id, etop.id)
+        end
+      end
+
+      context 'when filter active param given' do
+        subject { get :index, time_off_policy_id: time_off_policy.id, filter: 'active' }
+
+        it { is_expected.to have_http_status(200) }
+
+        it 'has valid employee presence policies in response' do
+          subject
+
+          expect(response.body).to include(etops.second.id, etops.last.id)
+          expect(response.body).to_not include(etops.first.id, etop.id)
+        end
+      end
+
+      context 'when filter inactive param given' do
+        subject { get :index, time_off_policy_id: time_off_policy.id, filter: 'inactive' }
+
+        it { is_expected.to have_http_status(200) }
+
+        it 'has valid employee presence policies in response' do
+          subject
+
+          expect(response.body).to include(etops.first.id)
+          expect(response.body).to_not include(etops.second.id, etops.last.id, etop.id)
+        end
+      end
+
+      context 'when filter all param given' do
+        subject { get :index, time_off_policy_id: time_off_policy.id, filter: 'all' }
+
+        it { is_expected.to have_http_status(200) }
+
+        it 'has valid employee presence policies in response' do
+          subject
+
+          expect(response.body).to include(etops.first.id, etops.second.id, etops.last.id)
+          expect(response.body).to_not include(etop.id)
+        end
       end
     end
 

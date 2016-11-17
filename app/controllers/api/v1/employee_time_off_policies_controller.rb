@@ -6,7 +6,7 @@ module API
 
       def index
         authorize! :index, time_off_policy
-        render_resource(resources)
+        render_resource(resources_with_filters(EmployeeTimeOffPolicy, time_off_policy.id))
       end
 
       def create
@@ -52,10 +52,6 @@ module API
 
       def resource
         @resource ||= Account.current.employee_time_off_policies.find(params[:id])
-      end
-
-      def resources
-        resources_with_effective_till(EmployeeTimeOffPolicy, nil, time_off_policy.id)
       end
 
       def time_off_policy
