@@ -536,7 +536,7 @@ RSpec.describe Employee::Balance, type: :model do
       let(:start_month) { 2 }
       let(:end_day) { 5 }
       let(:end_month) { 1 }
-      let(:expected_effective_at) { Time.zone.parse("#{end_day}/#{end_month}/2018") }
+      let(:expected_effective_at) { Time.zone.parse("#{end_day}/#{end_month}/2018 00:00:03") }
       let(:in_2019) { Time.zone.parse("#{end_day}/#{end_month}/2019") }
       let(:in_2017) { Time.zone.parse("#{end_day}/#{end_month}/2017") }
 
@@ -592,7 +592,7 @@ RSpec.describe Employee::Balance, type: :model do
       let(:start_day) { 10 }
       let(:start_month) { 1 }
       let(:end_day) { 10 }
-      let(:expected_effective_at) { Time.zone.parse("#{end_day}/#{end_month}/2016") }
+      let(:expected_effective_at) { Time.zone.parse("#{end_day}/#{end_month}/2016 00:00:03") }
       let(:in_2015) { Time.zone.parse("#{end_day}/#{end_month}/2015") }
       let(:in_2017) { Time.zone.parse("#{end_day}/#{end_month}/2017") }
 
@@ -643,7 +643,7 @@ RSpec.describe Employee::Balance, type: :model do
     context 'offset 0' do
       let(:etop_effective_at) { Time.zone.parse('01/01/2015') }
       let(:start_year) { 2015 }
-      let(:expected_effective_at) { Time.zone.parse("#{end_day}/#{end_month}/2017") }
+      let(:expected_effective_at) { Time.zone.parse("#{end_day}/#{end_month}/2017 00:00:03") }
       let(:in_2016) { Time.zone.parse("#{end_day}/#{end_month}/2016") }
       let(:in_2018) { Time.zone.parse("#{end_day}/#{end_month}/2018") }
 

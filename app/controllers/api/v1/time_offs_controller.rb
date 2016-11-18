@@ -95,7 +95,8 @@ module API
           time_off_id: resource.id,
           resource_amount: resource.balance,
           manual_amount: params[:manual_amount] || 0,
-          validity_date: find_validity_date(resource)
+          validity_date: find_validity_date(resource),
+          effective_at: resource.end_time
         ).call
       end
 

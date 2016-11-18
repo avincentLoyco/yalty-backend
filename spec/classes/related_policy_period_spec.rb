@@ -95,13 +95,13 @@ RSpec.describe RelatedPolicyPeriod do
           context 'when years to effect eqal 0' do
             let(:years_to_effect) { 0 }
 
-            it { expect(subject).to eq '01/04/2006'.to_date }
+            it { expect(subject).to eq(Time.zone.parse('01/04/2006 00:00:03')) }
           end
 
           context 'when years to effect equal 1 or more' do
             let(:years_to_effect) { 1 }
 
-            it { expect(subject).to eq '01/04/2007'.to_date }
+            it { expect(subject).to eq(Time.zone.parse('01/04/2007 00:00:03')) }
           end
         end
 
@@ -117,19 +117,19 @@ RSpec.describe RelatedPolicyPeriod do
           context 'when years to effect eqal 0' do
             let(:years_to_effect) { 0 }
 
-            it { expect(subject).to eq '1/4/2007'.to_date }
+            it { expect(subject).to eq(Time.zone.parse('1/4/2007 00:00:03')) }
           end
 
           context 'when years to effect equal 1' do
             let(:years_to_effect) { 1 }
 
-            it { expect(subject).to eq '1/4/2008'.to_date }
+            it { expect(subject).to eq(Time.zone.parse('1/4/2008 00:00:03')) }
           end
 
           context 'when years to effect equal 2 or more' do
             let(:years_to_effect) { 2 }
 
-            it { expect(subject).to eq '1/4/2009'.to_date }
+            it { expect(subject).to eq(Time.zone.parse('1/4/2009 00:00:03')) }
           end
         end
       end
@@ -145,8 +145,9 @@ RSpec.describe RelatedPolicyPeriod do
           )
         end
         let!(:policy_addition) do
-          create(:employee_balance_manual, effective_at: '1/1/2015', validity_date: '1/4/2016',
-            time_off_category: time_off_policy.time_off_category, employee: related_policy.employee)
+          create(:employee_balance_manual, time_off_category: time_off_policy.time_off_category,
+            effective_at: '1/1/2015', validity_date: Time.zone.parse('1/4/2016 00:00:03'),
+            employee: related_policy.employee)
         end
 
         context 'when there is only assignation balance before the given date' do
