@@ -49,7 +49,7 @@ class RemoveBalances
 
   def additions_to_delete
     balances = balances_after_starting_date.additions.not_time_off
-    return balances unless ending_date.present?
+    return balances - assignation_balances unless ending_date.present?
     balances.where('effective_at <= ?', ending_date) - assignation_balances
   end
 

@@ -277,18 +277,21 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
           )
         end
 
+        let(:create_balances_for_existing_etops) do
+          EmployeeTimeOffPolicy.order(:effective_at).each do |etop|
+            RecreateBalances::AfterEmployeeTimeOffPolicyCreate.new(
+              new_effective_at: etop.effective_at,
+              time_off_category_id: category.id,
+              employee_id: employee.id
+            ).call
+          end
+        end
+
         context 'and the effective at is equal to the latest ETOP effective_at' do
           let(:effective_at) { latest_etop.effective_at }
 
           context 'and the time off policy is the same as the oldest ETOP' do
-            before do
-              EmployeeTimeOffPolicy.order(:effective_at).each do |etop|
-                validity_date = RelatedPolicyPeriod.new(etop).validity_date_for(etop.effective_at)
-                CreateEmployeeBalance.new(etop.time_off_category_id, etop.employee_id, account.id,
-                  effective_at: etop.effective_at, validity_date: validity_date).call
-                ManageEmployeeBalanceAdditions.new(etop).call
-              end
-            end
+            before { create_balances_for_existing_etops }
 
             it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(-1) }
             it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
@@ -306,18 +309,14 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
         context 'and the effective at is before the latest ETOP effective_at' do
           let(:effective_at) { latest_etop.effective_at - 2.days }
+          let(:time_off_policy_id) { latest_etop.time_off_policy_id }
+
+          before { create_balances_for_existing_etops }
 
           context 'and the time off policy is the same as the oldest ETOP' do
             it { expect { subject }.to_not change { EmployeeTimeOffPolicy.count } }
-            it { expect { subject }.to_not change { Employee::Balance.count } }
-
-            it { is_expected.to have_http_status(205) }
-          end
-
-          context "and the time off policy is the same as the latest etop" do
-            let(:time_off_policy_id) { latest_etop.time_off_policy_id }
-
             it { expect { subject }.to change { EmployeeTimeOffPolicy.exists?(latest_etop.id) } }
+            it { expect { subject }.to_not change { Employee::Balance.count } }
             it { is_expected.to have_http_status(201) }
           end
         end
