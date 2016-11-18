@@ -109,7 +109,11 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
             context 'when removal manual amount greater than time off related amount' do
               let(:policy_adjustment) { 1000 }
 
-              it { expect(subject).to eq -(1000 + removal.related_amount + removal_manual_amount) }
+              it do
+                expect(subject).to eq -(1000 + TimeOff.last.balance(
+                  nil, removal.effective_at.end_of_day
+                ) + removal_manual_amount)
+              end
             end
 
             context 'when removal manual amount smaller than time off related amount' do

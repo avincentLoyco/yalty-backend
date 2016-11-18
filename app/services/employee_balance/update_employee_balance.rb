@@ -10,6 +10,7 @@ class UpdateEmployeeBalance
   end
 
   def call
+    employee_balance.reload
     update_attributes unless options.blank?
     recalculate_amount unless employee_balance.reset_balance
     update_status

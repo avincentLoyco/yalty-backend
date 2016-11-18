@@ -62,13 +62,15 @@ class CalculateEmployeeBalanceRemovalAmount
   end
 
   def time_off_in_period_end_amount
-    time_off_in_period =
+    time_off =
       TimeOff
       .for_employee_in_category(removal.employee_id, removal.time_off_category_id)
       .where('start_time <= ? AND end_time > ?', removal.effective_at, removal.effective_at)
       .first
-    return 0 unless time_off_in_period.present?
-    time_off_in_period.balance(nil, removal.effective_at.end_of_day)
+    return 0 unless time_off.present?
+    end_of_removal_day = removal.effective_at.end_of_day
+    end_time = time_off.end_time < end_of_removal_day ? time_off.end_time : end_of_removal_day
+    time_off.balance(nil, end_time)
   end
 
   def previous_balance

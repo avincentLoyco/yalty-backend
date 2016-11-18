@@ -392,16 +392,15 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
           end
           context ' and the time off ends in the same day of the validity date' do
             before do
-              t = create(:time_off,
+              create(:time_off,
                 start_time: Time.zone.parse('1/1/2017 00:30:00'),
                 end_time: Time.zone.parse('1/1/2017 1:30:00'),
                 employee: employee,
                 time_off_category: vacation_category
               )
-              t.employee_balance.update_attribute(:resource_amount, 0)
-              #Employee::Balance.all.order(:effective_at).each do |balance|
-                #UpdateEmployeeBalance.new(balance).call
-              #end
+              Employee::Balance.all.order(:effective_at).each do |balance|
+                UpdateEmployeeBalance.new(balance).call
+              end
               subject
             end
             it do
