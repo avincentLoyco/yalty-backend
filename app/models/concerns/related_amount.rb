@@ -12,12 +12,24 @@ module RelatedAmount
   private
 
   def related_amount_at_time_off_end_date
-    employee
+    not_removals =
+      employee
       .employee_balances
+      .not_removals
       .in_category(time_off_category_id).not_time_off
       .where(
         'employee_balances.effective_at BETWEEN ? AND ?', time_off.start_time, time_off.end_time
       ).inject(0) { |sum, balance| sum + balance.related_amount.abs }
+    removals =
+      employee
+      .employee_balances
+      .removals
+      .in_category(time_off_category_id).not_time_off
+      .where(
+        'employee_balances.effective_at::date BETWEEN ? AND ?',
+        time_off.start_time.to_date, time_off.end_time.to_date
+      ).inject(0) { |sum, balance| sum + balance.related_amount.abs }
+    not_removals + removals
   end
 
   def calculate_related_amount
@@ -36,23 +48,35 @@ module RelatedAmount
       end
     return calculate_time_off_balance(nil, end_time) unless previous_balance.present?
     if previous_balance.balance_credit_additions.any?
-      calculate_time_off_balance((previous_balance.effective_at + 1.day).beginning_of_day, end_time)
-    else
-      calculate_time_off_balance(previous_balance.effective_at, end_time)
+      start_of_date_after_removal = (previous_balance.effective_at + 1.day).beginning_of_day
+      return calculate_time_off_balance(start_of_date_after_removal, end_time)
     end
+    calculate_time_off_balance(previous_balance.effective_at, end_time)
   end
 
   def previous_balance
-    @previous_balance ||=
-      employee
-      .employee_balances.in_category(time_off_category_id)
-      .not_time_off
+    balances_in_category_and_not_time_off =
+      employee.employee_balances.in_category(time_off_category_id).not_time_off
+    previous_balance =
+      balances_in_category_and_not_time_off
       .where(
         'employee_balances.effective_at >= ? AND employee_balances.effective_at < ?',
         time_off_containing_this_balance.start_time,
         effective_at
       ).order(:effective_at)
       .last
+    return previous_balance if previous_balance.present?
+    if previous_balance.nil?
+      previous_balance =
+        balances_in_category_and_not_time_off
+        .removals
+        .where(
+          'employee_balances.effective_at::date = ? AND employee_balances.effective_at < ?',
+          time_off_containing_this_balance.start_time.to_date,
+          effective_at
+        ).order(:effective_at)
+        .last
+    end
   end
 
   def time_off_containing_this_balance
