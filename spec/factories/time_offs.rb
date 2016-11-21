@@ -20,7 +20,8 @@ FactoryGirl.define do
           time_off_category: time_off.time_off_category,
           effective_at: time_off.end_time,
           time_off: time_off,
-          resource_amount: time_off.balance
+          resource_amount: time_off.balance,
+          policy_credit_addition: false
         )
       end
     end

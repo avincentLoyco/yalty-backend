@@ -3,6 +3,10 @@ require 'employee_policy_period'
 class Employee::Balance < ActiveRecord::Base
   include RelatedAmount
 
+  DAY_BEFORE_START_DAY_SECONDS = 1.second
+  START_DATE_OR_ASSIGNATION_SECONDS = 2.seconds
+  REMOVAL_SECONDS = 3.seconds
+
   belongs_to :employee
   belongs_to :time_off_category
   belongs_to :time_off
@@ -31,12 +35,13 @@ class Employee::Balance < ActiveRecord::Base
     where(employee_id: employee_id, time_off_category_id: time_off_category_id)
   end)
   scope :additions, -> { where(policy_credit_addition: true).order(:effective_at) }
-  scope :removals, -> { Employee::Balance.joins(:balance_credit_additions) }
+  scope :removals, -> { Employee::Balance.joins(:balance_credit_additions).distinct }
   scope :removal_at_date, (lambda do |employee_id, time_off_category_id, date|
     employee_balances(employee_id, time_off_category_id)
       .where("effective_at::date = to_date('#{date}', 'YYYY-MM_DD')").uniq
   end)
   scope :in_category, -> (category_id) { where(time_off_category_id: category_id) }
+  scope :with_time_off, -> { where.not(time_off_id: nil) }
   scope :not_time_off, -> { where(time_off_id: nil) }
 
   def amount
@@ -52,7 +57,7 @@ class Employee::Balance < ActiveRecord::Base
   def current_or_next_period
     [EmployeePolicyPeriod.new(employee, time_off_category_id).current_policy_period,
      EmployeePolicyPeriod.new(employee, time_off_category_id).future_policy_period]
-      .find { |r| r.include?(effective_at.to_date) }
+      .compact.find { |r| r.include?(effective_at.to_date) }
   end
 
   def calculate_and_set_balance
