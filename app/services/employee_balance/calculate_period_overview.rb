@@ -70,11 +70,12 @@ class CalculatePeriodOverview
   end
 
   def period_addition
+  @period_addition ||=
     balances
-      .between(@period[:start_date], @period[:end_date])
-      .where(policy_credit_addition: true)
-      .order(:effective_at)
-      .first
+    .between(@period[:start_date], @period[:end_date])
+    .where(policy_credit_addition: true)
+    .order(:effective_at)
+    .first
   end
 
   def period_start_balance
@@ -97,13 +98,14 @@ class CalculatePeriodOverview
   end
 
   def negative_amounts_between(from_date, time_offs_to_date, removals_to_date)
-    manual_and_resource_amounts = balances.not_removals.between(from_date, time_offs_to_date)
-                                          .pluck(:manual_amount, :resource_amount)
+    negative_balances = balances.between(from_date, time_offs_to_date)
+    if @period[:type] == 'balancer'
+      negative_balances =
+        negative_balances.where.not(effective_at: period_addition.validity_date)
+    end
+    manual_and_resource_amounts = negative_balances.pluck(:manual_amount, :resource_amount)
     negative_amounts = manual_and_resource_amounts.flatten.select { |value| value < 0 }.sum
-    removal_amount_sum =
-      balances.removals.between(from_date, removals_to_date)
-              .pluck(:manual_amount, :resource_amount).flatten.sum
-    negative_amounts + removal_amount_sum + end_of_period_time_off_amount
+    negative_amounts + end_of_period_time_off_amount
   end
 
   def last_time_off_between(start_date, end_date)
