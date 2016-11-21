@@ -13,16 +13,15 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
         manual_amount: time_off_manual, validity_date: '1/4/2016',
         balance_credit_removal: time_off_removal
       )
-      # TODO needs to be removed after removing no_balances_after_effective_at validation
-      allow_any_instance_of(EmployeeTimeOffPolicy).to receive(:valid?) { true }
       removal.reload.balance_credit_additions
     end
 
     let!(:policy_balance) do
       create(:employee_balance_manual,
-        employee: employee, time_off_category: category, effective_at: employee_policy.effective_at,
-        validity_date: '1/4/2016', resource_amount: 0,
-        manual_amount: policy_adjustment, policy_credit_addition: true)
+        employee: employee, time_off_category: category, validity_date: '1/4/2016',
+        resource_amount: 0, manual_amount: policy_adjustment,
+        effective_at: employee_policy.effective_at + Employee::Balance::START_DATE_OR_ASSIGNATION_SECONDS,
+        policy_credit_addition: true)
     end
     let(:account) { create(:account) }
     let(:category) { create(:time_off_category, account: account) }

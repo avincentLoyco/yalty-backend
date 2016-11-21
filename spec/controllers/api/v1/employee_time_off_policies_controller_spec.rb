@@ -75,7 +75,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
     context 'with valid params' do
       it { expect { subject }.to change { employee.employee_time_off_policies.count }.by(1) }
       it { expect { subject }.to change { Employee::Balance.additions.count }.by(3) }
-      it { expect { subject }.to change { Employee::Balance.count }.by(6) }
+      it { expect { subject }.to change { Employee::Balance.count }.by(7) }
 
       it { is_expected.to have_http_status(201) }
 
@@ -113,10 +113,11 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
         before do
           EmployeeTimeOffPolicy.order(:effective_at).each do |etop|
-            validity_date = RelatedPolicyPeriod.new(etop).validity_date_for(etop.effective_at)
-            CreateEmployeeBalance.new(etop.time_off_category_id, etop.employee_id, account.id,
-              effective_at: etop.effective_at, validity_date: validity_date).call
-            ManageEmployeeBalanceAdditions.new(etop).call
+            RecreateBalances::AfterEmployeeTimeOffPolicyCreate.new(
+              time_off_category_id: etop.time_off_category_id,
+              employee_id: etop.employee_id,
+              new_effective_at: etop.effective_at
+            ).call
           end
           subject
         end
@@ -133,7 +134,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
         it { expect { subject }.to change { employee.employee_time_off_policies.count }.by(1) }
         it { expect { subject }.to change { employee.employee_balances.additions.uniq.count }.by(7) }
         it { expect { subject }.to change { employee.employee_balances.removals.uniq.count }.by(1) }
-        it { expect { subject }.to change { employee.reload.employee_balances.count }.by(15) }
+        it { expect { subject }.to change { employee.reload.employee_balances.count }.by(16) }
 
         it { is_expected.to have_http_status(201) }
 
@@ -151,7 +152,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
         before { params.merge!(employee_balance_amount: 1000) }
         let(:effective_at) { Time.now - 1.day }
 
-        it { expect { subject }.to change { Employee::Balance.count }.by(6) }
+        it { expect { subject }.to change { Employee::Balance.count }.by(7) }
         it { expect { subject }.to change { employee.employee_time_off_policies.count }.by(1) }
         it { is_expected.to have_http_status(201) }
 
@@ -167,7 +168,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
           let(:new_balances) { Employee::Balance.order(:effective_at) }
           before { subject }
 
-          it { expect(new_balances.first.amount).to eq 1000 }
+          it { expect(new_balances.second.amount).to eq 1000 }
           it { expect(new_balances.last.amount).to eq time_off_policy.amount }
           it { expect(new_balances.last.policy_credit_addition).to eq true }
 
@@ -212,10 +213,11 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
             before do
               EmployeeTimeOffPolicy.order(:effective_at).each do |etop|
-                validity_date = RelatedPolicyPeriod.new(etop).validity_date_for(etop.effective_at)
-                CreateEmployeeBalance.new(etop.time_off_category_id, etop.employee_id, account.id,
-                  effective_at: etop.effective_at, validity_date: validity_date).call
-                ManageEmployeeBalanceAdditions.new(etop).call
+                RecreateBalances::AfterEmployeeTimeOffPolicyCreate.new(
+                  time_off_category_id: etop.time_off_category_id,
+                  employee_id: etop.employee_id,
+                  new_effective_at: etop.effective_at
+                ).call
               end
             end
 
@@ -237,7 +239,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
         context 'and the effective at is equal to this already existing ETOP effective_at' do
           it { expect { subject }.to change { EmployeeTimeOffPolicy.exists?(past_etop.id) } }
           it { expect { subject }.to change { Employee::Balance.additions.count }.by(3) }
-          it { expect { subject }.to change { Employee::Balance.count }.by(6) }
+          it { expect { subject }.to change { Employee::Balance.count }.by(7) }
         end
       end
 
@@ -433,10 +435,11 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
           before do
             EmployeeTimeOffPolicy.order(:effective_at).each do |etop|
-              validity_date = RelatedPolicyPeriod.new(etop).validity_date_for(etop.effective_at)
-              CreateEmployeeBalance.new(etop.time_off_category_id, etop.employee_id, account.id,
-                effective_at: etop.effective_at, validity_date: validity_date).call
-              ManageEmployeeBalanceAdditions.new(etop).call
+              RecreateBalances::AfterEmployeeTimeOffPolicyCreate.new(
+                time_off_category_id: etop.time_off_category_id,
+                employee_id: etop.employee_id,
+                new_effective_at: etop.effective_at
+              ).call
             end
             subject
           end
@@ -469,10 +472,11 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
           before do
             EmployeeTimeOffPolicy.order(:effective_at).each do |etop|
-              validity_date = RelatedPolicyPeriod.new(etop).validity_date_for(etop.effective_at)
-              CreateEmployeeBalance.new(etop.time_off_category_id, etop.employee_id, account.id,
-                effective_at: etop.effective_at, validity_date: validity_date).call
-              ManageEmployeeBalanceAdditions.new(etop).call
+              RecreateBalances::AfterEmployeeTimeOffPolicyCreate.new(
+                time_off_category_id: etop.time_off_category_id,
+                employee_id: etop.employee_id,
+                new_effective_at: etop.effective_at
+              ).call
             end
             subject
           end
@@ -676,10 +680,11 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
           before do
             EmployeeTimeOffPolicy.order(:effective_at).each do |etop|
-              validity_date = RelatedPolicyPeriod.new(etop).validity_date_for(etop.effective_at)
-              CreateEmployeeBalance.new(etop.time_off_category_id, etop.employee_id, account.id,
-                effective_at: etop.effective_at, validity_date: validity_date).call
-              ManageEmployeeBalanceAdditions.new(etop).call
+              RecreateBalances::AfterEmployeeTimeOffPolicyCreate.new(
+                time_off_category_id: etop.time_off_category_id,
+                employee_id: etop.employee_id,
+                new_effective_at: etop.effective_at
+              ).call
             end
           end
 
@@ -802,10 +807,11 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
         before do
           EmployeeTimeOffPolicy.order(:effective_at).each do |etop|
-            validity_date = RelatedPolicyPeriod.new(etop).validity_date_for(etop.effective_at)
-            CreateEmployeeBalance.new(etop.time_off_category_id, etop.employee_id, account.id,
-              effective_at: etop.effective_at, validity_date: validity_date).call
-            ManageEmployeeBalanceAdditions.new(etop).call
+            RecreateBalances::AfterEmployeeTimeOffPolicyCreate.new(
+              time_off_category_id: etop.time_off_category_id,
+              employee_id: etop.employee_id,
+              new_effective_at: etop.effective_at
+            ).call
           end
           subject
         end
@@ -843,10 +849,11 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
         before do
           EmployeeTimeOffPolicy.order(:effective_at).each do |etop|
-            validity_date = RelatedPolicyPeriod.new(etop).validity_date_for(etop.effective_at)
-            CreateEmployeeBalance.new(etop.time_off_category_id, etop.employee_id, account.id,
-              effective_at: etop.effective_at, validity_date: validity_date).call
-            ManageEmployeeBalanceAdditions.new(etop).call
+            RecreateBalances::AfterEmployeeTimeOffPolicyCreate.new(
+              time_off_category_id: etop.time_off_category_id,
+              employee_id: etop.employee_id,
+              new_effective_at: etop.effective_at
+            ).call
           end
         end
 
@@ -864,10 +871,11 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
           before do
             EmployeeTimeOffPolicy.order(:effective_at).each do |etop|
-              validity_date = RelatedPolicyPeriod.new(etop).validity_date_for(etop.effective_at)
-              CreateEmployeeBalance.new(etop.time_off_category_id, etop.employee_id, account.id,
-                effective_at: etop.effective_at, validity_date: validity_date).call
-              ManageEmployeeBalanceAdditions.new(etop).call
+              RecreateBalances::AfterEmployeeTimeOffPolicyCreate.new(
+                time_off_category_id: etop.time_off_category_id,
+                employee_id: etop.employee_id,
+                new_effective_at: etop.effective_at
+              ).call
             end
           end
 
@@ -880,10 +888,11 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
             employee_time_off_policy.policy_assignation_balance.destroy!
             employee_time_off_policy.update!(effective_at: Time.now - 2.years)
             EmployeeTimeOffPolicy.order(:effective_at).each do |etop|
-              validity_date = RelatedPolicyPeriod.new(etop).validity_date_for(etop.effective_at)
-              CreateEmployeeBalance.new(etop.time_off_category_id, etop.employee_id, account.id,
-                effective_at: etop.effective_at, validity_date: validity_date).call
-              ManageEmployeeBalanceAdditions.new(etop).call
+              RecreateBalances::AfterEmployeeTimeOffPolicyCreate.new(
+                time_off_category_id: etop.time_off_category_id,
+                employee_id: etop.employee_id,
+                new_effective_at: etop.effective_at
+              ).call
             end
           end
 

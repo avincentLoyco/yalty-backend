@@ -27,7 +27,8 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
     employee.employee_balances.where(
       time_off_category_id: time_off_policy.time_off_category.id,
       time_off_id: nil
-    ).where('effective_at::date = ?', effective_at).first
+    ).where('effective_at = ?', effective_at + Employee::Balance::START_DATE_OR_ASSIGNATION_SECONDS)
+     .first
   end
 
   def employee_balances
