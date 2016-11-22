@@ -72,7 +72,6 @@ class CalculatePeriodOverview
     @period_addition ||=
       balances
       .between(@period[:start_date], @period[:end_date])
-      .where(policy_credit_addition: true)
       .order(:effective_at)
       .first
   end
