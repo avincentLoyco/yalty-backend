@@ -15,7 +15,7 @@ class PeriodInformationFinderByCategory
       start_date: start_date_of_period,
       end_date: end_date_of_period,
       validity_date:
-        RelatedPolicyPeriod.new(current_etop).validity_date_for(start_date_of_period)
+        RelatedPolicyPeriod.new(current_etop).validity_date_for(start_date_of_period).try(:to_date)
     }
   end
 

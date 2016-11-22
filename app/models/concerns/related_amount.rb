@@ -66,17 +66,15 @@ module RelatedAmount
       ).order(:effective_at)
       .last
     return previous_balance if previous_balance.present?
-    if previous_balance.nil?
-      previous_balance =
-        balances_in_category_and_not_time_off
-        .removals
-        .where(
-          'employee_balances.effective_at::date = ? AND employee_balances.effective_at < ?',
-          time_off_containing_this_balance.start_time.to_date,
-          effective_at
-        ).order(:effective_at)
-        .last
-    end
+    return unless previous_balance.nil?
+    balances_in_category_and_not_time_off
+      .removals
+      .where(
+        'employee_balances.effective_at::date = ? AND employee_balances.effective_at < ?',
+        time_off_containing_this_balance.start_time.to_date,
+        effective_at
+      ).order(:effective_at)
+      .last
   end
 
   def time_off_containing_this_balance

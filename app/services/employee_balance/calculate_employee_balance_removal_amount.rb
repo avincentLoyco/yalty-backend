@@ -78,7 +78,8 @@ class CalculateEmployeeBalanceRemovalAmount
       .for_employee_in_category(removal.employee_id, removal.time_off_category_id)
       .where(
         'start_time <= ? AND end_time > ?',
-        removal.effective_at.end_of_day, removal.effective_at)
+        removal.effective_at.end_of_day, removal.effective_at
+      )
       .first
   end
 

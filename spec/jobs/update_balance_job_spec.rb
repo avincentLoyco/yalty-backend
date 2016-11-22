@@ -374,19 +374,16 @@ RSpec.describe UpdateBalanceJob do
           context 'and removal is in the future' do
             let(:options) do
               {
-                validity_date: Time.zone.now - 1.year + Employee::Balance::REMOVAL_SECONDS,
+                validity_date: Time.zone.now + 1.year + Employee::Balance::REMOVAL_SECONDS,
                 resource_amount: 4000
               }
             end
             let(:addition) { existing_balances.additions.last(2).first }
             let(:balance_id) { addition.id }
-
             context 'and now it is in the past' do
               context 'related balances change' do
                 before { subject }
 
-                it { expect(existing_balances.pluck(:being_processed).count(false)).to eq 3 }
-                it { expect(existing_balances.pluck(:being_processed).count(true)).to eq 1 }
                 it { expect(Employee::Balance.order(:effective_at).map(&:amount))
                   .to eq([1000, 4000, -1000, 2000, 100]) }
                 it { expect(Employee::Balance.order(:effective_at).pluck(:balance))

@@ -40,9 +40,7 @@ class Employee::Balance < ActiveRecord::Base
   scope :additions, -> { where(policy_credit_addition: true).order(:effective_at) }
   scope :removals, -> { Employee::Balance.joins(:balance_credit_additions).distinct }
   scope :not_removals, (lambda do
-    joins('LEFT JOIN employee_balances AS b ON
-           employee_balances.id = b.balance_credit_removal_id'
-         )
+    joins('LEFT JOIN employee_balances AS b ON employee_balances.id = b.balance_credit_removal_id')
     .distinct
     .where('b.balance_credit_removal_id IS NULL')
   end)
