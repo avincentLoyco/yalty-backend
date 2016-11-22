@@ -62,26 +62,37 @@ class CalculateEmployeeBalanceRemovalAmount
   end
 
   def time_off_in_period_end_amount
-    time_off =
-      TimeOff
+    return 0 unless time_off_in_period_end.present?
+    end_of_removal_day = (removal.effective_at + 1.day).beginning_of_day
+    end_time =
+      if time_off_in_period_end.end_time < end_of_removal_day
+        time_off_in_period_end.end_time
+      else
+        end_of_removal_day
+      end
+    time_off_in_period_end.balance(nil, end_time)
+  end
+
+  def time_off_in_period_end
+    TimeOff
       .for_employee_in_category(removal.employee_id, removal.time_off_category_id)
       .where(
         'start_time <= ? AND end_time > ?',
         removal.effective_at.end_of_day, removal.effective_at)
       .first
-    return 0 unless time_off.present?
-    end_of_removal_day = (removal.effective_at + 1.day).beginning_of_day
-    end_time = time_off.end_time < end_of_removal_day ? time_off.end_time : end_of_removal_day
-    time_off.balance(nil, end_time)
   end
 
   def previous_balance
-    previous = RelativeEmployeeBalancesFinder.new(removal).previous_balances.last
-    return 0 unless previous
-    if previous.time_off_id.present?
-      previous.balance
+    previous_balances = RelativeEmployeeBalancesFinder.new(removal).previous_balances
+    return 0 unless previous_balances.last.present?
+    if previous_balances.last.time_off_id.present? || time_off_in_period_end.blank?
+      previous_balances.last.balance
     else
-      previous.balance - previous.related_amount
+      related_amount_sum =
+        previous_balances
+        .where('effective_at >= ?', time_off_in_period_end.start_time)
+        .map(&:related_amount).sum
+      previous_balances.last.balance - related_amount_sum
     end
   end
 
