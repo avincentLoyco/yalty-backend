@@ -12,8 +12,7 @@ class CalculatePeriodOverview
     negative_amounts =
       negative_amounts_between(
         @period[:start_date],
-        end_date_for_negative_values,
-        @period[:end_date]
+        end_date_for_negative_values
       )
     amount_taken = @period_start_balance + negative_amounts
     amount_taken =
@@ -70,12 +69,12 @@ class CalculatePeriodOverview
   end
 
   def period_addition
-  @period_addition ||=
-    balances
-    .between(@period[:start_date], @period[:end_date])
-    .where(policy_credit_addition: true)
-    .order(:effective_at)
-    .first
+    @period_addition ||=
+      balances
+      .between(@period[:start_date], @period[:end_date])
+      .where(policy_credit_addition: true)
+      .order(:effective_at)
+      .first
   end
 
   def period_start_balance
@@ -97,7 +96,7 @@ class CalculatePeriodOverview
     additions_sum - period_addition.resource_amount
   end
 
-  def negative_amounts_between(from_date, time_offs_to_date, removals_to_date)
+  def negative_amounts_between(from_date, time_offs_to_date)
     negative_balances = balances.between(from_date, time_offs_to_date)
     if @period[:type] == 'balancer'
       negative_balances =
