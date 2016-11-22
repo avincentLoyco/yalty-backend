@@ -319,7 +319,6 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
             it { expect { subject }.to_not change { EmployeeTimeOffPolicy.count } }
             it { expect { subject }.to change { EmployeeTimeOffPolicy.exists?(latest_etop.id) } }
             it { expect { subject }.to_not change { Employee::Balance.count } }
-            it { is_expected.to have_http_status(201) }
           end
         end
 

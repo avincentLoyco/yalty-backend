@@ -34,15 +34,25 @@ class Employee::Balance < ActiveRecord::Base
   scope :employee_balances, (lambda do |employee_id, time_off_category_id|
     where(employee_id: employee_id, time_off_category_id: time_off_category_id)
   end)
+  scope :between, (lambda do |from_date, to_date|
+    where('employee_balances.effective_at BETWEEN ? and ?', from_date, to_date)
+  end)
   scope :additions, -> { where(policy_credit_addition: true).order(:effective_at) }
   scope :removals, -> { Employee::Balance.joins(:balance_credit_additions).distinct }
+  scope :not_removals, (lambda do
+    joins('LEFT JOIN employee_balances AS b ON employee_balances.id = b.balance_credit_removal_id')
+    .distinct
+    .where('b.balance_credit_removal_id IS NULL')
+  end)
   scope :removal_at_date, (lambda do |employee_id, time_off_category_id, date|
     employee_balances(employee_id, time_off_category_id)
       .where("effective_at::date = to_date('#{date}', 'YYYY-MM_DD')").uniq
   end)
+
   scope :in_category, -> (category_id) { where(time_off_category_id: category_id) }
   scope :with_time_off, -> { where.not(time_off_id: nil) }
   scope :not_time_off, -> { where(time_off_id: nil) }
+  scope :from_time_offs, -> { where.not(time_off_id: nil) }
 
   def amount
     return unless resource_amount && manual_amount
