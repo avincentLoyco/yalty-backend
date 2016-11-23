@@ -20,7 +20,7 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
       create(:employee_balance_manual,
         employee: employee, time_off_category: category, validity_date: '1/4/2016',
         resource_amount: 0, manual_amount: policy_adjustment,
-        effective_at: employee_policy.effective_at + Employee::Balance::START_DATE_OR_ASSIGNATION_SECONDS,
+        effective_at: employee_policy.effective_at + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
         policy_credit_addition: true)
     end
     let(:account) { create(:account) }
