@@ -3,11 +3,12 @@ module Api::V1
     def complete
       {
         amount: resource.amount,
+        manual_amount: resource.manual_amount,
+        resource_amount: resource.resource_amount,
         balance: resource.balance,
         effective_at: resource.effective_at,
         being_processed: resource.being_processed,
         validity_date: resource.validity_date,
-        policy_credit_removal: resource.policy_credit_removal,
         policy_credit_addition: resource.policy_credit_addition
       }
         .merge(basic)
@@ -18,6 +19,8 @@ module Api::V1
       {
         amount: resource.amount,
         balance: resource.balance,
+        manual_amount: resource.manual_amount,
+        resource_amount: resource.resource_amount,
         effective_at: resource.effective_at,
         being_processed: resource.being_processed
       }

@@ -9,11 +9,15 @@ Rails.application.routes.draw do
         post '/employees', to: "employee_working_places#create"
         get '/employees', to: "employee_working_places#index"
       end
+      resources :employee_working_places, only: [:update, :destroy]
+      resources :employee_time_off_policies, only: [:update, :destroy]
+      resources :employee_presence_policies, only: [:update, :destroy]
       resources :holiday_policies, except: [:edit, :new]
       resources :countries, only: [:show]
       resource :settings, only: [:show, :update]
       resources :employee_attribute_definitions
       resources :employees, only: [:index, :show] do
+        get 'employee_balance_overview', to: 'employee_balance_overviews#show'
         resources :employee_events, only: :index
         resources :employee_balances, only: :index
         post '/working_times', to: 'registered_working_times#create'
@@ -64,11 +68,14 @@ Rails.application.routes.draw do
     end
 
     post 'newsletters', to: 'newsletters#create'
+    post 'referrals',   to: 'referrals#create'
   end
 
   # ADMIN
   constraints subdomain: /^admin/ do
-    mount ResqueWeb::Engine => '/resque'
+    require 'sidekiq/web'
+    mount Sidekiq::Web => '/sidekiq'
+    get 'referrals/referrers', to: 'referrals#referrers_csv', defaults: { format: :csv }
   end
 
   # Catch all invalid routings

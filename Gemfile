@@ -2,25 +2,26 @@ source 'https://rubygems.org'
 
 ruby '2.2.2'
 
-gem 'rails',              '4.2.5.1'
-gem 'pg',                 '~> 0.18.4'
-gem 'bcrypt',             '~> 3.1.10'
-gem 'rack-cors',          '~> 0.4.0', require: 'rack/cors'
-gem 'doorkeeper',         '~> 3.1.0'
-gem 'virtus',             '~> 1.0.5'
-gem 'request_store',      '~> 1.3.0'
-gem 'scenic',             '~> 1.1.0'
-gem 'countries',          '~> 1.2.5'
-gem 'holidays',           '~> 4.0'
-gem 'dry-validation',     '~> 0.9.2'
-gem 'newrelic_rpm',       '~> 3.14.2'
-gem 'resque',             '~> 1.25.2'
-gem 'resque-web',         '~> 0.0.7', require: 'resque_web'
-gem 'tod',                '~> 2.0.2'
-gem 'cancancan',          '~> 1.13.1'
-gem 'intercom',           '~> 3.3.0'
-gem 'resque-scheduler',   '~> 4.0.0'
-gem 'active_scheduler',   '~> 0.0.3'
+gem 'rails',                '4.2.7.1'
+gem 'pg',                   '~> 0.18.4'
+gem 'bcrypt',               '~> 3.1.10'
+gem 'rack-cors',            '~> 0.4.0', require: 'rack/cors'
+gem 'doorkeeper',           '~> 4.2.0'
+gem 'virtus',               '~> 1.0.5'
+gem 'request_store',        '~> 1.3.0'
+gem 'scenic',               '~> 1.1.0'
+gem 'countries',            '~> 1.2.5'
+gem 'holidays',             '~> 4.0'
+gem 'dry-validation',       '~> 0.9.2'
+gem 'newrelic_rpm',         '~> 3.14.2'
+gem 'tod',                  '~> 2.0.2'
+gem 'cancancan',            '~> 1.13.1'
+gem 'intercom',             '~> 3.3.0'
+gem 'ar_after_transaction', '~> 0.4.0'
+
+# background jobs
+gem 'sidekiq',              '~> 4.2.3'
+gem 'sidekiq-scheduler',    '~> 2.0.19'
 
 # Production environment dependencies
 group :production, :staging, :review do
@@ -61,7 +62,7 @@ group :test do
   gem 'database_cleaner'
   gem 'fantaskspec'
   gem 'fakeredis', '~> 0.5.0'
-  gem 'resque_spec', '~> 0.17.0'
+  gem 'rspec-sidekiq'
 end
 
 # Development environment dependencies (only)

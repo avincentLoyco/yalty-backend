@@ -11,14 +11,21 @@ class FindEmployeeBalancesToUpdate
 
   def call
     return [resource.id] if resource.last_in_category? && options[:effective_at].blank?
-    options[:effective_at] || addition_destroyed? ? all_later_balances_ids : find_balances_by_policy
+    if options[:update_all] || options[:effective_at] || addition_destroyed?
+      all_later_balances_ids
+    else
+      find_balances_by_policy
+    end
   end
 
   private
 
   def find_amount
-    if options[:amount]
-      options[:amount] - resource.amount
+    if options[:resource_amount] || options[:manual_amount]
+      new_amount = options[:resource_amount].to_i + options[:manual_amount].to_i
+
+      return 0 if new_amount > resource.amount && new_amount <= 0
+      new_amount - resource.amount
     else
       resource.amount
     end
@@ -62,32 +69,33 @@ class FindEmployeeBalancesToUpdate
   end
 
   def no_removals_or_removals_bigger_than_amount?
-    options[:amount] && options[:amount] > 0 && resource.validity_date.blank? ||
-      resource.current_or_next_period && active_balances_with_removals.blank? ||
+    amounts_bigger_than_zero? && resource.validity_date.blank? ||
       next_removals_smaller_than_amount? || active_balances_with_removals.blank?
   end
 
-  def active_balances
-    related_balances.where('effective_at < ? AND validity_date > ?', effective_at, effective_at)
+  def amounts_bigger_than_zero?
+    options[:resource_amount].to_i + options[:manual_amount].to_i > 0
   end
 
   def active_balances_with_removals
-    balance_additions_ids =
-      related_balances
-      .where(balance_credit_addition_id: active_balances.pluck(:id))
-      .pluck(:balance_credit_addition_id)
-
-    related_balances.where(id: balance_additions_ids)
+    related_balances
+      .where(
+        'effective_at < ? AND validity_date > ? AND balance_credit_removal_id IS NOT NULL',
+        effective_at, effective_at
+      )
   end
 
   def next_removals_smaller_than_amount?
     return true unless active_balances_with_removals.present?
-    active_balances_with_removals.pluck(:amount).sum < amount.try(:abs).to_i
+    active_balances_with_removals.map(&:amount).sum < amount.try(:abs).to_i
   end
 
   def ids_to_removal
-    removals = related_balances.where(balance_credit_addition_id: active_balances.pluck(:id))
-                               .order(effective_at: :asc)
+    removals =
+      related_balances
+      .where(id: active_balances_with_removals.pluck(:balance_credit_removal_id).uniq)
+      .order(effective_at: :asc)
+
     operation_amount = amount
     ids_till_removal = []
 

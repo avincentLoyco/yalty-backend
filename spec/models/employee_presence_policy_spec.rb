@@ -14,14 +14,30 @@ RSpec.describe EmployeePresencePolicy, type: :model do
   it { is_expected.to have_db_index([:employee_id, :presence_policy_id, :effective_at]).unique }
 
   describe 'validations' do
+    context '#effective_at_cannot_be_before_hired_date' do
+      let(:employee) { create(:employee) }
+      subject(:create_invalid_epp) do
+        create(
+          :employee_presence_policy,
+          employee: employee,
+          effective_at: employee.events.last.effective_at - 5.days
+        )
+      end
+
+      it do
+        expect { create_invalid_epp }.to raise_error(
+          ActiveRecord::RecordInvalid,
+          'Validation failed: Effective at can\'t be set before employee hired date'
+        )
+      end
+    end
+
     context '#no_balances_after_effective_at' do
       let(:employee) { create(:employee, created_at: Time.now - 12.years) }
       let!(:policy) { create(:time_off_policy, time_off_category: category) }
       let(:category) { create(:time_off_category, account_id: employee.account_id) }
       let(:balance) { time_off.employee_balance }
-      let(:time_off) do
-        create(:time_off, employee: employee, time_off_category: category)
-      end
+      let(:time_off) { create(:time_off, employee: employee, time_off_category: category) }
       let(:new_policy) do
         build(:employee_presence_policy,
           employee: balance.employee,
@@ -44,9 +60,8 @@ RSpec.describe EmployeePresencePolicy, type: :model do
 
         before { balance.update_attribute(:effective_at, effective_at) }
 
-        it { expect(subject.valid?).to eq false }
-        it { expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
-          .to include('Employee balance after effective at already exists') }
+        it { expect(subject.valid?).to eq true }
+        it { expect { subject.valid? }.to_not change { subject.errors.messages.count } }
       end
     end
   end

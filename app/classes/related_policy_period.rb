@@ -40,19 +40,43 @@ class RelatedPolicyPeriod
   end
 
   def last_validity_date
-    return nil unless end_month && end_day && years_to_effect
+    return unless end_month && end_day && years_to_effect
     Date.new(last_start_date.year + years_to_effect, end_month, end_day)
   end
 
   def first_validity_date
-    return nil unless end_month && end_day && years_to_effect
+    return unless end_month && end_day && years_to_effect
     Date.new(first_start_date.year + years_to_effect, end_month, end_day)
   end
 
   def validity_date_for(date)
-    return nil unless end_day && end_month && years_to_effect
-    validity_date = Date.new(date.year + years_to_effect, end_month, end_day)
+    return unless end_day && end_month && years_to_effect
+    validity_date =
+      Date.new(date.year + years_to_effect, end_month, end_day) + Employee::Balance::REMOVAL_SECONDS
+    validity_date += 1.year if validity_date < date
+    return validity_date if (date.month <= end_month && date.day <= end_day) || years_to_effect == 0
+    validity_date + 1.year
+  end
 
-    validity_date < date ? validity_date + 1.year : validity_date
+  def validity_date_for_balance_at(date)
+    return unless end_date?
+    validity_date =
+      if previous_addition(date)
+        previous_addition(date).validity_date
+      else
+        related_policy.policy_assignation_balance.validity_date
+      end
+    validity_date >= date ? validity_date : validity_date_for(date)
+  end
+
+  def previous_addition(date)
+    related_policy
+      .employee_balances.additions.where('effective_at < ?', date)
+      .order(:effective_at)
+      .last
+  end
+
+  def end_date?
+    time_off_policy.end_day.present? && time_off_policy.end_month.present?
   end
 end

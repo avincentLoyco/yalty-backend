@@ -69,14 +69,6 @@ class Employee < ActiveRecord::Base
     assigned_time_off_policies_in_category(category_id, date).first
   end
 
-  def active_presence_policy(date = Time.zone.today)
-    PresencePolicy.active_for_employee(id, date)
-  end
-
-  def active_holiday_policy_at(date)
-    active_working_place_at(date).holiday_policy
-  end
-
   def active_working_place_at(date = Time.zone.today)
     WorkingPlace.active_for_employee(id, date)
   end

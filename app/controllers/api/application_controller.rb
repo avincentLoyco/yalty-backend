@@ -33,14 +33,6 @@ class API::ApplicationController < ApplicationController
       ::Api::V1::ErrorsRepresenter.new(nil, message: 'User unauthorized').complete, status: 401
   end
 
-  def assign_collection(resource, collection, collection_name)
-    AssignCollection.new(resource, collection, collection_name).call
-  end
-
-  def assign_member(resource, member, member_name)
-    AssignMember.new(resource, member, member_name).call
-  end
-
   def update_affected_balances(presence_policy, employees = [])
     UpdateAffectedEmployeeBalances.new(presence_policy, employees).call
   end
@@ -57,8 +49,19 @@ class API::ApplicationController < ApplicationController
     RelativeEmployeeBalancesFinder.new(resource).next_balance
   end
 
-  def create_join_table(join_table_class, resource_class, attributes)
-    CreateJoinTableService.new(join_table_class, resource_class, attributes).call
+  def create_or_update_join_table(resource_class, attributes, resource = nil)
+    CreateOrUpdateJoinTable.new(
+      controller_name.classify.constantize, resource_class, attributes, resource
+    ).call
+  end
+
+  def destroy_join_tables_with_duplicated_resources
+    employee_collection = resource.employee.send(resource.class.model_name.plural)
+    related_resource = resource.send(resource.class.model_name.element.gsub('employee_', ''))
+
+    FindSequenceJoinTableInTime.new(
+      employee_collection, nil, related_resource, resource
+    ).call.map(&:destroy!)
   end
 
   def resources_with_effective_till(join_table, join_table_id, related_id = nil, employee_id = nil)
@@ -74,6 +77,15 @@ class API::ApplicationController < ApplicationController
     ActiveAndInactiveJoinTableFinders
       .new(resource_class, join_table_class, Account.current.id)
       .send(status)
+  end
+
+  def find_and_update_balances(join_table, attributes = {}, previous_effective_at = nil,
+    resource = nil)
+
+    new_effective_at = attributes[:effective_at] || join_table.effective_at
+    FindAndUpdateEmployeeBalancesForJoinTables.new(
+      join_table, new_effective_at.to_date, previous_effective_at, resource
+    ).call
   end
 
   def transactions
@@ -92,5 +104,10 @@ class API::ApplicationController < ApplicationController
                end
 
     render options.merge(json: response)
+  end
+
+  def render_join_table(resource, status)
+    return render_resource(resource, status: status) unless status.eql?(205)
+    head :reset_content
   end
 end

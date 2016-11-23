@@ -92,26 +92,65 @@ RSpec.describe FindEmployeeBalancesToUpdate, type: :service do
     end
 
     context 'when amount option send and resource in previous period' do
+      before do
+        allow_any_instance_of(TimeOff).to receive(:balance) { -500 }
+        previous_balance.update!(manual_amount: -400)
+        previous_removal.update!(resource_amount: -100)
+      end
       let(:resource) { previous_balance }
 
-      context 'when new amount bigger than removal' do
-        let(:options) { { amount: -900 } }
+      context 'when new amount smaller than removal' do
+        let(:options) { { manual_amount: -300, resource_amount: -500 } }
 
         it { expect(subject).to include(previous_balance.id, previous_removal.id) }
         it { expect(subject).to_not include(balance_add.id) }
+
+        context 'but option update all was given' do
+          before { options.merge!(update_all: true) }
+
+          it do
+            expect(subject).to include(previous_balance.id, previous_removal.id, balance_add.id)
+          end
+        end
+
+        context 'and previous amount eq removal amount' do
+          before do
+            previous_balance.update!(manual_amount: -500)
+            previous_removal.update!(resource_amount: 0)
+          end
+
+          it { expect(subject).to include(previous_balance.id, previous_removal.id) }
+          it { expect(subject).to_not include(balance_add.id) }
+        end
+
+        context 'when one amount instead of two given' do
+          let(:options) { { manual_amount: -300 } }
+
+          it { expect(subject).to include(previous_balance.id, previous_removal.id) }
+          it { expect(subject).to_not include(balance_add.id) }
+        end
       end
 
       context 'when new amount eq removal' do
-        let(:options) { { amount: -1000 } }
+        let(:options) { { manual_amount: -500, resource_amount: -500 } }
 
         it { expect(subject).to include(previous_balance.id, previous_removal.id) }
         it { expect(subject).to_not include(balance_add.id) }
       end
 
       context 'when new amount smaller than removal' do
-        let(:options) { { amount: -1100 } }
+        let(:options) { { manual_amount: -600, resource_amount: -500 } }
 
         it { expect(subject).to include(previous_balance.id, previous_removal.id, balance_add.id) }
+
+        context 'and previous amount eq removal amount' do
+          before do
+            previous_balance.update!(manual_amount: -500)
+            previous_removal.update!(resource_amount: 0)
+          end
+
+          it { expect(subject).to include(previous_balance.id, previous_removal.id, balance_add.id) }
+        end
       end
     end
   end

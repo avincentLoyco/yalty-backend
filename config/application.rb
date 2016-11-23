@@ -7,7 +7,8 @@ require 'active_job/railtie'
 require 'active_record/railtie'
 require 'action_controller/railtie'
 require 'action_mailer/railtie'
-require "action_view/railtie"
+require 'action_view/railtie'
+require 'csv'
 # require "sprockets/railtie"
 # require "rails/test_unit/railtie"
 
@@ -51,6 +52,8 @@ module Yalty
     config.middleware.insert_after('MaintenanceModeMiddleware', 'CurrentUserMiddleware')
     # Set current account
     config.middleware.insert_after('CurrentUserMiddleware', 'CurrentAccountMiddleware')
+    # Remove Content-Type header in response with status 205
+    config.middleware.use('RemoveContentTypeHeader')
 
     # CORS configuration
     config.middleware.insert_before 0, 'Rack::Cors', debug: !Rails.env.production?, logger: (-> { Rails.logger }) do
@@ -92,7 +95,7 @@ module Yalty
     }
 
     # Active Job adapter
-    config.active_job.queue_adapter = :resque
+    config.active_job.queue_adapter = :sidekiq
   end
 
   #

@@ -6,8 +6,6 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
 
   before do
     time_off_category.update!(account: Account.current)
-    create(:presence_day, order: 7, presence_policy: policy)
-    EmployeePresencePolicy.first.update!(order_of_start_day: 5)
   end
 
   let(:policy) { create(:presence_policy, :with_presence_day, account: Account.current) }
@@ -16,8 +14,12 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
       presence_policy: policy
     )
   end
-  let(:time_off_category) do
-    employee.employee_time_off_policies.first.time_off_policy.time_off_category
+  let(:employee_time_off_policy) { employee.employee_time_off_policies.first }
+  let(:time_off_category) { employee_time_off_policy.time_off_policy.time_off_category }
+  let!(:assignation_balance) do
+    create(:employee_balance_manual, effective_at: employee_time_off_policy.effective_at,
+      time_off_category: time_off_category, employee: employee,
+      resource_amount: 0, manual_amount: 0)
   end
   let!(:time_off) do
     create(:time_off, time_off_category_id: time_off_category.id, employee: employee)
@@ -121,8 +123,8 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
   end
 
   describe 'POST #create' do
-    before { Employee::Balance.destroy_all }
-
+    before { Employee::Balance.where.not(id: assignation_balance.id).destroy_all }
+    let(:time_off) { nil }
     let(:start_time) { '2016-10-11T13:00:00'  }
     let(:end_time) { '2016-10-18T15:00:00' }
     let(:employee_id) { employee.id }
@@ -165,6 +167,19 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
         it { expect_json_keys([:id, :type, :employee, :time_off_category, :start_time, :end_time]) }
       end
 
+      context 'with manual_amount' do
+        let(:params_with_manual_amount) { params.merge!(manual_amount: 200) }
+        subject(:create_with_manual_amount) { post :create, params_with_manual_amount }
+
+        it { expect { create_with_manual_amount }.to change { TimeOff.count }.by(1) }
+        it { expect { create_with_manual_amount }.to change { Employee::Balance.count }.by(1) }
+
+        it 'properly assigns manual_amount' do
+          create_with_manual_amount
+          expect(Employee::Balance.order(:effective_at).last.manual_amount).to eq(200)
+        end
+      end
+
       context 'when time off has time entries in its period' do
         let(:first_day) { create(:presence_day, order: 5, presence_policy: policy) }
         let(:second_day) { create(:presence_day, order: 2, presence_policy: policy) }
@@ -179,9 +194,27 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
         it { is_expected.to have_http_status(201) }
 
         context 'new employee balance amount' do
+          before do
+            create(:presence_day, order: 7, presence_policy: policy)
+            EmployeePresencePolicy.first.update!(order_of_start_day: 5)
+            subject
+          end
+          it { expect(Employee::Balance.order(:effective_at).last.amount).to eq (-480) }
+        end
+      end
+
+      context 'when employee does not have employee presence policy' do
+        before { EmployeePresencePolicy.destroy_all }
+
+        it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+        it { expect { subject }.to change { TimeOff.count }.by(1) }
+
+        it { is_expected.to have_http_status(201) }
+
+        context 'new employee balance amount' do
           before { subject }
 
-          it { expect(Employee::Balance.last.amount).to eq -480 }
+          it { expect(Employee::Balance.last.amount).to eq 0 }
         end
       end
     end
@@ -266,6 +299,22 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
       it { expect { subject }.to change { employee_balance.reload.being_processed } }
 
       it { is_expected.to have_http_status(204) }
+
+      context 'with manual_amount' do
+        let(:params_with_manual_amount) { params.merge!(manual_amount: 200) }
+        subject(:update_with_manual_amount) { put :update, params_with_manual_amount }
+
+        before do
+          ActiveJob::Base.queue_adapter = :inline
+          update_with_manual_amount
+        end
+
+        after { ActiveJob::Base.queue_adapter = :sidekiq }
+
+        it do
+          expect(employee_balance.reload.manual_amount).to eq(200)
+        end
+      end
     end
 
     context 'with invalid params' do

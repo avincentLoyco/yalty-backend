@@ -120,7 +120,6 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
       subject { post :create, valid_data_json }
 
       it { expect { subject }.to change { PresencePolicy.count }.by(1) }
-      it { expect { subject }.to change { PresenceDay.where(order: 7).count }.by(1) }
 
       context 'response' do
         before { subject }
@@ -158,7 +157,7 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
           before { days_params.pop }
 
           it { expect { subject }.to change { PresencePolicy.count }.by(1) }
-          it { expect { subject }.to change { PresenceDay.count }.by(2) }
+          it { expect { subject }.to change { PresenceDay.count }.by(1) }
           it { expect { subject }.to change { TimeEntry.count }.by(1) }
 
           it { is_expected.to have_http_status(201) }
@@ -234,6 +233,20 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
         it { is_expected.to have_http_status(204) }
       end
 
+      context 'and the policy is already assigned to an employee' do
+        before do
+          presence_policy.update!(presence_days: [create(:presence_day)])
+          create(:employee_presence_policy,
+            employee: first_employee,
+            presence_policy: presence_policy
+          )
+        end
+
+        it { is_expected.to have_http_status(423) }
+        it { expect { subject }.to_not change { presence_policy.reload.name } }
+        it { expect { subject }.to_not change { presence_policy.reload.presence_days.count } }
+      end
+
       context 'it does not overwrite records when do not send' do
         let(:policy_params) {{ name: 'test', id: presence_policy.id }}
         subject { put :update, policy_params }
@@ -297,7 +310,7 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
       it { expect { subject }.to change { PresencePolicy.count }.by(-1) }
       it { is_expected.to have_http_status(204) }
 
-      context 'if it has an employee associated' do
+      context 'and the policy is already assigned to an employee' do
         before { presence_policy.update!(presence_days: [create(:presence_day)]) }
         let(:employee) { create(:employee, account: account) }
         let!(:epp) do
@@ -312,8 +325,9 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
         let!(:presence_day) do
           create(:presence_day, presence_policy: presence_policy)
         end
-        it { is_expected.to have_http_status(423) }
-        it { expect { subject }.to_not change { PresencePolicy.count } }
+        it { is_expected.to have_http_status(204) }
+        it { expect { subject }.to change {PresencePolicy.count}.by(-1) }
+        it { expect { subject }.to change {PresenceDay.count}.by(-1) }
       end
     end
 

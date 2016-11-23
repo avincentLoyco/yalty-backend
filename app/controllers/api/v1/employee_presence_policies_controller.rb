@@ -2,24 +2,46 @@ module API
   module V1
     class EmployeePresencePoliciesController < ApplicationController
       include EmployeePresencePoliciesSchemas
-
-      def create
-        verified_dry_params(dry_validation_schema) do |attributes|
-          authorize! :create, presence_policy
-          resource = create_join_table(EmployeePresencePolicy, PresencePolicy, attributes)
-          render_resource(resource, status: 201)
-        end
-      end
+      include EmployeeBalancesPresenceVerification
 
       def index
         authorize! :index, presence_policy
         render_resource(resources)
       end
 
+      def create
+        verified_dry_params(dry_validation_schema) do |attributes|
+          authorize! :create, presence_policy
+          response = create_or_update_join_table(PresencePolicy, attributes)
+          find_and_update_balances(response[:result], attributes)
+          render_join_table(response[:result], response[:status])
+        end
+      end
+
+      def update
+        verified_dry_params(dry_validation_schema) do |attributes|
+          authorize! :update, resource
+          previous_date = resource.effective_at
+          response = create_or_update_join_table(PresencePolicy, attributes, resource)
+          find_and_update_balances(resource, attributes, previous_date)
+          render_join_table(response[:result], response[:status])
+        end
+      end
+
+      def destroy
+        authorize! :destroy, resource
+        transactions do
+          resource.destroy!
+          destroy_join_tables_with_duplicated_resources
+          find_and_update_balances(resource)
+        end
+        render_no_content
+      end
+
       private
 
-      def employee
-        @employee ||= Account.current.employees.find(params[:id])
+      def resource
+        @resource ||= Account.current.employee_presence_policies.find(params[:id])
       end
 
       def presence_policy

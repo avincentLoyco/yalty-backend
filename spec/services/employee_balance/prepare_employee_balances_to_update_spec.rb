@@ -6,9 +6,13 @@ RSpec.describe PrepareEmployeeBalancesToUpdate, type: :service do
   before { allow_any_instance_of(FindEmployeeBalancesToUpdate).to receive(:call) { balances } }
   subject { PrepareEmployeeBalancesToUpdate.new(resource).call }
 
-  let(:resource) { create(:employee_balance) }
-  let(:time_off) { create(:time_off, employee_balance: balance) }
-  let(:employee_balance) { create(:employee_balance) }
+  let!(:resource) { create(:employee_balance) }
+  let!(:employee_balance) { create(:employee_balance) }
+  let(:time_off) do
+    create(:time_off,
+      employee_balance: balance, employee: balance.employee,
+      time_off_category: balance.time_off_category)
+  end
 
   context 'when resource has time off' do
     let(:balance) { resource }

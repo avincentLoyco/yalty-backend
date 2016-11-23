@@ -95,13 +95,13 @@ RSpec.describe RelatedPolicyPeriod do
           context 'when years to effect eqal 0' do
             let(:years_to_effect) { 0 }
 
-            it { expect(subject).to eq '01/04/2006'.to_date }
+            it { expect(subject).to eq(Time.zone.parse('01/04/2006 00:00:03')) }
           end
 
           context 'when years to effect equal 1 or more' do
             let(:years_to_effect) { 1 }
 
-            it { expect(subject).to eq '01/04/2007'.to_date }
+            it { expect(subject).to eq(Time.zone.parse('01/04/2007 00:00:03')) }
           end
         end
 
@@ -117,16 +117,50 @@ RSpec.describe RelatedPolicyPeriod do
           context 'when years to effect eqal 0' do
             let(:years_to_effect) { 0 }
 
-            it { expect(subject).to eq '1/4/2007'.to_date }
+            it { expect(subject).to eq(Time.zone.parse('1/4/2007 00:00:03')) }
           end
 
-          context 'when years to effect equal 1 or more' do
+          context 'when years to effect equal 1' do
             let(:years_to_effect) { 1 }
 
-            it { expect(subject).to eq '1/4/2007'.to_date }
+            it { expect(subject).to eq(Time.zone.parse('1/4/2008 00:00:03')) }
+          end
+
+          context 'when years to effect equal 2 or more' do
+            let(:years_to_effect) { 2 }
+
+            it { expect(subject).to eq(Time.zone.parse('1/4/2009 00:00:03')) }
           end
         end
+      end
 
+      context '.validity_date_for_balance_at' do
+        before { time_off_policy.update!(end_day: 1, end_month: 4) }
+
+        subject { RelatedPolicyPeriod.new(related_policy).validity_date_for_balance_at(date) }
+        let!(:related_policy) do
+          create(:employee_time_off_policy, :with_employee_balance,
+            time_off_policy: time_off_policy,
+            effective_at: 2.years.ago
+          )
+        end
+        let!(:policy_addition) do
+          create(:employee_balance_manual, time_off_category: time_off_policy.time_off_category,
+            effective_at: '1/1/2015', validity_date: Time.zone.parse('1/4/2016 00:00:03'),
+            employee: related_policy.employee)
+        end
+
+        context 'when there is only assignation balance before the given date' do
+          let(:date) { related_policy.effective_at + 5.months }
+
+          it { expect(subject).to eq related_policy.policy_assignation_balance.validity_date }
+        end
+
+        context 'when there are policy additions before date' do
+          let(:date) { '1/6/2015' }
+
+          it { expect(subject).to eq policy_addition.validity_date }
+        end
       end
 
       context 'effective_at later than start date' do

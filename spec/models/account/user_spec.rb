@@ -80,6 +80,17 @@ RSpec.describe Account::User, type: :model do
     expect { second_user.save }.to change { second_user.errors.messages[:reset_password_token] }
   end
 
+  describe 'referrer' do
+    let(:user) { build(:account_user) }
+    subject(:create_user) { user.save! }
+
+    it { expect { create_user }.to change(Referrer, :count).by(1) }
+    it do
+      create_user
+      expect(user.reload.referrer).to be_a(Referrer)
+    end
+  end
+
   describe 'intercom integration' do
     include_context 'shared_context_intercom_attributes'
     let(:account) { user.account }

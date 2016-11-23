@@ -112,7 +112,8 @@ CREATE TABLE accounts (
     default_locale character varying DEFAULT 'en'::character varying,
     timezone character varying,
     holiday_policy_id uuid,
-    id uuid DEFAULT uuid_generate_v4() NOT NULL
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    referred_by character varying
 );
 
 
@@ -196,8 +197,8 @@ CREATE VIEW employee_attributes AS
 
 CREATE TABLE employee_balances (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
-    balance integer DEFAULT 0,
-    amount integer DEFAULT 0,
+    balance integer DEFAULT 0 NOT NULL,
+    resource_amount integer DEFAULT 0 NOT NULL,
     time_off_id uuid,
     employee_id uuid NOT NULL,
     time_off_category_id uuid NOT NULL,
@@ -206,10 +207,10 @@ CREATE TABLE employee_balances (
     being_processed boolean DEFAULT false,
     effective_at timestamp without time zone,
     validity_date timestamp without time zone,
-    policy_credit_removal boolean DEFAULT false,
     policy_credit_addition boolean DEFAULT false,
-    balance_credit_addition_id uuid,
-    reset_balance boolean DEFAULT false
+    reset_balance boolean DEFAULT false,
+    manual_amount integer DEFAULT 0 NOT NULL,
+    balance_credit_removal_id uuid
 );
 
 
@@ -222,7 +223,9 @@ CREATE TABLE employee_presence_policies (
     employee_id uuid NOT NULL,
     presence_policy_id uuid NOT NULL,
     effective_at date NOT NULL,
-    order_of_start_day integer DEFAULT 1 NOT NULL
+    order_of_start_day integer DEFAULT 1 NOT NULL,
+    created_at timestamp without time zone,
+    updated_at timestamp without time zone
 );
 
 
@@ -235,7 +238,9 @@ CREATE TABLE employee_time_off_policies (
     employee_id uuid NOT NULL,
     time_off_policy_id uuid NOT NULL,
     effective_at date NOT NULL,
-    time_off_category_id uuid
+    time_off_category_id uuid,
+    created_at timestamp without time zone,
+    updated_at timestamp without time zone
 );
 
 
@@ -247,7 +252,9 @@ CREATE TABLE employee_working_places (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
     employee_id uuid NOT NULL,
     working_place_id uuid NOT NULL,
-    effective_at date NOT NULL
+    effective_at date NOT NULL,
+    created_at timestamp without time zone,
+    updated_at timestamp without time zone
 );
 
 
@@ -422,6 +429,19 @@ CREATE TABLE presence_policies (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
     account_id uuid NOT NULL,
     name character varying,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL
+);
+
+
+--
+-- Name: referrers; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE referrers (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    email character varying NOT NULL,
+    token character varying NOT NULL,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL
 );
@@ -697,6 +717,14 @@ ALTER TABLE ONLY presence_policies
 
 
 --
+-- Name: referrers_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY referrers
+    ADD CONSTRAINT referrers_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: registered_working_times_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -815,10 +843,10 @@ CREATE INDEX index_employee_attribute_versions_on_employee_id ON employee_attrib
 
 
 --
--- Name: index_employee_balances_on_balance_credit_addition_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_employee_balances_on_balance_credit_removal_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
-CREATE INDEX index_employee_balances_on_balance_credit_addition_id ON employee_balances USING btree (balance_credit_addition_id);
+CREATE INDEX index_employee_balances_on_balance_credit_removal_id ON employee_balances USING btree (balance_credit_removal_id);
 
 
 --
@@ -899,6 +927,13 @@ CREATE UNIQUE INDEX index_employee_presence_policy_effective_at ON employee_pres
 
 
 --
+-- Name: index_employee_time_off_category_effective_at; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE UNIQUE INDEX index_employee_time_off_category_effective_at ON employee_time_off_policies USING btree (employee_id, time_off_category_id, effective_at);
+
+
+--
 -- Name: index_employee_time_off_policies_on_employee_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -910,13 +945,6 @@ CREATE INDEX index_employee_time_off_policies_on_employee_id ON employee_time_of
 --
 
 CREATE INDEX index_employee_time_off_policies_on_time_off_policy_id ON employee_time_off_policies USING btree (time_off_policy_id);
-
-
---
--- Name: index_employee_time_off_policy_effective_at; Type: INDEX; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE UNIQUE INDEX index_employee_time_off_policy_effective_at ON employee_time_off_policies USING btree (employee_id, time_off_policy_id, effective_at);
 
 
 --
@@ -994,6 +1022,13 @@ CREATE INDEX index_presence_days_on_presence_policy_id ON presence_days USING bt
 --
 
 CREATE INDEX index_presence_policies_on_account_id ON presence_policies USING btree (account_id);
+
+
+--
+-- Name: index_referrers_on_email; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE INDEX index_referrers_on_email ON referrers USING btree (email);
 
 
 --
@@ -1505,4 +1540,26 @@ INSERT INTO schema_migrations (version) VALUES ('20160721122247');
 INSERT INTO schema_migrations (version) VALUES ('20160725134153');
 
 INSERT INTO schema_migrations (version) VALUES ('20160921075423');
+
+INSERT INTO schema_migrations (version) VALUES ('20160922144502');
+
+INSERT INTO schema_migrations (version) VALUES ('20160923122718');
+
+INSERT INTO schema_migrations (version) VALUES ('20160924112602');
+
+INSERT INTO schema_migrations (version) VALUES ('20160925084714');
+
+INSERT INTO schema_migrations (version) VALUES ('20161003103437');
+
+INSERT INTO schema_migrations (version) VALUES ('20161005123445');
+
+INSERT INTO schema_migrations (version) VALUES ('20161005143927');
+
+INSERT INTO schema_migrations (version) VALUES ('20161006062757');
+
+INSERT INTO schema_migrations (version) VALUES ('20161006114700');
+
+INSERT INTO schema_migrations (version) VALUES ('20161108075746');
+
+INSERT INTO schema_migrations (version) VALUES ('20161117124026');
 

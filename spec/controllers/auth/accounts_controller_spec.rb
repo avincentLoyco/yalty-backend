@@ -57,9 +57,60 @@ RSpec.describe Auth::AccountsController, type: :controller do
           expect(ActionMailer::Base.deliveries.last.body).to match(/password: .+/i)
         end
       end
-    end
+
+      context 'with referred_by key' do
+        let!(:referrer_1) { create(:referrer, email: 'test@test.com') }
+        let!(:referrer_2) { create(:referrer, email: 'not_test@example.com') }
+        before { params[:account][:referred_by] = referrer_2.token }
+        it { expect { subject }.to change(referrer_2.referred_accounts, :count).by(1) }
+      end
+
+      context 'where Referrer does not exists' do
+        let(:user) { create(:account_user) }
+        before do
+          params[:account][:referred_by] = user.referrer.token
+          params[:user][:email] = 'someRandomEmail@random.com'
+        end
+
+        it { expect { subject }.to change(user.referrer.referred_accounts, :count).by(1) }
+        it { expect { subject }.to change(Account::User, :count).by(1) }
+        it { expect { subject }.to change(Account, :count).by(1) }
+      end
+
+      context 'with nil as referred_by key' do
+        before do
+          params[:account][:referred_by] = nil
+          params[:user][:email] = 'someRandomEmail@random.com'
+        end
+
+        it { expect { subject }.to change(Account::User, :count).by(1) }
+        it { expect { subject }.to change(Account, :count).by(1) }
+      end
+
+      context 'with empty string as referred_by key' do
+        before do
+          params[:account][:referred_by] = ''
+          params[:user][:email] = 'someRandomEmail@random.com'
+        end
+
+        it { expect { subject }.to change(Account::User, :count).by(1) }
+        it { expect { subject }.to change(Account, :count).by(1) }
+      end
+     end
 
     context 'with invalid params' do
+      context 'with own referral token' do
+        let(:user) { create(:account_user) }
+        before do
+          params[:account][:referred_by] = user.referrer.token
+          params[:user][:email] = user.email
+          subject
+        end
+
+        it { expect(response.status).to eq(422) }
+        it { expect(response.body).to include('can\'t use own referral token') }
+      end
+
       context 'when params are missing' do
         shared_examples 'Missing param' do
           it { expect { subject }.to_not change { Account.count } }

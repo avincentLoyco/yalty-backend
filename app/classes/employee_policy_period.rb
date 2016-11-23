@@ -5,14 +5,16 @@ class EmployeePolicyPeriod
     @employee = employee
     @time_off_category_id = time_off_category_id
     @active_related_policy = employee.active_policy_in_category_at_date(time_off_category_id)
-    @active_policy_period = RelatedPolicyPeriod.new(active_related_policy)
+    @active_policy_period = find_active_policy_period
   end
 
   def previous_policy_period
+    return unless active_policy_period.present?
     (previous_start_date...current_start_date)
   end
 
   def current_policy_period
+    return unless active_policy_period.present?
     (current_start_date...next_start_date)
   end
 
@@ -21,6 +23,7 @@ class EmployeePolicyPeriod
   end
 
   def previous_start_date
+    return unless active_policy_period.present?
     previous_start = active_policy_period.previous_start_date
     if active_related_policy.effective_at > previous_start && previous_related_policy
       RelatedPolicyPeriod.new(previous_related_policy)
@@ -31,7 +34,8 @@ class EmployeePolicyPeriod
   end
 
   def current_start_date
-    if previous_related_policy && active_policy_period.first_start_date > Time.zone.today
+    if previous_related_policy && active_policy_period &&
+        active_policy_period.first_start_date > Time.zone.today
       current_start_date_from_previous
     else
       current_start_date_from_active
@@ -39,6 +43,7 @@ class EmployeePolicyPeriod
   end
 
   def current_start_date_from_active
+    return unless active_policy_period.present?
     if active_policy_period.last_start_date <= Time.zone.today
       active_policy_period.last_start_date
     else
@@ -57,11 +62,16 @@ class EmployeePolicyPeriod
 
   def next_start_date
     next_policy_period = RelatedPolicyPeriod.new(next_related_policy) if next_related_policy
-    if next_policy_period && next_policy_period.first_start_date < active_policy_period.end_date
+    if next_policy_first_start_date?(next_policy_period)
       next_policy_period.first_start_date
     else
-      active_policy_period.end_date
+      active_policy_period.try(:end_date)
     end
+  end
+
+  def next_policy_first_start_date?(next_policy_period)
+    next_policy_period.present? && (active_policy_period.nil? || active_policy_period.present? &&
+      next_policy_period.first_start_date < active_policy_period.end_date)
   end
 
   def future_start_date
@@ -80,7 +90,7 @@ class EmployeePolicyPeriod
     if next_related_policy
       next_start_date + RelatedPolicyPeriod.new(next_related_policy).policy_length.years
     else
-      next_start_date + active_policy_period.policy_length.years
+      next_start_date + active_policy_period.try(:policy_length).to_i.years
     end
   end
 
@@ -97,5 +107,10 @@ class EmployeePolicyPeriod
   def future_related_policy
     @future_related_policy ||=
       employee.not_assigned_time_off_policies_in_category(time_off_category_id).first
+  end
+
+  def find_active_policy_period
+    return unless active_related_policy.present?
+    RelatedPolicyPeriod.new(active_related_policy)
   end
 end

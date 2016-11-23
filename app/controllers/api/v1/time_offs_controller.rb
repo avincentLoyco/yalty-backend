@@ -17,13 +17,11 @@ module API
       def create
         convert_times_to_utc
         verified_dry_params(dry_validation_schema) do |attributes|
-          resource = resources.new(time_off_attributes(attributes))
+          resource = resources.new(time_off_attributes(attributes.except(:manual_amount)))
           authorize! :create, resource
           transactions do
-            resource.save! &&
-              create_new_employee_balance(resource)
+            resource.save! && create_new_employee_balance(resource)
           end
-
           render_resource(resource, status: :created)
         end
       end
@@ -32,11 +30,10 @@ module API
         convert_times_to_utc
         verified_dry_params(dry_validation_schema) do |attributes|
           transactions do
-            resource.update!(attributes)
-            prepare_balances_to_update(resource.employee_balance, balance_attributes)
+            resource.update!(attributes.except(:manual_amount))
+            prepare_balances_to_update(resource.employee_balance, balance_attributes(attributes))
           end
-
-          update_balances_job(resource.employee_balance.id, balance_attributes)
+          update_balances_job(resource.employee_balance.id, balance_attributes(attributes))
           render_no_content
         end
       end
@@ -91,27 +88,41 @@ module API
       end
 
       def create_new_employee_balance(resource)
-        category = resource.time_off_category_id
-        employee_id = resource.employee_id
-        account = Account.current.id
-        amount = resource.balance
-        options = { time_off_id: resource.id }
-
-        CreateEmployeeBalance.new(category, employee_id, account, amount, options).call
+        CreateEmployeeBalance.new(
+          resource.time_off_category_id,
+          resource.employee_id,
+          Account.current.id,
+          time_off_id: resource.id,
+          resource_amount: resource.balance,
+          manual_amount: params[:manual_amount] || 0,
+          validity_date: find_validity_date(resource),
+          effective_at: resource.end_time
+        ).call
       end
 
       def resource_representer
         ::Api::V1::TimeOffsRepresenter
       end
 
-      def balance_attributes
-        { amount: resource.balance, effective_at: resource.start_time.to_s }
+      def balance_attributes(verified_params = {})
+        {
+          manual_amount: verified_params[:manual_amount] ? verified_params[:manual_amount] : 0,
+          resource_amount: resource.balance,
+          effective_at: resource.end_time.to_s
+        }
       end
 
       def convert_times_to_utc
         return unless params[:start_time].present? && params[:end_time].present?
         params[:start_time] = params.delete(:start_time) + '+00:00'
         params[:end_time] = params.delete(:end_time) + '+00:00'
+      end
+
+      def find_validity_date(resource)
+        active_policy =
+          employee.active_policy_in_category_at_date(time_off_category.id, resource.end_time)
+
+        RelatedPolicyPeriod.new(active_policy).validity_date_for_balance_at(resource.end_time)
       end
     end
   end

@@ -2,6 +2,7 @@ require 'employee_policy_period'
 
 class EmployeeTimeOffPolicy < ActiveRecord::Base
   include ActsAsIntercomTrigger
+  include ValidateEffectiveAtBeforeHired
 
   attr_accessor :effective_till
 
@@ -10,8 +11,7 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
   belongs_to :time_off_category
 
   validates :employee_id, :time_off_policy_id, :effective_at, presence: true
-  validates :effective_at, uniqueness: { scope: [:employee_id, :time_off_policy_id] }
-  validate :no_balances_after_effective_at, on: :create, if: :time_off_policy
+  validates :effective_at, uniqueness: { scope: [:employee_id, :time_off_category_id] }
   validate :verify_not_change_of_policy_type_in_category, if: [:employee, :time_off_policy]
   before_save :add_category_id
 
@@ -22,6 +22,29 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
       .where(time_off_policies: { time_off_category_id: category_id }, employee_id: employee_id)
       .order(effective_at: :desc)
   }
+
+  def policy_assignation_balance(effective_at = self.effective_at)
+    employee
+      .employee_balances
+      .where(
+        time_off_category_id: time_off_policy.time_off_category.id,
+        time_off_id: nil
+      )
+      .where(
+        'effective_at = ?', effective_at + Employee::Balance::START_DATE_OR_ASSIGNATION_SECONDS
+      )
+      .first
+  end
+
+  def employee_balances
+    if effective_till
+      Employee::Balance.employee_balances(employee.id, time_off_category.id)
+                       .where('effective_at BETWEEN ? and ?', effective_at, effective_till)
+    else
+      Employee::Balance.employee_balances(employee.id, time_off_category.id)
+                       .where('effective_at >= ?', effective_at)
+    end
+  end
 
   def effective_till
     next_effective_at =
@@ -48,14 +71,6 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
       :policy_type,
       'The employee has an existing policy of different type in the category'
     )
-  end
-
-  def no_balances_after_effective_at
-    balances_after_effective_at =
-      Employee::Balance.employee_balances(employee_id, time_off_policy.time_off_category_id)
-                       .where('effective_at >= ?', effective_at)
-    return unless balances_after_effective_at.present?
-    errors.add(:time_off_category, 'Employee balance after effective at already exists')
   end
 
   def add_category_id

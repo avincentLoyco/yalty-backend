@@ -90,6 +90,14 @@ RSpec.describe Account, type: :model do
         account.update_default_time_off_categories!
       }.to_not change { TimeOffCategory.count }
     end
+
+    context 'doesn\'t create \'other\' category anymore' do
+      let(:account) { create(:account) }
+      let(:category_names) { account.time_off_categories.pluck(:name) }
+
+      it { expect(account.time_off_categories.count).to eq(5) }
+      it { expect(category_names).to_not include('other') }
+    end
   end
 
   context 'validations for default attribute definitions' do
@@ -171,6 +179,20 @@ RSpec.describe Account, type: :model do
     it 'returns proper data' do
       data_keys = account.intercom_data.keys + account.intercom_data[:custom_attributes].keys
       expect(data_keys).to match_array(proper_account_data_keys)
+    end
+  end
+
+  describe 'referred_by' do
+    let(:referrer) { create(:referrer, token: '1234') }
+    let(:valid_account) { build(:account, referred_by: referrer.token) }
+    let(:invalid_account) { build(:account, referred_by: '5678') }
+
+    it { expect { valid_account.save! }.not_to raise_error }
+    it do
+      expect { invalid_account.save! }.to raise_error(
+        ActiveRecord::RecordInvalid,
+        'Validation failed: Referred by must belong to existing referrer'
+      )
     end
   end
 end

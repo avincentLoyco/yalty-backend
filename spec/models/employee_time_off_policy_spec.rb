@@ -7,16 +7,35 @@ RSpec.describe EmployeeTimeOffPolicy, type: :model do
   it { is_expected.to have_db_column(:time_off_policy_id).of_type(:uuid) }
   it { is_expected.to have_db_column(:time_off_category_id).of_type(:uuid) }
   it { is_expected.to have_db_column(:effective_at).of_type(:date) }
+
   it { is_expected.to validate_presence_of(:employee_id) }
   it { is_expected.to validate_presence_of(:time_off_policy_id) }
     it { is_expected.to validate_presence_of(:effective_at) }
-  it { is_expected.to have_db_index([:time_off_policy_id, :employee_id]) }
+  it { is_expected.to have_db_index([:employee_id, :time_off_category_id, :effective_at]) }
   it '' do
-    is_expected.to have_db_index([:employee_id, :time_off_policy_id, :effective_at]).unique
+    is_expected.to have_db_index([:employee_id, :time_off_category_id, :effective_at]).unique
   end
 
   it 'the category_id must be the one to whihc the policy belongs' do
     expect(etop.time_off_category_id).to eq(etop.time_off_policy.time_off_category_id)
+  end
+
+  describe '#effective_at_cannot_be_before_hired_date' do
+    let(:employee) { create(:employee) }
+    subject(:create_invalid_etop) do
+      create(
+        :employee_time_off_policy,
+        employee: employee,
+        effective_at: employee.events.last.effective_at - 5.days
+      )
+    end
+
+    it do
+      expect { create_invalid_etop }.to raise_error(
+        ActiveRecord::RecordInvalid,
+        'Validation failed: Effective at can\'t be set before employee hired date'
+      )
+    end
   end
 
   describe '#verify_not_change_of_policy_type_in_category' do
@@ -80,9 +99,8 @@ RSpec.describe EmployeeTimeOffPolicy, type: :model do
       context 'when there is employee balance in the future' do
         let(:effective_at) { Time.now - 2.years }
 
-        it { expect(subject.valid?).to eq false }
-        it { expect { subject.valid? }.to change { subject.errors.messages[:time_off_category] }
-          .to include('Employee balance after effective at already exists') }
+        it { expect(subject.valid?).to eq true }
+        it { expect { subject.valid? }.to_not change { subject.errors.messages.count } }
       end
     end
   end
