@@ -374,7 +374,7 @@ RSpec.describe UpdateBalanceJob do
           context 'and removal is in the future' do
             let(:options) do
               {
-                validity_date: Time.zone.now + 1.year + Employee::Balance::REMOVAL_SECONDS,
+                validity_date: Time.zone.now + 1.year + Employee::Balance::REMOVAL_OFFSET,
                 resource_amount: 4000
               }
             end
