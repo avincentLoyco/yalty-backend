@@ -143,7 +143,6 @@ class CreateEmployeeBalance
   end
 
   def balance_is_not_removal_and_has_validity_date?
-    (validity_date.present? && validity_date <= Time.zone.today) &&
-      @employee_balance.balance_credit_additions.empty?
+    validity_date.present? && @employee_balance.balance_credit_additions.empty?
   end
 end
