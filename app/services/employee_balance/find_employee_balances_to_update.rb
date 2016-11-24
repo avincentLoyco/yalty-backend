@@ -52,7 +52,9 @@ class FindEmployeeBalancesToUpdate
   end
 
   def find_ids_for_counter
-    return all_later_balances_ids if resource.current_or_next_period || options.delete(:update_all)
+    return all_later_balances_ids if resource.current_or_next_period ||
+        options.delete(:update_all) ||
+        next_addition.nil?
     related_balances.where(effective_at: effective_at..next_addition.effective_at).pluck(:id)
   end
 
