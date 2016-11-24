@@ -3,7 +3,7 @@ class ChangeEffectiveAtsOfBalances < ActiveRecord::Migration
     # Removals
     execute("""
       UPDATE employee_balances balances
-      SET effective_at = balances.effective_at + interval '3 seconds'
+      SET effective_at = balances.effective_at::date + interval '3 seconds'
       FROM employee_balances additions
       WHERE additions.balance_credit_removal_id = balances.id;
     """)
@@ -11,8 +11,8 @@ class ChangeEffectiveAtsOfBalances < ActiveRecord::Migration
     # Start date / assignations
     execute("""
       UPDATE employee_balances
-      SET effective_at = employee_balances.effective_at + interval '2 seconds',
-	        validity_date = employee_balances.validity_date + interval '3 seconds'
+      SET effective_at = employee_balances.effective_at::date + interval '2 seconds',
+	        validity_date = employee_balances.validity_date::date + interval '3 seconds'
       WHERE employee_balances.policy_credit_addition = true
       AND employee_balances.time_off_id IS NULL;
     """)
@@ -20,8 +20,8 @@ class ChangeEffectiveAtsOfBalances < ActiveRecord::Migration
     # Assignations in other dates than start dates
     execute("""
       UPDATE employee_balances balances
-      SET effective_at = balances.effective_at + interval '2 seconds',
-          validity_date = balances.validity_date + interval '3 seconds'
+      SET effective_at = balances.effective_at::date + interval '2 seconds',
+          validity_date = balances.validity_date::date + interval '3 seconds'
       FROM employee_time_off_policies etops
       WHERE etops.effective_at::date = balances.effective_at::date
       AND etops.time_off_category_id = balances.time_off_category_id
@@ -32,7 +32,7 @@ class ChangeEffectiveAtsOfBalances < ActiveRecord::Migration
     # Time offs
     execute("""
       UPDATE employee_balances
-      SET validity_date = employee_balances.validity_date + interval '3 seconds'
+      SET validity_date = employee_balances.validity_date::date + interval '3 seconds'
       WHERE employee_balances.time_off_id IS NOT NULL;
     """)
   end
