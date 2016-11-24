@@ -43,9 +43,11 @@ class CalculatePeriodOverview
   end
 
   def last_balance_in_period
-    @balance ||= balances.between(@period[:start_date], @period[:end_date])
-                         .order(:effective_at)
-                         .last
+    @balance ||=
+      balances
+      .where('effective_at::date BETWEEN ? AND ?', @period[:start_date], @period[:end_date])
+      .order(:effective_at)
+      .last
   end
 
   def last_balance_value_in_period
@@ -71,7 +73,7 @@ class CalculatePeriodOverview
   def period_addition
     @period_addition ||=
       balances
-      .between(@period[:start_date], @period[:end_date])
+      .where('effective_at::date BETWEEN ? AND ?', @period[:start_date], @period[:end_date])
       .order(:effective_at)
       .first
   end
