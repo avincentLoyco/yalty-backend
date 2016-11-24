@@ -2,7 +2,7 @@ class CreateOrUpdateJoinTable
   include API::V1::Exceptions
 
   attr_reader :join_table_class, :params, :employee_join_tables, :join_table,
-    :resource_class, :resource_class_id, :join_table_resource
+    :resource_class, :resource_class_id, :join_table_resource, :current_account
 
   def initialize(join_table_class, resource_class, params, join_table_resource = nil)
     @join_table_class = join_table_class
@@ -11,6 +11,7 @@ class CreateOrUpdateJoinTable
     @resource_class_id = resource_class.model_name.singular + '_id'
     @join_table_resource = join_table_resource
     @status = 205
+    @current_account = Account.current || Employee.find(params[:employee_id]).account
   end
 
   def call
@@ -28,7 +29,7 @@ class CreateOrUpdateJoinTable
     if join_table_resource
       join_table_resource.employee.send(join_tables_class).where.not(id: join_table_resource.id)
     else
-      Account.current.employees.find(params[:id]).send(join_tables_class)
+      current_account.employees.find(params[:employee_id]).send(join_tables_class)
     end
   end
 
@@ -52,7 +53,7 @@ class CreateOrUpdateJoinTable
   def return_new_current_with_efective_till
     join_table_hash =
       JoinTableWithEffectiveTill
-      .new(join_table_class, Account.current.id, nil, nil, new_current_join_table.id, nil)
+      .new(join_table_class, current_account.id, nil, nil, new_current_join_table.id, nil)
       .call
       .first
     join_table_class.new(join_table_hash)
@@ -82,7 +83,7 @@ class CreateOrUpdateJoinTable
 
   def create_join_table
     @status = 201
-    employee_join_tables.create!(params.except(:id))
+    employee_join_tables.create!(params.except(:employee_id))
   end
 
   def previous_join_table
