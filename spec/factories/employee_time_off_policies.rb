@@ -14,7 +14,7 @@ FactoryGirl.define do
           employee: policy.employee,
           time_off_category: policy.time_off_policy.time_off_category,
           policy_credit_addition: true,
-          effective_at: policy.effective_at + Employee::Balance::START_DATE_OR_ASSIGNATION_SECONDS,
+          effective_at: policy.effective_at + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
           validity_date: RelatedPolicyPeriod.new(policy).validity_date_for(policy.effective_at)
         )
       end

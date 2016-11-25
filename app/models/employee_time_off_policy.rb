@@ -31,7 +31,7 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
         time_off_id: nil
       )
       .where(
-        'effective_at = ?', effective_at + Employee::Balance::START_DATE_OR_ASSIGNATION_SECONDS
+        'effective_at = ?', effective_at + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET
       )
       .first
   end

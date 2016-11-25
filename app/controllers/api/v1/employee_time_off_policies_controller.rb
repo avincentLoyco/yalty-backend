@@ -14,6 +14,7 @@ module API
           authorize! :create, time_off_policy
           join_table_params = attributes.except(:employee_balance_amount)
           transactions do
+            join_table_params[:employee_id] = join_table_params.delete(:id)
             @response = create_or_update_join_table(TimeOffPolicy, join_table_params)
             resource = @response[:result]
             RecreateBalances::AfterEmployeeTimeOffPolicyCreate.new(

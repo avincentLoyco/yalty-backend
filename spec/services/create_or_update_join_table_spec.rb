@@ -11,7 +11,7 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
     let(:params) do
       {
         effective_at: '1/4/2015',
-        id: employee.id
+        employee_id: employee.id
       }.merge(resource_params)
     end
 

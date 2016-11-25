@@ -3,9 +3,9 @@ require 'employee_policy_period'
 class Employee::Balance < ActiveRecord::Base
   include RelatedAmount
 
-  DAY_BEFORE_START_DAY_SECONDS = 1.second
-  START_DATE_OR_ASSIGNATION_SECONDS = 2.seconds
-  REMOVAL_SECONDS = 3.seconds
+  DAY_BEFORE_START_DAY_OFFSET = 1.second
+  START_DATE_OR_ASSIGNATION_OFFSET = 2.seconds
+  REMOVAL_OFFSET = 3.seconds
 
   belongs_to :employee
   belongs_to :time_off_category

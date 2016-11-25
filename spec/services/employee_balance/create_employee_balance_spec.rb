@@ -228,14 +228,14 @@ RSpec.describe CreateEmployeeBalance, type: :service do
           employee: employee, time_off_category: employee_policy.time_off_category,
           manual_amount: 1000,
           effective_at: employee_policy.effective_at +
-                        Employee::Balance::START_DATE_OR_ASSIGNATION_SECONDS
+                        Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET
         )
       end
 
       let(:options) do
         {
           effective_at: employee_policy.effective_at +
-                        Employee::Balance::START_DATE_OR_ASSIGNATION_SECONDS,
+                        Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
           resource_amount: 2000,
           policy_credit_addition: true
         }
