@@ -14,8 +14,9 @@ class RecreateBalancesHelper
     @new_effective_at = new_effective_at || destroyed_effective_at
     @old_effective_at = old_effective_at || destroyed_effective_at
     @time_off_category = TimeOffCategory.find(time_off_category_id)
-    @etop = EmployeeTimeOffPolicy.where(time_off_category: time_off_category)
-                                 .find_by(effective_at: new_effective_at)
+    @etop = EmployeeTimeOffPolicy
+            .where(time_off_category: time_off_category, employee_id: employee_id)
+            .find_by(effective_at: new_effective_at)
     @employee = Employee.find(employee_id)
     @manual_amount = manual_amount || balance_at_old_effective_at.try(:manual_amount).to_i
   end
@@ -63,9 +64,13 @@ class RecreateBalancesHelper
   def balance_at_old_effective_at
     return unless old_effective_at.present?
     @balance_at_old_effective_at ||=
-      balances_in_category.not_time_off
-                          .where('effective_at::date = ?', old_effective_at.to_date)
-                          .first
+      balances_in_category
+      .not_time_off
+      .where(
+        'effective_at = ?',
+        old_effective_at + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET
+      )
+      .first
   end
 
   def recreate_balances!
