@@ -16,7 +16,10 @@ class RemoveBalances
   private
 
   def day_before_start_dates_to_delete
-    balances = balances_after_starting_date.where(policy_credit_addition: false).not_time_off
+    balances_before = balances_in_category.where(
+      'employee_balances.effective_at > ?', starting_date.to_date - 1.day
+    )
+    balances = balances_before.where(policy_credit_addition: false).not_time_off
     balances = balances.where('effective_at < ?', ending_date) if ending_date.present?
     balances - removals_after_new_effective_at - assignation_balances
   end
@@ -68,7 +71,7 @@ class RemoveBalances
 
   def balances_after_starting_date
     @balances_after_starting_date ||=
-      balances_in_category.where('employee_balances.effective_at > ?', starting_date)
+      balances_in_category.where('employee_balances.effective_at::date > ?', starting_date.to_date)
   end
 
   def etops_in_category
