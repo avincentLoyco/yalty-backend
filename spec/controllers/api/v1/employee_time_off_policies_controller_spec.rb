@@ -490,8 +490,14 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
         let(:assignation_balance) { join_table_resource.reload.policy_assignation_balance }
 
         before do
-          create(:employee_balance, time_off_category: category, employee: employee,
-            effective_at: join_table_resource.effective_at, manual_amount: 2000)
+          create(
+            :employee_balance_manual,
+            time_off_category: category,
+            employee: employee,
+            effective_at: join_table_resource.effective_at +
+                          Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
+            manual_amount: 2000
+          )
         end
 
         it { expect { subject }.to change { join_table_resource.reload.effective_at } }
@@ -647,9 +653,13 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
             context 'and employee time off policy has assignation balance' do
               let!(:employee_balance) do
-                create(:employee_balance,
-                  time_off_category: category, employee: employee,
-                  effective_at: join_table_resource.effective_at, manual_amount: 2000)
+                create(
+                  :employee_balance_manual,
+                  time_off_category: category,
+                  employee: employee,
+                  effective_at: join_table_resource.effective_at +
+                                Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
+                  manual_amount: 2000)
               end
 
               it { is_expected.to have_http_status(205) }
