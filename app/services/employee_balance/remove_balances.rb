@@ -10,7 +10,9 @@ class RemoveBalances
   end
 
   def call
-    (day_before_start_dates_to_delete + removals_to_delete + additions_to_delete).map(&:delete)
+    day_before_start_dates_to_delete.map(&:delete)
+    removals_to_delete.map(&:delete)
+    additions_to_delete.map(&:delete)
   end
 
   private
@@ -30,8 +32,7 @@ class RemoveBalances
 
   def removals_with_additions_between_dates
     balances = removals_after_new_effective_at.where('
-      balance_credit_additions.effective_at > ? AND
-      balance_credit_additions.policy_credit_addition = true', starting_date)
+      balance_credit_additions.effective_at > ? ', starting_date)
     return balances unless ending_date.present?
     balances.where('balance_credit_additions.effective_at < ?', ending_date)
   end
@@ -57,14 +58,22 @@ class RemoveBalances
   end
 
   def assignation_balances
-    return [] unless etops_in_category.exists?
     @assignation_balances ||= begin
       etop_effective_ats = etops_in_category.pluck(:effective_at)
                                             .map { |date| "\'#{date}\'::date" }.join(', ')
-      sql_where_clause = "effective_at::date IN (#{etop_effective_ats})"
-      if old_effective_at.present?
-        sql_where_clause += " OR effective_at::date = \'#{old_effective_at.to_date}\'::date"
+      clause_for_etops = "effective_at::date IN (#{etop_effective_ats})"
+      clause_for_old_effective_at =
+        "effective_at::date = \'#{old_effective_at.try(:to_date)}\'::date"
+
+      sql_where_clause = case
+      when etop_effective_ats.present? && old_effective_at.present?
+        clause_for_etops + ' OR ' + clause_for_old_effective_at
+      when etop_effective_ats.empty? && old_effective_at.present?
+        clause_for_old_effective_at
+      when etop_effective_ats.present? && old_effective_at.nil?
+        clause_for_etops
       end
+
       balances_in_category.not_time_off.where(sql_where_clause)
     end
   end
