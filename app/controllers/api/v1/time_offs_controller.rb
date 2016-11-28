@@ -95,7 +95,8 @@ module API
           time_off_id: resource.id,
           resource_amount: resource.balance,
           manual_amount: params[:manual_amount] || 0,
-          validity_date: find_validity_date(resource)
+          validity_date: find_validity_date(resource),
+          effective_at: resource.end_time
         ).call
       end
 
@@ -121,7 +122,7 @@ module API
         active_policy =
           employee.active_policy_in_category_at_date(time_off_category.id, resource.end_time)
 
-        RelatedPolicyPeriod.new(active_policy).validity_date_for_time_off(resource.end_time)
+        RelatedPolicyPeriod.new(active_policy).validity_date_for_balance_at(resource.end_time)
       end
     end
   end

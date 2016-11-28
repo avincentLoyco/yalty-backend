@@ -78,9 +78,14 @@ FactoryGirl.define do
     time_off_category { create(:time_off_category, account: employee.account) }
     resource_amount { Faker::Number.number(2) }
     effective_at { nil }
+    policy_credit_addition false
 
     trait :processing do
       being_processed true
+    end
+
+    trait :addition do
+      policy_credit_addition true
     end
 
     trait :with_time_off do

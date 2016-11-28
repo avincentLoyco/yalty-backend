@@ -14,11 +14,15 @@ module API
           authorize! :create, time_off_policy
           join_table_params = attributes.except(:employee_balance_amount)
           transactions do
+            join_table_params[:employee_id] = join_table_params.delete(:id)
             @response = create_or_update_join_table(TimeOffPolicy, join_table_params)
-            if @response[:status].eql?(201)
-              @balance = create_new_employee_balance(@response[:result])
-              ManageEmployeeBalanceAdditions.new(@response[:result]).call
-            end
+            resource = @response[:result]
+            RecreateBalances::AfterEmployeeTimeOffPolicyCreate.new(
+              new_effective_at: attributes[:effective_at],
+              time_off_category_id: resource.time_off_category_id,
+              employee_id: resource.employee_id,
+              manual_amount: params[:employee_balance_amount]
+            ).call
           end
 
           render_join_table(@response[:result], @response[:status])
@@ -29,8 +33,15 @@ module API
         verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :update, resource
           transactions do
+            old_effective_at = resource.effective_at
             @response = create_or_update_join_table(TimeOffPolicy, attributes, resource)
-            ManageEmployeeBalanceAdditions.new(@response[:result]).call
+            RecreateBalances::AfterEmployeeTimeOffPolicyUpdate.new(
+              new_effective_at: attributes[:effective_at],
+              old_effective_at: old_effective_at,
+              time_off_category_id: resource.time_off_category_id,
+              employee_id: resource.employee_id,
+              manual_amount: params[:employee_balance_amount]
+            ).call
           end
 
           render_join_table(@response[:result], @response[:status])
@@ -40,10 +51,13 @@ module API
       def destroy
         authorize! :destroy, resource
         transactions do
-          resource.policy_assignation_balance.try(:destroy!)
           destroy_join_tables_with_duplicated_resources
-          verify_if_there_are_no_balances!
           resource.destroy!
+          RecreateBalances::AfterEmployeeTimeOffPolicyDestroy.new(
+            destroyed_effective_at: resource.effective_at,
+            time_off_category_id: resource.time_off_category_id,
+            employee_id: resource.employee_id
+          ).call
         end
         render_no_content
       end
@@ -56,23 +70,6 @@ module API
 
       def time_off_policy
         @time_off_policy ||= Account.current.time_off_policies.find(params[:time_off_policy_id])
-      end
-
-      def create_new_employee_balance(resource)
-        CreateEmployeeBalance.new(
-          resource.time_off_category_id,
-          resource.employee_id,
-          Account.current.id,
-          options_for(resource)
-        ).call
-      end
-
-      def options_for(resource)
-        {
-          manual_amount: params[:employee_balance_amount] || 0,
-          effective_at: resource.effective_at,
-          validity_date: RelatedPolicyPeriod.new(resource).validity_date_for(resource.effective_at)
-        }
       end
 
       def resource_representer

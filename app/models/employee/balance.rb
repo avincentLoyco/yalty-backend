@@ -3,6 +3,10 @@ require 'employee_policy_period'
 class Employee::Balance < ActiveRecord::Base
   include RelatedAmount
 
+  DAY_BEFORE_START_DAY_OFFSET = 1.second
+  START_DATE_OR_ASSIGNATION_OFFSET = 2.seconds
+  REMOVAL_OFFSET = 3.seconds
+
   belongs_to :employee
   belongs_to :time_off_category
   belongs_to :time_off
@@ -30,14 +34,25 @@ class Employee::Balance < ActiveRecord::Base
   scope :employee_balances, (lambda do |employee_id, time_off_category_id|
     where(employee_id: employee_id, time_off_category_id: time_off_category_id)
   end)
+  scope :between, (lambda do |from_date, to_date|
+    where('employee_balances.effective_at BETWEEN ? and ?', from_date, to_date)
+  end)
   scope :additions, -> { where(policy_credit_addition: true).order(:effective_at) }
-  scope :removals, -> { Employee::Balance.joins(:balance_credit_additions) }
+  scope :removals, -> { Employee::Balance.joins(:balance_credit_additions).distinct }
+  scope :not_removals, (lambda do
+    joins('LEFT JOIN employee_balances AS b ON employee_balances.id = b.balance_credit_removal_id')
+    .distinct
+    .where('b.balance_credit_removal_id IS NULL')
+  end)
   scope :removal_at_date, (lambda do |employee_id, time_off_category_id, date|
     employee_balances(employee_id, time_off_category_id)
       .where("effective_at::date = to_date('#{date}', 'YYYY-MM_DD')").uniq
   end)
+
   scope :in_category, -> (category_id) { where(time_off_category_id: category_id) }
+  scope :with_time_off, -> { where.not(time_off_id: nil) }
   scope :not_time_off, -> { where(time_off_id: nil) }
+  scope :from_time_offs, -> { where.not(time_off_id: nil) }
 
   def amount
     return unless resource_amount && manual_amount
@@ -52,7 +67,7 @@ class Employee::Balance < ActiveRecord::Base
   def current_or_next_period
     [EmployeePolicyPeriod.new(employee, time_off_category_id).current_policy_period,
      EmployeePolicyPeriod.new(employee, time_off_category_id).future_policy_period]
-      .find { |r| r.include?(effective_at.to_date) }
+      .compact.find { |r| r.include?(effective_at.to_date) }
   end
 
   def calculate_and_set_balance

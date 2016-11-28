@@ -3,7 +3,6 @@ require 'employee_policy_period'
 class EmployeeTimeOffPolicy < ActiveRecord::Base
   include ActsAsIntercomTrigger
   include ValidateEffectiveAtBeforeHired
-  include ValidateNoBalancesAfterJoinTableEffectiveAt
 
   attr_accessor :effective_till
 
@@ -25,10 +24,16 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
   }
 
   def policy_assignation_balance(effective_at = self.effective_at)
-    employee.employee_balances.where(
-      time_off_category_id: time_off_policy.time_off_category.id,
-      time_off_id: nil
-    ).where('effective_at::date = ?', effective_at).first
+    employee
+      .employee_balances
+      .where(
+        time_off_category_id: time_off_policy.time_off_category.id,
+        time_off_id: nil
+      )
+      .where(
+        'effective_at = ?', effective_at + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET
+      )
+      .first
   end
 
   def employee_balances
