@@ -72,6 +72,29 @@ class API::ApplicationController < ApplicationController
     resources.map { |join_hash| join_table.new(join_hash) }
   end
 
+  def resources_with_filters_and_effective_till(join_table, resource_id)
+    resources =
+      JoinTableWithEffectiveTill
+      .new(join_table, Account.current.id, resource_id, nil, nil, nil)
+      .call
+
+    if params[:filter].eql?('inactive')
+      resources = resources.select do |resource|
+        resource['effective_till'].present? && resource['effective_till'].to_date < Time.zone.today
+      end
+    end
+
+    resources.map { |join_hash| join_table.new(join_hash) }
+  end
+
+  def resources_with_filters(join_table, resource_id)
+    if params[:filter].blank? || params[:filter].eql?('active')
+      resources_with_effective_till(join_table, nil, resource_id)
+    else
+      resources_with_filters_and_effective_till(join_table, resource_id)
+    end
+  end
+
   def resources_by_status(resource_class, join_table_class)
     status = params[:status] == 'inactive' ? 'inactive' : 'active'
     ActiveAndInactiveJoinTableFinders
