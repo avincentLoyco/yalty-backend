@@ -1,21 +1,21 @@
 class UpdateEvent
   include API::V1::Exceptions
   attr_reader :employee_params, :attributes_params, :event_params, :versions,
-    :event, :employee, :updated_working_place
+    :event, :employee, :updated_assignations
 
   def initialize(params, employee_attributes_params)
     @versions              = []
     @employee_params       = params[:employee].tap { |attr| attr.delete(:employee_attributes) }
     @attributes_params     = employee_attributes_params
     @event_params          = build_event_params(params)
-    @updated_working_place = nil
+    @updated_assignations  = {}
   end
 
   def call
     ActiveRecord::Base.transaction do
       find_and_update_event
       find_employee
-      update_employee_working_place
+      update_employee_join_tables
       manage_versions
 
       save!
@@ -37,10 +37,9 @@ class UpdateEvent
     @event.attributes = event_params
   end
 
-  def update_employee_working_place
-    return if event.event_type != 'hired' || employee.employee_working_places.empty?
-    @updated_working_place =
-      ManageEmployeeWorkingPlace.new(employee, event_params[:effective_at]).call
+  def update_employee_join_tables
+    return if event.event_type != 'hired'
+    @updated_assignations = ManageEmployeeJoinTables.new(employee, event_params[:effective_at]).call
   end
 
   def manage_versions
@@ -112,26 +111,42 @@ class UpdateEvent
   end
 
   def valid?
-    event.valid? && employee.valid? && unique_attribute_versions? && attribute_version_valid?
+    employee.valid? && unique_attribute_versions? && attribute_version_valid?
   end
 
   def save!
-    if valid?
-      event.save!
+    if unique_attribute_versions? && attribute_version_valid?
       employee.save!
-      updated_working_place.try(:save!)
+      if event.effective_at.to_date < employee.hired_date
+        event.save!
+        update_assignations_and_balances
+        create_policy_additions_and_removals
+      else
+        update_assignations_and_balances
+        event.save!
+      end
       event.employee_attribute_versions.each(&:save!)
-
       event
     else
       messages = {}
       messages = messages.merge(employee_attributes: 'Not unique') unless unique_attribute_versions?
-      messages = messages
-                 .merge(event.errors.messages)
-                 .merge(employee.errors.messages)
-                 .merge(attribute_versions_errors)
+      messages = messages.merge(attribute_versions_errors)
 
       raise InvalidResourcesError.new(event, messages)
+    end
+  end
+
+  def update_assignations_and_balances
+    updated_assignations[:join_tables].to_a.map(&:save!)
+    updated_assignations[:employee_balances].to_a.map(&:save!)
+  end
+
+  def create_policy_additions_and_removals
+    employee_time_off_policies =
+      updated_assignations[:join_tables].select { |table| table.class.eql?(EmployeeTimeOffPolicy) }
+
+    employee_time_off_policies.map do |policy|
+      ManageEmployeeBalanceAdditions.new(policy).call
     end
   end
 

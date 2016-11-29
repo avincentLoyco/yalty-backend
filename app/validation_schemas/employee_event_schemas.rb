@@ -3,7 +3,7 @@ module EmployeeEventSchemas
 
   def post_schema
     Dry::Validation.Form do
-      required(:effective_at).filled
+      required(:effective_at).filled(:date?)
       required(:event_type).filled(:str?)
       optional(:comment).filled(:str?)
       required(:employee).schema do
@@ -17,7 +17,7 @@ module EmployeeEventSchemas
   def put_schema
     Dry::Validation.Form do
       required(:id).filled(:str?)
-      required(:effective_at).filled
+      required(:effective_at).filled(:date?)
       required(:event_type).filled(:str?)
       optional(:comment).filled(:str?)
       required(:employee).schema do
