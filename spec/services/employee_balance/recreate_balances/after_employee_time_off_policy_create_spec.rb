@@ -69,8 +69,8 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyCreate, type: :servic
     end
     let(:expeted_balances_dates) do
       ['2013-02-01', '2013-12-31', '2014-01-01', '2014-04-01', '2014-04-15', '2015-01-31',
-       '2015-02-01', '2015-04-01', '2016-01-31', '2016-02-01', '2016-05-01', '2017-01-31',
-       '2017-02-01', '2017-05-01', '2018-05-01'].map(&:to_date)
+       '2015-02-01', '2015-04-01', '2015-05-01', '2016-01-31', '2016-02-01', '2016-05-01',
+       '2017-01-31', '2017-02-01', '2017-05-01', '2018-05-01'].map(&:to_date)
     end
     let(:top_a) do
       create(:time_off_policy, :with_end_date, time_off_category: category, amount: 1000)

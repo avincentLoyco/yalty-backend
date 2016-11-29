@@ -74,8 +74,8 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyDestroy, type: :servi
     context 'without time off' do
       let(:expeted_balances_dates) do
         ['2013-01-02', '2013-12-31', '2014-01-01', '2014-04-01', '2014-12-31', '2015-01-01',
-         '2015-04-01', '2015-12-31', '2016-01-01', '2016-12-31', '2017-01-01', '2017-12-31',
-         '2018-01-01'].map(&:to_date)
+         '2015-04-01', '2015-12-31', '2016-01-01', '2016-04-01', '2016-12-31', '2017-01-01',
+         '2017-04-01', '2017-12-31', '2018-01-01', '2018-04-01', '2019-04-01'].map(&:to_date)
       end
 
       before do
@@ -90,8 +90,9 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyDestroy, type: :servi
     context 'with time off' do
       let(:expeted_balances_dates) do
         ['2013-01-02', '2013-12-31', '2014-01-01', '2014-04-01', '2014-12-31', '2015-01-01',
-         '2015-04-01', '2015-10-01', '2015-12-31', '2016-01-01', '2016-12-31', '2017-01-01',
-         '2017-12-31', '2018-01-01'].map(&:to_date)
+         '2015-04-01', '2015-10-01', '2015-12-31', '2016-01-01', '2016-04-01', '2016-12-31',
+         '2017-01-01', '2017-04-01', '2017-12-31', '2018-01-01', '2018-04-01', '2019-04-01'
+        ].map(&:to_date)
       end
       let(:time_off_effective_at) { destroyed_effective_at }
       let!(:time_off) do
@@ -129,8 +130,8 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyDestroy, type: :servi
     end
     let(:expeted_balances_dates) do
       ['2013-01-02', '2013-12-31', '2014-01-01', '2014-04-01', '2014-12-31', '2015-01-01',
-       '2015-04-01', '2015-12-31', '2016-01-01', '2016-10-01', '2016-12-31', '2017-01-01'
-      ].map(&:to_date)
+       '2015-04-01', '2015-12-31', '2016-01-01', '2016-04-01', '2016-10-01', '2016-12-31',
+       '2017-01-01', '2017-04-01', '2018-04-01'].map(&:to_date)
     end
 
     before do
