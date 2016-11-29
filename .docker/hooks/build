@@ -1,0 +1,14 @@
+#!/bin/bash
+
+RAKE_VERSION=$(grep rake ../Gemfile.lock | cut -d '(' -f 2 | cut -d ')' -f 1 | grep -P '^\d')
+PUMA_VERSION=$(grep puma ../Gemfile.lock | cut -d '(' -f 2 | cut -d ')' -f 1 | grep -P '^\d')
+BUNDLER_VERSION=$(tail -n 1 ../Gemfile.lock | cut -d ' ' -f 4)
+
+docker build \
+  --rm \
+  --build-arg RAKE_VERSION=$RAKE_VERSION \
+  --build-arg PUMA_VERSION=$PUMA_VERSION \
+  --build-arg BUNDLER_VERSION=$BUNDLER_VERSION \
+  -f Dockerfile \
+  -t $IMAGE_NAME \
+  ..
