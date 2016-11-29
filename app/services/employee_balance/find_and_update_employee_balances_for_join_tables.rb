@@ -1,17 +1,25 @@
 class FindAndUpdateEmployeeBalancesForJoinTables
-  attr_reader :join_table, :new_date, :previous_date, :resource_at_previous_date
+  attr_reader :join_table, :new_date, :previous_date, :resource_at_previous_date,
+    :order_of_start_day
 
-  def initialize(join_table, new_date, previous_date = nil, resource_at_previous_date = nil)
+  def initialize(
+    join_table,
+    new_date,
+    previous_date = nil,
+    resource_at_previous_date = nil,
+    order_of_start_day = nil
+  )
     @join_table = join_table
     @new_date = new_date
     @previous_date = previous_date
     @resource_at_previous_date = resource_at_previous_date
+    @order_of_start_day = order_of_start_day
   end
 
   def call
     date = find_date_from_effective_at
-    return unless date.present?
-    group_and_update_employee_balances(date)
+    return unless date.present? || order_of_start_day.present?
+    group_and_update_employee_balances(date || join_table.effective_at)
   end
 
   private

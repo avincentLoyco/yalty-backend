@@ -323,13 +323,15 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
   context 'PUT #update' do
     let(:id) { join_table_resource.id }
     let(:effective_at) { Date.new(2016, 1, 1) }
+    let(:order_of_start_day) { join_table_resource.order_of_start_day }
     let!(:join_table_resource) do
       create(:employee_presence_policy,
         presence_policy: new_presence_policy, employee: employee, effective_at: 10.days.ago)
     end
     let(:new_presence_policy) { presence_policy }
+    let(:params) { { id: id, effective_at: effective_at, order_of_start_day: order_of_start_day } }
 
-    subject { put :update, { id: id, effective_at: effective_at } }
+    subject { put :update, params }
 
     context 'when there are employee balances with time offs assigned' do
       let(:policy) { create(:time_off_policy) }
@@ -344,12 +346,33 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
       end
 
       context 'and join table was updated' do
-        it { expect { subject }.to change { balances.second.reload.being_processed } }
-        it { expect { subject }.to change { balances.last.reload.being_processed } }
-        it { expect { subject }.to_not change { balances.first.reload.being_processed } }
+        shared_examples 'properly updates balances' do
+          it { expect { subject }.to change { balances.second.reload.being_processed } }
+          it { expect { subject }.to change { balances.last.reload.being_processed } }
+          it { expect { subject }.to_not change { balances.first.reload.being_processed } }
 
-        it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
-        it { is_expected.to have_http_status(200) }
+          it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+          it { is_expected.to have_http_status(200) }
+        end
+
+        context 'same date' do
+          let(:effective_at) { join_table_resource.effective_at.to_date }
+
+          it_behaves_like 'properly updates balances'
+          it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
+          it { expect { subject }.to_not change { join_table_resource.reload.order_of_start_day } }
+        end
+
+        context 'only order of start date' do
+          let(:effective_at) { join_table_resource.effective_at.to_date }
+          let(:order_of_start_day) { join_table_resource.order_of_start_day + 2 }
+
+          it_behaves_like 'properly updates balances'
+          it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
+          it { expect { subject }.to change { join_table_resource.reload.order_of_start_day } }
+        end
+
+        it_behaves_like 'properly updates balances'
 
         context 'and its previous date is before new one' do
           before { join_table_resource.update!(effective_at: 1.year.ago) }
@@ -512,6 +535,30 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
 
         it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
         it { is_expected.to have_http_status(422) }
+      end
+
+      context 'when order_of_start_day is not valid' do
+        context 'when it\'s nil' do
+          let(:order_of_start_day) { nil }
+
+          it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
+          it { is_expected.to have_http_status(422) }
+        end
+
+        context 'when it\'s not int' do
+          let(:order_of_start_day) { 'abc' }
+
+          it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
+          it { is_expected.to have_http_status(422) }
+        end
+
+        context 'when it\'s not in payload' do
+          let(:params) { { id: id, effective_at: effective_at } }
+          subject { put :update, params }
+
+          it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
+          it { is_expected.to have_http_status(422) }
+        end
       end
     end
   end
