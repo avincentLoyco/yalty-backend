@@ -13,7 +13,7 @@ class ManageEmployeeBalanceAdditions
     return if RelatedPolicyPeriod.new(resource).first_start_date > effective_till
     ActiveRecord::Base.transaction do
       create_additions_with_removals
-      PrepareEmployeeBalancesToUpdate.new(balances.flatten.first).call
+      PrepareEmployeeBalancesToUpdate.new(balances.flatten.first).call if balances.flatten.present?
     end
     check_amount_and_update_balances
   end
@@ -21,6 +21,7 @@ class ManageEmployeeBalanceAdditions
   private
 
   def check_amount_and_update_balances
+    return unless balances.flatten.present?
     unless balances.flatten.map { |b| [b[:manual_amount], b[:resource_amount]] }.flatten.uniq == [0]
       ActiveRecord::Base.after_transaction do
         UpdateBalanceJob.perform_later(balances.flatten.first)
@@ -29,37 +30,79 @@ class ManageEmployeeBalanceAdditions
   end
 
   def create_additions_with_removals
-    date = RelatedPolicyPeriod.new(resource).first_start_date
-    while date <= effective_till
-      balances << CreateEmployeeBalance.new(*employee_balance_params(date)).call
-      if active_policy_at(date - 1.day).present? && balance_is_not_assignation?(date)
-        balances << CreateEmployeeBalance.new(*employee_balance_params(date - 1.day, true)).call
+    etops_between_dates.each do |etop|
+      balance_date = RelatedPolicyPeriod.new(etop).first_start_date
+      date_to_which_create_balances = etop.effective_till || ending_date
+
+      while balance_date <= date_to_which_create_balances
+        if addition_at(balance_date).nil?
+          balances << CreateEmployeeBalance.new(*employee_balance_params(etop, balance_date)).call
+        end
+        if create_before_start_date_balance?(balance_date)
+          balances <<
+            CreateEmployeeBalance.new(*employee_balance_params(etop, balance_date - 1.day, true)).call
+        end
+        balance_date += 1.year
       end
-      date += 1.year
     end
   end
 
-  def employee_balance_params(date, for_day_before = false)
+  def etops_between_dates
+    @etops_between_dates = employee
+                           .employee_time_off_policies
+                           .where('effective_at BETWEEN ? AND ?', starting_date, ending_date)
+  end
+
+  def starting_date
+    @starting_date = resource.effective_at
+  end
+
+  def ending_date
+    @ending_date = future_policy_period_last_date
+  end
+
+  def create_before_start_date_balance?(date)
+    active_policy_at(date - 1.day).present? &&
+      balance_is_not_assignation?(date) &&
+      day_before_balance_at(date - 1.day).nil?
+  end
+
+  def addition_at(date)
+    employee.employee_balances.find_by(
+      'effective_at = ?', date + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET)
+  end
+
+  def day_before_balance_at(date)
+    employee.employee_balances.find_by(
+      'effective_at = ?', date + Employee::Balance::DAY_BEFORE_START_DAY_OFFSET)
+  end
+
+  def employee_balance_params(etop, date, for_day_before = false)
     [
-      resource.time_off_category_id,
-      resource.employee_id,
+      etop.time_off_category_id,
+      etop.employee_id,
       employee.account_id,
-      policy_type_options(date, for_day_before)
+      policy_type_options(etop, date, for_day_before)
     ]
   end
 
-  def policy_type_options(date, for_day_before)
-    base_options = for_day_before ? options_for_day_before_start_date(date) : default_options(date)
-    return base_options if resource.time_off_policy.counter?
+  def policy_type_options(etop, date, for_day_before)
+    base_options =
+      if for_day_before
+        options_for_day_before_start_date(date)
+      else
+        default_options(etop, date)
+      end
+    return base_options if etop.time_off_policy.counter?
     base_options.merge(validity_date: validity_date_for_base_options(date, for_day_before))
   end
 
-  def default_options(date)
+  def default_options(etop, date)
     {
       skip_update: true,
       policy_credit_addition: true,
       effective_at: date + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
-      resource_amount: resource.time_off_policy.amount
+      resource_amount: etop.time_off_policy.amount
     }
   end
 

@@ -1,9 +1,9 @@
 every_midnight_policy_add:
   cron: "0 0 * * *"
-  class: "AddPolicyAdditionsJob"
+  class: "CreateAdditionsAndRemovals"
   args:
   queue: policies_and_balances
-  description: "Check policies start dates and create addition balances if policy start date is today"
+  description: "Create balances in advance for active EmployeeTimeOffPolicy up to next period"
 
 every_midnight_add_working_time:
   cron: "0 0 * * *"
@@ -11,10 +11,3 @@ every_midnight_add_working_time:
   args:
   queue: registered_working_times
   description: "Adds the user registered working time from previous day"
-
-every_one_am:
-  cron: "0 1 * * *"
-  class: "AddBalanceRemovalsJob"
-  args:
-  queue: policies_and_balances
-  description: "Check employee balances validity dates and create removals if validity date is today"
