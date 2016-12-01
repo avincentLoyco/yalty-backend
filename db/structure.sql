@@ -563,7 +563,15 @@ CREATE TABLE working_places (
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
-    holiday_policy_id uuid
+    holiday_policy_id uuid,
+    country character varying(60) NOT NULL,
+    state character varying(60),
+    city character varying(60) NOT NULL,
+    postalcode character varying(12),
+    additional_address character varying(60),
+    street character varying(60),
+    street_number character varying(10),
+    timezone character varying
 );
 
 
