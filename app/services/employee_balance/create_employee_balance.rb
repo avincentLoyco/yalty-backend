@@ -54,6 +54,7 @@ class CreateEmployeeBalance
     if employee_balance.balance_credit_additions.present?
       employee_balance.balance_credit_additions.map(&:save!)
     end
+
     balance_removal.try(:save!)
   end
 

@@ -38,7 +38,7 @@ class ManageEmployeeBalanceAdditions
         if addition_at(balance_date).nil?
           balances << CreateEmployeeBalance.new(*employee_balance_params(etop, balance_date)).call
         end
-        if create_before_start_date_balance?(balance_date)
+        if create_before_start_date_balance?(etop, balance_date)
           balances <<
             CreateEmployeeBalance.new(*employee_balance_params(etop, balance_date - 1.day, true)).call
         end
@@ -50,6 +50,7 @@ class ManageEmployeeBalanceAdditions
   def etops_between_dates
     @etops_between_dates = employee
                            .employee_time_off_policies
+                           .where(time_off_category: resource.time_off_category)
                            .where('effective_at BETWEEN ? AND ?', starting_date, ending_date)
   end
 
@@ -61,10 +62,10 @@ class ManageEmployeeBalanceAdditions
     @ending_date = future_policy_period_last_date
   end
 
-  def create_before_start_date_balance?(date)
-    active_policy_at(date - 1.day).present? &&
-      balance_is_not_assignation?(date) &&
-      day_before_balance_at(date - 1.day).nil?
+  def create_before_start_date_balance?(etop, date)
+    active_policy_at(etop, date - 1.day).present? &&
+      balance_is_not_assignation?(etop, date) &&
+      day_before_balance_at(etop, date - 1.day).nil?
   end
 
   def addition_at(date)
@@ -72,8 +73,8 @@ class ManageEmployeeBalanceAdditions
       'effective_at = ?', date + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET)
   end
 
-  def day_before_balance_at(date)
-    employee.employee_balances.find_by(
+  def day_before_balance_at(etop, date)
+    employee.employee_balances.where(time_off_category: etop.time_off_category).find_by(
       'effective_at = ?', date + Employee::Balance::DAY_BEFORE_START_DAY_OFFSET)
   end
 
@@ -94,7 +95,7 @@ class ManageEmployeeBalanceAdditions
         default_options(etop, date)
       end
     return base_options if etop.time_off_policy.counter?
-    base_options.merge(validity_date: validity_date_for_base_options(date, for_day_before))
+    base_options.merge(validity_date: validity_date_for_base_options(etop, date, for_day_before))
   end
 
   def default_options(etop, date)
@@ -115,17 +116,17 @@ class ManageEmployeeBalanceAdditions
     }
   end
 
-  def validity_date_for_base_options(date, for_day_before)
-    return RelatedPolicyPeriod.new(resource).validity_date_for(date) unless for_day_before
-    RelatedPolicyPeriod.new(active_policy_at(date)).validity_date_for_balance_at(date)
+  def validity_date_for_base_options(etop, date, for_day_before)
+    return RelatedPolicyPeriod.new(etop).validity_date_for(date) unless for_day_before
+    RelatedPolicyPeriod.new(active_policy_at(etop, date)).validity_date_for_balance_at(date)
   end
 
-  def active_policy_at(date)
-    employee.active_policy_in_category_at_date(resource.time_off_category_id, date)
+  def active_policy_at(etop, date)
+    employee.active_policy_in_category_at_date(etop.time_off_category_id, date)
   end
 
-  def balance_is_not_assignation?(date)
-    date != resource.effective_at
+  def balance_is_not_assignation?(etop, date)
+    date != etop.effective_at
   end
 
   def calculate_effective_till

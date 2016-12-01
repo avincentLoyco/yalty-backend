@@ -43,7 +43,7 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyCreate, type: :servic
   end
 
   context 'when there are no etops' do
-    let(:new_effective_at) { Time.zone.parse('2013-02-01') }
+    let(:new_effective_at) { Time.zone.parse('2013-01-01') }
     let(:new_top) do
       create(:time_off_policy, :with_end_date, time_off_category: category, amount: 1000)
     end
