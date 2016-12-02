@@ -223,12 +223,18 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
       context 'with param that fails regex validation' do
         let(:postalcode) { '%%$3@/' }
 
-        it_behaves_like 'Invalid Data'
+          it_behaves_like 'Invalid Data'
 
-        it { is_expected.to have_http_status(422) }
+          it { is_expected.to have_http_status(422) }
 
-        context 'response' do
-          before { subject }
+          context 'response' do
+            before { subject }
+
+            it { expect_json(regex('must be filled')) }
+          end
+        end
+        context 'without country' do
+          let(:country) { '' }
 
           it { expect_json(regex('only numbers, capital letters, spaces and -')) }
         end
