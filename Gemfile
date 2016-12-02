@@ -19,6 +19,7 @@ gem 'request_store',        '~> 1.3.0'
 gem 'scenic',               '~> 1.1.0'
 gem 'tod',                  '~> 2.0.2'
 gem 'virtus',               '~> 1.0.5'
+gem 'geokit',               '~> 1.10.0'
 
 # background jobs
 gem 'sidekiq',              '~> 4.2.3'

@@ -1,6 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe API::V1::WorkingPlacesController, type: :controller do
+
   include_context 'example_authorization',
     resource_name: 'working_place'
   include_examples 'example_crud_resources',
@@ -18,13 +19,24 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
       working_place: first_working_place, effective_at: Time.now - 6.months)
   end
 
+  # before :each do
+  #   loc = Geokit::GeoLoc.new
+  #   loc.city = 'Zurich'
+  #   loc.country = 'Switzerland'
+  #   allow_any_instance_of(WorkingPlace).to receive(:place_info) { loc }
+  #   binding.pry
+  # end
+
   context 'GET #index' do
     subject { get :index }
     before { subject }
 
     it { is_expected.to have_http_status(200) }
     it { expect_json_sizes(1) }
-    it { expect_json_keys('*', [:id, :type, :name, :employees, :holiday_policy]) }
+    it do
+      expect_json_keys('*', [:id, :type, :name, :employees, :holiday_policy, :country, :state,
+                             :city, :postalcode, :street, :street_number, :additional_address])
+    end
   end
 
   context 'GET #show' do
@@ -51,6 +63,9 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
 
   context 'POST #create' do
     let(:name) { 'test' }
+    let(:country) { 'Switzerland' }
+    let(:city) { 'Zurich' }
+    let(:state) { 'Some State' }
     let(:holiday_policy_id) { holiday_policy.id }
     let(:valid_data_json) do
       {
@@ -58,8 +73,11 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
         type: 'working_place',
         holiday_policy: {
           id: holiday_policy_id,
-          type: 'holiday_policy',
-        }
+          type: 'holiday_policy'
+        },
+        country: country,
+        city: city,
+        state: state
       }
     end
     shared_examples 'Invalid Data' do
@@ -77,13 +95,17 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
       it { expect { subject }.to change { account.reload.working_places.count }.by(1) }
       it { expect { subject }.to change { holiday_policy.working_places.count }.by(1) }
 
-
       it { is_expected.to have_http_status(201) }
 
       context 'response' do
         before { subject }
 
-        it { expect_json_types(name: :string, id: :string, type: :string) }
+        it do
+          expect_json_types(name: :string, id: :string, type: :string, country: :string,
+                            city: :string, state: :string_or_null, postalcode: :string_or_null,
+                            street: :string_or_null, street_number: :string_or_null,
+                            additional_address: :string_or_null)
+        end
       end
 
       context 'null holiday policy' do
@@ -113,16 +135,44 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
       end
 
       context 'with params that are not valid' do
-        let(:name) { '' }
+        ## POPRAWA array
+        context 'without name' do
+          let(:name) { '' }
 
-        it_behaves_like 'Invalid Data'
+          it_behaves_like 'Invalid Data'
 
-        it { is_expected.to have_http_status(422) }
+          it { is_expected.to have_http_status(422) }
 
-        context 'response' do
-          before { subject }
+          context 'response' do
+            before { subject }
 
-          it { expect_json(regex("must be filled")) }
+            it { expect_json(regex('must be filled')) }
+          end
+        end
+        context 'without country' do
+          let(:country) { '' }
+
+          it_behaves_like 'Invalid Data'
+
+          it { is_expected.to have_http_status(422) }
+
+          context 'response' do
+            before { subject }
+
+            it { expect_json(regex('must be filled')) }
+          end
+        end
+        context 'with param that fails regex validation' do
+          let(:state) { 'Some State1' }
+          it_behaves_like 'Invalid Data'
+
+          it { is_expected.to have_http_status(422) }
+
+          context 'response' do
+            before { subject }
+
+            it { expect_json(regex('only nondigit')) }
+          end
         end
       end
 
@@ -158,8 +208,10 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
           type: 'working_place',
           holiday_policy: {
             id: holiday_policy_id,
-            type: 'holiday_policy',
-          }
+            type: 'holiday_policy'
+          },
+          country: 'Switzerland',
+          city: 'Zurich'
         }
       end
 

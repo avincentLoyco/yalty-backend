@@ -2,7 +2,14 @@ module Api::V1
   class WorkingPlaceRepresenter < BaseRepresenter
     def complete
       {
-        name: resource.name
+        name: resource.name,
+        country: resource.country,
+        state: resource.state,
+        city: resource.city,
+        postalcode: resource.postalcode,
+        street: resource.street,
+        street_number: resource.street_number,
+        additional_address: resource.additional_address
       }
         .merge(basic)
         .merge(relationships)
