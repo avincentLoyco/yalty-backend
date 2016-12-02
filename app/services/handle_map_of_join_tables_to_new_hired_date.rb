@@ -1,4 +1,6 @@
-class ManageEmployeeJoinTables
+class HandleMapOfJoinTablesToNewHiredDate
+  attr_reader :employee, :new_hired_date, :join_table_class, :balances, :join_tables_in_range
+
   JOIN_TABLES_CLASSES = %w(employee_working_places
                            employee_presence_policies
                            employee_time_off_policies).freeze
@@ -15,8 +17,6 @@ class ManageEmployeeJoinTables
   end
 
   private
-
-  attr_reader :employee, :new_hired_date, :join_table_class, :balances, :join_tables_in_range
 
   def updated_join_tables
     JOIN_TABLES_CLASSES.map do |join_table_class|
@@ -62,28 +62,30 @@ class ManageEmployeeJoinTables
   end
 
   def remove_and_update_etops_by_category
-    grouped_etops_in_range.map do |_category, etop|
-      join_tables_to_destroy = etop.first(etop.size - 1)
+    grouped_etops_in_range.map do |_category, etop_collection|
+      join_tables_to_destroy = etop_collection.first(etop_collection.size - 1)
       join_tables_to_destroy.map(&:policy_assignation_balance).compact.map(&:destroy!)
       join_tables_to_destroy.map(&:destroy!)
-      update_time_off_policy_assignation_balance(etop.last)
-      etop.last.tap { |table| table.assign_attributes(effective_at: new_hired_date) }
+      update_time_off_policy_assignation_balance(etop_collection.last)
+      etop_collection.last.tap { |etop| etop.assign_attributes(effective_at: new_hired_date) }
     end
   end
 
   def remove_older_join_tables_and_update_last(join_tables = join_tables_in_range)
     join_tables_to_destroy_size = join_tables.size - 1
-    join_tables.first(join_tables_to_destroy_size).map(&:destroy!)
-    join_tables.last.tap { |table| table.assign_attributes(effective_at: new_hired_date) }
+    join_tables.limit(join_tables_to_destroy_size).destroy_all
+    join_tables.last.tap do |join_table|
+      join_table.assign_attributes(effective_at: new_hired_date)
+    end
   end
 
-  def update_time_off_policy_assignation_balance(assignation)
-    assignation_balance = assignation.policy_assignation_balance
+  def update_time_off_policy_assignation_balance(etop)
+    assignation_balance = etop.policy_assignation_balance
     return unless assignation_balance.present?
-    validity_date = RelatedPolicyPeriod.new(assignation).validity_date_for(new_hired_date)
+    validity_date = RelatedPolicyPeriod.new(etop).validity_date_for(new_hired_date)
     assignation_balance.assign_attributes(
       effective_at: new_hired_date + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
-      policy_credit_addition: time_off_policy_start_date?(assignation),
+      policy_credit_addition: time_off_policy_start_date?(etop),
       validity_date: validity_date
     )
     balances.push(assignation_balance)
@@ -105,8 +107,8 @@ class ManageEmployeeJoinTables
     join_table_class.eql?('employee_time_off_policies')
   end
 
-  def time_off_policy_start_date?(assignation)
-    policy = assignation.time_off_policy
+  def time_off_policy_start_date?(etop)
+    policy = etop.time_off_policy
     new_hired_date.to_date == Date.new(new_hired_date.year, policy.start_month, policy.start_day)
   end
 end

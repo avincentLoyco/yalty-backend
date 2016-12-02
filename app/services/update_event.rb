@@ -39,7 +39,8 @@ class UpdateEvent
 
   def update_employee_join_tables
     return if event.event_type != 'hired'
-    @updated_assignations = ManageEmployeeJoinTables.new(employee, event_params[:effective_at]).call
+    @updated_assignations =
+      HandleMapOfJoinTablesToNewHiredDate.new(employee, event_params[:effective_at]).call
   end
 
   def manage_versions
@@ -143,7 +144,9 @@ class UpdateEvent
 
   def create_policy_additions_and_removals
     employee_time_off_policies =
-      updated_assignations[:join_tables].select { |table| table.class.eql?(EmployeeTimeOffPolicy) }
+      updated_assignations[:join_tables].select do |join_table|
+        join_table.class.eql?(EmployeeTimeOffPolicy)
+      end
 
     employee_time_off_policies.map do |policy|
       ManageEmployeeBalanceAdditions.new(policy).call

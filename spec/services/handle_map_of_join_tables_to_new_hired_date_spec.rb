@@ -1,9 +1,9 @@
 require 'rails_helper'
 
-RSpec.describe ManageEmployeeJoinTables, type: :service do
+RSpec.describe HandleMapOfJoinTablesToNewHiredDate, type: :service do
   include_context 'shared_context_account_helper'
   include_context 'shared_context_timecop_helper'
-  subject { ManageEmployeeJoinTables.new(employee, hired_date).call }
+  subject { HandleMapOfJoinTablesToNewHiredDate.new(employee, hired_date).call }
 
   describe 'For EmployeeTimeOffPolicy' do
     let(:employee) { create(:employee) }
