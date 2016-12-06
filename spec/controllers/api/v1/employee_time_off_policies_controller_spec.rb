@@ -844,7 +844,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
     subject { delete :destroy, id: id }
 
     context 'with valid params' do
-      context 'when creating etop in place of another' do
+      context 'when removing etop between the same etops' do
         let(:id) { etop_b.id }
         let(:top_a) { time_off_policy }
         let(:top_b) do

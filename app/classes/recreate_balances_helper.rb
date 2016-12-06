@@ -86,7 +86,8 @@ class RecreateBalancesHelper
       effective_at: new_effective_at,
       validity_date: RelatedPolicyPeriod.new(etop).validity_date_for(new_effective_at),
       manual_amount: manual_amount,
-      policy_credit_addition: assignation_in_start_date?
+      policy_credit_addition: assignation_in_start_date?,
+      resource_amount: assignation_in_start_date? ? etop.time_off_policy.amount : 0
     ).call
   end
 

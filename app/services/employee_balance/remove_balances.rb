@@ -18,12 +18,10 @@ class RemoveBalances
   private
 
   def day_before_start_dates_to_delete
-    balances_before = balances_in_category.where(
-      'employee_balances.effective_at > ?', starting_date.to_date - 1.day
-    )
-    balances = balances_before.where(policy_credit_addition: false).not_time_off
-    balances = balances.where('effective_at < ?', ending_date) if ending_date.present?
-    balances - removals_after_new_effective_at - assignation_balances
+    day_before_dates = additions_to_delete.map do |balance|
+      balance.effective_at.to_date - 1.day + Employee::Balance::DAY_BEFORE_START_DAY_OFFSET
+    end
+    balances_in_category.where(effective_at: day_before_dates)
   end
 
   def removals_to_delete
@@ -31,9 +29,11 @@ class RemoveBalances
   end
 
   def removals_with_additions_between_dates
-    balances = removals_after_new_effective_at.where('
-      balance_credit_additions.effective_at > ? ', starting_date)
-    return balances unless ending_date.present?
+    balances =
+      removals_after_new_effective_at
+      .where('balance_credit_additions.effective_at > ?', starting_date)
+      .where.not(balance_credit_additions: { id: assignation_balances_ids})
+    return balances. unless ending_date.present?
     balances.where('balance_credit_additions.effective_at < ?', ending_date)
   end
 
@@ -55,6 +55,10 @@ class RemoveBalances
     balances = balances_after_starting_date.additions.not_time_off
     return balances - assignation_balances unless ending_date.present?
     balances.where('effective_at <= ?', ending_date) - assignation_balances
+  end
+
+  def assignation_balances_ids
+    assignation_balances.pluck(:id)
   end
 
   def assignation_balances

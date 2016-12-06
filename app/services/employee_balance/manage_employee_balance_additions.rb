@@ -125,7 +125,8 @@ class ManageEmployeeBalanceAdditions
       etop.employee.account.id,
       effective_at: etop.effective_at + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
       validity_date: RelatedPolicyPeriod.new(etop).validity_date_for(etop.effective_at),
-      policy_credit_addition: assignation_in_start_date?(etop)
+      policy_credit_addition: assignation_in_start_date?(etop),
+      resource_amount: assignation_in_start_date?(etop) ? etop.time_off_policy.amount : 0
     ).call
   end
 
