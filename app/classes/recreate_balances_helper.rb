@@ -85,8 +85,17 @@ class RecreateBalancesHelper
       employee.account.id,
       effective_at: new_effective_at,
       validity_date: RelatedPolicyPeriod.new(etop).validity_date_for(new_effective_at),
-      manual_amount: manual_amount
+      manual_amount: manual_amount,
+      policy_credit_addition: assignation_in_start_date?
     ).call
+  end
+
+  def assignation_in_start_date?
+    start_day = etop.time_off_policy.start_day
+    start_month = etop.time_off_policy.start_month
+    assignation_day = etop.effective_at.day
+    assignation_month = etop.effective_at.month
+    start_day == assignation_day && start_month == assignation_month
   end
 
   def manage_additions!

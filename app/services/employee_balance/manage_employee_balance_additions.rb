@@ -31,11 +31,13 @@ class ManageEmployeeBalanceAdditions
 
   def create_additions_with_removals
     etops_between_dates.each do |etop|
+      create_assignation_balance!(etop) if etop.policy_assignation_balance.nil?
+
       balance_date = RelatedPolicyPeriod.new(etop).first_start_date
       date_to_which_create_balances = etop.effective_till || ending_date
 
       while balance_date <= date_to_which_create_balances
-        if addition_at(balance_date).nil?
+        if addition_at(etop, balance_date).nil?
           balances << CreateEmployeeBalance.new(*employee_balance_params(etop, balance_date)).call
         end
         if create_before_start_date_balance?(etop, balance_date)
@@ -68,8 +70,8 @@ class ManageEmployeeBalanceAdditions
       day_before_balance_at(etop, date - 1.day).nil?
   end
 
-  def addition_at(date)
-    employee.employee_balances.find_by(
+  def addition_at(etop, date)
+    employee.employee_balances.where(time_off_category: etop.time_off_category).find_by(
       'effective_at = ?', date + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET)
   end
 
@@ -114,6 +116,25 @@ class ManageEmployeeBalanceAdditions
       effective_at: date + Employee::Balance::DAY_BEFORE_START_DAY_OFFSET,
       resource_amount: 0
     }
+  end
+
+  def create_assignation_balance!(etop)
+    CreateEmployeeBalance.new(
+      etop.time_off_category.id,
+      etop.employee.id,
+      etop.employee.account.id,
+      effective_at: etop.effective_at + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
+      validity_date: RelatedPolicyPeriod.new(etop).validity_date_for(etop.effective_at),
+      policy_credit_addition: assignation_in_start_date?(etop)
+    ).call
+  end
+
+  def assignation_in_start_date?(etop)
+    start_day = etop.time_off_policy.start_day
+    start_month = etop.time_off_policy.start_month
+    assignation_day = etop.effective_at.day
+    assignation_month = etop.effective_at.month
+    start_day == assignation_day && start_month == assignation_month
   end
 
   def validity_date_for_base_options(etop, date, for_day_before)
