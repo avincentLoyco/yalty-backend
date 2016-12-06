@@ -2,6 +2,7 @@ require 'rails_helper'
 
 RSpec.describe do
   include_context 'shared_context_account_helper'
+  include_context 'shared_context_timecop_helper'
 
   before do
     Account.current = employee.account
@@ -148,23 +149,130 @@ RSpec.describe do
     end
 
     context 'when effective at changes' do
-      before 'assign employee_working_place to employee' do
-        create(:employee_working_place, employee: employee)
-        employee.reload
+      before do
+        versions = employee.reload.employee_attribute_versions
+        versions.first.update!(attribute_definition: definition, data: { string: 'a' })
+        employee.events.first.update!(effective_at: 2.years.ago + 1.day)
+        employee_attributes_params.shift
+        [[20, etops.first], [30, etops.last], [40, new_etop]].map do |manual_amount, etop|
+          etop.policy_assignation_balance.update!(
+            manual_amount: manual_amount, policy_credit_addition: false
+          )
+        end
       end
 
+      let(:first_category) { create(:time_off_category, account: employee.account) }
+      let(:second_category) { create(:time_off_category, account: employee.account) }
+      let!(:ewp) do
+        create(:employee_working_place, employee: employee, effective_at: 2.years.ago + 1.day)
+      end
+      let!(:etops) do
+        [first_category, second_category].map do |category|
+          create(:employee_time_off_policy, :with_employee_balance,
+            employee: employee, effective_at: 2.years.ago + 1.day,
+            time_off_policy:
+              create(:time_off_policy, :with_end_date, time_off_category: category)
+          )
+        end
+      end
+      let!(:new_etop) do
+        create(:employee_time_off_policy, :with_employee_balance,
+          employee: employee, effective_at: 2.years.ago + 5.days,
+          time_off_policy:
+            create(:time_off_policy, :with_end_date,time_off_category: first_category)
+        )
+      end
+      let!(:epp) do
+        create(:employee_presence_policy, employee: employee, effective_at: 2.years.since)
+      end
+      let!(:first_balance) { etops.first.policy_assignation_balance }
+      let!(:second_balance) { etops.last.policy_assignation_balance }
+      let!(:newest_balance) { new_etop.policy_assignation_balance }
+      let(:effective_at) { 1.year.since }
+
       context 'and this is event hired' do
-        it { expect { subject }.to change { event.reload.effective_at } }
-        it { expect { subject }
-          .to change { employee.employee_working_places.first.reload.effective_at } }
+        context 'and date move to the future' do
+          it { expect { subject }.to change { event.reload.effective_at } }
+          it { expect { subject }.to change { ewp.reload.effective_at } }
+          it { expect { subject }.to change { etops.last.reload.effective_at } }
+          it { expect { subject }.to change { new_etop.reload.effective_at } }
+          it { expect { subject }.to change { newest_balance.reload.effective_at } }
+          it { expect { subject }.to change { second_balance.reload.effective_at } }
+          it do
+            expect { subject }.to change { newest_balance.reload.policy_credit_addition }.to true
+          end
+
+          it { expect { subject }.to change { EmployeeTimeOffPolicy.exists?(etops.first.id) } }
+          it { expect { subject }.to change { Employee::Balance.exists?(first_balance.id) } }
+          it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
+
+          it { expect { subject }.to_not change { second_balance.reload.manual_amount } }
+          it { expect { subject }.to_not change { newest_balance.reload.manual_amount } }
+          it { expect { subject }.to_not change { epp.reload.effective_at } }
+
+          context 'it does not change policy credit addition to true while not policy start date' do
+            let(:effective_at) { 1.year.since + 1.day }
+
+            it { expect { subject }.to_not change { newest_balance.reload.policy_credit_addition } }
+          end
+        end
+
+        context 'and date move to the past' do
+          before do
+            EmployeeTimeOffPolicy.all.map do |etop|
+              ManageEmployeeBalanceAdditions.new(etop).call
+            end
+            params[:effective_at] = 3.years.ago
+          end
+
+          it { expect { subject }.to change { event.reload.effective_at } }
+          it { expect { subject }.to change { ewp.reload.effective_at } }
+          it { expect { subject }.to change { etops.last.reload.effective_at } }
+          it { expect { subject }.to change { etops.first.reload.effective_at } }
+          it { expect { subject }.to change { first_balance.reload.effective_at } }
+          it { expect { subject }.to change { second_balance.reload.effective_at } }
+          it { expect { subject }.to change { Employee::Balance.additions.count }.by(4) }
+          it { expect { subject }.to change { Employee::Balance.removals.count }.by(4) }
+          it { expect { subject }.to change { Employee::Balance.count}.by(8) }
+
+          it { expect { subject }.to_not change { first_balance.reload.manual_amount } }
+          it { expect { subject }.to_not change { second_balance.reload.manual_amount } }
+          it { expect { subject }.to_not change { newest_balance.reload.manual_amount } }
+          it { expect { subject }.to_not change { new_etop.reload.effective_at } }
+          it { expect { subject }.to_not change { newest_balance.reload.effective_at } }
+          it { expect { subject }.to_not change { epp.reload.effective_at } }
+
+          it { expect { subject }.to_not change { EmployeeTimeOffPolicy.exists?(etops.first.id) } }
+
+          context 'it does not change policy credit addition to true while not policy start date' do
+            let(:effective_at) { 3.years.ago + 1.day }
+
+            it { expect { subject }.to_not change { newest_balance.reload.policy_credit_addition } }
+          end
+        end
       end
 
       context 'and this is not hired event' do
         let(:event_type) { 'change' }
 
         it { expect { subject }.to change { event.reload.effective_at } }
-        it { expect { subject }
-          .to_not change { employee.employee_working_places.first.reload.effective_at } }
+        it { expect { subject }.to_not change { ewp.reload.effective_at } }
+        it { expect { subject }.to_not change { etops.last.reload.effective_at } }
+        it { expect { subject }.to_not change { new_etop.reload.effective_at } }
+
+        it { expect { subject }.to_not change { EmployeeTimeOffPolicy.exists?(etops.first.id) } }
+
+        it { expect { subject }.to_not change { epp.reload.effective_at } }
+      end
+
+      context 'when there are employee balances between previous hired date and new hired date' do
+        before do
+          create(:time_off,
+            start_time: employee.hired_date + 1.month,
+            end_time: employee.hired_date + 2.months, employee: employee)
+        end
+
+        it { expect { subject }.to raise_error(ActiveRecord::RecordInvalid) }
       end
     end
 
@@ -211,12 +319,6 @@ RSpec.describe do
   end
 
   context 'with invalid params' do
-    context 'when required param value set to null' do
-      let(:effective_at) { nil }
-
-      it { expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
-    end
-
     context 'when required attribute does not send or value set to nil' do
       before do
         Employee::AttributeDefinition
@@ -226,7 +328,7 @@ RSpec.describe do
       context 'when required attribute does not send' do
         before { employee_attributes_params.pop }
 
-        it { expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
+        it { expect { subject }.to raise_error(ActiveRecord::RecordInvalid) }
       end
 
       context 'when required attribute value set to nil' do

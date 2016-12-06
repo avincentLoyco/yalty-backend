@@ -60,9 +60,12 @@ class CreateEmployeeBalance
   private
 
   def find_active_assignation_balance_for_date
-    active_policy = employee.active_policy_in_category_at_date(category.id, options[:effective_at])
-    return unless active_policy_and_date_match?
-    active_policy.policy_assignation_balance
+    return if options[:time_off_id] || options[:effective_at].blank?
+    Employee::Balance
+      .employee_balances(employee.id, category.id)
+      .where(effective_at: options[:effective_at])
+      .where(time_off_id: nil)
+      .first
   end
 
   def active_policy_and_date_match?
