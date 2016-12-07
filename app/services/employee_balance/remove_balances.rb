@@ -32,8 +32,8 @@ class RemoveBalances
     balances =
       removals_after_new_effective_at
       .where('balance_credit_additions.effective_at > ?', starting_date)
-      .where.not(balance_credit_additions: { id: assignation_balances_ids})
-    return balances. unless ending_date.present?
+      .where.not(balance_credit_additions: { id: assignation_balances_ids })
+    return balances unless ending_date.present?
     balances.where('balance_credit_additions.effective_at < ?', ending_date)
   end
 
@@ -44,7 +44,7 @@ class RemoveBalances
 
   def removals_after_new_effective_at
     @removals_after_new_effective_at ||=
-      balances_after_starting_date.removals.joins('
+      balances_after_starting_date.joins('
         INNER JOIN employee_balances AS balance_credit_additions
         ON balance_credit_additions.balance_credit_removal_id =
         employee_balances.id

@@ -234,7 +234,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
           end
           let!(:related_balance) do
             create(:employee_balance_manual, effective_at: related_effective_at, employee: employee,
-              time_off_category: time_off_policy.time_off_category)
+              time_off_category: time_off_policy.time_off_category, updated_at: Time.zone.now - 30.minutes)
           end
 
           context 'after effective at' do
@@ -245,7 +245,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
               expect { subject }.to change { EmployeeTimeOffPolicy.exists?(related_resource.id) }
             end
             it do
-              expect { subject }.to change { Employee::Balance.exists?(related_balance.id) }
+              expect { subject }.to_not change { related_balance.updated_at }
             end
 
             it 'should have proper data in response body' do
@@ -515,7 +515,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
           end
           let(:expected_balances_dates) do
             ['2015-01-01', '2016-01-01', '2016-01-31', '2016-02-01', '2016-04-01', '2017-01-31',
-             '2017-02-01', '2017-05-01', '2018-05-01'].map(&:to_date)
+             '2017-02-01', '2017-05-01', '2018-04-01', '2018-05-01', '2019-05-01'].map(&:to_date)
           end
           let(:id) { EmployeeTimeOffPolicy.order(:effective_at).first.id }
 

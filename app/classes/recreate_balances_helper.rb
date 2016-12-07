@@ -44,7 +44,9 @@ class RecreateBalancesHelper
 
   def remove_balance_at_old_effective_at!
     return unless balance_at_old_effective_at.present?
+    removal = balance_at_old_effective_at.balance_credit_removal
     balance_at_old_effective_at.delete
+    removal.delete if removal && removal.balance_credit_additions.empty?
   end
 
   def recreate_and_recalculate_balances!
