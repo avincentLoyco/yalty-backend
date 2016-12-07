@@ -58,10 +58,13 @@ class Account < ActiveRecord::Base
   ATTR_VALIDATIONS = {
     lastname: { presence: true },
     firstname: { presence: true },
-    start_date: { presence: true }
+    start_date: { presence: true },
+    file: { presence: true }
   }.with_indifferent_access
 
   MULTIPLE_ATTRIBUTES = %w(child).freeze
+
+  ATTRIBUTES_WITH_LONG_TOKEN = %w(profile_picture).freeze
 
   DEFAULT_ATTRIBUTES = {
     Attribute::String.attribute_type => %w(
@@ -81,7 +84,10 @@ class Account < ActiveRecord::Base
     ),
     Attribute::Address.attribute_type => %w(address),
     Attribute::Child.attribute_type => %w(child),
-    Attribute::Person.attribute_type => %w(spouse)
+    Attribute::Person.attribute_type => %w(spouse),
+    Attribute::File.attribute_type => %w(
+      profile_picture salary_slip contract id_card work_permit avs_card
+    )
   }.freeze
 
   DEFAULT_ATTRIBUTE_DEFINITIONS = Account::DEFAULT_ATTRIBUTES.map do |type, attributes|
@@ -104,7 +110,8 @@ class Account < ActiveRecord::Base
           attribute_type: attr[:type],
           system: true,
           multiple: MULTIPLE_ATTRIBUTES.include?(attr[:name]),
-          validation: attr[:validation]
+          validation: attr[:validation],
+          long_token_allowed: ATTRIBUTES_WITH_LONG_TOKEN.include?(attr[:name])
         )
       end
 

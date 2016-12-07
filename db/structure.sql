@@ -131,7 +131,8 @@ CREATE TABLE employee_attribute_definitions (
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
-    multiple boolean DEFAULT false NOT NULL
+    multiple boolean DEFAULT false NOT NULL,
+    long_token_allowed boolean DEFAULT false NOT NULL
 );
 
 
@@ -1564,6 +1565,8 @@ INSERT INTO schema_migrations (version) VALUES ('20161108075746');
 INSERT INTO schema_migrations (version) VALUES ('20161117124026');
 
 INSERT INTO schema_migrations (version) VALUES ('20161123081056');
+
+INSERT INTO schema_migrations (version) VALUES ('20161207095113');
 
 INSERT INTO schema_migrations (version) VALUES ('20170111105844');
 
