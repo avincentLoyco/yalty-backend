@@ -232,8 +232,8 @@ RSpec.describe do
           it { expect { subject }.to change { first_balance.reload.effective_at } }
           it { expect { subject }.to change { second_balance.reload.effective_at } }
           it { expect { subject }.to change { Employee::Balance.additions.count }.by(4) }
-          it { expect { subject }.to change { Employee::Balance.removals.count }.by(4) }
-          it { expect { subject }.to change { Employee::Balance.count}.by(8) }
+          it { expect { subject }.to change { Employee::Balance.removals.count }.by(2) }
+          it { expect { subject }.to change { Employee::Balance.count}.by(6) }
 
           it { expect { subject }.to_not change { first_balance.reload.manual_amount } }
           it { expect { subject }.to_not change { second_balance.reload.manual_amount } }
