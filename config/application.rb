@@ -35,6 +35,9 @@ module Yalty
     config.autoload_once_paths << config.root.join('app', 'services', 'schedule')
 
     Geokit::Geocoders::GoogleGeocoder.api_key = ENV['GOOGLE_GEOCODERS']
+    Timezone::Lookup.config(:geonames) do |c|
+      c.username = ENV['GEONAMES_KEY']
+    end
     # Genrators
     config.generators do |g|
       g.orm                 :active_record
