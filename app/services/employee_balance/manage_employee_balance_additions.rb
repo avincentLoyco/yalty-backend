@@ -42,7 +42,9 @@ class ManageEmployeeBalanceAdditions
         end
         if create_before_start_date_balance?(etop, balance_date)
           balances <<
-            CreateEmployeeBalance.new(*employee_balance_params(etop, balance_date - 1.day, true)).call
+            CreateEmployeeBalance.new(
+              *employee_balance_params(etop, balance_date - 1.day, true)
+            ).call
         end
         balance_date += 1.year
       end
@@ -72,12 +74,14 @@ class ManageEmployeeBalanceAdditions
 
   def addition_at(etop, date)
     employee.employee_balances.where(time_off_category: etop.time_off_category).find_by(
-      'effective_at = ?', date + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET)
+      'effective_at = ?', date + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET
+    )
   end
 
   def day_before_balance_at(etop, date)
     employee.employee_balances.where(time_off_category: etop.time_off_category).find_by(
-      'effective_at = ?', date + Employee::Balance::DAY_BEFORE_START_DAY_OFFSET)
+      'effective_at = ?', date + Employee::Balance::DAY_BEFORE_START_DAY_OFFSET
+    )
   end
 
   def employee_balance_params(etop, date, for_day_before = false)

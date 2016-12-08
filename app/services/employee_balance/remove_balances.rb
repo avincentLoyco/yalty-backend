@@ -69,14 +69,14 @@ class RemoveBalances
       clause_for_old_effective_at =
         "effective_at::date = \'#{old_effective_at.try(:to_date)}\'::date"
 
-      sql_where_clause = case
-      when etop_effective_ats.present? && old_effective_at.present?
-        clause_for_etops + ' OR ' + clause_for_old_effective_at
-      when etop_effective_ats.empty? && old_effective_at.present?
-        clause_for_old_effective_at
-      when etop_effective_ats.present? && old_effective_at.nil?
-        clause_for_etops
-      end
+      sql_where_clause =
+        if etop_effective_ats.present? && old_effective_at.present?
+          clause_for_etops + ' OR ' + clause_for_old_effective_at
+        elsif etop_effective_ats.empty? && old_effective_at.present?
+          clause_for_old_effective_at
+        elsif etop_effective_ats.present? && old_effective_at.nil?
+          clause_for_etops
+        end
 
       balances_in_category.not_time_off.where(sql_where_clause)
     end

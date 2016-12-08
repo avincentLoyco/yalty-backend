@@ -38,7 +38,7 @@ class CreateEmployeeBalance
   def build_employee_balance_removal
     @balance_removal =
       Employee::Balance
-        .removal_at_date(employee.id, category.id, employee_balance.validity_date).first
+      .removal_at_date(employee.id, category.id, employee_balance.validity_date).first
     @balance_removal ||=
       Employee::Balance.new(
         employee_id: employee.id,
