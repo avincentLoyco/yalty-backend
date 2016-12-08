@@ -9,7 +9,8 @@ module Api::V1
         postalcode: resource.postalcode,
         street: resource.street,
         street_number: resource.street_number,
-        additional_address: resource.additional_address
+        additional_address: resource.additional_address,
+        timezone: resource.timezone
       }
         .merge(basic)
         .merge(relationships)

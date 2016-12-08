@@ -33,8 +33,13 @@ RSpec.shared_examples 'example_crud_resources' do |settings|
       if actions.include?(:create)
         context 'POST #create' do
           context 'valid data and valid id' do
-            let(:resource_params) { attributes_for(settings[:resource_name]) }
             let(:params) { resource_params.merge("type": settings[:resource_name].pluralize) }
+
+            if settings[:resource_name].eql?('working_place')
+              let(:resource_params) { attributes_for(settings[:resource_name], :with_address) }
+            else
+              let(:resource_params) { attributes_for(settings[:resource_name]) }
+            end
 
             it 'should create resource' do
               expect { post :create, params }.to change { resource_name.classify.

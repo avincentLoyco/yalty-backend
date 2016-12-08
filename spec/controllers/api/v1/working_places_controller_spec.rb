@@ -19,13 +19,14 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
       working_place: first_working_place, effective_at: Time.now - 6.months)
   end
 
-  # before :each do
-  #   loc = Geokit::GeoLoc.new
-  #   loc.city = 'Zurich'
-  #   loc.country = 'Switzerland'
-  #   allow_any_instance_of(WorkingPlace).to receive(:place_info) { loc }
-  #   binding.pry
-  # end
+  before :each do
+    allow_any_instance_of(WorkingPlace).to receive(:place_info) do
+      loc = Geokit::GeoLoc.new(city: 'Zürich')
+      loc.country = 'Switzerland'
+      loc
+    end
+    allow_any_instance_of(WorkingPlace).to receive(:place_timezone) { 'Europe/Zurich' }
+  end
 
   context 'GET #index' do
     subject { get :index }
@@ -95,6 +96,13 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
       it { expect { subject }.to change { account.reload.working_places.count }.by(1) }
       it { expect { subject }.to change { holiday_policy.working_places.count }.by(1) }
 
+      context 'response' do
+        before { subject }
+
+        it { expect_json(regex('Zürich')) }
+        it { expect_json(regex('Europe/Zurich')) }
+      end
+
       it { is_expected.to have_http_status(201) }
 
       context 'response' do
@@ -104,7 +112,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
           expect_json_types(name: :string, id: :string, type: :string, country: :string,
                             city: :string, state: :string_or_null, postalcode: :string_or_null,
                             street: :string_or_null, street_number: :string_or_null,
-                            additional_address: :string_or_null)
+                            additional_address: :string_or_null, timezone: :string_or_null)
         end
       end
 
@@ -135,7 +143,6 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
       end
 
       context 'with params that are not valid' do
-        ## POPRAWA array
         context 'without name' do
           let(:name) { '' }
 

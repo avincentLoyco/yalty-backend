@@ -164,6 +164,7 @@ GEM
       rspec (~> 3.0)
     ffi (1.9.10)
     formatador (0.2.5)
+    geokit (1.10.0)
     git-version-bump (0.15.1)
     globalid (0.3.7)
       activesupport (>= 4.1.0)
@@ -397,6 +398,7 @@ GEM
     thread_safe (0.3.5)
     tilt (2.0.5)
     timecop (0.7.4)
+    timezone (1.2.3)
     tod (2.0.2)
     tzinfo (1.2.2)
       thread_safe (~> 0.1)
@@ -447,6 +449,7 @@ DEPENDENCIES
   faker
   fakeredis (~> 0.5.0)
   fantaskspec
+  geokit (~> 1.10.0)
   guard-rspec
   holidays (~> 4.0)
   intercom (~> 3.3.0)
@@ -476,6 +479,7 @@ DEPENDENCIES
   temping
   therubyracer (~> 0.12.2)
   timecop
+  timezone
   tod (~> 2.0.2)
   virtus (~> 1.0.5)
   web-console (~> 2.0)

@@ -5,7 +5,7 @@ class WorkingPlace < ActiveRecord::Base
   has_many :employee_working_places
   has_many :employees, through: :employee_working_places
 
-  validates :name, :account_id, :country, :city, presence: true
+  validates :name, :account_id, presence: true
   validates :country, :city, :additional_address, length: { maximum: 60 }
   validates :street, length: { maximum: 72 }
   validates :state,
@@ -20,7 +20,9 @@ class WorkingPlace < ActiveRecord::Base
     length: { maximum: 10 },
     format: { with: /\A[A-Z0-9 \/]+\z/, message: 'only numbers, capital letters and /'},
     allow_blank: true
-  validate :address_existance, on: [:create, :update], if: :address_presence?
+  validate :address_existance, on: [:create, :update], if: [:city, :country]
+  validate :correct_address, on: [:create, :update], if: [:city, :country]
+  after_validation :assign_address, on: [:create, :update], if: [:city, :country]
 
   scope :active_for_employee, lambda { |employee_id, date|
     joins(:employee_working_places)
@@ -36,16 +38,13 @@ class WorkingPlace < ActiveRecord::Base
     @place_info ||= Geokit::Geocoders::GoogleGeocoder.geocode("#{city}, #{country}")
   end
 
-  def address_presence?
-    city.present? && country.present?
+  def place_timezone
+    @place_timezone ||= Timezone.lookup(place_info.lat, place_info.lng).name
   end
 
   def address_existance
-    if place_info.city.nil? || place_info.country.nil?
-      errors.add(:address, 'place does not exist')
-    else
-      correct_address
-    end
+    return if place_info.city.present? || place_info.country.present?
+    errors.add(:address, 'place does not exist')
   end
 
   def correct_address
@@ -53,19 +52,27 @@ class WorkingPlace < ActiveRecord::Base
     errors.add(:address, 'place not found')
   end
 
+  def assign_address
+    self.city = place_info.city
+    self.country = place_info.country
+    self.timezone = place_timezone
+  end
+
   def standardized_city
-    @standardized_city ||= I18n.transliterate(place_info.city).downcase.capitalize
+    return if place_info.city.nil?
+    I18n.transliterate(place_info.city).downcase.capitalize
   end
 
   def standardized_country
-    @standardized_country ||= I18n.transliterate(place_info.country).downcase.capitalize
+    return if place_info.country.nil?
+    I18n.transliterate(place_info.country).downcase.capitalize
   end
 
   def capitalized_city
-    @capitalized_city ||= I18n.transliterate(city).downcase.capitalize
+    I18n.transliterate(city).downcase.capitalize
   end
 
   def capitalized_country
-    @capitalized_country ||= I18n.transliterate(country).downcase.capitalize
+    I18n.transliterate(country).downcase.capitalize
   end
 end
