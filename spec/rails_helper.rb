@@ -5,6 +5,7 @@ require File.expand_path('../../config/environment', __FILE__)
 require 'rspec/rails'
 # Add additional requires below this line. Rails is not loaded until this point!
 require 'fantaskspec'
+require 'paperclip/matchers'
 
 Rails.application.load_tasks
 
@@ -31,6 +32,7 @@ RSpec.configure do |config|
   # Basic HTTP Auth
   config.include AuthRequestHelper, type: :request
   config.include AuthHelper, type: :controller
+  config.include Paperclip::Shoulda::Matchers
 
   # If you're not using ActiveRecord, or you'd prefer not to run each of your
   # examples within a transaction, remove the following line or assign false

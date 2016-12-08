@@ -216,6 +216,21 @@ CREATE TABLE employee_balances (
 
 
 --
+-- Name: employee_files; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE employee_files (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    created_at timestamp without time zone,
+    updated_at timestamp without time zone,
+    file_file_name character varying,
+    file_content_type character varying,
+    file_file_size integer,
+    file_updated_at timestamp without time zone
+);
+
+
+--
 -- Name: employee_presence_policies; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -627,6 +642,14 @@ ALTER TABLE ONLY employee_balances
 
 ALTER TABLE ONLY employee_events
     ADD CONSTRAINT employee_events_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: employee_files_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY employee_files
+    ADD CONSTRAINT employee_files_pkey PRIMARY KEY (id);
 
 
 --
@@ -1567,6 +1590,8 @@ INSERT INTO schema_migrations (version) VALUES ('20161117124026');
 INSERT INTO schema_migrations (version) VALUES ('20161123081056');
 
 INSERT INTO schema_migrations (version) VALUES ('20161207095113');
+
+INSERT INTO schema_migrations (version) VALUES ('20161207131436');
 
 INSERT INTO schema_migrations (version) VALUES ('20170111105844');
 
