@@ -89,7 +89,23 @@ class Employee < ActiveRecord::Base
     EmployeeTimeOffPolicy.not_assigned_at(date).by_employee_in_category(id, category_id).limit(2)
   end
 
+  def has_file_with?(file_id)
+    employee_files.find_by(id: file_id).present?
+  end
+
+  def employee_files
+    EmployeeFile.where(id: employee_file_ids)
+  end
+
   private
+
+  def employee_file_ids
+    ActiveRecord::Base.connection.execute("""
+      SELECT data -> 'id' AS file_id FROM employee_attribute_versions
+      WHERE employee_id = '#{id}'
+      AND data -> 'attribute_type' = 'File';
+    """).map { |row| row['file_id'] }
+  end
 
   def hired_event_presence
     return if events && events.map(&:event_type).include?('hired')

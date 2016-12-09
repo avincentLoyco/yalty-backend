@@ -63,6 +63,10 @@ RSpec.configure do |config|
     ENV['YALTY_OAUTH_SECRET'] = client.secret
   end
 
+  config.after(:suite) do
+    FileUtils.rm_rf(Dir["#{Rails.root}/tmp/paperclip_uploads"])
+  end
+
   config.after(:all) do
     Temping.teardown
   end

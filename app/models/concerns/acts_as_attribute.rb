@@ -6,6 +6,7 @@ module ActsAsAttribute
   PUBLIC_ATTRIBUTES_FOR_OTHERS = %w(
     firstname lastname language job_title start_date occupation_rate department
     manager professional_email professional_mobile cost_center department gender
+    profile_picture
   ).freeze
 
   NOT_EDITABLE_ATTRIBUTES_FOR_EMPLOYEE = %w(
