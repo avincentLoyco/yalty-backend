@@ -307,6 +307,13 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         expect(subject).to have_http_status(422)
       end
 
+      it 'should not create event and attribute definitions when user is not an account manager' do
+        Account::User.current.update!(account_manager: false)
+
+        expect { subject }.to_not change { Employee::Event.count }
+        expect { subject }.to_not change { Employee::AttributeVersion.count }
+      end
+
       context 'attributes validations' do
         before do
           Account.current.employee_attribute_definitions
