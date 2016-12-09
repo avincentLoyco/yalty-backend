@@ -21,8 +21,8 @@ class ManageEmployeeBalanceAdditions
   private
 
   def check_amount_and_update_balances
-    return unless balances.flatten.present?
-    unless balances.flatten.map { |b| [b[:manual_amount], b[:resource_amount]] }.flatten.uniq == [0]
+    unless balances.flatten.present? &&
+        balances.flatten.map { |b| [b[:manual_amount], b[:resource_amount]] }.flatten.uniq == [0]
       ActiveRecord::Base.after_transaction do
         UpdateBalanceJob.perform_later(balances.flatten.first)
       end
