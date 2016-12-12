@@ -17,7 +17,6 @@ class UpdateEvent
       find_employee
       update_employee_join_tables
       manage_versions
-
       save!
     end
   end
@@ -58,7 +57,7 @@ class UpdateEvent
   def update_version(attribute)
     version = event.employee_attribute_versions.find(attribute[:id])
     version.attribute_definition = definition_for(attribute)
-    version.value = attribute[:value]
+    version.value = FindValueForAttribute.new(attribute, version).call
     version.order = attribute[:order]
     @versions << version
   end
@@ -66,7 +65,7 @@ class UpdateEvent
   def new_version(attribute)
     version = build_version(attribute)
     if version.attribute_definition_id.present?
-      version.value = attribute[:value]
+      version.value = FindValueForAttribute.new(attribute, version).call
       version.multiple = version.attribute_definition.multiple
     end
     @versions << version

@@ -86,7 +86,7 @@ class Account < ActiveRecord::Base
     Attribute::Child.attribute_type => %w(child),
     Attribute::Person.attribute_type => %w(spouse),
     Attribute::File.attribute_type => %w(
-      profile_picture salary_slip contract id_card work_permit avs_card
+      profile_picture salary_slip contract salary_certificate id_card work_permit avs_card
     )
   }.freeze
 

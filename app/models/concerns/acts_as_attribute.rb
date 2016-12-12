@@ -12,6 +12,7 @@ module ActsAsAttribute
   NOT_EDITABLE_ATTRIBUTES_FOR_EMPLOYEE = %w(
     annual_salary contract_type cost_center department exit_date hourly_salary job_title
     manager monthly_payments occupation_rate representation_fees start_date tax_source_code
+    salary_slip salary_certificate contract
   ).freeze
 
   included do

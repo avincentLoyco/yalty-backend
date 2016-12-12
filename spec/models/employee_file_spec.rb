@@ -7,7 +7,7 @@ RSpec.describe EmployeeFile, type: :model do
 
   context 'format validations' do
     it 'accepts jpg' do
-      employee_file = build(:employee_file)
+      employee_file = build(:employee_file, :with_jpg)
 
       expect(employee_file.valid?).to eq true
     end

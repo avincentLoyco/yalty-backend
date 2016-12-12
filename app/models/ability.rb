@@ -17,8 +17,10 @@ class Ability
       can [:show], Employee::Balance do |employee_balance|
         employee_balance.employee_id == user.employee.try(:id)
       end
-      can [:read, :show, :update], Employee::Event do |event|
-        event.employee_id == user.employee.try(:id)
+      can [:create, :read, :show, :update], Employee::Event do |event, event_attributes|
+        user.employee.try(:id).present? &&
+          (event.employee_id == user.employee.id ||
+          event_attributes[:employee][:id] == user.employee.id)
       end
       can :schedule_for_employee, Employee, id: user.employee.try(:id)
       can [:create], RegisteredWorkingTime do |registered_working_time|

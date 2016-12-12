@@ -6,4 +6,8 @@ class EmployeeFile < ActiveRecord::Base
   validates :file,
     attachment_content_type: { content_type: CONTENT_TYPES },
     attachment_size: { less_than: 20.megabytes }
+
+  def find_file_path
+    Dir.glob("files/#{id}/original/*")
+  end
 end
