@@ -47,7 +47,7 @@ Rails.application.routes.draw do
 
       resources :users
       resources :employee_balances, except: [:edit, :new]
-      resources :tokens, only: :create
+      resources :file_storage_tokens, only: :create
 
       get '/employee_event_types/:employee_event_type', to: "employee_event_types#show"
     end

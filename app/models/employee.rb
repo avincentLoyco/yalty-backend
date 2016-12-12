@@ -90,7 +90,7 @@ class Employee < ActiveRecord::Base
   end
 
   def has_file_with?(file_id)
-    employee_files.find_by(id: file_id).present?
+    employee_file_ids.include?(file_id)
   end
 
   def employee_files
@@ -100,11 +100,9 @@ class Employee < ActiveRecord::Base
   private
 
   def employee_file_ids
-    ActiveRecord::Base.connection.execute("""
-      SELECT data -> 'id' AS file_id FROM employee_attribute_versions
-      WHERE employee_id = '#{id}'
-      AND data -> 'attribute_type' = 'File';
-    """).map { |row| row['file_id'] }
+    employee_attribute_versions
+      .where("data -> 'attribute_type' = 'File'")
+      .pluck("data -> 'id'")
   end
 
   def hired_event_presence

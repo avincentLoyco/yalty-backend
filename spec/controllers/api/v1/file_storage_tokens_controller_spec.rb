@@ -1,6 +1,7 @@
 require 'rails_helper'
+require 'fakeredis/rspec'
 
-RSpec.describe API::V1::TokensController, type: :controller do
+RSpec.describe API::V1::FileStorageTokensController, type: :controller do
   include_context 'shared_context_headers'
   include_context 'shared_context_timecop_helper'
 
@@ -14,7 +15,7 @@ RSpec.describe API::V1::TokensController, type: :controller do
     it { expect(response.status).to eq(201) }
     it 'return proper json' do
       expect_json(
-        token: '1234567887654321',
+        token: 'employee_file_1234567887654321',
         file_id: EmployeeFile.last.id,
         type: 'token',
         created_at: Time.zone.now.to_s,
@@ -49,7 +50,7 @@ RSpec.describe API::V1::TokensController, type: :controller do
       it { expect(response.status).to eq(201) }
       it 'return proper json' do
         expect_json(
-          token: '1234567887654321',
+          token: 'employee_file_1234567887654321',
           file_id: employee_file.id,
           type: 'token',
           created_at: Time.zone.now.to_s,
@@ -204,6 +205,7 @@ RSpec.describe API::V1::TokensController, type: :controller do
 
         before do
           employee_attribute
+          employee.reload
           request_token
         end
 
@@ -217,6 +219,7 @@ RSpec.describe API::V1::TokensController, type: :controller do
 
         before do
           employee_attribute
+          employee.reload
           request_token
         end
 

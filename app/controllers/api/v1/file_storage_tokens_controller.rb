@@ -1,6 +1,6 @@
 module API
   module V1
-    class TokensController < ApplicationController
+    class FileStorageTokensController < ApplicationController
       include TokensSchemas
 
       def create
@@ -8,15 +8,15 @@ module API
           file_not_found!(attributes[:file_id])
           wrong_duration!(attribute_version(attributes[:file_id]), attributes[:duration])
           authorize! :create, :tokens, attributes[:file_id], attribute_version(attributes[:file_id])
-          render json: EmployeeFileTokens.new(attributes).call, status: 201
+          render json: SaveFileStorageTokenToRedis.new(attributes).call, status: 201
         end
       end
 
       private
 
       def file_not_found!(file_id)
-        return unless file_id.present?
-        EmployeeFile.find(file_id)
+        return unless file_id.present? && !EmployeeFile.exists?(id: file_id)
+        raise ActiveRecord::RecordNotFound
       end
 
       def wrong_duration!(attr_version, duration)
@@ -33,7 +33,7 @@ module API
       def attribute_version(file_id)
         @attribute_version ||= begin
           return unless file_id.present?
-          Employee::AttributeVersion
+          Account.current.employee_attribute_versions
             .where("data -> 'attribute_type' = 'File' AND data -> 'id' = '#{file_id}'")
             .first
         end

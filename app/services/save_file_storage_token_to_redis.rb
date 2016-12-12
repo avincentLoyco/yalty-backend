@@ -1,9 +1,14 @@
-class EmployeeFileTokens
+class SaveFileStorageTokenToRedis
+  InvalidToken = Class.new(StandardError)
+  SHORTTERM_TOKEN = 30
+  LONGTERM_TOKEN = 43200
+
   def initialize(attributes)
-    @time_to_expire = attributes[:duration].eql?('longterm') ? 43200 : 30
+    @redis = Redis.current
+    @time_to_expire = attributes[:duration].eql?('longterm') ? LONGTERM_TOKEN : SHORTTERM_TOKEN
     created_at = Time.zone.now
     @token_params = {
-      token: SecureRandom.hex(8),
+      token: generate_token,
       file_id: attributes[:file_id] || EmployeeFile.create!.id,
       type: 'token',
       created_at: created_at.to_s,
@@ -21,8 +26,7 @@ class EmployeeFileTokens
   private
 
   def save_token_to_redis!
-    redis = Redis.new
-    redis.hmset(
+    @redis.hmset(
       @token_params[:token],
       'file_id', @token_params[:file_id],
       'created_at', @token_params[:created_at],
@@ -30,6 +34,18 @@ class EmployeeFileTokens
       'counter', @token_params[:counter],
       'action_type', @token_params[:action_type]
     )
-    redis.expire(@token_params[:token], @time_to_expire)
+    @redis.expire(@token_params[:token], @time_to_expire)
+  end
+
+  def generate_token
+    token = nil
+
+    3.times do |iterator|
+      raise InvalidToken, 'Reached maximum number of regenerations.' if iterator == 2
+      token = 'employee_file_' + SecureRandom.hex(8)
+      break if !@redis.exists(token)
+    end
+
+    token
   end
 end
