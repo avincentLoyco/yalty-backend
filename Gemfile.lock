@@ -479,7 +479,7 @@ DEPENDENCIES
   temping
   therubyracer (~> 0.12.2)
   timecop
-  timezone
+  timezone (~> 1.2.3)
   tod (~> 2.0.2)
   virtus (~> 1.0.5)
   web-console (~> 2.0)

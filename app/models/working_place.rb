@@ -11,18 +11,19 @@ class WorkingPlace < ActiveRecord::Base
   validates :state,
     length: { maximum: 60 },
     format: { with: /\A[\D]+\z/, message: 'only nondigit' },
-    allow_blank: true
+    allow_nil: true
   validates :postalcode,
     length: { maximum: 12 },
-    format: { with: /\A[A-Z0-9 -]+\z/, message: 'only numbers, capital letters and -'},
-    allow_blank: true
+    format: { with: /\A([A-Z0-9 -])\w+/, message: 'only numbers, capital letters, spaces and -' },
+    allow_nil: true
   validates :street_number,
     length: { maximum: 10 },
-    format: { with: /\A[A-Z0-9 \/]+\z/, message: 'only numbers, capital letters and /'},
-    allow_blank: true
-  validate :address_existance, on: [:create, :update], if: [:city, :country]
+    format: { with: %r{\A([A-Z0-9 \/])\w+}, \
+              message: 'only numbers, capital letters, spaces and /' },
+    allow_nil: true
+  validate :correct_country, on: [:create, :update], if: [:city, :country]
   validate :correct_address, on: [:create, :update], if: [:city, :country]
-  after_validation :assign_address, on: [:create, :update], if: [:city, :country]
+  before_save :assign_params, on: [:create, :update], if: [:city, :country]
 
   scope :active_for_employee, lambda { |employee_id, date|
     joins(:employee_working_places)
@@ -34,45 +35,50 @@ class WorkingPlace < ActiveRecord::Base
 
   private
 
-  def place_info
-    @place_info ||= Geokit::Geocoders::GoogleGeocoder.geocode("#{city}, #{country}")
+  def location_attributes
+    @location_attributes ||= Geokit::Geocoders::GoogleGeocoder.geocode("#{city}, #{country}")
   end
 
-  def place_timezone
-    @place_timezone ||= Timezone.lookup(place_info.lat, place_info.lng).name
+  def location_timezone
+    Timezone.lookup(location_attributes.lat, location_attributes.lng).name
   end
 
-  def address_existance
-    return if place_info.city.present? || place_info.country.present?
-    errors.add(:address, 'place does not exist')
+  def address_found?
+    location_attributes.city.present? && location_attributes.country.present?
   end
 
   def correct_address
-    return if standardized_city == capitalized_city && standardized_country == capitalized_country
-    errors.add(:address, 'place not found')
+    errors.add(:address, 'not found') unless correct_standardized_address
   end
 
-  def assign_address
-    self.city = place_info.city
-    self.country = place_info.country
-    self.timezone = place_timezone
+  def correct_country
+    errors.add(:country, 'does not exist') if country_data.empty?
   end
 
-  def standardized_city
-    return if place_info.city.nil?
-    I18n.transliterate(place_info.city).downcase.capitalize
+  def correct_standardized_address
+    return unless address_found? && country_data.any?
+    standardize(location_attributes.country).eql? \
+      standardize(country_data.first.translations['en'])
   end
 
-  def standardized_country
-    return if place_info.country.nil?
-    I18n.transliterate(place_info.country).downcase.capitalize
+  def assign_params
+    self.timezone = location_timezone
+    if HolidayPolicy::COUNTRIES_WITHOUT_REGIONS.include?(location_attributes.country_code.downcase)
+      self.state = nil
+    else
+      self.state = location_attributes.state_code.downcase
+    end
   end
 
-  def capitalized_city
-    I18n.transliterate(city).downcase.capitalize
+  def standardize(address_param)
+    I18n.transliterate(address_param).downcase.capitalize unless address_param.nil?
   end
 
-  def capitalized_country
-    I18n.transliterate(country).downcase.capitalize
+  def country_data
+    ISO3166::Country
+      .all
+      .select do |place|
+        place.translated_names.include?(country.downcase.capitalize)
+      end
   end
 end

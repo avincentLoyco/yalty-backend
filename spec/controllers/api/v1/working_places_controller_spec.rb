@@ -19,13 +19,15 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
       working_place: first_working_place, effective_at: Time.now - 6.months)
   end
 
-  before :each do
-    allow_any_instance_of(WorkingPlace).to receive(:place_info) do
+  before do
+    allow_any_instance_of(WorkingPlace).to receive(:location_attributes) do
       loc = Geokit::GeoLoc.new(city: 'Zürich')
       loc.country = 'Switzerland'
+      loc.country_code = 'CH'
+      loc.state_code = 'ZH'
       loc
     end
-    allow_any_instance_of(WorkingPlace).to receive(:place_timezone) { 'Europe/Zurich' }
+    allow_any_instance_of(WorkingPlace).to receive(:location_timezone) { 'Europe/Zurich' }
   end
 
   context 'GET #index' do
@@ -35,7 +37,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
     it { is_expected.to have_http_status(200) }
     it { expect_json_sizes(1) }
     it do
-      expect_json_keys('*', [:id, :type, :name, :employees, :holiday_policy, :country, :state,
+      expect_json_keys('*', [:id, :type, :name, :employees, :holiday_policy, :country,
                              :city, :postalcode, :street, :street_number, :additional_address])
     end
   end
@@ -65,8 +67,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
   context 'POST #create' do
     let(:name) { 'test' }
     let(:country) { 'Switzerland' }
-    let(:city) { 'Zurich' }
-    let(:state) { 'Some State' }
+    let(:postalcode) { '123-41'}
     let(:holiday_policy_id) { holiday_policy.id }
     let(:valid_data_json) do
       {
@@ -76,9 +77,9 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
           id: holiday_policy_id,
           type: 'holiday_policy'
         },
+        city: 'Zurich',
         country: country,
-        city: city,
-        state: state
+        postalcode: postalcode
       }
     end
     shared_examples 'Invalid Data' do
@@ -99,7 +100,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
       context 'response' do
         before { subject }
 
-        it { expect_json(regex('Zürich')) }
+        it { expect_json(regex('Zurich')) }
         it { expect_json(regex('Europe/Zurich')) }
       end
 
@@ -110,7 +111,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
 
         it do
           expect_json_types(name: :string, id: :string, type: :string, country: :string,
-                            city: :string, state: :string_or_null, postalcode: :string_or_null,
+                            city: :string, postalcode: :string_or_null,
                             street: :string_or_null, street_number: :string_or_null,
                             additional_address: :string_or_null, timezone: :string_or_null)
         end
@@ -142,13 +143,13 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
         end
       end
 
-      context 'with params that are not valid' do
-        context 'without name' do
-          let(:name) { '' }
-
-          it_behaves_like 'Invalid Data'
+      context 'with single params that are empty' do
+        [:name, :country].each do |param|
+          let(param) { '' }
 
           it { is_expected.to have_http_status(422) }
+
+          it_behaves_like 'Invalid Data'
 
           context 'response' do
             before { subject }
@@ -156,30 +157,19 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
             it { expect_json(regex('must be filled')) }
           end
         end
-        context 'without country' do
-          let(:country) { '' }
+      end
 
-          it_behaves_like 'Invalid Data'
+      context 'with param that fails regex validation' do
+        let(:postalcode) { '%%$3@/' }
 
-          it { is_expected.to have_http_status(422) }
+        it_behaves_like 'Invalid Data'
 
-          context 'response' do
-            before { subject }
+        it { is_expected.to have_http_status(422) }
 
-            it { expect_json(regex('must be filled')) }
-          end
-        end
-        context 'with param that fails regex validation' do
-          let(:state) { 'Some State1' }
-          it_behaves_like 'Invalid Data'
+        context 'response' do
+          before { subject }
 
-          it { is_expected.to have_http_status(422) }
-
-          context 'response' do
-            before { subject }
-
-            it { expect_json(regex('only nondigit')) }
-          end
+          it { expect_json(regex('only numbers, capital letters, spaces and -')) }
         end
       end
 
@@ -203,7 +193,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
 
   context 'PUT #update' do
     context 'valid params' do
-      let(:working_place) { create(:working_place, account: account) }
+      let(:working_place) { create(:working_place, :with_address, account: account) }
       let(:name) { 'test' }
       let(:id) { working_place.id }
       let(:holiday_policy_id) { holiday_policy.id }

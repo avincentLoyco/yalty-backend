@@ -70,6 +70,10 @@ Make sure everything is ok by running specs:
 bin/rspec
 ```
 
+Get keys for geolocation and write them to `.env` file
+* GOOGLE_GEOCODERS key from [Google Geocoders](https://developers.google.com/maps/documentation/geocoding/intro)
+* GEONAMES_KEY from [Geonames](http://www.geonames.org/)
+
 
 Running development
 -------------------

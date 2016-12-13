@@ -42,18 +42,30 @@ RSpec.describe WorkingPlace, type: :model do
 
   context 'address and timezone' do
     before do
-      allow_any_instance_of(WorkingPlace).to receive(:place_timezone) { 'Europe/Zurich' }
+      allow_any_instance_of(WorkingPlace).to receive(:location_attributes) { place_info_result }
+      allow_any_instance_of(WorkingPlace).to receive(:location_timezone) { 'Europe/Zurich' }
+    end
+
+    let(:city) { 'Zurich' }
+    let(:country) { 'Switzerland' }
+
+    let(:place_info_result) do
+      loc = Geokit::GeoLoc.new(city: city)
+      loc.country = country
+      loc.country_code = 'CH'
+      loc.state_code = 'ZH'
+      loc
     end
 
     context 'with valid data' do
       subject { create(:working_place, :with_address) }
-      before do
-        allow_any_instance_of(WorkingPlace).to receive(:place_info) do
-          loc = Geokit::GeoLoc.new(city: 'Zürich')
-          loc.country = 'Switzerland'
-          loc
-        end
-      end
+
+      it { expect(subject.valid?).to eq true }
+      it { expect { subject.valid? }.not_to change { subject.errors.messages[:address] } }
+    end
+
+    context 'with not english country names' do
+      subject { create(:working_place, country: 'Suisse', city: 'Genf') }
 
       it { expect(subject.valid?).to eq true }
       it { expect { subject.valid? }.not_to change { subject.errors.messages[:address] } }
@@ -61,32 +73,52 @@ RSpec.describe WorkingPlace, type: :model do
 
     context 'with invalid data' do
       subject { build(:working_place, :with_address) }
-      context 'with invalid city' do
-        before do
-          allow_any_instance_of(WorkingPlace).to receive(:place_info) do
-            Geokit::GeoLoc.new(city: 'asdf')
-          end
-        end
+
+      context "with country that dosen't exist" do
+        subject { build(:working_place, country: 'asdf', city: 'asdf') }
+        let(:country) { nil }
 
         it_behaves_like 'Invalid Address'
 
-        context 'should have error message' do
-          before { subject.valid? }
-          let(:errors) { subject.errors[:address] }
-
-          it { expect(errors).to include 'place not found' }
+        it do
+          expect { subject.valid? }
+            .to change { subject.errors[:country] }
+            .to include 'does not exist'
+        end
+        it do
+          expect { subject.valid? }.to change { subject.errors[:address] }.to include 'not found'
         end
       end
-      context 'with city that does not exist' do
-        before { allow_any_instance_of(WorkingPlace).to receive(:place_info) { Geokit::GeoLoc.new } }
+
+      context 'with invalid country' do
+        let(:city) { 'asdf' }
+        let(:country) { 'asdf' }
 
         it_behaves_like 'Invalid Address'
 
-        context 'should have error message' do
-          before { subject.valid? }
-          let(:errors) { subject.errors[:address] }
+        it do
+          expect { subject.valid? }.to change { subject.errors[:address] }.to include 'not found'
+        end
+      end
 
-          it { expect(errors).to include 'place does not exist' }
+      context 'with invalid city' do
+        let(:city) { 'asdf' }
+        let(:country) { nil }
+
+        it_behaves_like 'Invalid Address'
+
+        it do
+          expect { subject.valid? }.to change { subject.errors[:address] }.to include 'not found'
+        end
+      end
+
+      context 'with city that does not exist' do
+        let(:city) { nil }
+
+        it_behaves_like 'Invalid Address'
+
+        it do
+          expect { subject.valid? }.to change { subject.errors[:address] }.to include 'not found'
         end
       end
     end

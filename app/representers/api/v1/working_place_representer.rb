@@ -4,7 +4,6 @@ module Api::V1
       {
         name: resource.name,
         country: resource.country,
-        state: resource.state,
         city: resource.city,
         postalcode: resource.postalcode,
         street: resource.street,
