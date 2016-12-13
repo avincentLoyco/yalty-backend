@@ -3,8 +3,15 @@ require 'rails_helper'
 RSpec.describe API::V1::UsersController, type: :controller do
   include_context 'shared_context_headers'
 
+  let(:redirect_uri) { 'http://yalty.test/setup'}
+  let(:client) { FactoryGirl.create(:oauth_client, redirect_uri: redirect_uri) }
   let(:employee) { create(:employee, account: account) }
   let(:employee_id) { employee.id }
+
+  before(:each) do
+    ENV['YALTY_OAUTH_ID'] = client.uid
+    ENV['YALTY_OAUTH_SECRET'] = client.secret
+  end
 
   describe 'POST #create' do
     let(:email) { 'test@example.com' }
@@ -31,10 +38,10 @@ RSpec.describe API::V1::UsersController, type: :controller do
         it { expect_json_keys(:email, :account_manager, :is_employee, :employee) }
       end
 
-      it 'should send email with credentials' do
+      it 'should send email with generated login url' do
         expect { subject }.to change(ActionMailer::Base.deliveries, :count)
 
-        expect(ActionMailer::Base.deliveries.last.body).to match(/password: .+/i)
+        expect(ActionMailer::Base.deliveries.last.body).to match(/http.+code=.+/i)
       end
 
       context 'assign employee' do
@@ -80,9 +87,9 @@ RSpec.describe API::V1::UsersController, type: :controller do
         it { expect { subject }.to change { Account::User.count }.by(1) }
         it { is_expected.to have_http_status(201) }
 
-        it 'expect to add generated password to email' do
+        it 'expect to add generated login url to email' do
           expect(subject).to have_http_status(:created)
-          expect(ActionMailer::Base.deliveries.last.body).to match(/password: .+/i)
+          expect(ActionMailer::Base.deliveries.last.body).to match(/http.+code=.+/i)
         end
       end
 
