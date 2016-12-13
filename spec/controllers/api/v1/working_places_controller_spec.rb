@@ -225,8 +225,6 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
 
           it_behaves_like 'Invalid Data'
 
-          it { is_expected.to have_http_status(422) }
-
           context 'response' do
             before { subject }
 
