@@ -2,9 +2,6 @@ class Account < ActiveRecord::Base
   include ActsAsIntercomData
   include AccountIntercomData
 
-  SUPPORTED_TIMEZONES = ActiveSupport::TimeZone.all
-                                               .map { |tz| tz.tzinfo.name } + ['Europe/Zurich']
-
   validates :subdomain,
     presence: true,
     uniqueness: { case_sensitive: false },
@@ -15,9 +12,7 @@ class Account < ActiveRecord::Base
     },
     exclusion: { in: Yalty.reserved_subdomains }
   validates :company_name, presence: true
-  validates :timezone,
-    inclusion: { in: SUPPORTED_TIMEZONES },
-    if: -> { timezone.present? }
+  validate :timezone_must_exist, if: -> { timezone.present? }
   validates :default_locale, inclusion: { in: I18n.available_locales.map(&:to_s) }
   validate :referrer_must_exist, if: :referred_by, on: :create
 
@@ -170,5 +165,10 @@ class Account < ActiveRecord::Base
   def referrer_must_exist
     return if Referrer.where(token: referred_by).exists?
     errors.add(:referred_by, 'must belong to existing referrer')
+  end
+
+  def timezone_must_exist
+    return if ActiveSupport::TimeZone[timezone].present?
+    errors.add(:timezone, 'must be a valid time zone')
   end
 end

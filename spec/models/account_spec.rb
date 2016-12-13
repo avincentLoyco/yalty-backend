@@ -149,8 +149,24 @@ RSpec.describe Account, type: :model do
   end
 
   context '#timezone' do
-    it 'should save account with valid timezone name' do
-      timezone_name = ActiveSupport::TimeZone.all.last.tzinfo.name
+    it 'should save account with default rails timezone name' do
+      timezone_name = ActiveSupport::TimeZone.all.sample.tzinfo.name
+      account = build(:account, timezone: timezone_name)
+
+      expect(account).to be_valid
+      expect(account.timezone).to eq(timezone_name)
+    end
+
+    it 'should save account with UTC timezone name' do
+      timezone_name = 'UTC'
+      account = build(:account, timezone: timezone_name)
+
+      expect(account).to be_valid
+      expect(account.timezone).to eq(timezone_name)
+    end
+
+    it 'should save account with Europe/Zurich timezone name' do
+      timezone_name = 'Europe/Zurich'
       account = build(:account, timezone: timezone_name)
 
       expect(account).to be_valid
@@ -158,7 +174,7 @@ RSpec.describe Account, type: :model do
     end
 
     it 'should not save account with not valid timezone name' do
-      account = build(:account, timezone: 'ABC')
+      account = build(:account, timezone: 'Pluto')
 
       expect(account).to_not be_valid
     end
