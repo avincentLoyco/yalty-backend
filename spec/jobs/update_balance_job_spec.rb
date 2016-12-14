@@ -14,7 +14,10 @@ RSpec.describe UpdateBalanceJob do
       type: 'counter',
       years_to_effect: 0
 
-    before { Employee::Balance.update_all(being_processed: true) }
+    before do
+      Employee::Balance.update_all(being_processed: true)
+      TimeOff.update_all(being_processed: true)
+    end
 
     context 'and balance from previous policy period is edited' do
       let(:balance_id) { previous_balance.id }
@@ -32,12 +35,14 @@ RSpec.describe UpdateBalanceJob do
       it { expect { subject }.to_not change { balance.reload.being_processed } }
 
       context 'when counter has time off' do
-        before { time_off.update!(being_processed: true) }
-        let(:time_off) { TimeOff.first }
+        let(:time_off) do
+          balance.time_off
+        end
         let(:balance_id) { balance.id }
 
+        it { expect { subject }.to change { time_off.reload.employee_balance.reload.being_processed } }
         it { expect { subject }.to change { time_off.reload.being_processed } }
-        it { expect { subject }.to change { time_off.employee_balance.reload.being_processed } }
+
       end
     end
 
@@ -53,8 +58,10 @@ RSpec.describe UpdateBalanceJob do
       it { expect { subject }.to_not change { balance_add.reload.being_processed } }
 
       context 'when counter has time off' do
-        before { time_off.update!(being_processed: true) }
-        let(:time_off) { TimeOff.first }
+        before { time_off.employee_balance = balance }
+        let(:time_off) do
+          balance.time_off
+        end
         let(:balance_id) { balance.id }
 
         it { expect { subject }.to change { time_off.reload.being_processed } }

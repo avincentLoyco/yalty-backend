@@ -138,7 +138,13 @@ RSpec.describe CreateEmployeeBalance, type: :service do
 
       context 'effective date is after an existing balance effective date from another policy' do
         let(:amount) { 100 }
-        let(:options) {{ effective_at: Time.now, validity_date: Time.now + 4.months }}
+        let(:effective_at) { Time.now + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET }
+        let(:options) do
+          {
+            effective_at: effective_at,
+            validity_date: RelatedPolicyPeriod.new(employee_policy).validity_date_for(effective_at)
+          }
+        end
         let!(:other_working_place_policy) do
           create(:employee_time_off_policy, time_off_policy: other_policy,
             effective_at: Time.zone.now - 1.month

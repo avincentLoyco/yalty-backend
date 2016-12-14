@@ -27,7 +27,7 @@ module UserIntercomData
       custom_attributes: [
         {
           referral_token: referrer.try(:token),
-          account_manager: account_manager,
+          account_manager: account_manager
         },
         intercom_employee_data
       ].inject(:merge)
@@ -35,15 +35,7 @@ module UserIntercomData
   end
 
   def intercom_employee_data
-    unless employee.present?
-      {
-        employee_id: nil,
-        last_vacation_created_at: nil,
-        last_other_time_off_created_at: nil,
-        last_manual_working_time_created_at: nil,
-        manual_working_time_ratio: nil,
-      }
-    else
+    if employee.present?
       {
         employee_id: employee.id,
         last_vacation_created_at: TimeOff.vacations.for_employee(employee.id).pluck(:created_at).last,
@@ -51,6 +43,14 @@ module UserIntercomData
         last_manual_working_time_created_at:
           RegisteredWorkingTime.manually_created_by_employee_ordered(employee.id).pluck(:created_at).last,
         manual_working_time_ratio: RegisteredWorkingTime.manually_created_ratio_per_employee(employee.id)
+      }
+    else
+      {
+        employee_id: nil,
+        last_vacation_created_at: nil,
+        last_other_time_off_created_at: nil,
+        last_manual_working_time_created_at: nil,
+        manual_working_time_ratio: nil
       }
     end
   end

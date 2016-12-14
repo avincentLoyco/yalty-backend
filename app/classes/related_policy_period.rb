@@ -53,9 +53,9 @@ class RelatedPolicyPeriod
     return unless end_day && end_month && years_to_effect
     validity_date =
       Date.new(date.year + years_to_effect, end_month, end_day) + Employee::Balance::REMOVAL_OFFSET
-    validity_date += 1.year if validity_date < date
-    return validity_date if (date.month <= end_month && date.day <= end_day) || years_to_effect == 0
-    validity_date + 1.year
+    years_end_date = Date.new(date.year, end_month, end_day)
+    validity_date += 1.year if date > years_end_date
+    validity_date
   end
 
   def validity_date_for_balance_at(date)

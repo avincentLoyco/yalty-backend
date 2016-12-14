@@ -44,7 +44,9 @@ class RecreateBalancesHelper
 
   def remove_balance_at_old_effective_at!
     return unless balance_at_old_effective_at.present?
+    removal = balance_at_old_effective_at.balance_credit_removal
     balance_at_old_effective_at.delete
+    removal.delete if removal && removal.balance_credit_additions.empty?
   end
 
   def recreate_and_recalculate_balances!
@@ -85,8 +87,18 @@ class RecreateBalancesHelper
       employee.account.id,
       effective_at: new_effective_at,
       validity_date: RelatedPolicyPeriod.new(etop).validity_date_for(new_effective_at),
-      manual_amount: manual_amount
+      manual_amount: manual_amount,
+      policy_credit_addition: assignation_in_start_date?,
+      resource_amount: assignation_in_start_date? ? etop.time_off_policy.amount : 0
     ).call
+  end
+
+  def assignation_in_start_date?
+    start_day = etop.time_off_policy.start_day
+    start_month = etop.time_off_policy.start_month
+    assignation_day = etop.effective_at.day
+    assignation_month = etop.effective_at.month
+    start_day == assignation_day && start_month == assignation_month
   end
 
   def manage_additions!

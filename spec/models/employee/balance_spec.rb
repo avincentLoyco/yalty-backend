@@ -829,6 +829,45 @@ RSpec.describe Employee::Balance, type: :model do
               expect(last_possible_balance.valid?).to be(false)
             end
           end
+
+          context 'edge case' do
+            let(:employee) { create(:employee) }
+            let!(:categoryyy) { create(:time_off_category, account: employee.account) }
+
+            let(:top_1) do
+              create(:time_off_policy, time_off_category: categoryyy, start_day: 1, start_month: 2,
+                years_to_effect: 1, end_day: 1, end_month: 5)
+            end
+
+            let(:top_2) do
+              create(:time_off_policy, time_off_category: categoryyy, start_day: 1, start_month: 2,
+                years_to_effect: 1, end_day: 1, end_month: 4)
+            end
+
+            let!(:etop_1) do
+              create(:employee_time_off_policy, employee: employee, time_off_policy: top_1,
+                time_off_category: category, effective_at: Time.zone.parse('2014-06-01'))
+            end
+
+            let!(:etop_2) do
+              create(:employee_time_off_policy, employee: employee, time_off_policy: top_2,
+                time_off_category: category, effective_at: Time.zone.parse('2014-10-01'))
+            end
+
+            before do
+              EmployeeTimeOffPolicy.where(time_off_category: categoryyy).each do |etop|
+                RecreateBalances::AfterEmployeeTimeOffPolicyCreate.new(
+                  new_effective_at: etop.effective_at,
+                  time_off_category_id: categoryyy.id,
+                  employee_id: employee.id
+                ).call
+              end
+            end
+
+            xit "text" do
+
+            end
+          end
         end
 
         context 'S = E < T' do

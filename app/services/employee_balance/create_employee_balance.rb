@@ -38,12 +38,12 @@ class CreateEmployeeBalance
   def build_employee_balance_removal
     @balance_removal =
       Employee::Balance
-      .removal_at_date(employee.id, category.id, employee_balance.validity_date.to_date).first
+      .removal_at_date(employee.id, category.id, employee_balance.validity_date).first
     @balance_removal ||=
       Employee::Balance.new(
         employee_id: employee.id,
         time_off_category_id: category.id,
-        effective_at: employee_balance.validity_date.to_date
+        effective_at: employee_balance.validity_date
       )
 
     balance_removal.balance_credit_additions << [employee_balance]
@@ -54,6 +54,7 @@ class CreateEmployeeBalance
     if employee_balance.balance_credit_additions.present?
       employee_balance.balance_credit_additions.map(&:save!)
     end
+
     balance_removal.try(:save!)
   end
 
@@ -143,7 +144,6 @@ class CreateEmployeeBalance
   end
 
   def balance_is_not_removal_and_has_validity_date?
-    (validity_date.present? && validity_date <= Time.zone.today) &&
-      @employee_balance.balance_credit_additions.empty?
+    validity_date.present? && @employee_balance.balance_credit_additions.empty?
   end
 end

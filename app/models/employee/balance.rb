@@ -266,19 +266,22 @@ class Employee::Balance < ActiveRecord::Base
     return unless etop_effective_till.present?
     end_date = Date.new(etop_effective_till.year, end_month, end_day)
     start_date = Date.new(etop_effective_till.year, start_month, start_day)
-
+    etop_effective_at = employee_time_off_policy.effective_at
     end_date_before_start_date = end_date < start_date
     end_date_after_or_equal_start_date = end_date >= start_date
     effective_till_after_or_equal_start_date = etop_effective_till >= start_date
     effective_till_before_start_date = etop_effective_till < start_date
 
-    if end_date_before_start_date && effective_till_after_or_equal_start_date
-      time_off_policy.years_to_effect + 1
-    elsif end_date_after_or_equal_start_date && effective_till_before_start_date
-      time_off_policy.years_to_effect - 1
-    else
-      time_off_policy.years_to_effect
-    end
+    offset =
+      if end_date_before_start_date && effective_till_after_or_equal_start_date
+        time_off_policy.years_to_effect + 1
+      elsif end_date_after_or_equal_start_date && effective_till_before_start_date
+        time_off_policy.years_to_effect - 1
+      else
+        time_off_policy.years_to_effect
+      end
+
+    etop_effective_at <= end_date ? offset : offset + 1
   end
 
   def effective_at_equal_time_off_end_date
