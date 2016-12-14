@@ -125,8 +125,8 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
   describe 'POST #create' do
     before { Employee::Balance.where.not(id: assignation_balance.id).destroy_all }
     let(:time_off) { nil }
-    let(:start_time) { '2016-10-11T13:00:00'  }
-    let(:end_time) { '2016-10-18T15:00:00' }
+    let(:start_time) { '2016-12-30T13:00:00'  }
+    let(:end_time) { '2017-1-3T15:00:00' }
     let(:employee_id) { employee.id }
     let(:time_off_category_id) { time_off_category.id }
     let(:params) do
@@ -199,7 +199,28 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
             EmployeePresencePolicy.first.update!(order_of_start_day: 5)
             subject
           end
-          it { expect(Employee::Balance.order(:effective_at).last.amount).to eq (-480) }
+
+          it { expect(Employee::Balance.order(:effective_at).last.amount).to eq (-240) }
+        end
+
+        context 'when they are other balances in time offs period' do
+          before do
+            employee_time_off_policy.update!(effective_at: Time.now)
+            ManageEmployeeBalanceAdditions.new(employee_time_off_policy).call
+            Employee::Balance.update_all(being_processed: false)
+          end
+
+          let(:day_before_start_balance) { employee.employee_balances.order(:effective_at).third }
+          let(:start_day_balance) { employee.employee_balances.order(:effective_at).fourth }
+
+          it { expect { subject }.to change { TimeOff.count }.by(1) }
+          it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+          it { expect { subject }.to change { start_day_balance.reload.being_processed }.to true }
+          it do
+            expect { subject }.to change { start_day_balance.reload.being_processed }.to true
+          end
+
+          it { is_expected.to have_http_status(201) }
         end
       end
 
@@ -315,6 +336,56 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
           expect(employee_balance.reload.manual_amount).to eq(200)
         end
       end
+
+      context 'when there are balances between time offs start and end time' do
+        before do
+          policy.presence_days.first.time_entries.create!(start_time: '10:00', end_time: '18:00')
+          ManageEmployeeBalanceAdditions.new(employee_time_off_policy).call
+          Employee::Balance.update_all(being_processed: false)
+        end
+
+        let!(:balance_after_time_off) { employee.employee_balances.order(:effective_at).fourth }
+
+        context 'and time off moved to future' do
+          let(:start_time) { 14.months.since }
+          let(:end_time) { 15.months.since }
+          let(:balances_after_new_effective_at) do
+            employee.employee_balances.order(:effective_at).last(2)
+          end
+
+          it do
+            expect { subject }.to change { balance_after_time_off.reload.being_processed }.to true
+          end
+          it do
+            expect { subject }
+              .to change { balances_after_new_effective_at.first.reload.being_processed }.to true
+          end
+          it do
+            expect { subject }
+              .to change { balances_after_new_effective_at.last.reload.being_processed }.to true
+          end
+        end
+
+        context 'and time off moved to past' do
+          let!(:balances_after_new_effective_at) do
+            Employee::Balance.order(:effective_at).first(2)
+          end
+          let(:start_time) { 1.year.ago }
+          let(:end_time) { 11.months.since }
+
+          it do
+            expect { subject }
+              .to change { balances_after_new_effective_at.first.reload.being_processed }.to true
+          end
+          it do
+            expect { subject }
+              .to change { balances_after_new_effective_at.last.reload.being_processed }.to true
+          end
+          it do
+            expect { subject }.to change { balance_after_time_off.reload.being_processed }.to true
+          end
+        end
+      end
     end
 
     context 'with invalid params' do
@@ -364,6 +435,21 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
         it { is_expected.to have_http_status(204) }
       end
 
+      context 'when there are balances between time off start and end time' do
+        let!(:policy_start_balance) do
+          create(:employee_balance_manual,
+            effective_at: Date.new(2017, 1, 1), being_processed: false, resource_amount: 1000,
+            time_off_category: employee_time_off_policy.time_off_category, employee: employee
+          )
+        end
+
+        it { expect { subject }.to change { TimeOff.count }.by(-1) }
+        it { expect { subject }.to change { policy_start_balance.reload.being_processed }.to true }
+        it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
+
+        it { is_expected.to have_http_status(204) }
+      end
+
       context 'when there are no balances to be updated' do
         let(:id) { time_off.id }
         let!(:later_time_off) do
@@ -379,7 +465,6 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
         it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
         it { is_expected.to have_http_status(204) }
       end
-
     end
 
     context 'with invalid data' do
