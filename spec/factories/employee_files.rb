@@ -15,5 +15,9 @@ FactoryGirl.define do
     trait :with_docx do
       file File.open(File.join(Rails.root, '/spec/fixtures/files/test.docx'))
     end
+
+    trait :without_file do
+      file nil
+    end
   end
 end

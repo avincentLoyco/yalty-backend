@@ -3,7 +3,7 @@ class SaveFileStorageTokenToRedis
   SHORTTERM_TOKEN = 30
   LONGTERM_TOKEN = 43200
 
-  def initialize(attributes)
+  def initialize(attributes, attribute_version)
     @redis = Redis.current
     @time_to_expire = attributes[:duration].eql?('longterm') ? LONGTERM_TOKEN : SHORTTERM_TOKEN
     created_at = Time.zone.now
@@ -14,7 +14,9 @@ class SaveFileStorageTokenToRedis
       created_at: created_at.to_s,
       expires_at: (created_at + @time_to_expire.seconds).to_s,
       counter: 1,
-      action_type: attributes[:file_id].present? ? 'download' : 'upload'
+      action_type: attributes[:file_id].present? ? 'download' : 'upload',
+      file_sha: file_sha(attribute_version),
+      file_type: file_type(attribute_version)
     }
   end
 
@@ -32,7 +34,9 @@ class SaveFileStorageTokenToRedis
       'created_at', @token_params[:created_at],
       'expires_at', @token_params[:expires_at],
       'counter', @token_params[:counter],
-      'action_type', @token_params[:action_type]
+      'action_type', @token_params[:action_type],
+      'file_sha', @token_params[:file_sha],
+      'file_type', @token_params[:file_type]
     )
     @redis.expire(@token_params[:token], @time_to_expire)
   end
@@ -47,5 +51,15 @@ class SaveFileStorageTokenToRedis
     end
 
     token
+  end
+
+  def file_sha(attribute_version)
+    return unless attribute_version.present?
+    attribute_version.data.file_sha
+  end
+
+  def file_type(attribute_version)
+    return unless attribute_version.present?
+    attribute_version.data.file_type
   end
 end

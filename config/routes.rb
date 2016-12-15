@@ -45,6 +45,8 @@ Rails.application.routes.draw do
         get '/employees', to: "employee_time_off_policies#index"
       end
 
+      mount FileStorageUploadDownload, at: '/files'
+
       resources :users
       resources :employee_balances, except: [:edit, :new]
       resources :file_storage_tokens, only: :create

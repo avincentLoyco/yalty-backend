@@ -6,9 +6,10 @@ module API
       def create
         verified_dry_params(dry_validation_schema) do |attributes|
           file_not_found!(attributes[:file_id])
-          wrong_duration!(attribute_version(attributes[:file_id]), attributes[:duration])
-          authorize! :create, :tokens, attributes[:file_id], attribute_version(attributes[:file_id])
-          render json: SaveFileStorageTokenToRedis.new(attributes).call, status: 201
+          attr_version = find_attribute_version(attributes[:file_id])
+          wrong_duration!(attr_version, attributes[:duration])
+          authorize! :create, :tokens, attributes[:file_id], attr_version
+          render json: SaveFileStorageTokenToRedis.new(attributes, attr_version).call, status: 201
         end
       end
 
@@ -30,13 +31,11 @@ module API
           !attr_version.attribute_definition.long_token_allowed
       end
 
-      def attribute_version(file_id)
-        @attribute_version ||= begin
-          return unless file_id.present?
-          Account.current.employee_attribute_versions
-            .where("data -> 'attribute_type' = 'File' AND data -> 'id' = '#{file_id}'")
-            .first
-        end
+      def find_attribute_version(file_id)
+        return unless file_id.present?
+        Account.current.employee_attribute_versions
+          .where("data -> 'attribute_type' = 'File' AND data -> 'id' = '#{file_id}'")
+          .first
       end
     end
   end

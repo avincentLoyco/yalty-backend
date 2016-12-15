@@ -39,5 +39,6 @@ Rails.application.configure do
 
   # Raises error for missing translations
   # config.action_view.raise_on_missing_translations = true
-  config.paperclip_defaults = { path: 'tmp/paperclip_uploads/:attachment/:id/:style.:extension' }
+
+  config.paperclip_defaults = { path: 'tmp/files/:id/:style/:filename' }
 end
