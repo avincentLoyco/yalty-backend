@@ -50,6 +50,10 @@ group :development, :test do
   # spring
   gem 'spring'
   gem 'spring-commands-rspec'
+
+  # deploy
+  gem 'capistrano'
+  gem 'capistrano-docker-copy', github: 'yalty/capistrano-docker-copy'
 end
 
 group :test do
