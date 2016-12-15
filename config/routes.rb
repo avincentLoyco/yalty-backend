@@ -8,9 +8,6 @@ Sidekiq::Web.use Rack::Auth::Basic do |username, password|
 end unless Rails.env.development?
 
 Rails.application.routes.draw do
-  # ping
-  get 'ping', to: lambda {|env| [200, {'Content-Type' => 'text/plain'}, ['PONG']] }
-
   # API
   namespace :api, path: '', constraints: { subdomain: /^api/ } do
     namespace :v1 do
