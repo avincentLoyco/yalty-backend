@@ -1,14 +1,13 @@
 class CreateEmployeeBalance
   include API::V1::Exceptions
   attr_reader :category, :employee, :resource_amount, :employee_balance,
-    :account, :time_off, :options, :balance_removal, :active_balance
+    :account, :options, :balance_removal, :active_balance
 
   def initialize(category_id, employee_id, account_id, options = {})
     @options = options
     @account = Account.find(account_id)
     @category = account.time_off_categories.find(category_id)
     @employee = account.employees.find(employee_id)
-    @time_off = time_off
     @active_balance = find_active_assignation_balance_for_date
   end
 
@@ -124,15 +123,16 @@ class CreateEmployeeBalance
   end
 
   def update_next_employee_balances
-    return if only_in_balance_period? || options[:skip_update]
-    PrepareEmployeeBalancesToUpdate.new(employee_balance).call
-    UpdateBalanceJob.perform_later(employee_balance.id)
+    balance_to_update = find_first_balance_for_update
+    return if only_in_balance_period?(balance_to_update) || options[:skip_update]
+    PrepareEmployeeBalancesToUpdate.new(balance_to_update).call
+    UpdateBalanceJob.perform_later(balance_to_update.id)
   end
 
-  def only_in_balance_period?
-    employee_balance.last_in_category? || balance_removal.try(:last_in_category?) &&
+  def only_in_balance_period?(balance_to_update)
+    balance_to_update.last_in_category? || balance_removal.try(:last_in_category?) &&
       Employee::Balance.where(effective_at:
-        employee_balance.effective_at...balance_removal.effective_at).count == 1
+        balance_to_update.effective_at...balance_removal.effective_at).count == 1
   end
 
   def balancer_removal?
@@ -145,5 +145,14 @@ class CreateEmployeeBalance
 
   def balance_is_not_removal_and_has_validity_date?
     validity_date.present? && @employee_balance.balance_credit_additions.empty?
+  end
+
+  def find_first_balance_for_update
+    return employee_balance unless employee_balance.time_off_id.present?
+    Employee::Balance
+      .employee_balances(employee.id, category.id)
+      .between(employee_balance.time_off.start_time, employee_balance.time_off.end_time)
+      .order(:effective_at)
+      .first
   end
 end

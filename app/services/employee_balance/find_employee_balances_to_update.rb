@@ -36,11 +36,8 @@ class FindEmployeeBalancesToUpdate
   end
 
   def earlier_date
-    if options[:effective_at] && options[:effective_at] < resource.effective_at
-      options[:effective_at]
-    else
-      resource.effective_at
-    end
+    [options[:effective_at], resource.effective_at, resource.time_off.try(:start_time)]
+      .compact.map(&:to_time).min
   end
 
   def find_balances_by_policy

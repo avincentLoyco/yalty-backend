@@ -201,6 +201,22 @@ RSpec.describe CreateEmployeeBalance, type: :service do
         it { expect(subject.first.effective_at).to be_kind_of(Time) }
         it { expect(subject.first.time_off).to be_kind_of(TimeOff) }
         it { expect(subject.first.time_off.id).to eq time_off.id }
+
+        context 'and there are balances between time off start and end time' do
+          let!(:policy_start_balance) do
+            create(:employee_balance_manual,
+              employee: employee, effective_at: Date.new(2017, 1, 1), policy_credit_addition: true,
+              resource_amount: 100, time_off_category: employee_policy.time_off_category,
+              being_processed: false
+            )
+          end
+
+          it do
+            expect { subject }.to change { policy_start_balance.reload.being_processed }.to true
+          end
+          it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+          it { expect { subject }.to change { enqueued_jobs.size } }
+        end
       end
 
       context 'balance credit addition given' do

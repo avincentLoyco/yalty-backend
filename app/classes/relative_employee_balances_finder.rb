@@ -12,7 +12,15 @@ class RelativeEmployeeBalancesFinder
   end
 
   def next_balance
-    related_balances.where('effective_at > ?', employee_balance.now_or_effective_at)
+    effective_at =
+      if employee_balance.time_off.present?
+        employee_balance.time_off.start_time
+      else
+        employee_balance.now_or_effective_at
+      end
+
+    related_balances.where('effective_at > ?', effective_at)
+                    .where.not(id: employee_balance.id)
                     .order(effective_at: :asc).first.try(:id)
   end
 

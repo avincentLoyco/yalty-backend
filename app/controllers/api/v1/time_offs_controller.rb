@@ -29,11 +29,15 @@ module API
       def update
         convert_times_to_utc
         verified_dry_params(dry_validation_schema) do |attributes|
+          previous_start_time = resource.start_time
+          attributes_for_balance = balance_attributes(attributes, previous_start_time)
+
           transactions do
             resource.update!(attributes.except(:manual_amount))
-            prepare_balances_to_update(resource.employee_balance, balance_attributes(attributes))
+            prepare_balances_to_update(resource.employee_balance, attributes_for_balance)
           end
-          update_balances_job(resource.employee_balance.id, balance_attributes(attributes))
+
+          update_balances_job(resource.employee_balance.id, attributes_for_balance)
           render_no_content
         end
       end
@@ -47,7 +51,7 @@ module API
           prepare_balances_to_update(resource.employee_balance, balance_attributes)
         end
 
-        update_balances_job(next_balance, balance_attributes) if next_balance
+        update_balances_job(next_balance, update_all: true) if next_balance
         render_no_content
       end
 
@@ -104,11 +108,11 @@ module API
         ::Api::V1::TimeOffsRepresenter
       end
 
-      def balance_attributes(verified_params = {})
+      def balance_attributes(verified_params = {}, previous_start_time = nil)
         {
           manual_amount: verified_params[:manual_amount] ? verified_params[:manual_amount] : 0,
           resource_amount: resource.balance,
-          effective_at: resource.end_time.to_s
+          effective_at: find_effective_at(previous_start_time).to_s
         }
       end
 
@@ -123,6 +127,14 @@ module API
           employee.active_policy_in_category_at_date(time_off_category.id, resource.end_time)
 
         RelatedPolicyPeriod.new(active_policy).validity_date_for_balance_at(resource.end_time)
+      end
+
+      def find_effective_at(previous_start_time)
+        if previous_start_time && previous_start_time < resource.start_time
+          previous_start_time
+        else
+          resource.start_time
+        end
       end
     end
   end
