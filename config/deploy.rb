@@ -2,7 +2,7 @@ lock '3.7.1'
 
 set :application, 'backend'
 
-set :docker_roles, %w(api launchpad worker db)
+set :docker_roles, %w(api launchpad worker)
 set :docker_repository, 'yalty/backend'
 set :docker_source, '/code'
 ask :docker_tag, 'stable'
@@ -17,7 +17,7 @@ append :local_exclude_list, %w(
   /log
 )
 
-set :rbenv_roles, %w(api launchpad worker db)
+set :rbenv_roles, %w(api launchpad worker)
 set :rbenv_path, -> {
   File.join(fetch(:deploy_to), 'rbenv')
 }
