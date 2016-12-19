@@ -1,11 +1,11 @@
 task recalculate_all_balances: [:environment] do
   initial_etop_balances = Employee::Balance.all.order(:effective_at)
   puts 'Updating the being_processed flag of all balances'
-  puts ''
+  puts
   initial_etop_balances.update_all(being_processed: true)
 
   puts 'Updating the balances'
-  puts ''
+  puts
   initial_etop_balances.each do |balance|
     begin
       UpdateEmployeeBalance.new(balance).call
@@ -14,5 +14,5 @@ task recalculate_all_balances: [:environment] do
     end
   end
   puts 'Finished processing balances'
-  puts ''
+  puts
 end
