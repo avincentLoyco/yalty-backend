@@ -1,7 +1,6 @@
 namespace :rbenv do
   task :install_rbenv do
     on release_roles(fetch(:rbenv_roles)) do
-
       next if test "[ -d #{fetch(:rbenv_path)} ]"
       execute :git, :clone, 'https://github.com/rbenv/rbenv.git', fetch(:rbenv_path)
     end
@@ -41,7 +40,8 @@ namespace :rbenv do
       local_gem_path = File.join(fetch(:local_temporary_root), "bundler-#{bundler_version}.gem")
       remote_gem_path = File.join(fetch(:remote_temporary_root), "bundler-#{bundler_version}.gem")
 
-      next if test(:gem, :query,
+      next if test(
+        :gem, :query,
         "--quiet --installed --name-matches ^bundler$ -v #{bundler_version}"
       )
 
@@ -64,10 +64,10 @@ namespace :rbenv do
   end
 
   task :map_bins do
-    SSHKit.config.default_env.merge!({
+    SSHKit.config.default_env.merge!(
       rbenv_root: fetch(:rbenv_path),
       rbenv_version: fetch(:rbenv_ruby)
-    })
+    )
     SSHKit.config.command_map[:rbenv] = "#{fetch(:rbenv_path)}/bin/rbenv"
 
     rbenv_prefix = fetch(:rbenv_prefix, proc { "#{fetch(:rbenv_path)}/bin/rbenv exec" })
