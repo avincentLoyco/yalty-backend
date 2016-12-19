@@ -25,7 +25,7 @@ gem 'sidekiq-scheduler',    '~> 2.0.19'
 
 # Production environment dependencies
 group :production, :staging, :review do
-  gem 'puma',             '~> 2.16.0'
+  gem 'puma',             '~> 3.6.2'
   gem 'rails_12factor',   '~> 0.0.3'
   gem 'therubyracer',     '~> 0.12.2'
 end
@@ -53,7 +53,7 @@ group :development, :test do
 
   # deploy
   gem 'capistrano'
-  gem 'capistrano-docker-copy', github: 'yalty/capistrano-docker-copy'
+  gem 'capistrano-docker-copy', git: 'https://github.com/yalty/capistrano-docker-copy.git'
 end
 
 group :test do

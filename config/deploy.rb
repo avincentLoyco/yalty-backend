@@ -32,4 +32,9 @@ set :rbenv_bundler, -> {
 set :rbenv_map_bins, %w{ruby gem bundle}
 set :bundle_map_bins, %w(rake)
 
+set :linked_dirs, %w(
+  log
+  tmp/pids
+)
+
 set :keep_releases, 5

@@ -1,6 +1,6 @@
 namespace :deploy do
   task :database do
-    on release_roles(:all) do
+    on running_task_server do
       within release_path do
         next unless test 'rake db:pending'
       end

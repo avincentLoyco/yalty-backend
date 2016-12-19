@@ -1,0 +1,194 @@
+#!/usr/bin/env ruby
+require_relative '../config/boot'
+require 'optparse'
+require 'fileutils'
+require 'puma/const'
+require 'puma/configuration'
+
+class PumaCtl
+  COMMANDS = %w{halt phased-restart restart start status stop}
+
+  def initialize(argv, stdout=STDOUT, stderr=STDERR)
+    @quiet = false
+    @pidfile = nil
+    @config_file = nil
+    @config = nil
+    @command = nil
+
+    @stdout = stdout
+    @stderr = stderr
+
+    @pid = nil
+    @worker_pidfiles = {}
+    @worker_pids = {}
+
+    opts = OptionParser.new do |o|
+      o.banner = "Usage: pumactl -C config/puma.rb (#{COMMANDS.join("|")})"
+
+      o.on '-Q', '--quiet', 'Not display messages' do |arg|
+        @quiet = true
+      end
+
+      o.on '-C', '--config-file PATH', 'Puma config script' do |arg|
+        @config_file = arg
+      end
+
+      o.on_tail('-H', '--help', 'Show this message') do
+        @stdout.puts o
+        exit
+      end
+
+      o.on_tail('-V', '--version', 'Show version') do
+        puts Const::PUMA_VERSION
+        exit
+      end
+    end
+    opts.order!(argv) { |a| opts.terminate a }
+
+    @command = argv.shift
+
+    if @config_file
+      @config = Puma::Configuration.from_file(@config_file)
+      @pidfile ||= @config.options[:pidfile]
+    end
+
+    # check present of command
+    unless @command
+      raise "Available commands: #{COMMANDS.join(", ")}"
+    end
+
+    unless COMMANDS.include? @command
+      raise "Invalid command: #{@command}"
+    end
+  rescue => e
+    @stdout.puts e.message
+    exit 1
+  end
+
+  def run
+    start if @command == 'start'
+    prepare_configuration
+
+    send_signal
+  rescue => e
+    message e.message
+    exit 1
+  end
+
+  private
+
+  def prepare_configuration
+    if @pidfile && File.exist?(@pidfile)
+      @pid = File.open(@pidfile).gets.to_i
+
+      @config.options[:workers].times do |worker|
+        @worker_pids[worker] = worker_pid(worker)
+      end
+    end
+  end
+
+  def start
+    require 'puma/cli'
+
+    run_args = []
+    run_args += ['-q'] if @quiet
+    run_args += ['--pidfile', @pidfile] if @pidfile
+    run_args += ['-C', @config_file] if @config_file
+
+    events = Puma::Events.new(@stdout, @stderr)
+
+    puma_cmd = $0.gsub(/pumactl$/, 'puma')
+    $0 = puma_cmd if File.exist?(puma_cmd)
+
+    if @pidfile
+      FileUtils.rm_f(@pidfile.gsub(/(.+?)(\.pid)?$/, '\1*'))
+    end
+
+    cli = Puma::CLI.new run_args, events
+    cli.run
+  end
+
+  def send_signal
+    begin
+      case @command
+      when 'restart'
+        Process.kill('USR2', @pid)
+        wait_on_workers
+
+      when 'halt'
+        Process.kill('QUIT', @pid)
+
+      when 'stop'
+        Process.kill('TERM', @pid)
+        @config.options[:worker_shutdown_timeout].times do
+          sleep 1 if Process.kill(0, @pid)
+        end
+        Process.kill('QUIT', @pid)
+        @shutdown_timeout.times do
+          sleep 1 if Process.kill(0, @pid)
+        end
+
+      when 'phased-restart'
+        Process.kill('USR1', @pid)
+        wait_on_workers
+
+      else
+        Process.kill(0, @pid)
+        message 'Puma server running.'
+      end
+
+    rescue Errno::ESRCH
+      if @pidfile
+        FileUtils.rm_f(@pidfile)
+        @worker_pidfiles.each_value do |pidfile|
+          FileUtils.rm_f(pidfile)
+        end
+      end
+
+    rescue SystemCallError, TypeError
+      if @command == 'restart'
+        start
+      elsif @pid.nil?
+        raise 'No pid available'
+      else
+        raise "No pid '#{@pid}' found"
+      end
+    end
+
+    message "Command #{@command} sent success"
+  end
+
+  def wait_on_workers
+    @worker_pids.each_key do |worker|
+      wait_on_worker(worker)
+    end
+  end
+
+  def wait_on_worker(worker)
+    @config.options[:worker_boot_timeout].times do
+      return if @worker_pids[worker] != worker_pid(worker)
+      sleep 1
+    end
+    raise "Timeout waiting on worker #{worker} after #{@config.options[:worker_boot_timeout]} sec."
+  end
+
+  def worker_pidfile(worker)
+    @worker_pidfiles[worker] ||= @pidfile.gsub(/(.+?)(\.pid)?$/, "\\1.#{worker}\\2")
+  end
+
+  def worker_pid(worker)
+    File.open(worker_pidfile(worker)).gets.to_i if File.exist?(worker_pidfile(worker))
+  end
+
+  def message(msg)
+    @stdout.puts msg unless @quiet
+  end
+end
+
+begin
+  cli = PumaCtl.new(ARGV.dup)
+  cli.run
+rescue => e
+  STDERR.puts e.message
+  exit 1
+end
