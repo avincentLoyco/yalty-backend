@@ -2,6 +2,7 @@ require 'rails_helper'
 
 RSpec.describe 'create_missing_balances' do
   include_context 'rake'
+  include_context 'shared_context_account_helper'
   include_context 'shared_context_timecop_helper'
 
   let(:user) { create(:account_user, account_manager: true) }
@@ -9,9 +10,6 @@ RSpec.describe 'create_missing_balances' do
   let!(:employee) { create(:employee, account: account) }
   let(:employee_id) { employee.id }
   let(:vacation_category) { create(:time_off_category, account: account, name: 'vacation_xsd') }
-
-
-
 
   context 'when the policy is of type balancer' do
     let(:vacation_balancer_policy_amount) { 50 }
