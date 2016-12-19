@@ -1,4 +1,4 @@
-lock '3.7.0'
+lock '3.7.1'
 
 set :application, 'backend'
 
@@ -29,6 +29,7 @@ set :rbenv_bundler, -> {
   path = File.expand_path('../Gemfile.lock', __dir__)
   File.read(path).match(/BUNDLED WITH\n(.+)/)[1].strip
 }
-set :rbenv_map_bins, %w{gem bundle ruby}
+set :rbenv_map_bins, %w{ruby gem bundle}
+set :bundle_map_bins, %w(rake)
 
 set :keep_releases, 5

@@ -1,4 +1,3 @@
-
 namespace :rbenv do
   task :install_rbenv do
     on release_roles(fetch(:rbenv_roles)) do
@@ -73,6 +72,10 @@ namespace :rbenv do
 
     rbenv_prefix = fetch(:rbenv_prefix, proc { "#{fetch(:rbenv_path)}/bin/rbenv exec" })
     fetch(:rbenv_map_bins).each do |command|
+      SSHKit.config.command_map.prefix[command.to_sym].unshift(rbenv_prefix)
+    end
+    fetch(:bundle_map_bins).each do |command|
+      SSHKit.config.command_map.prefix[command.to_sym].unshift('bundle exec')
       SSHKit.config.command_map.prefix[command.to_sym].unshift(rbenv_prefix)
     end
   end
