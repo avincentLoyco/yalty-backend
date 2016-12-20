@@ -290,10 +290,11 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
             vacation_balancer_policy_A.update!(end_day: nil, end_month: nil, amount: 12000)
             vacation_policy_A_assignation.update!(effective_at: '10/10/2016')
             create(:employee_balance_manual,
-              effective_at: DateTime.new(2016, 10, 10) + 2.seconds, employee: employee,
+              effective_at:
+                DateTime.new(2016, 10, 10) + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
               manual_amount: manual_amount_for_balance, time_off_category: vacation_category,
-              resource_amount: 0)
-              Timecop.freeze(2016, 11, 10, 0, 0)
+              resource_amount: 0, employee: employee)
+            Timecop.freeze(2016, 11, 10, 0, 0)
             create(:time_off,
               time_off_category: vacation_category, employee: employee,
               start_time: Date.new(2016, 12, 26), end_time: Date.new(2017, 1, 8))
@@ -304,13 +305,6 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
             subject
           end
 
-          let(:time_off) { TimeOff.last }
-          let(:first_time_off_amount) do
-            time_off.balance(time_off.start_time, Date.new(2017, 1, 1).beginning_of_day)
-          end
-          let(:second_time_off_amount) do
-            time_off.balance(Date.new(2017, 1, 1).beginning_of_day)
-          end
           after do
             Timecop.return
           end
@@ -331,7 +325,7 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
                           'validity_date' => nil,
                           'amount_taken' => 0,
                           'period_result' => 0,
-                          'balance' => first_time_off_amount
+                          'balance' => -8640
                         },
                         {
                           'type' => "balancer",
@@ -339,7 +333,7 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
                           'validity_date' => nil,
                           'amount_taken' => 12000,
                           'period_result' => 0,
-                          'balance' => 12000 + time_off.balance
+                          'balance' => -6720
                         }
                     ]
                   }
@@ -365,15 +359,15 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
                             'validity_date' => nil,
                             'amount_taken' => 7000,
                             'period_result' => 0,
-                            'balance' => first_time_off_amount + 7000
+                            'balance' => -1640
                           },
                           {
                             'type' => "balancer",
                             'start_date' => '2017-01-01',
                             'validity_date' => nil,
-                            'amount_taken' => -(7000 + time_off.balance),
-                            'period_result' => 12000 + 7000 + time_off.balance,
-                            'balance' => 12000 + 7000 + time_off.balance
+                            'amount_taken' => 11720,
+                            'period_result' => 280,
+                            'balance' => 280
                           }
                       ]
                     }
@@ -396,17 +390,17 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
                             'type' => "balancer",
                             'start_date' => '2016-10-10',
                             'validity_date' => nil,
-                            'amount_taken' => -first_time_off_amount,
-                            'period_result' => manual_amount_for_balance + first_time_off_amount,
-                            'balance' => manual_amount_for_balance + first_time_off_amount
+                            'amount_taken' => 8640,
+                            'period_result' => 1360,
+                            'balance' => 1360
                           },
                           {
                             'type' => "balancer",
                             'start_date' => '2017-01-01',
                             'validity_date' => nil,
-                            'amount_taken' => -second_time_off_amount,
-                            'period_result' => 12000 + second_time_off_amount,
-                            'balance' => 12000 + manual_amount_for_balance + time_off.balance
+                            'amount_taken' => 10080,
+                            'period_result' => 1920,
+                            'balance' => 3280
                           }
                       ]
                     }
