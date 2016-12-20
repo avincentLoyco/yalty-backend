@@ -1,9 +1,9 @@
-namespace :database do
+namespace :db do
   desc 'Run database migrations'
   task :migrate do
-    on running_task_server do
+    on fetch(:migration_server) do
       within release_path do
-        info 'Migrate database'
+        info 'Run database migration'
         execute :rake, 'db:migrate'
       end
     end
