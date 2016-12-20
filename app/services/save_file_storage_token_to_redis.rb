@@ -1,7 +1,7 @@
 class SaveFileStorageTokenToRedis
   InvalidToken = Class.new(StandardError)
   SHORTTERM_TOKEN = 30
-  LONGTERM_TOKEN = 43200
+  LONGTERM_TOKEN = 43_200
 
   def initialize(attributes, attribute_version)
     @redis = Redis.current
@@ -47,7 +47,7 @@ class SaveFileStorageTokenToRedis
     3.times do |iterator|
       raise InvalidToken, 'Reached maximum number of regenerations.' if iterator == 2
       token = 'employee_file_' + SecureRandom.hex(8)
-      break if !@redis.exists(token)
+      break unless @redis.exists(token)
     end
 
     token

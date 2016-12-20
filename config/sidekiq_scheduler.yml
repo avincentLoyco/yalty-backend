@@ -11,3 +11,10 @@ every_midnight_add_working_time:
   args:
   queue: registered_working_times
   description: "Adds the user registered working time from previous day"
+
+every_midnight_remove_orphan_files:
+  cron: "0 0 * * *"
+  class: "RemoveOrphanEmployeeFiles"
+  args:
+  queue: employee_files
+  description: "Remove files not assigned to employees"

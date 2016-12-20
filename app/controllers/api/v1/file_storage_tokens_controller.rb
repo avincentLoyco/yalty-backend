@@ -33,7 +33,8 @@ module API
 
       def find_attribute_version(file_id)
         return unless file_id.present?
-        Account.current.employee_attribute_versions
+        Account
+          .current.employee_attribute_versions
           .where("data -> 'attribute_type' = 'File' AND data -> 'id' = '#{file_id}'")
           .first
       end
