@@ -1,3 +1,4 @@
+desc 'Recalcualtes the balances for every employee'
 task recalculate_all_balances: [:environment] do
   initial_etop_balances = Employee::Balance.all.order(:effective_at)
   puts 'Updating the being_processed flag of all balances'

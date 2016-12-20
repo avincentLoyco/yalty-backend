@@ -1,3 +1,4 @@
+desc 'Create missing balances for all employees'
 task create_missing_balances: [:environment] do
   older_etop_per_employee_and_category =
     EmployeeTimeOffPolicy
