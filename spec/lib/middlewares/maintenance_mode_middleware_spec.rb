@@ -15,7 +15,7 @@ RSpec.describe MaintenanceModeMiddleware do
 
   context 'maintenance mode turn on' do
     before(:each) do
-      ENV['YALTY_MAINTENANCE_MODE'] = 'true'
+      Redis.current.set('maintenance_mode', true)
     end
 
     it 'should return 503 and maintenance mode' do
@@ -27,7 +27,7 @@ RSpec.describe MaintenanceModeMiddleware do
 
   context 'maintenance mode turn off' do
     before(:each) do
-      ENV['YALTY_MAINTENANCE_MODE'] = 'false'
+      Redis.current.set('maintenance_mode', false)
     end
 
     it 'should return 200' do

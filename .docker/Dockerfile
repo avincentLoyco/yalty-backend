@@ -12,7 +12,7 @@ ARG BUNDLE_APP_CONFIG=/code/.bundle
 ARG BUNDLE_WITHOUT=development:test
 
 # App envs
-ENV RAILS_ENV=review
+ENV RAILS_ENV=production
 ENV RAILS_PORT=3000
 ENV WEB_CONCURRENCY=1
 ENV MAX_THREADS=5
@@ -68,7 +68,7 @@ RUN set -ex \
   && gem install rake --version "$RAKE_VERSION" \
   && gem install bundler --version "$BUNDLER_VERSION" \
   && gem install puma --version "$PUMA_VERSION" \
-  && bundle install --deployment --clean \
+  && bundle install --without development test --deployment --clean \
   && rm -rf $GEM_HOME/cache/* \
   && rm -rf $BUNDLE_PATH/cache/* \
   && rm -rf $BUNDLE_PATH/*/*/cache/*
