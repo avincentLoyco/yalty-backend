@@ -377,35 +377,70 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
             end
 
             context 'and greater than time off amount' do
-              let(:manual_amount_for_balance) { 10000 }
+              context 'and smaller than whole time off amount' do
+                let(:manual_amount_for_balance) { 10000 }
 
-              it do
-                expect(JSON.parse(response.body)).to eq(
-                  [
-                    {
-                      'employee' => employee_id,
-                      'category' => "vacation",
-                      'periods' => [
-                          {
-                            'type' => "balancer",
-                            'start_date' => '2016-10-10',
-                            'validity_date' => nil,
-                            'amount_taken' => 8640,
-                            'period_result' => 1360,
-                            'balance' => 1360
-                          },
-                          {
-                            'type' => "balancer",
-                            'start_date' => '2017-01-01',
-                            'validity_date' => nil,
-                            'amount_taken' => 10080,
-                            'period_result' => 1920,
-                            'balance' => 3280
-                          }
-                      ]
-                    }
-                  ]
-                )
+                it do
+                  expect(JSON.parse(response.body)).to eq(
+                    [
+                      {
+                        'employee' => employee_id,
+                        'category' => "vacation",
+                        'periods' => [
+                            {
+                              'type' => "balancer",
+                              'start_date' => '2016-10-10',
+                              'validity_date' => nil,
+                              'amount_taken' => 10000,
+                              'period_result' => 0,
+                              'balance' => 1360
+                            },
+                            {
+                              'type' => "balancer",
+                              'start_date' => '2017-01-01',
+                              'validity_date' => nil,
+                              'amount_taken' => 8720,
+                              'period_result' => 3280,
+                              'balance' => 3280
+                            }
+                        ]
+                      }
+                    ]
+                  )
+                end
+              end
+
+              context 'and greater than whole time off amount' do
+                let(:manual_amount_for_balance) { 20000 }
+
+                it do
+                  expect(JSON.parse(response.body)).to eq(
+                    [
+                      {
+                        'employee' => employee_id,
+                        'category' => "vacation",
+                        'periods' => [
+                            {
+                              'type' => "balancer",
+                              'start_date' => '2016-10-10',
+                              'validity_date' => nil,
+                              'amount_taken' => 18720,
+                              'period_result' => 1280,
+                              'balance' => 11360
+                            },
+                            {
+                              'type' => "balancer",
+                              'start_date' => '2017-01-01',
+                              'validity_date' => nil,
+                              'amount_taken' => 0,
+                              'period_result' => 12000,
+                              'balance' => 13280
+                            }
+                        ]
+                      }
+                    ]
+                  )
+                end
               end
             end
           end

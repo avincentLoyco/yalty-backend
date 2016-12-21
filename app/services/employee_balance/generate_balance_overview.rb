@@ -23,6 +23,10 @@ class GenerateBalanceOverview
           period_important_info.merge(result_calculations)
         end
       end
+      if result_category_hash[:periods].present?
+        result_category_hash[:periods] =
+          ovveride_amount_taken_for_balancer(result_category_hash[:periods])
+      end
       result_category_hash
     end
   end
@@ -96,5 +100,21 @@ class GenerateBalanceOverview
 
   def find_period(category, date)
     PeriodInformationFinderByCategory.new(@employee, category).find_period_for_date(date)
+  end
+
+  def ovveride_amount_taken_for_balancer(periods)
+    return periods unless periods.first[:type].eql?('balancer') && !periods.first[:validity_date]
+    periods.map.each_with_index do |period, index|
+      next_period = periods[index + 1]
+      next if period[:period_result].eql?(0) || next_period.blank?
+      if next_period[:amount_taken] > 0
+        period[:amount_taken] += period[:period_result]
+        period[:period_result] = 0
+      else
+        period[:period_result] = next_period[:balance] - next_period[:period_result]
+        period[:amount_taken] = period[:amount_taken] + period[:balance] - period[:period_result]
+      end
+    end
+    periods
   end
 end

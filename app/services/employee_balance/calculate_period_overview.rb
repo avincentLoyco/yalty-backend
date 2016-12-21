@@ -14,13 +14,8 @@ class CalculatePeriodOverview
         @period[:start_date],
         end_date_for_negative_values
       )
-    amount_taken = balance_at_period_start_date + negative_amounts
-    amount_taken =
-      if @period[:type] == 'balancer' && amount_taken.abs > periods_positive_amount.abs
-        - periods_positive_amount
-      else
-        amount_taken
-      end
+    amount_taken = @period_start_balance + negative_amounts
+    amount_taken = calculate_amount_taken(amount_taken, periods_positive_amount)
     period_result = periods_positive_amount + amount_taken
     if @period[:type].eql?('balancer')
       period_result = 0 unless period_result > 0
@@ -157,12 +152,12 @@ class CalculatePeriodOverview
       .balance(balance.effective_at.beginning_of_day, (@period[:end_date] + 1.day).beginning_of_day)
   end
 
-  def balance_at_period_start_date
-    if @period_start_balance < 0 || @period[:validity_date].present? ||
-        @period[:type].eql?('counter')
-      @period_start_balance
+  def calculate_amount_taken(amount_taken, periods_positive_amount)
+    return 0 if amount_taken >= 0
+    if @period[:type].eql?('balancer') && amount_taken.abs > periods_positive_amount.abs
+      - periods_positive_amount
     else
-      0
+      amount_taken
     end
   end
 end
