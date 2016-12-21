@@ -700,7 +700,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       end
     end
     context 'when the user is not an account manager'do
-      before { user.account_manager = false }
+      before { user.role = 'user' }
 
       context 'and he wants to update other employee attributes' do
         before do
@@ -1119,7 +1119,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
       context 'when current user is not account manager' do
         before do
-          Account::User.current.update!(account_manager: false, employee: nil)
+          Account::User.current.update!(role: 'user', employee: nil)
         end
 
         it 'should not include some attributes' do

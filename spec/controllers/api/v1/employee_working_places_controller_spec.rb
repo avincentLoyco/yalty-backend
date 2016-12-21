@@ -64,7 +64,7 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
         end
 
         context 'when account user is not account manager' do
-          before { Account::User.current.update!(account_manager: false ) }
+          before { Account::User.current.update!(role: 'user' ) }
 
           it { is_expected.to have_http_status(403) }
         end
@@ -80,7 +80,7 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
         end
 
         context 'when account user is not account manager' do
-          before { Account::User.current.update!(account_manager: false ) }
+          before { Account::User.current.update!(role: 'user' ) }
 
           it { is_expected.to have_http_status(403) }
         end
@@ -288,7 +288,7 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
       end
 
       context 'when account user is not account manager' do
-        before { Account::User.current.update!(account_manager: false ) }
+        before { Account::User.current.update!(role: 'user' ) }
 
         it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
         it { is_expected.to have_http_status(403) }
@@ -468,7 +468,7 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
 
     context 'with invalid params' do
       context 'when account user is not an account manager' do
-        before { Account::User.current.update!(account_manager: false ) }
+        before { Account::User.current.update!(role: 'user' ) }
 
         it { expect { subject }.to_not change { employee_working_place.reload.effective_at } }
         it { is_expected.to have_http_status(403) }
@@ -654,7 +654,7 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
       end
 
       context 'when user is not an account manager' do
-        before { Account::User.current.update!(account_manager: false, employee: employee) }
+        before { Account::User.current.update!(role: 'user', employee: employee) }
 
         it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
         it { is_expected.to have_http_status(403) }

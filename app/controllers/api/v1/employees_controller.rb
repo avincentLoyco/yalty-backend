@@ -22,7 +22,7 @@ module API
       end
 
       def resource_representer
-        if current_user.account_manager ||
+        if current_user.owner_or_administrator? ||
             (@resource && current_user.employee.try(:id) == @resource.id)
           ::Api::V1::EmployeeRepresenter
         else

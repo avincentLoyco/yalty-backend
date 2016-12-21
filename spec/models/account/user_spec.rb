@@ -18,6 +18,9 @@ RSpec.describe Account::User, type: :model do
   it { is_expected.to validate_length_of(:password).is_at_least(8).is_at_most(74) }
   it { is_expected.to have_db_column(:reset_password_token).of_type(:string) }
 
+  it { is_expected.to have_db_column(:role).of_type(:string).with_options(null: false) }
+  it { is_expected.to validate_inclusion_of(:role).in_array(%w(user account_administrator account_owner))}
+
   it 'should validate length of password only when is updated' do
     user = create(:account_user)
     user = Account::User.find(user.id)
@@ -95,31 +98,29 @@ RSpec.describe Account::User, type: :model do
     include_context 'shared_context_intercom_attributes'
     let(:account) { user.account }
     let(:user) { create(:account_user) }
+    let(:data_keys) { user.intercom_data.keys + user.intercom_data[:custom_attributes].keys }
 
-    it 'is of type :users' do
-      expect(user.intercom_type).to eq(:users)
-    end
-
-    it 'includes proper attributes' do
-      expect(user.intercom_attributes).to eq(proper_user_intercom_attributes)
-    end
+    it { expect(user.intercom_type).to eq(:users) }
+    it { expect(user.intercom_attributes).to eq(proper_user_intercom_attributes) }
 
     context 'as user only' do
-      it 'returns proper data' do
-        data_keys = user.intercom_data.keys + user.intercom_data[:custom_attributes].keys
-        expect(data_keys).to match_array(proper_user_data_keys)
-      end
+      it { expect(data_keys).to match_array(proper_user_data_keys) }
     end
 
     context 'as employee' do
-      before do
-        create(:employee, account: account, user: user)
-      end
+      before { create(:employee, account: account, user: user) }
 
-      it 'returns proper data' do
-        data_keys = user.intercom_data.keys + user.intercom_data[:custom_attributes].keys
-        expect(data_keys).to match_array(proper_user_data_keys)
-      end
+      it { expect(data_keys).to match_array(proper_user_data_keys) }
     end
+  end
+
+  describe '#owner_or_administrator?' do
+    let(:owner) { create(:account_user, role: 'account_owner') }
+    let(:manager) { create(:account_user, role: 'account_administrator') }
+    let(:user) { create(:account_user, role: 'user') }
+
+    it { expect(owner.owner_or_administrator?).to be(true) }
+    it { expect(manager.owner_or_administrator?).to be(true) }
+    it { expect(user.owner_or_administrator?).to be(false) }
   end
 end

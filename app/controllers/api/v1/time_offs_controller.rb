@@ -70,7 +70,7 @@ module API
       end
 
       def resources
-        return time_off_category.time_offs if current_user.account_manager
+        return time_off_category.time_offs if current_user.owner_or_administrator?
         return TimeOff.none unless current_user.employee
         time_off_category.time_offs.where(employee: current_user.employee)
       end

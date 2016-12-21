@@ -103,7 +103,7 @@ class UpdateEvent
   end
 
   def not_editable_versions
-    return [] if Account::User.current.account_manager
+    return [] if Account::User.current.owner_or_administrator?
     Employee::AttributeVersion.not_editable.where(employee_event_id: event.id)
   end
 
