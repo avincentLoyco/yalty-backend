@@ -82,6 +82,7 @@ class SidekiqCtl
     require 'sidekiq/cli'
 
     run_args = []
+    run_args += ['--daemon']
     run_args += ['--pidfile', @pidfile] if @pidfile
     run_args += ['-C', @config_file] if @config_file
 
