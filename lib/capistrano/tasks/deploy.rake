@@ -17,30 +17,24 @@ namespace :deploy do
   namespace :backend do
     desc 'Start backend servers'
     task :start do
-      on roles(%w(api launchpad), in: :sequence, wait: 5) do
-        within current_path do
-          execute(:'./bin/pumactl', '-C', File.join(current_path, 'config/puma.rb'), :start)
-        end
+      on roles(%w(api launchpad)) do
+        execute(:sudo, :systemctl, :start, fetch(:backend_service_name))
       end
     end
 
     desc 'Stop backend servers'
     task :stop do
-      on roles(%w(api launchpad), in: :sequence, wait: 5) do
-        within current_path do
-          execute(:'./bin/pumactl', '-C', File.join(current_path, 'config/puma.rb'), :stop)
-        end
+      on roles(%w(api launchpad)) do
+        execute(:sudo, :systemctl, :stop, fetch(:backend_service_name))
       end
     end
 
     desc 'Restart backend servers (phased-restart if maintenance mode is active)'
     task :restart do
-      command = fetch(:maintenance_mode, false) ? :restart : :'phased-restart'
+      command = fetch(:maintenance_mode, false) ? :restart : :reload
 
-      on roles(%w(worker)) do
-        within current_path do
-          execute(:'./bin/pumactl', '-C', File.join(current_path, 'config/puma.rb'), command)
-        end
+      on roles(%w(api launchpad)) do
+        execute(:sudo, :systemctl, command, fetch(:backend_service_name))
       end
     end
   end
@@ -49,33 +43,28 @@ namespace :deploy do
     desc 'Start workers'
     task :start do
       on roles(%w(worker)) do
-        within current_path do
-          execute(:'./bin/sidekiqctl', '-C', File.join(current_path, 'config/sidekiq.yml'), :start)
-        end
+        execute(:sudo, :systemctl, :start, fetch(:worker_service_name))
       end
     end
 
     desc 'Stop workers'
     task :stop do
       on roles(%w(worker)) do
-        within current_path do
-          execute(:'./bin/sidekiqctl', '-C', File.join(current_path, 'config/sidekiq.yml'), :stop)
-        end
+        execute(:sudo, :systemctl, :stop, fetch(:worker_service_name))
       end
     end
 
     desc 'Restart workers'
     task :restart do
-      invoke 'deploy:worker:stop'
-      invoke 'deploy:worker:start'
+      on roles(%w(worker)) do
+        execute(:sudo, :systemctl, :restart, fetch(:worker_service_name))
+      end
     end
 
     desc 'Ask workers to not take new job'
     task :quiet do
       on roles(%w(worker)) do
-        within current_path do
-          execute(:'./bin/sidekiqctl', '-C', File.join(current_path, 'config/sidekiq.yml'), :quiet)
-        end
+        execute(:sudo, '/etc/init.d/app-03 quiet')
       end
     end
   end

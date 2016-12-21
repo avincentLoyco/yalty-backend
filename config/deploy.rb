@@ -5,9 +5,10 @@ set :application, 'backend'
 set :docker_roles, %w(api launchpad worker)
 set :docker_repository, 'yalty/backend'
 set :docker_source, '/code'
-ask :docker_tag, 'stable'
 
 set :deploy_to, '/var/www/backend-yalty/'
+set :backend_service_name, 'app-02'
+set :worker_service_name, 'app-03'
 
 append :local_exclude_list, %w(
   .docker*
@@ -16,6 +17,8 @@ append :local_exclude_list, %w(
   /spec
   /log
 )
+
+set :pty, true
 
 set :rbenv_roles, %w(api launchpad worker)
 set :rbenv_path, -> {

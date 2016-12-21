@@ -20,6 +20,7 @@ class SidekiqCtl
 
     @pid = nil
 
+    @rails_root = File.expand_path('..', __dir__)
     @shutdown_timeout = 30
 
     opts = OptionParser.new do |o|
@@ -43,10 +44,14 @@ class SidekiqCtl
 
     @command = argv.shift
 
+    @config_file = File.expand_path(@config_file, @rails_root) if @config_file
     if @config_file && File.exist?(@config_file)
       @config = YAML.load(ERB.new(IO.read(@config_file)).result)
       @config = @config.merge(@config.delete(ENV['RAILS_ENV'] || 'development') || {})
-      @pidfile ||= @config[:pidfile]
+      @pidfile ||= File.expand_path(@config[:pidfile], @rails_root)
+      @logfile ||= File.expand_path(@config[:logfile], @rails_root)
+    else
+      raise "Config file not found: #{@config_file}"
     end
 
     # check present of command
@@ -83,15 +88,18 @@ class SidekiqCtl
 
     run_args = []
     run_args += ['--daemon']
+    run_args += ['--logfile', @logfile] if @logfile
     run_args += ['--pidfile', @pidfile] if @pidfile
     run_args += ['-C', @config_file] if @config_file
 
     sidekiq_cmd = $0.gsub(/sidekiqctl$/, 'sidekiq')
     $0 = sidekiq_cmd if File.exist?(sidekiq_cmd)
 
-    cli = Sidekiq::CLI.instance
-    cli.parse(run_args)
-    cli.run
+    Dir.chdir(@rails_root) do
+      cli = Sidekiq::CLI.instance
+      cli.parse(run_args)
+      cli.run
+    end
   end
 
   def send_signal
