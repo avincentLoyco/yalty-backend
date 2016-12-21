@@ -1,0 +1,143 @@
+#!/usr/bin/env ruby
+require_relative '../config/boot'
+require 'optparse'
+require 'fileutils'
+require 'yaml'
+require 'erb'
+require 'sidekiq/version'
+
+class SidekiqCtl
+  COMMANDS = %w{halt quiet start status stop}
+
+  def initialize(argv, stdout=STDOUT, stderr=STDERR)
+    @pidfile = nil
+    @config_file = nil
+    @config = nil
+    @command = nil
+
+    @stdout = stdout
+    @stderr = stderr
+
+    @pid = nil
+
+    @shutdown_timeout = 30
+
+    opts = OptionParser.new do |o|
+      o.banner = "Usage: sidekiqctl -C config/sidekiq.yml (#{COMMANDS.join("|")})"
+
+      o.on '-C', '--config-file PATH', 'Puma config script' do |arg|
+        @config_file = arg
+      end
+
+      o.on_tail('-H', '--help', 'Show this message') do
+        @stdout.puts o
+        exit
+      end
+
+      o.on_tail('-V', '--version', 'Show version') do
+        puts Sidekiq::VERSION
+        exit
+      end
+    end
+    opts.order!(argv) { |a| opts.terminate a }
+
+    @command = argv.shift
+
+    if @config_file && File.exist?(@config_file)
+      @config = YAML.load(ERB.new(IO.read(@config_file)).result)
+      @config = @config.merge(@config.delete(ENV['RAILS_ENV'] || 'development') || {})
+      @pidfile ||= @config[:pidfile]
+    end
+
+    # check present of command
+    unless @command
+      raise "Available commands: #{COMMANDS.join(", ")}"
+    end
+
+    unless COMMANDS.include? @command
+      raise "Invalid command: #{@command}"
+    end
+  rescue => e
+    @stdout.puts e.message
+    exit 1
+  end
+
+  def run
+    start if @command == 'start'
+    prepare_configuration
+
+    send_signal
+  rescue => e
+    message e.message
+    exit 1
+  end
+
+  private
+
+  def prepare_configuration
+    @pid = File.open(@pidfile).gets.to_i if @pidfile && File.exist?(@pidfile)
+  end
+
+  def start
+    require 'sidekiq/cli'
+
+    run_args = []
+    run_args += ['--daemon']
+    run_args += ['--pidfile', @pidfile] if @pidfile
+    run_args += ['-C', @config_file] if @config_file
+
+    sidekiq_cmd = $0.gsub(/sidekiqctl$/, 'sidekiq')
+    $0 = sidekiq_cmd if File.exist?(sidekiq_cmd)
+
+    cli = Sidekiq::CLI.instance
+    cli.parse(run_args)
+    cli.run
+  end
+
+  def send_signal
+    begin
+      case @command
+      when 'halt'
+        Process.kill('QUIT', @pid)
+
+      when 'stop'
+        Process.kill('TERM', @pid)
+        @shutdown_timeout.times do
+          sleep 1 if Process.kill(0, @pid)
+        end
+        Process.kill('QUIT', @pid)
+
+      when 'quiet'
+        Process.kill('USR1', @pid)
+
+      else
+        Process.kill(0, @pid)
+        message 'Sidekiq running.'
+      end
+
+    rescue Errno::ESRCH
+      FileUtils.rm_f(@pidfile)
+
+    rescue SystemCallError, TypeError
+      if @pid
+        raise "No pid '#{@pid}' found"
+      else
+        message 'No pid available'
+      end
+    end
+
+    message "Command #{@command} sent success"
+  end
+
+  def message(msg)
+    @stdout.puts msg unless @quiet
+  end
+end
+
+begin
+  cli = SidekiqCtl.new(ARGV.dup)
+  cli.run
+rescue => e
+  STDERR.puts e.message
+  exit 1
+end

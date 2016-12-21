@@ -1,4 +1,6 @@
 :concurrency: 1
+:pidfile: <%= File.expand_path('./tmp/pids/sidekiq.pid', __dir__)  %>
+:logfile: <%= File.expand_path('./log/sidekiq.log', __dir__)  %>
 :queues:
   - mailers
   - intercom

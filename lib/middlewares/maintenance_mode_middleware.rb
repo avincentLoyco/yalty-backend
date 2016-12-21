@@ -4,7 +4,7 @@ class MaintenanceModeMiddleware
   end
 
   def call(env)
-    if ENV['YALTY_MAINTENANCE_MODE'] == 'true'
+    if Redis.current && Redis.current.get('maintenance_mode') == 'true'
       [503, { 'Content-Type' => 'application/json' }, ['{"error": "Maintenance mode"}']]
     else
       @app.call(env)

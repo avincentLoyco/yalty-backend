@@ -47,16 +47,12 @@ module Yalty
     end
 
     # Support Maintenance Mode Middleware
-    config.middleware.use('MaintenanceModeMiddleware')
-    # Set current user
-    config.middleware.insert_after('MaintenanceModeMiddleware', 'CurrentUserMiddleware')
-    # Set current account
-    config.middleware.insert_after('CurrentUserMiddleware', 'CurrentAccountMiddleware')
-    # Remove Content-Type header in response with status 205
-    config.middleware.use('RemoveContentTypeHeader')
+    config.middleware.insert_before(0, 'MaintenanceModeMiddleware')
+    # Answer to ping request Middleware
+    config.middleware.insert_after('MaintenanceModeMiddleware', 'PingMiddleware')
 
     # CORS configuration
-    config.middleware.insert_before 0, 'Rack::Cors', debug: !Rails.env.production?, logger: (-> { Rails.logger }) do
+    config.middleware.insert_after 'PingMiddleware', 'Rack::Cors', debug: !Rails.env.production?, logger: (-> { Rails.logger }) do
       allow do
         origins '*'
 
@@ -66,6 +62,14 @@ module Yalty
           max_age: 0
       end
     end
+
+    # Remove Content-Type header in response with status 205
+    config.middleware.use('RemoveContentTypeHeader')
+
+    # Set current user
+    config.middleware.use('CurrentUserMiddleware')
+    # Set current account
+    config.middleware.insert_after('CurrentUserMiddleware', 'CurrentAccountMiddleware')
 
     # SQL database schema
     config.active_record.schema_format = :sql
