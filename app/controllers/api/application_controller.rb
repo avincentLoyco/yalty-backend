@@ -125,9 +125,9 @@ class API::ApplicationController < ApplicationController
     representer = options.delete(:representer) || resource_representer
 
     response = if resource.respond_to?(:map)
-                 resource.map { |item| representer.new(item).complete }
+                 resource.map { |item| representer.new(item, current_user).complete }
                else
-                 representer.new(resource).complete
+                 representer.new(resource, current_user).complete
                end
 
     render options.merge(json: response)

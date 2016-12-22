@@ -4,7 +4,7 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
   include_examples 'example_authorization',
     resource_name: 'time_off_category'
   include_context 'shared_context_headers'
-
+  let(:expected_keys) { [:id, :type, :system, :name, :first_assignation_date] }
   describe 'GET #index' do
     let!(:time_off_categories) { create_list(:time_off_category, 3, account: account) }
     subject { get :index }
@@ -41,12 +41,13 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
       context 'response body' do
         before { subject }
 
-        it { expect_json_keys([:id, :type, :system, :name]) }
+        it { expect_json_keys(expected_keys) }
         it { expect_json(
           id: category.id,
           type: 'time_off_category',
           system: category.system,
-          name: category.name)
+          name: category.name,
+          first_assignation_date: nil)
         }
       end
     end
@@ -86,7 +87,7 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
       context 'response body' do
         before { subject }
 
-        it { expect_json_keys([:id, :type, :system, :name]) }
+        it { expect_json_keys(expected_keys) }
       end
     end
 
