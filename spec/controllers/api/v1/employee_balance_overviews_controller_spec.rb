@@ -6,7 +6,7 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
   include_context 'shared_context_timecop_helper'
 
   let!(:employee) { create(:employee, account: account) }
-  let(:vacation_category) {create(:time_off_category, account: Account.current, name: 'vacation') }
+  let(:vacation_category) { create(:time_off_category, account: Account.current, name: 'vacation') }
   let(:vacation_balancer_policy_A_amount) { 100 }
   let(:vacation_balancer_policy_A) do
     create(:time_off_policy, :with_end_date, time_off_category: vacation_category,
@@ -285,6 +285,216 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
       end
 
       context 'when there is a time off that begins in the current period and ends in the next one' do
+        context 'and policy does not have end dates' do
+          before do
+            vacation_balancer_policy_A.update!(end_day: nil, end_month: nil, amount: 12000)
+            vacation_policy_A_assignation.update!(effective_at: '10/10/2016')
+            create(:employee_balance_manual,
+              effective_at:
+                DateTime.new(2016, 10, 10) + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
+              manual_amount: manual_amount_for_balance, time_off_category: vacation_category,
+              resource_amount: 0, employee: employee)
+            Timecop.freeze(2016, 11, 10, 0, 0)
+            create(:time_off,
+              time_off_category: vacation_category, employee: employee,
+              start_time: Date.new(2016, 12, 26), end_time: Date.new(2017, 1, 8))
+            ManageEmployeeBalanceAdditions.new(vacation_policy_A_assignation).call
+            Employee::Balance.all.order(:effective_at).each do |balance|
+              UpdateEmployeeBalance.new(balance).call
+            end
+          end
+
+          after do
+            Timecop.return
+          end
+
+          context 'and policy assignation amount was 0' do
+            let(:manual_amount_for_balance) { 0 }
+            before { subject }
+
+            it do
+              expect(JSON.parse(response.body)).to eq(
+                [
+                  {
+                    'employee' => employee_id,
+                    'category' => "vacation",
+                    'periods' => [
+                        {
+                          'type' => "balancer",
+                          'start_date' => '2016-10-10',
+                          'validity_date' => nil,
+                          'amount_taken' => 0,
+                          'period_result' => 0,
+                          'balance' => -8640
+                        },
+                        {
+                          'type' => "balancer",
+                          'start_date' => '2017-01-01',
+                          'validity_date' => nil,
+                          'amount_taken' => 12000,
+                          'period_result' => 0,
+                          'balance' => -6720
+                        }
+                    ]
+                  }
+                ]
+              )
+            end
+          end
+
+          context 'and policy assignation amount was different than 0 ' do
+            context 'and smaller than time off amount' do
+              before { subject }
+              let(:manual_amount_for_balance) { 7000 }
+
+              it do
+                expect(JSON.parse(response.body)).to eq(
+                  [
+                    {
+                      'employee' => employee_id,
+                      'category' => "vacation",
+                      'periods' => [
+                          {
+                            'type' => "balancer",
+                            'start_date' => '2016-10-10',
+                            'validity_date' => nil,
+                            'amount_taken' => 7000,
+                            'period_result' => 0,
+                            'balance' => -1640
+                          },
+                          {
+                            'type' => "balancer",
+                            'start_date' => '2017-01-01',
+                            'validity_date' => nil,
+                            'amount_taken' => 11720,
+                            'period_result' => 280,
+                            'balance' => 280
+                          }
+                      ]
+                    }
+                  ]
+                )
+              end
+            end
+
+            context 'and greater than time off amount' do
+              context 'and smaller than whole time off amount' do
+                before { subject }
+                let(:manual_amount_for_balance) { 10000 }
+
+                it do
+                  expect(JSON.parse(response.body)).to eq(
+                    [
+                      {
+                        'employee' => employee_id,
+                        'category' => "vacation",
+                        'periods' => [
+                            {
+                              'type' => "balancer",
+                              'start_date' => '2016-10-10',
+                              'validity_date' => nil,
+                              'amount_taken' => 10000,
+                              'period_result' => 0,
+                              'balance' => 1360
+                            },
+                            {
+                              'type' => "balancer",
+                              'start_date' => '2017-01-01',
+                              'validity_date' => nil,
+                              'amount_taken' => 8720,
+                              'period_result' => 3280,
+                              'balance' => 3280
+                            }
+                        ]
+                      }
+                    ]
+                  )
+                end
+              end
+
+              context 'and greater than whole time off amount' do
+                before { subject }
+                let(:manual_amount_for_balance) { 20000 }
+
+                it do
+                  expect(JSON.parse(response.body)).to eq(
+                    [
+                      {
+                        'employee' => employee_id,
+                        'category' => "vacation",
+                        'periods' => [
+                            {
+                              'type' => "balancer",
+                              'start_date' => '2016-10-10',
+                              'validity_date' => nil,
+                              'amount_taken' => 18720,
+                              'period_result' => 1280,
+                              'balance' => 11360
+                            },
+                            {
+                              'type' => "balancer",
+                              'start_date' => '2017-01-01',
+                              'validity_date' => nil,
+                              'amount_taken' => 0,
+                              'period_result' => 12000,
+                              'balance' => 13280
+                            }
+                        ]
+                      }
+                    ]
+                  )
+                end
+              end
+
+              context 'and there are active periods' do
+                let(:manual_amount_for_balance) { 20000 }
+
+                before do
+                  Timecop.freeze(2017, 11, 10, 0, 0)
+                end
+
+                it do
+                  subject
+                  expect(JSON.parse(response.body)).to eq(
+                    [
+                      {
+                        'employee' => employee_id,
+                        'category' => "vacation",
+                        'periods' => [
+                            {
+                              'type' => "balancer",
+                              'start_date' => '2016-10-10',
+                              'validity_date' => nil,
+                              'amount_taken' => 18720,
+                              'period_result' => 1280,
+                              'balance' => 11360
+                            },
+                            {
+                              'type' => "balancer",
+                              'start_date' => '2017-01-01',
+                              'validity_date' => nil,
+                              'amount_taken' => 0,
+                              'period_result' => 12000,
+                              'balance' => 13280
+                            },
+                            {
+                              'type' => "balancer",
+                              'start_date' => '2018-01-01',
+                              'validity_date' => nil,
+                              'amount_taken' => 0,
+                              'period_result' => 12000,
+                              'balance' => 25280
+                            }
+                        ]
+                      }
+                    ]
+                  )
+                end
+              end
+            end
+          end
+        end
+
         context 'but the validity date of the current period is after the end of the time off' do
           let(:vacation_policy_A_assignation_date) { Date.new(2016,1,1) }
           before do
@@ -433,7 +643,7 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
                )
             end
           end
-          context ' and the time off ends in the same day of the validity date' do
+          context 'and the time off ends in the same day of the validity date' do
             before do
               create(:time_off,
                 start_time: Time.zone.parse('1/1/2017 23:30:00'),
