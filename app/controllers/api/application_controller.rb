@@ -112,7 +112,8 @@ class API::ApplicationController < ApplicationController
     if order_of_start_day && order_of_start_day != join_table.order_of_start_day
       params_for_service.push(order_of_start_day)
     end
-    return if previous_effective_at.present? && previous_effective_at == join_table.effective_at &&
+    return if join_table.class.eql?(EmployeePresencePolicy) && previous_effective_at.present? &&
+        previous_effective_at == join_table.effective_at &&
         ((previous_order_of_start_day.present? && order_of_start_day.present? &&
         order_of_start_day == previous_order_of_start_day) || order_of_start_day.nil?)
     FindAndUpdateEmployeeBalancesForJoinTables.new(*params_for_service).call
