@@ -302,7 +302,6 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
             Employee::Balance.all.order(:effective_at).each do |balance|
               UpdateEmployeeBalance.new(balance).call
             end
-            subject
           end
 
           after do
@@ -311,6 +310,7 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
 
           context 'and policy assignation amount was 0' do
             let(:manual_amount_for_balance) { 0 }
+            before { subject }
 
             it do
               expect(JSON.parse(response.body)).to eq(
@@ -344,6 +344,7 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
 
           context 'and policy assignation amount was different than 0 ' do
             context 'and smaller than time off amount' do
+              before { subject }
               let(:manual_amount_for_balance) { 7000 }
 
               it do
@@ -378,6 +379,7 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
 
             context 'and greater than time off amount' do
               context 'and smaller than whole time off amount' do
+                before { subject }
                 let(:manual_amount_for_balance) { 10000 }
 
                 it do
@@ -411,6 +413,7 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
               end
 
               context 'and greater than whole time off amount' do
+                before { subject }
                 let(:manual_amount_for_balance) { 20000 }
 
                 it do
@@ -435,6 +438,52 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
                               'amount_taken' => 0,
                               'period_result' => 12000,
                               'balance' => 13280
+                            }
+                        ]
+                      }
+                    ]
+                  )
+                end
+              end
+
+              context 'and there are active periods' do
+                let(:manual_amount_for_balance) { 20000 }
+
+                before do
+                  Timecop.freeze(2017, 11, 10, 0, 0)
+                end
+
+                it do
+                  subject
+                  expect(JSON.parse(response.body)).to eq(
+                    [
+                      {
+                        'employee' => employee_id,
+                        'category' => "vacation",
+                        'periods' => [
+                            {
+                              'type' => "balancer",
+                              'start_date' => '2016-10-10',
+                              'validity_date' => nil,
+                              'amount_taken' => 18720,
+                              'period_result' => 1280,
+                              'balance' => 11360
+                            },
+                            {
+                              'type' => "balancer",
+                              'start_date' => '2017-01-01',
+                              'validity_date' => nil,
+                              'amount_taken' => 0,
+                              'period_result' => 12000,
+                              'balance' => 13280
+                            },
+                            {
+                              'type' => "balancer",
+                              'start_date' => '2018-01-01',
+                              'validity_date' => nil,
+                              'amount_taken' => 0,
+                              'period_result' => 12000,
+                              'balance' => 25280
                             }
                         ]
                       }
