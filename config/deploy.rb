@@ -10,6 +10,14 @@ set :deploy_to, '/var/www/backend-yalty/'
 set :backend_service_name, 'app-02'
 set :worker_service_name, 'app-03'
 
+set :app_version, -> {
+  begin
+    File.read(File.expand_path('../VERSION', __dir__)).strip
+  rescue
+    'VERSION file cannot be read'
+  end
+}
+
 append :local_exclude_list, %w(
   .docker*
   .gitignore
