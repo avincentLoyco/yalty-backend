@@ -50,6 +50,44 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
           first_assignation_date: nil)
         }
       end
+
+      context ' when the  user has an employee and the employee does ' do
+        let!(:employee) do
+          create(:employee,  user: user, account: account)
+        end
+
+        context ' have a policy assigned to the category' do
+
+          let(:policy) { create(:time_off_policy, time_off_category: category) }
+          let!(:etop) do
+            create(:employee_time_off_policy, time_off_policy: policy, employee: employee,
+              effective_at: Time.zone.now
+            )
+          end
+
+          before{ subject }
+
+          it { expect_json(
+            id: category.id,
+            type: 'time_off_category',
+            system: category.system,
+            name: category.name,
+            first_assignation_date: Time.zone.today.to_s)
+          }
+        end
+
+        context ' not have a policy assigned to the category' do
+          before{ subject }
+
+          it { expect_json(
+            id: category.id,
+            type: 'time_off_category',
+            system: category.system,
+            name: category.name,
+            first_assignation_date: nil)
+          }
+        end
+      end
     end
 
     context 'with invalid id' do

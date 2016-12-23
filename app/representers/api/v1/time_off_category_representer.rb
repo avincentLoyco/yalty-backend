@@ -11,10 +11,9 @@ module Api::V1
 
     def find_first_assignation_date
       current_employee = current_user.employee
-      return unless current_employee
-
+      return unless current_employee.present?
       EmployeeTimeOffPolicy.by_employee_in_category(current_employee.id, resource.id)
-                           .last.pluck(:effective_at)
+                           .try(:last).try(:effective_at)
     end
   end
 end
