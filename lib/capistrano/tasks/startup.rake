@@ -1,3 +1,19 @@
+def systemctl(command, service)
+  begin
+    execute(:sudo, :systemctl, command, service)
+  rescue SSHKit::Command::Failed => e
+    if command == :reload
+      command = :restart
+      retry
+    elsif command == :restart
+      command = :start
+      retry
+    else
+      raise e
+    end
+  end
+end
+
 namespace :start do
   desc 'Start all services'
   task :all do
@@ -8,14 +24,14 @@ namespace :start do
   desc 'Start backend service'
   task :backend do
     on roles(%w(api launchpad)) do
-      execute(:sudo, :systemctl, :start, fetch(:backend_service_name))
+      systemctl(:start, fetch(:backend_service_name))
     end
   end
 
   desc 'Start worker service'
-  task :start do
+  task :worker do
     on roles(%w(worker)) do
-      execute(:sudo, :systemctl, :start, fetch(:worker_service_name))
+      systemctl(:start, fetch(:worker_service_name))
     end
   end
 end
@@ -23,21 +39,22 @@ end
 namespace :stop do
   desc 'Stop all services'
   task :all do
+    invoke 'deploy:quiet_workers'
     invoke 'stop:backend'
     invoke 'stop:worker'
   end
 
   desc 'Stop backend service'
-  task :stop do
+  task :backend do
     on roles(%w(api launchpad)) do
-      execute(:sudo, :systemctl, :stop, fetch(:backend_service_name))
+      systemctl(:stop, fetch(:backend_service_name))
     end
   end
 
   desc 'Stop worker service'
-  task :stop do
+  task :worker do
     on roles(%w(worker)) do
-      execute(:sudo, :systemctl, :stop, fetch(:worker_service_name))
+      systemctl(:stop, fetch(:worker_service_name))
     end
   end
 end
@@ -45,6 +62,7 @@ end
 namespace :restart do
   desc 'Restart all services'
   task :all do
+    invoke 'deploy:quiet_workers'
     invoke 'restart:backend'
     invoke 'restart:worker'
   end
@@ -54,14 +72,14 @@ namespace :restart do
     command = fetch(:maintenance_mode, false) ? :restart : :reload
 
     on roles(%w(api launchpad)) do
-      execute(:sudo, :systemctl, command, fetch(:backend_service_name))
+      systemctl(command, fetch(:backend_service_name))
     end
   end
 
   desc 'Restart worker service'
   task :worker do
     on roles(%w(worker)) do
-      execute(:sudo, :systemctl, :restart, fetch(:worker_service_name))
+      systemctl(:restart, fetch(:worker_service_name))
     end
   end
 end
