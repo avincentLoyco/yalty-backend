@@ -1,8 +1,10 @@
 class OverrideAmountTakenForBalancer
-  attr_reader :periods
+  attr_reader :periods, :added, :balance_difference
 
   def initialize(periods)
     @periods = periods
+    @added = 0
+    @balance_difference = 0
   end
 
   def call
@@ -13,13 +15,14 @@ class OverrideAmountTakenForBalancer
   private
 
   def override_amount_for_periods
+    @balance_difference = periods.map { |p| p[:period_result] }.sum - periods.last[:balance]
     periods.map.each_with_index do |period, index|
       next if period[:period_result].eql?(0) || periods[index + 1].blank?
       if periods[index + 1][:amount_taken] > 0
         use_whole_period_amount(period)
       else
         next if previous_period(index).present? && previous_period(index)[:period_result].nonzero?
-        iterate_over_next_periods_to_remove_amount(period, index)
+        iterate_over_next_periods_to_remove_amount(period)
       end
     end
     periods
@@ -30,40 +33,21 @@ class OverrideAmountTakenForBalancer
   end
 
   def use_whole_period_amount(period)
+    previous_amount = period[:amount_taken]
     period[:amount_taken] += period[:period_result]
     period[:period_result] = 0
+    @added += previous_amount - period[:amount_taken]
   end
 
-  def periods_after(index)
-    periods[(index + 1)..periods.length]
-  end
-
-  def periods_difference(index, next_period, next_index)
-    periods_sum = periods[index + 1..next_index].map { |p| p[:period_result] }.sum
-    next_period[:balance] - next_period[:period_result] - periods_sum
-  end
-
-  def difference(period)
-    return 0 if period[:balance].eql?(period[:period_result])
-    period[:balance] - period[:period_result] - period[:amount_taken]
-  end
-
-  def balance_didnt_changed?(index, next_period, next_index)
-    (next_period[:balance] - next_period[:period_result])
-      .eql?(periods_after(index)[next_index - 1][:balance])
-  end
-
-  def iterate_over_next_periods_to_remove_amount(period, index)
-    periods_after(index).each_with_index do |next_period, next_index|
-      if periods_difference(index, next_period, next_index) < 0
-        use_whole_period_amount(period)
-      else
-        next if balance_didnt_changed?(index, next_period, next_index)
-        difference = difference(period)
-        period[:period_result] = periods_difference(index, next_period, next_index)
-        period[:amount_taken] = period[:amount_taken] + period[:balance] - period[:period_result]
-        period[:amount_taken] -= difference if difference.nonzero? && difference > 0
-      end
+  def iterate_over_next_periods_to_remove_amount(period)
+    if balance_difference + added > period[:period_result]
+      use_whole_period_amount(period)
+    else
+      previous_result = period[:period_result]
+      previous_amount = period[:amount_taken]
+      period[:period_result] = period[:period_result] - (balance_difference + added)
+      period[:amount_taken] = previous_result - period[:period_result] + previous_amount
+      @added += previous_amount - period[:amount_taken]
     end
   end
 end
