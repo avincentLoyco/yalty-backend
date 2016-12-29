@@ -490,6 +490,57 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
                     ]
                   )
                 end
+
+                context 'and their amount is used in next period' do
+                  let(:manual_amount_for_balance) { 20000 }
+
+                  before do
+                    create(:time_off,
+                      time_off_category: vacation_category, employee: employee,
+                      start_time: Date.new(2018, 1, 1), end_time: Date.new(2018, 1, 8))
+                    Employee::Balance.all.order(:effective_at).each do |balance|
+                      UpdateEmployeeBalance.new(balance).call
+                    end
+                    subject
+                  end
+
+                  it do
+                    expect(JSON.parse(response.body)).to eq(
+                      [
+                        {
+                          'employee' => employee_id,
+                          'category' => "vacation",
+                          'periods' => [
+                              {
+                                'type' => "balancer",
+                                'start_date' => '2016-10-10',
+                                'validity_date' => nil,
+                                'amount_taken' => 20000,
+                                'period_result' => 0,
+                                'balance' => 11360
+                              },
+                              {
+                                'type' => "balancer",
+                                'start_date' => '2017-01-01',
+                                'validity_date' => nil,
+                                'amount_taken' => 8800,
+                                'period_result' => 3200,
+                                'balance' => 13280
+                              },
+                              {
+                                'type' => "balancer",
+                                'start_date' => '2018-01-01',
+                                'validity_date' => nil,
+                                'amount_taken' => 0,
+                                'period_result' => 12000,
+                                'balance' => 15200
+                              }
+                          ]
+                        }
+                      ]
+                    )
+                  end
+                end
               end
             end
           end
