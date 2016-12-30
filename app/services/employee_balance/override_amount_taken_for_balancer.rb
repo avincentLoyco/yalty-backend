@@ -1,9 +1,9 @@
 class OverrideAmountTakenForBalancer
-  attr_reader :periods, :added, :balance_difference
+  attr_reader :periods, :already_added_amount, :balance_difference
 
   def initialize(periods)
     @periods = periods
-    @added = 0
+    @already_added_amount = 0
     @balance_difference = 0
   end
 
@@ -36,18 +36,18 @@ class OverrideAmountTakenForBalancer
     previous_amount = period[:amount_taken]
     period[:amount_taken] += period[:period_result]
     period[:period_result] = 0
-    @added += previous_amount - period[:amount_taken]
+    @already_added_amount += previous_amount - period[:amount_taken]
   end
 
   def iterate_over_next_periods_to_remove_amount(period)
-    if balance_difference + added > period[:period_result]
+    if balance_difference + already_added_amount > period[:period_result]
       use_whole_period_amount(period)
     else
       previous_result = period[:period_result]
       previous_amount = period[:amount_taken]
-      period[:period_result] = period[:period_result] - (balance_difference + added)
+      period[:period_result] = period[:period_result] - (balance_difference + already_added_amount)
       period[:amount_taken] = previous_result - period[:period_result] + previous_amount
-      @added += previous_amount - period[:amount_taken]
+      @already_added_amount += previous_amount - period[:amount_taken]
     end
   end
 end

@@ -82,7 +82,8 @@ module RelatedAmount
       .time_offs
       .in_category(time_off_category_id)
       .where('? BETWEEN time_offs.start_time::date AND
-              time_offs.end_time::date', effective_at.to_date)
+              time_offs.end_time::date AND
+              time_offs.end_time > ?', effective_at.to_date, effective_at)
       .first
   end
 

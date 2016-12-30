@@ -20,10 +20,7 @@ class GenerateBalanceOverview
           period_important_info.merge(result_calculations)
         end
       end
-      if result_category_hash[:periods].present?
-        result_category_hash[:periods] =
-          OverrideAmountTakenForBalancer.new(result_category_hash[:periods]).call
-      end
+      result_category_hash[:periods] = overrided_hash_for_category(result_category_hash[:periods])
       result_category_hash
     end
   end
@@ -47,8 +44,7 @@ class GenerateBalanceOverview
     @active_categories.map do |category|
       current_period = find_period_if_balances_present(category, Time.zone.today)
       next_period = find_next_period(category, current_period)
-      active_periods =
-        find_active_periods_from_balances(category, current_period)
+      active_periods = find_active_periods_from_balances(category, current_period)
 
       { category.id => [active_periods, current_period, next_period].flatten.compact }
     end
@@ -84,7 +80,7 @@ class GenerateBalanceOverview
       .where(time_off_category: category)
       .where('effective_at < ?', current_period_start)
       .order(:effective_at)
-    return compared_with_time_offs(balances) if current_period[:validity_date].blank?
+    return active_balances(balances) unless current_period[:validity_date]
     balances.where('validity_date >= ?', current_period_start)
   end
 
@@ -103,9 +99,22 @@ class GenerateBalanceOverview
     PeriodInformationFinderByCategory.new(@employee, category).find_period_for_date(date)
   end
 
-  def compared_with_time_offs(balances)
-    positive = balances.where('resource_amount > 0 OR manual_amount > 0').order(effective_at: :desc)
-    negative = balances.where('resource_amount < 0 OR manual_amount < 0')
-    negative.blank? ? positive : []
+  def overrided_hash_for_category(period)
+    return [] unless period.present?
+    OverrideAmountTakenForBalancer.new(period).call
+  end
+
+  def active_balances(balances)
+    positive = balances.where('resource_amount > 0 OR manual_amount > 0').order(:effective_at)
+    negative =
+      balances.pluck(:manual_amount, :resource_amount).flatten.select { |value| value < 0 }.sum
+    positive.map do |balance|
+      balance_positive_amount =
+        balance.slice(:resource_amount, :manual_amount).values.select { |value| value > 0 }.sum
+      break if balance_positive_amount + negative > 0
+      negative += balance_positive_amount
+      positive -= [balance]
+    end
+    positive
   end
 end

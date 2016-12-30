@@ -305,67 +305,141 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
               ManageEmployeeBalanceAdditions.new(vacation_policy_A_assignation).call
             end
 
-            context 'when first period amount not used' do
-              it do
-                subject
-                expect(JSON.parse(response.body)).to eq(
-                  [
-                    {
-                      'employee' => employee_id,
-                      'category' => "vacation",
-                      'periods' => [
-                        {
-                          'type' => "balancer",
-                          'start_date' => '2015-10-10',
-                          'validity_date' => nil,
-                          'amount_taken' => 0,
-                          'period_result' => 10000,
-                          'balance' => 10000
-                        },
-                        {
-                          'type' => "balancer",
-                          'start_date' => '2016-01-01',
-                          'validity_date' => nil,
-                          'amount_taken' => 0,
-                          'period_result' =>  12000,
-                          'balance' => 22000
-                        },
-                        {
-                          'type' => "balancer",
-                          'start_date' => '2017-01-01',
-                          'validity_date' => nil,
-                          'amount_taken' => 0,
-                          'period_result' => 12000,
-                          'balance' => 34000
-                        },
-                        {
-                          'type' => "balancer",
-                          'start_date' => '2018-01-01',
-                          'validity_date' => nil,
-                          'amount_taken' => 0,
-                          'period_result' => 12000,
-                          'balance' => 46000
-                        },
-                        {
-                          'type' => "balancer",
-                          'start_date' => '2019-01-01',
-                          'validity_date' => nil,
-                          'amount_taken' => 0,
-                          'period_result' => 12000,
-                          'balance' => 58000
-                        }
-                      ]
-                    }
-                  ]
-                )
+            context 'when first period amount used' do
+              context 'in current period' do
+                before do
+                  create(:time_off,
+                    time_off_category: vacation_category, employee: employee,
+                    start_time: Date.new(2017, 12, 26), end_time: Date.new(2018, 1, 8))
+                  Employee::Balance.all.order(:effective_at).each do |balance|
+                    UpdateEmployeeBalance.new(balance).call
+                  end
+                end
+
+                it do
+                  subject
+                  expect(JSON.parse(response.body)).to eq(
+                    [
+                      {
+                        'employee' => employee_id,
+                        'category' => "vacation",
+                        'periods' => [
+                          {
+                            'type' => "balancer",
+                            'start_date' => '2015-10-10',
+                            'validity_date' => nil,
+                            'amount_taken' => 10000,
+                            'period_result' => 0,
+                            'balance' => 10000
+                          },
+                          {
+                            'type' => "balancer",
+                            'start_date' => '2016-01-01',
+                            'validity_date' => nil,
+                            'amount_taken' => 8720,
+                            'period_result' =>  3280,
+                            'balance' => 22000
+                          },
+                          {
+                            'type' => "balancer",
+                            'start_date' => '2017-01-01',
+                            'validity_date' => nil,
+                            'amount_taken' => 0,
+                            'period_result' => 12000,
+                            'balance' => 25360
+                          },
+                          {
+                            'type' => "balancer",
+                            'start_date' => '2018-01-01',
+                            'validity_date' => nil,
+                            'amount_taken' => 0,
+                            'period_result' => 12000,
+                            'balance' => 27280
+                          },
+                          {
+                            'type' => "balancer",
+                            'start_date' => '2019-01-01',
+                            'validity_date' => nil,
+                            'amount_taken' => 0,
+                            'period_result' => 12000,
+                            'balance' => 39280
+                          }
+                        ]
+                      }
+                    ]
+                  )
+                end
+              end
+
+              context 'in previous periods' do
+                before do
+                  create(:time_off,
+                    time_off_category: vacation_category, employee: employee,
+                    start_time: Date.new(2015, 11, 1), end_time: Date.new(2015, 11, 11))
+                  create(:time_off,
+                    time_off_category: vacation_category, employee: employee,
+                    start_time: Date.new(2017, 12, 28), end_time: Date.new(2018, 1, 1))
+                  Employee::Balance.all.order(:effective_at).each do |balance|
+                    UpdateEmployeeBalance.new(balance).call
+                  end
+                end
+
+                it do
+                  subject
+                  expect(JSON.parse(response.body)).to eq(
+                    [
+                      {
+                        'employee' => employee_id,
+                        'category' => "vacation",
+                        'periods' => [
+                          {
+                            'type' => "balancer",
+                            'start_date' => '2016-01-01',
+                            'validity_date' => nil,
+                            'amount_taken' => 10160,
+                            'period_result' => 1840,
+                            'balance' => 7600
+                          },
+                          {
+                            'type' => "balancer",
+                            'start_date' => '2017-01-01',
+                            'validity_date' => nil,
+                            'amount_taken' => 0,
+                            'period_result' => 12000,
+                            'balance' => 13840
+                          },
+                          {
+                            'type' => "balancer",
+                            'start_date' => '2018-01-01',
+                            'validity_date' => nil,
+                            'amount_taken' => 0,
+                            'period_result' => 12000,
+                            'balance' => 25840
+                          },
+                          {
+                            'type' => "balancer",
+                            'start_date' => '2019-01-01',
+                            'validity_date' => nil,
+                            'amount_taken' => 0,
+                            'period_result' => 12000,
+                            'balance' => 37840
+                          }
+                        ]
+                      }
+                    ]
+                  )
+                end
               end
             end
 
-            context 'when first period amount used' do
+            context 'when there are more than one time off' do
               before do
                 create(:time_off,
                   time_off_category: vacation_category, employee: employee,
-                  start_time: Date.new(2017, 12, 26), end_time: Date.new(2018, 1, 8))
+                  start_time: Date.new(2016, 12, 26), end_time: Date.new(2017, 1, 1))
+                create(:time_off,
+                  time_off_category: vacation_category, employee: employee,
+                  start_time: Date.new(2017, 12, 26), end_time: Date.new(2018, 1, 1))
                 Employee::Balance.all.order(:effective_at).each do |balance|
                   UpdateEmployeeBalance.new(balance).call
                 end
@@ -391,17 +465,17 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
                           'type' => "balancer",
                           'start_date' => '2016-01-01',
                           'validity_date' => nil,
-                          'amount_taken' => 8720,
-                          'period_result' =>  3280,
-                          'balance' => 22000
+                          'amount_taken' => 7280,
+                          'period_result' =>  4720,
+                          'balance' => 13360
                         },
                         {
                           'type' => "balancer",
                           'start_date' => '2017-01-01',
                           'validity_date' => nil,
                           'amount_taken' => 0,
-                          'period_result' => 12000,
-                          'balance' => 25360
+                          'period_result' =>  12000,
+                          'balance' => 16720
                         },
                         {
                           'type' => "balancer",
@@ -409,7 +483,7 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
                           'validity_date' => nil,
                           'amount_taken' => 0,
                           'period_result' => 12000,
-                          'balance' => 27280
+                          'balance' => 28720
                         },
                         {
                           'type' => "balancer",
@@ -417,7 +491,7 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
                           'validity_date' => nil,
                           'amount_taken' => 0,
                           'period_result' => 12000,
-                          'balance' => 39280
+                          'balance' => 40720
                         }
                       ]
                     }
