@@ -339,12 +339,19 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
 
       context 'when there are balances between time offs start and end time' do
         before do
+          time_off.update!(start_time: Date.new(2017, 1, 1))
           policy.presence_days.first.time_entries.create!(start_time: '10:00', end_time: '18:00')
           ManageEmployeeBalanceAdditions.new(employee_time_off_policy).call
           Employee::Balance.update_all(being_processed: false)
         end
 
-        let!(:balance_after_time_off) { employee.employee_balances.order(:effective_at).fourth }
+        let!(:balance_after_time_off) do
+          Employee::Balance
+          .where(
+            'effective_at BETWEEN ? AND ?', time_off.start_time, time_off.end_time
+          )
+          .where(time_off_id: nil).first
+        end
 
         context 'and time off moved to future' do
           let(:start_time) { 14.months.since }
@@ -367,9 +374,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
         end
 
         context 'and time off moved to past' do
-          let!(:balances_after_new_effective_at) do
-            Employee::Balance.order(:effective_at).first(2)
-          end
+          let!(:balances_after_new_effective_at) { Employee::Balance.order(:effective_at).first(2) }
           let(:start_time) { 1.year.ago }
           let(:end_time) { 11.months.since }
 
@@ -436,6 +441,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
       end
 
       context 'when there are balances between time off start and end time' do
+        before { time_off.update!(start_time: Date.new(2017, 1, 1)) }
         let!(:policy_start_balance) do
           create(:employee_balance_manual,
             effective_at: Date.new(2017, 1, 1), being_processed: false, resource_amount: 1000,

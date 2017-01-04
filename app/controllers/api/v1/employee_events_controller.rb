@@ -57,13 +57,13 @@ module API
       end
 
       def verify_employee_attributes_values(employee_attributes)
-        errors = {}
-        employee_attributes.to_a.map do |attributes|
-          result = VerifyEmployeeAttributeValues.new(attributes)
-          result.valid?
-          errors.merge!(result.errors)
-        end
-        raise InvalidResourcesError.new(nil, errors) unless errors.blank?
+        result_errors =
+          employee_attributes.to_a.inject({}) do |errors, attributes|
+            result = VerifyEmployeeAttributeValues.new(attributes)
+            result.valid? ? errors : errors.merge!(result.errors)
+          end
+
+        raise InvalidResourcesError.new(nil, result_errors) unless result_errors.blank?
       end
     end
   end
