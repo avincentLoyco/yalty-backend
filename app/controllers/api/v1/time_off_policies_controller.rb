@@ -5,12 +5,12 @@ module API
       include TimeOffPoliciesSchemas
 
       def show
-        render json: resource_representer.new(resource, current_user).with_relationships
+        render json: resource_representer.new(resource).with_relationships
       end
 
       def index
         render json:
-          resources.map { |item| resource_representer.new(item, current_user).with_relationships }
+          resources.map { |item| resource_representer.new(item).with_relationships }
       end
 
       def create

@@ -11,7 +11,7 @@ module API
       def index
         response =
           resources_by_status(PresencePolicy, EmployeePresencePolicy).map do |item|
-            resource_representer.new(item, current_user).with_relationships
+            resource_representer.new(item).with_relationships
           end
         render json: response
       end
@@ -86,7 +86,7 @@ module API
 
       def render_resource_with_relationships(resource, response = {})
         render response.merge(
-          json: resource_representer.new(resource, current_user).with_relationships
+          json: resource_representer.new(resource).with_relationships
         )
       end
 

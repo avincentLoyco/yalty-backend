@@ -19,7 +19,7 @@ module Api::V1
     end
 
     def relationships
-      return {} unless current_user.try(:account_manager)
+      return {} unless Account::User.current.try(:account_manager)
       holiday_policy = HolidayPolicyRepresenter.new(resource.holiday_policy).basic
       {
         holiday_policy: holiday_policy
