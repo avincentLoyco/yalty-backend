@@ -63,9 +63,7 @@ class CreateEmployeeBalance
     return if options[:time_off_id] || options[:effective_at].blank?
     Employee::Balance
       .employee_balances(employee.id, category.id)
-      .where(effective_at: options[:effective_at])
-      .where(time_off_id: nil)
-      .first
+      .find_by('effective_at = ? AND time_off_id is NULL', options[:effective_at])
   end
 
   def active_policy_and_date_match?

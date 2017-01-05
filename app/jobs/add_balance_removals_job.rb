@@ -5,7 +5,6 @@ class AddBalanceRemovalsJob < ActiveJob::Base
     expiring_balances_by_employee_and_category =
       Employee::Balance
       .where('validity_date::date = ?', Time.zone.today)
-      .all
       .group_by { |balance| [balance[:employee_id], balance[:time_off_category_id]] }
 
     expiring_balances_by_employee_and_category.each do |_k, v|
