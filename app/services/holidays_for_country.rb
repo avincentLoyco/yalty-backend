@@ -1,19 +1,14 @@
 class HolidaysForCountry
   include API::V1::Exceptions
-  attr_reader :beginning_of_year, :end_of_year, :country_code, :params, :has_regions
-  attr_accessor :country
+  attr_reader :country_code, :region, :filter
 
-  def initialize(country, has_regions, params = {})
-    @country = has_regions ? "#{country}_" : country
+  def initialize(country, region = nil, filter = nil)
     @country_code = country
-    @has_regions = has_regions
-    @params = params
-    @beginning_of_year = Time.zone.now.beginning_of_year
-    @end_of_year = Time.zone.now.end_of_year
+    @region = region
+    @filter = filter
   end
 
   def call
-    @country += region if region.present?
     check_params
     calculate_holiday(filtered_holidays)
   end
@@ -25,10 +20,10 @@ class HolidaysForCountry
     holidays = []
     holiday_list.each do |holiday|
       holidays << { date: holiday[:date], code: holiday[:name] }
-      next if region.present? || has_regions == false
+      next if region.present? || regions? == false
       regions_holidays = assign_regions_holidays(regions_holidays, holiday)
     end
-    region.nil? && has_regions ? [holidays, regions_holidays.values] : holidays
+    { holidays: holidays, regions: regions_holidays.values }
   end
 
   def assign_regions_holidays(regions_holidays, holiday)
@@ -40,22 +35,30 @@ class HolidaysForCountry
     regions_holidays
   end
 
+  def country
+    country = regions? ? "#{country_code}_" : country_code
+    country += region if region.present?
+    country
+  end
+
+  def regions?
+    !HolidayPolicy::COUNTRIES_WITHOUT_REGIONS.include?(country_code)
+  end
+
   def filtered_holidays
     filter.present? ? incoming_holidays : year_holidays
   end
 
   def invalid_region?
-    has_regions == false && region.present?
+    regions? == false && region.present?
   end
 
   def region_exists?
-    return true if region.nil?
-    Holidays.available_regions.include? country.to_sym
+    region.nil? || Holidays.available_regions.include?(country.to_sym)
   end
 
   def valid_filter?
-    return true if filter.nil?
-    filter.eql?('upcoming')
+    filter.nil? || filter.eql?('upcoming')
   end
 
   def incoming_holidays
@@ -63,24 +66,11 @@ class HolidaysForCountry
   end
 
   def year_holidays
-    Holidays.between(beginning_of_year, end_of_year, country)
-  end
-
-  def region
-    params[:region]
-  end
-
-  def filter
-    params[:filter]
+    Holidays.between(Time.zone.now.beginning_of_year, Time.zone.now.end_of_year, country)
   end
 
   def check_params
     return if !invalid_region? && region_exists? && valid_filter?
-    messages = {}
-    messages[:country_attribute] = "Country doesn't have regions" if invalid_region?
-    messages[:region_attribute] = "Region doesn't exist" unless region_exists?
-    messages[:filter_attribute] = 'Wrong type of filter specified' unless valid_filter?
-
-    raise InvalidParamTypeError.new(params, messages.values.first)
+    raise InvalidParamTypeError.new(country, 'Invalid param value')
   end
 end
