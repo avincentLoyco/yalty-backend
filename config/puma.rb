@@ -3,16 +3,19 @@ threads Integer(ENV['MIN_THREADS'] || ENV['MAX_THREADS'] || 5), Integer(ENV['MAX
 
 rackup      DefaultRackup
 
-environment ENV['RAILS_ENV'] || 'development'
+rails_env = ENV['RAILS_ENV'] || 'development'
+environment rails_env
 directory File.expand_path('..', __dir__)
+
+if %w(production staging).include?(rails_env)
+  logfile = File.expand_path('../log/puma.log', __dir__)
+  stdout_redirect logfile, logfile, true
+end
+
+pidfile File.expand_path('../tmp/pids/puma.pid', __dir__)
 
 worker_timeout 30
 worker_boot_timeout 60
-
-logfile = File.expand_path('../log/puma.log', __dir__)
-stdout_redirect logfile, logfile, true
-
-pidfile File.expand_path('../tmp/pids/puma.pid', __dir__)
 
 # Production config
 if ENV['PUMA_BINDING']

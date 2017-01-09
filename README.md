@@ -186,29 +186,33 @@ rake parallel:spec
 How to deploy
 -------------
 
-Add git remotes:
+First, install [docker](https://docs.docker.com/engine/installation/). Review environment is
+automatically deploy, but for staging and production you should use capitrano.
 
+deploy release candidate to staging:
 ```bash
-git remote add review git@scalingo.com:yalty-api-server-review.git
-git remote add staging git@scalingo.com:yalty-api-server-staging.git
-git remote add production git@scalingo.com:yalty-api-server-production.git
+git checkout master && git pull
+
+cap staging release:candidate
+
+git add --patch && git commit -m "Create release candidate X.X.X"
+git push -u origin releases/X.X.X
+
+# waiting on docker build
+
+cap staging deploy
 ```
 
-For review, checkout branch to deploy and run deploy task:
-
+deploy release to production:
 ```bash
-git checkout <branch>
-rake deploy:review
-```
+git checkout releases/X.X.X && git pull
 
-or deploy master to staging:
-```bash
-rake deploy:staging
-```
+cap staging release:finalize
 
-or deploy stable to production:
-```bash
-rake deploy:production
+docker push yalty/backend:X.X.X
+git push --tags
+
+cap production deploy
 ```
 
 Known issues

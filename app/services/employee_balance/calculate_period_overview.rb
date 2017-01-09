@@ -15,12 +15,7 @@ class CalculatePeriodOverview
         end_date_for_negative_values
       )
     amount_taken = @period_start_balance + negative_amounts
-    amount_taken =
-      if @period[:type] == 'balancer' && amount_taken.abs > periods_positive_amount.abs
-        - periods_positive_amount
-      else
-        amount_taken
-      end
+    amount_taken = calculate_amount_taken(amount_taken, periods_positive_amount)
     period_result = periods_positive_amount + amount_taken
     if @period[:type].eql?('balancer')
       period_result = 0 unless period_result > 0
@@ -35,10 +30,16 @@ class CalculatePeriodOverview
   private
 
   def end_of_period_time_off_amount
-    if @period[:type].eql?('balancer')
+    if @period[:type].eql?('balancer') && @period[:validity_date]
       - time_off_amount_from_till(last_balance_in_period.effective_at, @period[:validity_date])
     else
-      - time_off_amount_from_till(last_balance_in_period.effective_at, @period[:end_date])
+      amount =
+        if last_balance_in_period && last_balance_in_period.time_off_id.nil?
+          last_balance_in_period.related_amount + time_off_value(last_balance_in_period)
+        else
+          0
+        end
+      amount - time_off_amount_from_till(last_balance_in_period.effective_at, @period[:end_date])
     end
   end
 
@@ -56,14 +57,24 @@ class CalculatePeriodOverview
     value = last_balance_in_period.try(:balance).to_i
     if time_off.present?
       time_off_end_time = (@period[:end_date] + 1.day).beginning_of_day
-      value - CalculateTimeOffBalance.new(time_off, nil, time_off_end_time).call
+      date =
+        if last_balance_in_period.effective_at > time_off.start_time
+          last_balance_in_period.effective_at.beginning_of_day
+        else
+          time_off.start_time
+        end
+      value - CalculateTimeOffBalance.new(time_off, date, time_off_end_time).call
     else
       value
     end
   end
 
   def end_date_for_negative_values
-    @period[:type] == 'balancer' ? @period[:validity_date] : @period[:end_date]
+    if @period[:type] == 'balancer' && @period[:validity_date]
+      @period[:validity_date]
+    else
+      @period[:end_date]
+    end
   end
 
   def balances
@@ -82,7 +93,7 @@ class CalculatePeriodOverview
     return 0 unless period_addition.present?
 
     if @period[:type].eql?('balancer')
-      period_addition.balance - period_addition.amount
+      period_addition.balance - period_addition.resource_amount - period_addition.manual_amount
     else
       period_addition.balance.abs
     end
@@ -99,13 +110,13 @@ class CalculatePeriodOverview
 
   def negative_amounts_between(from_date, time_offs_to_date)
     negative_balances = balances.between(from_date, time_offs_to_date)
-    if @period[:type] == 'balancer'
+    if @period[:type] == 'balancer' && @period[:validity_date]
       negative_balances =
         negative_balances.where.not(effective_at: period_addition.validity_date)
     end
     manual_and_resource_amounts = negative_balances.pluck(:manual_amount, :resource_amount)
     negative_amounts = manual_and_resource_amounts.flatten.select { |value| value < 0 }.sum
-    negative_amounts + end_of_period_time_off_amount
+    negative_amounts + end_of_period_time_off_amount - related_amount_at_period_beginning
   end
 
   def last_time_off_between(start_date, end_date)
@@ -117,11 +128,35 @@ class CalculatePeriodOverview
 
   def time_off_amount_from_till(start_date, end_date)
     time_off = last_time_off_between(start_date, end_date)
-
     return 0 unless time_off
     end_date_end_time = (end_date + 1.day).beginning_of_day
     next_day_of_end_date_beginning =
       time_off.end_time < end_date_end_time ? time_off.end_time : end_date_end_time
     CalculateTimeOffBalance.new(time_off, nil, next_day_of_end_date_beginning).call
+  end
+
+  def related_amount_at_period_beginning
+    time_off_at_start =
+      TimeOff.where(
+        'start_time::date < ? AND end_time::date >= ?', @period[:start_date], @period[:start_date]
+      ).first
+    return 0 unless time_off_at_start.present? && @period[:type].eql?('balancer')
+    time_off_at_start.balance(nil, @period[:start_date].beginning_of_day)
+  end
+
+  def time_off_value(balance)
+    time_off = last_time_off_between(@period[:start_date], @period[:end_date])
+    return 0 unless time_off && @period[:type].eql?('balancer')
+    time_off
+      .balance(balance.effective_at.beginning_of_day, (@period[:end_date] + 1.day).beginning_of_day)
+  end
+
+  def calculate_amount_taken(amount_taken, periods_positive_amount)
+    return 0 if amount_taken >= 0
+    if @period[:type].eql?('balancer') && amount_taken.abs > periods_positive_amount.abs
+      - periods_positive_amount
+    else
+      amount_taken
+    end
   end
 end

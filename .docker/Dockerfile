@@ -77,5 +77,8 @@ RUN set -ex \
 COPY .docker/run.sh /docker-run.sh
 COPY . /code
 
+RUN mkdir -p  /code/log
+RUN mkdir -p  /code/tmp/pids
+
 EXPOSE $RAILS_PORT
 CMD ["/docker-run.sh"]
