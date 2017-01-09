@@ -1,16 +1,14 @@
 def systemctl(command, service)
-  begin
-    execute(:sudo, :systemctl, command, service)
-  rescue SSHKit::Command::Failed => e
-    if command == :reload
-      command = :restart
-      retry
-    elsif command == :restart
-      command = :start
-      retry
-    else
-      raise e
-    end
+  execute(:sudo, :systemctl, command, service)
+rescue SSHKit::Command::Failed => e
+  if command == :reload
+    command = :restart
+    retry
+  elsif command == :restart
+    command = :start
+    retry
+  else
+    raise e
   end
 end
 

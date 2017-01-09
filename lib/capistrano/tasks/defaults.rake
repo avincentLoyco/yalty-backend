@@ -6,7 +6,7 @@ namespace :load do
     set :migration_server, -> { primary(fetch(:running_task_role, :worker)) }
     set :running_console_server, -> { primary(fetch(:running_task_role, :worker)) }
 
-    set :app_version, -> {
+    set :app_version, lambda {
       begin
         File.read(File.expand_path('../../../VERSION', __dir__)).strip
       rescue
@@ -14,11 +14,11 @@ namespace :load do
       end
     }
 
-    set :rbenv_ruby, -> {
+    set :rbenv_ruby, lambda {
       path = File.expand_path('../../../Gemfile', __dir__)
       File.read(path).match(/ruby '([^']+)'/)[1]
     }
-    set :rbenv_bundler, -> {
+    set :rbenv_bundler, lambda {
       path = File.expand_path('../../../Gemfile.lock', __dir__)
       File.read(path).match(/BUNDLED WITH\n(.+)/)[1].strip
     }
