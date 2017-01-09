@@ -1,11 +1,4 @@
 require 'sidekiq/web'
-Sidekiq::Web.use Rack::Auth::Basic do |username, password|
-  # Protect against timing attacks: (https://codahale.com/a-lesson-in-timing-attacks/)
-  # - Use & (do not use &&) so that it doesn't short circuit.
-  # - Use `secure_compare` to stop length information leaking
-  ActiveSupport::SecurityUtils.secure_compare(username, ENV["SIDEKIQ_USERNAME"]) &
-    ActiveSupport::SecurityUtils.secure_compare(password, ENV["SIDEKIQ_PASSWORD"])
-end unless Rails.env.development?
 
 Rails.application.routes.draw do
   # API

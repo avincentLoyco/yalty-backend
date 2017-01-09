@@ -12,6 +12,8 @@ namespace :maintenance do
 
   desc 'Turn maintenance mode off'
   task :off do
+    next if fetch(:maintenance_mode, false)
+
     on fetch(:running_task_server) do
       within release_path do
         info 'Turn maintenance mode off'
