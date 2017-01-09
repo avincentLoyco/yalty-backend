@@ -72,6 +72,23 @@ class Employee < ActiveRecord::Base
     last_civil_status_event_for(date).try(:effective_at)
   end
 
+  def contract_end_for(date)
+    events
+      .where(event_type: 'contract_end')
+      .where('effective_at <= ?', date)
+      .order(:effective_at).last.try(:effective_at)
+  end
+
+  def hired_date_for(date)
+    hired_event_date =
+      events
+      .where(event_type: 'hired')
+      .where('effective_at <= ?', date)
+      .order(:effective_at).last.try(:effective_at)
+
+    hired_event_date ? hired_event_date : hired_date
+  end
+
   def first_employee_event
     events.find_by(event_type: 'hired') || events.find { |event| event.event_type.eql?('hired' ) }
   end

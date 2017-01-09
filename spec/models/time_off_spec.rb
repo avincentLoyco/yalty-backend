@@ -29,6 +29,78 @@ RSpec.describe TimeOff, type: :model do
         .to receive(:active_policy_in_category_at_date) { employee_policy }
     end
 
+    context 'effective_at_not_after_contract_end' do
+      let!(:employee) { create(:employee) }
+      before do
+        create(:employee_event,
+          employee: employee, effective_at: Date.new(2014, 1, 1), event_type: 'contract_end'
+        )
+        employee.events.reload
+      end
+      subject { build(:time_off, start_time: start_time, end_time: end_time, employee: employee) }
+
+      context 'when employee has one contract end date' do
+        context 'with valid data' do
+          let(:start_time) { Date.new(2013, 1, 1) }
+          let(:end_time) { Date.new(2013, 1, 4) }
+
+          it { expect(subject.valid?).to eq true }
+          it { expect { subject.valid? }.to_not change { subject.errors.messages.count } }
+        end
+
+        context 'with invalid data' do
+          let(:start_time) { Date.new(2015, 1, 1) }
+          let(:end_time) { Date.new(2015, 1, 4) }
+
+          it { expect(subject.valid?).to eq false }
+          it do
+            expect { subject.valid? }.to change { subject.errors.messages[:end_time] }
+              .to include 'Time Off can not be added after employee contract end date'
+          end
+        end
+
+        context 'when employee has more than one contract end date' do
+          before do
+            create(:employee_event,
+              employee: employee, effective_at: Date.new(2015, 1, 1), event_type: 'hired'
+            )
+            create(:employee_event,
+              employee: employee, effective_at: Date.new(2016, 1, 1), event_type: 'contract_end'
+            )
+            employee.events.reload
+          end
+
+          context 'with valid data' do
+            let(:start_time) { Date.new(2015, 1, 1) }
+            let(:end_time) { Date.new(2015, 1, 4) }
+
+            it { expect(subject.valid?).to eq true }
+            it { expect { subject.valid? }.to_not change { subject.errors.messages.count } }
+          end
+
+          context 'with invalid data' do
+            context 'time off date after new contract end date' do
+              context 'time off date between new hired date and previous contract end' do
+                let(:start_time) { Date.new(2014, 1, 1) }
+                let(:end_time) { Date.new(2014, 1, 4) }
+
+                it { expect(subject.valid?).to eq false }
+                it { expect { subject.valid? }.to change { subject.errors.messages.count } }
+              end
+            end
+
+            context 'time off date between new hired date and previous contract end' do
+              let(:start_time) { Date.new(2016, 1, 1) }
+              let(:end_time) { Date.new(2016, 1, 4) }
+
+              it { expect(subject.valid?).to eq false }
+              it { expect { subject.valid? }.to change { subject.errors.messages.count } }
+            end
+          end
+        end
+      end
+    end
+
     context '#start_time_after_employee_creation' do
       subject { build(:time_off, start_time: effective_at) }
 

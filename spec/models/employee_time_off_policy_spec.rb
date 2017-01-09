@@ -20,20 +20,9 @@ RSpec.describe EmployeeTimeOffPolicy, type: :model do
     expect(etop.time_off_category_id).to eq(etop.time_off_policy.time_off_category_id)
   end
 
-  describe '#effective_at_cannot_be_before_hired_date' do
-    let(:employee) { create(:employee) }
-    subject(:create_invalid_etop) do
-      create(:employee_time_off_policy,
-        employee: employee, effective_at: employee.events.last.effective_at - 5.days
-      )
-    end
-
-    it do
-      expect { create_invalid_etop }.to raise_error(
-        ActiveRecord::RecordInvalid,
-        'Validation failed: Effective at can\'t be set before employee hired date'
-      )
-    end
+  describe 'effective_at_cannot_be_before_hired_date and shared_context_join_tables_effective_at' do
+    include_context 'shared_context_join_tables_effective_at',
+      join_table: :employee_time_off_policy
   end
 
   describe '#balances_without_valid_policy_present?' do

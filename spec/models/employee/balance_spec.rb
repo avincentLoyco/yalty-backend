@@ -23,7 +23,10 @@ RSpec.describe Employee::Balance, type: :model do
   context 'callbacks and helper methods' do
     let(:account) { create(:account) }
     let(:time_off_category) { create(:time_off_category, account: account) }
-    let(:balance) { build(:employee_balance, resource_amount: 200, time_off_category: time_off_category, employee: employee) }
+    let(:balance) do
+       build(:employee_balance,
+        resource_amount: 200, time_off_category: time_off_category, employee: employee)
+    end
     let(:policy) { create(:time_off_policy, time_off_category: time_off_category) }
     let(:employee) { create(:employee, account: account) }
     let!(:employee_policy) do
@@ -90,7 +93,11 @@ RSpec.describe Employee::Balance, type: :model do
         end
 
         context 'when employee balance has time off' do
-          let(:time_off) { create(:time_off, employee: employee, start_time: Date.today - 1.week, time_off_category: time_off_category ) }
+          let(:time_off) do
+            create(:time_off,
+              employee: employee, start_time: Date.today - 1.week,
+              time_off_category: time_off_category)
+          end
           subject { build(:employee_balance, time_off: time_off) }
 
           it { expect { subject.valid? }.to change { subject.effective_at } }
@@ -105,9 +112,80 @@ RSpec.describe Employee::Balance, type: :model do
     end
 
     context 'validations' do
+      context 'end_time_not_after_contract_end' do
+        before do
+          create(:employee_event,
+            employee: employee, effective_at: Date.new(2014, 1, 1), event_type: 'contract_end'
+          )
+          employee.events.reload
+        end
+        subject do
+          build(:employee_balance_manual,
+            employee: employee, time_off_category: time_off_category, effective_at: effective_at)
+        end
+
+        context 'when employee has one contract end date' do
+          context 'with valid data' do
+            let(:effective_at) { Date.new(2013, 1, 1) }
+
+            it { expect(subject.valid?).to eq true }
+            it { expect { subject.valid? }.to_not change { subject.errors.messages } }
+          end
+
+          context 'with invalid data' do
+            let(:effective_at) { Date.new(2014, 1, 1) }
+
+            it { expect(subject.valid?).to eq false }
+            it do
+              expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
+                .to include 'Employee Balance can not be added after employee contract end date'
+            end
+          end
+        end
+
+        context 'when employee has more than one contract end date' do
+          before do
+            create(:employee_event,
+              employee: employee, effective_at: Date.new(2015, 1, 1), event_type: 'hired'
+            )
+            create(:employee_event,
+              employee: employee, effective_at: Date.new(2016, 1, 1), event_type: 'contract_end'
+            )
+            employee.events.reload
+          end
+
+          context 'with valid data' do
+            let(:effective_at) { Date.new(2015, 1, 1) }
+
+            it { expect(subject.valid?).to eq true }
+            it { expect { subject.valid? }.to_not change { subject.errors.messages.count } }
+          end
+
+          context 'with invalid data' do
+            context 'effective_at between old contract end and new contract end' do
+              let(:effective_at) { Date.new(2014, 1, 1) }
+
+              it { expect(subject.valid?).to eq false }
+              it do
+                expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
+                  .to include 'Employee Balance can not be added after employee contract end date'
+              end
+            end
+
+            context 'effective at after new contract end' do
+              let(:effective_at) { Date.new(2016, 1, 1) }
+
+              it { expect(subject.valid?).to eq false }
+              it do
+                expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
+                  .to include 'Employee Balance can not be added after employee contract end date'
+              end
+            end
+          end
+        end
+      end
 
       context 'effective_after_employee_creation' do
-
         context 'when effective at before employee creation' do
           let(:effective_at) { Time.now - 11.years }
           let(:employee) { create(:employee) }

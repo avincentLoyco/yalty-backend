@@ -25,7 +25,7 @@ class Employee::Event < ActiveRecord::Base
     child_death: %w(child),
     partner_death: %w(spouse),
     child_studies: %w(child),
-    end_of_contract: %w()
+    contract_end: %w()
   }.with_indifferent_access
 
   belongs_to :employee, inverse_of: :events, required: true
@@ -40,7 +40,6 @@ class Employee::Event < ActiveRecord::Base
     presence: true,
     inclusion: { in: proc { Employee::Event.event_types }, allow_nil: true }
   validate :attributes_presence, if: [:event_attributes, :employee]
-  validate :only_one_hired_event_presence, if: :employee
   validate :balances_before_hired_date, if: :employee, on: :update
 
   def self.event_types

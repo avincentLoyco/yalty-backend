@@ -14,22 +14,9 @@ RSpec.describe EmployeePresencePolicy, type: :model do
   it { is_expected.to have_db_index([:employee_id, :presence_policy_id, :effective_at]).unique }
 
   describe 'validations' do
-    context '#effective_at_cannot_be_before_hired_date' do
-      let(:employee) { create(:employee) }
-      subject(:create_invalid_epp) do
-        create(
-          :employee_presence_policy,
-          employee: employee,
-          effective_at: employee.events.last.effective_at - 5.days
-        )
-      end
-
-      it do
-        expect { create_invalid_epp }.to raise_error(
-          ActiveRecord::RecordInvalid,
-          'Validation failed: Effective at can\'t be set before employee hired date'
-        )
-      end
+    context 'effective_at_cannot_be_before_hired_date and shared_context_join_tables_effective_at' do
+      include_context 'shared_context_join_tables_effective_at',
+        join_table: :employee_presence_policy
     end
 
     context '#no_balances_after_effective_at' do

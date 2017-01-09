@@ -1,5 +1,5 @@
 class EmployeeWorkingPlace < ActiveRecord::Base
-  include ValidateEffectiveAtBeforeHired
+  include ValidateEffectiveAtBetweenHiredAndContractEndDates
 
   attr_accessor :effective_till
 

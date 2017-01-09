@@ -26,6 +26,7 @@ class Employee::Balance < ActiveRecord::Base
   validate :effective_at_equal_time_off_policy_dates, if: 'time_off_id.nil? && employee_id'
   validate :effective_at_equal_time_off_end_date, if: :time_off_id
   validate :removal_effective_at_date
+  validate :end_time_not_after_contract_end, if: [:employee, :effective_at]
 
   before_validation :find_effective_at
   before_validation :calculate_amount_from_time_off, if: :time_off_id
@@ -107,6 +108,12 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   private
+
+  def end_time_not_after_contract_end
+    return unless employee.contract_end_for(effective_at).present? &&
+        employee.contract_end_for(effective_at) > employee.hired_date_for(effective_at)
+    errors.add(:effective_at, 'Employee Balance can not be added after employee contract end date')
+  end
 
   def attributes_present?
     employee.present? && time_off_category.present? && amount.present? && time_off_policy.present?
