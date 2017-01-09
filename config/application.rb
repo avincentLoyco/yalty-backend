@@ -46,13 +46,8 @@ module Yalty
       g.fixture_replacement :factory_girl, dir: 'spec/factories'
     end
 
-    # Support Maintenance Mode Middleware
-    config.middleware.insert_before(0, 'MaintenanceModeMiddleware')
-    # Answer to ping request Middleware
-    config.middleware.insert_after('MaintenanceModeMiddleware', 'PingMiddleware')
-
     # CORS configuration
-    config.middleware.insert_after 'PingMiddleware', 'Rack::Cors', debug: !Rails.env.production?, logger: (-> { Rails.logger }) do
+    config.middleware.insert_before 0, 'Rack::Cors', debug: !Rails.env.production?, logger: (-> { Rails.logger }) do
       allow do
         origins '*'
 
@@ -62,6 +57,11 @@ module Yalty
           max_age: 0
       end
     end
+
+    # Support Maintenance Mode Middleware
+    config.middleware.insert_after('Rack::Cors', 'MaintenanceModeMiddleware')
+    # Answer to ping request Middleware
+    config.middleware.insert_after('MaintenanceModeMiddleware', 'PingMiddleware')
 
     # Remove Content-Type header in response with status 205
     config.middleware.use('RemoveContentTypeHeader')

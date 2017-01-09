@@ -203,6 +203,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
         it { expect(subject.first.time_off.id).to eq time_off.id }
 
         context 'and there are balances between time off start and end time' do
+          before { time_off.update!(start_time: Date.new(2017, 1, 1)) }
           let!(:policy_start_balance) do
             create(:employee_balance_manual,
               employee: employee, effective_at: Date.new(2017, 1, 1), policy_credit_addition: true,

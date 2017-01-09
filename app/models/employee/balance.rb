@@ -178,7 +178,6 @@ class Employee::Balance < ActiveRecord::Base
     etop_effective_at,
     etop_effective_till
   )
-
     day = now_or_effective_at.to_date.day
     month = now_or_effective_at.to_date.month
     year = now_or_effective_at.to_date.year
@@ -213,7 +212,6 @@ class Employee::Balance < ActiveRecord::Base
     month,
     day
   )
-
     start_day = time_off_policy.start_day
     start_month = time_off_policy.start_month
     date_before_start_day = Date.new(year, start_month, start_day) - 1
