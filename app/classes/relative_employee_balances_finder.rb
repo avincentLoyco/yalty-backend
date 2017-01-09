@@ -19,8 +19,7 @@ class RelativeEmployeeBalancesFinder
         employee_balance.now_or_effective_at
       end
 
-    related_balances.where('effective_at > ?', effective_at)
-                    .where.not(id: employee_balance.id)
+    related_balances.where('effective_at > ? AND id != ?', effective_at, employee_balance.id)
                     .order(effective_at: :asc).first.try(:id)
   end
 

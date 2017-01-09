@@ -122,9 +122,8 @@ class CalculatePeriodOverview
   def last_time_off_between(start_date, end_date)
     TimeOff
       .for_employee_in_category(@employee_id, @time_off_category_id)
-      .where('start_time >= ? AND end_time > ? AND start_time::date <= ?',
+      .find_by('start_time >= ? AND end_time > ? AND start_time::date <= ?',
         start_date, end_date, end_date)
-      .first
   end
 
   def time_off_amount_from_till(start_date, end_date)
