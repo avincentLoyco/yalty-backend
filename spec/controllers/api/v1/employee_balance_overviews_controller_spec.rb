@@ -88,21 +88,6 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
             [
               {
                 'employee' => employee_id,
-                'category' => "vacation",
-                'periods' =>
-                  [
-                      {
-                        'type' => "balancer",
-                        'start_date' => '2016-01-01',
-                        'validity_date' => '2017-04-01',
-                        'amount_taken' => 0,
-                        'period_result' => vacation_balancer_policy_A_amount,
-                        'balance' => vacation_balancer_policy_A_amount
-                      }
-                  ]
-              },
-              {
-                'employee' => employee_id,
                 'category' => "emergency",
                 'periods' =>
                   [
@@ -113,6 +98,21 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
                         'amount_taken' => 0,
                         'period_result' => 0,
                         'balance' => 0
+                      }
+                  ]
+              },
+              {
+                'employee' => employee_id,
+                'category' => "vacation",
+                'periods' =>
+                  [
+                      {
+                        'type' => "balancer",
+                        'start_date' => '2016-01-01',
+                        'validity_date' => '2017-04-01',
+                        'amount_taken' => 0,
+                        'period_result' => vacation_balancer_policy_A_amount,
+                        'balance' => vacation_balancer_policy_A_amount
                       }
                   ]
               }
@@ -139,21 +139,6 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
               [
                 {
                   'employee' => employee_id,
-                  'category' => "vacation",
-                  'periods' =>
-                    [
-                        {
-                          'type' => "balancer",
-                          'start_date' => '2016-01-01',
-                          'validity_date' => '2017-04-01',
-                          'amount_taken' => 100,
-                          'period_result' => 0,
-                          'balance' => -50
-                        }
-                    ]
-                },
-                {
-                  'employee' => employee_id,
                   'category' => "emergency",
                   'periods' =>
                     [
@@ -164,6 +149,21 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
                           'amount_taken' => 150,
                           'period_result' => -150,
                           'balance' => -150
+                        }
+                    ]
+                },
+                {
+                  'employee' => employee_id,
+                  'category' => "vacation",
+                  'periods' =>
+                    [
+                        {
+                          'type' => "balancer",
+                          'start_date' => '2016-01-01',
+                          'validity_date' => '2017-04-01',
+                          'amount_taken' => 100,
+                          'period_result' => 0,
+                          'balance' => -50
                         }
                     ]
                 }
