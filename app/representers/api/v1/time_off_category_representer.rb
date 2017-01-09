@@ -4,7 +4,7 @@ module Api::V1
       {
         name: resource.name,
         system: resource.system,
-        first_assignation_date: find_first_assignation_date
+        active_since: find_first_assignation_date
       }
         .merge(basic)
     end

@@ -4,7 +4,7 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
   include_examples 'example_authorization',
     resource_name: 'time_off_category'
   include_context 'shared_context_headers'
-  let(:expected_keys) { [:id, :type, :system, :name, :first_assignation_date] }
+  let(:expected_keys) { [:id, :type, :system, :name, :active_since] }
   describe 'GET #index' do
     let!(:time_off_categories) { create_list(:time_off_category, 3, account: account) }
     subject { get :index }
@@ -47,7 +47,7 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
           type: 'time_off_category',
           system: category.system,
           name: category.name,
-          first_assignation_date: nil)
+          active_since: nil)
         }
       end
 
@@ -72,7 +72,7 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
             type: 'time_off_category',
             system: category.system,
             name: category.name,
-            first_assignation_date: Time.zone.today.to_s)
+            active_since: Time.zone.today.to_s)
           }
         end
 
@@ -84,7 +84,7 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
             type: 'time_off_category',
             system: category.system,
             name: category.name,
-            first_assignation_date: nil)
+            active_since: nil)
           }
         end
       end
