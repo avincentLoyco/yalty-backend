@@ -39,7 +39,7 @@ class GenerateBalanceOverview
 
   def find_employees_categories
     categories_id = @employee.employee_time_off_policies.pluck(:time_off_category_id).uniq
-    TimeOffCategory.where(id: categories_id)
+    TimeOffCategory.where(id: categories_id).order(:name)
   end
 
   def find_active_periods_per_category

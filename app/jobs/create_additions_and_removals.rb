@@ -23,7 +23,7 @@ class CreateAdditionsAndRemovals < ActiveJob::Base
     INNER JOIN (
       SELECT time_off_category_id, employee_id, max(effective_at) AS maxeffective
       FROM employee_time_off_policies
-      WHERE effective_at <= CURRENT_DATE
+      WHERE effective_at <= '#{Time.zone.today}'
       GROUP BY time_off_category_id, employee_id
     ) grouped
     ON policies.time_off_category_id = grouped.time_off_category_id
