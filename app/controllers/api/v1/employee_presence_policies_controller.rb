@@ -23,8 +23,10 @@ module API
         verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :update, resource
           previous_date = resource.effective_at
+          find_attributes =
+            attributes.merge(previous_order_of_start_day: resource.order_of_start_day)
           response = create_or_update_join_table(PresencePolicy, attributes, resource)
-          find_and_update_balances(resource, attributes, previous_date)
+          find_and_update_balances(response[:result], find_attributes, previous_date)
           render_join_table(response[:result], response[:status])
         end
       end
