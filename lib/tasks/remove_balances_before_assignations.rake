@@ -19,8 +19,7 @@ task remove_balances_before_assignations: [:environment] do
       ")
 
     oldest_etop_per_employee_and_category.each do |etop|
-      etop
-        .employee.employee_balances.where(time_off_category: etop.time_off_category)
+      etop.employee.employee_balances.where(time_off_category: etop.time_off_category)
         .where('effective_at < ?', etop.effective_at).delete_all
     end
   end

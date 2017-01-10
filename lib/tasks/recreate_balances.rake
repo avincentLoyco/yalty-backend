@@ -2,6 +2,7 @@ task recreate_balances: [:environment] do
   EmployeeTimeOffPolicy.order(:effective_at).each do |etop|
     new_effective_at = etop.effective_at
     old_effective_at = etop.effective_at
+
     if etop.effective_at < etop.employee.hired_date
       params = {
         time_off_policy_id: etop.time_off_policy_id,
