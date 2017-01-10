@@ -41,6 +41,7 @@ class Employee::Event < ActiveRecord::Base
     inclusion: { in: proc { Employee::Event.event_types }, allow_nil: true }
   validate :attributes_presence, if: [:event_attributes, :employee]
   validate :balances_before_hired_date, if: :employee, on: :update
+  validate :no_two_contract_end_dates_or_hired_events_in_row, if: [:employee, :event_type]
 
   def self.event_types
     Employee::Event::EVENT_ATTRIBUTES.keys.map(&:to_s)
@@ -84,5 +85,22 @@ class Employee::Event < ActiveRecord::Base
     employee_hired_events = employee.events.where(event_type: 'hired')
     return unless employee_hired_events.present? && employee_hired_events.pluck(:id).exclude?(id)
     errors.add(:event_type, 'Employee can have only one hired event')
+  end
+
+  def no_two_contract_end_dates_or_hired_events_in_row
+    return unless (event_type.eql?('hired') || event_type.eql?('contract_end')) &&
+        ((previous_event && previous_event.event_type.eql?(event_type)) ||
+        (next_event && next_event.event_type.eql?(event_type)))
+    errors.add(:event_type, "Employee can't have two #{event_type} events in a row")
+  end
+
+  def previous_event
+    employee
+      .events.where.not(id: id).where('effective_at < ?', effective_at).order(:effective_at).last
+  end
+
+  def next_event
+    employee
+      .events.where.not(id: id).where('effective_at > ?', effective_at).order(:effective_at).first
   end
 end
