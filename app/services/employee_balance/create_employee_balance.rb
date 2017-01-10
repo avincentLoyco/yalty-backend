@@ -15,13 +15,15 @@ class CreateEmployeeBalance
     ActiveRecord::Base.transaction do
       assign_employee_balance
       valid_balance?
-      build_employee_balance_removal if balance_is_not_removal_and_has_validity_date?
-      calculate_amount if employee_balance.time_off_policy.present?
+      build_employee_balance_removal
+      calculate_amount
       save!
       update_next_employee_balances
     end
     balance_removal ? [employee_balance, balance_removal] : [employee_balance]
   end
+
+  private
 
   def assign_employee_balance
     @employee_balance = build_or_update_employee_balance
@@ -35,6 +37,7 @@ class CreateEmployeeBalance
   end
 
   def build_employee_balance_removal
+    return unless validity_date.present? && employee_balance.balance_credit_additions.empty?
     @balance_removal =
       Employee::Balance
       .removal_at_date(employee.id, category.id, employee_balance.validity_date).first
@@ -53,11 +56,8 @@ class CreateEmployeeBalance
     if employee_balance.balance_credit_additions.present?
       employee_balance.balance_credit_additions.map(&:save!)
     end
-
     balance_removal.try(:save!)
   end
-
-  private
 
   def find_active_assignation_balance_for_date
     return if options[:time_off_id] || options[:effective_at].blank?
@@ -66,37 +66,23 @@ class CreateEmployeeBalance
       .find_by('effective_at = ? AND time_off_id is NULL', options[:effective_at])
   end
 
-  def active_policy_and_date_match?
-    active_policy = employee.active_policy_in_category_at_date(category.id, options[:effective_at])
-    return unless active_policy.present?
-    effective_at_with_seconds =
-      active_policy.effective_at + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET
-    effective_at_with_seconds == options[:effective_at]
-  end
-
   def valid_balance?
     return if employee_balance.valid? || balancer_removal? || counter_addition?
-    messages = employee_balance.errors.messages
-    raise InvalidResourcesError.new(employee_balance, messages)
+    raise InvalidResourcesError.new(employee_balance, employee_balance.errors.messages)
   end
 
-  def common_params
+  def balance_params
     {
       employee: employee,
       time_off:  options.key?(:time_off_id) ? employee.time_offs.find(options[:time_off_id]) : nil,
       time_off_category: category,
       manual_amount: manual_amount,
-      resource_amount: options.key?(:resource_amount) ? options[:resource_amount] : 0
-    }
-  end
-
-  def balance_params
-    {
+      resource_amount: options.key?(:resource_amount) ? options[:resource_amount] : 0,
       validity_date: validity_date,
       effective_at: options[:effective_at],
       policy_credit_addition: options[:policy_credit_addition] || false,
       reset_balance: options[:reset_balance] || false
-    }.merge(common_params)
+    }
   end
 
   def manual_amount
@@ -112,7 +98,7 @@ class CreateEmployeeBalance
 
   def calculate_amount
     return unless employee_balance.balance_credit_additions.present? || counter_addition? ||
-        balance_removal.try(:balance_credit_additions).present?
+        balance_removal.present?
     if balance_removal
       balance_removal.calculate_removal_amount
     else
@@ -121,16 +107,18 @@ class CreateEmployeeBalance
   end
 
   def update_next_employee_balances
-    balance_to_update = find_first_balance_for_update
-    return if only_in_balance_period?(balance_to_update) || options[:skip_update]
-    PrepareEmployeeBalancesToUpdate.new(balance_to_update).call
-    UpdateBalanceJob.perform_later(balance_to_update.id)
+    return if only_in_balance_period? || options[:skip_update]
+    PrepareEmployeeBalancesToUpdate.new(employee_balance).call
+    UpdateBalanceJob.perform_later(employee_balance.id)
   end
 
-  def only_in_balance_period?(balance_to_update)
-    balance_to_update.last_in_category? || balance_removal.try(:last_in_category?) &&
-      Employee::Balance.where(effective_at:
-        balance_to_update.effective_at...balance_removal.effective_at).count == 1
+  def only_in_balance_period?
+    start_time =
+      [employee_balance.effective_at, employee_balance.time_off.try(:start_time)].compact.min
+    Employee::Balance
+      .where('effective_at >= ?', start_time)
+      .where.not(id: [employee_balance.id, balance_removal.try(:id)])
+      .blank?
   end
 
   def balancer_removal?
@@ -139,18 +127,5 @@ class CreateEmployeeBalance
 
   def counter_addition?
     employee_balance.policy_credit_addition && employee_balance.time_off_policy.counter?
-  end
-
-  def balance_is_not_removal_and_has_validity_date?
-    validity_date.present? && @employee_balance.balance_credit_additions.empty?
-  end
-
-  def find_first_balance_for_update
-    return employee_balance unless employee_balance.time_off_id.present?
-    Employee::Balance
-      .employee_balances(employee.id, category.id)
-      .between(employee_balance.time_off.start_time, employee_balance.time_off.end_time)
-      .order(:effective_at)
-      .first
   end
 end
