@@ -103,4 +103,21 @@ class Employee::Event < ActiveRecord::Base
     employee
       .events.where.not(id: id).where('effective_at > ?', effective_at).order(:effective_at).first
   end
+
+  def no_two_contract_end_dates_or_hired_events_in_row
+    return unless (event_type.eql?('hired') || event_type.eql?('contract_end')) &&
+        ((previous_event && previous_event.event_type.eql?(event_type)) ||
+        (next_event && next_event.event_type.eql?(event_type)))
+    errors.add(:event_type, "Employee can't have two #{event_type} events in a row")
+  end
+
+  def previous_event
+    employee
+      .events.where.not(id: id).where('effective_at < ?', effective_at).order(:effective_at).last
+  end
+
+  def next_event
+    employee
+      .events.where.not(id: id).where('effective_at > ?', effective_at).order(:effective_at).first
+  end
 end
