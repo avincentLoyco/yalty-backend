@@ -54,8 +54,10 @@ class ManageEmployeeBalanceAdditions
   def etops_between_dates
     @etops_between_dates = employee
                            .employee_time_off_policies
-                           .where(time_off_category: resource.time_off_category)
-                           .where('effective_at BETWEEN ? AND ?', starting_date, ending_date)
+                           .where(
+                             'time_off_category_id = ? AND effective_at BETWEEN ? AND ?',
+                             resource.time_off_category_id, starting_date, ending_date
+                           )
   end
 
   def starting_date
@@ -73,14 +75,18 @@ class ManageEmployeeBalanceAdditions
   end
 
   def addition_at(etop, date)
-    employee.employee_balances.where(time_off_category: etop.time_off_category).find_by(
-      'effective_at = ?', date + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET
+    employee.employee_balances.find_by(
+      'effective_at = ? AND time_off_category_id = ?',
+      date + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
+      etop.time_off_category_id
     )
   end
 
   def day_before_balance_at(etop, date)
-    employee.employee_balances.where(time_off_category: etop.time_off_category).find_by(
-      'effective_at = ?', date + Employee::Balance::DAY_BEFORE_START_DAY_OFFSET
+    employee.employee_balances.find_by(
+      'effective_at = ? AND time_off_category_id = ?',
+      date + Employee::Balance::DAY_BEFORE_START_DAY_OFFSET,
+      etop.time_off_category_id
     )
   end
 

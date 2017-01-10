@@ -10,7 +10,8 @@ class FindEmployeeBalancesToUpdate
   end
 
   def call
-    return [resource.id] if resource.last_in_category? && options[:effective_at].blank?
+    return [resource.id] if resource.last_in_category? && resource.time_off_id.blank? &&
+        options[:effective_at].blank?
     if options[:update_all] || options[:effective_at] || addition_destroyed?
       all_later_balances_ids
     else

@@ -355,12 +355,31 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
           it { is_expected.to have_http_status(200) }
         end
 
+        shared_examples 'does not updates balances' do
+          it { expect { subject }.to_not change { balances.second.reload.being_processed } }
+          it { expect { subject }.to_not change { balances.last.reload.being_processed } }
+          it { expect { subject }.to_not change { balances.first.reload.being_processed } }
+
+          it { expect { subject }.to change { enqueued_jobs.size }.by(0) }
+          it { is_expected.to have_http_status(200) }
+        end
+
         context 'same date' do
           let(:effective_at) { join_table_resource.effective_at.to_date }
 
-          it_behaves_like 'properly updates balances'
-          it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
-          it { expect { subject }.to_not change { join_table_resource.reload.order_of_start_day } }
+          context 'and same order of start date' do
+            it_behaves_like 'does not updates balances'
+            it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
+            it { expect { subject }.to_not change { join_table_resource.reload.order_of_start_day } }
+          end
+
+          context 'and different order of start date' do
+            let!(:order_of_start_day) { join_table_resource.order_of_start_day + 1 }
+
+            it_behaves_like 'properly updates balances'
+            it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
+            it { expect { subject }.to change { join_table_resource.reload.order_of_start_day } }
+          end
         end
 
         context 'only order of start date' do

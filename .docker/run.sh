@@ -7,4 +7,4 @@ else
   rake db:migrate
 fi
 
-puma -C config/puma.rb
+./bin/puma -C config/puma.rb
