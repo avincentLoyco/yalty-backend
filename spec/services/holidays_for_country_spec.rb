@@ -25,50 +25,74 @@ RSpec.describe HolidaysForCountry, type: :service do
   end
 
   describe '#call' do
-    context 'with region and filter specified' do
-      subject { described_class.new('ch', 'vd', 'upcoming').call }
+    let(:country) { 'ch' }
+    subject { described_class.new(country, region, filter).call }
+    context 'with region' do
+      let(:region) { 'vd' }
 
-      it_behaves_like 'Holidays with region specified'
+      context 'when filter is specified' do
+        let(:filter) { 'upcoming' }
 
-      it 'is filtered to upcoming' do
-        response = subject
-        expect(response[:holidays].size).to be 10
+        it_behaves_like 'Holidays with region specified'
+
+        it 'is filtered to upcoming' do
+          expect(subject[:holidays].size).to eq(10)
+        end
+      end
+
+      context 'when filter is not specified' do
+        let(:filter) { nil }
+
+        it_behaves_like 'Holidays with region specified'
       end
     end
 
-    context 'with filter and no region specified' do
-      subject { described_class.new('ch', nil, 'upcoming').call }
+    context 'with no region' do
+      let(:region) { nil }
 
-      it_behaves_like 'Holidays without region specified'
+      context 'when filter is specified' do
+        let(:filter) { 'upcoming' }
 
-      it 'is filtered to upcoming' do
-        response = subject
-        expect(response[:holidays].size).to be 10
+        it_behaves_like 'Holidays without region specified'
+
+        it 'is filtered to upcoming' do
+          expect(subject[:holidays].size).to eq(10)
+        end
+      end
+
+      context 'when filter is not specified' do
+        let(:filter) { nil }
+
+        it { expect(subject.class).to be Hash }
+
+        it_behaves_like 'Holidays without region specified'
+
+        it 'has proper number of regions' do
+          expect(subject[:regions].size).to eq(27)
+        end
       end
     end
 
-    context 'with region and no filter specified' do
-      subject { described_class.new('ch', 'vd', nil).call }
+    context 'with invalid params' do
+      let(:country) { 'ch' }
+      let(:region) { 'vp' }
+      let(:filter) { 'upcoming' }
+      context 'with region param given for a country without regions' do
+        let(:country) { 'pl' }
 
-      it_behaves_like 'Holidays with region specified'
-    end
-
-    context 'with no region and no filter specified' do
-      subject { described_class.new('ch', nil, nil).call }
-      it { expect(subject.class).to be Hash }
-
-      it_behaves_like 'Holidays without region specified'
-
-      it 'has proper number of regions' do
-        response = subject
-        expect(response[:regions].size).to eq(27)
+        it { expect { subject }.to raise_error('Invalid param value') }
       end
-    end
 
-    context 'with nil params' do
-      [['pl', 'is', nil], ['ch', 'vp', nil], ['ch', nil, 'incoming']].each do |params|
-        subject { described_class.new(params[0], params[1], params[2]).call }
-        it { expect { subject }.to raise_error(/Invalid param value/) }
+      context 'with invalid region' do
+        let(:region) { 'vp' }
+
+        it { expect { subject }.to raise_error('Invalid param value') }
+      end
+
+      context 'with invalid filter' do
+        let(:filter) { 'incoming' }
+
+        it { expect { subject }.to raise_error('Invalid param value') }
       end
     end
   end

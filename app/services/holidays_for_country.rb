@@ -10,17 +10,17 @@ class HolidaysForCountry
 
   def call
     check_params
-    calculate_holiday(filtered_holidays)
+    calculate_holiday
   end
 
   private
 
-  def calculate_holiday(holiday_list)
+  def calculate_holiday
     regions_holidays = {}
     holidays = []
-    holiday_list.each do |holiday|
+    filtered_holidays.each do |holiday|
       holidays << { date: holiday[:date], code: holiday[:name] }
-      next if region.present? || regions? == false
+      next if region.present? || !regions?
       regions_holidays = assign_regions_holidays(regions_holidays, holiday)
     end
     { holidays: holidays, regions: regions_holidays.values }
@@ -46,31 +46,20 @@ class HolidaysForCountry
   end
 
   def filtered_holidays
-    filter.present? ? incoming_holidays : year_holidays
+    if filter.present?
+      Holidays.between(Time.zone.now, Time.zone.now + 2.years, country).first(10)
+    else
+      Holidays.between(Time.zone.now.beginning_of_year, Time.zone.now.end_of_year, country)
+    end
   end
 
-  def invalid_region?
-    regions? == false && region.present?
-  end
-
-  def region_exists?
-    region.nil? || Holidays.available_regions.include?(country.to_sym)
-  end
-
-  def valid_filter?
-    filter.nil? || filter.eql?('upcoming')
-  end
-
-  def incoming_holidays
-    Holidays.between(Time.zone.now, Time.zone.now + 2.years, country).first(10)
-  end
-
-  def year_holidays
-    Holidays.between(Time.zone.now.beginning_of_year, Time.zone.now.end_of_year, country)
+  def valid_params?
+    (filter.nil? || filter.eql?('upcoming')) && regions? && (region.nil? ||
+      Holidays.available_regions.include?(country.to_sym))
   end
 
   def check_params
-    return if !invalid_region? && region_exists? && valid_filter?
+    return if valid_params?
     raise InvalidParamTypeError.new(country, 'Invalid param value')
   end
 end

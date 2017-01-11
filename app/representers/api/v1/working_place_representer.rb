@@ -6,6 +6,7 @@ module Api::V1
         country: resource.country,
         city: resource.city,
         state: resource.state,
+        state_code: resource.state_code,
         postalcode: resource.postalcode,
         street: resource.street,
         street_number: resource.street_number,

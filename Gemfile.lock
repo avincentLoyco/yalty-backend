@@ -451,7 +451,7 @@ DEPENDENCIES
   fantaskspec
   geokit (~> 1.10.0)
   guard-rspec
-  holidays (~> 4.2.0)
+  holidays (~> 4.0)
   intercom (~> 3.3.0)
   letter_opener (~> 1.4.1)
   meta_request

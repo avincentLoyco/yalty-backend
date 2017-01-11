@@ -10,7 +10,7 @@ module Api::V1
     def complete
       {}.tap do |response|
         response[:holidays] = holidays
-        response[:regions] = regions if regions != []
+        response[:regions] = regions if regions.present?
       end
     end
   end

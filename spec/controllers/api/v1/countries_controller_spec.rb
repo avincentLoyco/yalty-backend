@@ -60,7 +60,7 @@ RSpec.describe API::V1::CountriesController, type: :controller do
         end
       end
 
-      context 'with invalid region' do
+      context 'with invalid data' do
         let(:region) { 'rztd' }
 
         it { is_expected.to have_http_status(422) }
@@ -79,6 +79,34 @@ RSpec.describe API::V1::CountriesController, type: :controller do
 
           it { expect_json(holidays: ->(holidays) { expect(holidays.size).to eq(10) }) }
         end
+      end
+
+      context 'with invalid data' do
+        let(:filter) { 'incoming' }
+
+        it { is_expected.to have_http_status(422) }
+      end
+    end
+
+    context 'with region and filter specified' do
+      let(:region) { 'ju' }
+      let(:filter) { 'upcoming' }
+
+      context 'with valid data' do
+        it { is_expected.to have_http_status(200) }
+
+        context 'response body' do
+          before { subject }
+          it { expect_json_keys(:holidays) }
+
+          it { expect_json(holidays: ->(holidays) { expect(holidays.size).to eq(10) }) }
+        end
+      end
+
+      context 'with invalid region' do
+        let(:region) { 'rztd' }
+
+        it { is_expected.to have_http_status(422) }
       end
 
       context 'with invalid filter' do
