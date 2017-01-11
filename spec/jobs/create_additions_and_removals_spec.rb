@@ -83,4 +83,18 @@ RSpec.describe CreateAdditionsAndRemovals do
     it { expect { execute_job }.to change(Employee::Balance, :count).by(5) }
     it { expect { execute_job }.to_not change(existing_balance, :updated_at) }
   end
+
+  context 'when etop time off policy has start day and month is not today' do
+    context 'when start day is different' do
+      before { policy.update!(start_day: 10) }
+
+      it { expect { execute_job }.to_not change { Employee::Balance.count } }
+    end
+
+    context 'when start month is different' do
+      before { policy.update!(start_month: 2) }
+
+      it { expect { execute_job }.to_not change { Employee::Balance.count } }
+    end
+  end
 end
