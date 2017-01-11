@@ -4,7 +4,7 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
   include_examples 'example_authorization',
     resource_name: 'time_off_category'
   include_context 'shared_context_headers'
-
+  let(:expected_keys) { [:id, :type, :system, :name, :active_since] }
   describe 'GET #index' do
     let!(:time_off_categories) { create_list(:time_off_category, 3, account: account) }
     subject { get :index }
@@ -41,13 +41,52 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
       context 'response body' do
         before { subject }
 
-        it { expect_json_keys([:id, :type, :system, :name]) }
+        it { expect_json_keys(expected_keys) }
         it { expect_json(
           id: category.id,
           type: 'time_off_category',
           system: category.system,
-          name: category.name)
+          name: category.name,
+          active_since: nil)
         }
+      end
+
+      context ' when the  user has an employee and the employee does ' do
+        let!(:employee) do
+          create(:employee,  user: user, account: account)
+        end
+
+        context ' have a policy assigned to the category' do
+
+          let(:policy) { create(:time_off_policy, time_off_category: category) }
+          let!(:etop) do
+            create(:employee_time_off_policy, time_off_policy: policy, employee: employee,
+              effective_at: Time.zone.now
+            )
+          end
+
+          before{ subject }
+
+          it { expect_json(
+            id: category.id,
+            type: 'time_off_category',
+            system: category.system,
+            name: category.name,
+            active_since: Time.zone.today.to_s)
+          }
+        end
+
+        context ' not have a policy assigned to the category' do
+          before{ subject }
+
+          it { expect_json(
+            id: category.id,
+            type: 'time_off_category',
+            system: category.system,
+            name: category.name,
+            active_since: nil)
+          }
+        end
       end
     end
 
@@ -86,7 +125,7 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
       context 'response body' do
         before { subject }
 
-        it { expect_json_keys([:id, :type, :system, :name]) }
+        it { expect_json_keys(expected_keys) }
       end
     end
 

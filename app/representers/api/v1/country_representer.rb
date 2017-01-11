@@ -1,5 +1,5 @@
 module Api::V1
-  class CountryRepresenter
+  class CountryRepresenter < BaseRepresenter
     attr_reader :country, :has_regions
 
     def initialize(country)
