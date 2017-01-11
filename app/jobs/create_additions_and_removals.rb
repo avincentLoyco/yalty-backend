@@ -21,14 +21,19 @@ class CreateAdditionsAndRemovals < ActiveJob::Base
     "
     SELECT policies.id FROM employee_time_off_policies policies
     INNER JOIN (
-      SELECT time_off_category_id, employee_id, max(effective_at) AS maxeffective
+      SELECT time_off_category_id, time_off_policy_id, employee_id,
+        max(effective_at) AS maxeffective
       FROM employee_time_off_policies
       WHERE effective_at <= '#{Time.zone.today}'
-      GROUP BY time_off_category_id, employee_id
-    ) grouped
+      GROUP BY time_off_category_id, employee_id, time_off_policy_id
+    ) AS grouped
+    INNER JOIN time_off_policies AS top
+      ON top.id = grouped.time_off_policy_id
     ON policies.time_off_category_id = grouped.time_off_category_id
     AND policies.effective_at = grouped.maxeffective
-    AND policies.employee_id = grouped.employee_id;
+    AND policies.employee_id = grouped.employee_id
+    WHERE top.start_day = '#{Time.zone.today.day}'
+    AND top.start_month = '#{Time.zone.today.month}';
     "
   end
 end
