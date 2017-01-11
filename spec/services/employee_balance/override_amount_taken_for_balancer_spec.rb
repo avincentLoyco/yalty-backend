@@ -59,7 +59,7 @@ RSpec.describe OverrideAmountTakenForBalancer do
         end
 
         context 'when next period amount taken is greater than 0' do
-          it do
+          it 'should take whole amount from active period and rest from the current one' do
             expect(subject).to eq([
               {
                 'type': 'balancer',
@@ -99,7 +99,7 @@ RSpec.describe OverrideAmountTakenForBalancer do
               next_period[:balance] = 16000
             end
 
-            it do
+            it 'should take amount from the current period' do
               expect(subject).to eq([
                 {
                   'type': 'balancer',
@@ -131,7 +131,7 @@ RSpec.describe OverrideAmountTakenForBalancer do
 
           context 'and first period period result is greater than 0' do
             context 'when only active balance amount used' do
-              it do
+              it 'should not take amount from the active period' do
                 expect(subject).to eq([
                   {
                     'type': 'balancer',
@@ -168,7 +168,7 @@ RSpec.describe OverrideAmountTakenForBalancer do
                 next_period[:balance] = 9000
               end
 
-              it do
+              it 'should take amount from active and current period and not change amount of the next' do
                 expect(subject).to eq([
                   {
                     'type': 'balancer',
@@ -205,7 +205,7 @@ RSpec.describe OverrideAmountTakenForBalancer do
                 next_period[:balance] = -1000
               end
 
-              it do
+              it 'should take all period results amount' do
                 expect(subject).to eq([
                   {
                     'type': 'balancer',
