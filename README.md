@@ -174,8 +174,7 @@ Instead of running `rspec spec` run `rake parallel:spec` to have a faster develo
 Run this commands once:
 ```bash
 rake parallel:create
-rake parallel:prepare
-rake parallel:setup
+rake parallel:prepare # repeate after migration
 ```
 
 Run each time:

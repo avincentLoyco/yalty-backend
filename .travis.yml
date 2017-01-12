@@ -1,20 +1,26 @@
 language: ruby
-env:
-  global:
-    - DATABASE_URL="postgresql://postgres@localhost/travis_ci_test"
 notifications:
   email: false
   slack:
     secure: J0J4BfYxVT2C0xfuHpRY6mqKfNGcef2b+4VmwAyU3BK+kZAy452p5BkPNIgmSJaj0pl4UE1dmTjFDRxyxOxF4q3KC3Ih61gYVqZ1a/3T940OokCjQowoJBiABSgXRimojTm7rlUD2Jq7zGKaJWJX/Ddinu5eOC8KcEqRh8wQ03Q=
-bundler_args: "--without production staging --deployment"
+bundler_args: "--without production staging review --deployment"
 before_install:
   - rvm @global do gem uninstall bundler -a -x
-  - rvm @global do gem install bundler -v 1.10.6
+  - rvm @global do gem install bundler -v 1.13.2
 before_script:
-  - psql -c 'create database travis_ci_test;' -U postgres
+  - mv tmp/parallel_test/parallel_runtime_rspec.log tmp/parallel_runtime_rspec.log || true
+  - bundle exec rake parallel:setup
 script: bundle exec rake ci
+after_script:
+  - test "$TRAVIS_PULL_REQUEST" = "false" &&
+    test "$TRAVIS_BRANCH" = "master" &&
+    bundle exec codeclimate-test-reporter
+before_cache:
+  - mv tmp/parallel_runtime_rspec.log tmp/parallel_test/parallel_runtime_rspec.log
 cache:
-  - bundler
+  bundler: true
+  directories:
+    - tmp/parallel_test
 addons:
   postgresql: '9.4'
   code_climate:

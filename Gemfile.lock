@@ -91,8 +91,8 @@ GEM
       rake (>= 10.0.0)
       sshkit (>= 1.9.0)
     capistrano-harrow (0.5.3)
-    codeclimate-test-reporter (0.4.8)
-      simplecov (>= 0.7.1, < 1.0.0)
+    codeclimate-test-reporter (1.0.4)
+      simplecov
     coderay (1.1.0)
     coercible (1.0.0)
       descendants_tracker (~> 0.0.1)
@@ -358,9 +358,9 @@ GEM
       rufus-scheduler (~> 3.1.8)
       sidekiq (>= 3)
       tilt (>= 1.4.0)
-    simplecov (0.11.2)
+    simplecov (0.12.0)
       docile (~> 1.1.0)
-      json (~> 1.8)
+      json (>= 1.8, < 3)
       simplecov-html (~> 0.10.0)
     simplecov-html (0.10.0)
     slop (3.6.0)
@@ -459,6 +459,7 @@ DEPENDENCIES
   shoulda-matchers
   sidekiq (~> 4.2.3)
   sidekiq-scheduler (~> 2.0.19)
+  simplecov
   spring
   spring-commands-rspec
   temping
