@@ -10,10 +10,7 @@ class CalculatePeriodOverview
     periods_positive_amount =
       positive_amounts_between(@period[:start_date], @period[:end_date])
     negative_amounts =
-      negative_amounts_between(
-        @period[:start_date],
-        end_date_for_negative_values
-      )
+      negative_amounts_between(@period[:start_date], end_date_for_negative_values)
     amount_taken = @period_start_balance + negative_amounts
     amount_taken = calculate_amount_taken(amount_taken, periods_positive_amount)
     period_result = periods_positive_amount + amount_taken
