@@ -1,6 +1,7 @@
 task recreate_balances: [:environment] do
   EmployeeTimeOffPolicy.all.each do |etop|
     new_effective_at = etop.effective_at
+    old_effective_at = etop.effective_at
 
     if etop.effective_at < etop.employee.hired_date
       params = {
@@ -16,7 +17,7 @@ task recreate_balances: [:environment] do
 
     RecreateBalances::AfterEmployeeTimeOffPolicyUpdate.new(
       new_effective_at: new_effective_at,
-      old_effective_at: etop.effective_at,
+      old_effective_at: old_effective_at,
       time_off_category_id: etop.time_off_category_id,
       employee_id: etop.employee_id,
       manual_amount: 0

@@ -11,7 +11,7 @@ RSpec.describe CreateEvent do
   end
   let(:employee) { create(:employee) }
   let(:employee_id) { employee.id }
-  let(:effective_at) { Time.now }
+  let(:effective_at) { Date.today }
   let(:event_type) { 'job_details' }
   let(:value) { 'abc' }
   let(:attribute_name) { 'job_title' }
