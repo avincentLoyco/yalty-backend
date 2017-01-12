@@ -51,4 +51,5 @@ namespace :deploy do
   before 'deploy:publishing', 'deploy:migrate_database'
   after 'deploy:publishing', 'restart:all'
   after 'deploy:publishing', 'maintenance:off'
+  after 'deploy:publishing', 'newrelic:notice_deployment'
 end
