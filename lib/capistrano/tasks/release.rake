@@ -8,10 +8,10 @@ namespace :release do
       execute :git, :checkout, '-b', "releases/#{version}"
 
       info 'Update VERSION file'
-      File.write(File.expand_path('../../VERSION', __dir__), version)
+      File.write(File.expand_path('../../../VERSION', __dir__), version)
 
-      info "Run follwing command to push git branch and build docker image:\
-        git add --patch && git commit -m \"Create release candidate #{version}\"\
+      info "Run follwing command to push git branch and build docker image:
+        git add --patch && git commit -m \"Create release candidate #{version}\"
         git push -u origin releases/#{version}"
 
       info 'Then wait on docker build and deploy to staging environment'
@@ -28,10 +28,9 @@ namespace :release do
       execute :docker, :tag, "yalty/backend:#{version}-rc", "yalty/backend:#{version}"
       execute :git, :tag, "v#{version}"
 
-      info "Run follwing command to push docker image and git tag:\
-        docker push yalty/backend:#{version}\
-        git push --tags\
-        git push"
+      info "Run follwing command to push docker image and git tag:
+        docker push yalty/backend:#{version}
+        git push && git push --tags"
 
       info 'Then deploy to production environment'
     end

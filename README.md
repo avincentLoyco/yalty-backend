@@ -206,7 +206,7 @@ deploy release to production:
 ```bash
 git checkout releases/X.X.X && git pull
 
-cap staging release:finalize
+cap production release:finalize
 
 docker push yalty/backend:X.X.X
 git push --tags
