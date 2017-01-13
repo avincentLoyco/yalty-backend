@@ -12,6 +12,8 @@ set :linked_dirs, %w(
   tmp/pids
 )
 
+set :maintenance_mode, false
+
 set :tasks_before_migration, %w(
 )
 set :tasks_after_migration, %w(

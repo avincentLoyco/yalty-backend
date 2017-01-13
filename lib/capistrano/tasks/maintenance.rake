@@ -5,7 +5,7 @@ namespace :maintenance do
       within release_path do
         info 'Turn maintenance mode on'
         execute :rake, 'maintenance:on'
-        set(:maintenance_mode, true)
+        set(:maintenance_mode_enable, true)
       end
     end
   end

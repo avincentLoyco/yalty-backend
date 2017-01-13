@@ -5,17 +5,20 @@ namespace :deploy do
 
   task :migrate_database do
     on fetch(:migration_server) do
+      invoke 'maintenance:on' if test(:diff, "-qr #{release_path}/db #{current_path}/db")
+    end
+
+    invoke 'deploy:rake:before_migrate_database'
+
+    on fetch(:migration_server) do
       if test(:diff, "-qr #{release_path}/db #{current_path}/db")
         info 'Skip migration because not new migration files found'
-        invoke 'deploy:rake:before_migrate_database'
-        invoke 'deploy:rake:after_migrate_database'
       else
-        invoke 'maintenance:on'
-        invoke 'deploy:rake:before_migrate_database'
         invoke 'db:migrate'
-        invoke 'deploy:rake:after_migrate_database'
       end
     end
+
+    invoke 'deploy:rake:after_migrate_database'
   end
 
   task :quiet_workers do

@@ -14,7 +14,8 @@ namespace :release do
         git add --patch && git commit -m \"Create release candidate #{version}\"
         git push -u origin releases/#{version}"
 
-      info 'Then wait on docker build and deploy to staging environment'
+      info 'Then wait on docker build and deploy to staging environment:
+        cap staging deploy'
     end
   end
 
@@ -24,7 +25,7 @@ namespace :release do
 
     run_locally do
       info 'Create release tag'
-      executt :docker, :pull, "yalty/backend:#{version}-rc"
+      execute :docker, :pull, "yalty/backend:#{version}-rc"
       execute :docker, :tag, "yalty/backend:#{version}-rc", "yalty/backend:#{version}"
       execute :git, :tag, "v#{version}"
 
@@ -32,7 +33,8 @@ namespace :release do
         docker push yalty/backend:#{version}
         git push && git push --tags"
 
-      info 'Then deploy to production environment'
+      info 'Then deploy to production environment:
+        cap production deploy'
     end
   end
 end

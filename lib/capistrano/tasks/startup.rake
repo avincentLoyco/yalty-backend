@@ -67,7 +67,7 @@ namespace :restart do
 
   desc 'Restart backend service (phased-restart if maintenance mode is active)'
   task :backend do
-    command = fetch(:maintenance_mode, false) ? :restart : :reload
+    command = fetch(:maintenance_mode_enable, false) ? :restart : :reload
 
     on roles(%w(api launchpad)) do
       systemctl(command, fetch(:backend_service_name))
