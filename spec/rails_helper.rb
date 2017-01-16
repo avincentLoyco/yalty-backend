@@ -68,6 +68,9 @@ RSpec.configure do |config|
 
   config.before(:each) do
     Sidekiq::Worker.clear_all
+    allow_any_instance_of(Account).to receive(:default_attribute_definition) do
+      Account::DEFAULT_ATTRIBUTE_DEFINITIONS.first(2)
+    end
   end
 
   config.around(:each) do |example|

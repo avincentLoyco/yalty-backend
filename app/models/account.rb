@@ -125,11 +125,7 @@ class Account < ActiveRecord::Base
   end
 
   def default_attribute_definition
-    if Rails.env.test?
-      DEFAULT_ATTRIBUTE_DEFINITIONS.first(2)
-    else
-      DEFAULT_ATTRIBUTE_DEFINITIONS
-    end
+    DEFAULT_ATTRIBUTE_DEFINITIONS
   end
 
   private
