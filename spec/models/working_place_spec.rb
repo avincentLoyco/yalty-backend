@@ -2,6 +2,7 @@ require 'rails_helper'
 
 RSpec.describe WorkingPlace, type: :model do
   include_context 'shared_context_timecop_helper'
+  include_context 'shared_context_geoloc_helper'
 
   shared_examples 'Invalid Address' do
     it { expect(subject.valid?).to eq false }

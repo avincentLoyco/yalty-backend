@@ -17,6 +17,8 @@ class HolidayPolicy < ActiveRecord::Base
   before_save :unset_region, unless: :region_required?
   before_validation :downcase, if: :local?
 
+  AUTHORIZED_COUNTRIES = %w(ch).freeze
+
   COUNTRIES_WITH_CODES = %w(ch).freeze
 
   COUNTRIES_WITHOUT_REGIONS = %w(ar at be br cl cr cz dk el fr je gg im hr hu ie is it li lt nl no
