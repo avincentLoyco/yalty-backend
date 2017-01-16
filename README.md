@@ -174,8 +174,7 @@ Instead of running `rspec spec` run `rake parallel:spec` to have a faster develo
 Run this commands once:
 ```bash
 rake parallel:create
-rake parallel:prepare
-rake parallel:setup
+rake parallel:prepare # repeate after migration
 ```
 
 Run each time:
@@ -207,7 +206,7 @@ deploy release to production:
 ```bash
 git checkout releases/X.X.X && git pull
 
-cap staging release:finalize
+cap production release:finalize
 
 docker push yalty/backend:X.X.X
 git push --tags

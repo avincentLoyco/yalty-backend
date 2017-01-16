@@ -36,6 +36,7 @@ group :development, :test do
   gem 'factory_girl_rails'
   gem 'faker'
   gem 'dotenv-rails'
+  gem 'simplecov'
   gem 'codeclimate-test-reporter', require: false
   gem 'mutant-rspec'
 

@@ -4,7 +4,7 @@ class RemoveBalances
   def initialize(time_off_category, employee, starting_date, ending_date, old_effective_at = nil)
     @time_off_category = time_off_category
     @employee = employee
-    @starting_date = starting_date
+    @starting_date = starting_date.to_date
     @ending_date = ending_date
     @old_effective_at = old_effective_at
   end
@@ -21,7 +21,10 @@ class RemoveBalances
     day_before_dates = additions_to_delete.map do |balance|
       balance.effective_at.to_date - 1.day + Employee::Balance::DAY_BEFORE_START_DAY_OFFSET
     end
-    balances_in_category.where(effective_at: day_before_dates)
+    balances_day_before_assignations = assignation_balances.map do |balance|
+      balance.effective_at.to_date - 1.day + Employee::Balance::DAY_BEFORE_START_DAY_OFFSET
+    end
+    balances_in_category.where(effective_at: day_before_dates + balances_day_before_assignations)
   end
 
   def removals_to_delete
@@ -63,11 +66,16 @@ class RemoveBalances
 
   def assignation_balances
     @assignation_balances ||= begin
-      etop_effective_ats = etops_in_category.pluck(:effective_at)
-                                            .map { |date| "\'#{date}\'::date" }.join(', ')
-      clause_for_etops = "effective_at::date IN (#{etop_effective_ats})"
-      clause_for_old_effective_at =
-        "effective_at::date = \'#{old_effective_at.try(:to_date)}\'::date"
+      etop_effective_ats = etops_in_category.pluck(:effective_at).map do |date|
+        "\'#{date + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET}\'"
+      end.join(', ')
+
+      clause_for_etops = "effective_at IN (#{etop_effective_ats})"
+
+      if old_effective_at.present?
+        date_with_offset = old_effective_at + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET
+        clause_for_old_effective_at = "effective_at = \'#{date_with_offset}\'"
+      end
 
       sql_where_clause =
         if etop_effective_ats.present? && old_effective_at.present?
