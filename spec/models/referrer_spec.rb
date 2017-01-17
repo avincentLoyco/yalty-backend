@@ -3,9 +3,10 @@ require 'rails_helper'
 RSpec.describe Referrer, type: :model do
   describe 'validations' do
     subject { build(:referrer, :with_token) }
+    let(:referrer_with_alpha_token) { create(:referrer, token: '123asd') }
     it { is_expected.to validate_presence_of(:email) }
     it { is_expected.to validate_uniqueness_of(:email) }
-    it { is_expected.to validate_uniqueness_of(:token) }
+    it { expect(referrer_with_alpha_token).to validate_uniqueness_of(:token) }
     it { is_expected.to have_many(:users).with_primary_key(:email).with_foreign_key(:email) }
     it do
       is_expected
