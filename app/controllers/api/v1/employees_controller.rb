@@ -8,7 +8,7 @@ module API
       end
 
       def index
-        render_resource(resources)
+        render_resources
       end
 
       private
@@ -28,6 +28,17 @@ module API
         else
           ::Api::V1::PublicEmployeeRepresenter
         end
+      end
+
+      def render_resources
+        response = resources.map do |employee|
+          if current_user.account_manager || current_user.employee.try(:id) == employee.id
+            ::Api::V1::EmployeeRepresenter.new(employee).complete
+          else
+            ::Api::V1::PublicEmployeeRepresenter.new(employee).complete
+          end
+        end
+        render json: response
       end
     end
   end
