@@ -42,13 +42,8 @@ RSpec.describe ManageEmployeeBalanceRemoval, type: :service do
           shared_examples 'No other balances assigned to removal and validity date present' do
             before { policy.update!(years_to_effect: 3) }
 
-            it { expect { subject }.to change { balance.balance_credit_removal_id } }
+            it { expect { subject }.to change { balance.reload.balance_credit_removal_id } }
             it { expect { subject }.to change { Employee::Balance.exists?(removal.id) }.to false }
-            it do
-              subject
-
-              expect(balance.balance_credit_removal_id).to_not be nil
-            end
           end
 
           shared_examples 'Other balance assigned to removal' do

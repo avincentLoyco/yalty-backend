@@ -71,13 +71,13 @@ RSpec.configure do |config|
     allow_any_instance_of(Account).to receive(:default_attribute_definition) do
       Account::DEFAULT_ATTRIBUTE_DEFINITIONS.first(2)
     end
+    allow_any_instance_of(ActsAsIntercomData).to receive(:intercom_jobs) do
+      SendDataToIntercom.jobs.map { |job| OpenStruct.new(job) }
+    end
   end
 
   config.after(:each) do
     FileUtils.rm_rf(Rails.application.config.file_upload_root_path)
-    allow_any_instance_of(ActsAsIntercomData).to receive(:intercom_jobs) do
-      SendDataToIntercom.jobs.map { |job| OpenStruct.new(job) }
-    end
   end
 
   config.around(:each) do |example|

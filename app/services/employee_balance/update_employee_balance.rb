@@ -21,6 +21,7 @@ class UpdateEmployeeBalance
   private
 
   def manage_removal
+    # TODO verify form of validity date
     ManageEmployeeBalanceRemoval.new(options[:validity_date], employee_balance, current_date).call
   end
 
