@@ -13,10 +13,11 @@ RSpec.describe FileStorageUploadDownload do
   let(:file_type) { 'image/jpg' }
   let(:source_path) { File.join(Dir.pwd, '/spec/fixtures/files/test.jpg') }
   let(:file_id) { 'some_random_id' }
+  let(:duration) { 'shortterm' }
 
   subject(:set_token_in_redis) do
     Redis.current.hmset(token, 'file_id', file_id, 'counter', counter, 'file_sha', file_sha,
-      'action_type', action_type, 'file_type', file_type)
+      'action_type', action_type, 'file_type', file_type, 'duration', duration)
   end
 
   subject(:get_token) { Redis.current.hgetall(token) }
@@ -174,6 +175,20 @@ RSpec.describe FileStorageUploadDownload do
       it { expect(last_response.original_headers).to eq('Content-Type' => 'image/jpg') }
       it { expect(last_response.length).to eq(employee_file.size) }
       it { expect(get_token['counter']).to eq('0') }
+    end
+
+    context 'longterm token does not consider counter' do
+      let(:duration) { 'longterm' }
+      let(:counter) { 0 }
+
+      before do
+        create_file
+        set_token_in_redis
+        get_request
+      end
+
+      it { expect(last_response.status).to eq(200) }
+      it { expect(get_token['counter']).to eq('-1') }
     end
 
     context 'invalid params' do
