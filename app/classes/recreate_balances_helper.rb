@@ -53,6 +53,7 @@ class RecreateBalancesHelper
 
   def recreate_and_recalculate_balances!
     recreate_balances!
+    update_time_offs_balances!
     recalculate_balances!
   end
 
@@ -122,7 +123,7 @@ class RecreateBalancesHelper
 
   def recalculate_balances!
     balance = balance_at_starting_date_or_first_balance
-    PrepareEmployeeBalancesToUpdate.new(balance).call
+    PrepareEmployeeBalancesToUpdate.new(balance, update_all: true).call
     UpdateBalanceJob.perform_later(balance.id, update_all: true)
   end
 
@@ -150,5 +151,21 @@ class RecreateBalancesHelper
 
   def balances_in_category
     employee.employee_balances.where(time_off_category: time_off_category)
+  end
+
+  def update_time_offs_balances!
+    balances_with_time_offs.each do |balance|
+      balance_etop = etop.present? ? etop : first_etop_before(balance.effective_at)
+      new_date = RelatedPolicyPeriod.new(balance_etop).validity_date_for(balance.effective_at)
+      if new_date != balance.validity_date
+        UpdateEmployeeBalance.new(balance, validity_date: new_date).call
+      end
+    end
+  end
+
+  def balances_with_time_offs
+    balances_in_category = employee.employee_balances.with_time_off.in_category(time_off_category)
+    return balances_in_category.between(starting_date, ending_date) if ending_date
+    balances_in_category.where('effective_at >= ?', starting_date)
   end
 end

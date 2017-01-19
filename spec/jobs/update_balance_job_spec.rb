@@ -175,7 +175,12 @@ RSpec.describe UpdateBalanceJob do
         end
 
         context 'amount is addition' do
-          let(:options) { { manual_amount: 2000, validity_date: '1/4/2016' } }
+          let(:options) do
+            {
+              manual_amount: 2000,
+              validity_date: Date.new(2016, 4, 1) + Employee::Balance::REMOVAL_OFFSET
+            }
+          end
 
           it { expect { subject }.to change { previous_balance.reload.amount }.to(2000) }
           it { expect { subject }.to change { previous_balance.reload.balance }.to(3000) }
@@ -270,7 +275,7 @@ RSpec.describe UpdateBalanceJob do
           time_off_policy: top_first, effective_at: 2.years.ago)
         etop_second
         create(:employee_balance_manual, employee: employee, time_off_category: category,
-          effective_at: Date.new(etop_first.effective_at.year + 1, top_first.end_month, top_first.end_day),
+          effective_at: Date.new(2015, 4, 1),
           balance_credit_additions: [employee.employee_balances.order(:effective_at).first],
           resource_amount: -1000
         )
@@ -332,7 +337,7 @@ RSpec.describe UpdateBalanceJob do
             let(:existing_balances) { Employee::Balance.order(:effective_at) }
             let(:options) {{ resource_amount: 1200 }}
             let(:addition) { existing_balances.additions.first }
-            let(:addition_removal) { addition.balance_credit_removal }
+            let!(:addition_removal) { addition.balance_credit_removal }
             let(:balance_id) { addition.id }
 
             it { expect { subject }.to_not change { Employee::Balance.count } }
@@ -352,43 +357,44 @@ RSpec.describe UpdateBalanceJob do
             end
 
             context 'and now it is in the future' do
-              let(:options) {{ validity_date: Time.now + 1.year }}
+              before { top_first.update!(years_to_effect: 3) }
+              let(:options) {{ validity_date: 15.months.since }}
 
-              it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
-              it { expect { subject }.to change { Employee::Balance.exists?(addition_removal.id) } }
               it { expect { subject }.to change { addition.reload.validity_date } }
               it { expect { subject }.to_not change { addition.reload.effective_at } }
 
               context 'related balances change ' do
                 before { subject }
 
-                it { expect(existing_balances.pluck(:being_processed).count(false)).to eq 3 }
+                it { expect(existing_balances.pluck(:being_processed).count(false)).to eq 4 }
                 it { expect(existing_balances.pluck(:being_processed).count(true)).to eq 0 }
                 it { expect(Employee::Balance.order(:effective_at).map(&:amount))
-                  .to eq([1000, 2000, 2000]) }
+                  .to eq([1000, 2000, 2000, -1000]) }
                 it { expect(Employee::Balance.order(:effective_at).pluck(:balance))
-                  .to eq([1000, 3000, 5000]) }
+                  .to eq([1000, 3000, 5000, 4000]) }
               end
             end
           end
 
           context 'and removal is in the future' do
+            before { top_second.update!(end_day: 1, end_month: 4, years_to_effect: 2) }
             let(:options) do
               {
-                validity_date: Time.zone.now + 1.year + Employee::Balance::REMOVAL_OFFSET,
+                validity_date: 1.years.since + 3.months + Employee::Balance::REMOVAL_OFFSET,
                 resource_amount: 4000
               }
             end
             let(:addition) { existing_balances.additions.last(2).first }
             let(:balance_id) { addition.id }
+
             context 'and now it is in the past' do
               context 'related balances change' do
                 before { subject }
 
                 it { expect(Employee::Balance.order(:effective_at).map(&:amount))
-                  .to eq([1000, 4000, -1000, 2000, 100]) }
+                  .to eq([1000, 4000, -1000, 2000, 100, -4000]) }
                 it { expect(Employee::Balance.order(:effective_at).pluck(:balance))
-                  .to eq([1000, 5000, 4000, 6000, 6100]) }
+                  .to eq([1000, 5000, 4000, 6000, 6100, 2100]) }
               end
             end
           end

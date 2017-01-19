@@ -46,7 +46,7 @@ class Employee::Balance < ActiveRecord::Base
   end)
   scope :removal_at_date, (lambda do |employee_id, time_off_category_id, date|
     employee_balances(employee_id, time_off_category_id)
-      .where("effective_at::date = to_date('#{date}', 'YYYY-MM_DD')").uniq
+      .where(effective_at: date).uniq
   end)
 
   scope :in_category, -> (category_id) { where(time_off_category_id: category_id) }

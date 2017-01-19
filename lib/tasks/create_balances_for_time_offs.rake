@@ -3,10 +3,10 @@ task create_balances_for_time_offs: [:environment] do
                      .references(:employee_balances)
 
   time_offs.each do |time_off|
-    category, employee, account, amount, options = setup_params(time_off)
+    category, employee, account, options = setup_params(time_off)
     create_or_find_employeee_policy(employee, category)
 
-    CreateEmployeeBalance.new(category.id, employee.id, account.id, amount, options).call
+    CreateEmployeeBalance.new(category.id, employee.id, account.id, options).call
   end
 end
 

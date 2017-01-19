@@ -14,13 +14,14 @@ class UpdateEmployeeBalance
     update_attributes unless options.blank?
     recalculate_amount unless employee_balance.reset_balance
     update_status
-    manage_removal if options[:validity_date]
+    manage_removal if options.key?(:validity_date)
     save!
   end
 
   private
 
   def manage_removal
+    # TODO verify form of validity date
     ManageEmployeeBalanceRemoval.new(options[:validity_date], employee_balance, current_date).call
   end
 
