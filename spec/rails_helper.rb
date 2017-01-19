@@ -68,6 +68,9 @@ RSpec.configure do |config|
 
   config.before(:each) do
     Sidekiq::Worker.clear_all
+    allow_any_instance_of(ActsAsIntercomData).to receive(:intercom_jobs) do
+      SendDataToIntercom.jobs.map { |job| OpenStruct.new(job) }
+    end
     allow_any_instance_of(Account).to receive(:default_attribute_definition) do
       Account::DEFAULT_ATTRIBUTE_DEFINITIONS.first(2)
     end
