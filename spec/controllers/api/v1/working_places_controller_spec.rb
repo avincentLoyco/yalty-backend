@@ -20,15 +20,26 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
   end
 
   before do
-    allow_any_instance_of(WorkingPlace).to receive(:location_attributes) do
-      loc = Geokit::GeoLoc.new(city: 'Zürich')
-      loc.country = 'Switzerland'
-      loc.country_code = 'CH'
-      loc.state_code = 'ZH'
-      loc
-    end
-    allow_any_instance_of(WorkingPlace).to receive(:location_timezone) { 'Europe/Zurich' }
+    allow_any_instance_of(WorkingPlace).to receive(:location_attributes) { place_info_result }
+    allow_any_instance_of(WorkingPlace).to receive(:location_timezone) { timezone }
   end
+
+  let(:place_info_result) do
+    loc = Geokit::GeoLoc.new(city: city)
+    loc.country = country
+    loc.country_code = country_code
+    loc.state_code = state_code
+    loc.state_name = state_name
+    loc
+  end
+
+  let(:timezone) { 'Europe/Zurich' }
+
+  let(:city) { 'Zurich' }
+  let(:country) { 'Switzerland' }
+  let(:country_code) { 'CH' }
+  let(:state_code) { 'ZH' }
+  let(:state_name) { 'Zurich' }
 
   context 'GET #index' do
     subject { get :index }
@@ -67,7 +78,9 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
   context 'POST #create' do
     let(:name) { 'test' }
     let(:country) { 'Switzerland' }
+    let(:state) { 'zurich' }
     let(:postalcode) { '123-41'}
+    let(:city) { 'Zurich' }
     let(:holiday_policy_id) { holiday_policy.id }
     let(:valid_data_json) do
       {
@@ -77,11 +90,13 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
           id: holiday_policy_id,
           type: 'holiday_policy'
         },
-        city: 'Zurich',
+        city: city,
         country: country,
-        postalcode: postalcode
+        postalcode: postalcode,
+        state: state
       }
     end
+
     shared_examples 'Invalid Data' do
       context 'it does not create or update records' do
         it { expect { subject }.to_not change { WorkingPlace.count } }
@@ -97,11 +112,57 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
       it { expect { subject }.to change { account.reload.working_places.count }.by(1) }
       it { expect { subject }.to change { holiday_policy.working_places.count }.by(1) }
 
-      context 'response' do
-        before { subject }
+      context 'with country that has region validation' do
+        context 'with state specified' do
+          context 'response' do
+            before { subject }
 
-        it { expect_json(regex('Zurich')) }
-        it { expect_json(regex('Europe/Zurich')) }
+            it { expect_json(regex('Zurich')) }
+            it { expect_json(regex('Europe/Zurich')) }
+            it { expect_json('state', state) }
+          end
+        end
+
+        context 'with state not specified' do
+          let(:state) { nil }
+          context 'response' do
+            before { subject }
+
+            it { expect_json(regex('Zurich')) }
+            it { expect_json(regex('Europe/Zurich')) }
+            it { expect_json('state', 'ZH') }
+          end
+        end
+      end
+
+      context "with country that doen't have region validation" do
+        let(:country) { 'Poland'}
+        let(:country_code) { 'PL'}
+        let(:city) { 'Warsaw'}
+        let(:state) { 'Podkarpacie' }
+        let(:state_code) { 'Podkarpacie Voivodeship' }
+        let(:timezone) { 'Europe/Warsaw' }
+
+        context 'with state specified' do
+          context 'response' do
+            before { subject }
+
+            it { expect_json(regex(city)) }
+            it { expect_json(regex(timezone)) }
+            it { expect_json('state', state) }
+          end
+        end
+
+        context 'with state not specified' do
+          let(:state) { nil }
+          context 'response' do
+            before { subject }
+
+            it { expect_json(regex(city)) }
+            it { expect_json(regex(timezone)) }
+            it { expect_json('state', state_code) }
+          end
+        end
       end
 
       it { is_expected.to have_http_status(201) }
@@ -143,7 +204,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
         end
       end
 
-      context 'with single params that are empty' do
+      context 'with single param that is empty' do
         [:name, :country].each do |param|
           let(param) { '' }
 
@@ -184,7 +245,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
           context 'response' do
             before { subject }
 
-            it { expect_json(regex("Record Not Found")) }
+            it { expect_json(regex('Record Not Found')) }
           end
         end
       end
@@ -192,109 +253,121 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
   end
 
   context 'PUT #update' do
-    context 'valid params' do
-      let(:working_place) { create(:working_place, :with_address, account: account) }
-      let(:name) { 'test' }
-      let(:id) { working_place.id }
-      let(:holiday_policy_id) { holiday_policy.id }
-      let(:presence_policy_id) { presence_policy.id }
-      let(:valid_data_json) do
-        {
-          id: id,
-          name: name,
-          type: 'working_place',
-          holiday_policy: {
-            id: holiday_policy_id,
-            type: 'holiday_policy'
-          },
-          country: 'Switzerland',
-          city: 'Zurich'
-        }
+    let(:working_place) { create(:working_place, country: country, city: city, account: account) }
+    let(:name) { 'test' }
+    let(:country) { 'Switzerland' }
+    let(:city) { 'Zurich' }
+    let(:id) { working_place.id }
+    let(:holiday_policy_id) { holiday_policy.id }
+    let(:presence_policy_id) { presence_policy.id }
+    let(:valid_data_json) do
+      {
+        id: id,
+        name: name,
+        type: 'working_place',
+        holiday_policy: {
+          id: holiday_policy_id,
+          type: 'holiday_policy'
+        },
+        country: country,
+        city: city
+      }
+    end
+
+    shared_examples 'Invalid Data' do
+      context 'it does not update and assign records' do
+        it { expect { subject }.to_not change { working_place.reload.name } }
+        it { expect { subject }.to_not change { working_place.reload.holiday_policy_id } }
       end
+    end
 
-      shared_examples 'Invalid Data' do
-        context 'it does not update and assign records' do
-          it { expect { subject }.to_not change { working_place.reload.name } }
-          it { expect { subject }.to_not change { working_place.reload.holiday_policy_id } }
-        end
-      end
+    subject { put :update, valid_data_json }
 
-      subject { put :update, valid_data_json }
+    context 'with valid data' do
+      it { expect { subject }.to change { working_place.reload.name } }
+      it { expect { subject }.to change { working_place.reload.holiday_policy_id } }
 
-      context 'with valid data' do
-        it { expect { subject }.to change { working_place.reload.name } }
-        it { expect { subject }.to change { working_place.reload.holiday_policy_id } }
-
-        it { is_expected.to have_http_status(204) }
-      end
+      it { is_expected.to have_http_status(204) }
 
       context 'with holiday_policy null send' do
         let!(:holiday_policy) do
           create(:holiday_policy, account: account, working_places: [working_place])
         end
+
         subject { put :update, valid_data_json.merge(holiday_policy: nil) }
 
         it { is_expected.to have_http_status(204) }
         it { expect { subject }.to change { working_place.reload.holiday_policy_id }.to(nil) }
       end
 
-      context 'with invalid data' do
-        context 'without all required params' do
-          let(:missing_data_json) { valid_data_json.tap { |json| json.delete(:name) } }
-          subject { post :create, missing_data_json }
+      context 'with country without region validation' do
+        let(:country) { 'Poland' }
+        let(:city) { 'Warsaw' }
+        let(:country_code) { 'PL' }
+
+        it { expect { subject }.to change { working_place.reload.name } }
+        it { expect { subject }.to change { working_place.reload.holiday_policy_id } }
+
+        it { is_expected.to have_http_status(204) }
+      end
+    end
+
+    context 'with invalid data' do
+      context 'without all required params' do
+        let(:missing_data_json) { valid_data_json.tap { |json| json.delete(:name) } }
+        subject { post :create, missing_data_json }
+
+        it_behaves_like 'Invalid Data'
+
+        it { is_expected.to have_http_status(422) }
+
+        context 'response' do
+          before { subject }
+
+          it { expect_json(regex('missing')) }
+        end
+      end
+
+      context 'with params that are not valid' do
+        let(:name) { '' }
+
+        it_behaves_like 'Invalid Data'
+
+        it { is_expected.to have_http_status(422) }
+
+        context 'response' do
+          before { subject }
+
+          it { expect_json(regex('must be filled')) }
+        end
+      end
+
+      context 'with invalid related records ids' do
+        context 'with invalid working place id' do
+          let(:id) { '1' }
 
           it_behaves_like 'Invalid Data'
 
-          it { is_expected.to have_http_status(422) }
+          it { is_expected.to have_http_status(404) }
 
           context 'response' do
             before { subject }
 
-            it { expect_json(regex('missing')) }
+            it { expect_json(regex('Record Not Found')) }
           end
         end
 
-        context 'with params that are not valid' do
-          let(:name) { '' }
+        context 'with invalid holiday policy id' do
+          let(:holiday_policy_id) { '1' }
 
           it_behaves_like 'Invalid Data'
 
-          it { is_expected.to have_http_status(422) }
+          it { is_expected.to have_http_status(404) }
 
           context 'response' do
             before { subject }
 
-            it { expect_json(regex("must be filled")) }
-          end
-        end
-
-        context 'with invalid related records ids' do
-          context 'with invalid working place id' do
-            let(:id) { '1' }
-
-            it_behaves_like 'Invalid Data'
-
-            it { is_expected.to have_http_status(404) }
-
-            context 'response' do
-              before { subject }
-
-              it { expect_json(regex("Record Not Found")) }
-            end
-          end
-
-          context 'with invalid holiday policy id' do
-            let(:holiday_policy_id) { '1' }
-
-            it_behaves_like 'Invalid Data'
-
-            it { is_expected.to have_http_status(404) }
-
-            context 'response' do
-              before { subject }
-
-              it { expect_json(regex("Record Not Found")) }
-            end
+            it { expect_json(regex('Record Not Found')) }
           end
         end
       end

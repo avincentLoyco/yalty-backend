@@ -11,6 +11,7 @@ module WorkingPlaceSchemas
       end
       required(:country).filled(:str?)
       required(:city).filled(:str?)
+      optional(:state).maybe(:str?)
       optional(:postalcode).maybe(:str?)
       optional(:additional_address).maybe(:str?)
       optional(:street).maybe(:str?)
@@ -29,6 +30,7 @@ module WorkingPlaceSchemas
       end
       optional(:country).maybe(:str?)
       optional(:city).maybe(:str?)
+      optional(:state).maybe(:str?)
       optional(:postalcode).maybe(:str?)
       optional(:additional_address).maybe(:str?)
       optional(:street).maybe(:str?)

@@ -13,6 +13,7 @@ RSpec.describe WorkingPlace, type: :model do
 
   it { is_expected.to have_db_column(:country) }
   it { is_expected.to have_db_column(:state) }
+  it { is_expected.to have_db_column(:state_code) }
   it { is_expected.to have_db_column(:city) }
   it { is_expected.to have_db_column(:postalcode) }
   it { is_expected.to have_db_column(:street_number) }
@@ -46,29 +47,80 @@ RSpec.describe WorkingPlace, type: :model do
       allow_any_instance_of(WorkingPlace).to receive(:location_timezone) { 'Europe/Zurich' }
     end
 
-    let(:city) { 'Zurich' }
-    let(:country) { 'Switzerland' }
-
     let(:place_info_result) do
       loc = Geokit::GeoLoc.new(city: city)
       loc.country = country
-      loc.country_code = 'CH'
-      loc.state_code = 'ZH'
+      loc.country_code = country_code
+      loc.state_code = state_code
+      loc.state_name = state_name
       loc
     end
 
+    let(:city) { 'Zurich' }
+    let(:country) { 'Switzerland' }
+    let(:country_code) { 'CH' }
+    let(:state_code) { 'ZH' }
+    let(:state_name) { 'Zurich' }
+
     context 'with valid data' do
-      subject { create(:working_place, :with_address) }
+      context 'with country with state validation' do
+        context 'with region passed' do
+          subject { create(:working_place, :with_address, state: state_name) }
 
-      it { expect(subject.valid?).to eq true }
-      it { expect { subject.valid? }.not_to change { subject.errors.messages[:address] } }
-    end
+          it { expect(subject.valid?).to eq true }
+          it { expect { subject.valid? }.not_to change { subject.errors.messages[:address] } }
+          it { expect(subject.state).to eq('Zurich') }
+          it { expect(subject.state_code).to eq('zh') }
+        end
 
-    context 'with not english country names' do
-      subject { create(:working_place, country: 'Suisse', city: 'Genf') }
+        context 'with region not passed' do
+          subject { create(:working_place, :with_address) }
 
-      it { expect(subject.valid?).to eq true }
-      it { expect { subject.valid? }.not_to change { subject.errors.messages[:address] } }
+          it { expect(subject.valid?).to eq true }
+          it { expect { subject.valid? }.not_to change { subject.errors.messages[:address] } }
+          it { expect(subject.state).to eq(state_code) }
+          it { expect(subject.state_code).to eq(state_code.downcase) }
+        end
+
+        context 'with not english country name' do
+          subject { create(:working_place, country: 'Suisse', city: 'Genf') }
+          let(:state_name) { 'Geneve' }
+          let(:state_code) { 'GE' }
+
+          it { expect(subject.valid?).to eq true }
+          it { expect { subject.valid? }.not_to change { subject.errors.messages[:address] } }
+          it { expect(subject.state).to eq(state_code) }
+          it { expect(subject.state_code).to eq('ge') }
+        end
+      end
+
+      context 'with country without state validation' do
+        let(:country) { 'Poland' }
+        let(:city) { 'Rzeszow' }
+        let(:state_name) { 'Podkarpackie Voivodeship' }
+        let(:state_code) { 'Podkarpackie Voivodeship' }
+        let(:country_code) { 'PL' }
+
+        %w(Podkarpacie asdf).each do |current_state|
+          let(:state) { current_state }
+
+          subject { create(:working_place, country: 'Polska', city: 'Rzeszow', state: state) }
+
+          it { expect(subject.valid?).to eq true }
+          it { expect { subject.valid? }.not_to change { subject.errors.messages[:address] } }
+          it { expect(subject.state).to eq(state) }
+          it { expect(subject.state_code).to eq('podkarpackie voivodeship') }
+        end
+
+        context 'without state specified' do
+          subject { create(:working_place, country: 'Polska', city: 'Rzeszow', state: nil) }
+
+          it { expect(subject.valid?).to eq true }
+          it { expect { subject.valid? }.not_to change { subject.errors.messages[:address] } }
+          it { expect(subject.state).to eq('Podkarpackie Voivodeship') }
+          it { expect(subject.state_code).to eq('podkarpackie voivodeship') }
+        end
+      end
     end
 
     context 'with invalid data' do
@@ -85,6 +137,7 @@ RSpec.describe WorkingPlace, type: :model do
             .to change { subject.errors[:country] }
             .to include 'does not exist'
         end
+
         it do
           expect { subject.valid? }.to change { subject.errors[:address] }.to include 'not found'
         end
@@ -119,6 +172,23 @@ RSpec.describe WorkingPlace, type: :model do
 
         it do
           expect { subject.valid? }.to change { subject.errors[:address] }.to include 'not found'
+        end
+      end
+
+      context 'with country that has state validation' do
+        %w(GE Iowa).each do |current_state|
+          let(:state) { current_state }
+
+          subject { build(:working_place, :with_address, state: 'state') }
+
+          it { expect(subject.valid?).to eq false }
+          it { expect(subject.timezone).to be_nil }
+
+          it do
+            expect { subject.valid? }
+              .to change { subject.errors[:state] }
+              .to include 'does not match given address'
+          end
         end
       end
     end
