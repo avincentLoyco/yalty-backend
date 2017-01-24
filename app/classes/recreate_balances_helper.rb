@@ -92,7 +92,8 @@ class RecreateBalancesHelper
       validity_date: RelatedPolicyPeriod.new(etop).validity_date_for(new_effective_at),
       manual_amount: manual_amount,
       policy_credit_addition: assignation_in_start_date?,
-      resource_amount: assignation_in_start_date? ? etop.time_off_policy.amount : 0
+      resource_amount: assignation_in_start_date? ? etop.time_off_policy.amount : 0,
+      skip_update: true
     ).call
   end
 
@@ -109,7 +110,7 @@ class RecreateBalancesHelper
     if old_effective_at.present?
       manage_additions_for_etops_between_dates!
     else
-      ManageEmployeeBalanceAdditions.new(etop_for_manage).call
+      ManageEmployeeBalanceAdditions.new(etop_for_manage, false).call
     end
   end
 
@@ -118,19 +119,23 @@ class RecreateBalancesHelper
     etops = etops_in_category.where(
       'effective_at BETWEEN ? AND ?', starting_date, ending_date || end_effective_at
     )
-    etops.each { |etop_between| ManageEmployeeBalanceAdditions.new(etop_between).call }
+    etops.each { |etop_between| ManageEmployeeBalanceAdditions.new(etop_between, false).call }
   end
 
   def recalculate_balances!
     balance = balance_at_starting_date_or_first_balance
+
     PrepareEmployeeBalancesToUpdate.new(balance, update_all: true).call
     UpdateBalanceJob.perform_later(balance.id, update_all: true)
   end
 
   def balance_at_starting_date_or_first_balance
-    Employee::Balance.where('effective_at::date = ?', starting_date.to_date).first ||
-      Employee::Balance.where('effective_at::date = ?',
-        etops_in_category.first.effective_at.to_date).first
+    related_balances =
+      Employee::Balance.where(time_off_category: time_off_category, employee: employee)
+    related_balances.where('effective_at::date = ?', starting_date.to_date).first ||
+      related_balances.where(
+        'effective_at::date = ?', etops_in_category.first.effective_at.to_date
+      ).first
   end
 
   def date_in_past

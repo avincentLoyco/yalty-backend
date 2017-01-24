@@ -2,7 +2,7 @@ class ManageEmployeeBalanceRemoval
   attr_reader :new_date, :resource, :current_date
 
   def initialize(new_date, resource, current_date = resource.validity_date)
-    @new_date = new_date
+    @new_date = find_new_date(new_date)
     @resource = resource
     @current_date = current_date
   end
@@ -13,6 +13,12 @@ class ManageEmployeeBalanceRemoval
   end
 
   private
+
+  def find_new_date(new_date)
+    return unless new_date.present?
+    return new_date if new_date.is_a?(Time)
+    Time.zone.parse(new_date).utc
+  end
 
   def unassign_from_removal
     resource_removal = resource.balance_credit_removal

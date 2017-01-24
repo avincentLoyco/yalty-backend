@@ -16,7 +16,8 @@ task update_validity_dates_for_time_offs: [:environment] do
         RelatedPolicyPeriod.new(time_off_etop).validity_date_for(employee_balance.effective_at)
 
       next unless employee_balance.validity_date != valid_validity_date ||
-          (employee_balance.validity_date.present? && employee_balance.balance_credit_removal_id.nil?)
+          (employee_balance.validity_date.present? &&
+          employee_balance.balance_credit_removal_id.nil?)
 
       params = { update_all: true }
       if employee_balance.validity_date != valid_validity_date
