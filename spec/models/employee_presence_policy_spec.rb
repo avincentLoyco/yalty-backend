@@ -1,6 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe EmployeePresencePolicy, type: :model do
+  include_context 'shared_context_timecop_helper'
+
   let(:epp) { create(:employee_presence_policy) }
 
   it { is_expected.to have_db_column(:employee_id).of_type(:uuid) }
@@ -85,12 +87,12 @@ RSpec.describe EmployeePresencePolicy, type: :model do
   end
 
   context 'callbacks' do
-    context '.trigger_intercom_update' do
-      let!(:account) { create(:account) }
-      let!(:employee) { create(:employee, account: account) }
-      let!(:policy) { create(:presence_policy, :with_time_entries, account: account) }
-      let(:epp) { build(:employee_presence_policy, employee: employee, presence_policy: policy) }
+    let!(:account) { create(:account) }
+    let!(:employee) { create(:employee, account: account) }
+    let!(:policy) { create(:presence_policy, :with_time_entries, account: account) }
+    let(:epp) { build(:employee_presence_policy, employee: employee, presence_policy: policy) }
 
+    context '.trigger_intercom_update' do
       it 'should invoke trigger_intercom_update' do
         expect(epp).to receive(:trigger_intercom_update)
         epp.save!

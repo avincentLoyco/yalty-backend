@@ -8,9 +8,10 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
   describe '#call' do
     let(:employee) { create(:employee, account: Account.current) }
     let(:join_table_resource) { nil }
+    let(:params_effective_at) { '1/4/2015' }
     let(:params) do
       {
-        effective_at: '1/4/2015',
+        effective_at: params_effective_at,
         employee_id: employee.id
       }.merge(resource_params)
     end
@@ -82,6 +83,18 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
       end
     end
 
+    shared_examples 'Join Table create with different resource before and contract_end' do
+      it { expect { subject }.to_not raise_error }
+      it { expect(subject[:result].effective_at).to eq(params[:effective_at].to_date) }
+      it { expect(subject[:status]).to eq(201) }
+      it 'removes reset join table' do
+        expect { subject }
+          .to change { join_table_class.exists?(existing_join_table.id) }
+          .from(true)
+          .to(false)
+      end
+    end
+
     shared_examples 'Duplicated Join Table' do
       it 'should raise error with proper message' do
         expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError)
@@ -150,6 +163,22 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
           let(:resource_params) { { working_place_id: existing_join_table.working_place_id } }
 
           it_behaves_like 'Duplicated Join Table'
+        end
+
+        context 'when there is contract_end assigned and no reset working_place' do
+          before do
+            employee.employee_working_places.map(&:destroy)
+            event_params = {
+              effective_at: Time.zone.parse('2016/03/01'),
+              event_type: 'contract_end',
+              employee: { id: employee.id }
+            }
+            CreateEvent.new(event_params, {}).call
+            subject
+          end
+
+          it { expect(employee.employee_working_places.count).to eq(2) }
+          it { expect(employee.reload.working_places.where(reset: true).exists?).to be(true) }
         end
 
         context 'when there is JoinTable with the same reosurce assigned before' do
@@ -277,6 +306,23 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
         end
 
         it_behaves_like 'Join Table create'
+
+        context 'when there is contract_end assigned and no reset time_off_policy' do
+          before do
+            employee.employee_time_off_policies.map(&:destroy)
+            employee.employee_balances.map(&:destroy)
+            event_params = {
+              effective_at: Time.zone.parse('2016/03/01'),
+              event_type: 'contract_end',
+              employee: { id: employee.reload.id }
+            }
+            CreateEvent.new(event_params, {}).call
+            subject
+          end
+
+          it { expect(employee.employee_time_off_policies.count).to eq(2) }
+          it { expect(employee.reload.time_off_policies.where(reset: true).exists?).to be(true) }
+        end
 
         context 'when there is Join Table with the same resource and date' do
           let(:resource_params) { { time_off_policy_id: existing_join_table.time_off_policy_id } }
@@ -410,6 +456,22 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
       context 'Join table create' do
         it_behaves_like 'Join Table create'
 
+        context 'when there is contract_end assigned and no reset presence_policy' do
+          before do
+            employee.employee_presence_policies.map(&:destroy)
+            event_params = {
+              effective_at: Time.zone.parse('2016/03/01'),
+              event_type: 'contract_end',
+              employee: { id: employee.id }
+            }
+            CreateEvent.new(event_params, {}).call
+            subject
+          end
+
+          it { expect(employee.employee_presence_policies.count).to eq(2) }
+          it { expect(employee.reload.presence_policies.where(reset: true).exists?).to be(true) }
+        end
+
         context 'when there is Join Table with the same resource and date' do
           let(:resource_params) { { presence_policy_id: existing_join_table.presence_policy_id } }
 
@@ -495,6 +557,202 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
           before { params[:effective_at] = 3.years.ago.to_s }
 
           it_behaves_like 'Join Table update with the same resource after and before new effective at'
+        end
+      end
+    end
+
+    context 'with contract_end' do
+      let(:now) { Time.zone.now }
+      let(:time_off_category) { create(:time_off_category, account: Account.current) }
+      let(:time_off_policy)   { create(:time_off_policy, time_off_category: time_off_category) }
+      let!(:etop) { create(:employee_time_off_policy, employee: employee, effective_at: now, time_off_policy: time_off_policy) }
+      let!(:epp)  { create(:employee_presence_policy, employee: employee, effective_at: now) }
+      let!(:ewp)  { create(:employee_working_place, employee: employee, effective_at: now) }
+      let!(:contract_end) do
+        create(:employee_event, effective_at: now + 3.months, employee: employee,
+          event_type: 'contract_end')
+      end
+      let!(:rehire) do
+        create(:employee_event, effective_at: contract_end.effective_at + 1.day, employee: employee,
+          event_type: 'hired')
+      end
+
+      context 'when moving join table from current hire period' do
+       context 'when moving after current contract_end_date' do
+          let!(:contract_end_2) do
+            create(:employee_event, effective_at: contract_end.effective_at + 6.months,
+              employee: employee, event_type: 'contract_end')
+          end
+
+          let(:join_table_resource) { epp }
+          let(:params_effective_at) { contract_end.effective_at + 2.months }
+          let(:join_table_class)    { EmployeePresencePolicy }
+          let(:resource_class)      { PresencePolicy }
+          let(:resource_params)     {{}}
+          let(:policies_dates)      { employee.employee_presence_policies.pluck(:effective_at) }
+          let(:expected_dates)      { [params_effective_at, contract_end_2.effective_at + 1.day] }
+
+          before { subject }
+
+          it { expect(policies_dates).to match_array(expected_dates) }
+       end
+
+       context 'when moving before current hire_date' do
+          let!(:contract_end_2) do
+            create(:employee_event, effective_at: contract_end.effective_at + 6.months,
+              employee: employee, event_type: 'contract_end')
+          end
+
+          let!(:join_table_resource) { create(:employee_presence_policy, employee: employee, effective_at: contract_end_2.effective_at - 1.month) }
+          let(:params_effective_at)  { contract_end.effective_at - 2.months }
+          let(:join_table_class)     { EmployeePresencePolicy }
+          let(:resource_class)       { PresencePolicy }
+          let(:resource_params)      {{}}
+          let(:policies_dates)       { employee.employee_presence_policies.pluck(:effective_at) }
+          let(:expected_dates)       { [params_effective_at, contract_end.effective_at + 1.day] }
+
+          before do
+            epp.destroy
+            employee.employee_presence_policies.with_reset.find_by(effective_at: contract_end.effective_at + 1.day).destroy
+            subject
+          end
+
+          it { expect(policies_dates).to match_array(expected_dates) }
+       end
+      end
+
+      context 'when rehire day after contract_end' do
+        let(:params_effective_at) { rehire.effective_at }
+
+        context 'for EmployeeTimeOffPolicy' do
+          let(:same_resource_before) { etop }
+          let(:existing_join_table)  { employee.employee_time_off_policies.with_reset.first }
+          let(:resource_class)       { TimeOffPolicy }
+          let(:join_table_class)     { EmployeeTimeOffPolicy }
+
+          context 'when assigning different EmployeeTimeOffPolicy' do
+            let!(:top) { create(:time_off_policy, time_off_category: etop.time_off_category) }
+            let(:resource_params) { { time_off_policy_id: top.id } }
+
+            it_behaves_like 'Join Table create with different resource before and contract_end'
+          end
+
+          context 'when assigning the same EmployeeTimeOffPolicy' do
+            let(:resource_params) { { time_off_policy_id: same_resource_before.time_off_policy_id } }
+
+            it_behaves_like 'Join Table create with the same resource before'
+          end
+
+          context 'when moving assigned policy from day after contract_end' do
+            let(:top) { create(:time_off_policy, time_off_category: time_off_category, policy_type: time_off_policy.policy_type) }
+            let!(:join_table_resource) do
+              create(:employee_time_off_policy, employee: employee, time_off_policy: top, effective_at: rehire.effective_at)
+            end
+            let(:params_effective_at) { rehire.effective_at + 1.month - 1.day }
+            let(:resource_params) {{}}
+
+            context 'employee have proper resources' do
+              before { subject }
+
+              it { expect(employee.employee_time_off_policies.count).to eq(3) }
+              it { expect(employee.employee_time_off_policies.with_reset.count).to eq(1) }
+              it 'returns policies in proper dates' do
+                dates = employee.reload.employee_time_off_policies.map { |etop| etop.effective_at.to_date }
+                expected_dates = ['01/01/2016', '02/04/2016', '01/05/2016'].map(&:to_date)
+                expect(dates).to match_array(expected_dates)
+              end
+            end
+
+            it { expect { subject }.to change(EmployeeTimeOffPolicy, :count).by(1) }
+          end
+        end
+
+        context 'for EmployeePresencePolicy' do
+          let(:same_resource_before) { epp }
+          let(:existing_join_table)  { employee.employee_presence_policies.with_reset.first }
+          let(:resource_class)       { PresencePolicy }
+          let(:join_table_class)     { EmployeePresencePolicy }
+
+          context 'when assigning different EmployeePresencePolicy' do
+            let!(:presence_policy) { create(:presence_policy, :with_presence_day) }
+            let(:resource_params) { { presence_policy_id: presence_policy.id } }
+
+            it_behaves_like 'Join Table create with different resource before and contract_end'
+          end
+
+          context 'when assigning the same EmployeePresencePolicy' do
+            let(:resource_params) { { presence_policy_id: same_resource_before.presence_policy_id } }
+
+            it_behaves_like 'Join Table create with the same resource before'
+          end
+
+          context 'when moving assigned policy from day after contract_end' do
+            let!(:presence_policy) { create(:presence_policy, :with_presence_day) }
+            let!(:join_table_resource) do
+              create(:employee_presence_policy, employee: employee, presence_policy: presence_policy,
+                effective_at: rehire.effective_at)
+            end
+            let(:params_effective_at) { rehire.effective_at + 1.month - 1.day }
+            let(:resource_params) {{}}
+
+            context 'employee have proper resources' do
+              before { subject }
+
+              it { expect(employee.employee_presence_policies.count).to eq(3) }
+              it { expect(employee.employee_presence_policies.with_reset.count).to eq(1) }
+              it 'returns policies in proper dates' do
+                dates = employee.employee_presence_policies.map { |epp| epp.effective_at.to_date }
+                expected_dates = ['01/01/2016', '02/04/2016', '01/05/2016'].map(&:to_date)
+                expect(dates).to match_array(expected_dates)
+              end
+            end
+
+            it { expect { subject }.to change(EmployeePresencePolicy, :count).by(1) }
+          end
+        end
+
+        context 'for EmployeeWorkingPlace' do
+          let(:same_resource_before) { ewp }
+          let(:existing_join_table)  { employee.employee_working_places.with_reset.first }
+          let(:resource_class)       { WorkingPlace }
+          let(:join_table_class)     { EmployeeWorkingPlace }
+
+          context 'when assigning different EmployeeWorkingPlace' do
+            let!(:working_place) { create(:working_place) }
+            let(:resource_params) { { working_place_id: working_place.id } }
+
+            it_behaves_like 'Join Table create with different resource before and contract_end'
+          end
+
+          context 'when assigning the same EmployeeWorkingPlace' do
+            let(:resource_params) { { working_place_id: same_resource_before.working_place_id } }
+
+            it_behaves_like 'Join Table create with the same resource before'
+          end
+
+          context 'when moving assigned working place from day after contract_end' do
+            let!(:working_place) { create(:working_place, account: Account.current) }
+            let!(:join_table_resource) do
+              create(:employee_working_place, employee: employee, working_place: working_place,
+                effective_at: rehire.effective_at)
+            end
+            let(:params_effective_at) { rehire.effective_at + 1.month - 1.day }
+            let(:resource_params) {{}}
+
+            context 'employee have proper resources' do
+              before { subject }
+
+              it { expect(employee.employee_working_places.count).to eq(3) }
+              it { expect(employee.employee_working_places.with_reset.count).to eq(1) }
+              it 'returns policies in proper dates' do
+                dates = employee.employee_working_places.map { |ewp| ewp.effective_at.to_date }
+                expected_dates = ['01/01/2016', '02/04/2016', '01/05/2016'].map(&:to_date)
+                expect(dates).to match_array(expected_dates)
+              end
+            end
+
+            it { expect { subject }.to change(EmployeeWorkingPlace, :count).by(1) }
+          end
         end
       end
     end

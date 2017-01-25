@@ -145,13 +145,16 @@ RSpec.describe EmployeeTimeOffPolicy, type: :model do
   end
 
   context 'callbacks' do
-    context '.trigger_intercom_update' do
-      let!(:account) { create(:account) }
-      let!(:category) { create(:time_off_category, account: account) }
-      let!(:employee) { create(:employee, account: account) }
-      let!(:policy) { create(:time_off_policy, time_off_category: category) }
-      let(:etop) { build(:employee_time_off_policy, employee: employee, time_off_policy: policy) }
+    let!(:account) { create(:account) }
+    let!(:category) { create(:time_off_category, account: account) }
+    let!(:employee) { create(:employee, account: account) }
+    let!(:policy) { create(:time_off_policy, time_off_category: category) }
+    let(:etop) do
+      build(:employee_time_off_policy, :with_employee_balance, employee: employee,
+        time_off_policy: policy)
+    end
 
+    context '.trigger_intercom_update' do
       it 'should invoke trigger_intercom_update' do
         expect(etop).to receive(:trigger_intercom_update)
         etop.save!

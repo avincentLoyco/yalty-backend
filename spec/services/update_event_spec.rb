@@ -9,10 +9,6 @@ RSpec.describe do
     Account::User.current = create(:account_user, account: employee.account)
   end
   subject { UpdateEvent.new(params, employee_attributes_params).call }
-  let!(:definition) do
-    create(:employee_attribute_definition,
-      account: employee.account, name: 'firstname', multiple: true, validation: { presence: true })
-  end
   let(:first_name_order) { 1 }
   let(:employee) { create(:employee, :with_attributes) }
   let(:event) { employee.events.first }
@@ -55,6 +51,11 @@ RSpec.describe do
   end
 
   context 'with valid params' do
+    let!(:definition) do
+      create(:employee_attribute_definition,
+        account: employee.account, name: 'firstname', multiple: true, validation: { presence: true })
+    end
+
     context 'when attributes id send' do
       it { expect { subject }.to change { event.employee_attribute_versions.count }.by(1) }
       it { expect { subject }.to change { first_attribute.reload.data.value }.to eq 'Snow' }
@@ -384,7 +385,157 @@ RSpec.describe do
     end
   end
 
+  context 'contract_end' do
+    let(:event_type) { 'contract_end' }
+    let(:old_effective_at) { Time.zone.parse('2016/03/01') }
+    let(:now) { Time.zone.now }
+    let!(:category) { create(:time_off_category, account: Account.current) }
+    let!(:top) { create(:time_off_policy, time_off_category: category) }
+    let!(:etop) do
+      create(:employee_time_off_policy, employee: employee, effective_at: now, time_off_policy: top)
+    end
+    let!(:epp) { create(:employee_presence_policy, employee: employee, effective_at: now) }
+    let!(:ewp) { create(:employee_working_place, employee: employee, effective_at: now) }
+    let!(:contract_end) do
+      create(:employee_event, event_type: event_type, effective_at: old_effective_at,
+        employee: employee)
+    end
+    let(:employee_contract_end) { employee.events.find_by(event_type: 'contract_end') }
+    let(:event) { contract_end }
+    let(:event_id) { contract_end.id }
+    let(:employee_attributes_params) {{}}
+    let(:reset_epp) { employee.employee_presence_policies.with_reset.last }
+    let(:reset_ewp) { employee.employee_working_places.with_reset.last }
+    let(:reset_etop) { employee.employee_time_off_policies.with_reset.last }
+
+    context 'move to the future' do
+      let(:effective_at) { Time.zone.parse('2016/04/01') }
+
+      context 'when there is no re-hire' do
+        it 'moves reset employee_presence_policies' do
+          expect { subject }
+            .to change { reset_epp.reload.effective_at }
+            .from(old_effective_at + 1.day)
+            .to(effective_at + 1.day)
+        end
+
+        it 'moves reset employee_working_places' do
+          expect { subject }
+            .to change { reset_ewp.reload.effective_at }
+            .from(old_effective_at + 1.day)
+            .to(effective_at + 1.day)
+        end
+
+        it 'moves reset employee_time_off_policies' do
+          expect { subject }
+            .to change { reset_etop.reload.effective_at }
+            .from(old_effective_at + 1.day)
+            .to(effective_at + 1.day)
+        end
+      end
+
+      context 'moving after re-hire' do
+        let!(:re_hire) do
+          create(:employee_event, event_type: 'hired', effective_at: effective_at - 10.days,
+            employee: employee)
+        end
+
+        it { expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
+      end
+    end
+
+    context 'move to the past' do
+      let(:effective_at) { Time.zone.parse('2012/01/01') }
+
+      context 'there are no more join tables' do
+        before do
+          subject
+          employee.reload
+        end
+
+        it { expect(employee_contract_end.effective_at).to eq(effective_at) }
+        it { expect(employee.time_off_policies.count).to eq(0) }
+        it { expect(employee.employee_time_off_policies.count).to eq(0) }
+        it { expect(employee.presence_policies.count).to eq(0) }
+        it { expect(employee.employee_presence_policies.count).to eq(0) }
+        it { expect(employee.working_places.count).to eq(0) }
+        it { expect(employee.employee_working_places.count).to eq(0) }
+      end
+
+      context 'there are join tables before new effective_at' do
+        let!(:category2) { create(:time_off_category, account: Account.current) }
+        let!(:top2) { create(:time_off_policy, time_off_category: category) }
+        let!(:etop_2) do
+          create(:employee_time_off_policy, :with_employee_balance, employee: employee,
+            effective_at: effective_at - 9.days, time_off_policy: top2)
+        end
+        let!(:epp_2) do
+          create(:employee_presence_policy, employee: employee, effective_at: effective_at - 9.days)
+        end
+        let!(:ewp_2) do
+          create(:employee_working_place, employee: employee, effective_at: effective_at - 9.days)
+        end
+
+        context 'without time_off' do
+          before do
+            subject
+            employee.reload
+          end
+
+          it { expect(employee_contract_end.effective_at).to eq(effective_at) }
+          it { expect(employee.time_off_policies.count).to eq(2) }
+          it { expect(employee.employee_time_off_policies.count).to eq(2) }
+          it { expect(employee.employee_time_off_policies.with_reset.count).to eq(1) }
+          it { expect(employee.presence_policies.count).to eq(2) }
+          it { expect(employee.employee_presence_policies.count).to eq(2) }
+          it { expect(employee.employee_presence_policies.with_reset.count).to eq(1) }
+          it { expect(employee.working_places.count).to eq(2) }
+          it { expect(employee.employee_working_places.count).to eq(2) }
+          it { expect(employee.employee_working_places.with_reset.count).to eq(1) }
+        end
+
+        context 'with time_off' do
+          let(:start_time) { effective_at - 10.days }
+
+          let!(:time_off) do
+            create(:time_off, start_time: start_time, end_time: end_time,
+              employee: employee, time_off_category: category2)
+          end
+
+          context 'when moved before time_off start_time' do
+            let(:start_time) { effective_at + 10.days }
+            let(:end_time) { start_time + 10.days }
+
+            it { expect { subject }.to change(TimeOff, :count).by(-1) }
+          end
+
+          context 'when moved before time_off end_time' do
+            let(:end_time) { effective_at + 10.days }
+
+            it 'moves it to day after contract_end' do
+              expect { subject }
+                .to change { time_off.reload.end_time }
+                .from(end_time)
+                .to(effective_at + 1.day)
+            end
+          end
+
+          context 'when moved to time_off end_time' do
+            let(:end_time) { effective_at + 10.days }
+
+            it { expect { subject }.to_not change { time_off } }
+          end
+        end
+      end
+    end
+  end
+
   context 'with invalid params' do
+    let!(:definition) do
+      create(:employee_attribute_definition,
+        account: employee.account, name: 'firstname', multiple: true, validation: { presence: true })
+    end
+
     context 'when required attribute does not send or value set to nil' do
       before do
         Employee::AttributeDefinition

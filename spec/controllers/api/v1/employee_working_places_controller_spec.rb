@@ -666,5 +666,26 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
         end
       end
     end
+
+    context 'when there is contract_end' do
+      let!(:contract_end) do
+        create(:employee_event, employee: employee, effective_at: 3.months.from_now,
+          event_type: 'contract_end')
+      end
+
+      context 'only one employee_working_place' do
+        before { employee.reload.employee_working_places.order(:effective_at).first.destroy }
+
+        it { expect { subject }.to change(EmployeeWorkingPlace, :count).by(-2) }
+      end
+
+      context 'there are employee_working_places left' do
+        let!(:employee_working_place_2) do
+          create(:employee_working_place, employee: employee, effective_at: Time.zone.now)
+        end
+
+        it { expect { subject }.to change(EmployeeWorkingPlace, :count).by(-1) }
+      end
+    end
   end
 end

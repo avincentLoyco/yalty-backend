@@ -16,8 +16,9 @@ module ValidateEffectiveAtBetweenHiredAndContractEndDates
   end
 
   def effective_at_between_hired_date_and_contract_end
-    return unless employee.contract_end_for(effective_at).present? &&
-        employee.contract_end_for(effective_at) > employee.hired_date_for(effective_at)
+    return unless employee.contract_end_for(effective_at) != (effective_at - 1.day) &&
+                  employee.contract_end_for(effective_at).present? &&
+                  employee.contract_end_for(effective_at) > employee.hired_date_for(effective_at)
     errors.add(:effective_at, 'can\'t be set after employee contract end date')
   end
 end

@@ -1,6 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe EmployeeWorkingPlace, type: :model do
+  include_context 'shared_context_timecop_helper'
+
   it { is_expected.to have_db_column(:employee_id).of_type(:uuid) }
   it { is_expected.to have_db_column(:working_place_id).of_type(:uuid) }
   it { is_expected.to have_db_column(:effective_at).of_type(:date) }

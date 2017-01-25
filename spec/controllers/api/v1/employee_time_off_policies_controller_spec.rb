@@ -4,9 +4,9 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
   include_context 'shared_context_headers'
   include_context 'shared_context_timecop_helper'
 
-  let(:category) { create(:time_off_category, account: Account.current) }
+  let!(:category) { create(:time_off_category, account: Account.current) }
   let(:employee) { create(:employee, account: Account.current) }
-  let(:time_off_policy) { create(:time_off_policy, :with_end_date, time_off_category: category) }
+  let!(:time_off_policy) { create(:time_off_policy, :with_end_date, time_off_category: category) }
   let(:time_off_policy_id) { time_off_policy.id }
 
   shared_examples 'TimeOff validity date change' do
@@ -959,7 +959,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
   describe 'DELETE #destroy' do
     let(:employee_time_off_policy) do
       create(:employee_time_off_policy, :with_employee_balance,
-        employee: employee, time_off_policy: time_off_policy, effective_at: Time.now)
+        employee: employee, time_off_policy: time_off_policy, effective_at: Time.zone.now)
     end
     let(:id) { employee_time_off_policy.id }
 
@@ -1101,6 +1101,48 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
           expect(response.body).to include 'You are not authorized to access this page.'
         end
+      end
+    end
+
+    context 'when there is contract_end' do
+      let!(:contract_end) do
+        create(:employee_event, employee: employee, effective_at: 3.months.from_now,
+          event_type: 'contract_end')
+      end
+      let(:reset_top) do
+        create(:time_off_policy, time_off_category: category, policy_type: nil, reset: true)
+      end
+      let(:reset_etop) do
+        create(:employee_time_off_policy, employee: employee, time_off_policy: reset_top,
+          effective_at: contract_end.effective_at + 1.day)
+      end
+
+      context 'only one employee_time_off_policy' do
+        before do
+          employee_time_off_policy
+          reset_etop
+        end
+
+        it { expect { subject }.to change(EmployeeTimeOffPolicy, :count).by(-2) }
+      end
+
+      context 'there are employee_time_off_policies left' do
+        let(:top) do
+          create(:time_off_policy, time_off_category: category, policy_type:
+            time_off_policy.policy_type)
+        end
+        let(:etop_2) do
+          create(:employee_time_off_policy, :with_employee_balance, employee: employee,
+            time_off_policy: top, effective_at: 1.month.from_now)
+        end
+
+        before do
+          employee_time_off_policy
+          etop_2
+          reset_etop
+        end
+
+        it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(-1) }
       end
     end
   end

@@ -9,6 +9,8 @@ class UpdateEvent
     @attributes_params     = employee_attributes_params
     @event_params          = build_event_params(params)
     @updated_assignations  = {}
+    @event                 = Account.current.employee_events.find(event_params[:id])
+    @old_effective_at      = event.effective_at
   end
 
   def call
@@ -18,10 +20,28 @@ class UpdateEvent
       update_employee_join_tables
       manage_versions
       save!
-    end
+      previous_and_next_events_valid?
+    end.tap { handle_contract_end  }
   end
 
   private
+
+  def handle_contract_end
+    return unless event.event_type.eql?('contract_end')
+    employee = event.employee
+    tables = %w(employee_time_off_policies employee_presence_policies employee_working_places)
+    reset_effective_at = @old_effective_at + 1.day
+    if @old_effective_at < event.reload.effective_at
+      tables.each do |table_name|
+        employee.send(table_name).with_reset.where(effective_at: reset_effective_at).update_all(effective_at: event.effective_at + 1.day)
+      end
+    elsif @old_effective_at > event.reload.effective_at
+      tables.each do |table_name|
+        employee.send(table_name).with_reset.where(effective_at: reset_effective_at).delete_all
+      end
+      HandleContractEnd.new(employee, event.effective_at).call
+    end
+  end
 
   def build_event_params(params)
     params.tap { |attr| attr.delete(:employee) && attr.delete(:employee_attributes) }
@@ -32,8 +52,7 @@ class UpdateEvent
   end
 
   def find_and_update_event
-    @event = Account.current.employee_events.find(event_params[:id])
-    @event.attributes = event_params
+    event.attributes = event_params
   end
 
   def update_employee_join_tables
@@ -134,6 +153,19 @@ class UpdateEvent
 
       raise InvalidResourcesError.new(event, messages)
     end
+  end
+
+  def previous_and_next_events_valid?
+    hired_or_contract_end = event.event_type.eql?('hired') || event.event_type.eql?('contract_end')
+    previous_not_valid = event.previous_event.present? && !event.previous_event.valid?
+    next_not_valid = event.next_event.present? && !event.next_event.valid?
+    return event unless hired_or_contract_end && (previous_not_valid || next_not_valid)
+    messages = [event.previous_event, event.next_event].inject({}) do |msg, evnt|
+      msg.merge(evnt.errors.messages) if evnt.present?
+      msg
+    end
+
+    raise InvalidResourcesError.new(event, messages)
   end
 
   def update_assignations_and_balances

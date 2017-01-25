@@ -10,8 +10,11 @@ class EmployeePresencePolicy < ActiveRecord::Base
   validates :employee_id, :presence_policy_id, :effective_at, presence: true
   validates :effective_at, uniqueness: { scope: [:employee_id, :presence_policy_id] }
   validates :order_of_start_day, numericality: { greater_than: 0 }
-  validate :presence_days_presence, if: :presence_policy
+  validate :presence_days_presence, if: -> { presence_policy.present? && !presence_policy.reset }
   validate :order_smaller_than_last_presence_day_order, if: [:presence_policy, :order_of_start_day]
+
+  scope :with_reset, -> { joins(:presence_policy).where(presence_policies: { reset: true }) }
+  scope :not_reset, -> { joins(:presence_policy).where(presence_policies: { reset: false }) }
 
   def order_for(date)
     order_difference = ((date - effective_at) % policy_length).to_i

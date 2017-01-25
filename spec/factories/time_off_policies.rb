@@ -7,6 +7,7 @@ FactoryGirl.define do
     start_month 1
     policy_type 'balancer'
     years_to_effect 0
+    reset false
 
     trait :as_counter do
       policy_type 'counter'

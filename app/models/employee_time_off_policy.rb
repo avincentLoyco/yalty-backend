@@ -25,6 +25,8 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
       .where(time_off_policies: { time_off_category_id: category_id }, employee_id: employee_id)
       .order(effective_at: :desc)
   }
+  scope :with_reset, -> { joins(:time_off_policy).where(time_off_policies: { reset: true }) }
+  scope :not_reset, -> { joins(:time_off_policy).where(time_off_policies: { reset: false }) }
 
   def policy_assignation_balance(effective_at = self.effective_at)
     employee
@@ -102,10 +104,12 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
   end
 
   def verify_not_change_of_policy_type_in_category
+    return if self.time_off_policy.reset
     firts_etop =
       employee
       .employee_time_off_policies
       .where(time_off_category_id: time_off_policy.time_off_category_id)
+      .order(:effective_at)
       .first
     return unless
       firts_etop && firts_etop.time_off_policy.policy_type != time_off_policy.policy_type

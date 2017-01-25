@@ -15,6 +15,20 @@ FactoryGirl.define do
       end
     end
 
+    trait :hired_now do
+      after(:build) do |employee|
+        employee.events.delete_all
+        hired_event = build(:employee_event,
+          event_type: 'hired',
+          employee: employee,
+          effective_at: Time.zone.now
+        )
+        employee.events << hired_event
+      end
+    end
+
+    factory :employee_hired_now, traits: [:hired_now]
+
     trait :with_working_place do
       after(:build) do |employee|
         effective_at = Time.zone.now - 6.years

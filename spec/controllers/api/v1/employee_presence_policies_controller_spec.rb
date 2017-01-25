@@ -630,6 +630,25 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
 
         it { is_expected.to have_http_status(204) }
       end
+
+      context 'when there is contract_end' do
+        let!(:contract_end) do
+          create(:employee_event, employee: employee, effective_at: 3.months.from_now,
+            event_type: 'contract_end')
+        end
+
+        context 'only one employee_presence_policy' do
+          it { expect { subject }.to change(EmployeePresencePolicy, :count).by(-2) }
+        end
+
+        context 'there are employee_presence_policies left' do
+          let!(:employee_presence_policy_2) do
+            create(:employee_presence_policy, employee: employee, effective_at: Time.zone.now)
+          end
+
+          it { expect { subject }.to change(EmployeePresencePolicy, :count).by(-1) }
+        end
+      end
     end
 
     context 'with invalid params' do

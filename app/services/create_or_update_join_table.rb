@@ -2,7 +2,8 @@ class CreateOrUpdateJoinTable
   include API::V1::Exceptions
 
   attr_reader :join_table_class, :params, :employee_join_tables, :join_table,
-    :resource_class, :resource_class_id, :join_table_resource, :current_account
+    :resource_class, :resource_class_id, :join_table_resource, :current_account,
+    :join_table_old_effective_at
 
   def initialize(join_table_class, resource_class, params, join_table_resource = nil)
     @join_table_class = join_table_class
@@ -10,6 +11,7 @@ class CreateOrUpdateJoinTable
     @resource_class = resource_class
     @resource_class_id = resource_class.model_name.singular + '_id'
     @join_table_resource = join_table_resource
+    @join_table_old_effective_at = join_table_resource.try(:effective_at)
     @status = 205
     @current_account = Account.current || Employee.find(params[:employee_id]).account
   end
@@ -87,7 +89,7 @@ class CreateOrUpdateJoinTable
     @status = 200
     return update_with_assignation_balance if join_table_class.eql?(EmployeeTimeOffPolicy)
     join_table_resource.update!(params)
-    join_table_resource
+    join_table_resource.tap { |join_table| create_reset_join_table_after_update(join_table) }
   end
 
   def update_with_assignation_balance
@@ -101,12 +103,51 @@ class CreateOrUpdateJoinTable
         assignation_balance.update!(effective_at: assignation_effective_at)
       end
     end
-    join_table_resource
+    join_table_resource.tap { |join_table| create_reset_join_table_after_update(join_table) }
   end
 
   def create_join_table
     @status = 201
-    employee_join_tables.create!(params.except(:employee_id))
+    employee_join_tables.create!(params.except(:employee_id)).tap do |join_table|
+      upcoming_contract_end = join_table.employee.first_upcoming_contract_end
+      next unless upcoming_contract_end.present? && join_table.effective_at <= upcoming_contract_end.effective_at
+      create_reset_join_table(join_table)
+    end
+  end
+
+  def create_reset_join_table_after_update(join_table)
+    return if join_table_old_effective_at.eql?(join_table.effective_at)
+    employee = join_table.employee
+
+    before_contract_end = employee.contract_end_for(join_table.effective_at)
+    next_contract_end = employee.first_upcoming_contract_end(join_table.effective_at).try(:effective_at)
+
+    if before_contract_end.present? && join_table_old_effective_at.eql?(before_contract_end + 1.day)
+      create_reset_join_table(join_table, before_contract_end)
+    end
+
+    if next_contract_end.present?
+      create_reset_join_table(join_table, next_contract_end)
+    end
+  end
+
+  def create_reset_join_table(join_table, effective_at = nil)
+    employee = join_table.employee
+    join_table_name = resource_class.name.underscore.pluralize
+    time_off_category = join_table.try(:time_off_category)
+    return unless create_reset_join_table?(employee, join_table_name, time_off_category, effective_at)
+    AssignResetJoinTable.new(join_table_name, employee, time_off_category, effective_at).call
+    ClearResetJoinTables.new(employee, join_table_old_effective_at, time_off_category).call
+  end
+
+  def create_reset_join_table?(employee, join_table_name, time_off_category, effective_at)
+    reset_join_tables = employee.send("employee_#{join_table_name}").with_reset
+    reset_join_tables = reset_join_tables.where(effective_at: effective_at) if effective_at.present?
+    if time_off_category.present?
+      reset_join_tables.where(time_off_category: time_off_category.id).empty?
+    else
+      reset_join_tables.empty?
+    end
   end
 
   def previous_join_table

@@ -64,6 +64,10 @@ class API::ApplicationController < ApplicationController
     ).call.map(&:destroy!)
   end
 
+  def clear_respective_reset_join_tables(employee, effective_at, time_off_category = nil)
+    ClearResetJoinTables.new(employee, effective_at, time_off_category).call
+  end
+
   def resources_with_effective_till(join_table, join_table_id, related_id = nil, employee_id = nil)
     resources =
       JoinTableWithEffectiveTill
