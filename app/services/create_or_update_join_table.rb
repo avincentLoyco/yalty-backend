@@ -84,7 +84,7 @@ class CreateOrUpdateJoinTable
 
   def update_with_assignation_balance
     assignation_balance = join_table_resource.policy_assignation_balance
-    # TODO update assignation balance
+    # TODO: update assignation balance
     join_table_resource.update!(params)
     if assignation_balance &&
         assignation_balance.effective_at < join_table_resource.employee.hired_date
