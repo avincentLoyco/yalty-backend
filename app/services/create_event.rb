@@ -14,7 +14,6 @@ class CreateEvent
 
   def call
     ActiveRecord::Base.transaction do
-      # binding.pry
       build_event
       find_or_build_employee
       build_versions

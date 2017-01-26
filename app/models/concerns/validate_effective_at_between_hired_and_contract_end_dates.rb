@@ -5,7 +5,7 @@ module ValidateEffectiveAtBetweenHiredAndContractEndDates
 
   included do
     validate :effective_at_cannot_be_before_hired_date, if: [:employee, :effective_at]
-    validate :effective_at_between_hired_date_and_contract_end, if: [:employee, :effective_at]
+    # validate :effective_at_between_hired_date_and_contract_end, if: [:employee, :effective_at]
   end
 
   private
