@@ -42,4 +42,11 @@ class EmployeePresencePolicy < ActiveRecord::Base
     return unless policy_length != 0 && order_of_start_day > policy_length
     errors.add(:order_of_start_day, 'Must be smaller than last presence day order')
   end
+
+  def create_reset_policy
+    return unless presence_policy.present? &&
+                  !presence_policy.reset &&
+                  employee.first_upcoming_contract_end.present?
+    AssignResetJoinTable.new('presence_policies', employee).call
+  end
 end
