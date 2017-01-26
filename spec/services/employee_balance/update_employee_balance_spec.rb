@@ -151,25 +151,15 @@ RSpec.describe UpdateEmployeeBalance, type: :service do
       end
 
       context 'and employee balance have validity date in future' do
-        let!(:options) {{ validity_date: Time.now + 4.months }}
+        let!(:options) {{ validity_date: nil }}
 
         it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
         it { expect { subject }.to change { Employee::Balance.exists?(id: removal.id) } }
       end
-
-      context 'and employee balance have validity date in past' do
-        let!(:options) {{ validity_date: 9.months.ago }}
-
-        it { expect { subject }.to_not change { Employee::Balance.count } }
-        it { expect { subject }.to change { Employee::Balance.exists?(id: removal.id) } }
-        it { expect { subject }.to change { employee_balance.reload.balance_credit_removal_id } }
-      end
     end
 
     context 'and employee balance does not have removal' do
-      before do
-        employee_balance.update!(effective_at: 1.year.ago)
-      end
+      before { employee_balance.update!(effective_at: 1.year.ago) }
 
       context 'and new validity date in past' do
         let!(:options) {{ validity_date: 9.months.ago }}

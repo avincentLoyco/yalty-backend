@@ -77,7 +77,22 @@ class CreateOrUpdateJoinTable
 
   def update_current_join_table
     @status = 200
+    return update_with_assignation_balance if join_table_class.eql?(EmployeeTimeOffPolicy)
     join_table_resource.update!(params)
+    join_table_resource
+  end
+
+  def update_with_assignation_balance
+    assignation_balance = join_table_resource.policy_assignation_balance
+    join_table_resource.update!(params)
+    if assignation_balance &&
+        assignation_balance.effective_at < join_table_resource.employee.hired_date
+      if related_balances.present?
+        assignation_balance.destroy!
+      else
+        assignation_balance.update!(effective_at: assignation_effective_at)
+      end
+    end
     join_table_resource
   end
 
@@ -96,5 +111,18 @@ class CreateOrUpdateJoinTable
   def resource_id
     return params[resource_class_id.to_sym] unless join_table_resource
     join_table_resource.send(resource_class_id)
+  end
+
+  def related_balances
+    Employee::Balance
+      .where(
+        time_off_category_id: join_table_resource.time_off_category_id,
+        employee_id: join_table_resource.employee_id,
+        effective_at: assignation_effective_at
+      )
+  end
+
+  def assignation_effective_at
+    params[:effective_at] + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET
   end
 end

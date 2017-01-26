@@ -5,7 +5,12 @@ FactoryGirl.define do
     resource_amount { Faker::Number.number(2) }
     policy_credit_addition { true }
     after(:build) do |employee_balance|
-      effective_at = employee_balance.effective_at ? employee_balance.effective_at : Time.zone.now
+      effective_at =
+        if employee_balance.time_off.try(:start_time).present?
+          employee_balance.time_off.start_time
+        else
+          employee_balance.effective_at ? employee_balance.effective_at : Time.zone.now
+        end
       etop =
         employee_balance
         .employee
@@ -19,7 +24,7 @@ FactoryGirl.define do
         employee_policy = create(:employee_time_off_policy,
           time_off_policy: policy,
           employee: employee_balance.employee,
-          effective_at: employee_balance.effective_at
+          effective_at: effective_at
         )
         employee_balance.effective_at = employee_policy.effective_at
       elsif employee_balance.time_off_id.blank?

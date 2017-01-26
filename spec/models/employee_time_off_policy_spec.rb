@@ -23,10 +23,8 @@ RSpec.describe EmployeeTimeOffPolicy, type: :model do
   describe '#effective_at_cannot_be_before_hired_date' do
     let(:employee) { create(:employee) }
     subject(:create_invalid_etop) do
-      create(
-        :employee_time_off_policy,
-        employee: employee,
-        effective_at: employee.events.last.effective_at - 5.days
+      create(:employee_time_off_policy,
+        employee: employee, effective_at: employee.events.last.effective_at - 5.days
       )
     end
 
@@ -35,6 +33,32 @@ RSpec.describe EmployeeTimeOffPolicy, type: :model do
         ActiveRecord::RecordInvalid,
         'Validation failed: Effective at can\'t be set before employee hired date'
       )
+    end
+  end
+
+  describe '#balances_without_valid_policy_present?' do
+    subject { create(:employee_time_off_policy) }
+    let!(:employee_balance) do
+      create(:employee_balance, :with_time_off,
+        employee: subject.employee, time_off_category: subject.time_off_category)
+    end
+
+    context 'on update' do
+      before { subject.effective_at = employee_balance.effective_at + 1.month }
+
+      it { expect(subject.valid?).to eq false }
+      it do
+        expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
+          .to include 'Can \'t change if there are time offs after and there is no previous policy'
+      end
+    end
+
+    context 'on destroy' do
+      it { expect(subject.destroy).to eq false }
+      it do
+        expect { subject.destroy }.to change { subject.errors.messages[:effective_at] }
+          .to include 'Can \'t remove if there are time offs after and there is no previous policy'
+      end
     end
   end
 

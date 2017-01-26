@@ -61,6 +61,10 @@ class TimeOff < ActiveRecord::Base
     TimeEntry.hour_as_time(end_time.strftime('%H:%M'))
   end
 
+  def employee_time_off_policy
+    employee.active_policy_in_category_at_date(time_off_category_id, start_time)
+  end
+
   private
 
   def does_not_overlap_with_registered_working_times
@@ -108,7 +112,7 @@ class TimeOff < ActiveRecord::Base
   end
 
   def time_off_policy_presence
-    return if employee.active_policy_in_category_at_date(time_off_category_id, end_time).present?
+    return if employee.active_policy_in_category_at_date(time_off_category_id, start_time).present?
     errors.add(:employee, 'Time off policy in category required')
   end
 

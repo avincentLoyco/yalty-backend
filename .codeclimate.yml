@@ -6,6 +6,10 @@ engines:
     enabled: true
   fixme:
     enabled: true
+    config:
+      strings:
+        - FIXME
+        - BUG
 ratings:
   paths:
   - "Gemfile.lock"

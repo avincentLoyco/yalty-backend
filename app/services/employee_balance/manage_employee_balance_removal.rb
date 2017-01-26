@@ -2,26 +2,29 @@ class ManageEmployeeBalanceRemoval
   attr_reader :new_date, :resource, :current_date
 
   def initialize(new_date, resource, current_date = resource.validity_date)
-    @new_date = new_date.try(:to_date)
+    @new_date = find_new_date(new_date)
     @resource = resource
     @current_date = current_date
   end
 
   def call
     return unless !resource.time_off_policy.counter? && validity_date_changed?
-    new_date.blank? || moved_to_future? ? unassign_from_removal : create_or_assign_to_new_removal
+    new_date.blank? ? unassign_from_removal : create_or_assign_to_new_removal
   end
 
   private
 
+  def find_new_date(new_date)
+    return unless new_date.present?
+    return new_date if new_date.is_a?(Time)
+    Time.zone.parse(new_date).utc
+  end
+
   def unassign_from_removal
     resource_removal = resource.balance_credit_removal
     return unless resource_removal
-    if resource_removal.balance_credit_additions.count > 1
-      resource.update!(balance_credit_removal_id: nil)
-    else
-      resource_removal.destroy!
-    end
+    resource.update!(balance_credit_removal_id: nil)
+    resource_removal.destroy! if resource_removal.reload.balance_credit_additions.blank?
   end
 
   def create_or_assign_to_new_removal
@@ -36,7 +39,6 @@ class ManageEmployeeBalanceRemoval
     new_removal =
       Employee::Balance
       .removal_at_date(resource.employee_id, resource.time_off_category_id, new_date)
-
     new_removal.first_or_create do |removal|
       removal.effective_at = new_date
     end

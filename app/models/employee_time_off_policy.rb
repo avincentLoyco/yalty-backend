@@ -13,7 +13,10 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
   validates :employee_id, :time_off_policy_id, :effective_at, presence: true
   validates :effective_at, uniqueness: { scope: [:employee_id, :time_off_category_id] }
   validate :verify_not_change_of_policy_type_in_category, if: [:employee, :time_off_policy]
+  validate :no_balances_without_valid_policy, on: :update
+
   before_save :add_category_id
+  before_destroy :balances_without_valid_policy_present?
 
   scope :not_assigned_at, -> (date) { where(['effective_at > ?', date]) }
   scope :assigned_at, -> (date) { where(['effective_at <= ?', date]) }
@@ -57,7 +60,46 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
     next_effective_at - 1.day if next_effective_at
   end
 
+  def previous_policy_for(date = effective_at)
+    self
+      .class
+      .by_employee_in_category(employee_id, time_off_category_id)
+      .where('effective_at < ?', date)
+      .where.not(id: id)
+  end
+
   private
+
+  def no_balances_without_valid_policy
+    time_off_after = first_time_off_after_effective_at
+    return unless time_off_after.present? && time_off_after.employee_time_off_policy.id.eql?(id) &&
+        effective_at > time_off_after.start_time &&
+        !previous_policy_for(time_off_after.start_time).present?
+
+    errors.add(
+      :effective_at, 'Can \'t change if there are time offs after and there is no previous policy'
+    )
+  end
+
+  def first_time_off_after_effective_at
+    date = effective_at != effective_at_was ? effective_at_was : effective_at
+    employee
+      .time_offs
+      .in_category(time_off_category_id)
+      .where('end_time >= ?', date)
+      .order(:start_time)
+      .first
+  end
+
+  def balances_without_valid_policy_present?
+    time_off_after = first_time_off_after_effective_at
+    return unless time_off_after.present? && time_off_after.employee_time_off_policy.id.eql?(id) &&
+        !previous_policy_for(effective_at_was).present?
+    errors.add(
+      :effective_at, 'Can \'t remove if there are time offs after and there is no previous policy'
+    )
+    errors.blank?
+  end
 
   def verify_not_change_of_policy_type_in_category
     firts_etop =
