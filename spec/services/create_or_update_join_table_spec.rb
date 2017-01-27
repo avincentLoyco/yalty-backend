@@ -305,7 +305,7 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
         let(:resource_params) { {} }
         let(:second_resource) do
           create(:time_off_policy,
-            time_off_category: create(:time_off_category, account: Account.current))
+            time_off_category: existing_resource.time_off_category)
         end
         let!(:first_resource_tables) do
           [2.years.ago, Time.now].map do |date|
