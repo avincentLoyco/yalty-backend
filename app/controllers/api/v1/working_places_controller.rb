@@ -5,7 +5,7 @@ module API
       include WorkingPlaceSchemas
 
       def index
-        render_resource(resources_by_status(WorkingPlace, EmployeeWorkingPlace))
+        render_resource(resources_by_status(WorkingPlace, EmployeeWorkingPlace).not_reset)
       end
 
       def show

@@ -473,7 +473,8 @@ CREATE TABLE presence_policies (
     account_id uuid NOT NULL,
     name character varying,
     created_at timestamp without time zone NOT NULL,
-    updated_at timestamp without time zone NOT NULL
+    updated_at timestamp without time zone NOT NULL,
+    reset boolean DEFAULT false
 );
 
 
@@ -550,17 +551,18 @@ CREATE TABLE time_off_categories (
 
 CREATE TABLE time_off_policies (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
-    start_day integer NOT NULL,
+    start_day integer,
     end_day integer,
-    start_month integer NOT NULL,
+    start_month integer,
     end_month integer,
     amount integer,
     years_to_effect integer,
-    policy_type character varying NOT NULL,
+    policy_type character varying,
     time_off_category_id uuid NOT NULL,
     created_at timestamp without time zone,
     updated_at timestamp without time zone,
-    name character varying NOT NULL
+    name character varying NOT NULL,
+    reset boolean DEFAULT false
 );
 
 
@@ -599,6 +601,7 @@ CREATE TABLE working_places (
     street character varying(60),
     street_number character varying(10),
     timezone character varying,
+    reset boolean DEFAULT false,
     state_code character varying(60)
 );
 
@@ -1627,6 +1630,10 @@ INSERT INTO schema_migrations (version) VALUES ('20161207131436');
 INSERT INTO schema_migrations (version) VALUES ('20161220125415');
 
 INSERT INTO schema_migrations (version) VALUES ('20170111105844');
+
+INSERT INTO schema_migrations (version) VALUES ('20170123075900');
+
+INSERT INTO schema_migrations (version) VALUES ('20170123092622');
 
 INSERT INTO schema_migrations (version) VALUES ('20170209083140');
 

@@ -607,7 +607,7 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
         let!(:balances) { TimeOff.all.map(&:employee_balance) }
 
         context 'when previous employee working places has the same holiday policy' do
-          before { WorkingPlace.update_all(holiday_policy_id: holiday_policy.id) }
+          before { WorkingPlace.not_reset.update_all(holiday_policy_id: holiday_policy.id) }
 
           it { expect { subject }.to_not change { balances.first.reload.being_processed } }
           it { expect { subject }.to_not change { balances.last.reload.being_processed } }
@@ -617,7 +617,7 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
         end
 
         context 'when previous employee working place has different holiday policy' do
-          before { WorkingPlace.last.update!(holiday_policy_id: holiday_policy.id) }
+          before { WorkingPlace.not_reset.last.update!(holiday_policy_id: holiday_policy.id) }
 
           context 'and there are no employee balances with time offs assigned' do
             before { Employee::Balance.destroy_all }

@@ -44,6 +44,7 @@ class Account < ActiveRecord::Base
   before_validation :generate_subdomain, on: :create
   after_create :update_default_attribute_definitions!
   after_create :update_default_time_off_categories!
+  after_create :create_reset_presence_policy_and_working_place!
 
   def self.current=(account)
     RequestStore.write(:current_account, account)
@@ -183,5 +184,10 @@ class Account < ActiveRecord::Base
   def timezone_must_exist
     return if ActiveSupport::TimeZone[timezone].present?
     errors.add(:timezone, 'must be a valid time zone')
+  end
+
+  def create_reset_presence_policy_and_working_place!
+    presence_policies.create!(name: 'Reset policy', reset: true)
+    working_places.create!(name: 'Reset working place', reset: true)
   end
 end

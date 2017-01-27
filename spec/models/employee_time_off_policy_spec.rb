@@ -93,7 +93,7 @@ RSpec.describe EmployeeTimeOffPolicy, type: :model do
       let(:employee) { create(:employee) }
       let(:effective_at) { Time.now + 1.day }
       let!(:balance) { create(:employee_balance, effective_at: effective_at, employee: employee) }
-      let(:policy) { TimeOffPolicy.first }
+      let(:policy) { TimeOffPolicy.not_reset.first }
       let(:new_policy) do
         build(:employee_time_off_policy,
           employee: balance.employee, time_off_policy: policy, effective_at: Time.now - 4.years

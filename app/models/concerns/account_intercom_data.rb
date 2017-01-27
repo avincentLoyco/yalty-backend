@@ -50,20 +50,20 @@ module AccountIntercomData
 
   def intercom_policies_attributes
     {
-      presence_policy_count: PresencePolicy.for_account(id).count,
+      presence_policy_count: PresencePolicy.for_account(id).not_reset.count,
       active_presence_policy_count:
         ActiveAndInactiveJoinTableFinders.new(
           PresencePolicy,
           EmployeePresencePolicy,
           id
-        ).active.count,
-      time_off_policy_count: TimeOffPolicy.for_account(id).count,
+        ).active.not_reset.count,
+      time_off_policy_count: TimeOffPolicy.for_account(id).not_reset.count,
       active_time_off_policy_count:
         ActiveAndInactiveJoinTableFinders.new(
           TimeOffPolicy,
           EmployeeTimeOffPolicy,
           id
-        ).active.count
+        ).active.not_reset.count
     }
   end
 

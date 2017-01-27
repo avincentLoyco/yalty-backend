@@ -42,13 +42,10 @@ module ActsAsIntercomData
   end
 
   def delayed_jobs
-    @delayed_jobs ||=
-      if Rails.env.test?
-        SendDataToIntercom.jobs.map { |job| OpenStruct.new(job) }
-      else
-        Sidekiq::ScheduledSet.new
-      end.select do |job|
-        job.queue.eql?('intercom') && job.args.include?(self.class.name)
-      end
+    intercom_jobs.select { |job| job.queue.eql?('intercom') && job.args.include?(self.class.name) }
+  end
+
+  def intercom_jobs
+    Sidekiq::ScheduledSet.new
   end
 end

@@ -27,6 +27,7 @@ class WorkingPlace < ActiveRecord::Base
 
   before_validation :assign_coordinate_related_attributes, if: :coordinate_changed?
 
+  scope :not_reset, -> { where(reset: false) }
   scope :active_for_employee, lambda { |employee_id, date|
     joins(:employee_working_places)
       .where("employee_working_places.employee_id= ? AND

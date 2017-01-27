@@ -231,4 +231,21 @@ RSpec.describe Account, type: :model do
     it { expect(account.total_amount_of_data).to eq(total_amount_of_data.round(2)) }
     it { expect(account.number_of_files).to eq(3) }
   end
+
+  describe 'reset resources' do
+    let(:default_categories_count) { TimeOffCategory::DEFAULT.size }
+
+    it { expect { subject.save! }.to change(PresencePolicy, :count).by(1) }
+    it { expect { subject.save! }.to change(WorkingPlace, :count).by(1) }
+    it { expect { subject.save! }.to change(TimeOffCategory, :count).by(default_categories_count) }
+    it { expect { subject.save! }.to change(TimeOffPolicy, :count).by(default_categories_count) }
+
+    context 'resources have reset flag' do
+      before { subject.save! }
+
+      it { expect(subject.presence_policies.last.reset).to be(true) }
+      it { expect(subject.working_places.last.reset).to be(true) }
+      it { expect(subject.time_off_policies.pluck(:reset).uniq.first).to be(true) }
+    end
+  end
 end
