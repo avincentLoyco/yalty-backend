@@ -17,6 +17,7 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
 
   before_save :add_category_id
   before_destroy :balances_without_valid_policy_present?
+  after_create :create_reset_policy
 
   scope :not_assigned_at, ->(date) { where(['effective_at > ?', date]) }
   scope :assigned_at, ->(date) { where(['effective_at <= ?', date]) }
@@ -121,5 +122,12 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
 
   def add_category_id
     self.time_off_category_id = time_off_policy.time_off_category_id
+  end
+
+  def create_reset_policy
+    return unless time_off_policy.present? &&
+                  !time_off_policy.reset &&
+                  employee.first_upcoming_contract_end.present?
+    AssignResetJoinTable.new('time_off_categories', employee).call
   end
 end
