@@ -102,10 +102,11 @@ class CreateOrUpdateJoinTable
   end
 
   def previous_join_table
-    employee_join_tables
-      .where('effective_at < ?', params[:effective_at].to_date)
-      .order(:effective_at)
-      .last
+    join_tables =
+      employee_join_tables
+      .where('effective_at < ?', params[:effective_at].to_date).order(:effective_at)
+    return join_tables.last unless join_table_class.eql?(EmployeeTimeOffPolicy)
+    join_tables.where(time_off_category_id: time_off_category_id).last
   end
 
   def resource_id
@@ -124,5 +125,9 @@ class CreateOrUpdateJoinTable
 
   def assignation_effective_at
     params[:effective_at] + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET
+  end
+
+  def time_off_category_id
+    resource_class.where(id: resource_id).first.time_off_category_id
   end
 end

@@ -54,7 +54,8 @@ class RelatedPolicyPeriod
     validity_date =
       Date.new(date.year + years_to_effect, end_month, end_day) + Employee::Balance::REMOVAL_OFFSET
     years_end_date = Date.new(date.year, end_month, end_day)
-    validity_date += 1.year if date > years_end_date
+    validity_date += 1.year if date.to_date > years_end_date
+    validity_date += 1.year if (validity_date.to_date - date.to_date).to_i / 365 < years_to_effect
     validity_date
   end
 
