@@ -12,7 +12,7 @@ class PresencePolicy < ActiveRecord::Base
   validates :account_id, :name, presence: true
 
   scope :not_reset, -> { where(reset: false) }
-  scope :for_account, -> (account_id) { not_reset.where(account_id: account_id) }
+  scope :for_account, ->(account_id) { not_reset.where(account_id: account_id) }
 
   scope(:active_for_employee, lambda do |employee_id, date|
     joins(:employee_presence_policies)
