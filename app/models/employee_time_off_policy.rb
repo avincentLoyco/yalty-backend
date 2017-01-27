@@ -128,6 +128,7 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
     return unless time_off_policy.present? &&
                   !time_off_policy.reset &&
                   employee.first_upcoming_contract_end.present?
-    AssignResetJoinTable.new('time_off_categories', employee).call
+    AssignResetJoinTable.new(
+      'time_off_policies', employee, time_off_category: time_off_category).call
   end
 end

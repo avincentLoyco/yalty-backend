@@ -63,4 +63,29 @@ RSpec.describe EmployeeWorkingPlace, type: :model do
       end
     end
   end
+
+  context 'callbacks' do
+    let!(:account) { create(:account) }
+    let!(:employee) { create(:employee, account: account) }
+    let!(:working_place) { create(:working_place, account: account) }
+    let(:ewp) { build(:employee_working_place, employee: employee, working_place: working_place) }
+
+    context '.create_reset_policy' do
+      before do
+        Account.current = account
+        params = {
+          effective_at: Time.zone.parse('2016/03/01'),
+          event_type: 'contract_end',
+          employee: { id: employee.id }
+        }
+        CreateEvent.new(params, {}).call
+      end
+
+      it { expect { ewp.save! }.to change(EmployeeWorkingPlace, :count).by(2) }
+      it 'last presence policy is reset' do
+        ewp.save!
+        expect(employee.reload.working_places.where(reset: true).last.present?).to be(true)
+      end
+    end
+  end
 end
