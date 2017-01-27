@@ -3,6 +3,8 @@ default: &default
   username: rails
   encoding: unicode
   pool: <%= ENV["DB_POOL"] || ENV['MAX_THREADS'] || 5 %>
+  reaping_frequency: <%= ENV['DB_REAPING_FREQUENCY'] || 10 %>
+  prepared_statements: false
 
 development:
   <<: *default
