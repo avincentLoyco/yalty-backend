@@ -2,7 +2,8 @@ module Api::V1
   class WorkingPlaceRepresenter < BaseRepresenter
     def complete
       {
-        name: resource.name
+        name: resource.name,
+        deletable: assigned_employees_json.empty?
       }
         .merge(basic)
         .merge(relationships)
@@ -11,7 +12,7 @@ module Api::V1
     def relationships
       {
         holiday_policy: holiday_policy_json,
-        employees: employees_json
+        employees: assigned_employees_json
       }
     end
 
@@ -19,7 +20,7 @@ module Api::V1
       HolidayPolicyRepresenter.new(resource.holiday_policy).basic
     end
 
-    def employees_json
+    def assigned_employees_json
       related_resources(EmployeeWorkingPlace, resource.id).map do |employee_working_place|
         EmployeeWorkingPlaceRepresenter.new(employee_working_place).complete
       end
