@@ -1,6 +1,7 @@
 # This file is copied to spec/ when you run 'rails generate rspec:install'
 ENV["RAILS_ENV"] ||= 'test'
 require File.expand_path("../../config/environment", __FILE__)
+require 'spec_helper'
 require 'rspec/rails'
 # Add additional requires below this line. Rails is not loaded until this point!
 require 'fantaskspec'
@@ -71,6 +72,10 @@ RSpec.configure do |config|
     allow_any_instance_of(Account).to receive(:default_attribute_definition) do
       Account::DEFAULT_ATTRIBUTE_DEFINITIONS.first(2)
     end
+  end
+
+  config.after(:each) do
+    FileUtils.rm_rf(Rails.application.config.file_upload_root_path)
   end
 
   config.around(:each) do |example|

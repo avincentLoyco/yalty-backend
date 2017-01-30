@@ -27,7 +27,4 @@ Rails.application.configure do
 
   # Preview email in the browser instead of sending.
   config.action_mailer.delivery_method = :letter_opener
-
-  # Match Paperclip path with the one from Rake app
-  config.paperclip_defaults = { path: 'files/:id/:style/:filename' }
 end

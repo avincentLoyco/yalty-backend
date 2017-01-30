@@ -6,7 +6,7 @@ class RemoveOrphanEmployeeFiles < ActiveJob::Base
       EmployeeFile.orphans.where('created_at < ?', 1.day.ago.beginning_of_day).ids
     EmployeeFile.where(id: ids_of_orphan_files).delete_all
     ids_of_orphan_files.each do |id|
-      FileUtils.remove_entry_secure(Rails.root.join(ENV['FILE_STORAGE_UPLOAD_PATH'], id))
+      FileUtils.remove_entry_secure(Rails.application.config.file_upload_root_path.join(id))
     end
   end
 end

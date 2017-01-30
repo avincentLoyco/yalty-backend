@@ -22,6 +22,10 @@ RSpec.describe FileStorageUploadDownload do
 
   subject(:get_token) { Redis.current.hgetall(token) }
 
+  before(:all) do
+    ENV['FILE_STORAGE_UPLOAD_PATH'] = 'tmp/files'
+  end
+
   describe 'upload' do
     subject(:post_request) { post('/files', params) }
 

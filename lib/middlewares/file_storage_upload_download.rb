@@ -1,3 +1,5 @@
+require 'pathname'
+
 class FileStorageUploadDownload
   class << self
     KEYS_WHITELIST = %w(token attachment version action_type).freeze
@@ -12,6 +14,14 @@ class FileStorageUploadDownload
       if request.post? then upload_file(token_data, params)
       elsif request.get?  then download_file(token_data, params, get_file_id(env['PATH_INFO']))
       else [405, { 'Content-Type' => 'text/plain' }, ['Method Not Allowed']]
+      end
+    end
+
+    def file_upload_root_path
+      @file_upload_root_path ||= begin
+        path = Pathname.new(ENV['FILE_STORAGE_UPLOAD_PATH'] || 'file')
+        path = path.expand_path(File.join(__dir__, '../..')) unless path.absolute?
+        path
       end
     end
 
@@ -69,15 +79,14 @@ class FileStorageUploadDownload
     end
 
     def path_for_upload(file_id, filename)
-      file_storage_path = File.join(ENV['FILE_STORAGE_UPLOAD_PATH'], file_id, 'original')
+      file_storage_path = File.join(file_upload_root_path, file_id, 'original')
       FileUtils.mkdir_p(file_storage_path)
-      File.join(Dir.pwd, file_storage_path, filename)
+      File.join(file_storage_path, filename)
     end
 
     def path_for_download(file_id, version)
       version_directory = version ? version : 'original'
-      file_storage_path =
-        File.join(ENV['FILE_STORAGE_UPLOAD_PATH'], file_id, version_directory, '*')
+      file_storage_path = File.join(file_upload_root_path, file_id, version_directory, '*')
       files_in_directory = Dir.glob(file_storage_path)
       return error_response if files_in_directory.size != 1
       files_in_directory.first

@@ -15,6 +15,6 @@ class EmployeeFile < ActiveRecord::Base
     attachment_size: { less_than: 20.megabytes }
 
   def find_file_path
-    Dir.glob("files/#{id}/original/*")
+    Dir.glob(Rails.application.config.file_upload_root_path.join(id, 'original/*'))
   end
 end
