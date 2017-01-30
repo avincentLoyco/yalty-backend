@@ -16,11 +16,8 @@ class AssignCollection
 
   def ids
     result = collection.map { |item| item[:id] } & valid_ids
-    if result.size != collection.size
-      raise ActiveRecord::RecordNotFound
-    else
-      result
-    end
+    return result if result.size.eql?(collection.size)
+    raise ActiveRecord::RecordNotFound
   end
 
   def valid_ids

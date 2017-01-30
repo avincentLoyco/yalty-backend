@@ -53,8 +53,10 @@ module API
 
       def related_params(attributes)
         related = {}
-        working_places =
-          { working_places: attributes.delete(:working_places) } if attributes.key?(:working_places)
+        if attributes.key?(:working_places)
+          working_places = { working_places: attributes.delete(:working_places) }
+        end
+
         related.merge(working_places.to_h)
       end
 

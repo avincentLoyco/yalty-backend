@@ -13,7 +13,7 @@ class TimeOff < ActiveRecord::Base
   validate :does_not_overlap_with_other_users_time_offs, if: [:employee, :time_off_category_id]
   validate :does_not_overlap_with_registered_working_times, if: [:employee]
 
-  scope :for_employee, -> (employee_id) { where(employee_id: employee_id) }
+  scope :for_employee, ->(employee_id) { where(employee_id: employee_id) }
 
   scope(:for_account, lambda do |account_id|
     joins(:time_off_category)
@@ -47,7 +47,7 @@ class TimeOff < ActiveRecord::Base
     where(employee_id: employee_id, time_off_category_id: time_off_category_id)
   }
 
-  scope :in_category, -> (category_id) { where(time_off_category_id: category_id) }
+  scope :in_category, ->(category_id) { where(time_off_category_id: category_id) }
 
   def balance(starts = start_time, ends = end_time)
     - CalculateTimeOffBalance.new(self, starts, ends).call

@@ -46,7 +46,8 @@ class CalculateTimeOffBalance
         employee.id,
         nil,
         time_off_start_date,
-        time_off_end_date)
+        time_off_end_date
+      )
       .call
       .map do |join_table_hash|
         join_table_class.new(join_table_hash)
@@ -92,7 +93,7 @@ class CalculateTimeOffBalance
 
   def end_order
     ends = (start_order + num_of_days_in_time_off - 1) % @epp.policy_length
-    ends == 0 ? @epp.policy_length : ends
+    ends.zero? ? @epp.policy_length : ends
   end
 
   def num_of_days_in_time_off
