@@ -23,7 +23,7 @@ RSpec.describe FileStorageUploadDownload do
   subject(:get_token) { Redis.current.hgetall(token) }
 
   before(:all) do
-    ENV['FILE_STORAGE_UPLOAD_PATH'] = 'tmp/files'
+    ENV['FILE_STORAGE_UPLOAD_PATH'] = "tmp/files#{ENV['TEST_ENV_NUMBER']}"
   end
 
   describe 'upload' do
@@ -33,7 +33,10 @@ RSpec.describe FileStorageUploadDownload do
     let(:file) { Rack::Test::UploadedFile.new(source_path, file_type) }
     let(:params) {{ token: token, attachment: file, action_type: action_type }}
     let(:response) {{ 'message' => 'File uploaded', 'file_id' => file_id, 'type' => 'file' }}
-    let(:file_saved) { File.exist?(File.join('tmp/files', file_id, 'original/test.jpg')) }
+    let(:file_saved) do
+      path = FileStorageUploadDownload.file_upload_root_path.join(file_id, 'original/test.jpg')
+      File.exist?(path)
+    end
 
     context 'valid response' do
       before do
@@ -155,7 +158,7 @@ RSpec.describe FileStorageUploadDownload do
   describe 'download' do
     subject(:get_request) { get("/files/#{file_id}", params) }
 
-    let(:dir_path) { "#{Dir.pwd}/#{ENV['FILE_STORAGE_UPLOAD_PATH']}/#{file_id}/original" }
+    let(:dir_path) { FileStorageUploadDownload.file_upload_root_path.join(file_id, 'original') }
     let(:destination_path) { "#{dir_path}/test.jpg" }
     let(:employee_file) { File.open(destination_path) }
     let(:action_type) { 'download' }
