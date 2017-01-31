@@ -26,11 +26,12 @@ RSpec.describe RemoveOrphanEmployeeFiles do
     end
 
     let(:existing_dirs) do
-      employee_files.map { |f| "#{Dir.pwd}/#{ENV['FILE_STORAGE_UPLOAD_PATH']}/#{f.id}" }
+      employee_files.map { |f| Rails.application.config.file_upload_root_path.join(f.id) }
     end
-    let(:removed_dir) { "#{Dir.pwd}/#{ENV['FILE_STORAGE_UPLOAD_PATH']}/#{orphan_file.id}" }
-
-    let(:dir_path) { "#{Dir.pwd}/#{ENV['FILE_STORAGE_UPLOAD_PATH']}/#{orphan_file.id}/original" }
+    let(:removed_dir) { Rails.application.config.file_upload_root_path.join(orphan_file.id) }
+    let(:dir_path) do
+      Rails.application.config.file_upload_root_path.join(orphan_file.id, 'original')
+    end
     let(:destination_path) { "#{dir_path}/test.jpg" }
     subject(:create_orphan_file) do
       FileUtils.mkdir_p(dir_path)

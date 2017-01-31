@@ -68,7 +68,7 @@ RSpec.configure do |config|
     config.default_formatter = 'doc'
   end
 
-  config.after(:each) do
+  config.after(:suite) do
     FileUtils.rm_rf(FileStorageUploadDownload.file_upload_root_path)
   end
 
