@@ -66,7 +66,7 @@ RSpec.describe EmployeeWorkingPlace, type: :model do
 
   context 'callbacks' do
     let!(:account) { create(:account) }
-    let!(:employee) { create(:employee, account: account) }
+    let!(:employee) { create(:employee_hired_now, account: account) }
     let!(:working_place) { create(:working_place, account: account) }
     let(:ewp) { build(:employee_working_place, employee: employee, working_place: working_place) }
 
