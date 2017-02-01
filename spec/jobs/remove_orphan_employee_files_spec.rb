@@ -46,8 +46,10 @@ RSpec.describe RemoveOrphanEmployeeFiles do
 
     after { Timecop.return }
 
-    it { expect(Dir.exist?(existing_dirs.first)).to be(true) }
-    it { expect(Dir.exist?(existing_dirs.second)).to be(true) }
-    it { expect(Dir.exist?(removed_dir)).to be(false) }
+    it 'check if proper dirs are removed' do
+      expect(Dir.exist?(existing_dirs.first)).to be(true)
+      expect(Dir.exist?(existing_dirs.second)).to be(true)
+      expect(Dir.exist?(removed_dir)).to be(false)
+    end
   end
 end
