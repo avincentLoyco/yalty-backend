@@ -25,7 +25,7 @@ RSpec.describe RemoveOrphanEmployeeFiles do
       end
     end
 
-    let(:existing_dirs) do
+    let!(:existing_dirs) do
       employee_files.map { |f| Rails.application.config.file_upload_root_path.join(f.id) }
     end
     let(:removed_dir) { Rails.application.config.file_upload_root_path.join(orphan_file.id) }

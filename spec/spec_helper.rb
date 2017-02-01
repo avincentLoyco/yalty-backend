@@ -68,10 +68,6 @@ RSpec.configure do |config|
     config.default_formatter = 'doc'
   end
 
-  config.after(:each) do
-    FileUtils.rm_rf(FileStorageUploadDownload.file_upload_root_path)
-  end
-
   # Print the 10 slowest examples and example groups at the
   # end of the spec run, to help surface which specs are running
   # particularly slow.
