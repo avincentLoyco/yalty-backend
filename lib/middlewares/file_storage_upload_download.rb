@@ -2,6 +2,7 @@ require 'pathname'
 
 class FileStorageUploadDownload
   class << self
+    InvalidData = Class.new(StandardError)
     KEYS_WHITELIST = %w(token attachment version action_type).freeze
 
     def call(env)
@@ -9,12 +10,15 @@ class FileStorageUploadDownload
       params = request.params.select { |key, _| KEYS_WHITELIST.include?(key) }
       token_data = manage_token(params['token'])
 
-      return error_response if token_data.empty? || params.empty?
+      raise InvalidData if token_data.empty? || params.empty?
 
       if request.post? then upload_file(token_data, params)
       elsif request.get?  then download_file(token_data, params, get_file_id(env['PATH_INFO']))
       else [405, { 'Content-Type' => 'text/plain' }, ['Method Not Allowed']]
       end
+
+    rescue InvalidData
+      error_response
     end
 
     def file_upload_root_path
@@ -28,7 +32,7 @@ class FileStorageUploadDownload
     private
 
     def upload_file(token_data, params)
-      return error_response if invalid_params_for_upload?(token_data, params)
+      raise InvalidData if invalid_params_for_upload?(token_data, params)
       IO.copy_stream(
         params['attachment'][:tempfile],
         path_for_upload(token_data['file_id'], params['attachment'][:filename])
@@ -38,10 +42,10 @@ class FileStorageUploadDownload
     end
 
     def download_file(token_data, params, file_id)
-      return error_response if invalid_params_for_download?(token_data, params, file_id)
+      raise InvalidData if invalid_params_for_download?(token_data, params, file_id)
       path = path_for_download(file_id, params['version'])
       file = File.open(path)
-      return error_response if sha_checksum_incorrect?(file, token_data)
+      raise InvalidData if sha_checksum_incorrect?(file, token_data)
       [200, { 'Content-Type' => token_data['file_type'] }, file]
     end
 
@@ -88,7 +92,7 @@ class FileStorageUploadDownload
       version_directory = version ? version : 'original'
       file_storage_path = File.join(file_upload_root_path, file_id, version_directory, '*')
       files_in_directory = Dir.glob(file_storage_path)
-      return error_response if files_in_directory.size != 1
+      raise InvalidData if files_in_directory.size != 1
       files_in_directory.first
     end
 
