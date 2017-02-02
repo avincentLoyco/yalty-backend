@@ -1,4 +1,4 @@
-FROM yalty/centos-ruby:2.2.2
+FROM yalty/centos-ruby:2.3.3
 MAINTAINER "Yann Lugrin" <yann.lugrin@yalty.io>
 
 # Versions
