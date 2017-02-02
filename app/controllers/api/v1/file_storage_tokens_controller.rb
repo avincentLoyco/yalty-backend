@@ -6,6 +6,7 @@ module API
       def create
         verified_dry_params(dry_validation_schema) do |attributes|
           file_not_found!(attributes[:file_id])
+          version_doesnt_exist!(attributes[:version], attributes[:file_id])
           attr_version = find_attribute_version(attributes[:file_id])
           wrong_duration!(attr_version, attributes[:duration])
           authorize! :create, :tokens, attributes[:file_id], attr_version
@@ -18,6 +19,12 @@ module API
       def file_not_found!(file_id)
         return unless file_id.present? && !EmployeeFile.exists?(id: file_id)
         raise ActiveRecord::RecordNotFound
+      end
+
+      def version_doesnt_exist!(version, id)
+        return unless version.present? && id.present? && !EmployeeFile.find(id).file.exists?(version)
+        message = { version: 'Requested version of the file does not exist' }
+        raise InvalidParamTypeError.new(version, message)
       end
 
       def wrong_duration!(attr_version, duration)

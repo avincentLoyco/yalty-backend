@@ -27,7 +27,7 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
   end
 
   describe 'for download' do
-    let!(:employee_file) { create(:employee_file) }
+    let(:employee_file) { create(:employee_file) }
     let(:long_token_allowed) { false }
     let(:attribute_definition) do
       create(:employee_attribute_definition, :required, attribute_type: 'File', name: 'contract',
@@ -36,7 +36,7 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
     let(:employee_attribute) do
       create(:employee_attribute, account: account, attribute_type: 'File',
         attribute_definition: attribute_definition,
-        data: { size: 1000, file_type: 'pdf', id: employee_file.id, file_sha: '23' })
+        data: { size: 1000, file_type: 'pdf', id: employee_file.id, original_sha: '12' })
     end
 
     context 'return proper json' do
@@ -58,6 +58,32 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
           counter: 1,
           action_type: 'download'
         )
+      end
+    end
+
+    context 'version' do
+      let(:params) {{ file_id: employee_file.id, version: 'thumbnail' }}
+
+      context 'if sent and exists' do
+        let!(:employee_file) { create(:employee_file, :with_jpg).reload }
+
+        before do
+          employee_attribute
+          request_token
+        end
+
+        it { expect(response.status).to eq(201) }
+      end
+
+      context 'if sent and exists' do
+        let(:employee_file) { create(:employee_file, :with_pdf) }
+
+        before do
+          employee_attribute
+          request_token
+        end
+
+        it { expect(response.status).to eq(422) }
       end
     end
 
@@ -175,7 +201,7 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
       let(:employee_attribute) do
         create(:employee_attribute, account: account, attribute_type: 'File',
           attribute_definition: attribute_definition, employee: employee_for_file,
-          data: { size: 1000, file_type: 'jpg', id: employee_file.id, file_sha: '12' })
+          data: { size: 1000, file_type: 'jpg', id: employee_file.id, original_sha: '12' })
       end
 
       context 'can request token for upload' do

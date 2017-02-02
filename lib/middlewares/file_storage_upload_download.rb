@@ -3,7 +3,7 @@ require 'pathname'
 class FileStorageUploadDownload
   class << self
     InvalidData = Class.new(StandardError)
-    KEYS_WHITELIST = %w(token attachment version action_type).freeze
+    KEYS_WHITELIST = %w(token attachment action_type).freeze
 
     def call(env)
       request = Rack::Request.new(env)
@@ -43,7 +43,7 @@ class FileStorageUploadDownload
 
     def download_file(token_data, params, file_id)
       raise InvalidData if invalid_params_for_download?(token_data, params, file_id)
-      path = path_for_download(file_id, params['version'])
+      path = path_for_download(file_id, token_data['version'])
       file = File.open(path)
       raise InvalidData if sha_checksum_incorrect?(file, token_data)
       [200, { 'Content-Type' => token_data['file_type'] }, file]
@@ -89,8 +89,7 @@ class FileStorageUploadDownload
     end
 
     def path_for_download(file_id, version)
-      version_directory = version ? version : 'original'
-      file_storage_path = File.join(file_upload_root_path, file_id, version_directory, '*')
+      file_storage_path = File.join(file_upload_root_path, file_id, version, '*')
       files_in_directory = Dir.glob(file_storage_path)
       raise InvalidData if files_in_directory.size != 1
       files_in_directory.first

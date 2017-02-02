@@ -41,7 +41,7 @@ RSpec.describe FindValueForAttribute do
     it { expect(subject[:id]).to eq employee_file.id }
     it { expect(subject[:size]).to eq image.size }
     it { expect(subject[:file_type]).to eq MIME::Types.type_for(image_path).first.content_type }
-    it { expect(subject[:file_sha]).to eq Digest::SHA256.file(image_path.first).hexdigest }
+    it { expect(subject[:original_sha]).to eq Digest::SHA256.file(image_path.first).hexdigest }
 
     it { expect { subject }.to_not raise_error }
 
