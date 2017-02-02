@@ -1,18 +1,17 @@
 class UserMailer < ApplicationMailer
   helper_method :subdomain_url_for
 
-  def account_creation_confirmation(user_id, password)
+  def account_creation_confirmation(user_id)
     @user = Account::User.where(id: user_id).includes(:account).readonly.first!
-    @user.password = password
 
     I18n.with_locale(@user.account.default_locale) do
       mail to: @user.email
     end
   end
 
-  def credentials(user_id, password)
+  def user_invitation(user_id, login_url)
     @user = Account::User.where(id: user_id).includes(:account).readonly.first!
-    @user.password = password
+    @login_url = login_url
 
     I18n.with_locale(@user.account.default_locale) do
       mail to: @user.email

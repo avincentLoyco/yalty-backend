@@ -1,10 +1,14 @@
 module DoorkeeperAuthorization
   include Doorkeeper::Helpers::Controller
 
-  def redirect_uri_with_subdomain(redirect_uri)
-    uri = URI(redirect_uri)
+  def authorization_uri
+    uri = URI(authorization.redirect_uri)
     uri.host.prepend("#{current_resource_owner.account.subdomain}.")
     uri.to_s
+  end
+
+  def authorization_token
+    authorization.auth.token.token
   end
 
   def client
