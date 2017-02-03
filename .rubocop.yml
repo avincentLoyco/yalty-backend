@@ -45,6 +45,9 @@ Style/AlignParameters:
 Style/BracesAroundHashParameters:
   EnforcedStyle: context_dependent
 
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
 Style/MultilineOperationIndentation:
   EnforcedStyle: indented
 
