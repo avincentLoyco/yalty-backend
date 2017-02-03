@@ -1,5 +1,5 @@
 task add_missing_manual_amounts: [:environment] do
-  missing_balances_data = eval(File.read('missing_balances_data.rb'))
+  missing_balances_data = eval(File.read('missing_balances_data.rb')) # rubocop:disable Lint/Eval
   return unless missing_balances_data.is_a?(Array)
 
   ActiveRecord::Base.transaction do

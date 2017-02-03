@@ -1,5 +1,4 @@
 task recreate_balances: [:environment] do
-
   EmployeeTimeOffPolicy.order(:effective_at).each do |etop|
     new_effective_at = etop.effective_at
     old_effective_at = etop.effective_at
