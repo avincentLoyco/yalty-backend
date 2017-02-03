@@ -68,11 +68,11 @@ class JoinTableWithEffectiveTill
 
   def conditional
     conditions = [effective_till_after_date_sql, effective_at_before_date_sql].compact.join(' AND ')
-    conditions.empty? ? '' :  " WHERE #{conditions}"
+    conditions.empty? ? '' : " WHERE #{conditions}"
   end
 
   def effective_till_after_date_sql
-    return nil unless effective_till_from_date.present?
+    return unless effective_till_from_date.present?
     "(B.effective_till is null
      OR B.effective_till >= to_date('#{effective_till_from_date}', 'YYYY-MM_DD'))"
   end

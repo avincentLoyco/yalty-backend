@@ -206,6 +206,17 @@ RSpec.describe ManageEmployeeBalanceRemoval, type: :service do
           it { expect { subject }.to change { balance.balance_credit_removal_id } }
         end
       end
+
+      context 'when new validity date is the same as previous one and balance has removal' do
+        before {
+          create(:employee_balance,
+            employee: employee, time_off_category: category, effective_at: validity_date,
+            balance_credit_additions: [balance])
+        }
+
+        it { expect { subject }.to_not change { Employee::Balance.count } }
+        it { expect { subject }.to_not change { balance.reload.balance_credit_removal_id } }
+      end
     end
 
     context 'when employee balance is a counter' do

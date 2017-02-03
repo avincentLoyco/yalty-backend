@@ -8,7 +8,7 @@ class ManageEmployeeBalanceRemoval
   end
 
   def call
-    return if resource.time_off_policy.counter? && validity_date_didnt_changed?
+    return if resource.time_off_policy.counter? || validity_date_didnt_changed?
     new_date.blank? ? unassign_from_removal : create_or_assign_to_new_removal
   end
 
@@ -45,7 +45,7 @@ class ManageEmployeeBalanceRemoval
   end
 
   def validity_date_didnt_changed?
-    (new_date.blank? && current_date.blank?) &&
-      !new_date.try(:to_date).eql?(current_date.try(:to_date))
+    (new_date.blank? && current_date.blank?) ||
+      new_date.try(:to_date).eql?(current_date.try(:to_date))
   end
 end
