@@ -15,7 +15,7 @@ class CalculatePeriodOverview
     amount_taken = calculate_amount_taken(amount_taken, periods_positive_amount)
     period_result = periods_positive_amount + amount_taken
     if @period[:type].eql?('balancer')
-      period_result = 0 unless period_result > 0
+      period_result = 0 unless period_result.positive?
     end
     {
       amount_taken: amount_taken.abs,
@@ -99,7 +99,7 @@ class CalculatePeriodOverview
   def positive_amounts_between(from_date, to_date)
     manual_and_resource_amounts =
       balances.between(from_date, to_date).pluck(:manual_amount, :resource_amount)
-    additions_sum = manual_and_resource_amounts.flatten.select { |value| value > 0 }.sum
+    additions_sum = manual_and_resource_amounts.flatten.select(&:positive?).sum
 
     return additions_sum if @period[:type].eql?('balancer')
     additions_sum - period_addition.resource_amount
@@ -112,7 +112,7 @@ class CalculatePeriodOverview
         negative_balances.where.not(effective_at: period_addition.validity_date)
     end
     manual_and_resource_amounts = negative_balances.pluck(:manual_amount, :resource_amount)
-    negative_amounts = manual_and_resource_amounts.flatten.select { |value| value < 0 }.sum
+    negative_amounts = manual_and_resource_amounts.flatten.select(&:negative?).sum
     negative_amounts + end_of_period_time_off_amount - related_amount_at_period_beginning
   end
 

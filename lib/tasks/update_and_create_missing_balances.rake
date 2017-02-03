@@ -26,7 +26,7 @@ namespace :update_and_create_missing_balances do
     assignation_balance = etop.policy_assignation_balance
     @manual_amount = assignation_balance.try(:manual_amount).to_i
     etop.update!(effective_at: etop.employee.hired_date)
-    assignation_balance.update!(effective_at: etop.employee.hired_date) if assignation_balance
+    assignation_balance&.update!(effective_at: etop.employee.hired_date)
   end
 
   def remove_duplicated_employee_time_off_policies(etop)
