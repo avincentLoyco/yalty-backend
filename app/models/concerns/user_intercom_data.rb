@@ -38,11 +38,15 @@ module UserIntercomData
     if employee.present?
       {
         employee_id: employee.id,
-        last_vacation_created_at: TimeOff.vacations.for_employee(employee.id).pluck(:created_at).last,
-        last_other_time_off_created_at: TimeOff.not_vacations.for_employee(employee.id).pluck(:created_at).last,
+        last_vacation_created_at:
+          TimeOff.vacations.for_employee(employee.id).pluck(:created_at).last,
+        last_other_time_off_created_at:
+          TimeOff.not_vacations.for_employee(employee.id).pluck(:created_at).last,
         last_manual_working_time_created_at:
-          RegisteredWorkingTime.manually_created_by_employee_ordered(employee.id).pluck(:created_at).last,
-        manual_working_time_ratio: RegisteredWorkingTime.manually_created_ratio_per_employee(employee.id)
+          RegisteredWorkingTime
+            .manually_created_by_employee_ordered(employee.id).pluck(:created_at).last,
+        manual_working_time_ratio:
+          RegisteredWorkingTime.manually_created_ratio_per_employee(employee.id)
       }
     else
       {

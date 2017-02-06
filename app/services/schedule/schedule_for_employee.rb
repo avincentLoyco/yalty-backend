@@ -36,7 +36,8 @@ class ScheduleForEmployee
       RegisteredWorkingTimeForEmployeeSchedule.new(@employee, @start_date, @end_date).call
     @comments_in_range = prepare_working_day_comments
     @holidays_in_range = HolidaysForEmployeeSchedule.new(@employee, @start_date, @end_date).call
-    @time_entries_in_range = TimeEntriesForEmployeeSchedule.new(@employee, @start_date, @end_date).call
+    @time_entries_in_range =
+      TimeEntriesForEmployeeSchedule.new(@employee, @start_date, @end_date).call
     @calculated_schedule.each do |day_hash|
       date = day_hash[:date]
       day_registered_working_times = @working_times_in_range[date]

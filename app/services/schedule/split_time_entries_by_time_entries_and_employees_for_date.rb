@@ -41,7 +41,8 @@ class SplitTimeEntriesByTimeEntriesAndEmployeesForDate
 
   def format_time_entries(employee_hash_with_time_entries_in_time_format)
     hash_response = {}
-    employee_hash_with_time_entries_in_time_format.each do |employee_id, time_entries_in_time_format|
+    employee_hash_with_time_entries_in_time_format
+      .each do |employee_id, time_entries_in_time_format|
       hash_response[employee_id.to_sym] =
         time_entries_in_time_format.map do |time_entry|
           formatted_entry = {

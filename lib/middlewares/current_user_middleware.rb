@@ -25,14 +25,14 @@ class CurrentUserMiddleware
   end
 
   def check_token(env)
-    if Account::User.current.nil? && is_bearer_auth?(env)
+    if Account::User.current.nil? && bearer_auth?(env)
       [401, { 'Content-Type' => 'application/json' }, ['{"error": "User not authorized"}']]
     else
       @app.call(env)
     end
   end
 
-  def is_bearer_auth?(env)
+  def bearer_auth?(env)
     env['HTTP_AUTHORIZATION'].present? && env['HTTP_AUTHORIZATION'] =~ /^Bearer/
   end
 end

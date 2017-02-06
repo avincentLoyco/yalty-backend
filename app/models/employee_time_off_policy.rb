@@ -18,8 +18,8 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
   before_save :add_category_id
   before_destroy :balances_without_valid_policy_present?
 
-  scope :not_assigned_at, -> (date) { where(['effective_at > ?', date]) }
-  scope :assigned_at, -> (date) { where(['effective_at <= ?', date]) }
+  scope :not_assigned_at, ->(date) { where(['effective_at > ?', date]) }
+  scope :assigned_at, ->(date) { where(['effective_at <= ?', date]) }
   scope :by_employee_in_category, lambda { |employee_id, category_id|
     joins(:time_off_policy)
       .where(time_off_policies: { time_off_category_id: category_id }, employee_id: employee_id)

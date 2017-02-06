@@ -78,8 +78,7 @@ class Employee::Event < ActiveRecord::Base
   def only_one_hired_event_presence
     return unless event_type == 'hired'
     employee_hired_events = employee.events.where(event_type: 'hired')
-    if employee_hired_events.present? && employee_hired_events.pluck(:id).exclude?(id)
-      errors.add(:event_type, 'Employee can have only one hired event')
-    end
+    return unless employee_hired_events.present? && employee_hired_events.pluck(:id).exclude?(id)
+    errors.add(:event_type, 'Employee can have only one hired event')
   end
 end

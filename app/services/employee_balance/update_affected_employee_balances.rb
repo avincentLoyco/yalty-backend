@@ -34,9 +34,8 @@ class UpdateAffectedEmployeeBalances
                                      .order(:effective_at)
                                      .first
 
-    if start_balance.present?
-      PrepareEmployeeBalancesToUpdate.new(start_balance).call
-      UpdateBalanceJob.perform_later(start_balance.id, update_all: true)
-    end
+    return unless start_balance.present?
+    PrepareEmployeeBalancesToUpdate.new(start_balance).call
+    UpdateBalanceJob.perform_later(start_balance.id, update_all: true)
   end
 end

@@ -12,14 +12,16 @@ class EmployeeCategoryPolicyFinder
       "
         #{employees_with_employee_policy_sql}
         #{and_in_day_and_month_sql} ;
-      ").to_ary
+        "
+    ).to_ary
   end
 
   def data_from_employees_with_employee_policy_with_previous_policy_of_different_type
     ActiveRecord::Base.connection.select_all(
       "
         #{info_of_previous_policies_of_different_type_for_employees_with_employee_policy} ;
-      ").to_ary
+      "
+    ).to_ary
   end
 
   private

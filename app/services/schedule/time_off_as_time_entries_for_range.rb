@@ -12,7 +12,7 @@ class TimeOffAsTimeEntriesForRange
 
   def call
     calculate_range_size
-    return prepare_single_day_hash if day_range == 0
+    return prepare_single_day_hash if day_range.zero?
     grouped_by_employee ? prepare_multiple_days_hash_with_employees : prepare_multiple_days_hash
     time_off_hash
   end
@@ -67,8 +67,8 @@ class TimeOffAsTimeEntriesForRange
   end
 
   def nested_merge_into_result_hash(new_time_entry)
-    time_off_hash.merge!(new_time_entry) do |_key, employe_hash_1, employe_hash_2|
-      employe_hash_1.merge!(employe_hash_2) do |_key, val1, val2|
+    time_off_hash.merge!(new_time_entry) do |_key, employee_hash1, employee_hash2|
+      employee_hash1.merge!(employee_hash2) do |_key, val1, val2|
         val1.push(val2.first)
       end
     end
