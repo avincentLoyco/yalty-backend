@@ -13,7 +13,7 @@ class EmployeeFile < ActiveRecord::Base
       .select("(data -> 'id')::uuid"))
   end)
 
-  has_attached_file :file, styles: { thumbnail: ['296x235>'] }
+  has_attached_file :file, styles: { thumbnail: ['296x235^'] }
 
   before_post_process :process_only_images
   after_save :rename_file, if: -> { file.present? }
