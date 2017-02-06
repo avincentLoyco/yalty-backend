@@ -1,8 +1,10 @@
 class EmployeeFile < ActiveRecord::Base
   IMAGES_TYPES   = %w(image/jpg image/jpeg image/png).freeze
-  DOCUMENT_TYPES = %w(application/pdf application/msword
-                     application/vnd.openxmlformats-officedocument.wordprocessingml.document).freeze
-  CONTENT_TYPES = IMAGES_TYPES + DOCUMENT_TYPES
+  DOCUMENT_TYPES = %w(
+    application/pdf application/msword
+    application/vnd.openxmlformats-officedocument.wordprocessingml.document
+  ).freeze
+  CONTENT_TYPES = (IMAGES_TYPES + DOCUMENT_TYPES).freeze
 
   scope(:orphans, lambda do
     where.not(id:

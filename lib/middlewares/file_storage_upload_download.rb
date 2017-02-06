@@ -74,7 +74,7 @@ class FileStorageUploadDownload
         redis.hincrby(token, 'counter', -1)
       end
 
-      if token_data.empty? || token_data['duration'].eql?('shortterm') && counter && counter < 0
+      if token_data.empty? || token_data['duration'].eql?('shortterm') && counter&.negative?
         redis.del(token)
         token_data = {}
       end

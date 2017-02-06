@@ -21,8 +21,8 @@ module API
         raise ActiveRecord::RecordNotFound
       end
 
-      def version_doesnt_exist!(version, id)
-        return unless version.present? && id.present? && !EmployeeFile.find(id).file.exists?(version)
+      def version_doesnt_exist!(version, file_id)
+        return unless version.present? && !EmployeeFile.find(file_id).file.exists?(version)
         message = { version: 'Requested version of the file does not exist' }
         raise InvalidParamTypeError.new(version, message)
       end
