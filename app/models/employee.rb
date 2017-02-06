@@ -50,6 +50,13 @@ class Employee < ActiveRecord::Base
     )
   end)
 
+  def last_event_for(date = Time.zone.today)
+    events
+      .where(event_type: %w(hired contract_end))
+      .where('effective_at <= ?', date)
+      .order(:effective_at).last
+  end
+
   def self.active_employee_ratio_per_account(account_id)
     active_employee_count = Employee.active_by_account(account_id).count
     return if active_employee_count.zero?

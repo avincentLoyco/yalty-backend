@@ -41,5 +41,9 @@ FactoryGirl.define do
         end
       end
     end
+
+    trait :contract_end do
+      event_type 'contract_end'
+    end
   end
 end
