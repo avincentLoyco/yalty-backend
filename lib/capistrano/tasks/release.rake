@@ -33,6 +33,10 @@ namespace :release do
         docker push yalty/backend:#{version}
         git push && git push --tags"
 
+      info 'Create a backup of production database:
+         pg_dump --format=c --clean --if-exists --no-owner --no-privileges --dbname yaltydb \
+         -h 10.128.104.10 -p 5432 -U postgres -W --file dump.pgsql'
+
       info 'Then deploy to production environment:
         cap production deploy'
     end

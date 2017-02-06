@@ -103,6 +103,23 @@ RSpec.describe RelatedPolicyPeriod do
 
             it { expect(subject).to eq(Time.zone.parse('01/04/2007 00:00:03')) }
           end
+
+          context 'when end date is the same day as start day' do
+            let(:end_day) { 1 }
+            let(:end_month) { 1 }
+
+            context 'when years to effect eqal 0' do
+              let(:years_to_effect) { 0 }
+
+              it { expect(subject).to eq(Time.zone.parse('01/01/2006 00:00:03')) }
+            end
+
+            context 'when years to effect eqal 1' do
+              let(:years_to_effect) { 1 }
+
+              it { expect(subject).to eq(Time.zone.parse('01/01/2007 00:00:03')) }
+            end
+          end
         end
 
         context 'validity date in the next year' do
@@ -130,6 +147,29 @@ RSpec.describe RelatedPolicyPeriod do
             let(:years_to_effect) { 2 }
 
             it { expect(subject).to eq(Time.zone.parse('1/4/2009 00:00:03')) }
+          end
+
+          context 'for day before start date' do
+            let(:start_month) { 1 }
+            let(:effective_at) { Date.new(2015, 12, 31) }
+
+            context 'when years to effect eq 0' do
+              let(:years_to_effect) { 0 }
+
+              it { expect(subject).to eq(Time.zone.parse('1/4/2016 00:00:03')) }
+            end
+
+            context 'when years to effect eq 1' do
+              let(:years_to_effect) { 1 }
+
+              it { expect(subject).to eq(Time.zone.parse('1/4/2017 00:00:03')) }
+            end
+
+            context 'when years to effect eq 2' do
+              let(:years_to_effect) { 2 }
+
+              it { expect(subject).to eq(Time.zone.parse('1/4/2018 00:00:03')) }
+            end
           end
         end
       end
