@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-ruby '2.2.2'
+ruby '2.3.3'
 
 gem 'ar_after_transaction', '~> 0.4.1'
 gem 'bcrypt',               '~> 3.1.10'

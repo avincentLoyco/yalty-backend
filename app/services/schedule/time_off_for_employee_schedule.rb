@@ -43,8 +43,9 @@ class TimeOffForEmployeeSchedule
 
   def populate_time_offs_hash_for_many_employees
     time_offs_in_range.each do |time_off|
-      time_offs_hash.merge!(generate_hash_for_time_off(time_off, true)) do |_key, employe_hash_1, employe_hash_2|
-        employe_hash_1.merge!(employe_hash_2) do |_key, val1, val2|
+      time_offs_hash
+        .merge!(generate_hash_for_time_off(time_off, true)) do |_key, employe_hash1, employe_hash2|
+        employe_hash1.merge!(employe_hash2) do |_key, val1, val2|
           val1.push(val2.first)
         end
       end

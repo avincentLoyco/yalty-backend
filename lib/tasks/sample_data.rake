@@ -41,16 +41,18 @@ take yalty:load_sample_data [ACCOUNT_SUBDOMAIN=my-company]
       ActiveRecord::Base.transaction do
         uuid = data.delete(:uuid)
         employee = account.employees.where(id: uuid).first
-        employee = account.employees.create!(id: uuid, working_place: working_place) if employee.nil?
-
-        if employee.events.empty?
-          event = employee.events.create!(
-            effective_at: 1.day.ago,
-            event_type: 'hired'
-          )
-        else
-          event = employee.events.order('id ASC').first
+        if employee.nil?
+          employee = account.employees.create!(id: uuid, working_place: working_place)
         end
+
+        event = if employee.events.empty?
+                  employee.events.create!(
+                    effective_at: 1.day.ago,
+                    event_type: 'hired'
+                  )
+                else
+                  employee.events.order('id ASC').first
+                end
 
         data.each do |key, value|
           attribute = event.employee_attribute_versions

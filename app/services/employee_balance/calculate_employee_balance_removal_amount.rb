@@ -37,7 +37,7 @@ class CalculateEmployeeBalanceRemovalAmount
   def calculate_amount_to_expire
     additions_amounts =
       additions.map { |addition| [addition[:manual_amount], addition[:resource_amount]] }
-    additions_amounts.flatten.select { |value| value > 0 }.sum
+    additions_amounts.flatten.select(&:positive?).sum
   end
 
   def amount_from_previous_balances
@@ -53,7 +53,7 @@ class CalculateEmployeeBalanceRemovalAmount
   def positive_amounts
     balances_in_removal_period
       .where('validity_date > ? OR validity_date IS NULL', removal.effective_at)
-      .pluck(:resource_amount, :manual_amount).flatten.select { |value| value > 0 }.sum
+      .pluck(:resource_amount, :manual_amount).flatten.select(&:positive?).sum
   end
 
   def amount_difference

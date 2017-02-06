@@ -4,7 +4,7 @@ task update_validity_dates: [:environment] do
     grouped_balances(employee).each do |_k, v|
       updated = v.map do |balance|
         next if balance.balance_credit_additions.present? ||
-            validity_date(balance).eql?(balance.validity_date)
+            (validity_date(balance).eql?(balance.validity_date) && balance_has_removal?(balance))
         UpdateEmployeeBalance.new(balance, validity_date: validity_date(balance)).call
         balance
       end.flatten.compact
@@ -15,9 +15,15 @@ task update_validity_dates: [:environment] do
 end
 
 def grouped_balances(employee)
-  employee.employee_balances.order(:effective_at).group_by(&:time_off_category_id)
+  employee.employee_balances.not_removals.order(:effective_at).group_by(&:time_off_category_id)
 end
 
 def validity_date(balance)
   RelatedPolicyPeriod.new(balance.employee_time_off_policy).validity_date_for(balance.effective_at)
+end
+
+def balance_has_removal?(balance)
+  (balance.validity_date.nil? && balance.balance_credit_removal_id.nil?) ||
+    (balance.validity_date.present? && balance.balance_credit_removal_id.present? &&
+      balance.validity_date.eql?(balance.balance_credit_removal.try(:effective_at)))
 end

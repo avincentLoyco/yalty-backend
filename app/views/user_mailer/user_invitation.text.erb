@@ -6,11 +6,8 @@ Yalty is a web application chosen by your company in order to manage several adm
  · Submit your vacation requests and know your remaining balance
  · Keep track of your time-off (sickness, accident, military, maternity leave, etc…
 
-First of all, here are your personal login details:
-
-Your subdomain: <%= subdomain_url_for(@user.account) %>
-Login: <%= @user.email %>
-Password: <%= @user.password %>
+First of all, here is the address to setup your account:
+<%= @login_url %>
 
 You can access your account from any type of device (computer, mobile, ipad,…)
 Should you have any question or if there's anything that's bugging you in the app, even the smallest of issues that could be done better, we want to hear about it. Use the in-app chat tool or send us an email at hello@yalty.io.

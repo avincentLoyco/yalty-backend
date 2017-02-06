@@ -42,8 +42,13 @@ RSpec.describe ManageEmployeeBalanceRemoval, type: :service do
           shared_examples 'No other balances assigned to removal and validity date present' do
             before { policy.update!(years_to_effect: 3) }
 
-            it { expect { subject }.to change { balance.reload.balance_credit_removal_id } }
+            it { expect { subject }.to change { balance.balance_credit_removal_id } }
             it { expect { subject }.to change { Employee::Balance.exists?(removal.id) }.to false }
+            it do
+              subject
+
+              expect(balance.balance_credit_removal_id).to_not be nil
+            end
           end
 
           shared_examples 'Other balance assigned to removal' do
@@ -54,14 +59,16 @@ RSpec.describe ManageEmployeeBalanceRemoval, type: :service do
               end
             end
 
-            it { expect { subject }.to_not change { removal.reload.validity_date } }
+            it { expect { subject }.to_not change { removal.effective_at } }
+            it { expect { subject }.to change { balance.balance_credit_removal_id } }
             it do
-              expect { subject }.to change { removal.reload.balance_credit_additions.count }.by(-1)
+              expect { subject }.to change { removal.balance_credit_additions.count }.by(-1)
             end
             it do
               subject
 
               expect(removal.reload.balance_credit_additions).to include validity_balance
+              expect(removal.reload.balance_credit_additions).to_not include balance
             end
           end
 
@@ -88,7 +95,7 @@ RSpec.describe ManageEmployeeBalanceRemoval, type: :service do
                 expect { subject }.to change { new_removal.balance_credit_additions.count }.by(1)
               end
               it do
-                expect { subject }.to change { balance.reload.balance_credit_removal.id }
+                expect { subject }.to change { balance.balance_credit_removal.id }
                   .to(new_removal.id)
               end
 
@@ -96,10 +103,16 @@ RSpec.describe ManageEmployeeBalanceRemoval, type: :service do
             end
 
             context 'when there is no removal at validity date' do
-              it { expect { subject }.to change { balance.reload.balance_credit_removal } }
+              it { expect { subject }.to change { balance.balance_credit_removal } }
               it { expect { subject }.to change { Employee::Balance.exists?(removal.id) } }
 
               it { expect { subject }.to_not change { Employee::Balance.count } }
+              it do
+                subject
+
+                expect(balance.balance_credit_removal_id).to_not eq removal.id
+                expect(balance.balance_credit_removal_id).to_not eq nil
+              end
 
               it_behaves_like 'Other balance assigned to removal'
             end
@@ -117,7 +130,7 @@ RSpec.describe ManageEmployeeBalanceRemoval, type: :service do
         end
 
         context 'and in future' do
-          let(:validity_date) { Date.today + 1.week + Employee::Balance::REMOVAL_OFFSET }
+          let(:validity_date) { Date.today + 3.months + Employee::Balance::REMOVAL_OFFSET }
 
           context 'and moved to today or earlier' do
             let(:new_date) { Date.today + Employee::Balance::REMOVAL_OFFSET }
@@ -126,15 +139,52 @@ RSpec.describe ManageEmployeeBalanceRemoval, type: :service do
           end
 
           context 'and moved to future' do
-            let(:new_date) { Date.today + 1.month + Employee::Balance::REMOVAL_OFFSET }
+            let(:new_date) { Date.today + 1.year + 3.months + Employee::Balance::REMOVAL_OFFSET }
 
-            it { expect { subject }.to_not change { Employee::Balance.count } }
+            context 'and previously didnt have employee balance removal' do
+
+              it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+              it { expect { subject }.to change { balance.balance_credit_removal_id } }
+            end
+
+            context 'and previous had employee balance removal' do
+              let!(:removal) do
+                create(:employee_balance,
+                  employee: employee, time_off_category: category, effective_at: validity_date,
+                  balance_credit_additions: [balance])
+              end
+
+              it { expect { subject }.to change { Employee::Balance.exists?(removal.id) } }
+              it { expect { subject }.to change { balance.balance_credit_removal_id } }
+              it do
+                subject
+
+                expect(balance.balance_credit_removal_id).to_not eq nil
+              end
+            end
           end
 
           context 'and now not present' do
             let(:new_date) { nil }
 
-            it { expect { subject }.to_not change { Employee::Balance.count } }
+            context 'and balance had balance credit removal' do
+              let!(:removal) do
+                create(:employee_balance,
+                  employee: employee, time_off_category: category, effective_at: validity_date,
+                  balance_credit_additions: [balance])
+              end
+
+              it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
+              it { expect { subject }.to change { Employee::Balance.exists?(removal.id) } }
+              it do
+                expect { subject }.to change { balance.balance_credit_removal_id }.to nil
+              end
+            end
+
+            context 'and balance didnt have balance credit removal' do
+              it { expect { subject }.to_not change { Employee::Balance.count } }
+              it { expect { subject }.to_not change { balance.balance_credit_removal_id } }
+            end
           end
         end
       end
@@ -146,13 +196,26 @@ RSpec.describe ManageEmployeeBalanceRemoval, type: :service do
           let(:new_date) { Date.today + 1.year + Employee::Balance::REMOVAL_OFFSET }
 
           it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+          it { expect { subject }.to change { balance.balance_credit_removal_id } }
         end
 
         context 'and now in past' do
           let(:new_date) { Date.new(2016, 4, 1) - 1.year + Employee::Balance::REMOVAL_OFFSET }
 
           it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+          it { expect { subject }.to change { balance.balance_credit_removal_id } }
         end
+      end
+
+      context 'when new validity date is the same as previous one and balance has removal' do
+        before {
+          create(:employee_balance,
+            employee: employee, time_off_category: category, effective_at: validity_date,
+            balance_credit_additions: [balance])
+        }
+
+        it { expect { subject }.to_not change { Employee::Balance.count } }
+        it { expect { subject }.to_not change { balance.reload.balance_credit_removal_id } }
       end
     end
 

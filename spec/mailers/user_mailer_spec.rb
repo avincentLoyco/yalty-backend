@@ -6,24 +6,22 @@ RSpec.describe UserMailer, type: :mailer do
   context '#account_creation_confirmation' do
     let(:password) { '12345678' }
 
-    subject { UserMailer.account_creation_confirmation(user.id, password).deliver_now }
+    subject { UserMailer.account_creation_confirmation(user.id).deliver_now }
 
     it { expect { subject }.to change { ActionMailer::Base.deliveries.count } }
     it 'email should contain proper password and url' do
-      expect(subject.body.to_s).to include(password)
       expect(subject.body.to_s).to match(/https?:\/\/#{user.account.subdomain}/)
     end
   end
 
-  context '#credentials' do
-    let(:password) { '12345678' }
+  context '#user_invitation' do
+    let(:login_url) { "http://#{user.account.subdomain}.yaltyapp.com/?code=12345678" }
 
-    subject { UserMailer.credentials(user.id, password).deliver_now }
+    subject { UserMailer.user_invitation(user.id, login_url).deliver_now }
 
     it { expect { subject }.to change { ActionMailer::Base.deliveries.count } }
     it 'email should contain proper password and url' do
-      expect(subject.body.to_s).to include(password)
-      expect(subject.body.to_s).to match(/https?:\/\/#{user.account.subdomain}/)
+      expect(subject.body.to_s).to match(/https?:\/\/#{user.account.subdomain}.+code=12345678/)
     end
   end
 

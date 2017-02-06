@@ -66,7 +66,7 @@ class ReferralsController < ApplicationController
       csv << column_names
 
       Referrer.with_referred_accounts_count(from, to).each do |referrer|
-        next unless referrer.referred_accounts_count > 0
+        next unless referrer.referred_accounts_count.positive?
         csv << column_names.map { |attr| referrer.send(attr) }
       end
     end

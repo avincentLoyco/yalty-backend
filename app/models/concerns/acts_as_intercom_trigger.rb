@@ -8,9 +8,9 @@ module ActsAsIntercomTrigger
   end
 
   def trigger_intercom_update
-    case
-    when try(:employee).present? then trigger_from_employee
-    when try(:time_off_category).present? then trigger_from_category
+    return trigger_from_employee if try(:employee).present?
+    if try(:time_off_category).present?
+      trigger_from_category
     else
       trigger_from_self
     end

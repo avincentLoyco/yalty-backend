@@ -29,7 +29,7 @@ class RegisteredWorkingTime < ActiveRecord::Base
 
   def self.manually_created_ratio_per_employee(employee_id)
     all_rwt_for_employee = RegisteredWorkingTime.where(employee_id: employee_id).count
-    return if all_rwt_for_employee == 0
+    return if all_rwt_for_employee.zero?
     manually_created_rwt_for_employee =
       RegisteredWorkingTime.manually_created_by_employee_ordered(employee_id).count
     ((manually_created_rwt_for_employee * 100.0) / all_rwt_for_employee).round(2)
@@ -38,7 +38,7 @@ class RegisteredWorkingTime < ActiveRecord::Base
   def self.manually_created_ratio_per_account(account_id)
     all_rwt_for_account =
       RegisteredWorkingTime.joins(:employee).where(employees: { account_id: account_id }).count
-    return if all_rwt_for_account == 0
+    return if all_rwt_for_account.zero?
     manually_created_rwt_for_account =
       RegisteredWorkingTime.manually_created_by_account_ordered(account_id).count
     ((manually_created_rwt_for_account * 100.0) / all_rwt_for_account).round(2)
