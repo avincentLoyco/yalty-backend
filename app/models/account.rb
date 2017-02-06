@@ -78,7 +78,9 @@ class Account < ActiveRecord::Base
     Attribute::Date.attribute_type => %w(
       birthdate permit_expiry start_date exit_date civil_status_date
     ),
-    Attribute::Number.attribute_type => %w(occupation_rate monthly_payments),
+    Attribute::Number.attribute_type => %w(
+      occupation_rate monthly_payments tax_rate number_of_months
+    ),
     Attribute::Currency.attribute_type => %w(
       annual_salary hourly_salary representation_fees
     ),
