@@ -30,4 +30,11 @@ RSpec.describe EmployeeFile, type: :model do
       expect(employee_file.valid?).to eq true
     end
   end
+
+  context 'processing' do
+    let(:employee_file) { create(:employee_file, :with_jpg) }
+
+    it { expect(employee_file.file_file_name).to eq("file_#{employee_file.id}.jpg") }
+    it { expect(employee_file.file.styles.keys).to include(:thumbnail) }
+  end
 end

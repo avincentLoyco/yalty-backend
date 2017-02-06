@@ -17,7 +17,8 @@ RSpec.describe FileStorageUploadDownload do
 
   subject(:set_token_in_redis) do
     Redis.current.hmset(token, 'file_id', file_id, 'counter', counter, 'file_sha', file_sha,
-      'action_type', action_type, 'file_type', file_type, 'duration', duration)
+      'action_type', action_type, 'file_type', file_type, 'duration', duration,
+      'version', 'original')
   end
 
   subject(:get_token) { Redis.current.hgetall(token) }

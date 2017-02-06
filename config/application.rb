@@ -16,7 +16,10 @@ require 'csv'
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
-Dotenv::Railtie.load if defined?(Dotenv)
+begin
+  Dotenv::Railtie.load
+rescue NameError
+end
 
 module Yalty
   class Application < Rails::Application

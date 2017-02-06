@@ -11,9 +11,10 @@ RSpec.describe RemoveOrphanEmployeeFiles do
   end
 
   describe '#perform' do
+    let(:created_at) { 7.days.ago }
     let(:employee) { create(:employee) }
-    let(:employee_files) { create_list(:employee_file, 2, :with_jpg) }
-    let(:orphan_file) { create(:employee_file, :without_file) }
+    let!(:employee_files) { create_list(:employee_file, 2, :with_jpg, created_at: created_at) }
+    let(:orphan_file) { create(:employee_file, :without_file, created_at: created_at) }
     let!(:employee_attributes) do
       employee_files.each do |file|
         create(:employee_attribute, employee: employee, attribute_type: 'File', data: {
@@ -25,9 +26,6 @@ RSpec.describe RemoveOrphanEmployeeFiles do
       end
     end
 
-    let!(:existing_dirs) do
-      employee_files.map { |f| Rails.application.config.file_upload_root_path.join(f.id) }
-    end
     let(:removed_dir) { Rails.application.config.file_upload_root_path.join(orphan_file.id) }
     let(:dir_path) do
       Rails.application.config.file_upload_root_path.join(orphan_file.id, 'original')
@@ -40,16 +38,10 @@ RSpec.describe RemoveOrphanEmployeeFiles do
 
     before do
       create_orphan_file
-      Timecop.freeze(2.days.from_now)
       described_class.new.perform
     end
 
-    after { Timecop.return }
-
-    it 'check if proper dirs are removed' do
-      expect(Dir.exist?(existing_dirs.first)).to be(true)
-      expect(Dir.exist?(existing_dirs.second)).to be(true)
-      expect(Dir.exist?(removed_dir)).to be(false)
-    end
+    it { expect(Dir.exist?(removed_dir)).to be(false) }
+    it { expect(EmployeeFile.count).to eq(2) }
   end
 end

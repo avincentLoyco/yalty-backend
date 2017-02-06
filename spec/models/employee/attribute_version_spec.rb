@@ -61,7 +61,7 @@ RSpec.describe Employee::AttributeVersion, type: :model do
           let(:data) { {} }
 
           it { expect(subject.valid?).to eq false }
-          [:size, :id, :file_type, :file_sha].map do |attribute|
+          [:size, :id, :file_type, :original_sha].map do |attribute|
             it do
               expect { subject.valid? }.to change { subject.data.errors.messages[attribute] }
                 .to include "can't be blank"
@@ -80,7 +80,7 @@ RSpec.describe Employee::AttributeVersion, type: :model do
         end
 
         context 'and all attribute values given' do
-          let(:data) {{ size: 1000, file_type: 'jpg', id: '12345', file_sha: '123' }}
+          let(:data) {{ size: 1000, file_type: 'jpg', id: '12345', original_sha: '123' }}
 
           it { expect(subject.valid?).to eq true }
           it { expect { subject.valid? }.to_not change { subject.data.errors.messages } }
