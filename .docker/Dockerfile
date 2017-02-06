@@ -60,8 +60,11 @@ RUN set -ex \
     gcc-c++ \
     postgresql-devel \
   ' \
+  && runDeps='\
+    ImageMagick-devel \
+  ' \
   && yum -y update \
-  && yum -y install $buildDeps \
+  && yum -y install $buildDeps $runDeps \
   && yum clean all \
   && rm -rf /var/cache/yum/* \
   \
