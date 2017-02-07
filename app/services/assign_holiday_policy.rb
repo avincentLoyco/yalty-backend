@@ -20,7 +20,7 @@ class AssignHolidayPolicy
 
   def find_or_create_policy
     holiday_policies
-      .where(region: working_place.state).find_or_create_by(country: country_code) do |policy|
+      .where(region: working_place.state).find_or_create_by!(country: country_code) do |policy|
         policy.name = working_place.state.present? ? working_place.state : country_code
         policy.region = working_place.state if working_place.state.present?
       end

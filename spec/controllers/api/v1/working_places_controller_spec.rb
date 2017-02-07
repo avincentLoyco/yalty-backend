@@ -202,6 +202,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
         end
 
         context 'matching holiday policy in account is present' do
+          let(:state) { 'zh' }
           before { account.holiday_policies = [existing_holiday_policy] }
 
           let(:existing_holiday_policy) do
@@ -255,7 +256,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
           context 'response' do
             before { subject }
 
-            it { expect_json(regex('must be filled')) }
+            it { expect_json(regex('only numbers, capital letters, spaces and -')) }
           end
         end
         context 'without country' do
@@ -281,7 +282,6 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
         end
       end
     end
-  end
 
   context 'PUT #update' do
     let(:working_place) { create(:working_place, country: country, city: city, account: account) }
