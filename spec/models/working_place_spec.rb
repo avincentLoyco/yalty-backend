@@ -43,26 +43,6 @@ RSpec.describe WorkingPlace, type: :model do
   it { is_expected.to belong_to(:holiday_policy) }
 
   context 'address and timezone' do
-    before do
-      allow_any_instance_of(WorkingPlace).to receive(:location_attributes) { place_info_result }
-      allow_any_instance_of(WorkingPlace).to receive(:location_timezone) { 'Europe/Zurich' }
-    end
-
-    let(:place_info_result) do
-      loc = Geokit::GeoLoc.new(city: city)
-      loc.country = country
-      loc.country_code = country_code
-      loc.state_code = state_code
-      loc.state_name = state_name
-      loc
-    end
-
-    let(:city) { 'Zurich' }
-    let(:country) { 'Switzerland' }
-    let(:country_code) { 'CH' }
-    let(:state_code) { 'ZH' }
-    let(:state_name) { 'Zurich' }
-
     context 'with valid data' do
       context 'with country with state validation' do
         context 'with region passed' do

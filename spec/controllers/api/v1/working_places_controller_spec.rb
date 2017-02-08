@@ -111,7 +111,6 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
     context 'with valid params' do
       it { expect { subject }.to change { WorkingPlace.count }.by(1) }
       it { expect { subject }.to change { account.reload.working_places.count }.by(1) }
-      it { expect { subject }.to change { holiday_policy.working_places.count }.by(1) }
 
       context 'with country that has region validation' do
         context 'with state specified' do
@@ -185,34 +184,40 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
         it { expect { subject }.to change { WorkingPlace.count }.by(1) }
         it { expect { subject }.to change { account.reload.working_places.count }.by(1) }
 
-        context "matching holiday policy in account isn't present" do
-          it { expect { subject }.not_to change { holiday_policy.working_places.count } }
-          it { expect { subject }.to change { HolidayPolicy.count }.by(1) }
+        context 'with valid region' do
+          let(:state) { 'zh' }
+          context "matching holiday policy in account isn't present" do
+            it { expect { subject }.not_to change { holiday_policy.working_places.count } }
+            it { expect { subject }.to change { HolidayPolicy.count }.by(1) }
 
-          it { expect { subject }.to change { account.working_places.count }.by(1) }
+            it { expect { subject }.to change { account.working_places.count }.by(1) }
 
-          context 'created holiday policy is assigned to working place' do
-            before do
-              HolidayPolicy.all.delete_all
-              subject
+            context 'created holiday policy is assigned to working place' do
+              before do
+                HolidayPolicy.all.delete_all
+                subject
+              end
+
+              it { expect(HolidayPolicy.first.working_places.present?).to eq(true) }
+            end
+          end
+
+          context 'matching holiday policy in account is present' do
+            let(:state) { 'zh' }
+            before { account.holiday_policies = [existing_holiday_policy] }
+
+            let(:existing_holiday_policy) do
+              create :holiday_policy, account: account, country: 'ch', region: 'zh'
             end
 
-            it { expect(HolidayPolicy.first.working_places.present?).to eq(true) }
+            it { expect { subject }.to change { existing_holiday_policy.working_places.count } }
+            it { expect { subject }.not_to change { HolidayPolicy.count } }
           end
+          it { is_expected.to have_http_status(201) }
         end
+      end
 
-        context 'matching holiday policy in account is present' do
-          let(:state) { 'zh' }
-          before { account.holiday_policies = [existing_holiday_policy] }
-
-          let(:existing_holiday_policy) do
-            create :holiday_policy, account: account, country: 'ch', region: 'zh'
-          end
-
-          it { expect { subject }.to change { existing_holiday_policy.working_places.count } }
-          it { expect { subject }.not_to change { HolidayPolicy.count } }
-        end
-        it { is_expected.to have_http_status(201) }
+      context 'with invalid region' do
       end
     end
 
@@ -259,10 +264,15 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
             it { expect_json(regex('only numbers, capital letters, spaces and -')) }
           end
         end
+
         context 'without country' do
           let(:country) { '' }
 
-          it { expect_json(regex('only numbers, capital letters, spaces and -')) }
+          context 'response' do
+            before { subject }
+
+            it { expect_json(regex('must be filled')) }
+          end
         end
       end
 

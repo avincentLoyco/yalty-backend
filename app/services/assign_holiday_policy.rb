@@ -20,9 +20,9 @@ class AssignHolidayPolicy
 
   def find_or_create_policy
     holiday_policies
-      .where(region: working_place.state).find_or_create_by!(country: country_code) do |policy|
-        policy.name = working_place.state.present? ? working_place.state : country_code
-        policy.region = working_place.state if working_place.state.present?
+      .where(region: working_place.state_code).find_or_create_by!(country: country_code) do |policy|
+        policy.name = working_place.state_code.present? ? working_place.state_code : country_code
+        policy.region = working_place.state_code if working_place.state_code.present?
       end
   end
 
@@ -32,6 +32,6 @@ class AssignHolidayPolicy
 
   def country_code
     return nil if working_place.country.nil?
-    ISO3166::Country.find_country_by_name(working_place.country).alpha2.downcase
+    working_place.country_code
   end
 end

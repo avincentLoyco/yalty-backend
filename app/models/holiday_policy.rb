@@ -11,7 +11,7 @@ class HolidayPolicy < ActiveRecord::Base
   validates :country, presence: true, inclusion: { in: :countries, allow_nil: true },
                       if: :country_or_region_present?
 
-  validates :region, presence: true, inclusion: { in: :regions, allow_nil: true },
+  validates :region, presence: true,# inclusion: { in: :regions, allow_nil: true },
                      if: :region_required?
 
   before_save :unset_region, unless: :region_required?
@@ -80,7 +80,7 @@ class HolidayPolicy < ActiveRecord::Base
     ISO3166::Country.translations.keys.map(&:downcase)
   end
 
-  def regions
-    ISO3166::Country.new(country).states.keys.map(&:downcase)
-  end
+  # def regions
+  #   ISO3166::Country.new(country).states.keys.map(&:downcase)
+  # end
 end

@@ -7,8 +7,11 @@ RSpec.describe AssignHolidayPolicy do
     Account.current = working_place.account
   end
 
-  let(:working_place) { build :working_place, country: country, city: city, state: state_code }
+  let(:working_place) do
+    create :working_place, country: country, city: city, state: state_code_param
+  end
   let(:account) { working_place.account }
+  let(:state_code_param) { 'zh' }
 
   context 'with authorized country' do
     context 'when holiday policy is given' do
@@ -28,7 +31,7 @@ RSpec.describe AssignHolidayPolicy do
         before { Account.current.holiday_policies = [holiday_policy] }
 
         let(:holiday_policy) do
-          create :holiday_policy, account: account, country: country_code, region: state_code
+          create :holiday_policy, account: account, country: country_code, region: state_code_param
         end
 
         before { subject }
@@ -40,7 +43,7 @@ RSpec.describe AssignHolidayPolicy do
         before { subject }
 
         it { expect(working_place.holiday_policy).not_to be(nil) }
-        it { expect(working_place.holiday_policy.name).to eq(state_code) }
+        it { expect(working_place.holiday_policy.name).to eq(state_code_param) }
       end
     end
   end
@@ -49,7 +52,7 @@ RSpec.describe AssignHolidayPolicy do
     let(:city) { 'Warsaw' }
     let(:country) { 'Poland' }
     let(:country_code) { 'pl' }
-    let(:state_code) { nil }
+    let(:state_code_param) { nil }
 
     context 'when holiday policy is given' do
       subject { described_class.new(working_place, holiday_policy.id).call }

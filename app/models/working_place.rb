@@ -34,6 +34,10 @@ class WorkingPlace < ActiveRecord::Base
       .first
   }
 
+  def country_code
+    country_data(country).first.alpha2.downcase
+  end
+
   private
 
   def location_attributes
