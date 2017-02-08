@@ -80,7 +80,7 @@ class ApplicationController < ActionController::Base
   end
 
   def invalid_param_type_error(exception)
-    message = { message: exception.message }
+    message = exception.message.is_a?(Hash) ? exception.message : { message: exception.message }
     render json:
       ::Api::V1::ErrorsRepresenter.new(exception.resource, message).complete, status: 422
   end

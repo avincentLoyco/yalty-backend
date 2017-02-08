@@ -19,7 +19,6 @@ class CreateEvent
       find_or_build_employee
       build_employee_working_place
       build_versions
-
       save!
     end
   end
@@ -58,7 +57,7 @@ class CreateEvent
     attributes_params.each do |attribute|
       version = build_version(attribute)
       if version.attribute_definition_id.present?
-        version.value = attribute[:value]
+        version.value = FindValueForAttribute.new(attribute, version).call
         version.multiple = version.attribute_definition.multiple
       end
       @versions << version

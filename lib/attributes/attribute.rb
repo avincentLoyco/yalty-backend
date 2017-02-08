@@ -10,4 +10,5 @@ module Attribute
   autoload :Number,   'attribute/number'
   autoload :Person,   'attribute/person'
   autoload :String,   'attribute/string'
+  autoload :File,     'attribute/file'
 end

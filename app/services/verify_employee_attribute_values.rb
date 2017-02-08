@@ -1,7 +1,8 @@
 class VerifyEmployeeAttributeValues
   include Attributes::PersonSchema, Attributes::StringSchema, Attributes::NumberSchema,
     Attributes::AddressSchema, Attributes::BooleanSchema, Attributes::ChildSchema,
-    Attributes::CurrencySchema, Attributes::DateSchema, Attributes::LineSchema
+    Attributes::CurrencySchema, Attributes::DateSchema, Attributes::LineSchema,
+    Attributes::FileSchema
 
   attr_reader :value, :errors, :type
 
@@ -22,7 +23,7 @@ class VerifyEmployeeAttributeValues
 
   def verify_value
     result = verify_schema
-    return unless result.try(:errors)
+    return unless result.try(:errors).present?
     errors.merge!(result.messages)
   end
 

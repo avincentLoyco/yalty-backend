@@ -16,6 +16,11 @@ require 'csv'
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
+begin
+  Dotenv::Railtie.load
+rescue NameError
+end
+
 module Yalty
   class Application < Rails::Application
     # Settings in config/environments/* take precedence over those specified here.
@@ -100,6 +105,18 @@ module Yalty
 
     # Active Job adapter
     config.active_job.queue_adapter = :sidekiq
+
+    # File upload root path
+    config.file_upload_root_path = begin
+      path = Pathname.new(ENV['FILE_STORAGE_UPLOAD_PATH'] || 'file')
+      path = path.expand_path(File.join(__dir__, '..')) unless path.absolute?
+      path
+    end
+
+    # Match Paperclip path with the one from Rake app
+    config.paperclip_defaults = {
+      path: config.file_upload_root_path.join(':id/:style/:filename').to_s
+    }
   end
 
   #

@@ -65,6 +65,9 @@ RUN set -ex \
     gcc-c++ \
     postgresql94-devel \
   ' \
+  && runDeps='\
+    ImageMagick-devel \
+  ' \
   && cat /etc/yum.repos.d/CentOS-Base.repo \
     | sed -n -f /update-yum-base-config.sed \
     | sed -n -f /update-yum-updates-config.sed \
@@ -72,7 +75,7 @@ RUN set -ex \
   && mv /etc/yum.repos.d/CentOS-Base.repo.new /etc/yum.repos.d/CentOS-Base.repo \
   && yum install -y https://download.postgresql.org/pub/repos/yum/9.4/redhat/rhel-7-x86_64/pgdg-centos94-9.4-3.noarch.rpm \
   && yum -y update \
-  && yum -y install $buildDeps \
+  && yum -y install $buildDeps $runDeps \
   && yum clean all \
   && rm -rf /var/cache/yum/* \
   \

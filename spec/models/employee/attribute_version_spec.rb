@@ -46,6 +46,46 @@ RSpec.describe Employee::AttributeVersion, type: :model do
 
       it { expect(subject.valid?).to eq false }
       it { expect { subject.valid? }.to change { subject.data.errors.messages[:string] } }
+
+      context 'when attribute has more than one key' do
+        let!(:attribute_definition) do
+          create(:employee_attribute_definition, :required, attribute_type: 'File', name: 'File')
+        end
+
+        subject do
+          build(:employee_attribute,
+            attribute_type: 'File', attribute_definition: attribute_definition, data: data)
+        end
+
+        context 'and all attributes values not given' do
+          let(:data) { {} }
+
+          it { expect(subject.valid?).to eq false }
+          [:size, :id, :file_type, :original_sha].map do |attribute|
+            it do
+              expect { subject.valid? }.to change { subject.data.errors.messages[attribute] }
+                .to include "can't be blank"
+            end
+          end
+        end
+
+        context 'when one attribute value not given' do
+          let(:data) {{ size: 1000, file_type: 'jpg', file_sha: '123' }}
+
+          it { expect(subject.valid?).to eq false }
+          it do
+            expect { subject.valid? }.to change { subject.data.errors.messages[:id] }
+              .to include "can't be blank"
+          end
+        end
+
+        context 'and all attribute values given' do
+          let(:data) {{ size: 1000, file_type: 'jpg', id: '12345', original_sha: '123' }}
+
+          it { expect(subject.valid?).to eq true }
+          it { expect { subject.valid? }.to_not change { subject.data.errors.messages } }
+        end
+      end
     end
 
     context 'when attribute is not required' do

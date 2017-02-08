@@ -17,16 +17,21 @@ module API
 
       def create
         verified_dry_params(dry_validation_schema) do |attributes|
+          authorize! :create, Employee::Event.new, attributes.except(:employee_attributes)
+
           verify_employee_attributes_values(attributes[:employee_attributes])
+          unless current_user.account_manager
+            UpdateEventAttributeValidator.new(attributes[:employee_attributes]).call
+          end
           resource = CreateEvent.new(attributes, attributes[:employee_attributes].to_a).call
-          authorize! :create, resource
+
           render_resource(resource, status: :created)
         end
       end
 
       def update
         verified_dry_params(dry_validation_schema) do |attributes|
-          authorize! :update, resource
+          authorize! :update, resource, attributes.except(:employee_attributes)
 
           verify_employee_attributes_values(attributes[:employee_attributes])
           unless current_user.account_manager
