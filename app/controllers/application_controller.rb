@@ -85,8 +85,10 @@ class ApplicationController < ActionController::Base
       ::Api::V1::ErrorsRepresenter.new(exception.resource, message).complete, status: 422
   end
 
-  def destroy_forbidden
+  def destroy_forbidden(exception)
     render json:
-      ::Api::V1::ErrorsRepresenter.new(resource, resource.errors.messages).complete, status: 403
+      ::Api::V1::ErrorsRepresenter.new(
+        exception.record, exception.record.errors.messages
+      ).complete, status: 403
   end
 end

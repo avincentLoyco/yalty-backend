@@ -261,6 +261,50 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
         it_behaves_like 'TimeOff validity date change'
 
+        context 'and there is time off after first etop effective at' do
+          before { etop_2.destroy! }
+
+          let!(:time_off) do
+            create(:time_off,
+              employee: employee, time_off_category: category, end_time: Date.new(2015, 6, 6),
+              start_time: Date.new(2015, 6, 5))
+          end
+          let(:time_off_policy_id) { top_b.id }
+          let(:effective_at) { Date.new(2015, 1, 1) }
+
+          it { expect { subject }.to_not change { TimeOff.count } }
+          it { expect { subject }.to_not change { EmployeeTimeOffPolicy } }
+          it do
+            expect { subject }.to change { employee.reload.employee_time_off_policies.pluck(:id) }
+          end
+          it do
+            expect { subject }
+              .to change { employee.reload.employee_time_off_policies.pluck(:time_off_policy_id) }
+              .to include (top_b.id)
+          end
+
+          it { is_expected.to have_http_status(201) }
+
+          context 'when the same resource assigned' do
+            let(:time_off_policy_id) { top_a.id }
+
+            it { expect { subject }.to_not change { TimeOff.count } }
+            it { expect { subject }.to_not change { EmployeeTimeOffPolicy } }
+            it do
+              expect { subject }
+                .to_not change { employee.reload.employee_time_off_policies.pluck(:id) }
+            end
+            it do
+              expect { subject }.to_not change {
+                employee.reload.employee_time_off_policies.pluck(:time_off_policy_id) }
+            end
+            it do
+              subject
+            end
+            it { is_expected.to have_http_status(422) }
+          end
+        end
+
         context 'it removes duplicated etops and recreate balances' do
           let(:expected_balances_dates) do
             %w(2015-01-01 2015-12-31 2016-01-01 2016-04-01 2016-12-31 2017-01-01
