@@ -42,12 +42,20 @@ class CreateOrUpdateJoinTable
         join_table_resource
       ).call
     remove_policy_assignation_balances(join_tables_to_remove)
+    reassignation = find_reassignation(join_tables_to_remove)
+    join_tables_to_remove.delete(reassignation)
+    reassignation.try(:delete)
     join_tables_to_remove.map(&:destroy!)
   end
 
   def remove_policy_assignation_balances(join_tables_to_remove)
     return unless join_table_class.eql?(EmployeeTimeOffPolicy)
     join_tables_to_remove.map(&:policy_assignation_balance).compact.map(&:destroy!)
+  end
+
+  def find_reassignation(join_tables)
+    return unless join_table_class.eql?(EmployeeTimeOffPolicy)
+    join_tables.find { |table| table[:effective_at].eql?(params[:effective_at]) }
   end
 
   def return_new_current_with_efective_till
