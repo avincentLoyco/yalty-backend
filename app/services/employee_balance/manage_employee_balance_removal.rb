@@ -46,6 +46,7 @@ class ManageEmployeeBalanceRemoval
 
   def validity_date_didnt_changed?
     (new_date.blank? && current_date.blank?) ||
-      new_date.try(:to_date).eql?(current_date.try(:to_date))
+      ((new_date.present? && resource.balance_credit_removal.try(:effective_at).eql?(new_date)) &&
+      new_date.try(:to_date).eql?(current_date.try(:to_date)))
   end
 end

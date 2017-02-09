@@ -6,7 +6,7 @@ notifications:
 bundler_args: "--without production staging review --deployment"
 before_install:
   - rvm @global do gem uninstall bundler -a -x
-  - rvm @global do gem install bundler -v 1.13.2
+  - rvm @global do gem install bundler -v 1.14.3
 before_script:
   - mv tmp/parallel_test/parallel_runtime_rspec.log tmp/parallel_runtime_rspec.log || true
   - bundle exec rake parallel:setup
