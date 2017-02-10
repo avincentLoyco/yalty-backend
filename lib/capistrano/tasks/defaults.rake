@@ -14,6 +14,18 @@ namespace :load do
       end
     }
 
+    set :app_version_sha1, lambda {
+      version = fetch(:app_version)
+      sha1 = nil
+
+      run_locally do
+        sha1, = capture(:git, :'ls-remote', '--heads', 'origin', "releases/#{version}")
+                .split(' ')
+      end
+
+      sha1
+    }
+
     set :rbenv_ruby, lambda {
       path = File.expand_path('../../../Gemfile', __dir__)
       File.read(path).match(/ruby '([^']+)'/)[1]

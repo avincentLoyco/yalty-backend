@@ -2,7 +2,7 @@ server '10.128.102.11', roles: %w(api launchpad worker), primary: true
 
 # Docker tag
 set :docker_tag, -> {
-  fetch(:app_version) + '-rc'
+  [fetch(:app_version), 'rc', fetch(:app_version_sha1)].join('-')
 }
 ask :docker_tag, fetch(:docker_tag)
 
