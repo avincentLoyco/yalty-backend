@@ -1,8 +1,6 @@
 class API::ApplicationController < ApplicationController
   before_action :authenticate!
 
-  etag { current_user.try :id }
-
   def current_user
     @current_user ||= Account::User.current
   end
