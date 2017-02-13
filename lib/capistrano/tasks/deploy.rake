@@ -8,6 +8,7 @@ namespace :deploy do
       invoke 'maintenance:on' if test(:diff, "-qr #{release_path}/db #{current_path}/db")
     end
 
+    invoke 'db:dump'
     invoke 'deploy:rake:before_migrate_database'
 
     on fetch(:migration_server) do

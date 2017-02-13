@@ -26,6 +26,11 @@ namespace :load do
       sha1
     }
 
+    set :db_dump_path, lambda {
+      timestamp = fetch(:release_timestamp, now)
+      File.join(shared_path, 'db', "dump.#{timestamp}.pgsql")
+    }
+
     set :rbenv_ruby, lambda {
       path = File.expand_path('../../../Gemfile', __dir__)
       File.read(path).match(/ruby '([^']+)'/)[1]
