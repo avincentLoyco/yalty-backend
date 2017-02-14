@@ -24,7 +24,7 @@ namespace :deploy do
 
   task :quiet_workers do
     on roles(%w(worker)) do
-      execute(:sudo, '/etc/init.d/app-03 quiet')
+      execute(:sudo, '/etc/init.d/app-03 quiet') if test "[ -d #{current_path} ]"
     end
   end
 
