@@ -2,29 +2,30 @@ class Employee::Event < ActiveRecord::Base
   EVENT_ATTRIBUTES = {
     default: %w(),
     change: %w(),
-    hired: %w(firstname lastname avs_number birthdate gender nationality language),
-    moving_out: %w(address),
-    contact_details_personal: %w(personal_email personal_phone personal_mobile address),
+    hired: %w(firstname lastname birthdate gender personal_email professional_email),
+    moving: %w(address),
+    contact_details_personal: %w(firstname lastname personal_email personal_phone personal_mobile
+                                 address id_card),
     contact_details_professional: %w(professional_email professional_mobile professional_phone),
     contact_details_emergency: %w(emergency_lastname emergency_firstname emergency_phone),
     identity: %w(firstname lastname avs_number birthdate gender nationality language permit_type
-                 permit_expiry),
-    work_permit: %w(permit_type permit_expiry tax_source_code address),
-    bank_account: %w(bank_name account_owner_name iban clearing_number),
-    job_details: %w(job_title start_date exit_date contract_type occupation_rate department
-                    cost_center manager annual_salary hourly_salary representation_fees
-                    monthly_payments avs_number tax_rate number_of_months),
-    wedding: %w(lastname civil_status civil_status_date tax_source_code account_owner_name spouse),
-    divorce: %w(lastname civil_status civil_status_date tax_source_code account_owner_name spouse),
-    partnership: %w(lastname civil_status civil_status_date tax_source_code account_owner_name
-                    spouse),
-    partnership_dissolution: %w(firstname lastname civil_status civil_status_date tax_source_code
-                                account_owner_name spouse),
+                 permit_expiry id_card work_permit profile_picture avs_card),
+    tax_at_source: %w(tax_source_code tax_canton),
+    bank_account: %w(bank_name account_owner_name iban clearing_number bank_account_number),
+    work_contract: %w(job_title contract_type occupation_rate department cost_center manager
+                      annual_salary hourly_salary representation_fees monthly_payments avs_number
+                      tax_rate salary_slip salary_certificate contract),
+    marriage: %w(firstname lastname id_card spouse),
+    divorce: %w(firstname lastname id_card spouse),
+    partnership: %w(firstname lastname id_card spouse),
+    partnership_dissolution: %w(firstname lastname id_card spouse),
     spouse_professional_situation: %w(spouse_is_working spouse_working_region),
-    spouse_death: %w(civil_status civil_status_date tax_source_code spouse),
-    child_birth: %w(tax_source_code child),
-    child_death: %w(tax_source_code child),
-    child_studies: %w(child_is_student child)
+    spouse_death: %w(spouse),
+    child_birth: %w(child),
+    child_death: %w(child),
+    partner_death: %w(spouse),
+    child_studies: %w(child),
+    end_of_contract: %w()
   }.with_indifferent_access
 
   belongs_to :employee, inverse_of: :events, required: true

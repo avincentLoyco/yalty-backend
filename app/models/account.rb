@@ -72,18 +72,12 @@ class Account < ActiveRecord::Base
       personal_phone professional_email professional_mobile emergency_lastname
       emergency_firstname emergency_phone permit_type tax_source_code bank_name
       account_owner_name iban clearing_number job_title contract_type department
-      cost_center manager civil_status spouse_working_region professional_phone
-      personal_mobile
+      cost_center manager spouse_working_region professional_phone personal_mobile
+      spouse_is_working bank_account_number tax_canton
     ),
-    Attribute::Date.attribute_type => %w(
-      birthdate permit_expiry start_date exit_date civil_status_date
-    ),
-    Attribute::Number.attribute_type => %w(
-      occupation_rate monthly_payments tax_rate number_of_months
-    ),
-    Attribute::Currency.attribute_type => %w(
-      annual_salary hourly_salary representation_fees
-    ),
+    Attribute::Date.attribute_type => %w(birthdate permit_expiry),
+    Attribute::Number.attribute_type => %w(occupation_rate monthly_payments tax_rate),
+    Attribute::Currency.attribute_type => %w(annual_salary hourly_salary representation_fees),
     Attribute::Address.attribute_type => %w(address),
     Attribute::Child.attribute_type => %w(child),
     Attribute::Person.attribute_type => %w(spouse),
