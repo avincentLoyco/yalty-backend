@@ -15,3 +15,31 @@ ask :release_candidate_version, proc {
     'VERSION file cannot be incremented'
   end
 }
+
+# Sync database with production dump
+ask :local_database_dump_path, 'tmp/dump.production.pgsql'
+
+desc 'Sync database from tmp/dump.production.pgsql'
+task :sync do
+  raise 'Do not run this task outside of staging environment' unless fetch(:stage) == 'staging'
+
+  on fetch(:migration_server) do
+    uri = URI.parse(capture('echo $DATABASE_URL'))
+    dump_path = fetch(:db_dump_path)
+    local_path = fetch(:local_database_dump_path)
+
+    with pg_password: uri.password do
+      info "Restore database from #{local_path}"
+
+      execute :mkdir, '-p', File.dirname(dump_path)
+      upload! local_path, dump_path
+      execute :pg_restore, '--format=c --clean --if-exists --no-owner --no-privileges',
+        "--dbname #{uri.path[1..-1]}",
+        "-h #{uri.host} -p #{uri.port}",
+        "-U #{uri.user}",
+        dump_path
+
+      execute :rake, :setup
+    end
+  end
+end
