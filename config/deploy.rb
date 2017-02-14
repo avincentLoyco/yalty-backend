@@ -8,6 +8,7 @@ set :backend_service_name, 'app-02'
 set :worker_service_name, 'app-03'
 
 set :linked_dirs, %w(
+  files
   log
   tmp/pids
 )
