@@ -15,7 +15,7 @@ class CreateCompletePresencePolicy
           presence_policie.presence_days.new(presence_day_params.permit(:minutes, :order))
         verify_and_save(presence_day)
 
-        next if time_entries_params.empty?
+        next unless time_entries_params.present?
         time_entries_params.each do |time_entry_params|
           time_entry =
             presence_day.time_entries.new(time_entry_params.permit(:start_time, :end_time))
