@@ -1,6 +1,11 @@
 class Employee < ActiveRecord::Base
   include ActsAsIntercomTrigger
 
+  CIVIL_STATUS = { 'marriage' => 'married', 'divorce' => 'divorced',
+                   'partnership' => 'registered partnership', 'spouse_death' => 'widowed',
+                   'partnership_dissolution' => 'dissolved partnership',
+                   'partner_death' => 'dissolved partnership due to death' }.freeze
+
   belongs_to :account, inverse_of: :employees, required: true
   belongs_to :user, class_name: 'Account::User', foreign_key: :account_user_id
   has_many :employee_attribute_versions,
@@ -57,12 +62,22 @@ class Employee < ActiveRecord::Base
     employee_working_places.find_by(effective_at: employee_working_places.pluck(:effective_at).min)
   end
 
+  def civil_status_for(date = Time.zone.today)
+    civil_status_event = last_civil_status_event_for(date)
+    return 'single' unless civil_status_event
+    CIVIL_STATUS[civil_status_event.event_type]
+  end
+
+  def civil_status_date_for(date = Time.zone.today)
+    last_civil_status_event_for(date).try(:effective_at)
+  end
+
   def first_employee_event
-    events.find_by(event_type: 'hired')
+    events.find_by(event_type: 'hired') || events.find { |event| event.event_type.eql?('hired' ) }
   end
 
   def hired_date
-    (first_employee_event || events.first).try(:effective_at).try(:to_date)
+    first_employee_event.try(:effective_at)
   end
 
   def active_policy_in_category_at_date(category_id, date = Time.zone.today)
@@ -118,5 +133,12 @@ class Employee < ActiveRecord::Base
   def hired_event_presence
     return if events && events.map(&:event_type).include?('hired')
     errors.add(:events, 'Employee must have hired event')
+  end
+
+  def last_civil_status_event_for(date)
+    @last_civil_status_event_for ||=
+      events
+      .where('event_type IN (?) AND effective_at <= ?',  CIVIL_STATUS.keys, date)
+      .order(:effective_at).last
   end
 end

@@ -37,6 +37,14 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
             assignation_id: employee_working_place.id
           )
         end
+
+        it 'has civil status date, civil status and hired date in json' do
+          expect_json(
+            civil_status: 'single',
+            civil_status_date: nil,
+            hired_date: employee.hired_date.to_s
+          )
+        end
       end
 
       context 'when future policy is now active one' do

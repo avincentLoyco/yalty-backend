@@ -1,8 +1,22 @@
 namespace :attribute_definitions do
   desc 'Creates missing attribute definitions for account'
+
+  task update: :environment do
+    puts 'Removing unused attribute definitions'
+    Rake::Task['attribute_definitions:remove_not_used'].invoke
+
+    puts 'Creating new definitions'
+    Rake::Task['attribute_definitions:create_missing'].invoke
+  end
+
+  task remove_not_used: :environment do
+    ids_to_remove = Employee::AttributeDefinition.where(name: definitions_to_remove).pluck(:id)
+    Employee::AttributeVersion.where(attribute_definition_id: ids_to_remove).destroy_all
+    Employee::AttributeDefinition.where(id: ids_to_remove).destroy_all
+  end
+
   task create_missing: :environment do
     Account.all.each do |account|
-      account.employee_attribute_definitions.where(name: definitions_to_remove).destroy_all
       account.update_default_attribute_definitions! unless all_attribute_definitions?(account)
     end
   end

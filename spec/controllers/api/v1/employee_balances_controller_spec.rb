@@ -9,7 +9,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
   let(:previous_end) { previous_start + policy.years_to_effect.years }
   let(:employee) { create(:employee, account: account) }
   let!(:etop) do
-    create(:employee_time_off_policy, effective_at: employee.first_employee_event.effective_at,
+    create(:employee_time_off_policy, effective_at: employee.hired_date,
       employee: employee)
   end
   let(:policy_category) do
