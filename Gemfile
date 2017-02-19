@@ -21,6 +21,7 @@ gem 'scenic',               '~> 1.1.0'
 gem 'timezone',             '~> 1.2.3'
 gem 'tod',                  '~> 2.0.2'
 gem 'virtus',               '~> 1.0.5'
+gem 'stripe',               '~> 2.0.0'
 
 # background jobs
 gem 'sidekiq',              '~> 4.2.3'
