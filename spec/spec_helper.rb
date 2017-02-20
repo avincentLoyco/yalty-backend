@@ -3,7 +3,7 @@ ENV["RAILS_ENV"] ||= 'test'
 
 # Ensure that FILE_STORAGE_UPLOAD_PATH environment variable include parallel test
 # number to avoid usage of same storage directory on each parallel test process.
-ENV['FILE_STORAGE_UPLOAD_PATH'] += ENV['TEST_ENV_NUMBER']
+ENV['FILE_STORAGE_UPLOAD_PATH'] += ENV['TEST_ENV_NUMBER'] unless ENV['TEST_ENV_NUMBER'].nil?
 
 # Load simplecov if coverage is enable
 require 'simplecov'
