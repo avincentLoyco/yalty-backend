@@ -4,6 +4,9 @@ Rails.application.routes.draw do
   # API
   namespace :api, path: '', constraints: { subdomain: /^api/ } do
     namespace :v1 do
+      namespace :payments do
+        resources 'cards', except: [:show, :update]
+      end
       resources :working_places, except: [:edit, :new] do
         post '/employees', to: "employee_working_places#create"
         get '/employees', to: "employee_working_places#index"
