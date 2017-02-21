@@ -5,9 +5,9 @@ RSpec.describe WorkingPlace, type: :model do
   include_context 'shared_context_geoloc_helper'
 
   shared_examples 'Invalid Address' do
-    it { expect(subject.valid?).to eq false }
-    it { expect { subject.valid? }.to change { subject.errors.messages[:address] } }
-    it { expect(subject.timezone).to be_nil }
+    it { expect(subject).to_not be_valid }
+    it { expect(subject.errors).to have_key(:address) }
+    it { expect(subject.errors[:address]).to include('not found') }
   end
 
   it { is_expected.to have_db_column(:name) }
@@ -43,133 +43,183 @@ RSpec.describe WorkingPlace, type: :model do
   it { is_expected.to belong_to(:holiday_policy) }
 
   context 'address and timezone' do
-    context 'with valid data' do
-      context 'with country with state validation' do
-        context 'with region passed' do
-          subject { create(:working_place, :with_address, state: state_name) }
+    before { subject.validate }
 
-          it { expect(subject.valid?).to eq true }
-          it { expect { subject.valid? }.not_to change { subject.errors.messages[:address] } }
+    context 'with valid data' do
+      let(:city) { 'Zurich' }
+      let(:country) { 'Switzerland' }
+      let(:country_code) { 'CH' }
+      let(:state_name) { 'Zurich' }
+      let(:state_code) { 'ZH' }
+      let(:timezone) { 'Europe/Zurich' }
+
+      context 'for a country with state validation' do
+        context 'passing city, state and country' do
+          subject { build(:working_place, city: city, state: state_name, country: country) }
+
+          it { expect(subject).to be_valid }
           it { expect(subject.state).to eq('Zurich') }
           it { expect(subject.state_code).to eq('zh') }
+          it { expect(subject.timezone).to eql('Europe/Zurich') }
         end
 
-        context 'with region not passed' do
-          subject { create(:working_place, :with_address) }
+        context 'passing city and country' do
+          subject { build(:working_place, city: city, country: country) }
 
-          it { expect(subject.valid?).to eq true }
-          it { expect { subject.valid? }.not_to change { subject.errors.messages[:address] } }
-          it { expect(subject.state).to eq(state_code) }
-          it { expect(subject.state_code).to eq(state_code.downcase) }
+          it { expect(subject).to be_valid }
+          it { expect(subject.state).to eq('ZH') }
+          it { expect(subject.state_code).to eq('zh') }
+          it { expect(subject.timezone).to eql('Europe/Zurich') }
         end
 
-        context 'with not english country name' do
-          subject { create(:working_place, country: 'Suisse', city: 'Genf') }
-          let(:state_name) { 'Geneve' }
+        context 'passing non english country name' do
+          subject { build(:working_place, city: city, country: 'Suisse') }
+
+          it { expect(subject).to be_valid }
+          it { expect(subject.state).to eq('ZH') }
+          it { expect(subject.state_code).to eq('zh') }
+          it { expect(subject.timezone).to eql('Europe/Zurich') }
+        end
+
+        context 'passing exotic english country name' do
+          subject { build(:working_place, city: city, country: 'Szwajcaria') }
+
+          it { expect(subject).to be_valid }
+          it { expect(subject.state).to eq('ZH') }
+          it { expect(subject.state_code).to eq('zh') }
+          it { expect(subject.timezone).to eql('Europe/Zurich') }
+        end
+
+        context 'passing non english city name' do
+          subject { create(:working_place, city: 'Genf', country: country) }
+          let(:city) { 'Geneva' }
+          let(:state_name) { 'Geneva' }
           let(:state_code) { 'GE' }
 
-          it { expect(subject.valid?).to eq true }
-          it { expect { subject.valid? }.not_to change { subject.errors.messages[:address] } }
-          it { expect(subject.state).to eq(state_code) }
+          it { expect(subject).to be_valid }
+          it { expect(subject.state).to eq('GE') }
           it { expect(subject.state_code).to eq('ge') }
+          it { expect(subject.timezone).to eql('Europe/Zurich') }
+        end
+
+        context 'passing state code' do
+          subject { create(:working_place, city: 'Lausanne', state: 'VD', country: country) }
+          let(:city) { 'Lausanne' }
+          let(:state_name) { 'Vaud' }
+          let(:state_code) { 'VD' }
+
+          it { expect(subject).to be_valid }
+          it { expect(subject.state).to eq('VD') }
+          it { expect(subject.state_code).to eq('vd') }
+          it { expect(subject.timezone).to eql('Europe/Zurich') }
         end
       end
 
       context 'with country without state validation' do
-        let(:country) { 'Poland' }
         let(:city) { 'Rzeszow' }
         let(:state_name) { 'Podkarpackie Voivodeship' }
         let(:state_code) { 'Podkarpackie Voivodeship' }
+        let(:country) { 'Poland' }
         let(:country_code) { 'PL' }
+        let(:timezone) { 'Europe/Warsaw' }
 
-        %w(Podkarpacie asdf).each do |current_state|
-          let(:state) { current_state }
+        context 'passing city and wrong region' do
+          subject { build(:working_place, city: city, state: 'Podkarpacie', country: country) }
 
-          subject { create(:working_place, country: 'Polska', city: 'Rzeszow', state: state) }
-
-          it { expect(subject.valid?).to eq true }
-          it { expect { subject.valid? }.not_to change { subject.errors.messages[:address] } }
-          it { expect(subject.state).to eq(state) }
+          it { expect(subject).to be_valid }
+          it { expect(subject.errors).to_not have_key(:address) }
+          it { expect(subject.state).to eq('Podkarpacie') }
           it { expect(subject.state_code).to eq('podkarpackie voivodeship') }
+          it { expect(subject.timezone).to eql('Europe/Warsaw') }
         end
 
-        context 'without state specified' do
-          subject { create(:working_place, country: 'Polska', city: 'Rzeszow', state: nil) }
+        context 'passing city' do
+          subject { create(:working_place, city: city, country: country) }
 
-          it { expect(subject.valid?).to eq true }
-          it { expect { subject.valid? }.not_to change { subject.errors.messages[:address] } }
-          it { expect(subject.state).to eq('Podkarpackie Voivodeship') }
+          it { expect(subject).to be_valid }
+          it { expect(subject.errors).to_not have_key(:address) }
+          it { expect(subject.state).to be_nil }
           it { expect(subject.state_code).to eq('podkarpackie voivodeship') }
+          it { expect(subject.timezone).to eql('Europe/Warsaw') }
         end
       end
     end
 
     context 'with invalid data' do
-      subject { build(:working_place, :with_address) }
+      let(:city) { nil }
+      let(:country) { nil }
+      let(:country_code) { nil }
+      let(:state_name) { nil }
+      let(:state_code) { nil }
 
-      context "with country that dosen't exist" do
-        subject { build(:working_place, country: 'asdf', city: 'asdf') }
-        let(:country) { nil }
+      context "passing country that dosen't exist" do
+        subject { build(:working_place, city: 'Zurich', country: 'NotACountry') }
 
         it_behaves_like 'Invalid Address'
 
-        it do
-          expect { subject.valid? }
-            .to change { subject.errors[:country] }
-            .to include 'does not exist'
-        end
+        it { expect(subject.errors).to_not have_key(:state) }
+        it { expect(subject.errors).to have_key(:country) }
+        it { expect(subject.errors[:country]).to include('does not exist') }
 
-        it do
-          expect { subject.valid? }.to change { subject.errors[:address] }.to include 'not found'
-        end
+        it { expect(subject.state).to be_nil }
+        it { expect(subject.state_code).to be_nil }
+        it { expect(subject.timezone).to be_nil }
       end
 
-      context 'with invalid country' do
-        let(:city) { 'asdf' }
-        let(:country) { 'asdf' }
+      context "passing city that dosen't exist" do
+        subject { build(:working_place, city: 'NotACity', country: 'Switzerland') }
 
         it_behaves_like 'Invalid Address'
 
-        it do
-          expect { subject.valid? }.to change { subject.errors[:address] }.to include 'not found'
-        end
+        it { expect(subject.errors).to_not have_key(:state) }
+        it { expect(subject.errors).to_not have_key(:country) }
+
+        it { expect(subject.state).to be_nil }
+        it { expect(subject.state_code).to be_nil }
+        it { expect(subject.timezone).to be_nil }
       end
 
-      context 'with invalid city' do
-        let(:city) { 'asdf' }
-        let(:country) { nil }
+      context "passing city that dosen't exist in country" do
+        subject { build(:working_place, city: 'Paris', country: 'Switzerland') }
+
+        let(:city) { 'Paris' }
+        let(:country) { 'France' }
+        let(:country_code) { 'FR' }
+        let(:state_name) { 'Île-de-France' }
+        let(:state_code) { 'Île-de-France' }
+        let(:timezone) { 'Paris/Europe' }
 
         it_behaves_like 'Invalid Address'
 
-        it do
-          expect { subject.valid? }.to change { subject.errors[:address] }.to include 'not found'
-        end
-      end
+        it { expect(subject.errors).to_not have_key(:state) }
+        it { expect(subject.errors).to_not have_key(:country) }
 
-      context 'with city that does not exist' do
-        let(:city) { nil }
-
-        it_behaves_like 'Invalid Address'
-
-        it do
-          expect { subject.valid? }.to change { subject.errors[:address] }.to include 'not found'
-        end
+        it { expect(subject.state).to be_nil }
+        it { expect(subject.state_code).to be_nil }
+        it { expect(subject.timezone).to be_nil }
       end
 
       context 'with country that has state validation' do
-        %w(GE Iowa).each do |current_state|
-          let(:state) { current_state }
+        context "passing state that doesn't exist" do
+          subject { build(:working_place, city: city, state: 'Wrong', country: country) }
 
-          subject { build(:working_place, :with_address, state: 'state') }
+          let(:city) { 'Zurich' }
+          let(:country) { 'Switzerland' }
+          let(:country_code) { 'CH' }
+          let(:state_name) { 'Zurich' }
+          let(:state_code) { 'ZH' }
+          let(:timezone) { 'Zurich/Europe' }
 
-          it { expect(subject.valid?).to eq false }
-          it { expect(subject.timezone).to be_nil }
+          it { expect(subject).to_not be_valid }
 
-          it do
-            expect { subject.valid? }
-              .to change { subject.errors[:state] }
-              .to include 'does not match given address'
-          end
+          it { expect(subject.errors).to_not have_key(:address) }
+          it { expect(subject.errors).to have_key(:state) }
+          it { expect(subject.errors[:state]).to include('does not match given address') }
+          it { expect(subject.errors).to_not have_key(:country) }
+
+          it { expect(subject.state).to eql('Wrong') }
+          it { expect(subject.state_code).to eql('zh') }
+          it { expect(subject.timezone).to eq('Zurich/Europe') }
         end
       end
     end

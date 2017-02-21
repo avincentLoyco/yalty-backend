@@ -1,7 +1,6 @@
 require 'rails_helper'
 
 RSpec.describe API::V1::WorkingPlacesController, type: :controller do
-
   include_context 'shared_context_geoloc_helper'
   include_context 'example_authorization',
     resource_name: 'working_place'
@@ -20,27 +19,12 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
       working_place: first_working_place, effective_at: Time.now - 6.months)
   end
 
-  before do
-    allow_any_instance_of(WorkingPlace).to receive(:location_attributes) { place_info_result }
-    allow_any_instance_of(WorkingPlace).to receive(:location_timezone) { timezone }
-  end
-
-  let(:place_info_result) do
-    loc = Geokit::GeoLoc.new(city: city)
-    loc.country = country
-    loc.country_code = country_code
-    loc.state_code = state_code
-    loc.state_name = state_name
-    loc
-  end
-
-  let(:timezone) { 'Europe/Zurich' }
-
   let(:city) { 'Zurich' }
   let(:country) { 'Switzerland' }
   let(:country_code) { 'CH' }
-  let(:state_code) { 'ZH' }
   let(:state_name) { 'Zurich' }
+  let(:state_code) { 'ZH' }
+  let(:timezone) { 'Europe/Zurich' }
 
   context 'GET #index' do
     subject { get :index }
@@ -160,7 +144,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
 
             it { expect_json(regex(city)) }
             it { expect_json(regex(timezone)) }
-            it { expect_json('state', state_code) }
+            it { expect_json('state', nil) }
           end
         end
       end
