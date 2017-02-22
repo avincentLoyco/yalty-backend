@@ -47,7 +47,7 @@ class Employee < ActiveRecord::Base
 
   def self.active_employee_ratio_per_account(account_id)
     active_employee_count = Employee.active_by_account(account_id).count
-    return if active_employee_count == 0
+    return if active_employee_count.zero?
     active_user_count = Employee.active_user_by_account(account_id).count
     ((active_user_count * 100.0) / active_employee_count).round(2)
   end
@@ -89,7 +89,31 @@ class Employee < ActiveRecord::Base
     EmployeeTimeOffPolicy.not_assigned_at(date).by_employee_in_category(id, category_id).limit(2)
   end
 
+  def file_with?(file_id)
+    employee_file_ids.include?(file_id)
+  end
+
+  def employee_files
+    EmployeeFile.where(id: employee_file_ids)
+  end
+
+  def total_amount_of_data
+    employee_attribute_versions
+      .where("data -> 'attribute_type' = 'File'")
+      .sum("(data -> 'size')::integer") / 1024.0
+  end
+
+  def number_of_files
+    employee_attribute_versions.where("data -> 'attribute_type' = 'File'").count
+  end
+
   private
+
+  def employee_file_ids
+    employee_attribute_versions
+      .where("data -> 'attribute_type' = 'File'")
+      .pluck("data -> 'id'")
+  end
 
   def hired_event_presence
     return if events && events.map(&:event_type).include?('hired')

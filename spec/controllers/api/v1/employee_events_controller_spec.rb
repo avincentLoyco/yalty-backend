@@ -12,6 +12,14 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       attribute_type: 'Address'
     )
   end
+  let(:attribute_name) { 'profile_picture' }
+  let!(:file_definition) do
+    create(:employee_attribute_definition, :required,
+      account: Account.current,
+      name: attribute_name,
+      attribute_type: 'File'
+    )
+  end
 
   let!(:employee) do
     create(:employee_with_working_place, :with_attributes,
@@ -227,6 +235,30 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         it { expect { subject }.not_to change { EmployeeWorkingPlace.count } }
       end
 
+      context 'when file type attribute send' do
+        let(:employee_file) { create(:employee_file) }
+
+        before do
+          allow_any_instance_of(EmployeeFile).to receive(:find_file_path) do
+            ["#{Rails.root}/spec/fixtures/files/test.jpg"]
+          end
+          json_payload[:employee_attributes].push(
+            {
+              type: 'employee_attribute',
+              attribute_name: file_definition.name,
+              value: employee_file.id
+            }
+          )
+        end
+
+        it { expect { subject }.to change { employee_file.reload.file_content_type } }
+        it { expect { subject }.to change { employee_file.reload.file_file_size } }
+        it { expect { subject }.to change { Employee.count } }
+        it { expect { subject }.to change { Employee::Event.count } }
+
+        it { is_expected.to have_http_status(201) }
+      end
+
       it 'should respond with success' do
         expect(subject).to have_http_status(201)
       end
@@ -305,6 +337,13 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         json_payload[:employee][:working_place_id] = nil
 
         expect(subject).to have_http_status(422)
+      end
+
+      it 'should not create event and attribute definitions when user is not an account manager' do
+        Account::User.current.update!(role: 'user')
+
+        expect { subject }.to_not change { Employee::Event.count }
+        expect { subject }.to_not change { Employee::AttributeVersion.count }
       end
 
       context 'attributes validations' do
@@ -394,6 +433,52 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         it 'should respond with success' do
           expect(subject).to have_http_status(201)
         end
+
+        context 'when account manager wants to upload a file' do
+          let(:employee_file) { create(:employee_file) }
+
+          before do
+            allow_any_instance_of(EmployeeFile).to receive(:find_file_path) do
+              ["#{Rails.root}/spec/fixtures/files/test.jpg"]
+            end
+            json_payload[:employee_attributes].push(
+              {
+                type: 'employee_attribute',
+                attribute_name: file_definition.name,
+                value: employee_file.id
+              }
+            )
+          end
+
+          it { expect { subject }.to change { employee_file.reload.file_file_size } }
+          it { expect { subject }.to change { employee_file.reload.file_content_type } }
+          it { expect { subject }.to change { Employee::AttributeVersion.count } }
+          it { expect { subject }.to change { Employee::Event.count } }
+
+          it { is_expected.to have_http_status(201) }
+
+          context 'when owner wants to upload a file' do
+            before { Account::User.current.update!(role: 'user') }
+
+            it { expect { subject }.to change { employee_file.reload.file_file_size } }
+            it { expect { subject }.to change { employee_file.reload.file_content_type } }
+            it { expect { subject }.to change { Employee::AttributeVersion.count } }
+            it { expect { subject }.to change { Employee::Event.count } }
+
+            it { is_expected.to have_http_status(201) }
+
+            context 'and file type is forbidden for him' do
+              let(:attribute_name) { 'salary_slip' }
+
+              it { expect { subject }.to_not change { employee_file.reload.file_file_size } }
+              it { expect { subject }.to_not change { employee_file.reload.file_content_type } }
+              it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
+              it { expect { subject }.to_not change { Employee::Event.count } }
+
+              it { is_expected.to have_http_status(403) }
+            end
+          end
+        end
       end
 
       context 'with same content for attributes' do
@@ -457,6 +542,19 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           it 'should respond with 404' do
             expect(subject).to have_http_status(404)
           end
+        end
+
+        context 'when employee wants to create event for other employee' do
+          before do
+            Account::User.current.update!(
+              employee: create(:employee, account: account), role: 'user'
+            )
+          end
+
+          it { expect { subject }.to_not change { Employee::Event.count } }
+          it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
+
+          it { is_expected.to have_http_status(403) }
         end
       end
 
@@ -674,6 +772,72 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         expect(subject).to have_http_status(204)
       end
     end
+
+    context 'when account user wants to add file' do
+      let(:employee_file) { create(:employee_file) }
+
+      before do
+        json_payload[:employee_attributes].pop
+        allow_any_instance_of(EmployeeFile).to receive(:find_file_path) do
+          ["#{Rails.root}/spec/fixtures/files/test.jpg"]
+        end
+        json_payload[:employee_attributes].push(
+          {
+            type: 'employee_attribute',
+            attribute_name: file_definition.name,
+            value: employee_file.id
+          }
+        )
+      end
+
+      it { expect { subject }.to change { employee_file.reload.file_content_type  } }
+      it { expect { subject }.to change { employee_file.reload.file_file_size } }
+      it { expect { subject }.to change { last_name_attribute.reload.value } }
+      it { expect { subject }.to change { first_name_attribute.reload.value } }
+
+      it { is_expected.to have_http_status(204) }
+
+      context 'and he is not an account manager' do
+        before do
+          Account::User.current = create(:account_user, account: account, employee: employee)
+        end
+
+        it { expect { subject }.to change { employee_file.reload.file_content_type  } }
+        it { expect { subject }.to change { employee_file.reload.file_file_size } }
+        it { expect { subject }.to change { Employee::AttributeVersion.count } }
+
+        it { is_expected.to have_http_status(204) }
+
+        context 'and its is in forbidden type' do
+          let(:attribute_name) { 'salary_slip' }
+
+          it { expect { subject }.to_not change { employee_file.reload.file_content_type  } }
+          it { expect { subject }.to_not change { employee_file.reload.file_file_size } }
+          it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
+
+          it { is_expected.to have_http_status(403) }
+
+          it 'has valid error in response body' do
+            subject
+
+            expect(response.body).to include 'Not authorized!'
+          end
+        end
+
+        context 'and he wants to update event of other employee' do
+          before do
+            Account::User.current = create(:account_user, account: account)
+          end
+
+          it { expect { subject }.to_not change { employee_file.reload.file_content_type  } }
+          it { expect { subject }.to_not change { employee_file.reload.file_file_size } }
+          it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
+
+          it { is_expected.to have_http_status(403) }
+        end
+      end
+    end
+
     context 'when effective_at changes' do
       context 'and event is first employee event' do
         let(:effective_at) { Time.now + 3.months }

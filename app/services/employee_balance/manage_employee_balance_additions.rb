@@ -1,7 +1,8 @@
 class ManageEmployeeBalanceAdditions
-  attr_reader :resource, :employee, :effective_at, :balances, :effective_till
+  attr_reader :resource, :employee, :effective_at, :balances, :effective_till, :update
 
-  def initialize(resource)
+  def initialize(resource, update = true)
+    @update = update
     @resource = resource
     @employee = resource.employee
     @effective_at = resource.effective_at
@@ -13,7 +14,9 @@ class ManageEmployeeBalanceAdditions
     return if RelatedPolicyPeriod.new(resource).first_start_date > effective_till
     ActiveRecord::Base.transaction do
       create_additions_with_removals
-      PrepareEmployeeBalancesToUpdate.new(balances.flatten.first).call if balances.flatten.present?
+      if update && balances.flatten.present?
+        PrepareEmployeeBalancesToUpdate.new(balances.flatten.first).call
+      end
     end
     check_amount_and_update_balances
   end
@@ -21,7 +24,7 @@ class ManageEmployeeBalanceAdditions
   private
 
   def check_amount_and_update_balances
-    if balances.flatten.present? &&
+    if update && balances.flatten.present? &&
         balances.flatten.map { |b| [b[:manual_amount], b[:resource_amount]] }.flatten.uniq != [0]
       ActiveRecord::Base.after_transaction do
         UpdateBalanceJob.perform_later(balances.flatten.first)

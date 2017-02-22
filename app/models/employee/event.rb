@@ -4,23 +4,27 @@ class Employee::Event < ActiveRecord::Base
     change: %w(),
     hired: %w(firstname lastname avs_number birthdate gender nationality language),
     moving_out: %w(address),
-    contact_details_personal: %w(personal_email personal_phone personal_mobile),
+    contact_details_personal: %w(personal_email personal_phone personal_mobile address),
     contact_details_professional: %w(professional_email professional_mobile professional_phone),
     contact_details_emergency: %w(emergency_lastname emergency_firstname emergency_phone),
-    work_permit: %w(permit_type permit_expiry tax_source_code),
+    identity: %w(firstname lastname avs_number birthdate gender nationality language permit_type
+                 permit_expiry),
+    work_permit: %w(permit_type permit_expiry tax_source_code address),
     bank_account: %w(bank_name account_owner_name iban clearing_number),
     job_details: %w(job_title start_date exit_date contract_type occupation_rate department
                     cost_center manager annual_salary hourly_salary representation_fees
-                    monthly_payments),
+                    monthly_payments avs_number tax_rate number_of_months),
     wedding: %w(lastname civil_status civil_status_date tax_source_code account_owner_name spouse),
     divorce: %w(lastname civil_status civil_status_date tax_source_code account_owner_name spouse),
     partnership: %w(lastname civil_status civil_status_date tax_source_code account_owner_name
                     spouse),
+    partnership_dissolution: %w(firstname lastname civil_status civil_status_date tax_source_code
+                                account_owner_name spouse),
     spouse_professional_situation: %w(spouse_is_working spouse_working_region),
-    spouse_death: %w(civil_status civil_status_date tax_source_code),
+    spouse_death: %w(civil_status civil_status_date tax_source_code spouse),
     child_birth: %w(tax_source_code child),
-    child_death: %w(tax_source_code),
-    child_studies: %w(child_is_student)
+    child_death: %w(tax_source_code child),
+    child_studies: %w(child_is_student child)
   }.with_indifferent_access
 
   belongs_to :employee, inverse_of: :events, required: true
@@ -78,8 +82,7 @@ class Employee::Event < ActiveRecord::Base
   def only_one_hired_event_presence
     return unless event_type == 'hired'
     employee_hired_events = employee.events.where(event_type: 'hired')
-    if employee_hired_events.present? && employee_hired_events.pluck(:id).exclude?(id)
-      errors.add(:event_type, 'Employee can have only one hired event')
-    end
+    return unless employee_hired_events.present? && employee_hired_events.pluck(:id).exclude?(id)
+    errors.add(:event_type, 'Employee can have only one hired event')
   end
 end

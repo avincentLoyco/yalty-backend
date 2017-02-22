@@ -14,7 +14,7 @@ class UpdateEmployeeBalance
     update_attributes unless options.blank?
     recalculate_amount unless employee_balance.reset_balance
     update_status
-    manage_removal if options[:validity_date]
+    manage_removal if options.key?(:validity_date)
     save!
   end
 

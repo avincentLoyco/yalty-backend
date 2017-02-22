@@ -22,7 +22,11 @@ class HolidaysForEmployeeInRange
       JoinTableWithEffectiveTill
       .new(EmployeeWorkingPlace, employee.account_id, nil, employee.id, nil, range_start, range_end)
       .call
-      .map { |join_table_hash| EmployeeWorkingPlace.new(join_table_hash) }
+      .map do |join_table_hash|
+        if date_in_range?(join_table_hash['effective_at'].to_date)
+          EmployeeWorkingPlace.new(join_table_hash)
+        end
+      end.compact
   end
 
   def find_holidays_for_active_working_places
@@ -35,7 +39,13 @@ class HolidaysForEmployeeInRange
   end
 
   def period_interval_for_employee_working_place(active)
-    [active_employee_working_places.first == active ? range_start : active.effective_at.to_date,
-     active_employee_working_places.last == active ? range_end : active.effective_till.to_date]
+    [
+      active_employee_working_places.first == active ? range_start : active.effective_at.to_date,
+      active_employee_working_places.last == active ? range_end : active.effective_till.to_date
+    ]
+  end
+
+  def date_in_range?(effective_at)
+    effective_at <= range_end.to_date
   end
 end

@@ -17,7 +17,6 @@ class UpdateEvent
       find_employee
       update_employee_join_tables
       manage_versions
-
       save!
     end
   end
@@ -58,7 +57,7 @@ class UpdateEvent
   def update_version(attribute)
     version = event.employee_attribute_versions.find(attribute[:id])
     version.attribute_definition = definition_for(attribute)
-    version.value = attribute[:value]
+    version.value = FindValueForAttribute.new(attribute, version).call
     version.order = attribute[:order]
     @versions << version
   end
@@ -66,7 +65,7 @@ class UpdateEvent
   def new_version(attribute)
     version = build_version(attribute)
     if version.attribute_definition_id.present?
-      version.value = attribute[:value]
+      version.value = FindValueForAttribute.new(attribute, version).call
       version.multiple = version.attribute_definition.multiple
     end
     @versions << version
@@ -118,7 +117,7 @@ class UpdateEvent
   def save!
     if unique_attribute_versions? && attribute_version_valid?
       employee.save!
-      if event.effective_at.to_date < employee.hired_date
+      if event.effective_at.to_date < employee.hired_date && event.event_type.eql?('hired')
         event.save!
         update_assignations_and_balances
         create_policy_additions_and_removals
@@ -138,11 +137,13 @@ class UpdateEvent
   end
 
   def update_assignations_and_balances
+    return unless updated_assignations.present?
     updated_assignations[:join_tables].to_a.map(&:save!)
     updated_assignations[:employee_balances].to_a.map(&:save!)
   end
 
   def create_policy_additions_and_removals
+    return unless updated_assignations.present?
     employee_time_off_policies =
       updated_assignations[:join_tables].select do |join_table|
         join_table.class.eql?(EmployeeTimeOffPolicy)

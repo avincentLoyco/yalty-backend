@@ -15,21 +15,15 @@ namespace :rbenv do
     end
   end
 
-  task :update_ruby_build do
+  task :install_ruby do
     rbenv_ruby_build_path = File.join(fetch(:rbenv_path), 'plugins', 'ruby-build')
 
     on release_roles(fetch(:rbenv_roles)) do
+      next if test "[ -d #{fetch(:rbenv_ruby_dir)} ]"
+
       within rbenv_ruby_build_path do
         execute :git, :pull
       end
-    end
-  end
-
-  task :install_ruby do
-    on release_roles(fetch(:rbenv_roles)) do
-      next if test "[ -d #{fetch(:rbenv_ruby_dir)} ]"
-      invoke 'rbenv:update_ruby_build'
-      execute :echo, '$CURL_OPTS'
       execute "#{fetch(:rbenv_path)}/bin/rbenv", :install, fetch(:rbenv_ruby)
     end
   end

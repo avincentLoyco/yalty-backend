@@ -106,12 +106,12 @@ class GenerateBalanceOverview
 
   def active_balances(balances)
     positive = balances.where('resource_amount > 0 OR manual_amount > 0').order(:effective_at)
-    negative =
-      balances.pluck(:manual_amount, :resource_amount).flatten.select { |value| value < 0 }.sum
+    negative = balances.pluck(:manual_amount, :resource_amount)
+                       .flatten.select(&:negative?).sum
     positive.map do |balance|
-      balance_positive_amount =
-        balance.slice(:resource_amount, :manual_amount).values.select { |value| value > 0 }.sum
-      break if balance_positive_amount + negative > 0
+      balance_positive_amount = balance.slice(:resource_amount, :manual_amount)
+                                       .values.select(&:positive?).sum
+      break if (balance_positive_amount + negative).positive?
       negative += balance_positive_amount
       positive -= [balance]
     end

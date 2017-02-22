@@ -165,6 +165,43 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
       }
     end
 
+    context 'attributes' do
+      let!(:current_user_employee) do
+        create(:employee_with_working_place, :with_attributes, user: Account::User.current, account: account)
+      end
+      let!(:public_definition) do
+        create(:employee_attribute_definition, name: 'firstname',
+          attribute_type: Attribute::String.attribute_type, account: account)
+      end
+      let(:public_attribute) do
+        build(:employee_attribute_version, attribute_definition: public_definition,
+          attribute_name: 'firstname', value: 'Mirek', employee: employees.last,
+          event: employees.last.events.last)
+      end
+      let(:employee_with_public_attribute) do
+        JSON.parse(response.body).select { |e| e["id"] == employees.last.id }.first
+      end
+      let(:employee_with_current_user) do
+        JSON.parse(response.body).select { |e| e["id"] == current_user_employee.id }.first
+      end
+
+      before do
+        Account::User.current.update!(role: 'user')
+        employees.last.events.last.employee_attribute_versions << public_attribute
+        subject
+      end
+
+      after { Account::User.current.update!(role: 'user') }
+
+      context 'advanced when employee belongs to current user' do
+        it { expect(employee_with_current_user['employee_attributes'].size).to eq(2) }
+      end
+
+      context 'simple for other employees' do
+        it { expect(employee_with_public_attribute['employee_attributes'].size).to eq(1) }
+      end
+    end
+
     context 'effective at date' do
       let!(:future_employee) do
         create(:employee_with_working_place, account: account, events: [event])

@@ -6,11 +6,13 @@ module ActsAsAttribute
   PUBLIC_ATTRIBUTES_FOR_OTHERS = %w(
     firstname lastname language job_title start_date occupation_rate department
     manager professional_email professional_mobile cost_center department gender
+    profile_picture
   ).freeze
 
   NOT_EDITABLE_ATTRIBUTES_FOR_EMPLOYEE = %w(
     annual_salary contract_type cost_center department exit_date hourly_salary job_title
     manager monthly_payments occupation_rate representation_fees start_date tax_source_code
+    salary_slip salary_certificate contract
   ).freeze
 
   included do

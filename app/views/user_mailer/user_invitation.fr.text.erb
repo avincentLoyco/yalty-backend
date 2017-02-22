@@ -6,14 +6,10 @@ Yalty est une application web choisie par votre entreprise qui vous permet de g�
  · Soumettre vos demandes de vacances et consulter votre solde
  · Saisir vos absences (maladie, accident, militaire, maternité, etc…)
 
-Tout d’abord, voici vos informations personnelles pour vous connecter à l’application :
-
-Votre sous-domaine : <%= subdomain_url_for(@user.account) %>
-Identifiant : <%= @user.email %>
-Mot de passe : <%= @user.password %>
+Tout d’abord, voici l'adresse pour configurer votre compte :
+<%= @login_url %>
 
 Vous pouvez accéder à votre compte depuis n’importe quel support (ordinateur, mobile, tablette,…)
-
 En cas de questions ou pour toutes suggestions d’améliorations de l’application, n’hésitez pas à nous contacter via le support en ligne directement dans l’application ou par email à hello@yalty.io.
 
 Merci!

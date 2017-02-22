@@ -14,7 +14,7 @@ class Auth::AccountsController < ApplicationController
         user.convert_intercom_leads
       end
 
-      send_account_creation_confirmation(user.password)
+      send_account_creation_confirmation
       render_response
     end
   end
@@ -60,20 +60,19 @@ class Auth::AccountsController < ApplicationController
     respond_to do |format|
       format.json do
         render status: 201, json: {
-          code: authorization.auth.token.token,
-          redirect_uri: redirect_uri_with_subdomain(authorization.redirect_uri)
+          code: authorization_token,
+          redirect_uri: authorization_uri
         }
       end
       format.any do
-        redirect_to redirect_uri_with_subdomain(authorization.redirect_uri)
+        redirect_to authorization_uri
       end
     end
   end
 
-  def send_account_creation_confirmation(password)
+  def send_account_creation_confirmation
     UserMailer.account_creation_confirmation(
-      current_resource_owner.id,
-      password
+      current_resource_owner.id
     ).deliver_later
   end
 
