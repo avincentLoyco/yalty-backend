@@ -72,6 +72,17 @@ RSpec.describe WorkingPlace, type: :model do
           it { expect(subject.timezone).to eql('Europe/Zurich') }
         end
 
+        context 'create with state and country' do
+          subject { build(:working_place, state: state_code, country: country) }
+
+          let(:city) { nil }
+
+          it { expect(subject).to be_valid }
+          it { expect(subject.state).to eq('ZH') }
+          it { expect(subject.state_code).to eq('zh') }
+          it { expect(subject.timezone).to eql('Europe/Zurich') }
+        end
+
         context 'create with non english country name' do
           subject { build(:working_place, city: city, country: 'Suisse') }
 
@@ -115,7 +126,7 @@ RSpec.describe WorkingPlace, type: :model do
         end
 
         context 'update city and state' do
-          subject { create(:working_place, city: city, country: country) }
+          subject { create(:working_place, city: city, state: state_code, country: country) }
 
           before do
             allow(subject).to receive(:location_attributes) do
@@ -137,6 +148,59 @@ RSpec.describe WorkingPlace, type: :model do
           it { expect(subject.city).to eq('Geneva') }
           it { expect(subject.state).to eq('GE') }
           it { expect(subject.state_code).to eq('ge') }
+          it { expect(subject.timezone).to eql('Europe/Zurich') }
+        end
+
+        context 'update state when city is empty' do
+          subject { create(:working_place, state: state_code, country: country) }
+
+          let(:city) { nil }
+
+          before do
+            allow(subject).to receive(:location_attributes) do
+              geoloc_instance(
+                city: nil,
+                state_name: 'Geneva',
+                state_code: 'GE',
+                country: 'Switzerland',
+                country_code: 'CH',
+              )
+            end
+
+            subject.state = 'GE'
+            subject.validate
+          end
+
+          it { expect(subject).to be_valid }
+          it { expect(subject.state).to eq('GE') }
+          it { expect(subject.state_code).to eq('ge') }
+          it { expect(subject.timezone).to eql('Europe/Zurich') }
+        end
+
+        context 'update city when previously empty' do
+          subject { create(:working_place, state: state_code, country: country) }
+
+          let(:city) { nil }
+
+          before do
+            allow(subject).to receive(:location_attributes) do
+              geoloc_instance(
+                city: 'Zurich',
+                state_name: state_name,
+                state_code: state_code,
+                country: country,
+                country_code: country_code,
+              )
+            end
+
+            subject.city = 'Zurich'
+            subject.validate
+          end
+
+          it { expect(subject).to be_valid }
+          it { expect(subject.city).to eq('Zurich') }
+          it { expect(subject.state).to eq('ZH') }
+          it { expect(subject.state_code).to eq('zh') }
           it { expect(subject.timezone).to eql('Europe/Zurich') }
         end
 
@@ -258,6 +322,22 @@ RSpec.describe WorkingPlace, type: :model do
         it { expect(subject.errors).to_not have_key(:state) }
         it { expect(subject.errors).to have_key(:country) }
         it { expect(subject.errors[:country]).to include('does not exist') }
+
+        it { expect(subject.state).to be_nil }
+        it { expect(subject.state_code).to be_nil }
+        it { expect(subject.timezone).to be_nil }
+      end
+
+      context "create without city and state" do
+        subject { build(:working_place, country: 'Switzerland') }
+
+        let(:country) { 'Switzerland' }
+        let(:country_code) { 'CH' }
+
+        it_behaves_like 'Invalid Address'
+
+        it { expect(subject.errors).to_not have_key(:state) }
+        it { expect(subject.errors).to_not have_key(:country) }
 
         it { expect(subject.state).to be_nil }
         it { expect(subject.state_code).to be_nil }

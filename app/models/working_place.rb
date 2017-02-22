@@ -47,7 +47,7 @@ class WorkingPlace < ActiveRecord::Base
 
   def location_attributes
     @location_attributes ||=
-      Geokit::Geocoders::GoogleGeocoder.geocode("#{city}, #{state}, #{country}")
+      Geokit::Geocoders::GoogleGeocoder.geocode([city, state, country].join(', '))
   end
 
   def location_timezone
@@ -55,7 +55,9 @@ class WorkingPlace < ActiveRecord::Base
   end
 
   def address_found?
-    location_attributes.city.present? && location_attributes.country.present?
+    (!city.present? || location_attributes.city.present?) &&
+      (!state_required? || location_attributes.state_code.present?) &&
+      location_attributes.country.present?
   end
 
   def right_country?
@@ -67,12 +69,12 @@ class WorkingPlace < ActiveRecord::Base
   end
 
   def state_required?
-    country? &&
-      HolidayPolicy::COUNTRIES_WITH_CODES.include?(location_attributes.country_code&.downcase)
+    HolidayPolicy::COUNTRIES_WITH_CODES.include?(location_attributes.country_code&.downcase)
   end
 
   def right_state?
-    !state_required?  || state.blank? || location_attributes.state_code.casecmp(state).zero? ||
+    !state_required? || !state.present? ||
+      location_attributes.state_code.casecmp(state).zero? ||
       location_attributes.state_name.casecmp(state).zero?
   end
 
@@ -91,7 +93,7 @@ class WorkingPlace < ActiveRecord::Base
   def assign_coordinate_related_attributes
     return unless address_found? && right_country?
 
-    self.state = location_attributes.state_code if state_required? && !state.present?
+    self.state = location_attributes.state if state_required? && !state.present?
     self.state_code = location_attributes.state_code.downcase
     self.timezone = location_timezone.name
   end
