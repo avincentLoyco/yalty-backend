@@ -15,7 +15,7 @@ namespace :db do
       uri = URI.parse(capture('echo $DATABASE_URL'))
       dump_path = fetch(:db_dump_path)
 
-      with pg_password: uri.password do
+      with pgpassword: uri.password do
         info "Dump database backup to #{dump_path}"
 
         execute :mkdir, '-p', File.dirname(dump_path)
