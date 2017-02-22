@@ -56,7 +56,8 @@ RSpec.describe CreateEvent do
       context 'and nested attribute send' do
         let!(:child_definition) do
           create(:employee_attribute_definition,
-            account: employee.account, name: 'child', attribute_type: 'Child')
+            account: employee.account, name: 'child', attribute_type: 'Child',
+            validation: { inclusion: true} )
         end
 
         before do
@@ -79,6 +80,25 @@ RSpec.describe CreateEvent do
 
           expect(subject.employee_attribute_versions
             .where(attribute_definition: child_definition).first.data[:firstname]).to eq 'Arya'
+        end
+
+        context 'other parent work status validation' do
+          before do
+            employee_attributes_params.first[:value][:other_parent_work_status] = work_status
+          end
+
+          context 'when other parent work status is valid' do
+            let(:work_status) { 'salaried employee'}
+
+            it { expect { subject }.to change { Employee::AttributeVersion.count }.by(3) }
+            it { expect { subject }.to change { Employee::Event.count }.by(1) }
+          end
+
+          context 'when other parent work status is invalid' do
+            let(:work_status) { 'test status' }
+
+            it { expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
+          end
         end
       end
 

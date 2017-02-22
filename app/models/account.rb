@@ -59,7 +59,8 @@ class Account < ActiveRecord::Base
     lastname: { presence: true },
     firstname: { presence: true },
     start_date: { presence: true },
-    file: { presence: true }
+    file: { presence: true },
+    child: { inclusion: true }
   }.with_indifferent_access
 
   MULTIPLE_ATTRIBUTES = %w(child).freeze
