@@ -54,7 +54,7 @@ RSpec.describe WorkingPlace, type: :model do
       let(:timezone) { 'Europe/Zurich' }
 
       context 'for a country with state validation' do
-        context 'passing city, state and country' do
+        context 'create with city, state and country' do
           subject { build(:working_place, city: city, state: state_name, country: country) }
 
           it { expect(subject).to be_valid }
@@ -63,7 +63,7 @@ RSpec.describe WorkingPlace, type: :model do
           it { expect(subject.timezone).to eql('Europe/Zurich') }
         end
 
-        context 'passing city and country' do
+        context 'create with city and country' do
           subject { build(:working_place, city: city, country: country) }
 
           it { expect(subject).to be_valid }
@@ -72,7 +72,7 @@ RSpec.describe WorkingPlace, type: :model do
           it { expect(subject.timezone).to eql('Europe/Zurich') }
         end
 
-        context 'passing non english country name' do
+        context 'create with non english country name' do
           subject { build(:working_place, city: city, country: 'Suisse') }
 
           it { expect(subject).to be_valid }
@@ -81,7 +81,7 @@ RSpec.describe WorkingPlace, type: :model do
           it { expect(subject.timezone).to eql('Europe/Zurich') }
         end
 
-        context 'passing exotic english country name' do
+        context 'create with exotic english country name' do
           subject { build(:working_place, city: city, country: 'Szwajcaria') }
 
           it { expect(subject).to be_valid }
@@ -90,7 +90,7 @@ RSpec.describe WorkingPlace, type: :model do
           it { expect(subject.timezone).to eql('Europe/Zurich') }
         end
 
-        context 'passing non english city name' do
+        context 'create with non english city name' do
           subject { create(:working_place, city: 'Genf', country: country) }
           let(:city) { 'Geneva' }
           let(:state_name) { 'Geneva' }
@@ -102,7 +102,7 @@ RSpec.describe WorkingPlace, type: :model do
           it { expect(subject.timezone).to eql('Europe/Zurich') }
         end
 
-        context 'passing state code' do
+        context 'create with state code' do
           subject { create(:working_place, city: 'Lausanne', state: 'VD', country: country) }
           let(:city) { 'Lausanne' }
           let(:state_name) { 'Vaud' }
@@ -112,6 +112,73 @@ RSpec.describe WorkingPlace, type: :model do
           it { expect(subject.state).to eq('VD') }
           it { expect(subject.state_code).to eq('vd') }
           it { expect(subject.timezone).to eql('Europe/Zurich') }
+        end
+
+        context 'update city and state' do
+          subject { create(:working_place, city: city, country: country) }
+
+          before do
+            allow(subject).to receive(:location_attributes) do
+              geoloc_instance(
+                city: 'Geneva',
+                state_name: 'Geneva',
+                state_code: 'GE',
+                country: 'Switzerland',
+                country_code: 'CH',
+              )
+            end
+
+            subject.city = 'Geneva'
+            subject.state = 'GE'
+            subject.validate
+          end
+
+          it { expect(subject).to be_valid }
+          it { expect(subject.city).to eq('Geneva') }
+          it { expect(subject.state).to eq('GE') }
+          it { expect(subject.state_code).to eq('ge') }
+          it { expect(subject.timezone).to eql('Europe/Zurich') }
+        end
+
+        context 'update city and set empty state' do
+          subject { create(:working_place, city: city, state: state_name, country: country) }
+
+          before do
+            allow(subject).to receive(:location_attributes) do
+              geoloc_instance(
+                city: 'Geneva',
+                state_name: 'Geneva',
+                state_code: 'GE',
+                country: 'Switzerland',
+                country_code: 'CH',
+              )
+            end
+
+            subject.city = 'Geneva'
+            subject.state = nil
+            subject.validate
+          end
+
+          it { expect(subject).to be_valid }
+          it { expect(subject.city).to eq('Geneva') }
+          it { expect(subject.state).to eq('GE') }
+          it { expect(subject.state_code).to eq('ge') }
+          it { expect(subject.timezone).to eql('Europe/Zurich') }
+        end
+
+        context 'update anything else coordinate' do
+          subject { spy(working_place) }
+
+          let!(:working_place) { create(:working_place, city: city, country: country) }
+
+          before do
+            subject.name = 'New office'
+            subject.validate
+          end
+
+          it { expect(subject).to be_valid }
+          it { expect(subject).to_not have_received(:location_attributes) }
+          it { expect(subject).to_not have_received(:location_timezone) }
         end
       end
 
@@ -123,7 +190,7 @@ RSpec.describe WorkingPlace, type: :model do
         let(:country_code) { 'PL' }
         let(:timezone) { 'Europe/Warsaw' }
 
-        context 'passing city and wrong region' do
+        context 'create with city and wrong state' do
           subject { build(:working_place, city: city, state: 'Podkarpacie', country: country) }
 
           it { expect(subject).to be_valid }
@@ -133,7 +200,7 @@ RSpec.describe WorkingPlace, type: :model do
           it { expect(subject.timezone).to eql('Europe/Warsaw') }
         end
 
-        context 'passing city' do
+        context 'create with city' do
           subject { create(:working_place, city: city, country: country) }
 
           it { expect(subject).to be_valid }
@@ -142,6 +209,37 @@ RSpec.describe WorkingPlace, type: :model do
           it { expect(subject.state_code).to eq('podkarpackie voivodeship') }
           it { expect(subject.timezone).to eql('Europe/Warsaw') }
         end
+
+        context 'update and set a wrong state' do
+          subject { create(:working_place, city: city, state: state_name, country: country) }
+
+          before do
+            subject.state = 'Podkarpacie'
+            subject.validate
+          end
+
+          it { expect(subject).to be_valid }
+          it { expect(subject.errors).to_not have_key(:address) }
+          it { expect(subject.state).to eq('Podkarpacie') }
+          it { expect(subject.state_code).to eq('podkarpackie voivodeship') }
+          it { expect(subject.timezone).to eql('Europe/Warsaw') }
+        end
+
+        context 'update and set empty state' do
+          subject { create(:working_place, city: city, state: state_name, country: country) }
+
+          before do
+            subject.state = nil
+            subject.validate
+          end
+
+          it { expect(subject).to be_valid }
+          it { expect(subject.errors).to_not have_key(:address) }
+          it { expect(subject.state).to be_nil }
+          it { expect(subject.state_code).to eq('podkarpackie voivodeship') }
+          it { expect(subject.timezone).to eql('Europe/Warsaw') }
+        end
+
       end
     end
 
@@ -152,7 +250,7 @@ RSpec.describe WorkingPlace, type: :model do
       let(:state_name) { nil }
       let(:state_code) { nil }
 
-      context "passing country that dosen't exist" do
+      context "create with country that dosen't exist" do
         subject { build(:working_place, city: 'Zurich', country: 'NotACountry') }
 
         it_behaves_like 'Invalid Address'
@@ -166,7 +264,7 @@ RSpec.describe WorkingPlace, type: :model do
         it { expect(subject.timezone).to be_nil }
       end
 
-      context "passing city that dosen't exist" do
+      context "create with city that dosen't exist" do
         subject { build(:working_place, city: 'NotACity', country: 'Switzerland') }
 
         it_behaves_like 'Invalid Address'
@@ -179,7 +277,7 @@ RSpec.describe WorkingPlace, type: :model do
         it { expect(subject.timezone).to be_nil }
       end
 
-      context "passing city that dosen't exist in country" do
+      context "create with city that dosen't exist in country" do
         subject { build(:working_place, city: 'Paris', country: 'Switzerland') }
 
         let(:city) { 'Paris' }
@@ -200,7 +298,7 @@ RSpec.describe WorkingPlace, type: :model do
       end
 
       context 'with country that has state validation' do
-        context "passing state that doesn't exist" do
+        context "create with state that doesn't exist" do
           subject { build(:working_place, city: city, state: 'Wrong', country: country) }
 
           let(:city) { 'Zurich' }

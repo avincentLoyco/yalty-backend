@@ -21,11 +21,11 @@ class WorkingPlace < ActiveRecord::Base
     format: { with: %r{\A([a-zA-Z0-9 \/]+\z)},
               message: 'only numbers, capital letters, spaces and /' },
     allow_nil: true
-  validate :correct_country, if: [:city, :country]
-  validate :correct_address, if: [:city, :country]
-  validate :correct_state, if: [:city, :country, :state]
+  validate :correct_address, if: :coordinate_changed?
+  validate :correct_state, if: :coordinate_changed?
+  validate :correct_country, if: :coordinate_changed?
 
-  before_validation :assign_params, if: [:city, :country]
+  before_validation :assign_coordinate_related_attributes, if: :coordinate_changed?
 
   scope :active_for_employee, lambda { |employee_id, date|
     joins(:employee_working_places)
@@ -39,6 +39,10 @@ class WorkingPlace < ActiveRecord::Base
     country_data(country).alpha2.downcase
   end
 
+  def coordinate_changed?
+    !(changed_attributes.keys & %w(city state country)).empty?
+  end
+
   private
 
   def location_attributes
@@ -47,7 +51,7 @@ class WorkingPlace < ActiveRecord::Base
   end
 
   def location_timezone
-    Timezone.lookup(location_attributes.lat, location_attributes.lng)
+    @location_timezone ||= Timezone.lookup(location_attributes.lat, location_attributes.lng)
   end
 
   def address_found?
@@ -68,7 +72,7 @@ class WorkingPlace < ActiveRecord::Base
   end
 
   def right_state?
-    !state_required? || location_attributes.state_code.casecmp(state).zero? ||
+    !state_required?  || state.blank? || location_attributes.state_code.casecmp(state).zero? ||
       location_attributes.state_name.casecmp(state).zero?
   end
 
@@ -84,12 +88,12 @@ class WorkingPlace < ActiveRecord::Base
     errors.add(:country, 'does not exist') unless country_data(country).present?
   end
 
-  def assign_params
+  def assign_coordinate_related_attributes
     return unless address_found? && right_country?
 
-    self.timezone = location_timezone.name
     self.state = location_attributes.state_code if state_required? && !state.present?
     self.state_code = location_attributes.state_code.downcase
+    self.timezone = location_timezone.name
   end
 
   def standardize(address_param)
