@@ -29,7 +29,7 @@ module Api::V1
     end
 
     def select_attributes
-      if Account::User.current.try(:account_manager) ||
+      if Account::User.current.try(:owner_or_administrator?) ||
           Account::User.current.try(:employee).try(:id) == resource.employee_id
         resource.employee_attribute_versions
       else

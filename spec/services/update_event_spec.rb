@@ -84,7 +84,7 @@ RSpec.describe do
       end
 
       context 'when account manager updates event' do
-        before { Account::User.current.update!(account_manager: true) }
+        before { Account::User.current.update!(role: 'account_administrator') }
 
         context 'and forbiden attribute is send' do
           before do

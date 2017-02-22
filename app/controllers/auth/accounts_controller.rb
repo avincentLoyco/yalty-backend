@@ -40,7 +40,7 @@ class Auth::AccountsController < ApplicationController
 
   def build_account_and_user(params)
     account = Account.new(params[:account])
-    user = account.users.new(params[:user].merge(account_manager: true))
+    user = account.users.new(params[:user].merge(role: 'account_owner'))
     [account, user]
   end
 

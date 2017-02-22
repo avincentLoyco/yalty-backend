@@ -29,7 +29,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
   end
 
   shared_examples 'Not Account Manager' do
-    before { Account::User.current.update!(account_manager: false) }
+    before { Account::User.current.update!(role: 'user') }
 
     it { is_expected.to have_http_status(403) }
   end
@@ -54,7 +54,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
     end
 
     context 'when employee is a balance owner' do
-      before { Account::User.current.update!(account_manager: false, employee: employee) }
+      before { Account::User.current.update!(role: 'user', employee: employee) }
 
       it { is_expected.to have_http_status(200) }
     end

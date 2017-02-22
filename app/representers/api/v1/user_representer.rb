@@ -3,7 +3,7 @@ module Api::V1
     def complete
       {
         email:           resource.email,
-        account_manager: resource.account_manager,
+        role:            resource.role,
         is_employee:     resource.employee.present?,
         referral_token:  resource.referrer.try(:token)
       }
