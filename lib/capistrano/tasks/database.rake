@@ -33,9 +33,11 @@ namespace :db do
     invoke 'db:dump'
 
     on fetch(:migration_server) do
+      dump_path = fetch(:db_dump_path)
       local_path = "tmp/dump.#{fetch(:stage)}.pgsql"
       info "Download database dump to #{local_path}"
-      download! fetch(:db_dump_path), local_path
+      download! dump_path, local_path
+      execute :rm, '-f', dump_path
     end
   end
 end

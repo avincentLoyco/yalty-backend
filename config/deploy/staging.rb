@@ -23,10 +23,11 @@ desc 'Sync database from tmp/dump.production.pgsql'
 task :sync do
   raise 'Do not run this task outside of staging environment' unless fetch(:stage) == :staging
 
+  dump_path = fetch(:db_dump_path)
+  local_path = fetch(:local_database_dump_path)
+
   on fetch(:migration_server) do
     uri = URI.parse(capture('echo $DATABASE_URL'))
-    dump_path = fetch(:db_dump_path)
-    local_path = fetch(:local_database_dump_path)
 
     with pgpassword: uri.password do
       info "Restore database from #{local_path}"
@@ -38,8 +39,13 @@ task :sync do
         "-h #{uri.host} -p #{uri.port}",
         "-U #{uri.user}",
         dump_path
+      execute :rm, '-f', dump_path
 
       execute :rake, :setup
     end
+  end
+
+  run_locally do
+    execute :rm, '-f', local_path
   end
 end
