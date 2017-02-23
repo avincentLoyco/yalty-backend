@@ -86,16 +86,18 @@ RSpec.describe Auth::AccountsController, type: :controller do
 
       context 'stripe customer and subscription' do
         StripeCustomer = Struct.new(:id)
+        StripeSubscription = Struct.new(:id)
 
-        before do
-          allow_any_instance_of(Account).to receive(:stripe_enabled?).and_return(true)
-          allow(Stripe::Subscription).to receive(:create)
-        end
+        before { allow_any_instance_of(Account).to receive(:stripe_enabled?).and_return(true) }
 
         context 'sync' do
-          before { allow(Stripe::Customer).to receive(:create).and_return(customer) }
+          before do
+            allow(Stripe::Customer).to receive(:create).and_return(customer)
+            allow(Stripe::Subscription).to receive(:create).and_return(subscription)
+          end
 
           let(:customer) { StripeCustomer.new('cus_123') }
+          let(:subscription) { StripeSubscription.new('sub_123') }
 
           it { expect { subject }.to change(Account::User, :count).by(1) }
           it { expect { subject }.to change(Account, :count).by(1) }
@@ -105,6 +107,7 @@ RSpec.describe Auth::AccountsController, type: :controller do
             before { subject }
 
             it { expect(Account.last.customer_id).to eq(customer.id) }
+            it { expect(Account.last.subscription_id).to eq(subscription.id) }
           end
         end
 
@@ -119,6 +122,7 @@ RSpec.describe Auth::AccountsController, type: :controller do
             before { subject }
 
             it { expect(Account.last.customer_id).to be(nil) }
+            it { expect(Account.last.subscription_id).to be(nil) }
             it { expect(enqueued_jobs.first[:job]).to eq(CreateCustomerWithSubscription) }
           end
         end

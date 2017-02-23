@@ -12,11 +12,24 @@ class CreateCustomerWithSubscription < ActiveJob::Base
   end
 
   def perform(account)
-    customer = Stripe::Customer.create(
-      description: account.stripe_description,
-      metadata: { account_id: account.id }
+    create_customer(account)
+    create_subscription(account)
+  end
+
+  private
+
+  def create_customer(account)
+    return if account.customer_id.present?
+    account.update!(customer_id:
+      Stripe::Customer.create(
+        description: account.stripe_description,
+        metadata: { account_id: account.id }
+      ).id
     )
-    Stripe::Subscription.create(customer: customer.id)
-    account.update(customer_id: customer.id)
+  end
+
+  def create_subscription(account)
+    return if account.customer_id.nil? || account.subscription_id.present?
+    account.update!(subscription_id: Stripe::Subscription.create(customer: account.customer_id).id)
   end
 end
