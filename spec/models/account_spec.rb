@@ -251,4 +251,72 @@ RSpec.describe Account, type: :model do
       it { expect(subject.time_off_policies.pluck(:reset).uniq.first).to be(true) }
     end
   end
+
+  describe 'stripe callbacks' do
+    let(:customer) { StripeCustomer.new('cus123', 'Some description') }
+    let(:subscription) { StripeSubscription.new('sub_123') }
+
+    before do
+      allow_any_instance_of(Account).to receive(:stripe_enabled?).and_return(true)
+      allow(Stripe::Customer).to receive(:retrieve).and_return(customer)
+      allow(Stripe::Customer).to receive(:create).and_return(customer)
+      allow(Stripe::Subscription).to receive(:create).and_return(subscription)
+    end
+
+    context 'create_stripe_customer_with_subscription' do
+      let(:account) { build(:account) }
+
+      subject { account.save! }
+
+      it 'triggers creation method' do
+        expect(account).to receive(:create_stripe_customer_with_subscription)
+        subject
+      end
+
+      it 'triggers cration job' do
+        expect(Payments::CreateCustomerWithSubscription).to receive(:perform_now).with(account)
+        subject
+      end
+    end
+
+    context 'update_stripe_customer_description' do
+      shared_examples 'update stripe description' do
+        it 'triggers update method' do
+          expect(account).to receive(:update_stripe_customer_description)
+          subject
+        end
+
+        it 'triggers update job' do
+          expect(Payments::UpdateStripeCustomerDescription)
+            .to receive(:perform_later)
+            .with(account)
+          subject
+        end
+
+        it { expect { subject }.to change(account, :stripe_description) }
+      end
+
+      let(:account) do
+        create(:account, customer_id: 'cus_123', company_name: 'Omnics', subdomain: 'omnics')
+      end
+
+      context 'when subdomain changes' do
+        subject { account.update(subdomain: 'lumeri-co') }
+
+        it_behaves_like 'update stripe description'
+      end
+
+      context 'when company_name changes' do
+        subject { account.update(company_name: 'LumeriCo') }
+
+        it_behaves_like 'update stripe description'
+      end
+
+      context 'when subdomain and company_name changes' do
+        subject { account.update(subdomain: 'lumeri-co', company_name: 'LumeriCo') }
+
+        it_behaves_like 'update stripe description'
+      end
+    end
+  end
 end

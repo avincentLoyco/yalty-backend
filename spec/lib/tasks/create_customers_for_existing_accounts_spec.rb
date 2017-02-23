@@ -3,8 +3,6 @@ require 'rake'
 
 RSpec.describe 'create_customers_for_existing_accounts', type: :rake do
   include_context 'rake'
-  StripeCustomer = Struct.new(:id)
-  StripeSubscription = Struct.new(:id)
 
   let!(:account)  { create(:account, customer_id: 'cus_123', subscription_id: 'sub_123') }
   let!(:accounts) { create_list(:account, 3) }

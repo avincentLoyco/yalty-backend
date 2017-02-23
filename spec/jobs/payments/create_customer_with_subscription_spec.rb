@@ -2,10 +2,8 @@ require 'rails_helper'
 require 'fakeredis/rspec'
 require 'sidekiq/testing'
 
-RSpec.describe CreateCustomerWithSubscription, type: :job do
+RSpec.describe Payments::CreateCustomerWithSubscription, type: :job do
   include ActiveJob::TestHelper
-  StripeCustomer = Struct.new(:id)
-  StripeSubscription = Struct.new(:id)
 
   let!(:account) { create(:account) }
 

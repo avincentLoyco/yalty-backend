@@ -1,6 +1,6 @@
 task create_customers_for_existing_accounts: [:environment] do
   Account.all.each do |account|
     next if account.customer_id.present? && account.subscription_id.present?
-    CreateCustomerWithSubscription.perform_now(account)
+    Payments::CreateCustomerWithSubscription.perform_now(account)
   end
 end

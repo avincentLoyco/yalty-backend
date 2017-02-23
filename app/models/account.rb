@@ -46,6 +46,8 @@ class Account < ActiveRecord::Base
   after_create :update_default_time_off_categories!
   after_create :create_reset_presence_policy_and_working_place!
   after_create :create_stripe_customer_with_subscription, if: :stripe_enabled?
+  after_update :update_stripe_customer_description,
+               if: -> { stripe_enabled? && (subdomain_changed? || company_name_changed?) }
 
   def self.current=(account)
     RequestStore.write(:current_account, account)
@@ -197,6 +199,11 @@ class Account < ActiveRecord::Base
   end
 
   def create_stripe_customer_with_subscription
-    CreateCustomerWithSubscription.perform_now(self)
+    Payments::CreateCustomerWithSubscription.perform_now(self)
+  end
+
+  def update_stripe_customer_description
+    return if subdomain_was.nil? || company_name_was.nil?
+    Payments::UpdateStripeCustomerDescription.perform_later(self)
   end
 end
