@@ -17,12 +17,10 @@ class HolidayPolicy < ActiveRecord::Base
   before_save :unset_region, unless: :region_required?
   before_validation :downcase, if: :local?
 
-  AUTHORIZED_COUNTRIES = %w(ch).freeze
+  COUNTRIES_WITH_REGIONS = %w(ch).freeze
+  COUNTRIES_WITHOUT_REGIONS = %w().freeze
+  COUNTRIES = (COUNTRIES_WITH_REGIONS + COUNTRIES_WITHOUT_REGIONS).freeze
 
-  COUNTRIES_WITH_CODES = %w(ch).freeze
-
-  COUNTRIES_WITHOUT_REGIONS = %w(ar at be br cl cr cz dk el fr je gg im hr hu ie is it li lt nl no
-                                 pl pt ro sk si fi jp ma ph se sg ve vi za).freeze
   HolidayStruct = Struct.new(:date, :name)
 
   def holidays
@@ -64,7 +62,7 @@ class HolidayPolicy < ActiveRecord::Base
   end
 
   def region_required?
-    valid_country? && COUNTRIES_WITHOUT_REGIONS.exclude?(country)
+    valid_country? && COUNTRIES_WITH_REGIONS.include?(country)
   end
 
   def valid_country?

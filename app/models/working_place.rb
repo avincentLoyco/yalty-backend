@@ -70,7 +70,7 @@ class WorkingPlace < ActiveRecord::Base
   end
 
   def state_required?
-    HolidayPolicy::COUNTRIES_WITH_CODES.include?(location_attributes.country_code&.downcase)
+    HolidayPolicy::COUNTRIES_WITH_REGIONS.include?(location_attributes.country_code&.downcase)
   end
 
   def right_state?

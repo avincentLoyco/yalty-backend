@@ -14,16 +14,23 @@ class AssignHolidayPolicy
   private
 
   def holiday_policy
-    return holiday_policies.find(holiday_policy_id) if holiday_policy_id.present?
-    find_or_create_policy if HolidayPolicy::AUTHORIZED_COUNTRIES.include?(country_code)
+    @holiday_policy ||= begin
+      if holiday_policy_id.present?
+        holiday_policies.find(holiday_policy_id)
+      elsif HolidayPolicy::COUNTRIES.include?(country_code)
+        find_or_create_policy
+      end
+    end
   end
 
   def find_or_create_policy
-    holiday_policies
-      .where(region: working_place.state_code).find_or_create_by!(country: country_code) do |policy|
-        policy.name = working_place.state_code.present? ? working_place.state_code : country_code
-        policy.region = working_place.state_code if working_place.state_code.present?
+    holiday_policies.find_or_create_by!(region: state_code, country: country_code) do |policy|
+      if state_code
+        policy.name = "#{working_place.country} (#{working_place.state})"
+      else
+        policy.name = working_place.country
       end
+    end
   end
 
   def holiday_policies
@@ -31,7 +38,11 @@ class AssignHolidayPolicy
   end
 
   def country_code
-    return nil if working_place.country.nil?
-    working_place.country_code
+    working_place.country_code.downcase
+  end
+
+  def state_code
+    return unless HolidayPolicy::COUNTRIES_WITH_REGIONS.include?(country_code)
+    working_place.state_code.downcase
   end
 end
