@@ -27,6 +27,7 @@ class Employee::Balance < ActiveRecord::Base
   validate :effective_at_equal_time_off_end_date, if: :time_off_id
   validate :removal_effective_at_date
   validate :end_time_not_after_contract_end, if: [:employee, :effective_at]
+  # TODO add validation for reset balance effective_at
 
   before_validation :find_effective_at
   before_validation :calculate_amount_from_time_off, if: :time_off_id
@@ -156,7 +157,7 @@ class Employee::Balance < ActiveRecord::Base
 
   def effective_at_equal_time_off_policy_dates
     etop = employee_time_off_policy
-    return unless etop
+    return if etop.blank? || reset_balance?
     etop_hash = employee_time_off_policy_with_effective_till(etop)
     matches_end_or_start_top_date = compare_effective_at_with_time_off_polices_related_dates(
       time_off_policy,

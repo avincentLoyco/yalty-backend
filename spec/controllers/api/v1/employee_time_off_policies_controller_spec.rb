@@ -241,6 +241,27 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
         it { expect_json(id: employee.id, effective_till: nil) }
       end
 
+      context 'when effective at is in the future and before is reset policy' do
+        before do
+          create(:employee_time_off_policy,
+            effective_at: employee.hired_date, employee: employee, time_off_policy: time_off_policy)
+          create(:employee_event,
+            employee: employee, event_type: 'contract_end', effective_at: 1.week.ago)
+          create(:employee_time_off_policy,
+            employee: employee, effective_at: 6.days.ago,
+            time_off_policy: create(:time_off_policy, :reset, time_off_category: category))
+          create(:employee_event,
+            employee: employee, effective_at: 2.years.since, event_type: 'hired')
+        end
+
+        # TODO verify amount of balances needed
+        let(:effective_at) { 2.years.since }
+
+        it { expect { subject }.to change { EmployeeTimeOffPolicy.count } }
+        xit { expect { subject }.to change { Employee::Balance.count }.by(3) }
+        it { is_expected.to have_http_status(201) }
+      end
+
       context 'when creating etop in place of another' do
         let(:effective_at) { Date.new(2016, 1, 1) }
         let(:top_a) { time_off_policy }

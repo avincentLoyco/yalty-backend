@@ -84,6 +84,47 @@ RSpec.describe CreateAdditionsAndRemovals do
     it { expect { execute_job }.to_not change(existing_balance, :updated_at) }
   end
 
+  context 'when employee has contract end date' do
+    before do
+      Timecop.freeze(2017, 1, 1, 0, 0)
+      create(:employee_event,
+        event_type: 'contract_end', effective_at: reset_etop_effective_at - 1.day,
+        employee: employee)
+    end
+
+    let(:reset_policy) { create(:time_off_policy, :reset, time_off_category: category) }
+    let!(:reset_etop) do
+      create(:employee_time_off_policy,
+        employee: employee, time_off_policy: reset_policy, effective_at: reset_etop_effective_at)
+    end
+
+    context 'and reset policy is assigned in the future' do
+      let(:reset_etop_effective_at) { 1.year.since }
+
+      it { expect { subject }.to_not change { Employee::Balance.count } }
+      it { expect { subject }.to_not raise_error }
+    end
+
+    context 'and reset policy is assigned since today' do
+      let(:reset_etop_effective_at) { Date.today }
+
+      it { expect { execute_job }.to_not change { Employee::Balance.count } }
+    end
+
+    context 'and reset policy was assigned in the past' do
+      let(:reset_etop_effective_at) { 1.year.ago + 1.week }
+
+      context 'and employee is rehired' do
+        # TODO
+         xit { }
+      end
+
+      context 'and employee is not rehired' do
+        it { expect { execute_job }.to_not change { Employee::Balance.count } }
+      end
+    end
+  end
+
   context 'when etop time off policy has start day and month is not today' do
     context 'when start day is different' do
       before { policy.update!(start_day: 10) }

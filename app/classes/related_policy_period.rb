@@ -10,10 +10,18 @@ class RelatedPolicyPeriod
   end
 
   def last_start_date_before(date)
+    return related_policy.effective_at.to_date unless related_policy.not_reset?
     years_to_remove = (date.year - first_start_date.year) % policy_length
     last_start_date = Date.new(date.year - years_to_remove.years, start_month, start_day)
 
-    last_start_date > date ? last_start_date - policy_length.years : last_start_date
+    if last_start_date > date
+      last_start_date - policy_length.years
+    elsif last_start_date == date
+      previous_start = last_start_date - policy_length.years
+      related_policy.effective_at > previous_start ? related_policy.effective_at : previous_start
+    else
+      last_start_date
+    end
   end
 
   def policy_length
@@ -21,6 +29,7 @@ class RelatedPolicyPeriod
   end
 
   def first_start_date
+    return related_policy.effective_at unless related_policy.not_reset?
     start_year_date = Date.new(effective_at.year, start_month, start_day)
     effective_at > start_year_date ? start_year_date + 1.year : start_year_date
   end
@@ -36,7 +45,8 @@ class RelatedPolicyPeriod
   end
 
   def previous_start_date
-    last_start_date - policy_length.years
+    return last_start_date - policy_length.years if related_policy.not_reset?
+    last_start_date
   end
 
   def last_validity_date

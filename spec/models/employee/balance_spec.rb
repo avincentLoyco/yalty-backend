@@ -121,7 +121,8 @@ RSpec.describe Employee::Balance, type: :model do
         end
         subject do
           build(:employee_balance_manual,
-            employee: employee, time_off_category: time_off_category, effective_at: effective_at)
+            employee: employee, time_off_category: time_off_category, effective_at: effective_at,
+            reset_balance: true)
         end
 
         context 'when employee has one contract end date' do

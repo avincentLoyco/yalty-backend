@@ -11,4 +11,6 @@ class EmployeeWorkingPlace < ActiveRecord::Base
 
   scope :with_reset, -> { joins(:working_place).where(working_places: { reset: true }) }
   scope :not_reset, -> { joins(:working_place).where(working_places: { reset: false }) }
+
+  alias related_resource working_place
 end

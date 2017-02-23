@@ -12,7 +12,9 @@ FactoryGirl.define do
       end
 
       employee_event.account = employee_event.employee.account
+    end
 
+    after(:create) do |employee_event|
       if employee_event.event_type.eql?('contract_end')
         employee = employee_event.employee
         hired_date = employee.hired_date_for(employee_event.effective_at)

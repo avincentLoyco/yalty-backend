@@ -19,5 +19,12 @@ FactoryGirl.define do
       end_month 4
       years_to_effect 1
     end
+
+    trait :reset do
+      reset true
+      policy_type nil
+      start_day nil
+      start_month nil
+    end
   end
 end

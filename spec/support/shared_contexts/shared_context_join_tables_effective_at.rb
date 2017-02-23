@@ -21,6 +21,34 @@ RSpec.shared_context 'shared_context_join_tables_effective_at' do |settings|
     end
   end
 
+  describe 'reset_join_table_effective_at_after_contract_end' do
+    let(:effective_at) { employee.hired_date + 10.days }
+
+    context 'when join table does not have reset resource assigned' do
+      it { expect(subject.valid?).to eq true }
+      it { expect { subject.valid? }.to_not change { subject.errors.messages.size } }
+    end
+
+    context 'when join table has reset resource assigned' do
+      before { subject.related_resource.update!(reset: true) }
+
+      context 'and it has proper effective at' do
+        let(:effective_at) { Date.new(2014, 1, 1) + 1.day }
+
+        it { expect(subject.valid?).to eq true }
+        it { expect { subject.valid? }.to_not change { subject.errors.messages.size } }
+      end
+
+      context 'and it does not have proper effective at' do
+        it { expect(subject.valid?).to eq false }
+        it do
+          expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
+            .to include 'must be set up day after employee contract end date'
+        end
+      end
+    end
+  end
+
   describe 'effective_at_between_hired_date_and_contract_end' do
     context 'when employee has one hired event and one contract end' do
       context 'with valid params' do

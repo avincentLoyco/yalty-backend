@@ -17,7 +17,6 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
 
   before_save :add_category_id
   before_destroy :balances_without_valid_policy_present?
-  after_create :create_reset_policy
 
   scope :not_assigned_at, ->(date) { where(['effective_at > ?', date]) }
   scope :assigned_at, ->(date) { where(['effective_at <= ?', date]) }
@@ -28,6 +27,12 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
   }
   scope :with_reset, -> { joins(:time_off_policy).where(time_off_policies: { reset: true }) }
   scope :not_reset, -> { joins(:time_off_policy).where(time_off_policies: { reset: false }) }
+
+  alias related_resource time_off_policy
+
+  def not_reset?
+    time_off_policy.reset.eql?(false)
+  end
 
   def policy_assignation_balance(effective_at = self.effective_at)
     employee
@@ -105,6 +110,7 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
   end
 
   def verify_not_change_of_policy_type_in_category
+    #TODO change this validation becuase its not working
     return if self.time_off_policy.reset
     firts_etop =
       employee
@@ -122,13 +128,5 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
 
   def add_category_id
     self.time_off_category_id = time_off_policy.time_off_category_id
-  end
-
-  def create_reset_policy
-    return unless time_off_policy.present? &&
-                  !time_off_policy.reset &&
-                  employee.first_upcoming_contract_end.present?
-    AssignResetJoinTable.new(
-      'time_off_policies', employee, time_off_category: time_off_category).call
   end
 end

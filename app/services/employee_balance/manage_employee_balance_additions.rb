@@ -165,8 +165,10 @@ class ManageEmployeeBalanceAdditions
   end
 
   def calculate_effective_till
+    #case jak nie ma effective_till a jest reset
     effective_till = resource.effective_till
-    if effective_till && effective_till <= future_policy_period_last_date
+    if effective_till && (future_policy_period_last_date.blank? ||
+        effective_till <= future_policy_period_last_date)
       effective_till
     else
       future_policy_period_last_date
@@ -175,6 +177,6 @@ class ManageEmployeeBalanceAdditions
 
   def future_policy_period_last_date
     @future_policy_period_last_date ||=
-      EmployeePolicyPeriod.new(employee, resource.time_off_category_id).future_policy_period.last
+      EmployeePolicyPeriod.new(employee, resource.time_off_category_id).future_policy_period&.last
   end
 end
