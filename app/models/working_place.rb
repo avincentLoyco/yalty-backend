@@ -36,7 +36,7 @@ class WorkingPlace < ActiveRecord::Base
   }
 
   def country_code
-    country_data(country).alpha2.downcase
+    country_data(country)&.alpha2&.downcase
   end
 
   def coordinate_changed?
@@ -47,7 +47,8 @@ class WorkingPlace < ActiveRecord::Base
 
   def location_attributes
     @location_attributes ||=
-      Geokit::Geocoders::GoogleGeocoder.geocode([city, state, country].join(', '))
+      Geokit::Geocoders::GoogleGeocoder
+      .geocode([city, state, country_code, country].compact.join(', '))
   end
 
   def location_timezone
