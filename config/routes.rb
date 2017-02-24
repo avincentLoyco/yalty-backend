@@ -5,7 +5,7 @@ Rails.application.routes.draw do
   namespace :api, path: '', constraints: { subdomain: /^api/ } do
     namespace :v1 do
       namespace :payments do
-        resources 'cards', except: [:show, :update]
+        resources 'cards', except: [:show, :update, :destroy]
         get 'subscription', to: 'subscriptions#index'
       end
       resources :working_places, except: [:edit, :new] do
