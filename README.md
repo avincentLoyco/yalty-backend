@@ -188,29 +188,30 @@ How to deploy
 First, install [docker](https://docs.docker.com/engine/installation/). Review environment is
 automatically deploy, but for staging and production you should use capitrano.
 
-deploy release candidate to staging:
+To deploy release candidate to staging, run following commands. The release branch is automatically
+created and pushed on git, then you must create a pull request on master and wait on the docker
+build (you can see build status on the release branch pull request).
 ```bash
-git checkout master && git pull
+git checkout master && git pull && bundle
 
 cap staging release:candidate
-
-git add --patch && git commit -m "Create release candidate X.X.X"
-git push -u origin releases/X.X.X
-
-# waiting on docker build
-
+# ... waiting on docker build ...
 cap staging deploy
 ```
 
-deploy release to production:
+Before deploying on staging you can run following commands to reset the database to
+a production state (usefull to have fresh data or test database migration).
 ```bash
-git checkout releases/X.X.X && git pull
+cap production db:download
+cap staging sync
+```
 
-cap production release:finalize
+To deploy a release on production, run following commands. The release tag is automatically created
+and pushed on git and docker, then you can deploy and merge the release pull request.
+```bash
+git checkout releases/X.X.X && git pull && bundle
 
-docker push yalty/backend:X.X.X
-git push --tags
-
+cap production release:approve
 cap production deploy
 ```
 
