@@ -21,10 +21,14 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
   context 'GET #index' do
     subject { get :index }
     before { subject }
+    let(:working_place_with_employees) do
+      JSON.parse(response.body).select { |wp| wp['employees'].present? }.first
+    end
 
     it { is_expected.to have_http_status(200) }
     it { expect_json_sizes(1) }
-    it { expect_json_keys('*', [:id, :type, :name, :employees, :holiday_policy]) }
+    it { expect_json_keys('*', [:id, :type, :name, :deletable, :employees, :holiday_policy]) }
+    it { expect(working_place_with_employees['deletable']).to be false }
   end
 
   context 'GET #show' do
@@ -35,6 +39,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
       before { subject }
 
       it { expect_json('employees', []) }
+      it { expect_json('deletable', true) }
     end
 
     context 'when working place has assigned employee working places' do
@@ -46,6 +51,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
       it { expect_json('employees.0',
         id: employee.id, type: 'employee', assignation_id: ewp.id)
       }
+      it { expect_json('deletable', false) }
     end
   end
 

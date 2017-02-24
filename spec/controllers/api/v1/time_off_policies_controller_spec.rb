@@ -37,7 +37,8 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
             :policy_type,
             :years_to_effect,
             :time_off_category,
-            :assigned_employees
+            :assigned_employees,
+            :deletable
           ]
         )
       end
@@ -56,9 +57,21 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
         )
       end
 
-      before { subject }
+      context 'response body' do
+        let(:time_off_policy_with_employees) do
+          JSON.parse(response.body).select { |p| p['assigned_employees'].present? }.first
+        end
+        let(:time_off_policy_without_employees) do
+          JSON.parse(response.body).select { |p| p['assigned_employees'].empty? }.first
+        end
 
-      it { expect(response.body).to include(first_etop.id, second_etop.id) }
+        before { subject }
+
+        it { expect(response.body).to include(first_etop.id, second_etop.id) }
+
+        it { expect(time_off_policy_with_employees['deletable']).to be false }
+        it { expect(time_off_policy_without_employees['deletable']).to be true }
+      end
     end
 
     context "without params" do
@@ -139,10 +152,13 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
               :policy_type,
               :years_to_effect,
               :time_off_category,
-              :assigned_employees
+              :assigned_employees,
+              :deletable
             ]
           )
         end
+
+        it { expect_json('deletable', true) }
       end
     end
 
@@ -165,7 +181,7 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
       let(:id) { policy.id }
 
       before do
-        create(:employee_time_off_policy, time_off_policy_id: policy.id)
+        create(:employee_time_off_policy, time_off_policy_id: policy.id, employee_id: employee.id)
       end
 
       it { is_expected.to have_http_status(200) }
@@ -185,6 +201,8 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
             ]
           )
         end
+
+        it { expect_json('deletable', false) }
       end
     end
   end
