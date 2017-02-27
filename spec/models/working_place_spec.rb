@@ -47,10 +47,10 @@ RSpec.describe WorkingPlace, type: :model do
 
     context 'with valid data' do
       let(:city) { 'Zurich' }
-      let(:country) { 'Switzerland' }
-      let(:country_code) { 'CH' }
       let(:state_name) { 'Zurich' }
       let(:state_code) { 'ZH' }
+      let(:country) { 'Switzerland' }
+      let(:country_code) { 'CH' }
       let(:timezone) { 'Europe/Zurich' }
 
       context 'for a country with state validation' do
@@ -333,6 +333,26 @@ RSpec.describe WorkingPlace, type: :model do
 
         let(:country) { 'Switzerland' }
         let(:country_code) { 'CH' }
+
+        it_behaves_like 'Invalid Address'
+
+        it { expect(subject.errors).to_not have_key(:state) }
+        it { expect(subject.errors).to_not have_key(:country) }
+
+        it { expect(subject.state).to be_nil }
+        it { expect(subject.state_code).to be_nil }
+        it { expect(subject.timezone).to be_nil }
+      end
+
+      context "create with city only" do
+        subject { build(:working_place, city: 'Lausanne') }
+
+        let(:city) { 'Lausanne' }
+        let(:state) { 'Vaud' }
+        let(:state_code) { 'VD' }
+        let(:country) { 'Switzerland' }
+        let(:country_code) { 'CH' }
+        let(:timezone) { 'Europe/Zurich' }
 
         it_behaves_like 'Invalid Address'
 
