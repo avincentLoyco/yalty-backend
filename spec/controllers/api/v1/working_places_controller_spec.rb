@@ -101,6 +101,8 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
           context 'response' do
             before { subject }
 
+            it { is_expected.to have_http_status(201) }
+
             it { expect_json(regex('Zurich')) }
             it { expect_json(regex('Europe/Zurich')) }
             it { expect_json('state', state) }
@@ -111,6 +113,8 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
           let(:state) { nil }
           context 'response' do
             before { subject }
+
+            it { is_expected.to have_http_status(201) }
 
             it { expect_json(regex('Zurich')) }
             it { expect_json(regex('Europe/Zurich')) }
@@ -131,6 +135,8 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
           context 'response' do
             before { subject }
 
+            it { is_expected.to have_http_status(201) }
+
             it { expect_json(regex(city)) }
             it { expect_json(regex(timezone)) }
             it { expect_json('state', state) }
@@ -142,6 +148,8 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
           context 'response' do
             before { subject }
 
+            it { is_expected.to have_http_status(201) }
+
             it { expect_json(regex(city)) }
             it { expect_json(regex(timezone)) }
             it { expect_json('state', nil) }
@@ -149,7 +157,21 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
         end
       end
 
-      it { is_expected.to have_http_status(201) }
+      context 'without address' do
+        let(:postalcode) { nil }
+        let(:city) { nil }
+        let(:country) { nil }
+        let(:state) { nil }
+        context 'response' do
+          before { subject }
+
+          it { is_expected.to have_http_status(201) }
+
+          it { expect_json('city', nil) }
+          it { expect_json('state', nil) }
+          it { expect_json('country', nil) }
+        end
+      end
 
       context 'response' do
         before { subject }
@@ -240,42 +262,42 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
       context 'with param that fails regex validation' do
         let(:postalcode) { '%%$3@/' }
 
-          it_behaves_like 'Invalid Data'
+        it_behaves_like 'Invalid Data'
 
-          context 'response' do
-            before { subject }
+        context 'response' do
+          before { subject }
 
-            it { expect_json(regex('only numbers, capital letters, spaces and -')) }
-          end
-        end
-
-        context 'without country' do
-          let(:country) { '' }
-
-          context 'response' do
-            before { subject }
-
-            it { expect_json(regex('must be filled')) }
-          end
+          it { expect_json(regex('only numbers, capital letters, spaces and -')) }
         end
       end
 
-      context 'with invalid related records ids' do
-        context 'with invalid holiday policy id' do
-          let(:holiday_policy_id) { '1' }
+      context 'without country' do
+        let(:country) { '' }
 
-          it_behaves_like 'Invalid Data'
+        context 'response' do
+          before { subject }
 
-          it { is_expected.to have_http_status(404) }
-
-          context 'response' do
-            before { subject }
-
-            it { expect_json(regex('Record Not Found')) }
-          end
+          it { expect_json(regex('must be filled')) }
         end
       end
     end
+
+    context 'with invalid related records ids' do
+      context 'with invalid holiday policy id' do
+        let(:holiday_policy_id) { '1' }
+
+        it_behaves_like 'Invalid Data'
+
+        it { is_expected.to have_http_status(404) }
+
+        context 'response' do
+          before { subject }
+
+          it { expect_json(regex('Record Not Found')) }
+        end
+      end
+    end
+  end
 
   context 'PUT #update' do
     let(:working_place) { create(:working_place, country: country, city: city, account: account) }
