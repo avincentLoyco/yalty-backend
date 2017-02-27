@@ -21,10 +21,11 @@ class WorkingPlace < ActiveRecord::Base
     format: { with: %r{\A([a-zA-Z0-9 \/]+\z)},
               message: 'only numbers, capital letters, spaces and /' },
     allow_nil: true
-  validate :correct_country, on: [:create, :update], if: [:city, :country]
-  validate :correct_address, on: [:create, :update], if: [:city, :country]
-  validate :correct_state, on: [:create, :update], if: [:city, :country, :state]
-  before_save :assign_params, on: [:create, :update], if: [:city, :country]
+  validate :correct_address, if: :coordinate_changed?
+  validate :correct_state, if: :coordinate_changed?
+  validate :correct_country, if: :coordinate_changed?
+
+  before_validation :assign_coordinate_related_attributes, if: :coordinate_changed?
 
   scope :active_for_employee, lambda { |employee_id, date|
     joins(:employee_working_places)
@@ -35,57 +36,67 @@ class WorkingPlace < ActiveRecord::Base
   }
 
   def country_code
-    country_data(country).first.alpha2.downcase
+    country_data(country)&.alpha2&.downcase
+  end
+
+  def coordinate_changed?
+    (changed_attributes.keys & %w(city state country)).present?
   end
 
   private
 
   def location_attributes
     @location_attributes ||=
-      Geokit::Geocoders::GoogleGeocoder.geocode("#{city}, #{state}, #{country}")
+      Geokit::Geocoders::GoogleGeocoder
+      .geocode([city, state, country_code, country].compact.join(', '))
   end
 
   def location_timezone
-    Timezone.lookup(location_attributes.lat, location_attributes.lng).name
+    @location_timezone ||= Timezone.lookup(location_attributes.lat, location_attributes.lng)
   end
 
   def address_found?
-    location_attributes.city.present? && location_attributes.country.present?
+    (city.blank? || location_attributes.city.present?) &&
+      (!state_required? || location_attributes.state_code.present?) &&
+      location_attributes.country.present?
   end
 
-  def country_data_found?
-    country_data(country).any? && country_data(location_attributes.country).any?
+  def right_country?
+    country_data(country).present? &&
+      country_data(location_attributes.country).present? &&
+      standardize(country_data(location_attributes.country).translations['en']).eql?(
+        standardize(country_data(country).translations['en'])
+      )
+  end
+
+  def state_required?
+    HolidayPolicy::COUNTRIES_WITH_REGIONS.include?(location_attributes.country_code&.downcase)
+  end
+
+  def right_state?
+    !state_required? || !state.present? ||
+      location_attributes.state_code.casecmp(state).zero? ||
+      location_attributes.state_name.casecmp(state).zero?
   end
 
   def correct_address
-    errors.add(:address, 'not found') unless correct_standardized_address
+    errors.add(:address, 'not found') unless address_found? && right_country?
   end
 
   def correct_state
-    errors.add(:state, 'does not match given address') if different_state_city
+    errors.add(:state, 'does not match given address') unless right_state?
   end
 
   def correct_country
-    errors.add(:country, 'does not exist') if country_data(country).empty?
+    errors.add(:country, 'does not exist') unless country_data(country).present?
   end
 
-  def correct_standardized_address
-    return unless address_found? && country_data_found?
-    standardize(country_data(location_attributes.country).first.translations['en']).eql? \
-      standardize(country_data(country).first.translations['en'])
-  end
+  def assign_coordinate_related_attributes
+    return unless address_found? && right_country?
 
-  def different_state_city
-    return if HolidayPolicy::COUNTRIES_WITH_CODES
-              .exclude?(location_attributes.country_code.downcase)
-    !(location_attributes.state_code.casecmp(state).zero? || \
-      location_attributes.state_name.casecmp(state).zero?)
-  end
-
-  def assign_params
-    self.timezone = location_timezone
-    self.state = location_attributes.state_code if state.nil?
+    self.state = location_attributes.state if state_required? && !state.present?
     self.state_code = location_attributes.state_code.downcase
+    self.timezone = location_timezone.name
   end
 
   def standardize(address_param)
@@ -93,10 +104,6 @@ class WorkingPlace < ActiveRecord::Base
   end
 
   def country_data(country_name)
-    ISO3166::Country
-      .all
-      .select do |place|
-        place.translated_names.include?(country_name.downcase.titleize)
-      end
+    ISO3166::Country.find_country_by_translated_names(country_name)
   end
 end
