@@ -12,8 +12,8 @@ class HolidayPolicy < ActiveRecord::Base
   validates :region, presence: true, inclusion: { in: :regions, allow_nil: true },
                      if: :region_required?
 
+  before_validation :downcase_attributes
   before_validation :unset_region, unless: :region_required?
-  before_validation :downcase_attributes, if: :local?
 
   COUNTRIES_WITH_REGIONS = %w(ch).freeze
   COUNTRIES_WITHOUT_REGIONS = %w().freeze
@@ -51,10 +51,6 @@ class HolidayPolicy < ActiveRecord::Base
     self.region = nil
   end
 
-  def local?
-    country? || region?
-  end
-
   def region_required?
     valid_country? && COUNTRIES_WITH_REGIONS.include?(country)
   end
@@ -64,8 +60,8 @@ class HolidayPolicy < ActiveRecord::Base
   end
 
   def downcase_attributes
-    self[:country] = country.try(:downcase)
-    self[:region] = region.try(:downcase)
+    self.country = country&.downcase
+    self.region = region&.downcase
   end
 
   def countries

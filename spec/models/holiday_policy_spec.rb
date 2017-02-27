@@ -38,7 +38,7 @@ RSpec.describe HolidayPolicy, type: :model do
         expect { holiday_policy.save }.to change { HolidayPolicy.count }.from(0).to(1)
       end
 
-      it 'should be valid when valid country code send not downcased' do
+      it 'should be valid when valid country code send downcased' do
         params = { name: 'test', country: 'pl', account: account }
         holiday_policy = HolidayPolicy.new(params)
 
@@ -46,15 +46,8 @@ RSpec.describe HolidayPolicy, type: :model do
         expect { holiday_policy.save }.to change { HolidayPolicy.count }.from(0).to(1)
       end
 
-      it 'should not be valid when invalid country code send' do
+      it 'should not be valid when worong country code send' do
         params = { name: 'test', country: 'XYZ', account: account }
-        holiday_policy = HolidayPolicy.new(params)
-
-        expect(holiday_policy).to_not be_valid
-      end
-
-      it 'should not be valid when wrong country code send' do
-        params = { name: 'test', country: 'xyz', region: 'DS', account: account }
         holiday_policy = HolidayPolicy.new(params)
 
         expect(holiday_policy).to_not be_valid
@@ -71,6 +64,12 @@ RSpec.describe HolidayPolicy, type: :model do
     context 'region inclusion' do
       it 'should be valid when valid region code send capitalized' do
         params = { name: 'test', country: 'ch', region: 'ZH', account: account }
+        holiday_policy = HolidayPolicy.new(params)
+
+        expect(holiday_policy).to be_valid
+      end
+      it 'should be valid when valid country and region code send capitalized' do
+        params = { name: 'test', country: 'CH', region: 'ZH', account: account }
         holiday_policy = HolidayPolicy.new(params)
 
         expect(holiday_policy).to be_valid
