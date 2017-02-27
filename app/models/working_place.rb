@@ -40,7 +40,7 @@ class WorkingPlace < ActiveRecord::Base
   end
 
   def coordinate_changed?
-    !(changed_attributes.keys & %w(city state country)).empty?
+    (changed_attributes.keys & %w(city state country)).present?
   end
 
   private
@@ -56,7 +56,7 @@ class WorkingPlace < ActiveRecord::Base
   end
 
   def address_found?
-    (!city.present? || location_attributes.city.present?) &&
+    (city.blank? || location_attributes.city.present?) &&
       (!state_required? || location_attributes.state_code.present?) &&
       location_attributes.country.present?
   end
