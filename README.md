@@ -70,11 +70,11 @@ Make sure everything is ok by running specs:
 bin/rspec
 ```
 
-Get keys for geolocation and write them to `.env.local` file
-* GOOGLE_GEOCODERS key from [Google Geocoders](https://developers.google.com/maps/documentation/geocoding/intro)
-* GEONAMES_KEY from [Geonames](http://www.geonames.org/)
-  * username of created account is the key
-  * enable free web services here: http://www.geonames.org/manageaccount
+Get a key on [Google API console](https://code.google.com/apis/console/) and add it in
+`.env.local` file under `GOOGLE_API_KEY` name, then enable following services:
+
+* Google Maps Time Zone API
+* Google Maps Geocoding API
 
 
 Running development
