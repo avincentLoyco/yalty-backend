@@ -22,7 +22,7 @@ module API
         employee_attributes =
           FullEmployeeAttributesList.new(Account.current.id, employee_id, attributes[:date]).call
 
-        if current_user.account_manager || current_user.employee.try(:id) == employee_id
+        if current_user.owner_or_administrator? || current_user.employee.try(:id).eql?(employee_id)
           employee_attributes
         else
           employee_attributes.try(:visible_for_other_employees)

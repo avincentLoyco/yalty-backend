@@ -63,13 +63,8 @@ namespace :attribute_definitions do
       event_type = find_event_type_for(version)
       next if event_type.nil?
       event_effective_at = civil_event_effective_at(version)
-      CreateEvent.new(
-        {
-          effective_at: event_effective_at,
-          event_type: event_type,
-          employee: { id: version.employee_id }
-        },
-        []
+      Employee::Event.create!(
+        effective_at: event_effective_at, event_type: event_type, employee: version.employee
       )
     end
   end
