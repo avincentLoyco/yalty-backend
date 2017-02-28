@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe API::V1::WorkingPlacesController, type: :controller do
-
+  include_context 'shared_context_geoloc_helper'
   include_context 'example_authorization',
     resource_name: 'working_place'
   include_examples 'example_crud_resources',
@@ -19,27 +19,12 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
       working_place: first_working_place, effective_at: Time.now - 6.months)
   end
 
-  before do
-    allow_any_instance_of(WorkingPlace).to receive(:location_attributes) { place_info_result }
-    allow_any_instance_of(WorkingPlace).to receive(:location_timezone) { timezone }
-  end
-
-  let(:place_info_result) do
-    loc = Geokit::GeoLoc.new(city: city)
-    loc.country = country
-    loc.country_code = country_code
-    loc.state_code = state_code
-    loc.state_name = state_name
-    loc
-  end
-
-  let(:timezone) { 'Europe/Zurich' }
-
   let(:city) { 'Zurich' }
   let(:country) { 'Switzerland' }
   let(:country_code) { 'CH' }
-  let(:state_code) { 'ZH' }
   let(:state_name) { 'Zurich' }
+  let(:state_code) { 'ZH' }
+  let(:timezone) { 'Europe/Zurich' }
 
   context 'GET #index' do
     subject { get :index }
@@ -78,7 +63,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
   context 'POST #create' do
     let(:name) { 'test' }
     let(:country) { 'Switzerland' }
-    let(:state) { 'zurich' }
+    let(:state) { 'Zurich' }
     let(:postalcode) { '123-41'}
     let(:city) { 'Zurich' }
     let(:holiday_policy_id) { holiday_policy.id }
@@ -110,12 +95,13 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
     context 'with valid params' do
       it { expect { subject }.to change { WorkingPlace.count }.by(1) }
       it { expect { subject }.to change { account.reload.working_places.count }.by(1) }
-      it { expect { subject }.to change { holiday_policy.working_places.count }.by(1) }
 
       context 'with country that has region validation' do
         context 'with state specified' do
           context 'response' do
             before { subject }
+
+            it { is_expected.to have_http_status(201) }
 
             it { expect_json(regex('Zurich')) }
             it { expect_json(regex('Europe/Zurich')) }
@@ -127,6 +113,8 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
           let(:state) { nil }
           context 'response' do
             before { subject }
+
+            it { is_expected.to have_http_status(201) }
 
             it { expect_json(regex('Zurich')) }
             it { expect_json(regex('Europe/Zurich')) }
@@ -147,6 +135,8 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
           context 'response' do
             before { subject }
 
+            it { is_expected.to have_http_status(201) }
+
             it { expect_json(regex(city)) }
             it { expect_json(regex(timezone)) }
             it { expect_json('state', state) }
@@ -158,14 +148,30 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
           context 'response' do
             before { subject }
 
+            it { is_expected.to have_http_status(201) }
+
             it { expect_json(regex(city)) }
             it { expect_json(regex(timezone)) }
-            it { expect_json('state', state_code) }
+            it { expect_json('state', nil) }
           end
         end
       end
 
-      it { is_expected.to have_http_status(201) }
+      context 'without address' do
+        let(:postalcode) { nil }
+        let(:city) { nil }
+        let(:country) { nil }
+        let(:state) { nil }
+        context 'response' do
+          before { subject }
+
+          it { is_expected.to have_http_status(201) }
+
+          it { expect_json('city', nil) }
+          it { expect_json('state', nil) }
+          it { expect_json('country', nil) }
+        end
+      end
 
       context 'response' do
         before { subject }
@@ -183,8 +189,41 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
 
         it { expect { subject }.to change { WorkingPlace.count }.by(1) }
         it { expect { subject }.to change { account.reload.working_places.count }.by(1) }
-        it { expect { subject }.not_to change { holiday_policy.working_places.count } }
-        it { is_expected.to have_http_status(201) }
+
+        context 'with valid region' do
+          let(:state) { 'ZH' }
+          context "matching holiday policy in account isn't present" do
+            it { expect { subject }.not_to change { holiday_policy.working_places.count } }
+            it { expect { subject }.to change { HolidayPolicy.count }.by(1) }
+
+            it { expect { subject }.to change { account.working_places.count }.by(1) }
+
+            context 'created holiday policy is assigned to working place' do
+              before do
+                HolidayPolicy.all.delete_all
+                subject
+              end
+
+              it { expect(HolidayPolicy.first.working_places.present?).to eq(true) }
+            end
+          end
+
+          context 'matching holiday policy in account is present' do
+            let(:state) { 'ZH' }
+            before { account.holiday_policies = [existing_holiday_policy] }
+
+            let(:existing_holiday_policy) do
+              create :holiday_policy, account: account, country: 'ch', region: 'zh'
+            end
+
+            it { expect { subject }.to change { existing_holiday_policy.working_places.count } }
+            it { expect { subject }.not_to change { HolidayPolicy.count } }
+          end
+          it { is_expected.to have_http_status(201) }
+        end
+      end
+
+      context 'with invalid region' do
       end
     end
 
@@ -225,8 +264,6 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
 
         it_behaves_like 'Invalid Data'
 
-        it { is_expected.to have_http_status(422) }
-
         context 'response' do
           before { subject }
 
@@ -234,19 +271,29 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
         end
       end
 
-      context 'with invalid related records ids' do
-        context 'with invalid holiday policy id' do
-          let(:holiday_policy_id) { '1' }
+      context 'without country' do
+        let(:country) { '' }
 
-          it_behaves_like 'Invalid Data'
+        context 'response' do
+          before { subject }
 
-          it { is_expected.to have_http_status(404) }
+          it { expect_json(regex('must be filled')) }
+        end
+      end
+    end
 
-          context 'response' do
-            before { subject }
+    context 'with invalid related records ids' do
+      context 'with invalid holiday policy id' do
+        let(:holiday_policy_id) { '1' }
 
-            it { expect_json(regex('Record Not Found')) }
-          end
+        it_behaves_like 'Invalid Data'
+
+        it { is_expected.to have_http_status(404) }
+
+        context 'response' do
+          before { subject }
+
+          it { expect_json(regex('Record Not Found')) }
         end
       end
     end
@@ -296,8 +343,26 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
 
         subject { put :update, valid_data_json.merge(holiday_policy: nil) }
 
-        it { is_expected.to have_http_status(204) }
-        it { expect { subject }.to change { working_place.reload.holiday_policy_id }.to(nil) }
+        context 'when account does not have holiday policy for country/region' do
+          it { is_expected.to have_http_status(204) }
+          it { expect { subject }.to change { working_place.reload.holiday_policy_id } }
+          it { expect { subject }.to change { HolidayPolicy.count } }
+        end
+
+        context 'when account has proper holiday policy' do
+          let!(:holiday_policy) do
+            create(:holiday_policy,
+              account: account,
+              country: 'ch',
+              region: 'zh')
+          end
+          it { is_expected.to have_http_status(204) }
+          it { expect { subject }.not_to change { HolidayPolicy.count } }
+          it do
+            expect { subject }.to change { working_place.reload.holiday_policy_id }
+              .to(holiday_policy.id)
+          end
+        end
       end
 
       context 'with country without region validation' do
@@ -389,7 +454,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
       end
 
       context 'when working place has employees assigned' do
-        it { expect { subject  }.to_not change { WorkingPlace.count } }
+        it { expect { subject }.to_not change { WorkingPlace.count } }
         it { is_expected.to have_http_status(423) }
 
         context 'response' do
