@@ -243,8 +243,8 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
         end
       end
 
-      context 'with single param that is empty' do
-        [:name, :country].each do |param|
+      %i(name).each do |param|
+        context "with #{param} param that is empty" do
           let(param) { '' }
 
           it { is_expected.to have_http_status(422) }
@@ -262,22 +262,14 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
       context 'with param that fails regex validation' do
         let(:postalcode) { '%%$3@/' }
 
+        it { is_expected.to have_http_status(422) }
+
         it_behaves_like 'Invalid Data'
 
         context 'response' do
           before { subject }
 
           it { expect_json(regex('only numbers, capital letters, spaces and -')) }
-        end
-      end
-
-      context 'without country' do
-        let(:country) { '' }
-
-        context 'response' do
-          before { subject }
-
-          it { expect_json(regex('must be filled')) }
         end
       end
     end

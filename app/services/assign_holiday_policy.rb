@@ -25,11 +25,7 @@ class AssignHolidayPolicy
 
   def find_or_create_policy
     holiday_policies.find_or_create_by!(region: state_code, country: country_code) do |policy|
-      if state_code
-        policy.name = "#{working_place.country} (#{working_place.state})"
-      else
-        policy.name = working_place.country
-      end
+      policy.name = state_code ? "#{working_place.country} (#{working_place.state})" : policy_name
     end
   end
 

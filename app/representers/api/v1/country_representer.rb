@@ -4,7 +4,7 @@ module Api::V1
 
     def initialize(country)
       @country = country
-      @has_regions = HolidayPolicy::country_with_regions?(country)
+      @has_regions = HolidayPolicy.country_with_regions?(country)
     end
 
     def complete

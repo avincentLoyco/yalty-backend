@@ -70,16 +70,18 @@ class WorkingPlace < ActiveRecord::Base
   end
 
   def state_required?
-    HolidayPolicy::country_with_regions?(location_attributes.country_code)
+    HolidayPolicy.country_with_regions?(location_attributes.country_code)
   end
 
   def right_state?
     !state_required? || !state.present? || state == state_code ||
       country_data(location_attributes.country).present? &&
-      country_data(location_attributes.country).states.has_key?(state_code) && (
-        country_data(location_attributes.country).states[state_code]['name'].include?(state) ||
-        country_data(location_attributes.country).states[state_code]['names'].any? { |n| n.include? state }
-      )
+        country_data(location_attributes.country).states.key?(state_code) &&
+        (
+          country_data(location_attributes.country).states[state_code]['name'].include?(state) ||
+          country_data(location_attributes.country)
+            .states[state_code]['names'].any? { |name| name.include?(state) }
+        )
   end
 
   def correct_address
