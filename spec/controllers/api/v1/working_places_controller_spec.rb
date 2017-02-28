@@ -63,7 +63,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
   context 'POST #create' do
     let(:name) { 'test' }
     let(:country) { 'Switzerland' }
-    let(:state) { 'zurich' }
+    let(:state) { 'Zurich' }
     let(:postalcode) { '123-41'}
     let(:city) { 'Zurich' }
     let(:holiday_policy_id) { holiday_policy.id }
@@ -191,7 +191,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
         it { expect { subject }.to change { account.reload.working_places.count }.by(1) }
 
         context 'with valid region' do
-          let(:state) { 'zh' }
+          let(:state) { 'ZH' }
           context "matching holiday policy in account isn't present" do
             it { expect { subject }.not_to change { holiday_policy.working_places.count } }
             it { expect { subject }.to change { HolidayPolicy.count }.by(1) }
@@ -209,7 +209,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
           end
 
           context 'matching holiday policy in account is present' do
-            let(:state) { 'zh' }
+            let(:state) { 'ZH' }
             before { account.holiday_policies = [existing_holiday_policy] }
 
             let(:existing_holiday_policy) do

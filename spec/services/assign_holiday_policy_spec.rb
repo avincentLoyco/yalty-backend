@@ -13,10 +13,10 @@ RSpec.describe AssignHolidayPolicy do
   let(:city) { 'Zurich' }
   let(:state_name) { 'Zurich' }
   let(:state_code) { 'ZH' }
-  let(:state_param) { 'zh' }
+  let(:state_param) { 'ZH' }
   let(:country) { 'Switzerland' }
   let(:country_code) { 'CH' }
-  let(:country_param) { 'ch' }
+  let(:country_param) { 'CH' }
   let(:timezone) { 'Europe/Zurich' }
 
   let(:working_place) { create :working_place, city: city, state: state_param, country: country }
@@ -44,7 +44,7 @@ RSpec.describe AssignHolidayPolicy do
       context "and a holiday policy matching working place coordinates doesn't exists" do
         it { expect { subject.call }.to change { HolidayPolicy.count }.by(1) }
         it { subject.call; expect(working_place.holiday_policy).not_to be(nil) }
-        it { subject.call; expect(working_place.holiday_policy.name).to eq('Switzerland (zh)') }
+        it { subject.call; expect(working_place.holiday_policy.name).to eq('Switzerland (ZH)') }
       end
     end
   end

@@ -59,7 +59,7 @@ RSpec.describe WorkingPlace, type: :model do
 
           it { expect(subject).to be_valid }
           it { expect(subject.state).to eq('Zurich') }
-          it { expect(subject.state_code).to eq('zh') }
+          it { expect(subject.state_code).to eq('ZH') }
           it { expect(subject.timezone).to eql('Europe/Zurich') }
         end
 
@@ -68,7 +68,7 @@ RSpec.describe WorkingPlace, type: :model do
 
           it { expect(subject).to be_valid }
           it { expect(subject.state).to eq('ZH') }
-          it { expect(subject.state_code).to eq('zh') }
+          it { expect(subject.state_code).to eq('ZH') }
           it { expect(subject.timezone).to eql('Europe/Zurich') }
         end
 
@@ -79,7 +79,7 @@ RSpec.describe WorkingPlace, type: :model do
 
           it { expect(subject).to be_valid }
           it { expect(subject.state).to eq('ZH') }
-          it { expect(subject.state_code).to eq('zh') }
+          it { expect(subject.state_code).to eq('ZH') }
           it { expect(subject.timezone).to eql('Europe/Zurich') }
         end
 
@@ -88,7 +88,7 @@ RSpec.describe WorkingPlace, type: :model do
 
           it { expect(subject).to be_valid }
           it { expect(subject.state).to eq('ZH') }
-          it { expect(subject.state_code).to eq('zh') }
+          it { expect(subject.state_code).to eq('ZH') }
           it { expect(subject.timezone).to eql('Europe/Zurich') }
         end
 
@@ -97,7 +97,7 @@ RSpec.describe WorkingPlace, type: :model do
 
           it { expect(subject).to be_valid }
           it { expect(subject.state).to eq('ZH') }
-          it { expect(subject.state_code).to eq('zh') }
+          it { expect(subject.state_code).to eq('ZH') }
           it { expect(subject.timezone).to eql('Europe/Zurich') }
         end
 
@@ -109,7 +109,7 @@ RSpec.describe WorkingPlace, type: :model do
 
           it { expect(subject).to be_valid }
           it { expect(subject.state).to eq('GE') }
-          it { expect(subject.state_code).to eq('ge') }
+          it { expect(subject.state_code).to eq('GE') }
           it { expect(subject.timezone).to eql('Europe/Zurich') }
         end
 
@@ -119,7 +119,7 @@ RSpec.describe WorkingPlace, type: :model do
 
           it { expect(subject).to be_valid }
           it { expect(subject.state).to eq('ZH') }
-          it { expect(subject.state_code).to eq('zh') }
+          it { expect(subject.state_code).to eq('ZH') }
           it { expect(subject.timezone).to eql('Europe/Zurich') }
         end
 
@@ -131,7 +131,19 @@ RSpec.describe WorkingPlace, type: :model do
 
           it { expect(subject).to be_valid }
           it { expect(subject.state).to eq('VD') }
-          it { expect(subject.state_code).to eq('vd') }
+          it { expect(subject.state_code).to eq('VD') }
+          it { expect(subject.timezone).to eql('Europe/Zurich') }
+        end
+
+        context 'create with exotic non english state name' do
+          subject { create(:working_place, state: 'Graubünden', country: country) }
+          let(:city) { nil  }
+          let(:state_name) { 'Grison' }
+          let(:state_code) { 'GR' }
+
+          it { expect(subject).to be_valid }
+          it { expect(subject.state).to eq('Graubünden') }
+          it { expect(subject.state_code).to eq('GR') }
           it { expect(subject.timezone).to eql('Europe/Zurich') }
         end
 
@@ -157,7 +169,7 @@ RSpec.describe WorkingPlace, type: :model do
           it { expect(subject).to be_valid }
           it { expect(subject.city).to eq('Geneva') }
           it { expect(subject.state).to eq('GE') }
-          it { expect(subject.state_code).to eq('ge') }
+          it { expect(subject.state_code).to eq('GE') }
           it { expect(subject.timezone).to eql('Europe/Zurich') }
         end
 
@@ -183,7 +195,7 @@ RSpec.describe WorkingPlace, type: :model do
 
           it { expect(subject).to be_valid }
           it { expect(subject.state).to eq('GE') }
-          it { expect(subject.state_code).to eq('ge') }
+          it { expect(subject.state_code).to eq('GE') }
           it { expect(subject.timezone).to eql('Europe/Zurich') }
         end
 
@@ -210,7 +222,7 @@ RSpec.describe WorkingPlace, type: :model do
           it { expect(subject).to be_valid }
           it { expect(subject.city).to eq('Zurich') }
           it { expect(subject.state).to eq('ZH') }
-          it { expect(subject.state_code).to eq('zh') }
+          it { expect(subject.state_code).to eq('ZH') }
           it { expect(subject.timezone).to eql('Europe/Zurich') }
         end
 
@@ -236,7 +248,7 @@ RSpec.describe WorkingPlace, type: :model do
           it { expect(subject).to be_valid }
           it { expect(subject.city).to eq('Geneva') }
           it { expect(subject.state).to eq('GE') }
-          it { expect(subject.state_code).to eq('ge') }
+          it { expect(subject.state_code).to eq('GE') }
           it { expect(subject.timezone).to eql('Europe/Zurich') }
         end
 
@@ -270,7 +282,7 @@ RSpec.describe WorkingPlace, type: :model do
           it { expect(subject).to be_valid }
           it { expect(subject.errors).to_not have_key(:address) }
           it { expect(subject.state).to eq('Podkarpacie') }
-          it { expect(subject.state_code).to eq('podkarpackie voivodeship') }
+          it { expect(subject.state_code).to eq('Podkarpackie Voivodeship') }
           it { expect(subject.timezone).to eql('Europe/Warsaw') }
         end
 
@@ -280,7 +292,7 @@ RSpec.describe WorkingPlace, type: :model do
           it { expect(subject).to be_valid }
           it { expect(subject.errors).to_not have_key(:address) }
           it { expect(subject.state).to be_nil }
-          it { expect(subject.state_code).to eq('podkarpackie voivodeship') }
+          it { expect(subject.state_code).to eq('Podkarpackie Voivodeship') }
           it { expect(subject.timezone).to eql('Europe/Warsaw') }
         end
 
@@ -295,7 +307,7 @@ RSpec.describe WorkingPlace, type: :model do
           it { expect(subject).to be_valid }
           it { expect(subject.errors).to_not have_key(:address) }
           it { expect(subject.state).to eq('Podkarpacie') }
-          it { expect(subject.state_code).to eq('podkarpackie voivodeship') }
+          it { expect(subject.state_code).to eq('Podkarpackie Voivodeship') }
           it { expect(subject.timezone).to eql('Europe/Warsaw') }
         end
 
@@ -310,7 +322,7 @@ RSpec.describe WorkingPlace, type: :model do
           it { expect(subject).to be_valid }
           it { expect(subject.errors).to_not have_key(:address) }
           it { expect(subject.state).to be_nil }
-          it { expect(subject.state_code).to eq('podkarpackie voivodeship') }
+          it { expect(subject.state_code).to eq('Podkarpackie Voivodeship') }
           it { expect(subject.timezone).to eql('Europe/Warsaw') }
         end
 
@@ -426,7 +438,7 @@ RSpec.describe WorkingPlace, type: :model do
           it { expect(subject.errors).to_not have_key(:country) }
 
           it { expect(subject.state).to eql('Wrong') }
-          it { expect(subject.state_code).to eql('zh') }
+          it { expect(subject.state_code).to eql('ZH') }
           it { expect(subject.timezone).to eq('Zurich/Europe') }
         end
       end

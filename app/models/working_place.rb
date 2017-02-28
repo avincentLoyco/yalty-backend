@@ -74,9 +74,12 @@ class WorkingPlace < ActiveRecord::Base
   end
 
   def right_state?
-    !state_required? || !state.present? ||
-      location_attributes.state_code.casecmp(state).zero? ||
-      location_attributes.state_name.casecmp(state).zero?
+    !state_required? || !state.present? || state == state_code ||
+      country_data(location_attributes.country).present? &&
+      country_data(location_attributes.country).states.has_key?(state_code) && (
+        country_data(location_attributes.country).states[state_code]['name'].include?(state) ||
+        country_data(location_attributes.country).states[state_code]['names'].any? { |n| n.include? state }
+      )
   end
 
   def correct_address
@@ -95,7 +98,7 @@ class WorkingPlace < ActiveRecord::Base
     return unless address_found? && right_country?
 
     self.state = location_attributes.state if state_required? && !state.present?
-    self.state_code = location_attributes.state_code.downcase
+    self.state_code = location_attributes.state_code
     self.timezone = location_timezone.name
   end
 
