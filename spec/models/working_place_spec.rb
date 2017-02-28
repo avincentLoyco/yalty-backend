@@ -113,6 +113,16 @@ RSpec.describe WorkingPlace, type: :model do
           it { expect(subject.timezone).to eql('Europe/Zurich') }
         end
 
+        context 'create with country code' do
+          subject { create(:working_place, state: state_code, country: 'CH') }
+          let(:city) { nil }
+
+          it { expect(subject).to be_valid }
+          it { expect(subject.state).to eq('ZH') }
+          it { expect(subject.state_code).to eq('zh') }
+          it { expect(subject.timezone).to eql('Europe/Zurich') }
+        end
+
         context 'create with state code' do
           subject { create(:working_place, city: 'Lausanne', state: 'VD', country: country) }
           let(:city) { 'Lausanne' }

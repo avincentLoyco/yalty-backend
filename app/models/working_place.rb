@@ -104,6 +104,7 @@ class WorkingPlace < ActiveRecord::Base
   end
 
   def country_data(country_name)
-    ISO3166::Country.find_country_by_translated_names(country_name)
+    ISO3166::Country.find_country_by_translated_names(country_name) ||
+      ISO3166::Country.find_country_by_alpha2(country_name)
   end
 end
