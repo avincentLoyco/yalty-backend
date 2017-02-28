@@ -42,7 +42,7 @@ class AssignHolidayPolicy
   end
 
   def state_code
-    return unless HolidayPolicy::COUNTRIES_WITH_REGIONS.include?(country_code)
+    return unless HolidayPolicy.country_with_regions?(country_code)
     working_place.state_code.downcase
   end
 end

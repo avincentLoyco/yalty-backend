@@ -21,6 +21,14 @@ class HolidayPolicy < ActiveRecord::Base
 
   HolidayStruct = Struct.new(:date, :name)
 
+  def self.country_with_regions?(country)
+    return false unless country.present?
+    return true if COUNTRIES_WITH_REGIONS.include?(country.downcase)
+    COUNTRIES_WITH_REGIONS.include?(
+      ISO3166::Country.find_country_by_translated_names(country)&.alpha2&.downcase
+    )
+  end
+
   def holidays
     country_holidays if country.present?
   end
