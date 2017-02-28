@@ -110,7 +110,8 @@ class CreateOrUpdateJoinTable
     @status = 201
     employee_join_tables.create!(params.except(:employee_id)).tap do |join_table|
       upcoming_contract_end = join_table.employee.first_upcoming_contract_end
-      next unless upcoming_contract_end.present? && join_table.effective_at <= upcoming_contract_end.effective_at
+      next unless upcoming_contract_end.present? &&
+          join_table.effective_at <= upcoming_contract_end.effective_at
       create_reset_join_table(join_table)
     end
   end
@@ -120,24 +121,24 @@ class CreateOrUpdateJoinTable
     employee = join_table.employee
 
     before_contract_end = employee.contract_end_for(join_table.effective_at)
-    next_contract_end = employee.first_upcoming_contract_end(join_table.effective_at).try(:effective_at)
+    next_contract_end =
+      employee.first_upcoming_contract_end(join_table.effective_at).try(:effective_at)
 
     if before_contract_end.present? && join_table_old_effective_at.eql?(before_contract_end + 1.day)
       create_reset_join_table(join_table, before_contract_end)
     end
 
-    if next_contract_end.present?
-      create_reset_join_table(join_table, next_contract_end)
-    end
+    create_reset_join_table(join_table, next_contract_end) if next_contract_end.present?
   end
 
   def create_reset_join_table(join_table, effective_at = nil)
     employee = join_table.employee
     join_table_name = resource_class.name.underscore.pluralize
     time_off_category = join_table.try(:time_off_category)
-    return unless create_reset_join_table?(employee, join_table_name, time_off_category, effective_at)
-    AssignResetJoinTable.new(join_table_name, employee, time_off_category, effective_at).call
-    ClearResetJoinTables.new(employee, join_table_old_effective_at, time_off_category).call
+    if create_reset_join_table?(employee, join_table_name, time_off_category, effective_at)
+      AssignResetJoinTable.new(join_table_name, employee, time_off_category, effective_at).call
+      ClearResetJoinTables.new(employee, join_table_old_effective_at, time_off_category).call
+    end
   end
 
   def create_reset_join_table?(employee, join_table_name, time_off_category, effective_at)

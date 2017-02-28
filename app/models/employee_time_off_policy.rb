@@ -110,8 +110,7 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
   end
 
   def verify_not_change_of_policy_type_in_category
-    #TODO change this validation becuase its not working
-    return if self.time_off_policy.reset
+    return if time_off_policy.reset
     firts_etop =
       employee
       .employee_time_off_policies

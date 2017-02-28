@@ -21,7 +21,8 @@ class UpdateEvent
       manage_versions
       save!
       previous_and_next_events_valid?
-    end.tap { handle_contract_end  }
+    end
+    event.tap { handle_contract_end }
   end
 
   private
@@ -33,7 +34,10 @@ class UpdateEvent
     reset_effective_at = @old_effective_at + 1.day
     if @old_effective_at < event.reload.effective_at
       tables.each do |table_name|
-        employee.send(table_name).with_reset.where(effective_at: reset_effective_at).update_all(effective_at: event.effective_at + 1.day)
+        join_tables = employee.send(table_name).with_reset.where(effective_at: reset_effective_at)
+        join_tables.map do |join_table|
+          join_table.update!(effective_at: event.effective_at + 1.day)
+        end
       end
     elsif @old_effective_at > event.reload.effective_at
       tables.each do |table_name|
@@ -160,9 +164,8 @@ class UpdateEvent
     previous_not_valid = event.previous_event.present? && !event.previous_event.valid?
     next_not_valid = event.next_event.present? && !event.next_event.valid?
     return event unless hired_or_contract_end && (previous_not_valid || next_not_valid)
-    messages = [event.previous_event, event.next_event].inject({}) do |msg, evnt|
+    messages = [event.previous_event, event.next_event].each_with_object({}) do |evnt, msg|
       msg.merge(evnt.errors.messages) if evnt.present?
-      msg
     end
 
     raise InvalidResourcesError.new(event, messages)

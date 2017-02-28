@@ -3,7 +3,8 @@ class AssignResetJoinTable
     @resources_name = resources_name
     @employee = employee
     @account = employee.account
-    @contract_end_date = contract_end_date || employee.first_upcoming_contract_end.try(:effective_at)
+    @contract_end_date =
+      contract_end_date || employee.first_upcoming_contract_end.try(:effective_at)
     @effective_at = @contract_end_date + 1.day if @contract_end_date.present?
     @time_off_category = time_off_category
   end
@@ -72,19 +73,21 @@ class AssignResetJoinTable
     @employee.employee_time_off_policies
              .joins(:time_off_policy)
              .where(
-                time_off_category: category,
-                effective_at: @effective_at,
-                time_off_policies: { reset: true }
-              )
+               time_off_category: category,
+               effective_at: @effective_at,
+               time_off_policies: { reset: true }
+             )
              .present?
   end
 
   def create_reset_join_table?
-    resources_present = if @resources_name.eql?('time_off_policies')
-      @employee.time_off_categories.distinct.present?
-    else
-      @employee.send(@resources_name).active_for_employee(@employee.id, @contract_end_date).present?
-    end
+    resources_present =
+      if @resources_name.eql?('time_off_policies')
+        @employee.time_off_categories.distinct.present?
+      else
+        @employee.send(@resources_name)
+                 .active_for_employee(@employee.id, @contract_end_date).present?
+      end
     @time_off_category.present? || resources_present
   end
 end

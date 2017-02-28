@@ -192,8 +192,9 @@ class TimeOff < ActiveRecord::Base
   end
 
   def end_time_not_after_contract_end
-    return unless employee.contract_end_for(end_time).present? &&
-        employee.contract_end_for(end_time) > employee.hired_date_for(end_time)
+    contract_end = employee.contract_end_for(end_time)
+    return unless contract_end.present? && contract_end > employee.hired_date_for(end_time) &&
+        end_time > (contract_end + 1.day).beginning_of_day
 
     errors.add(:end_time, 'Time Off can not be added after employee contract end date')
   end

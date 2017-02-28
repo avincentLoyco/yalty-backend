@@ -146,7 +146,7 @@ class Employee < ActiveRecord::Base
     employee_attribute_versions.where("data -> 'attribute_type' = 'File'").count
   end
 
-  def first_upcoming_contract_end(date = Date.today)
+  def first_upcoming_contract_end(date = Time.zone.today)
     events
       .where(event_type: 'contract_end')
       .where('effective_at > ?', date)

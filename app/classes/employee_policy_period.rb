@@ -97,10 +97,8 @@ class EmployeePolicyPeriod
       else
         next_start_date + RelatedPolicyPeriod.new(next_related_policy).policy_length.years
       end
-    else
-      if next_start_date
-        next_start_date + active_policy_period.try(:policy_length).to_i.years
-      end
+    elsif next_start_date
+      next_start_date + active_policy_period.try(:policy_length).to_i.years
     end
   end
 
