@@ -14,6 +14,12 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
     create(:employee_working_place, effective_at: 5.years.ago, working_place: working_place)
   end
 
+  describe 'reset join tables behaviour' do
+    include_context 'shared_context_join_tables_controller',
+      join_table: :employee_working_place,
+      resource: :working_place
+  end
+
   describe 'get #INDEX' do
     let!(:working_place_related) do
       create(:employee_working_place,
@@ -32,11 +38,11 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
 
       it { is_expected.to have_http_status(200) }
 
-      context 'response body' do
-        before { subject }
+      it 'has valid response body response body' do
+        subject
 
-        it { expect(response.body).to include(employee_working_place.id, employee_related.id) }
-        it { expect(response.body).to_not include(working_place_related.id) }
+        expect(response.body).to include(employee_working_place.id, employee_related.id)
+        expect(response.body).to_not include(working_place_related.id)
       end
     end
 

@@ -68,7 +68,7 @@ module API
       private
 
       def resource
-        @resource ||= Account.current.employee_time_off_policies.find(params[:id])
+        @resource ||= Account.current.employee_time_off_policies.not_reset.find(params[:id])
       end
 
       def time_off_policy

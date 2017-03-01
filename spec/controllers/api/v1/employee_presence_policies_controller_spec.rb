@@ -9,6 +9,12 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
   let(:employee) { create(:employee, account: Account.current) }
   let(:presence_policy_id) { presence_policy.id }
 
+  describe 'reset join tables behaviour' do
+    include_context 'shared_context_join_tables_controller',
+      join_table: :employee_presence_policy,
+      resource: :presence_policy
+  end
+
   describe 'GET #index' do
     subject { get :index, presence_policy_id: presence_policy.id }
 

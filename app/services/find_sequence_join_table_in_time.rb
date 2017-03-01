@@ -13,6 +13,7 @@ class FindSequenceJoinTableInTime
 
   def call
     return [] unless join_tables.present?
+    verify_if_not_at_reset_policy
     verify_if_resource_not_duplicated
     join_tables_to_delete = []
     join_tables_to_delete.push(current_join_table, next_join_table) if new_effective_at
@@ -59,6 +60,18 @@ class FindSequenceJoinTableInTime
     return unless current_join_table.try(:send, resource_class) == resource.id
     raise InvalidResourcesError.new(
       join_tables.first.class, ['Join Table with given date and resource already exists']
+    )
+  end
+
+  def verify_if_not_at_reset_policy
+    employee = join_tables.first.employee
+    contract_end = employee.contract_end_for(new_effective_at)
+    contract_start = employee.hired_date_for(new_effective_at)
+
+    return unless current_join_table && current_join_table.related_resource.reset? &&
+        contract_end > contract_start
+    raise InvalidResourcesError.new(
+      join_tables.first.class, ['Can not assign in reset resource effective at']
     )
   end
 end

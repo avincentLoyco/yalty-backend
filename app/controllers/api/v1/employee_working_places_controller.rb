@@ -64,7 +64,7 @@ module API
       end
 
       def resource
-        @resource ||= Account.current.employee_working_places.find(params[:id])
+        @resource ||= Account.current.employee_working_places.not_reset.find(params[:id])
       end
 
       def working_place

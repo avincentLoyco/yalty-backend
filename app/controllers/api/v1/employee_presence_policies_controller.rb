@@ -45,7 +45,7 @@ module API
       private
 
       def resource
-        @resource ||= Account.current.employee_presence_policies.find(params[:id])
+        @resource ||= Account.current.employee_presence_policies.not_reset.find(params[:id])
       end
 
       def presence_policy

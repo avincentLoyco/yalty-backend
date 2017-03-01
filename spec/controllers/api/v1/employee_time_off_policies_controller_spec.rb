@@ -9,6 +9,12 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
   let!(:time_off_policy) { create(:time_off_policy, :with_end_date, time_off_category: category) }
   let(:time_off_policy_id) { time_off_policy.id }
 
+  describe 'reset join tables behaviour' do
+    include_context 'shared_context_join_tables_controller',
+      join_table: :employee_time_off_policy,
+      resource: :time_off_policy
+  end
+
   shared_examples 'TimeOff validity date change' do
     let!(:time_off_balance) do
       create(:employee_balance_manual, :with_time_off,
@@ -124,7 +130,6 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
         )
       end
     end
-
     context 'with valid params' do
       it 'has valid keys in json' do
         subject
