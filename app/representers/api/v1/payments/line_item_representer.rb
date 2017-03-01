@@ -8,7 +8,7 @@ module Api
             amount: resource.amount,
             currency: resource.currency,
             period_start: Time.zone.at(resource.period.start),
-            period_end: Time.zone.at(resource.period.end)
+            period_end: Time.zone.at(resource.period.end),
             proration: resource.proration,
             quantity: resource.quantity,
             subscription: resource.subscription,

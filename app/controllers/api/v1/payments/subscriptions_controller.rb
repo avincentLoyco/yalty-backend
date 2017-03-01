@@ -2,8 +2,9 @@ module API
   module V1
     module Payments
       class SubscriptionsController < ApplicationController
+        include PaymentsHelper
+
         def index
-          authorize! :index, :payments
           render json: subscription_json
         end
 

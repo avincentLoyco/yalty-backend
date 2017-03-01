@@ -13,9 +13,7 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
       StripePlan.new(plan_id, 400, 'chf', 'month', plan_id.titleize)
     end
   end
-  let(:subscription_items) do
-    [StripeSubscriptionItem.new('si_123', plans.first)]
-  end
+  let(:subscription_items) { [StripeSubscriptionItem.new('si_123', plans.first)] }
 
   before do
     Account.current.update(customer_id: customer.id, subscription_id: subscription.id)
