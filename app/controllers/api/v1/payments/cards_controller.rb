@@ -18,6 +18,12 @@ module API
           end
         end
 
+        def destroy
+          authorize! :destroy, :payments
+          customer.sources.retrieve(params[:id]).delete
+          render_no_content
+        end
+
         private
 
         def create_card(token)

@@ -28,19 +28,19 @@ RSpec.describe API::V1::Payments::PlansController, type: :controller do
 
     context 'Stripe error' do
       before do
-        allow(Stripe::SubscriptionItem).to receive(:create).and_return(Stripe::APIError)
-        allow(Stripe::SubscriptionItem).to receive(:list).and_return(Stripe::APIError)
+        allow(Stripe::SubscriptionItem).to receive(:create).and_raise(Stripe::APIError)
+        allow(Stripe::SubscriptionItem).to receive(:list).and_raise(Stripe::APIError)
         shared_subject
       end
 
-      it { expect(response.status).to eq(500) }
+      it { expect(response.status).to eq(503) }
     end
 
     context 'when there is no customer_id' do
       let(:customer_id) { nil }
       before { shared_subject }
 
-      it { expect(response.status).to eq(500) }
+      it { expect(response.status).to eq(503) }
       it { expect_json(regex('customer_id is empty')) }
     end
 

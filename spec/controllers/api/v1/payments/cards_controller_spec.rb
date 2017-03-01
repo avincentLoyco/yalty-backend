@@ -6,6 +6,27 @@ RSpec.describe API::V1::Payments::CardsController, type: :controller do
   let(:token_json) { { token: 'example_token' } }
   let(:customer_id) { 'cus_tomer' }
 
+  shared_examples 'Stripe API errors' do
+    context 'when API error' do
+      let(:stripe_error) { Stripe::APIError }
+
+      it { is_expected.to have_http_status(503) }
+    end
+
+    context 'when invalid resource' do
+      let(:stripe_error) { Stripe::InvalidRequestError.new('message', 'something') }
+
+      it { is_expected.to have_http_status(503) }
+    end
+  end
+
+  shared_examples 'Customer not created' do
+    let(:customer_id) { nil }
+
+    it { is_expected.to have_http_status(503) }
+    it { expect_json(regex('customer_id is empty')) }
+  end
+
   context 'GET #index' do
     subject(:index_subject) { get :index }
     before { Account.current.update(customer_id: customer_id) }
@@ -37,33 +58,31 @@ RSpec.describe API::V1::Payments::CardsController, type: :controller do
           allow(Stripe::Customer).to receive(:retrieve) { customer }
           index_subject
         end
+
         it { is_expected.to have_http_status(200) }
         it { expect_json_keys('0', [:id, :last4, :brand, :exp_month, :exp_year, :default, :name]) }
       end
 
       context 'when customer id does not exist' do
-        let(:customer_id) { nil }
         before { index_subject }
 
-        it { is_expected.to have_http_status(500) }
-        it { expect_json(regex('customer_id is empty')) }
+        it_behaves_like 'Customer not created'
       end
 
-      context 'when stripe service is unavailable' do
+      context 'when Stripe API fails' do
         before do
-          allow(Stripe::Customer).to receive(:retrieve).and_raise(Stripe::APIError)
+          allow(Stripe::Customer)
+            .to receive_message_chain(:retrieve, :sources)
+            .and_raise(stripe_error)
           index_subject
         end
 
-        it { is_expected.to have_http_status(500) }
+        it_behaves_like 'Stripe API errors'
       end
     end
 
-    context 'when account administrator' do
-      before do
-        Account::User.current.update(role: 'account_administrator')
-        index_subject
-      end
+    context 'when user does not have rights' do
+      before { index_subject }
 
       it { is_expected.to have_http_status(403) }
     end
@@ -73,11 +92,8 @@ RSpec.describe API::V1::Payments::CardsController, type: :controller do
     subject(:post_subject) { post :create, token_json }
     before { Account.current.update(customer_id: customer_id) }
 
-    context 'when account administrator' do
-      before do
-        Account::User.current.update(role: 'account_administrator')
-        post_subject
-      end
+    context 'when user does not have rights' do
+      before { post_subject }
 
       it { is_expected.to have_http_status(403) }
     end
@@ -138,22 +154,91 @@ RSpec.describe API::V1::Payments::CardsController, type: :controller do
         end
       end
 
-      context 'when stripe API is unviable' do
+      context 'when Stripe API fails' do
         before do
-          allow(Stripe::Customer).to receive(:retrieve).and_raise(Stripe::APIError)
+          allow(Stripe::Customer)
+            .to receive_message_chain(:retrieve, :sources, :create)
+            .and_raise(stripe_error)
           post_subject
         end
 
-        it { is_expected.to have_http_status(500) }
+        it_behaves_like 'Stripe API errors'
       end
 
       context 'when customer_id is not yet created' do
-        let(:customer_id) { nil }
         before { post_subject }
 
-        it { is_expected.to have_http_status(500) }
-        it { expect_json(regex('customer_id is empty')) }
+        it_behaves_like 'Customer not created'
       end
+    end
+  end
+
+  context 'DELETE #destroy' do
+    subject(:destroy_subject) { delete :destroy, id_json }
+    before { Account.current.update(customer_id: customer_id) }
+
+    let(:id_json) { { id: card_id } }
+
+    let(:card_id) { 'CardID' }
+
+    let(:customer) do
+      customer = Stripe::Customer.new
+      customer.default_source = card_id
+      customer.sources = cards_response
+      customer
+    end
+
+    let(:cards_response) do
+      card = Stripe::Card.new(id: card_id)
+      card.last4 = '4242'
+      card.brand = 'Visa'
+      card.exp_month = 10
+      card.exp_year = 2018
+      card.name = 'Name'
+      [card]
+    end
+
+    context 'when account owner' do
+      before { Account::User.current.update(role: 'account_owner') }
+      let(:delete_response) do
+        card = Stripe::Card.new(id: card_id)
+        card.deleted = true
+        card
+      end
+
+      context 'with valid data' do
+        before do
+          allow(Stripe::Customer)
+            .to receive_message_chain(:retrieve, :sources, :retrieve, :delete) { delete_response }
+          destroy_subject
+        end
+
+        it { is_expected.to have_http_status(204) }
+      end
+
+      context 'when customer is not created' do
+        before { destroy_subject }
+
+        it_behaves_like 'Customer not created'
+      end
+
+      context 'when Stripe API fails' do
+        before do
+          allow(Stripe::Customer)
+            .to receive_message_chain(:retrieve, :sources, :retrieve, :delete)
+            .and_raise(stripe_error)
+          destroy_subject
+        end
+
+        it_behaves_like 'Stripe API errors'
+      end
+    end
+
+    context 'when user does not have rights' do
+      let(:customer_id) { 'cus_tomer' }
+      before { destroy_subject }
+
+      it { is_expected.to have_http_status(403) }
     end
   end
 end
