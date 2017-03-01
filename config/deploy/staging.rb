@@ -26,26 +26,35 @@ task :sync do
   dump_path = fetch(:db_dump_path)
   local_path = fetch(:local_database_dump_path)
 
+  invoke 'stop:all'
+
   on fetch(:migration_server) do
     uri = URI.parse(capture('echo $DATABASE_URL'))
 
     with pgpassword: uri.password do
-      info "Restore database from #{local_path}"
+      within release_path do
+        info "Restore database from #{local_path}"
 
-      execute :mkdir, '-p', File.dirname(dump_path)
-      upload! local_path, dump_path
-      execute :pg_restore, '--format=c --clean --if-exists --no-owner --no-privileges',
-        "--dbname #{uri.path[1..-1]}",
-        "-h #{uri.host} -p #{uri.port}",
-        "-U #{uri.user}",
-        dump_path
-      execute :rm, '-f', dump_path
+        execute :mkdir, '-p', File.dirname(dump_path)
+        execute :rake, 'db:drop', 'db:create'
 
-      execute :rake, :setup
+        upload! local_path, dump_path
+
+        execute :pg_restore, '--format=c --no-security-labels',
+          "--dbname #{uri.path[1..-1]}",
+          "-h #{uri.host} -p #{uri.port}",
+          "-U #{uri.user}",
+          dump_path
+        execute :rake, :setup
+
+        execute :rm, '-f', dump_path
+      end
     end
   end
 
   run_locally do
     execute :rm, '-f', local_path
   end
+
+  invoke 'start:all'
 end
