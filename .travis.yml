@@ -12,15 +12,21 @@ before_script:
   - bundle exec rake parallel:setup
   - export COVERAGE=$(test "$TRAVIS_PULL_REQUEST" = "false" && test "$TRAVIS_BRANCH" = "master" && echo 'true')
 script: bundle exec rake ci
-after_script:
-  - test "$COVERAGE" = "true" && bundle exec codeclimate-test-reporter
 before_cache:
   - mv tmp/parallel_runtime_rspec.log tmp/parallel_test/parallel_runtime_rspec.log
+after_success:
+  - test "$COVERAGE" = "true" && bundle exec codeclimate-test-reporter
+  - ./.travis/after_success
 cache:
   bundler: true
   directories:
     - tmp/parallel_test
+services:
+  - docker
 addons:
+  apt:
+    packages:
+      - docker-engine
   postgresql: '9.4'
   code_climate:
     repo_token:

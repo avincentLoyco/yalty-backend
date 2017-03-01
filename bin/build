@@ -1,0 +1,27 @@
+#!/bin/bash
+
+DOCKER_IMAGE=$1
+DOCKER_REPO=$(echo $DOCKER_IMAGE | cut -d ':' -f 1)
+DOCKER_TAG=$(echo $DOCKER_IMAGE | cut -d ':' -f 2)
+
+RAKE_VERSION=$(grep rake ./Gemfile.lock | cut -d '(' -f 2 | cut -d ')' -f 1 | grep -e '^[0-9]')
+PUMA_VERSION=$(grep puma ./Gemfile.lock | cut -d '(' -f 2 | cut -d ')' -f 1 | grep -e '^[0-9]')
+BUNDLER_VERSION=$(tail -n 1 ./Gemfile.lock | cut -d ' ' -f 4)
+
+# Pull latest image for build tag, or latest master if not exist
+docker pull $DOCKER_IMAGE
+if [ $? -ne 0 ]; then
+  docker pull $DOCKER_REPO:latest
+fi
+
+# build newest docker image
+docker build \
+  --rm \
+  --cache-from $DOCKER_IMAGE \
+  --cache-from $DOCKER_REPO:latest \
+  --build-arg RAKE_VERSION=$RAKE_VERSION \
+  --build-arg PUMA_VERSION=$PUMA_VERSION \
+  --build-arg BUNDLER_VERSION=$BUNDLER_VERSION \
+  -f .docker/Dockerfile \
+  -t $DOCKER_IMAGE \
+  .
