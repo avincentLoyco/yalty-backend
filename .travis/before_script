@@ -2,23 +2,25 @@
 require 'travis/pro'
 require 'octokit'
 
+#
 # Configure
-repository = ENV['TRAVIS_REPO_SLUG']
-branch = ENV['TRAVIS_BRANCH']
+#
 
 if ENV['GITHUB_ACCESS_TOKEN'].nil?
   puts 'GITHUB_ACCESS_TOKEN is not set'
   exit 1
 end
 
-Travis::Pro.github_auth(ENV['GITHUB_ACCESS_TOKEN'])
-Octokit.configure do |config|
-  config.access_token = ENV['GITHUB_ACCESS_TOKEN']
-end
-
 begin
+  repository = ENV['TRAVIS_REPO_SLUG']
+  branch = ENV['TRAVIS_BRANCH']
+
+  Travis::Pro.github_auth(ENV['GITHUB_ACCESS_TOKEN'])
   travis = Travis::Pro::Repository.find(repository)
 
+  Octokit.configure do |config|
+    config.access_token = ENV['GITHUB_ACCESS_TOKEN']
+  end
   github = Octokit::Client.new
   github.branch(repository, branch) # validate repository and target branch exists
 rescue Travis::Client::NotFound, Octokit::NotFound
@@ -26,7 +28,10 @@ rescue Travis::Client::NotFound, Octokit::NotFound
   exit 0
 end
 
+#
 # Restart builds that have a pull request on current branch
+#
+
 if ENV['TRAVIS_PULL_REQUEST'] == 'false'
   pull_requests = github.pull_requests(repository, state: 'open').select do |pull_request|
     pull_request.base.ref == branch

@@ -1,4 +1,16 @@
 #!/usr/bin/env ruby
+require 'travis/pro'
+
+#
+# Configure
+#
+
+if ENV['GITHUB_ACCESS_TOKEN'].nil?
+  puts 'GITHUB_ACCESS_TOKEN is not set'
+  exit 1
+end
+
+Travis::Pro.github_auth(ENV['GITHUB_ACCESS_TOKEN'])
 
 #
 # Build docker image
@@ -26,4 +38,23 @@ elsif ENV['TRAVIS_TAG'] =~ /^v(.+)/
   build_docker_image(ENV['TRAVIS_TAG'], docker_tag)
 elsif ENV['TRAVIS_BRANCH'] == 'master'
   build_docker_image('master', 'lastest')
+end
+
+#
+# Restart build for same branch on e2e-testing repository
+#
+
+if ENV['TRAVIS_PULL_REQUEST'] == 'false'
+  begin
+    travis = Travis::Pro::Repository.find('yalty/yalty-e2e-testing')
+    branch = ENV['TRAVIS_BRANCH']
+
+    build = travis.branch(branch)
+    if build.restartable?
+      puts "Build ##{build.number} on yalty/yalty-e2e-testing for branch #{branch} restarted"
+      build.restart
+    end
+  rescue Travis::Client::NotFound
+    puts "Build on yalty/yalty-e2e-testing for branch #{branch} not found"
+  end
 end
