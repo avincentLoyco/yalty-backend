@@ -25,7 +25,7 @@ def build_docker_image(branch, docker_tag)
   `docker push #{docker_repository}:#{docker_tag}`
 end
 
-if ENV['TRAVIS_PULL_REQUEST'] && ENV['TRAVIS_BRANCH'] == 'master'
+if ENV['TRAVIS_PULL_REQUEST'] != 'false' && ENV['TRAVIS_BRANCH'] == 'master'
   if ENV['TRAVIS_PULL_REQUEST_BRANCH'] =~ %r{^[^/]+/(ywa-[[:digit:]]+)}i
     docker_tag = Regexp.last_match(1).downcase
     build_docker_image('HEAD', docker_tag)
@@ -33,9 +33,6 @@ if ENV['TRAVIS_PULL_REQUEST'] && ENV['TRAVIS_BRANCH'] == 'master'
     docker_tag = "#{Regexp.last_match(1)}-rc-#{ENV['TRAVIS_COMMIT']}"
     build_docker_image(ENV['TRAVIS_PULL_REQUEST_BRANCH'], docker_tag)
   end
-elsif ENV['TRAVIS_TAG'] =~ /^v(.+)/
-  docker_tag = Regexp.last_match(1)
-  build_docker_image(ENV['TRAVIS_TAG'], docker_tag)
 elsif ENV['TRAVIS_BRANCH'] == 'master'
   build_docker_image('master', 'lastest')
 end
