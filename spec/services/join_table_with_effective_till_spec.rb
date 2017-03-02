@@ -168,17 +168,54 @@ RSpec.describe JoinTableWithEffectiveTill, type: :service do
             )
           end
 
-          before { subject }
+          context 'with contract end' do
+            before { subject }
 
-          it { expect(subject.class).to eq Array }
-          it { expect(subject.size).to eq 6 }
+            it { expect(subject.class).to eq Array }
+            it { expect(subject.size).to eq 6 }
 
-          it { expect(subject[0]['effective_till']).to eq (etop_third.effective_at - 1.days).to_date.to_s }
-          it { expect(subject[1]['effective_till']).to eq (etop_fourth.effective_at - 1.days).to_date.to_s }
-          it { expect(subject[2]['effective_till']).to eq (etop_fifth.effective_at - 1.days).to_date.to_s }
-          it { expect(subject[3]['effective_till']).to eq nil }
-          it { expect(subject[4]['effective_till']).to eq nil }
-          it { expect(subject[5]['effective_till']).to eq nil }
+            it do
+              expect(subject[0]['effective_till']).to eq (etop_third.effective_at - 1.days).to_s
+            end
+            it do
+              expect(subject[1]['effective_till']).to eq (etop_fourth.effective_at - 1.days).to_s
+            end
+            it do
+              expect(subject[2]['effective_till']).to eq (etop_fifth.effective_at - 1.days).to_s
+            end
+            it { expect(subject[3]['effective_till']).to eq nil }
+            it { expect(subject[4]['effective_till']).to eq nil }
+            it { expect(subject[5]['effective_till']).to eq nil }
+          end
+
+          context 'without contract end' do
+            before do
+              create(:employee_event,
+                employee: employee_second, effective_at: Time.now + 2.days,
+                event_type: 'contract_end')
+              subject
+            end
+
+            let(:reset_join_table) { EmployeeTimeOffPolicy.with_reset.first }
+
+
+            it { expect(subject.class).to eq Array }
+            it { expect(subject.size).to eq 7 }
+
+            it do
+              expect(subject[0]['effective_till']).to eq (etop_third.effective_at - 1.days).to_s
+            end
+            it do
+              expect(subject[1]['effective_till']).to eq (etop_fourth.effective_at - 1.days).to_s
+            end
+            it do
+              expect(subject[2]['effective_till']).to eq (reset_join_table.effective_at - 1.days).to_s
+            end
+            it { expect(subject[3]['effective_till']).to eq (etop_fifth.effective_at - 1.day).to_s }
+            it { expect(subject[4]['effective_till']).to eq nil }
+            it { expect(subject[5]['effective_till']).to eq nil }
+            it { expect(subject[6]['effective_till']).to eq nil }
+          end
         end
 
         context 'and there are employee time off policies that are before current in the category' do
@@ -366,14 +403,37 @@ RSpec.describe JoinTableWithEffectiveTill, type: :service do
             )
           end
 
-          before { subject }
+          context 'without contract end' do
+            before { subject }
 
-          it { expect(subject.class).to eq Array }
-          it { expect(subject.size).to eq 3 }
+            it { expect(subject.class).to eq Array }
+            it { expect(subject.size).to eq 3 }
 
-          it { expect(subject[0]['effective_till']).to eq nil }
-          it { expect(subject[1]['effective_till']).to eq (epp_third.effective_at - 1.days).to_date.to_s }
-          it { expect(subject[2]['effective_till']).to eq nil }
+            it { expect(subject[0]['effective_till']).to eq nil }
+            it { expect(subject[1]['effective_till']).to eq (epp_third.effective_at - 1.days).to_date.to_s }
+            it { expect(subject[2]['effective_till']).to eq nil }
+          end
+
+          context 'with contract end' do
+            before do
+              create(:employee_event,
+                employee: employee_second, effective_at: Time.now + 2.days,
+                event_type: 'contract_end')
+              subject
+            end
+
+            let(:reset_join_table) { EmployeePresencePolicy.with_reset.first }
+            it { expect(subject.class).to eq Array }
+            it { expect(subject.size).to eq 4 }
+
+            it { expect(subject[0]['effective_till']).to eq nil }
+            it do
+              expect(subject[1]['effective_till'])
+                .to eq (reset_join_table.effective_at - 1.day).to_s
+            end
+            it { expect(subject[2]['effective_till']).to eq (epp_third.effective_at - 1.day).to_s }
+            it { expect(subject[3]['effective_till']).to eq nil }
+          end
         end
 
         context 'and there are employee presence policies that are previous to the current' do
@@ -411,7 +471,6 @@ RSpec.describe JoinTableWithEffectiveTill, type: :service do
           it { expect(subject[1]['id']).to eq epp_second.id }
           it { subject.map { |epp| expect(epp['id']).not_to eq epp_from_account_second.id } }
         end
-
       end
 
       context 'and employee has no presence policy' do
@@ -541,14 +600,38 @@ RSpec.describe JoinTableWithEffectiveTill, type: :service do
             end
           end
 
-          before { subject }
+          context 'without contract end' do
+            before { subject }
 
-          it { expect(subject.class).to eq Array }
-          it { expect(subject.size).to eq 3 }
+            it { expect(subject.class).to eq Array }
+            it { expect(subject.size).to eq 3 }
 
-          it { expect(subject[0]['effective_till']).to eq (ewp_second.effective_at - 1.days).to_date.to_s }
-          it { expect(subject[1]['effective_till']).to eq nil }
-          it { expect(subject[2]['effective_till']).to eq nil }
+            it { expect(subject[0]['effective_till']).to eq (ewp_second.effective_at - 1.days).to_date.to_s }
+            it { expect(subject[1]['effective_till']).to eq nil }
+            it { expect(subject[2]['effective_till']).to eq nil }
+          end
+
+          context 'with contract end' do
+            before do
+              create(:employee_event,
+                employee: employee_first, effective_at: ewp_first.effective_at + 2.days,
+                event_type: 'contract_end')
+            end
+
+            let(:reset_join_table) { EmployeeWorkingPlace.with_reset.first }
+
+
+            it { expect(subject.class).to eq Array }
+            it { expect(subject.size).to eq 4 }
+
+            it do
+              expect(subject[0]['effective_till'])
+                .to eq (reset_join_table.effective_at - 1.day).to_s
+            end
+            it { expect(subject[1]['effective_till']).to eq nil }
+            it { expect(subject[2]['effective_till']).to eq (ewp_second.effective_at - 1.day).to_s }
+            it { expect(subject[1]['effective_till']).to eq nil }
+          end
         end
 
         context 'and there are employee working places that are previous to the current' do
