@@ -8,6 +8,7 @@ module UserSettingsSchemas
         required(:old_password).filled(:str?)
         required(:password).filled(:str?)
         required(:password_confirmation).filled(:str?)
+        required(:locale).maybe(:str?)
       end
     end
   end

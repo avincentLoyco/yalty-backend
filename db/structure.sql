@@ -96,7 +96,8 @@ CREATE TABLE account_users (
     updated_at timestamp without time zone NOT NULL,
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
     reset_password_token character varying,
-    role character varying DEFAULT 'user'::character varying NOT NULL
+    role character varying DEFAULT 'user'::character varying NOT NULL,
+    locale character varying
 );
 
 
@@ -1593,6 +1594,9 @@ INSERT INTO schema_migrations (version) VALUES ('20161207095113');
 
 INSERT INTO schema_migrations (version) VALUES ('20161207131436');
 
+INSERT INTO schema_migrations (version) VALUES ('20161220125415');
+
 INSERT INTO schema_migrations (version) VALUES ('20170111105844');
 
-INSERT INTO schema_migrations (version) VALUES ('20161220125415');
+INSERT INTO schema_migrations (version) VALUES ('20170302162303');
+
