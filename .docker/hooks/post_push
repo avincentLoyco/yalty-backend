@@ -1,7 +1,0 @@
-#!/bin/bash
-
-if [[ "$IMAGE_NAME" == *-rc ]]; then
-  echo "Push release candidate to $IMAGE_NAME-$SOURCE_COMMIT"
-  docker tag $IMAGE_NAME $IMAGE_NAME-$SOURCE_COMMIT
-  docker push $IMAGE_NAME-$SOURCE_COMMIT
-fi
