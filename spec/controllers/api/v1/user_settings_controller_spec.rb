@@ -36,11 +36,11 @@ RSpec.describe API::V1::UserSettingsController, type: :controller do
     let(:params) do
       {
         email: email,
+        locale: locale,
         password_params: {
           old_password: old_password,
           password: password,
           password_confirmation: password_confirmation,
-          locale: locale
         }
       }
     end
