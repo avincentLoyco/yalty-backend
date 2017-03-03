@@ -5,5 +5,20 @@ FactoryGirl.define do
     trait :from_zurich do
       timezone { 'Europe/Zurich' }
     end
+
+    trait :with_billing_information do
+      invoice_company_info {
+        {
+          company_name: Faker::Company.name,
+          additional_address: Faker::Name.name,
+          city: Faker::Address.city,
+          country: Faker::Address.country,
+          postalcode: Faker::Address.postcode,
+          region: Faker::Address.country_code,
+          street: "#{Faker::Address.building_number} #{Faker::Address.street_name}"
+        }
+      }
+      invoice_emails [ Faker::Internet.email, Faker::Internet.email ]
+    end
   end
 end

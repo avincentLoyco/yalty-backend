@@ -8,6 +8,7 @@ Rails.application.routes.draw do
         resources 'cards', except: [:show, :update]
         resources 'plans', only: [:create, :destroy]
         get 'subscription', to: 'subscriptions#index'
+        put 'subscription/settings', to: 'subscriptions#settings'
       end
       resources :working_places, except: [:edit, :new] do
         post '/employees', to: "employee_working_places#create"

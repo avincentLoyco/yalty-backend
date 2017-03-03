@@ -2,10 +2,21 @@ module API
   module V1
     module Payments
       class SubscriptionsController < ApplicationController
+        include SubscriptionsSchemas
         include PaymentsHelper
 
         def index
           render json: subscription_json
+        end
+
+        def settings
+          verified_dry_params(settings_schema) do |attributes|
+            Account.transaction do
+              update_company_info!(attributes)
+              update_invoice_emails!(attributes)
+            end
+            render_no_content
+          end
         end
 
         private
@@ -34,6 +45,16 @@ module API
               plan.active = true
               plan
             end
+        end
+
+        def update_company_info!(attributes)
+          return unless attributes.key?(:company_information)
+          Account.current.update!(invoice_company_info: attributes[:company_information])
+        end
+
+        def update_invoice_emails!(attributes)
+          return unless attributes.key?(:emails)
+          Account.current.update!(invoice_emails: attributes[:emails])
         end
 
         def subscription_json

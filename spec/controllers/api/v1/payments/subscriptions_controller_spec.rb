@@ -4,6 +4,9 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
   include_context 'shared_context_headers'
   include_context 'shared_context_timecop_helper'
 
+  let(:account) { create(:account, :with_billing_information) }
+  let(:user) { create(:account_user, role: 'account_administrator', account: account) }
+
   let!(:timestamp)   { Time.zone.now.to_i }
   let(:customer)     { StripeCustomer.new('cus_123') }
   let(:subscription) { StripeSubscription.new('sub_123', timestamp, 5) }
@@ -64,6 +67,18 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
           date: '2016-01-01T00:00:00.000Z',
           prorate_amount: 0,
           line_items: []
+        },
+        billing_information: {
+          company_information: {
+            company_name: account.invoice_company_info.company_name,
+            additional_address: account.invoice_company_info.additional_address,
+            street: account.invoice_company_info.street,
+            city: account.invoice_company_info.city,
+            postalcode: account.invoice_company_info.postalcode,
+            country: account.invoice_company_info.country,
+            region: account.invoice_company_info.region
+          },
+          emails: account.invoice_emails
         }
       }
     end
@@ -95,6 +110,92 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
 
         it { expect(response.status).to eq(403) }
       end
+    end
+  end
+
+  describe '#PUT /v1/payments/subscription/settings' do
+    let(:params) {{ company_information: invoice_company_info, emails: invoice_emails }}
+    let(:invoice_emails) { ['bruce@wayne.com'] }
+    let(:invoice_company_info) do
+      attributes_for(:account, :with_billing_information)[:invoice_company_info]
+    end
+
+    subject(:update_settings) { put :settings, params }
+
+    context 'update all settings' do\
+      it { expect { update_settings }.to change { account.invoice_company_info } }
+      it { expect { update_settings }.to change { account.invoice_emails } }
+
+      context 'settings are valid' do
+        before { update_settings }
+
+        it 'invoice_company_info is valid' do
+          invoice_company_info.keys.each do |key|
+            expect(account.invoice_company_info[key]).to eq(invoice_company_info[key])
+          end
+        end
+        it { expect(account.invoice_emails).to eq(invoice_emails) }
+      end
+    end
+
+    context 'update only company_information' do
+      let(:params) {{ company_information: invoice_company_info }}
+
+      it { expect { update_settings }.to     change { account.invoice_company_info } }
+      it { expect { update_settings }.to_not change { account.invoice_emails } }
+    end
+
+    context 'update only emails' do
+      let(:params) {{ emails: invoice_emails }}
+
+      it { expect { update_settings }.to_not change { account.invoice_company_info } }
+      it { expect { update_settings }.to     change { account.invoice_emails } }
+    end
+
+    context 'empty params clear settings' do
+      before do
+        account.update(invoice_company_info: invoice_company_info, invoice_emails: invoice_emails)
+      end
+
+      let(:params) {{ company_information: nil, emails: nil }}
+
+      it { expect { update_settings }.to change { account.invoice_company_info } }
+      it { expect { update_settings }.to change { account.invoice_emails } }
+
+      context 'settings are empty' do
+        before { update_settings }
+
+        it 'invoice_company_info is valid' do
+          invoice_company_info.keys.each do |key|
+            expect(account.invoice_company_info[key]).to eq(nil)
+          end
+        end
+        it { expect(account.invoice_emails).to eq(nil) }
+      end
+    end
+
+    context 'require params missing' do
+      let(:params_error) { JSON.parse(response.body).fetch('errors').first }
+      let(:params) {{ company_information: {} }}
+
+      before { update_settings }
+
+      it { expect(response.status).to eq(422) }
+      it { expect(params_error['field']).to eq('company_information') }
+      it 'returns missing params' do
+        invoice_company_info.except(:additional_address).keys.each do |key|
+          expect(params_error['messages'][key.to_s]).to eq(['is missing'])
+        end
+      end
+    end
+
+    context 'account update fails' do
+      before do
+        allow(account).to receive(:update!).and_raise(ActiveRecord::RecordInvalid.new(account))
+        update_settings
+      end
+
+      it { expect(response.status).to eq(422) }
     end
   end
 end

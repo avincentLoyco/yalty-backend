@@ -3,6 +3,8 @@ class Account < ActiveRecord::Base
   include AccountIntercomData
   include StripeHelpers
 
+  serialize :invoice_company_info, CompanyInformation
+
   validates :subdomain,
     presence: true,
     uniqueness: { case_sensitive: false },
