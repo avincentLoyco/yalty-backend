@@ -42,7 +42,6 @@ class Employee::Event < ActiveRecord::Base
   validate :attributes_presence, if: [:event_attributes, :employee]
   validate :balances_before_hired_date, if: :employee, on: :update
   validate :no_two_contract_end_dates_or_hired_events_in_row, if: [:employee, :event_type]
-  validate :contract_end_must_have_hired_event, if: [:employee, :event_type]
 
   def self.event_types
     Employee::Event::EVENT_ATTRIBUTES.keys.map(&:to_s)
@@ -90,7 +89,7 @@ class Employee::Event < ActiveRecord::Base
   end
 
   def previous_events
-    employee.events.where.not(id: id).where('effective_at < ?', effective_at).order(:effective_at)
+    employee.events.where.not(id: id).where('effective_at <= ?', effective_at).order(:effective_at)
   end
 
   def next_events
@@ -99,7 +98,10 @@ class Employee::Event < ActiveRecord::Base
 
   def no_two_contract_end_dates_or_hired_events_in_row
     return unless contract_end_and_hire_not_alternately?
-    errors.add(:event_type, "Employee can't have two #{event_type} events in a row")
+    errors.add(
+      :event_type,
+      "Employee can not two #{event_type} in a row and contract end must have hired event"
+    )
   end
 
   def contract_end_and_hire_not_alternately?
@@ -107,16 +109,8 @@ class Employee::Event < ActiveRecord::Base
 
     previous = previous_events.where(event_type: %w(hired contract_end)).last
     future = next_events.where(event_type: %w(hired contract_end)).first
-    (previous&.event_type.eql?(event_type) || future&.event_type.eql?(event_type))
-  end
 
-  def contract_end_must_have_hired_event
-    return unless event_type.eql?('contract_end')
-    hired_num = employee.events.where(event_type: 'hired').count
-    contract_end_num = employee.events.where.not(id: id).where(event_type: 'contract_end').count
-
-    if hired_num.eql?(contract_end_num)
-      errors.add(:event_type, 'contract end must have hired event')
-    end
+    (previous&.event_type.eql?(event_type) || future&.event_type.eql?(event_type)) ||
+      (event_type.eql?('contract_end') && previous.nil?)
   end
 end

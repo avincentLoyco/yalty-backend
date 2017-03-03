@@ -87,7 +87,9 @@ RSpec.describe Employee::Event, type: :model do
       it { expect(subject.valid?).to eq false }
       it do
         expect { subject.valid? }.to change { subject.errors.messages[:event_type] }
-          .to include "Employee can\'t have two #{event_type} events in a row"
+          .to include (
+            "Employee can not two #{event_type} in a row and contract end must have hired event"
+          )
       end
     end
 
@@ -125,6 +127,36 @@ RSpec.describe Employee::Event, type: :model do
       end
     end
 
+    context 'contract end must have hired event' do
+      let(:event_type) { 'contract_end' }
+      let(:effective_at) { 1.day.ago }
+
+      shared_examples 'Contract end does not have its hired event' do
+        it { expect(subject).to_not be_valid }
+        it do
+          expect { subject.valid? }.to change { subject.errors.messages[:event_type] }
+            .to include(
+              "Employee can not two #{event_type} in a row and contract end must have hired event"
+            )
+        end
+      end
+
+      context 'when there is only one contract end' do
+        before { employee.events.first.update!(event_type: 'wedding') }
+
+        it_behaves_like 'Contract end does not have its hired event'
+      end
+
+      context 'when this next employee\'s contract end' do
+        before do
+          create(:employee_event, event_type: 'contract_end', employee: employee)
+          employee.reload.events
+        end
+
+        it_behaves_like 'Contract end does not have its hired event'
+      end
+    end
+
     context 'when event has type hired' do
       let(:event_type) { 'hired' }
 
@@ -150,31 +182,6 @@ RSpec.describe Employee::Event, type: :model do
           it_behaves_like 'Two contract end or hired events in a row'
         end
       end
-    end
-  end
-
-  describe '#contract_end_must_have_hired_event' do
-    subject { build(:employee_event, event_type: 'contract_end', employee: employee) }
-    let(:employee) { create(:employee) }
-
-    shared_examples 'Contract end does not have its hired event' do
-      it { expect(subject).to_not be_valid }
-      it do
-        expect { subject.valid? }.to change { subject.errors.messages[:event_type] }
-          .to include 'contract end must have hired event'
-      end
-    end
-
-    context 'when there is only one contract end' do
-      before { employee.events.first.update!(event_type: 'wedding') }
-
-      it_behaves_like 'Contract end does not have its hired event'
-    end
-
-    context 'when this next employee\'s contract end' do
-      before { create(:employee_event, event_type: 'contract_end', employee: employee) }
-
-      it_behaves_like 'Contract end does not have its hired event'
     end
   end
 
