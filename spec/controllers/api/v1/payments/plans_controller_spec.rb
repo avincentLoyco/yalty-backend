@@ -14,7 +14,7 @@ RSpec.describe API::V1::Payments::PlansController, type: :controller do
     account.update(customer_id: customer_id)
     user.update(role: 'account_owner')
     allow(Stripe::SubscriptionItem).to receive(:create).and_return(sub_item)
-    allow(Stripe::SubscriptionItem).to receive_message_chain(:list, :data).and_return(sub_items)
+    allow(Stripe::SubscriptionItem).to receive(:list).and_return(sub_items)
   end
 
   shared_examples_for 'errors' do |controller_method|

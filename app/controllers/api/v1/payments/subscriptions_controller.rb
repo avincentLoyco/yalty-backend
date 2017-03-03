@@ -30,7 +30,7 @@ module API
         end
 
         def plans
-          Stripe::Plan.list.data.map do |plan|
+          Stripe::Plan.list.map do |plan|
             plan.active = false
             active_plans.find { |active_plan| active_plan.id.eql?(plan.id) } || plan
           end
@@ -39,7 +39,6 @@ module API
         def active_plans
           @active_plans ||= Stripe::SubscriptionItem
             .list(subscription: Account.current.subscription_id)
-            .data
             .map do |subscription_item|
               plan = subscription_item.plan
               plan.active = true
@@ -57,11 +56,16 @@ module API
           Account.current.update!(invoice_emails: attributes[:emails])
         end
 
+        def default_card
+          customer.sources.find { |src| src.default = src.id.eql?(customer.default_source) }
+        end
+
         def subscription_json
           ::Api::V1::Payments::SubscriptionsRepresenter.new(
             subscription,
             plans,
             upcoming_invoice,
+            default_card,
             Account.current
           ).complete
         end

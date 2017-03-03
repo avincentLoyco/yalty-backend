@@ -15,14 +15,14 @@ module Api
         private
 
         def prorate_amount
-          resource.lines.data.inject(0) do |sum, item|
+          resource.lines.inject(0) do |sum, item|
             sum += item.amount if item.proration
             sum
           end
         end
 
         def line_items
-          resource.lines.data.map do |line_item|
+          resource.lines.map do |line_item|
             ::Api::V1::Payments::LineItemRepresenter.new(line_item).complete
           end
         end

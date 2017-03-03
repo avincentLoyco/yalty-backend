@@ -2,10 +2,11 @@ module Api
   module V1
     module Payments
       class SubscriptionsRepresenter < Api::V1::BaseRepresenter
-        def initialize(subscription, plans, invoice, account)
+        def initialize(subscription, plans, invoice, default_card, account)
           @subscription = subscription
           @plans = plans
           @invoice = invoice
+          @default_card = default_card
           @account = account
         end
 
@@ -13,25 +14,34 @@ module Api
           single_subscription_json.merge(
             plans: plans_json,
             invoice: invoice_json,
-            billing_information: billing_information
+            default_card: default_card_json,
+            billing_information: billing_information_json
           )
         end
 
         private
 
         def single_subscription_json
+          return {} unless @subscription.present?
           ::Api::V1::Payments::SingleSubscriptionRepresenter.new(@subscription).complete
         end
 
         def plans_json
+          return [] unless @plans.present?
           @plans.map { |plan| ::Api::V1::Payments::PlanRepresenter.new(plan).complete }
         end
 
         def invoice_json
+          return unless @invoice.present?
           ::Api::V1::Payments::InvoiceRepresenter.new(@invoice).complete
         end
 
-        def billing_information
+        def default_card_json
+          return unless @default_card.present?
+          ::Api::V1::Payments::CardsRepresenter.new(@default_card).complete
+        end
+
+        def billing_information_json
           {
             company_information: {
               company_name: @account.invoice_company_info.company_name,

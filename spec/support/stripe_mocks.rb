@@ -1,5 +1,6 @@
 StripeSubscription = Struct.new(:id, :current_period_end, :quantity)
-StripeCustomer = Struct.new(:id, :description, :save)
+StripeCustomer = Struct.new(:id, :description, :default_source, :sources, :save)
 StripeInvoice = Struct.new(:id, :amount_due, :date, :lines)
 StripePlan = Struct.new(:id, :amount, :currency, :interval, :name, :active)
+StripeCard = Struct.new(:id, :last4, :brand, :exp_month, :exp_year, :default, :name)
 StripeSubscriptionItem = Struct.new(:id, :plan, :delete)

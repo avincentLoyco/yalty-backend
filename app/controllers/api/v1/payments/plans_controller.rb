@@ -48,7 +48,6 @@ module API
         def find_subscription_item(plan_id)
           Stripe::SubscriptionItem
             .list(subscription: Account.current.subscription_id)
-            .data
             .find do |subscription_item|
               subscription_item.plan.id.eql?(plan_id)
             end

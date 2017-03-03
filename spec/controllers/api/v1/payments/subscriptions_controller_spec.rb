@@ -8,9 +8,10 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
   let(:user) { create(:account_user, role: 'account_administrator', account: account) }
 
   let!(:timestamp)   { Time.zone.now.to_i }
-  let(:customer)     { StripeCustomer.new('cus_123') }
+  let(:customer)     { StripeCustomer.new('cus_123', 'desc', 'ca_123') }
   let(:subscription) { StripeSubscription.new('sub_123', timestamp, 5) }
   let(:invoice)      { StripeInvoice.new('in_123', 666, timestamp) }
+  let(:card)         { StripeCard.new('ca_123', 4567, 'Visa', 12, 2018) }
   let(:plans) do
     ['master-plan', 'evil-plan', 'sweet-sweet-plan'].map do |plan_id|
       StripePlan.new(plan_id, 400, 'chf', 'month', plan_id.titleize)
@@ -22,11 +23,13 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
     Account.current.update(customer_id: customer.id, subscription_id: subscription.id)
     Account::User.current.update(role: 'account_owner')
 
+    allow(Stripe::Customer).to receive(:retrieve).and_return(customer)
     allow(Stripe::Invoice).to receive(:upcoming).and_return(invoice)
     allow(Stripe::Subscription).to receive(:retrieve).and_return(subscription)
-    allow(Stripe::Plan).to receive_message_chain(:list, :data).and_return(plans)
-    allow(Stripe::SubscriptionItem).to receive_message_chain(:list, :data).and_return(subscription_items)
-    allow_any_instance_of(StripeInvoice).to receive_message_chain(:lines, :data).and_return([])
+    allow(Stripe::Plan).to receive(:list).and_return(plans)
+    allow(Stripe::SubscriptionItem).to receive(:list).and_return(subscription_items)
+    allow_any_instance_of(StripeCustomer).to receive(:sources).and_return([card])
+    allow_any_instance_of(StripeInvoice).to receive(:lines).and_return([])
   end
 
   describe '#GET /v1/payments/subscription' do
@@ -67,6 +70,15 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
           date: '2016-01-01T00:00:00.000Z',
           prorate_amount: 0,
           line_items: []
+        },
+        default_card: {
+          id: card.id,
+          last4: card.last4,
+          brand: card.brand,
+          exp_month: card.exp_month,
+          exp_year: card.exp_year,
+          default: card.default,
+          name: card.name
         },
         billing_information: {
           company_information: {
