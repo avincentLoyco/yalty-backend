@@ -2,8 +2,8 @@ class CompanyInformation
   include Virtus.model
 
   attribute :company_name, String
-  attribute :additional_address, String
-  attribute :street, String
+  attribute :address_1, String
+  attribute :address_2, String
   attribute :city, String
   attribute :postalcode, String
   attribute :country, String

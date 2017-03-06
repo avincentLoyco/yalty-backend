@@ -83,8 +83,8 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
         billing_information: {
           company_information: {
             company_name: account.invoice_company_info.company_name,
-            additional_address: account.invoice_company_info.additional_address,
-            street: account.invoice_company_info.street,
+            address_1: account.invoice_company_info.address_1,
+            address_2: account.invoice_company_info.address_2,
             city: account.invoice_company_info.city,
             postalcode: account.invoice_company_info.postalcode,
             country: account.invoice_company_info.country,
@@ -195,7 +195,7 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
       it { expect(response.status).to eq(422) }
       it { expect(params_error['field']).to eq('company_information') }
       it 'returns missing params' do
-        invoice_company_info.except(:additional_address).keys.each do |key|
+        invoice_company_info.except(:address_2).keys.each do |key|
           expect(params_error['messages'][key.to_s]).to eq(['is missing'])
         end
       end

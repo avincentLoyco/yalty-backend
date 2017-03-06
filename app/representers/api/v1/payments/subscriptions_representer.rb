@@ -45,8 +45,8 @@ module Api
           {
             company_information: {
               company_name: @account.invoice_company_info.company_name,
-              additional_address: @account.invoice_company_info.additional_address,
-              street: @account.invoice_company_info.street,
+              address_1: @account.invoice_company_info.address_1,
+              address_2: @account.invoice_company_info.address_2,
               city: @account.invoice_company_info.city,
               country: @account.invoice_company_info.country,
               postalcode: @account.invoice_company_info.postalcode,

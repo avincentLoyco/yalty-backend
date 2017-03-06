@@ -10,12 +10,12 @@ FactoryGirl.define do
       invoice_company_info {
         {
           company_name: Faker::Company.name,
-          additional_address: Faker::Name.name,
+          address_2: Faker::Name.name,
           city: Faker::Address.city,
           country: Faker::Address.country,
           postalcode: Faker::Address.postcode,
           region: Faker::Address.country_code,
-          street: "#{Faker::Address.building_number} #{Faker::Address.street_name}"
+          address_1: "#{Faker::Address.building_number} #{Faker::Address.street_name}"
         }
       }
       invoice_emails [ Faker::Internet.email, Faker::Internet.email ]
