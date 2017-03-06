@@ -31,7 +31,7 @@ module ExceptionHandler
   def stripe_api_error(exception = nil)
     message = exception.try(:message) ? exception.message : 'Stripe API error'
     render json:
-      ::Api::V1::ErrorsRepresenter.new(nil, message: message).complete, status: 503
+      ::Api::V1::ErrorsRepresenter.new(nil, message: message).complete, status: 502
   end
 
   def render_no_content
