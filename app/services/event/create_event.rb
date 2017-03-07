@@ -17,12 +17,19 @@ class CreateEvent
       build_event
       find_or_build_employee
       build_versions
+      authorize_upload
       save!
       event.tap { handle_contract_end }
     end
   end
 
   private
+
+  def authorize_upload
+    versions.each do |version|
+      raise CanCan::AccessDenied if version.attribute_type == 'File' && cannot_upload?
+    end
+  end
 
   def build_event_params(params)
     params.tap { |attr| attr.delete(:employee) && attr.delete(:employee_attributes) }
@@ -91,6 +98,13 @@ class CreateEvent
                  .merge(attribute_versions_errors)
 
       raise InvalidResourcesError.new(event, messages)
+    end
+  end
+
+  def cannot_upload?
+    return false if Account.current.available_modules.include?('filevault')
+    attributes_params.none? do |attribute|
+      attribute[:attribute_name] == 'profile_picture'
     end
   end
 

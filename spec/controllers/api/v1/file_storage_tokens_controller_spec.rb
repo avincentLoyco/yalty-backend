@@ -205,7 +205,7 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
       end
 
       context 'can request token for upload' do
-        let(:params) {{}}
+        let(:params) { {} }
         before { request_token }
 
         it { expect(response.status).to eq(201) }
@@ -227,7 +227,7 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
       context 'can\'t request download token for other users files' do
         let(:file_type) { 'contract' }
         let(:employee_for_file) { different_employee }
-        let(:params) {{ file_id: employee_file.id }}
+        let(:params) { { file_id: employee_file.id } }
 
         before do
           employee_attribute
@@ -238,10 +238,10 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
         it { expect(response.status).to eq(403) }
       end
 
-      context 'can reuqest token for download his files' do
+      context 'can request token for download his files' do
         let(:file_type) { 'contract' }
         let(:employee_for_file) { employee }
-        let(:params) {{ file_id: employee_file.id }}
+        let(:params) { { file_id: employee_file.id } }
 
         before do
           employee_attribute
