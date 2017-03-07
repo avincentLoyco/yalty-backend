@@ -31,19 +31,9 @@ module API
 
         def plans
           Stripe::Plan.list.map do |plan|
-            plan.active = false
-            active_plans.find { |active_plan| active_plan.id.eql?(plan.id) } || plan
+            plan.active = Account.current.available_modules.include?(plan.id)
+            plan
           end
-        end
-
-        def active_plans
-          @active_plans ||= Stripe::SubscriptionItem
-            .list(subscription: Account.current.subscription_id)
-            .map do |subscription_item|
-              plan = subscription_item.plan
-              plan.active = true
-              plan
-            end
         end
 
         def update_company_info!(attributes)

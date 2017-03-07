@@ -4,7 +4,7 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
   include_context 'shared_context_headers'
   include_context 'shared_context_timecop_helper'
 
-  let(:account) { create(:account, :with_billing_information) }
+  let(:account) { create(:account, :with_billing_information, available_modules: ['master-plan']) }
   let(:user) { create(:account_user, role: 'account_administrator', account: account) }
 
   let!(:timestamp)   { Time.zone.now.to_i }

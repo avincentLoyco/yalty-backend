@@ -8,7 +8,7 @@ module Api
             amount_due: resource.amount_due,
             date: Time.zone.at(resource.date),
             prorate_amount: prorate_amount,
-            line_items: line_items
+            line_items: line_items_json
           }
         end
 
@@ -21,10 +21,21 @@ module Api
           end
         end
 
-        def line_items
-          resource.lines.map do |line_item|
+        def line_items_json
+          line_items.map do |line_item|
             ::Api::V1::Payments::LineItemRepresenter.new(line_item).complete
           end
+        end
+
+        def line_items
+          resource.lines.map do |line|
+            line.plan.active = active_plan_ids.include?(line.plan.id) if line.plan.present?
+            line
+          end
+        end
+
+        def active_plan_ids
+          @active_plan_ids ||= Account.current.available_modules
         end
       end
     end

@@ -21,7 +21,7 @@ module Api
         private
 
         def plan
-          return unless plan.present?
+          return unless resource.plan.present?
           ::Api::V1::Payments::PlanRepresenter.new(resource.plan).complete
         end
       end
