@@ -48,7 +48,7 @@ class WorkingPlace < ActiveRecord::Base
   def location_attributes
     @location_attributes ||=
       Geokit::Geocoders::GoogleGeocoder
-      .geocode([city, state, country_code, country].compact.join(', '))
+      .geocode([city, state, country_code, country].compact.join(', '), language: 'en')
   end
 
   def location_timezone
@@ -56,7 +56,6 @@ class WorkingPlace < ActiveRecord::Base
   end
 
   def address_found?
-    (city.blank? || location_attributes.city.present?) &&
       (!state_required? || location_attributes.state_code.present?) &&
       location_attributes.country.present?
   end
@@ -78,6 +77,7 @@ class WorkingPlace < ActiveRecord::Base
       country_data(location_attributes.country).present? &&
         country_data(location_attributes.country).states.key?(state_code) &&
         (
+          state == state_code ||
           country_data(location_attributes.country).states[state_code]['name'].include?(state) ||
           country_data(location_attributes.country)
             .states[state_code]['names'].any? { |name| name.include?(state) }
@@ -93,7 +93,7 @@ class WorkingPlace < ActiveRecord::Base
   end
 
   def correct_country
-    errors.add(:country, 'does not exist') unless country_data(country).present?
+    errors.add(:country, 'does not exist') unless !country? || country_data(country).present?
   end
 
   def assign_coordinate_related_attributes
@@ -109,6 +109,7 @@ class WorkingPlace < ActiveRecord::Base
   end
 
   def country_data(country_name)
+    return unless country_name.present?
     ISO3166::Country.find_country_by_translated_names(country_name) ||
       ISO3166::Country.find_country_by_alpha2(country_name)
   end

@@ -135,6 +135,18 @@ RSpec.describe WorkingPlace, type: :model do
           it { expect(subject.timezone).to eql('Europe/Zurich') }
         end
 
+        context 'create with city that have same name as the state' do
+          subject { create(:working_place, city: 'Zug', state: 'ZG', country: country) }
+          let(:city) { nil }
+          let(:state_name) { 'Zug' }
+          let(:state_code) { 'ZG' }
+
+          it { expect(subject).to be_valid }
+          it { expect(subject.state).to eq('ZG') }
+          it { expect(subject.state_code).to eq('ZG') }
+          it { expect(subject.timezone).to eql('Europe/Zurich') }
+        end
+
         context 'create with exotic non english state name' do
           subject { create(:working_place, state: 'Graubünden', country: country) }
           let(:city) { nil  }
