@@ -5,7 +5,7 @@ module UserSchemas
     Dry::Validation.Form do
       required(:email).filled(:str?)
       optional(:password).filled(:str?)
-      optional(:account_manager).filled(:bool?)
+      optional(:role).filled(:str?)
       optional(:employee).maybe do
         schema do
           required(:id).filled(:str?)
@@ -19,7 +19,7 @@ module UserSchemas
       required(:id).filled(:str?)
       optional(:email).filled(:str?)
       optional(:password).filled(:str?)
-      optional(:account_manager).filled(:bool?)
+      optional(:role).filled(:str?)
       optional(:employee).maybe do
         schema do
           required(:id).filled(:str?)

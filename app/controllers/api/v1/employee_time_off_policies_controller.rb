@@ -21,7 +21,7 @@ module API
               new_effective_at: attributes[:effective_at],
               time_off_category_id: resource.time_off_category_id,
               employee_id: resource.employee_id,
-              manual_amount: params[:employee_balance_amount]
+              manual_amount: params[:employee_balance_amount].to_i
             ).call
           end
 

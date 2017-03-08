@@ -9,6 +9,7 @@ class Account::User < ActiveRecord::Base
   validates :email, uniqueness: { scope: :account_id, case_sensitive: false }
   validates :password, length: { in: 8..74 }, if: ->() { !password.nil? }
   validates :reset_password_token, uniqueness: true, allow_nil: true
+  validates :role, presence: true, inclusion: { in: %w(user account_administrator account_owner) }
 
   belongs_to :account, inverse_of: :users, required: true
   belongs_to :referrer, primary_key: :email, foreign_key: :email
@@ -43,6 +44,10 @@ class Account::User < ActiveRecord::Base
 
   def generate_password
     self.password ||= SecureRandom.urlsafe_base64(12)
+  end
+
+  def owner_or_administrator?
+    %w(account_owner account_administrator).include?(role)
   end
 
   private

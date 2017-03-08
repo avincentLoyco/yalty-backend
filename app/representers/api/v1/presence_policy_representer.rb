@@ -2,7 +2,8 @@ module Api::V1
   class PresencePolicyRepresenter < BaseRepresenter
     def complete
       {
-        name: resource.name
+        name: resource.name,
+        deletable: assigned_employees_json.empty?
       }
         .merge(basic)
     end

@@ -76,6 +76,9 @@ module Yalty
     # Set current account
     config.middleware.insert_after('CurrentUserMiddleware', 'CurrentAccountMiddleware')
 
+    # Etag
+    config.middleware.insert_before 'Rack::ETag', 'ETagMiddleware'
+
     # SQL database schema
     config.active_record.schema_format = :sql
 

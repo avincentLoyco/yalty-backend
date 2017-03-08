@@ -66,7 +66,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
     before { user.employee = employee }
 
     context 'when user is a manager' do
-      before { user.update_attribute(:account_manager, true) }
+      before { user.update_attribute(:role, 'account_administrator') }
       it 'should return all time off category time offs' do
         subject
 
@@ -80,7 +80,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
     end
 
     context 'when the user is not a manager' do
-      before { user.account_manager = false }
+      before { user.role = 'user' }
       context 'when user has an employee' do
         it 'should return employee time offs and not others time offs' do
           subject
