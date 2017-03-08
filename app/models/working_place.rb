@@ -56,7 +56,7 @@ class WorkingPlace < ActiveRecord::Base
   end
 
   def address_found?
-      (!state_required? || location_attributes.state_code.present?) &&
+    (!state_required? || location_attributes.state_code.present?) &&
       location_attributes.country.present?
   end
 
