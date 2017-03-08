@@ -20,7 +20,6 @@ class UpdateEvent
       update_employee_join_tables
       manage_versions
       save!
-      previous_and_next_events_valid?
     end
     event.tap { handle_contract_end }
   end
@@ -157,18 +156,6 @@ class UpdateEvent
 
       raise InvalidResourcesError.new(event, messages)
     end
-  end
-
-  def previous_and_next_events_valid?
-    hired_or_contract_end = event.event_type.eql?('hired') || event.event_type.eql?('contract_end')
-    previous_not_valid = event.previous_event.present? && !event.previous_event.valid?
-    next_not_valid = event.next_event.present? && !event.next_event.valid?
-    return event unless hired_or_contract_end && (previous_not_valid || next_not_valid)
-    messages = [event.previous_event, event.next_event].each_with_object({}) do |evnt, msg|
-      msg.merge(evnt.errors.messages) if evnt.present?
-    end
-
-    raise InvalidResourcesError.new(event, messages)
   end
 
   def update_assignations_and_balances

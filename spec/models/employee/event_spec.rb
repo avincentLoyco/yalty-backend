@@ -66,6 +66,35 @@ RSpec.describe Employee::Event, type: :model do
     end
   end
 
+  context '#hired_and_contract_end_not_in_the_same_date' do
+    let(:employee) { create(:employee) }
+    let!(:existing_event) do
+      create(:employee_event, event_type: 'contract_end', employee: employee)
+    end
+    subject do
+      build(:employee_event, event_type: 'hired', employee: employee, effective_at: effective_at)
+    end
+
+    context 'with valid params' do
+      let(:effective_at) { existing_event.effective_at + 1.day }
+
+      it { expect(subject).to be_valid }
+      it do
+        expect { subject.valid? }.to_not change { subject.errors.messages.size }
+      end
+    end
+
+    context 'with invalid params' do
+      let(:effective_at) { existing_event.effective_at }
+
+      it { expect(subject).to_not be_valid }
+      it do
+        expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
+          .to include 'Hired and contract end event can not be at the same date'
+      end
+    end
+  end
+
   context '#no_two_contract_end_dates_or_hired_events_in_row' do
     let(:employee) { create(:employee) }
     let(:subject_effective_at) { Time.now - 3.years }

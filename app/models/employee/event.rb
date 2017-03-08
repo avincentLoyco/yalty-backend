@@ -42,6 +42,10 @@ class Employee::Event < ActiveRecord::Base
   validate :attributes_presence, if: [:event_attributes, :employee]
   validate :balances_before_hired_date, if: :employee, on: :update
   validate :no_two_contract_end_dates_or_hired_events_in_row, if: [:employee, :event_type]
+  validate :not_moved_after_or_before_hired_date,
+    if: [:employee, :event_type, :effective_at],
+    on: :update
+  validate :hired_and_contract_end_not_in_the_same_date, if: [:employee, :event_type]
 
   def self.event_types
     Employee::Event::EVENT_ATTRIBUTES.keys.map(&:to_s)
@@ -79,6 +83,20 @@ class Employee::Event < ActiveRecord::Base
 
   private
 
+  def not_moved_after_or_before_hired_date
+    return unless event_type.in?(%w(contract_end hired)) && effective_at_changed?
+    events_types_between =
+      employee
+        .events
+        .where.not(id: id)
+        .where(
+          'effective_at BETWEEN ? AND ?',
+          [effective_at, effective_at_was].min, [effective_at, effective_at_was].max
+        ).pluck(:event_type)
+    return unless (events_types_between & %w(contract_end hired)).present?
+    errors.add(:effective_at, 'Can not update if before or after is contract end or hired event')
+  end
+
   def balances_before_hired_date
     return unless event_type == 'hired' && balances_before_effective_at?
     errors.add(:base, 'There can\'t be balances before hired date')
@@ -112,5 +130,13 @@ class Employee::Event < ActiveRecord::Base
 
     (previous&.event_type.eql?(event_type) || future&.event_type.eql?(event_type)) ||
       (event_type.eql?('contract_end') && previous.nil?)
+  end
+
+  def hired_and_contract_end_not_in_the_same_date
+    work_types = %w(contract_end hired)
+    return unless work_types.delete(event_type)
+    existing_event = employee.events.where.not(id: id).where(effective_at: effective_at).first
+    return unless existing_event.present? && existing_event.event_type.in?(work_types)
+    errors.add(:effective_at, 'Hired and contract end event can not be at the same date')
   end
 end

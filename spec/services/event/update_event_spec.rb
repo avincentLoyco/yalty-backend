@@ -440,7 +440,7 @@ RSpec.describe do
             employee: employee)
         end
 
-        it { expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
+        it { expect { subject }.to raise_error(ActiveRecord::RecordInvalid) }
       end
     end
 
