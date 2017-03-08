@@ -35,14 +35,19 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
   end
 
   def policy_assignation_balance(effective_at = self.effective_at)
+    balance_effective_at =
+      if related_resource.reset?
+        effective_at + Employee::Balance::REMOVAL_OFFSET
+      else
+        effective_at + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET
+      end
+
     employee
       .employee_balances
       .where(
         time_off_category_id: time_off_policy.time_off_category.id,
-        time_off_id: nil
-      )
-      .where(
-        'effective_at = ?', effective_at + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET
+        time_off_id: nil,
+        effective_at: balance_effective_at
       )
       .first
   end

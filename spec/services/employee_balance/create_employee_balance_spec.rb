@@ -271,15 +271,46 @@ RSpec.describe CreateEmployeeBalance, type: :service do
     end
 
     context 'when the balance is a reset balance' do
-      let(:amount) { 0 }
-      let(:options) { { reset_balance: true } }
+      let!(:contract_end) do
+        create(:employee_event, employee: employee, event_type: 'contract_end').effective_at
+      end
 
-      it { expect(subject.first.amount).to eq 0 }
-      it { expect(subject.first.balance).to eq 0 }
-      it { expect(subject.first.validity_date).to eq nil }
-      it { expect(subject.first.effective_at).to be_kind_of(Time) }
-      it { expect(subject.first.balance_credit_removal).to eq nil }
-      it { expect(subject.first.balance_credit_additions).to eq([]) }
+      before { Employee::Balance.destroy_all }
+
+      let(:options) do
+        {
+          reset_balance: true,
+          effective_at: contract_end + 1.day + Employee::Balance::REMOVAL_OFFSET
+        }
+      end
+
+      context 'when there are no previous balances' do
+        before { subject }
+
+        it { expect(subject.first.amount).to eq 0 }
+        it { expect(subject.first.balance).to eq 0 }
+        it { expect(subject.first.validity_date).to eq nil }
+        it { expect(subject.first.effective_at).to be_kind_of(Time) }
+        it { expect(subject.first.balance_credit_removal).to eq nil }
+        it { expect(subject.first.balance_credit_additions).to eq([]) }
+      end
+
+      context 'when there are previous balances' do
+        before do
+          create(:employee_presence_policy, :with_time_entries,
+            employee: employee, effective_at: 1.year.ago)
+          create(:time_off,
+            start_time: contract_end - 1.week, end_time: contract_end - 2.days,
+            employee: employee, time_off_category: category)
+          subject
+        end
+
+        it { expect(subject.first.amount).to eq (-TimeOff.first.employee_balance.resource_amount) }
+        it { expect(subject.first.balance).to eq 0 }
+        it { expect(subject.first.validity_date).to eq nil }
+        it { expect(subject.first.balance_credit_additions).to eq [] }
+        it { expect(subject.first.balance_credit_removal).to eq nil }
+      end
     end
   end
 

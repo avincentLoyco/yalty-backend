@@ -21,22 +21,26 @@ RSpec.describe HandleContractEnd, type: :service do
   let!(:working_places) { create_list(:working_place, 2, account: account) }
 
   let!(:time_off_policies_before) do
-    time_off_categories.map { |category| create(:time_off_policy, time_off_category: category) }
+    time_off_categories.map do |category|
+      create(:time_off_policy, :with_end_date, time_off_category: category)
+    end
   end
   let!(:time_off_policies_after) do
-    time_off_categories.map { |category| create(:time_off_policy, time_off_category: category) }
+    time_off_categories.map do |category|
+      create(:time_off_policy, :with_end_date, time_off_category: category)
+    end
   end
 
   let!(:etops_before) do
     time_off_policies_before.map do |policy|
-      create(:employee_time_off_policy, time_off_policy: policy, employee: employee,
-        effective_at: Time.zone.now)
+      create(:employee_time_off_policy, :with_employee_balance,
+        time_off_policy: policy, employee: employee, effective_at: Date.new(2011, 1, 1))
     end
   end
   let!(:etops_after) do
     time_off_policies_after.map do |policy|
-      create(:employee_time_off_policy, time_off_policy: policy, employee: employee,
-        effective_at: 6.months.from_now)
+      create(:employee_time_off_policy, :with_employee_balance,
+        time_off_policy: policy, employee: employee, effective_at: 6.months.from_now)
     end
   end
 
@@ -71,6 +75,14 @@ RSpec.describe HandleContractEnd, type: :service do
 
   before do
     Account.current = account
+    TimeOff.all.map do |time_off|
+      validity_date =
+        RelatedPolicyPeriod
+          .new(time_off.employee_balance.employee_time_off_policy)
+          .validity_date_for(time_off.end_time)
+      next unless validity_date.present?
+      time_off.employee_balance.update!(validity_date: validity_date)
+    end
     create_contract_end
   end
 
@@ -86,9 +98,18 @@ RSpec.describe HandleContractEnd, type: :service do
   end
 
   context 'assigned reset resources' do
+    let(:removal_balance) do
+      time_off_categories.first.employee_balances.order(:effective_at).last
+    end
     it do
-      expect(employee.employee_time_off_policies.order(:effective_at).last.time_off_policy.reset)
-        .to be(true)
+      expect(
+        employee.employee_time_off_policies.where(time_off_category: time_off_categories.last)
+      .order(:effective_at).last.time_off_policy.reset).to eq true
+    end
+    it do
+      expect(
+        employee.employee_time_off_policies.where(time_off_category: time_off_categories.first)
+      .order(:effective_at).last.time_off_policy.reset).to eq true
     end
     it do
       expect(employee.employee_presence_policies.order(:effective_at).last.presence_policy.reset)
@@ -97,6 +118,23 @@ RSpec.describe HandleContractEnd, type: :service do
     it do
       expect(employee.employee_working_places.order(:effective_at).last.working_place.reset)
         .to be(true)
+    end
+    it do
+      expect(time_off_categories.first.employee_balances.order(:effective_at).last.reset_balance)
+        .to be true
+    end
+    it do
+      expect(time_off_categories.last.employee_balances.order(:effective_at).last.reset_balance)
+        .to be true
+    end
+    it { expect(removal_balance.amount).to eq (-time_offs.second.employee_balance.balance) }
+    it do
+      expect(time_offs.second.employee_balance.reload.balance_credit_removal_id)
+        .to eq removal_balance.id
+    end
+    it do
+      expect(time_offs.second.employee_balance.reload.validity_date)
+        .to eq removal_balance.effective_at
     end
   end
 end

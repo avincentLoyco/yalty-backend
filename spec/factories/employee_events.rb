@@ -38,7 +38,7 @@ FactoryGirl.define do
         employee.employee_time_off_policies.not_reset.where('effective_at BETWEEN ? AND ?', hired_date, employee_event.effective_at).each do |etop|
           top = employee.account.time_off_policies.find_by(reset: true, time_off_category: etop.time_off_category) ||
                 create(:time_off_policy, reset: true, time_off_category: etop.time_off_category)
-          create(:employee_time_off_policy, employee: employee, time_off_policy: top,
+          create(:employee_time_off_policy, :with_reset_balance, employee: employee, time_off_policy: top,
             effective_at: effective_at)
         end
       end

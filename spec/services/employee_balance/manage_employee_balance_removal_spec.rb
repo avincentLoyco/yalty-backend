@@ -137,7 +137,6 @@ RSpec.describe ManageEmployeeBalanceRemoval, type: :service do
             let(:new_date) { Date.today + 1.year + 3.months + Employee::Balance::REMOVAL_OFFSET }
 
             context 'and previously didnt have employee balance removal' do
-
               it { expect { subject }.to change { Employee::Balance.count }.by(1) }
               it { expect { subject }.to change { balance.balance_credit_removal_id } }
             end

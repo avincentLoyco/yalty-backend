@@ -58,7 +58,7 @@ class AssignResetJoinTable
   end
 
   def assign_reset_time_off_policies_for_every_category
-    @employee.time_off_categories.distinct.each do |category|
+    @employee.time_off_categories.distinct.map do |category|
       next if reset_policy_in_category?(category)
       reset_policy = @account.time_off_policies.find_by(time_off_category: category, reset: true)
       EmployeeTimeOffPolicy.create!(

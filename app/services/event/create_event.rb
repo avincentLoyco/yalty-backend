@@ -18,7 +18,8 @@ class CreateEvent
       find_or_build_employee
       build_versions
       save!
-    end.tap { handle_contract_end if event_params[:event_type].eql?('contract_end') }
+      event.tap { handle_contract_end }
+    end
   end
 
   private
@@ -104,6 +105,7 @@ class CreateEvent
   end
 
   def handle_contract_end
+    return unless event.event_type.eql?('contract_end')
     HandleContractEnd.new(employee, event.effective_at).call
   end
 end

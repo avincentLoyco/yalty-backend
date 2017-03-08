@@ -27,7 +27,7 @@ class Employee::Balance < ActiveRecord::Base
   validate :effective_at_equal_time_off_end_date, if: :time_off_id
   validate :removal_effective_at_date
   validate :end_time_not_after_contract_end, if: [:employee, :effective_at]
-  # TODO add validation for reset balance effective_at
+  validate :reset_effective_at_after_contract_end, if: [:employee, :effective_at]
 
   before_validation :find_effective_at
   before_validation :calculate_amount_from_time_off, if: :time_off_id
@@ -51,6 +51,7 @@ class Employee::Balance < ActiveRecord::Base
       .where("effective_at::date = to_date('#{date}', 'YYYY-MM_DD')")
       .where('effective_at::time = ?', '00:00:03').uniq
   end)
+  scope :reset, -> { where(reset_balance: true) }
 
   scope :in_category, ->(category_id) { where(time_off_category_id: category_id) }
   scope :with_time_off, -> { where.not(time_off_id: nil) }
@@ -79,8 +80,6 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   def calculate_removal_amount
-    return unless balance_credit_additions.present? ||
-        (policy_credit_addition && time_off_policy.counter?)
     self.resource_amount = CalculateEmployeeBalanceRemovalAmount.new(self).call
   end
 
@@ -111,9 +110,20 @@ class Employee::Balance < ActiveRecord::Base
   private
 
   def end_time_not_after_contract_end
-    return unless employee.contract_end_for(effective_at).present? &&
-        employee.contract_end_for(effective_at) > employee.hired_date_for(effective_at)
+    contract_end = employee.contract_end_for(effective_at)
+    return unless !reset_balance &&
+        contract_end.present? && contract_end > employee.hired_date_for(effective_at) &&
+        (time_off_id.nil? || (contract_end + 1.day).beginning_of_day < effective_at)
+
     errors.add(:effective_at, 'Employee Balance can not be added after employee contract end date')
+  end
+
+  def reset_effective_at_after_contract_end
+    return unless reset_balance
+    contract_end = employee.contract_end_for(effective_at)
+    return if contract_end &&
+        (contract_end + 1.day + Employee::Balance::REMOVAL_OFFSET).eql?(effective_at)
+    errors.add(:effective_at, 'Reset Balance effective at must be at contract end')
   end
 
   def attributes_present?
@@ -157,7 +167,7 @@ class Employee::Balance < ActiveRecord::Base
 
   def effective_at_equal_time_off_policy_dates
     etop = employee_time_off_policy
-    return if etop.blank? || reset_balance?
+    return if etop.blank? || reset_balance? || !etop.not_reset?
     etop_hash = employee_time_off_policy_with_effective_till(etop)
     matches_end_or_start_top_date = compare_effective_at_with_time_off_polices_related_dates(
       time_off_policy,

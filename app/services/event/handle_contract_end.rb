@@ -16,6 +16,7 @@ class HandleContractEnd
       remove_balances
       assign_reset_resources
       move_time_offs
+      assign_reset_balances
     end
   end
 
@@ -25,7 +26,6 @@ class HandleContractEnd
     join_tables = JOIN_TABLES.map do |table_name|
       @employee.send(table_name).where('effective_at > ?', @contract_end_date)
     end
-    # TODO: verify this condition
     return join_tables.map(&:delete_all) unless @next_hire_date.present?
     join_tables.map { |table| table.where('effective_at < ?', @next_hire_date).delete_all }
   end
@@ -51,8 +51,18 @@ class HandleContractEnd
   end
 
   def assign_reset_resources
-    %w(presence_policies working_places time_off_policies).each do |resources_name|
-      AssignResetJoinTable.new(resources_name, @employee, nil, @contract_end_date).call
+    @reset_join_tables =
+      %w(presence_policies working_places time_off_policies).map do |resources_name|
+        AssignResetJoinTable.new(resources_name, @employee, nil, @contract_end_date).call
+      end
+  end
+
+  def assign_reset_balances
+    employee_time_off_policies =
+      @reset_join_tables.flatten.select { |table| table.class.eql?(EmployeeTimeOffPolicy) }
+    return unless employee_time_off_policies.present?
+    employee_time_off_policies.map do |etop|
+      AssignResetEmployeeBalance.new(etop).call
     end
   end
 
@@ -62,6 +72,10 @@ class HandleContractEnd
       end_time > '#{@contract_end_date}'::timestamp
     "'').map do |time_off|
       time_off.update!(end_time: @contract_end_date + 1.day)
+      validity_date = time_off.employee_balance.validity_date
+      time_off.employee_balance.update!(
+        effective_at: time_off.end_time, validity_date: validity_date
+      )
     end
   end
 

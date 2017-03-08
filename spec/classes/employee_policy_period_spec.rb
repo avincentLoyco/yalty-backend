@@ -106,18 +106,6 @@ RSpec.describe EmployeePolicyPeriod do
         )
       end
       it { expect(subject.future_policy_period).to eq(nil) }
-
-      context 'when there is employee time off policy in the future' do
-        before do
-          # binding.pry
-          create(:employee_time_off_policy,
-            employee: employee, effective_at: 20.months.since,
-            time_off_policy: create(:time_off_policy, time_off_category: category))
-        end
-
-        # it { binding.pry }
-        # it { expect(subject.future_start_date).to eq 20.months.since
-      end
     end
   end
 

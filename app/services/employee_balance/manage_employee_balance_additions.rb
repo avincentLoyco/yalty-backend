@@ -11,7 +11,7 @@ class ManageEmployeeBalanceAdditions
   end
 
   def call
-    return if RelatedPolicyPeriod.new(resource).first_start_date > effective_till
+    return if effective_till && RelatedPolicyPeriod.new(resource).first_start_date > effective_till
     ActiveRecord::Base.transaction do
       create_additions_with_removals
       if update && balances.flatten.present?
@@ -38,7 +38,6 @@ class ManageEmployeeBalanceAdditions
 
       balance_date = RelatedPolicyPeriod.new(etop).first_start_date
       date_to_which_create_balances = etop.effective_till || ending_date
-
       while balance_date <= date_to_which_create_balances
         if addition_at(etop, balance_date).nil?
           balances << CreateEmployeeBalance.new(*employee_balance_params(etop, balance_date)).call
@@ -55,12 +54,12 @@ class ManageEmployeeBalanceAdditions
   end
 
   def etops_between_dates
-    @etops_between_dates = employee
-                           .employee_time_off_policies
-                           .where(
-                             'time_off_category_id = ? AND effective_at BETWEEN ? AND ?',
-                             resource.time_off_category_id, starting_date, ending_date
-                           )
+    @etops_between_dates =
+      employee
+       .employee_time_off_policies
+       .where(time_off_category: resource.time_off_category)
+       .where('effective_at BETWEEN ? AND ?', starting_date, ending_date)
+       .not_reset
   end
 
   def starting_date
@@ -69,6 +68,8 @@ class ManageEmployeeBalanceAdditions
 
   def ending_date
     @ending_date = future_policy_period_last_date
+    return @ending_date if @ending_date.present?
+    resource.effective_till
   end
 
   def create_before_start_date_balance?(etop, date)
@@ -165,7 +166,6 @@ class ManageEmployeeBalanceAdditions
   end
 
   def calculate_effective_till
-    #case jak nie ma effective_till a jest reset
     effective_till = resource.effective_till
     if effective_till && (future_policy_period_last_date.blank? ||
         effective_till <= future_policy_period_last_date)
