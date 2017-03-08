@@ -2,8 +2,9 @@ class AddLongTokenAllowedFieldToEmployeeAttributeVersions < ActiveRecord::Migrat
   def change
     add_column :employee_attribute_definitions,
       :long_token_allowed,
-      :boolean,
-      default: false,
-      null: false
+      :boolean
+    change_column_default :employee_attribute_definitions, :long_token_allowed, false
+    execute('UPDATE employee_attribute_definitions SET long_token_allowed = false')
+    change_column_null :employee_attribute_definitions, :long_token_allowed, false
   end
 end

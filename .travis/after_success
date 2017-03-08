@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 require 'travis/pro'
+require 'octokit'
 
 #
 # Configure
@@ -10,34 +11,60 @@ if ENV['GITHUB_ACCESS_TOKEN'].nil?
   exit 1
 end
 
-Travis::Pro.github_auth(ENV['GITHUB_ACCESS_TOKEN'])
+begin
+  repository = ENV['TRAVIS_REPO_SLUG']
+  branch = ENV['TRAVIS_BRANCH']
+
+  Travis::Pro.github_auth(ENV['GITHUB_ACCESS_TOKEN'])
+
+  Octokit.configure do |config|
+    config.access_token = ENV['GITHUB_ACCESS_TOKEN']
+  end
+  github = Octokit::Client.new
+  github.branch(repository, branch) # validate repository and target branch exists
+rescue Travis::Client::NotFound, Octokit::NotFound
+  puts "Repository (#{repository}) or branch (#{branch}) not found"
+  exit 0
+end
 
 #
 # Build docker image
 #
 
-def build_docker_image(branch, docker_tag)
-  docker_repository = ENV['TRAVIS_REPO_SLUG'].gsub(%r{^yalty/yalty-}, 'yalty/')
-
-  `git reset --hard #{branch} && git clean -d -x -f -f`
-  `docker login -u="#{ENV['DOCKER_USERNAME']}" -p="#{ENV['DOCKER_PASSWORD']}"`
-  `./bin/build #{docker_repository}:#{docker_tag}`
-  `docker push #{docker_repository}:#{docker_tag}`
+def reset_git_working_tree(ref)
+  `git reset --hard #{ref} && git clean -d -x -f -f`
 end
 
-if ENV['TRAVIS_PULL_REQUEST'] && ENV['TRAVIS_BRANCH'] == 'master'
+def build_docker_image(docker_tag)
+  docker_repository = ENV['TRAVIS_REPO_SLUG'].gsub(%r{^yalty/yalty-}, 'yalty/')
+
+  system("docker login -u=\"#{ENV['DOCKER_USERNAME']}\" -p=\"#{ENV['DOCKER_PASSWORD']}\"") &&
+    system("./bin/build #{docker_repository}:#{docker_tag}") &&
+    system("docker push #{docker_repository}:#{docker_tag}")
+end
+
+if ENV['TRAVIS_PULL_REQUEST'] != 'false' && ENV['TRAVIS_BRANCH'] == 'master'
   if ENV['TRAVIS_PULL_REQUEST_BRANCH'] =~ %r{^[^/]+/(ywa-[[:digit:]]+)}i
     docker_tag = Regexp.last_match(1).downcase
-    build_docker_image('HEAD', docker_tag)
+    reset_git_working_tree('HEAD')
+    result = build_docker_image(docker_tag)
+    github.create_status(
+      repository, ENV['TRAVIS_PULL_REQUEST_SHA'], result ? 'success' : 'failure',
+      context: 'yalty/build', description: 'Docker image builded',
+      target_url: "http://sample.#{docker_tag}.review.yaltyapp.com"
+    )
   elsif ENV['TRAVIS_PULL_REQUEST_BRANCH'] =~ %r{^releases?/(.+)}
-    docker_tag = "#{Regexp.last_match(1)}-rc-#{ENV['TRAVIS_COMMIT']}"
-    build_docker_image(ENV['TRAVIS_PULL_REQUEST_BRANCH'], docker_tag)
+    docker_tag = "#{Regexp.last_match(1)}-rc-#{ENV['TRAVIS_PULL_REQUEST_SHA']}"
+    reset_git_working_tree(ENV['TRAVIS_PULL_REQUEST_SHA'])
+    result = build_docker_image(docker_tag)
+    github.create_status(
+      repository, ENV['TRAVIS_PULL_REQUEST_SHA'], result ? 'success' : 'failure',
+      context: 'yalty/build', description: 'Docker image builded'
+    )
   end
-elsif ENV['TRAVIS_TAG'] =~ /^v(.+)/
-  docker_tag = Regexp.last_match(1)
-  build_docker_image(ENV['TRAVIS_TAG'], docker_tag)
 elsif ENV['TRAVIS_BRANCH'] == 'master'
-  build_docker_image('master', 'lastest')
+  reset_git_working_tree('master')
+  build_docker_image('lastest')
 end
 
 #
@@ -46,10 +73,9 @@ end
 
 if ENV['TRAVIS_PULL_REQUEST'] == 'false'
   begin
-    travis = Travis::Pro::Repository.find('yalty/yalty-e2e-testing')
-    branch = ENV['TRAVIS_BRANCH']
+    e2e = Travis::Pro::Repository.find('yalty/yalty-e2e-testing')
 
-    build = travis.branch(branch)
+    build = e2e.branch(branch)
     if build.restartable?
       puts "Build ##{build.number} on yalty/yalty-e2e-testing for branch #{branch} restarted"
       build.restart

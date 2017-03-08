@@ -1,6 +1,6 @@
 require 'capistrano/setup'
 require 'capistrano/deploy'
-require 'new_relic/recipes'
+# require 'new_relic/recipes'
 
 # Load the SCM plugin appropriate to your project:
 require 'capistrano/docker_copy'

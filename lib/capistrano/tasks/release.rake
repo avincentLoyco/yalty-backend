@@ -33,9 +33,9 @@ namespace :release do
       execute :git, :tag, "v#{version}", sha1
       execute :docker, :push, "yalty/backend:#{version}"
       execute :git, :push, '--tags'
-    end
 
-    info 'Deploy to production environment:
-      cap production deploy'
+      info 'Deploy to production environment:
+        cap production deploy'
+    end
   end
 end
