@@ -2,25 +2,18 @@ class AssignHolidayPolicy
   include API::V1::Exceptions
   attr_reader :working_place, :holiday_policy_id
 
-  def initialize(working_place, holiday_policy_id)
+  def initialize(working_place)
     @working_place = working_place
-    @holiday_policy_id = holiday_policy_id
   end
 
   def call
-    working_place.update!(holiday_policy: holiday_policy)
+    working_place.update!(holiday_policy: holiday_policy) if holiday_policy.present?
   end
 
   private
 
   def holiday_policy
-    @holiday_policy ||= begin
-      if holiday_policy_id.present?
-        holiday_policies.find(holiday_policy_id)
-      elsif HolidayPolicy::COUNTRIES.include?(country_code)
-        find_or_create_policy
-      end
-    end
+    @holiday_policy ||= find_or_create_policy if HolidayPolicy::COUNTRIES.include?(country_code)
   end
 
   def find_or_create_policy
@@ -34,7 +27,7 @@ class AssignHolidayPolicy
   end
 
   def country_code
-    working_place.country_code.downcase
+    working_place.country_code&.downcase
   end
 
   def state_code

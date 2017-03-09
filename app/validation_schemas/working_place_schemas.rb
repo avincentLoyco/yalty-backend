@@ -4,11 +4,6 @@ module WorkingPlaceSchemas
   def post_schema
     Dry::Validation.Form do
       required(:name).filled(:str?)
-      optional(:holiday_policy).maybe do
-        schema do
-          required(:id).filled(:str?)
-        end
-      end
       optional(:country).maybe(:str?)
       optional(:city).maybe(:str?)
       optional(:state).maybe(:str?)
@@ -23,11 +18,6 @@ module WorkingPlaceSchemas
     Dry::Validation.Form do
       required(:id).filled(:str?)
       required(:name).filled(:str?)
-      optional(:holiday_policy).maybe do
-        schema do
-          required(:id).filled(:str?)
-        end
-      end
       optional(:country).maybe(:str?)
       optional(:city).maybe(:str?)
       optional(:state).maybe(:str?)

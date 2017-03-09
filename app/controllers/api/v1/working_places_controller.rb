@@ -14,12 +14,11 @@ module API
 
       def create
         verified_dry_params(dry_validation_schema) do |attributes|
-          holiday_policy_id = attributes.delete(:holiday_policy).try(:[], :id)
           @resource = Account.current.working_places.new(attributes)
           authorize! :create, resource
           transactions do
             resource.save!
-            AssignHolidayPolicy.new(resource, holiday_policy_id).call
+            AssignHolidayPolicy.new(resource).call
           end
           render_resource(resource, status: :created)
         end
@@ -27,10 +26,9 @@ module API
 
       def update
         verified_dry_params(dry_validation_schema) do |attributes|
-          holiday_policy_id = attributes.delete(:holiday_policy).try(:[], :id)
           transactions do
             resource.update(attributes)
-            AssignHolidayPolicy.new(resource, holiday_policy_id).call
+            AssignHolidayPolicy.new(resource).call
           end
           render_no_content
         end

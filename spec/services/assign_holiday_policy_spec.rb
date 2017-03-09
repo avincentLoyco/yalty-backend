@@ -10,7 +10,6 @@ RSpec.describe AssignHolidayPolicy do
   let!(:account) { working_place.account }
   let!(:holiday_policy) { create :holiday_policy, account: account, region: 'vd', country: 'ch' }
 
-  let(:city) { 'Zurich' }
   let(:state_name) { 'Zurich' }
   let(:state_code) { 'ZH' }
   let(:state_param) { 'ZH' }
@@ -22,35 +21,25 @@ RSpec.describe AssignHolidayPolicy do
   let(:working_place) { create :working_place, city: city, state: state_param, country: country }
 
   context 'with authorized country' do
-    context 'when holiday policy is given' do
-      subject { described_class.new(working_place, holiday_policy.id) }
+    subject { described_class.new(working_place) }
+
+    context 'and a holiday policy matching working place coordinates exists' do
+      let!(:holiday_policy) do
+        create :holiday_policy, account: account, region: state_param, country: country_param
+      end
 
       it { expect { subject.call }.to_not change { HolidayPolicy.count } }
       it { subject.call; expect(working_place.holiday_policy_id).to eq(holiday_policy.id) }
     end
 
-    context "when holiday policy isn't given" do
-      subject { described_class.new(working_place, nil) }
-
-      context 'and a holiday policy matching working place coordinates exists' do
-        let!(:holiday_policy) do
-          create :holiday_policy, account: account, region: state_param, country: country_param
-        end
-
-        it { expect { subject.call }.to_not change { HolidayPolicy.count } }
-        it { subject.call; expect(working_place.holiday_policy_id).to eq(holiday_policy.id) }
-      end
-
-      context "and a holiday policy matching working place coordinates doesn't exists" do
-        it { expect { subject.call }.to change { HolidayPolicy.count }.by(1) }
-        it { subject.call; expect(working_place.holiday_policy).not_to be(nil) }
-        it { subject.call; expect(working_place.holiday_policy.name).to eq('Switzerland (ZH)') }
-      end
+    context "and a holiday policy matching working place coordinates doesn't exists" do
+      it { expect { subject.call }.to change { HolidayPolicy.count }.by(1) }
+      it { subject.call; expect(working_place.holiday_policy).not_to be(nil) }
+      it { subject.call; expect(working_place.holiday_policy.name).to eq('Switzerland (ZH)') }
     end
   end
 
   context 'with unauthorized country' do
-    let(:city) { 'Rzeszow' }
     let(:state_name) { 'Podkarpackie Voivodeship' }
     let(:state_code) { 'Podkarpackie Voivodeship' }
     let(:state_param) { nil }
@@ -58,29 +47,23 @@ RSpec.describe AssignHolidayPolicy do
     let(:country_code) { 'PL' }
     let(:timezone) { 'Europe/Warsaw' }
 
-    context 'when holiday policy is given' do
-      subject { described_class.new(working_place, holiday_policy.id) }
+    subject { described_class.new(working_place) }
 
-      context 'if account has given holiday policy' do
-        let!(:holiday_policy) { create :holiday_policy, account: account }
+    it { expect { subject.call }.to_not change { HolidayPolicy.count } }
+    it { subject.call; expect(working_place.holiday_policy).to be(nil) }
+  end
 
-        it { expect { subject.call }.to_not change { HolidayPolicy.count } }
-        it { subject.call; expect(working_place.holiday_policy_id).to eq(holiday_policy.id) }
-      end
+  context 'without address' do
+    let(:state_name) { nil }
+    let(:state_code) { nil }
+    let(:state_param) { nil }
+    let(:country) { nil }
+    let(:country_code) { nil }
+    let(:timezone) { nil }
 
-      context "when holiday policy doesn't exist" do
-        subject { described_class.new(working_place, 'NOT-AN-UUID') }
+    subject { described_class.new(working_place) }
 
-        it { expect { subject.call rescue nil }.to_not change { HolidayPolicy.count } }
-        it { expect { subject.call }.to raise_exception(ActiveRecord::RecordNotFound) }
-      end
-    end
-
-    context "when holiday policy isn't given" do
-      subject { described_class.new(working_place, nil) }
-
-      it { expect { subject.call }.to_not change { HolidayPolicy.count } }
-      it { subject.call; expect(working_place.holiday_policy).to be(nil) }
-    end
+    it { expect { subject.call }.to_not change { HolidayPolicy.count } }
+    it { subject.call; expect(working_place.holiday_policy).to be(nil) }
   end
 end
