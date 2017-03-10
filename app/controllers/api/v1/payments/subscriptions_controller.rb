@@ -30,7 +30,8 @@ module API
         end
 
         def plans
-          Stripe::Plan.list.map do |plan|
+          Stripe::Plan.list.select do |plan|
+            next if plan.id.eql?('free-plan')
             plan.active = Account.current.available_modules.include?(plan.id)
             plan
           end

@@ -13,11 +13,16 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
   let(:invoice)      { StripeInvoice.new('in_123', 666, timestamp) }
   let(:card)         { StripeCard.new('ca_123', 4567, 'Visa', 12, 2018) }
   let(:plans) do
-    ['master-plan', 'evil-plan', 'sweet-sweet-plan'].map do |plan_id|
+    ['master-plan', 'evil-plan', 'sweet-sweet-plan', 'free-plan'].map do |plan_id|
       StripePlan.new(plan_id, 400, 'chf', 'month', plan_id.titleize)
     end
   end
-  let(:subscription_items) { [StripeSubscriptionItem.new('si_123', plans.first)] }
+  let(:subscription_items) do
+    [
+      StripeSubscriptionItem.new('si_123', plans.first),
+      StripeSubscriptionItem.new('si_456', plans.last)
+    ]
+  end
 
   before do
     Account.current.update(customer_id: customer.id, subscription_id: subscription.id)
@@ -122,6 +127,14 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
 
         it { expect(response.status).to eq(403) }
       end
+    end
+
+    context 'free-plan is not returned' do
+      let(:json_plans) { JSON.parse(response.body)['plans'] }
+      before { get_subscription }
+
+      it { expect(json_plans.size).to eq(3) }
+      it { expect(json_plans.map { |plan| plan['id'] }).to_not include('free-plan') }
     end
   end
 

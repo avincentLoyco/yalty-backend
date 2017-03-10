@@ -28,7 +28,8 @@ module Api
         end
 
         def line_items
-          resource.lines.map do |line|
+          resource.lines.select do |line|
+            next if line.plan.present? && line.plan.id.eql?('free-plan')
             line.plan.active = active_plan_ids.include?(line.plan.id) if line.plan.present?
             line
           end
