@@ -66,4 +66,23 @@ RSpec.describe AssignHolidayPolicy do
     it { expect { subject.call }.to_not change { HolidayPolicy.count } }
     it { subject.call; expect(working_place.holiday_policy).to be(nil) }
   end
+
+  context 'when removing the assigned policy' do
+    let(:state_name) { nil }
+    let(:state_code) { nil }
+    let(:state_param) { nil }
+    let(:country) { nil }
+    let(:country_code) { nil }
+    let(:timezone) { nil }
+
+    subject { described_class.new(working_place) }
+
+    before do
+      working_place.update!(holiday_policy_id: holiday_policy.id)
+    end
+
+    it { expect { subject.call }.to_not change { HolidayPolicy.count } }
+    it { expect { subject.call }.to change { working_place.holiday_policy } }
+    it { subject.call; expect(working_place.holiday_policy).to be(nil) }
+  end
 end

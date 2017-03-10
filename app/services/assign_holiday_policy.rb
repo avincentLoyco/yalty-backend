@@ -7,7 +7,7 @@ class AssignHolidayPolicy
   end
 
   def call
-    working_place.update!(holiday_policy: holiday_policy) if holiday_policy.present?
+    working_place.update!(holiday_policy: holiday_policy)
   end
 
   private
@@ -17,9 +17,13 @@ class AssignHolidayPolicy
   end
 
   def find_or_create_policy
+    return unless country_code.present?
+
     holiday_policies.find_or_create_by!(region: state_code, country: country_code) do |policy|
-      policy.name = state_code ? "#{working_place.country} (#{working_place.state})" : policy_name
+      policy.name = state_code ? "#{working_place.country} (#{working_place.state})" : policy.name
     end
+  rescue ActiveRecord::RecordInvalid
+    nil
   end
 
   def holiday_policies
@@ -32,6 +36,6 @@ class AssignHolidayPolicy
 
   def state_code
     return unless HolidayPolicy.country_with_regions?(country_code)
-    working_place.state_code.downcase
+    working_place.state_code&.downcase
   end
 end

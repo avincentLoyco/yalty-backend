@@ -10,12 +10,11 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
     resource_class: WorkingPlace.model_name,
     join_table_class: EmployeeWorkingPlace.model_name
 
-  let(:first_working_place) { create(:working_place, account: account) }
   let(:presence_policy) { create(:presence_policy, account: account) }
   let!(:employee) { create(:employee, account: Account.current, employee_working_places: [ewp]) }
   let(:ewp) do
     create(:employee_working_place,
-      working_place: first_working_place, effective_at: Time.now - 6.months)
+      working_place: create(:working_place, account: account), effective_at: Time.now - 6.months)
   end
 
   let(:country) { 'Switzerland' }
@@ -255,18 +254,26 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
   context 'PUT #update' do
     subject { put :update, valid_data_json }
 
-    let(:working_place) { create(:working_place, country: country, city: city, account: account) }
+    let!(:working_place) do
+      create(:working_place, account: account, holiday_policy: holiday_policy,
+             name: 'Old Name',
+             state: state_code, country: country_code
+            )
+    end
+    let(:holiday_policy) do
+      create(:holiday_policy, account: account, region: state_code, country: country_code)
+    end
 
-    let(:id) { working_place.id }
-    let(:name) { 'test' }
-    let(:country) { 'Switzerland' }
+    let(:name) { 'Old Name' }
+    let(:state_param) { state_code }
 
     let(:valid_data_json) do
       {
-        id: id,
+        id: working_place.id,
         name: name,
         type: 'working_place',
-        country: country
+        state: state_param,
+        country: country_code
       }
     end
 
@@ -277,68 +284,118 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
       end
     end
 
-    context 'with valid data' do
+    context 'when update name' do
+      let(:name) { 'New Name' }
+
       it { expect { subject }.to change { working_place.reload.name } }
-      it { expect { subject }.to change { working_place.reload.holiday_policy_id } }
+      it { expect { subject }.to_not change { working_place.reload.holiday_policy_id } }
 
       it { is_expected.to have_http_status(204) }
+    end
 
-      context 'with country without region validation' do
-        let(:country) { 'Poland' }
-        let(:city) { 'Warsaw' }
-        let(:country_code) { 'PL' }
+    context 'when update address but not state and country' do
+      before do
+        valid_data_json[:city] = 'Lausanne'
+      end
 
-        it { expect { subject }.to change { working_place.reload.name } }
+      it { expect { subject }.to_not change { working_place.reload.name } }
+      it { expect { subject }.to_not change { working_place.reload.holiday_policy_id } }
+
+      it { is_expected.to have_http_status(204) }
+    end
+
+    context 'including country that has region validation' do
+      context 'and update state that doesn\'t match existing holiday policy' do
+        before do
+          allow_any_instance_of(WorkingPlace).to receive(:location_attributes) do
+            geoloc_instance(
+              city: nil,
+              state_name: 'Vaud',
+              state_code: 'VD',
+              country: country,
+              country_code: country_code,
+            )
+          end
+
+          valid_data_json[:state] = 'VD'
+        end
+
+        it { expect { subject }.to change { working_place.reload.holiday_policy_id } }
+        it { expect { subject }.to change { account.reload.holiday_policies.count }.by(1) }
 
         it { is_expected.to have_http_status(204) }
       end
+
+      context 'and update state that match existing holiday policy' do
+        let!(:holiday_policy_vd) do
+          create(:holiday_policy, account: account, region: 'vd', country: 'ch')
+        end
+
+        before do
+          allow_any_instance_of(WorkingPlace).to receive(:location_attributes) do
+            geoloc_instance(
+              city: nil,
+              state_name: 'Vaud',
+              state_code: 'VD',
+              country: country,
+              country_code: country_code,
+            )
+          end
+
+          valid_data_json[:state] = 'VD'
+        end
+
+        it { expect { subject }.to change { working_place.reload.holiday_policy_id } }
+        it { expect { subject }.to_not change { HolidayPolicy.count } }
+        it { expect { subject }.to change { holiday_policy.reload.working_places.count }.by(-1) }
+        it { expect { subject }.to change { holiday_policy_vd.reload.working_places.count }.by(1) }
+
+        it { is_expected.to have_http_status(204) }
+      end
+
+      context 'and remove state' do
+        before do
+          allow_any_instance_of(WorkingPlace).to receive(:location_attributes) do
+            geoloc_instance(
+              city: nil,
+              state_name: nil,
+              state_code: nil,
+              country: country,
+              country_code: country_code,
+            )
+          end
+
+          valid_data_json[:state] = nil
+        end
+
+        it { expect { subject }.to_not change { HolidayPolicy.count } }
+        it { expect { subject }.to_not change { working_place.reload.holiday_policy_id } }
+
+        it { is_expected.to have_http_status(422) }
+      end
     end
 
-    context 'with invalid data' do
-      context 'without all required params' do
-        let(:missing_data_json) { valid_data_json.tap { |json| json.delete(:name) } }
-        subject { post :create, missing_data_json }
-
-        it_behaves_like 'Invalid Data'
-
-        it { is_expected.to have_http_status(422) }
-
-        context 'response' do
-          before { subject }
-
-          it { expect_json(regex('missing')) }
+    context 'when reomve address' do
+      before do
+        allow_any_instance_of(WorkingPlace).to receive(:location_attributes) do
+          geoloc_instance(
+            city: nil,
+            state_name: nil,
+            state_code: nil,
+            country: nil,
+            country_code: nil,
+          )
         end
+
+        valid_data_json[:state] = nil
+        valid_data_json[:country] = nil
       end
 
-      context 'with params that are not valid' do
-        let(:name) { '' }
+      it { expect { subject }.to change { working_place.reload.holiday_policy_id }.to(nil) }
+      it { expect { subject }.to_not change { HolidayPolicy.count } }
+      it { expect { subject }.to change { holiday_policy.reload.working_places.count }.by(-1) }
 
-        it_behaves_like 'Invalid Data'
-
-        it { is_expected.to have_http_status(422) }
-
-        context 'response' do
-          before { subject }
-
-          it { expect_json(regex('must be filled')) }
-        end
-      end
-
-      context 'with invalid related records ids' do
-        context 'with invalid working place id' do
-          let(:id) { '1' }
-
-          it_behaves_like 'Invalid Data'
-
-          it { is_expected.to have_http_status(404) }
-
-          context 'response' do
-            before { subject }
-
-            it { expect_json(regex('Record Not Found')) }
-          end
-        end
-      end
+      it { is_expected.to have_http_status(204) }
     end
   end
 
