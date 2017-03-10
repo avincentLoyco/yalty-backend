@@ -16,8 +16,6 @@ class Account < ActiveRecord::Base
   validates :default_locale, inclusion: { in: I18n.available_locales.map(&:to_s) }
   validate :referrer_must_exist, if: :referred_by, on: :create
 
-  # It is assigned to account holiday_policy as default
-  belongs_to :holiday_policy, inverse_of: :assigned_account
   has_many :users,
     class_name: 'Account::User',
     inverse_of: :account

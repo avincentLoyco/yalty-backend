@@ -377,7 +377,6 @@ CREATE TABLE accounts (
     company_name character varying,
     default_locale character varying DEFAULT 'en'::character varying,
     timezone character varying,
-    holiday_policy_id uuid,
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
     referred_by character varying
 );
@@ -1875,3 +1874,6 @@ INSERT INTO schema_migrations (version) VALUES ('20161220125415');
 INSERT INTO schema_migrations (version) VALUES ('20170111105844');
 
 INSERT INTO schema_migrations (version) VALUES ('20170209083140');
+
+INSERT INTO schema_migrations (version) VALUES ('20170310135249');
+
