@@ -1,10 +1,11 @@
 class FindValueForAttribute
   include API::V1::Exceptions
 
-  attr_reader :attribute, :attribute_type
+  attr_reader :attribute, :attribute_type, :version
 
   def initialize(attribute, version)
     @attribute = attribute
+    @version = version
     @attribute_type = version.attribute_definition.try(:attribute_type)
   end
 
@@ -26,8 +27,8 @@ class FindValueForAttribute
   end
 
   def verify_if_one_file_in_directory!(file_path, employee_file)
-    return unless file_path.size != 1
-    raise InvalidResourcesError.new(employee_file, 'Not authorized!')
+    return unless (employee_file.id != version.data&.id && file_path.size != 1) || file_path.blank?
+    raise InvalidResourcesError.new(employee_file, ['Not authorized!'])
   end
 
   def form_employee_attribute_version(employee_file)
