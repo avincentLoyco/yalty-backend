@@ -1,4 +1,6 @@
 require 'rails_helper'
+require 'fakeredis/rspec'
+require 'sidekiq/testing'
 require 'rake'
 
 RSpec.describe 'create_customers_for_existing_accounts', type: :rake do
@@ -6,6 +8,8 @@ RSpec.describe 'create_customers_for_existing_accounts', type: :rake do
 
   let!(:account)  { create(:account, customer_id: 'cus_123', subscription_id: 'sub_123') }
   let!(:accounts) { create_list(:account, 3) }
+
+  subject { rake['payments:create_customers_for_existing_accounts'].invoke }
 
   context 'in case of success' do
     let(:customer)     { StripeCustomer.new(SecureRandom.hex) }

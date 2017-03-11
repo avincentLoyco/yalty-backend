@@ -6,6 +6,11 @@ FactoryGirl.define do
       timezone { 'Europe/Zurich' }
     end
 
+    trait :with_stripe_fields do
+      customer_id { SecureRandom.hex }
+      subscription_id { SecureRandom.hex }
+    end
+
     trait :with_billing_information do
       invoice_company_info {
         {
