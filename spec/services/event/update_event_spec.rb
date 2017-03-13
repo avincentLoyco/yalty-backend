@@ -386,145 +386,93 @@ RSpec.describe do
   end
 
   context 'contract_end' do
-    let(:event_type) { 'contract_end' }
-    let(:old_effective_at) { Time.zone.parse('2016/03/01') }
-    let(:now) { Time.zone.now }
-    let!(:category) { create(:time_off_category, account: Account.current) }
-    let!(:top) { create(:time_off_policy, time_off_category: category) }
-    let!(:etop) do
-      create(:employee_time_off_policy, employee: employee, effective_at: now, time_off_policy: top)
-    end
-    let!(:epp) { create(:employee_presence_policy, employee: employee, effective_at: now) }
-    let!(:ewp) { create(:employee_working_place, employee: employee, effective_at: now) }
-    let!(:contract_end) do
-      create(:employee_event, event_type: event_type, effective_at: old_effective_at,
-        employee: employee)
-    end
-    let(:employee_contract_end) { employee.events.find_by(event_type: 'contract_end') }
-    let(:event) { contract_end }
-    let(:event_id) { contract_end.id }
-    let(:employee_attributes_params) {{}}
-    let(:reset_epp) { employee.employee_presence_policies.with_reset.last }
-    let(:reset_ewp) { employee.employee_working_places.with_reset.last }
-    let(:reset_etop) { employee.employee_time_off_policies.with_reset.last }
-
-    context 'move to the future' do
-      let(:effective_at) { Time.zone.parse('2016/04/01') }
-
-      context 'when there is no re-hire' do
-        it 'moves reset employee_presence_policies' do
-          expect { subject }
-            .to change { reset_epp.reload.effective_at }
-            .from(old_effective_at + 1.day)
-            .to(effective_at + 1.day)
-        end
-
-        it 'moves reset employee_working_places' do
-          expect { subject }
-            .to change { reset_ewp.reload.effective_at }
-            .from(old_effective_at + 1.day)
-            .to(effective_at + 1.day)
-        end
-
-        it 'moves reset employee_time_off_policies' do
-          expect { subject }
-            .to change { reset_etop.reload.effective_at }
-            .from(old_effective_at + 1.day)
-            .to(effective_at + 1.day)
-        end
-      end
-
-      context 'moving after re-hire' do
-        let!(:re_hire) do
-          create(:employee_event, event_type: 'hired', effective_at: effective_at - 10.days,
-            employee: employee)
-        end
-
-        it { expect { subject }.to raise_error(ActiveRecord::RecordInvalid) }
-      end
-    end
-
     context 'move to the past' do
-      let(:effective_at) { Time.zone.parse('2012/01/01') }
-
-      context 'there are no more join tables' do
-        before do
-          subject
-          employee.reload
+      let(:event_type) { 'contract_end' }
+      let(:categories) { create_list(:time_off_category, 2, account: employee.account) }
+      let(:policies) do
+        categories.map do |category|
+          create(:time_off_policy, :with_end_date, time_off_category: category)
         end
+      end
+      let!(:epp) do
+        create(:employee_presence_policy, :with_time_entries,
+          employee: employee, effective_at: 1.years.ago)
+      end
+      let!(:ewp) { create(:employee_working_place, employee: employee, effective_at: 1.years.ago) }
+      let!(:etops) do
+        policies.map do |policy|
+          create(:employee_time_off_policy, :with_employee_balance,
+            employee: employee, effective_at: 1.years.ago, time_off_policy: policy)
+        end
+      end
+      let!(:time_offs) do
+        [
+          [1.year.ago - 2.days, 1.year.ago + 5.days], [4.months.ago, 4.months.ago + 3.days]
+        ].map do |starts, ends|
+          create(:time_off,
+            employee: employee, start_time: starts, end_time: ends,
+            time_off_category: categories.first)
+        end
+      end
+      let!(:etop_assignation_balance) do
+        create(:employee_balance_manual,
+          employee: employee, time_off_category: time_offs.first.time_off_category,
+          policy_credit_addition: true,
+          effective_at:
+            time_offs.first.start_time + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET
+        )
+      end
+      let!(:event) do
+        create(:employee_event,
+          employee: employee, event_type: 'contract_end', effective_at: Time.zone.today)
+      end
+      let(:employee_attributes_params) {{ }}
 
-        it { expect(employee_contract_end.effective_at).to eq(effective_at) }
-        it { expect(employee.time_off_policies.count).to eq(0) }
-        it { expect(employee.employee_time_off_policies.count).to eq(0) }
-        it { expect(employee.presence_policies.count).to eq(0) }
-        it { expect(employee.employee_presence_policies.count).to eq(0) }
-        it { expect(employee.working_places.count).to eq(0) }
-        it { expect(employee.employee_working_places.count).to eq(0) }
+      before do
+        etops.map { |etop| ManageEmployeeBalanceAdditions.new(etop).call }
+        subject
+        event.reload
+        employee.reload
       end
 
-      context 'there are join tables before new effective_at' do
-        let!(:category2) { create(:time_off_category, account: Account.current) }
-        let!(:top2) { create(:time_off_policy, time_off_category: category) }
-        let!(:etop_2) do
-          create(:employee_time_off_policy, :with_employee_balance, employee: employee,
-            effective_at: effective_at - 9.days, time_off_policy: top2)
-        end
-        let!(:epp_2) do
-          create(:employee_presence_policy, employee: employee, effective_at: effective_at - 9.days)
-        end
-        let!(:ewp_2) do
-          create(:employee_working_place, employee: employee, effective_at: effective_at - 9.days)
-        end
+      context 'when all join tables effective at after contract end' do
+        let(:effective_at) { 1.year.ago - 3.days }
 
-        context 'without time_off' do
-          before do
-            subject
-            employee.reload
-          end
+        it { expect(event.effective_at).to eq effective_at }
+        it { expect(employee.employee_time_off_policies.count).to eq(0) }
+        it { expect(employee.employee_presence_policies.count).to eq(0) }
+        it { expect(employee.employee_working_places.count).to eq(0) }
+        it { expect(employee.employee_balances.count).to eq(0) }
+        it { expect(employee.time_offs.count).to eq(0) }
+      end
 
-          it { expect(employee_contract_end.effective_at).to eq(effective_at) }
-          it { expect(employee.time_off_policies.count).to eq(2) }
-          it { expect(employee.employee_time_off_policies.count).to eq(2) }
-          it { expect(employee.employee_time_off_policies.with_reset.count).to eq(1) }
-          it { expect(employee.presence_policies.count).to eq(2) }
-          it { expect(employee.employee_presence_policies.count).to eq(2) }
-          it { expect(employee.employee_presence_policies.with_reset.count).to eq(1) }
-          it { expect(employee.working_places.count).to eq(2) }
+      context 'when all join tables effective at before or in contract end' do
+        shared_examples 'Join tables effective_at before or in contract end' do
+          it { expect(event.effective_at).to eq effective_at }
+          it { expect(employee.employee_time_off_policies.count).to eq(5) }
           it { expect(employee.employee_working_places.count).to eq(2) }
-          it { expect(employee.employee_working_places.with_reset.count).to eq(1) }
+          it { expect(employee.employee_presence_policies.count).to eq(2) }
+          it { expect(employee.time_offs.count).to eq (1) }
+
+          it { expect(employee.employee_balances.count).to eq (6) }
+          it { expect(employee.employee_balances.where(reset_balance: true).count).to eq (2) }
+          it do
+            expect(employee.employee_balances.where(reset_balance: true)
+              .pluck(:effective_at).uniq)
+              .to eq ([effective_at + 1.day + Employee::Balance::REMOVAL_OFFSET])
+          end
         end
 
-        context 'with time_off' do
-          let(:start_time) { effective_at - 10.days }
+        context 'in contract end date' do
+          let(:effective_at) { 1.years.ago }
 
-          let!(:time_off) do
-            create(:time_off, start_time: start_time, end_time: end_time,
-              employee: employee, time_off_category: category2)
-          end
+          it_behaves_like 'Join tables effective_at before or in contract end'
+        end
 
-          context 'when moved before time_off start_time' do
-            let(:start_time) { effective_at + 10.days }
-            let(:end_time) { start_time + 10.days }
+        context 'before contract end' do
+          let(:effective_at) { 1.years.ago + 1.day }
 
-            it { expect { subject }.to change(TimeOff, :count).by(-1) }
-          end
-
-          context 'when moved before time_off end_time' do
-            let(:end_time) { effective_at + 10.days }
-
-            it 'moves it to day after contract_end' do
-              expect { subject }
-                .to change { time_off.reload.end_time }
-                .from(end_time)
-                .to(effective_at + 1.day)
-            end
-          end
-
-          context 'when moved to time_off end_time' do
-            let(:end_time) { effective_at + 10.days }
-
-            it { expect { subject }.to_not change { time_off } }
-          end
+          it_behaves_like 'Join tables effective_at before or in contract end'
         end
       end
     end

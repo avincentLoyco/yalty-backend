@@ -60,18 +60,13 @@ class RelatedPolicyPeriod
   end
 
   def validity_date_for(date)
-    return unless end_day && end_month && years_to_effect
+    return unless end_date?
     validity_date =
       Date.new(date.year + years_to_effect, end_month, end_day) + Employee::Balance::REMOVAL_OFFSET
     years_end_date = Date.new(date.year, end_month, end_day)
     validity_date += 1.year if date.to_date > years_end_date
     validity_date += 1.year if (validity_date.to_date - date.to_date).to_i / 365 < years_to_effect
-
-    if contract_end_for(validity_date) && validity_date >= contract_end_for(validity_date)
-      contract_end_for(validity_date)
-    else
-      validity_date
-    end
+    verify_with_contract_end(validity_date)
   end
 
   def validity_date_for_balance_at(date)
@@ -82,7 +77,16 @@ class RelatedPolicyPeriod
       else
         related_policy.policy_assignation_balance.validity_date
       end
-    validity_date >= date ? validity_date : validity_date_for(date)
+    validity_date = validity_date >= date ? validity_date : validity_date_for(date)
+    verify_with_contract_end(validity_date)
+  end
+
+  def verify_with_contract_end(validity_date)
+    if contract_end_for(validity_date) && validity_date >= contract_end_for(validity_date)
+      contract_end_for(validity_date)
+    else
+      validity_date
+    end
   end
 
   def previous_addition(date)
@@ -93,7 +97,8 @@ class RelatedPolicyPeriod
   end
 
   def end_date?
-    time_off_policy.end_day.present? && time_off_policy.end_month.present?
+    time_off_policy.end_day.present? && time_off_policy.end_month.present? &&
+      time_off_policy.years_to_effect.present?
   end
 
   def contract_end_for(validity_date)

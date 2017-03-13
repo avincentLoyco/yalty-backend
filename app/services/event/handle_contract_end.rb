@@ -46,7 +46,7 @@ class HandleContractEnd
   def remove_balances
     @employee
       .employee_balances
-      .where('effective_at > ?', @contract_end_date)
+      .where('effective_at > ?', @contract_end_date + 1.day)
       .not_time_off.delete_all
   end
 

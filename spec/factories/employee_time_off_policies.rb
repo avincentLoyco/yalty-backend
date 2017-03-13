@@ -28,17 +28,19 @@ FactoryGirl.define do
 
     trait :with_reset_balance do
       after(:create) do |policy|
-        previous_balance =
-          policy.employee.employee_balances.where('effective_at < ?', policy.effective_at)
-                .where(time_off_category: policy.time_off_category).order(:effective_at).last
-        amount = previous_balance ? -previous_balance.balance : 0
-        create(:employee_balance_manual,
-          resource_amount: amount,
-          employee: policy.employee,
-          time_off_category: policy.time_off_policy.time_off_category,
-          reset_balance: true,
-          effective_at: policy.effective_at + Employee::Balance::REMOVAL_OFFSET
-        )
+        if policy.policy_assignation_balance.blank?
+          previous_balance =
+            policy.employee.employee_balances.where('effective_at < ?', policy.effective_at)
+                  .where(time_off_category: policy.time_off_category).order(:effective_at).last
+          amount = previous_balance ? -previous_balance.balance : 0
+          create(:employee_balance_manual,
+            resource_amount: amount,
+            employee: policy.employee,
+            time_off_category: policy.time_off_policy.time_off_category,
+            reset_balance: true,
+            effective_at: policy.effective_at + Employee::Balance::REMOVAL_OFFSET
+          )
+        end
       end
     end
   end

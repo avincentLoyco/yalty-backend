@@ -174,7 +174,7 @@ RSpec.describe Employee::Balance, type: :model do
           end
 
           context 'with invalid data' do
-            let(:effective_at) { Date.new(2014, 1, 1) }
+            let(:effective_at) { Date.new(2014, 1, 1) + 1.day + 1.second }
 
             it { expect(subject.valid?).to eq false }
             it do
@@ -220,7 +220,7 @@ RSpec.describe Employee::Balance, type: :model do
 
           context 'with invalid data' do
             context 'effective_at between old contract end and new contract end' do
-              let(:effective_at) { Date.new(2014, 1, 1) }
+              let(:effective_at) { Date.new(2014, 1, 1) + 1.day + 1.second }
 
               it { expect(subject.valid?).to eq false }
               it do
@@ -230,7 +230,7 @@ RSpec.describe Employee::Balance, type: :model do
             end
 
             context 'effective at after new contract end' do
-              let(:effective_at) { Date.new(2016, 1, 1) }
+              let(:effective_at) { Date.new(2016, 1, 1) + 1.day + 1.second  }
 
               it { expect(subject.valid?).to eq false }
               it do

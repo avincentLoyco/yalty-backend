@@ -1,7 +1,7 @@
 class UpdateEvent
   include API::V1::Exceptions
   attr_reader :employee_params, :attributes_params, :event_params, :versions,
-    :event, :employee, :updated_assignations
+    :event, :employee, :updated_assignations, :old_effective_at
 
   def initialize(params, employee_attributes_params)
     @versions              = []
@@ -27,18 +27,19 @@ class UpdateEvent
   private
 
   def handle_contract_end
-    return unless event.event_type.eql?('contract_end')
+    return unless event.event_type.eql?('contract_end') && old_effective_at != event.effective_at
+
     employee = event.employee
     tables = %w(employee_time_off_policies employee_presence_policies employee_working_places)
-    reset_effective_at = @old_effective_at + 1.day
-    if @old_effective_at < event.reload.effective_at
+    reset_effective_at = old_effective_at + 1.day
+    if old_effective_at < event.reload.effective_at
       tables.each do |table_name|
         join_tables = employee.send(table_name).with_reset.where(effective_at: reset_effective_at)
         join_tables.map do |join_table|
           join_table.update!(effective_at: event.effective_at + 1.day)
         end
       end
-    elsif @old_effective_at > event.reload.effective_at
+    elsif old_effective_at > event.reload.effective_at
       tables.each do |table_name|
         employee.send(table_name).with_reset.where(effective_at: reset_effective_at).delete_all
       end

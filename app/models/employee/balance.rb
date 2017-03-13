@@ -111,10 +111,10 @@ class Employee::Balance < ActiveRecord::Base
 
   def end_time_not_after_contract_end
     contract_end = employee.contract_end_for(effective_at)
-    return unless !reset_balance &&
-        contract_end.present? && contract_end > employee.hired_date_for(effective_at) &&
-        (time_off_id.nil? || (contract_end + 1.day).beginning_of_day < effective_at)
 
+    return unless !reset_balance && contract_end.present? &&
+        contract_end > employee.hired_date_for(effective_at) &&
+        (contract_end + 1.day).beginning_of_day < effective_at
     errors.add(:effective_at, 'Employee Balance can not be added after employee contract end date')
   end
 
