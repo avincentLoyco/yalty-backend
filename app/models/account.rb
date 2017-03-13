@@ -3,7 +3,7 @@ class Account < ActiveRecord::Base
   include AccountIntercomData
   include StripeHelpers
 
-  serialize :invoice_company_info, CompanyInformation
+  serialize :invoice_company_info, Payments::CompanyInformation
 
   validates :subdomain,
     presence: true,
@@ -41,6 +41,7 @@ class Account < ActiveRecord::Base
   has_many :employee_working_places, through: :employees
   has_many :employee_time_off_policies, through: :employees
   has_many :employee_presence_policies, through: :employees
+  has_many :invoices
   belongs_to :referrer, primary_key: :token, foreign_key: :referred_by
 
   before_validation :generate_subdomain, on: :create

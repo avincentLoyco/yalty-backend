@@ -350,6 +350,23 @@ CREATE TABLE holidays (
 
 
 --
+-- Name: invoices; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE invoices (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    total_payed_amount integer NOT NULL,
+    status character varying NOT NULL,
+    attempts integer,
+    next_attempt date,
+    date date NOT NULL,
+    address hstore,
+    invoice_items json,
+    account_id uuid
+);
+
+
+--
 -- Name: oauth_access_grants; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -746,6 +763,14 @@ ALTER TABLE ONLY holidays
 
 
 --
+-- Name: invoices_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY invoices
+    ADD CONSTRAINT invoices_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: oauth_access_grants_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1035,6 +1060,13 @@ CREATE INDEX index_holiday_policies_on_account_id ON holiday_policies USING btre
 --
 
 CREATE INDEX index_holidays_on_holiday_policy_id ON holidays USING btree (holiday_policy_id);
+
+
+--
+-- Name: index_invoices_on_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_invoices_on_account_id ON invoices USING btree (account_id);
 
 
 --
@@ -1650,6 +1682,8 @@ INSERT INTO schema_migrations (version) VALUES ('20170221113046');
 INSERT INTO schema_migrations (version) VALUES ('20170301085412');
 
 INSERT INTO schema_migrations (version) VALUES ('20170302162303');
+
+INSERT INTO schema_migrations (version) VALUES ('20170307081031');
 
 INSERT INTO schema_migrations (version) VALUES ('20170310135249');
 
