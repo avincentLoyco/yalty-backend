@@ -100,7 +100,7 @@ class Employee < ActiveRecord::Base
   def total_amount_of_data
     employee_attribute_versions
       .where("data -> 'attribute_type' = 'File'")
-      .sum("(data -> 'size')::integer") / 1024.0
+      .sum("(data -> 'size')::float") / 1024.0
   end
 
   def number_of_files
