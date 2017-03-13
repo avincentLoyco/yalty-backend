@@ -27,7 +27,7 @@ class AssignHolidayPolicy
   end
 
   def holiday_policies
-    Account.current.holiday_policies
+    working_place.account.holiday_policies
   end
 
   def country_code
