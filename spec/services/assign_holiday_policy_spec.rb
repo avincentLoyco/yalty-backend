@@ -35,7 +35,6 @@ RSpec.describe AssignHolidayPolicy do
     context "and a holiday policy matching working place coordinates doesn't exists" do
       it { expect { subject.call }.to change { HolidayPolicy.count }.by(1) }
       it { subject.call; expect(working_place.holiday_policy).not_to be(nil) }
-      it { subject.call; expect(working_place.holiday_policy.name).to eq('Switzerland (ZH)') }
     end
   end
 

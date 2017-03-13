@@ -3,7 +3,7 @@ class HolidayPolicy < ActiveRecord::Base
   has_many :working_places
   has_many :employees
 
-  validates :name, :account_id, presence: true
+  validates :account_id, presence: true
   validates :country, presence: true, inclusion: { in: :countries, allow_nil: true }
   validates :region, presence: true, inclusion: { in: :regions, allow_nil: true },
                      if: :region_required?

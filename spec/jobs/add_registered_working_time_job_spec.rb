@@ -218,7 +218,7 @@ RSpec.describe AddRegisteredWorkingTimes do
     end
 
     let!(:holiday_policy) do
-      HolidayPolicy.create(name: 'vactions', account: account, country: 'ch', region: 'zh')
+      create :holiday_policy, region: 'zh', country: 'ch'
     end
     let(:date_of_job_run) { Time.zone.now - 1.day }
 

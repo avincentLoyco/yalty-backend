@@ -19,9 +19,7 @@ class AssignHolidayPolicy
   def find_or_create_policy
     return unless country_code.present?
 
-    holiday_policies.find_or_create_by!(region: state_code, country: country_code) do |policy|
-      policy.name = state_code ? "#{working_place.country} (#{working_place.state})" : policy.name
-    end
+    holiday_policies.find_or_create_by!(region: state_code, country: country_code)
   rescue ActiveRecord::RecordInvalid
     nil
   end

@@ -553,12 +553,11 @@ CREATE TABLE employees (
 
 
 --
--- Name: holiday_policies; Type: TABLE; Schema: public; Owner: -; Tablespace:
+-- Name: holiday_policies; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
 CREATE TABLE holiday_policies (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
-    name character varying NOT NULL,
     country character varying,
     region character varying,
     created_at timestamp without time zone NOT NULL,
@@ -1876,4 +1875,6 @@ INSERT INTO schema_migrations (version) VALUES ('20170111105844');
 INSERT INTO schema_migrations (version) VALUES ('20170209083140');
 
 INSERT INTO schema_migrations (version) VALUES ('20170310135249');
+
+INSERT INTO schema_migrations (version) VALUES ('20170313132722');
 
