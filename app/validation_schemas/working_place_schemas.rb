@@ -9,6 +9,13 @@ module WorkingPlaceSchemas
           required(:id).filled(:str?)
         end
       end
+      optional(:country).maybe(:str?)
+      optional(:city).maybe(:str?)
+      optional(:state).maybe(:str?)
+      optional(:postalcode).maybe(:str?)
+      optional(:additional_address).maybe(:str?)
+      optional(:street).maybe(:str?)
+      optional(:street_number).maybe(:str?)
     end
   end
 
@@ -21,6 +28,13 @@ module WorkingPlaceSchemas
           required(:id).filled(:str?)
         end
       end
+      optional(:country).maybe(:str?)
+      optional(:city).maybe(:str?)
+      optional(:state).maybe(:str?)
+      optional(:postalcode).maybe(:str?)
+      optional(:additional_address).maybe(:str?)
+      optional(:street).maybe(:str?)
+      optional(:street_number).maybe(:str?)
     end
   end
 end
