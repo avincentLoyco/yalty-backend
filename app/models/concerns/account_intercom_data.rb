@@ -10,6 +10,7 @@ module AccountIntercomData
   def intercom_attributes
     %w(
       id created_at company_name subdomain
+      number_of_files total_amount_of_data employee_files_ratio
       vacation_count other_time_offs_count last_vacation_created_at last_other_time_off_created_at
       manual_working_time_ratio last_manual_working_time_created_at
       active_employee_count user_employee_ratio
@@ -25,6 +26,7 @@ module AccountIntercomData
       remote_created_at: created_at,
       custom_attributes: [
         { subdomain: subdomain },
+        intercom_files_attributes,
         intercom_policies_attributes,
         intercom_employee_attributes,
         intercom_time_offs_attributes,
@@ -34,6 +36,14 @@ module AccountIntercomData
   end
 
   private
+
+  def intercom_files_attributes
+    {
+      number_of_files: number_of_files,
+      total_amount_of_data: total_amount_of_data,
+      employee_files_ratio: employees.count.zero? ? 0 : number_of_files / employees.count
+    }
+  end
 
   def intercom_policies_attributes
     {
