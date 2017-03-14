@@ -18,3 +18,10 @@ every_midnight_remove_orphan_files:
   args:
   queue: employee_files
   description: "Remove files not assigned to employees"
+
+every_day_check_if_update_quantity:
+  cron: "5 0 * * *"
+  class: "::Payments::UpdateSubscriptionQuantity"
+  args:
+  queue: billing
+  description: "Check if any new or leaving employess tomorrow and update quantity of plans"
