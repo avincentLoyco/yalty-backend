@@ -15,11 +15,13 @@ RSpec.describe API::V1::UsersController, type: :controller do
 
   describe 'POST #create' do
     let(:email) { 'test@example.com' }
+    let(:locale) { 'en' }
     let(:password) { '12345678' }
     let(:role) { 'account_administrator' }
     let(:params) do
       {
         email: email,
+        locale: locale,
         password: password,
         role: role,
         employee: { id: employee_id }
@@ -174,11 +176,13 @@ RSpec.describe API::V1::UsersController, type: :controller do
   describe 'PUT #update' do
     let!(:users) { create_list(:account_user, 3, account: Account.current) }
     let(:email) { 'test123@example.com' }
+    let(:locale) { 'en' }
     let(:role) { 'account_administrator' }
     let(:params) do
       {
         id: users.first.id,
         email: email,
+        locale: locale,
         role: role,
         employee: { id: employee_id }
       }
@@ -212,6 +216,7 @@ RSpec.describe API::V1::UsersController, type: :controller do
       context 'without optional params' do
         before do
           params.delete(:role)
+          params.delete(:locale)
           params.delete(:is_employee)
           params.delete(:employee)
         end
