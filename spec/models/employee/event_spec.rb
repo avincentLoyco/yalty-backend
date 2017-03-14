@@ -106,9 +106,9 @@ RSpec.describe Employee::Event, type: :model do
 
     shared_examples 'Two contract end or hired events in a row' do
       before do
-        if try(:wedding_effective_at)
+        if try(:marriage_effective_at)
           create(:employee_event,
-            employee: employee, event_type: 'wedding', effective_at: wedding_effective_at)
+            employee: employee, event_type: 'marriage', effective_at: marriage_effective_at)
           employee.reload.events
         end
       end
@@ -136,7 +136,7 @@ RSpec.describe Employee::Event, type: :model do
         it_behaves_like 'Two contract end or hired events in a row'
 
         context 'and they are separated by other events' do
-          let(:wedding_effective_at) { subject.effective_at - 4.days }
+          let(:marriage_effective_at) { subject.effective_at - 4.days }
           let(:effective_at) { subject.effective_at - 1.week }
 
           it_behaves_like 'Two contract end or hired events in a row'
@@ -149,7 +149,7 @@ RSpec.describe Employee::Event, type: :model do
         it_behaves_like 'Two contract end or hired events in a row'
 
         context 'and they are separated by other events' do
-          let(:wedding_effective_at) { subject.effective_at + 4.days }
+          let(:marriage_effective_at) { subject.effective_at + 4.days }
 
           it_behaves_like 'Two contract end or hired events in a row'
         end
@@ -171,7 +171,7 @@ RSpec.describe Employee::Event, type: :model do
       end
 
       context 'when there is only one contract end' do
-        before { employee.events.first.update!(event_type: 'wedding') }
+        before { employee.events.first.update!(event_type: 'marriage') }
 
         it_behaves_like 'Contract end does not have its hired event'
       end
@@ -194,7 +194,7 @@ RSpec.describe Employee::Event, type: :model do
 
         context 'and they are separated by other event' do
           let(:effective_at) { subject.effective_at - 1.hour }
-          let(:wedding_effective_at) { subject.effective_at - 1.day }
+          let(:marriage_effective_at) { subject.effective_at - 1.day }
 
           it_behaves_like 'Two contract end or hired events in a row'
         end
@@ -206,7 +206,7 @@ RSpec.describe Employee::Event, type: :model do
         it_behaves_like 'Two contract end or hired events in a row'
 
         context 'and they are separated by other event' do
-          let(:wedding_effective_at) { subject.effective_at + 1.day }
+          let(:marriage_effective_at) { subject.effective_at + 1.day }
 
           it_behaves_like 'Two contract end or hired events in a row'
         end
