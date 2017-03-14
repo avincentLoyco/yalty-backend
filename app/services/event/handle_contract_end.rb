@@ -2,11 +2,12 @@ class HandleContractEnd
   JOIN_TABLES =
     %w(employee_time_off_policies employee_presence_policies employee_working_places).freeze
 
-  def initialize(employee, contract_end_date)
+  def initialize(employee, contract_end_date, old_contract_end = nil)
     @employee = employee
     @contract_end_date = contract_end_date
     @account = employee.account
     @next_hire_date = find_next_hire_date(employee)
+    @old_contract_end = old_contract_end
   end
 
   def call
@@ -16,7 +17,7 @@ class HandleContractEnd
       remove_balances
       assign_reset_resources
       move_time_offs
-      assign_reset_balances
+      assign_reset_balances_and_create_additions
     end
   end
 
@@ -57,12 +58,15 @@ class HandleContractEnd
       end
   end
 
-  def assign_reset_balances
+  def assign_reset_balances_and_create_additions
     employee_time_off_policies =
       @reset_join_tables.flatten.select { |table| table.class.eql?(EmployeeTimeOffPolicy) }
     return unless employee_time_off_policies.present?
+
     employee_time_off_policies.map do |etop|
-      AssignResetEmployeeBalance.new(etop).call
+      AssignResetEmployeeBalance.new(etop, @old_contract_end).call
+      next unless @old_contract_end && etop.effective_at > @old_contract_end
+      ManageEmployeeBalanceAdditions.new(etop.previous_policy_for.first).call
     end
   end
 
