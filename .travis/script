@@ -6,5 +6,10 @@
     $TRAVIS_BRANCH:refs/remotes/origin/$TRAVIS_BRANCH &&
   test $(git rev-list --left-only --count origin/$TRAVIS_BRANCH...origin/$TRAVIS_PULL_REQUEST_BRANCH) = 0
 ) || (
-  bundle exec rake parallel:spec
+  (
+    test "$TRAVIS_PULL_REQUEST" = "false" ||
+    test $(git rev-parse master) = $(echo $TRAVIS_COMMIT_MESSAGE | awk '{print $NF}')
+  ) && (
+    bundle exec rake parallel:spec
+  )
 )
