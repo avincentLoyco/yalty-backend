@@ -21,6 +21,9 @@ RSpec.describe Account::User, type: :model do
   it { is_expected.to have_db_column(:role).of_type(:string).with_options(null: false) }
   it { is_expected.to validate_inclusion_of(:role).in_array(%w(user account_administrator account_owner))}
 
+  it { is_expected.to have_db_column(:locale).of_type(:string).with_options(null: true) }
+  it { is_expected.to validate_inclusion_of(:locale).in_array(I18n.available_locales.map(&:to_s)) }
+
   it 'should validate length of password only when is updated' do
     user = create(:account_user)
     user = Account::User.find(user.id)
