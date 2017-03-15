@@ -1,7 +1,7 @@
 RSpec.shared_context 'shared_context_intercom_attributes' do
   let(:proper_account_intercom_attributes) do
     %w(
-      id created_at company_name subdomain
+      id created_at company_name subdomain referred_by
       number_of_files total_amount_of_data employee_files_ratio
       vacation_count other_time_offs_count last_vacation_created_at last_other_time_off_created_at
       manual_working_time_ratio last_manual_working_time_created_at
@@ -13,7 +13,7 @@ RSpec.shared_context 'shared_context_intercom_attributes' do
 
   let(:proper_account_data_keys) do
     %i(
-      company_id name subdomain remote_created_at custom_attributes
+      company_id name subdomain remote_created_at custom_attributes referred_by
       number_of_files total_amount_of_data employee_files_ratio
       vacation_count other_time_offs_count last_vacation_created_at last_other_time_off_created_at
       manual_working_time_ratio last_manual_working_time_created_at
