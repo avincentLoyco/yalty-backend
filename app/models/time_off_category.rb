@@ -29,8 +29,6 @@ class TimeOffCategory < ActiveRecord::Base
     end
   end
 
-  private
-
   def create_reset_policy!
     time_off_policies.create!(reset: true, name: 'Reset time off policy')
   end

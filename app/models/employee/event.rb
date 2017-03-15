@@ -87,12 +87,12 @@ class Employee::Event < ActiveRecord::Base
     return unless event_type.in?(%w(contract_end hired)) && effective_at_changed?
     events_types_between =
       employee
-        .events
-        .where.not(id: id)
-        .where(
-          'effective_at BETWEEN ? AND ?',
-          [effective_at, effective_at_was].min, [effective_at, effective_at_was].max
-        ).pluck(:event_type)
+      .events
+      .where.not(id: id)
+      .where(
+        'effective_at BETWEEN ? AND ?',
+        [effective_at, effective_at_was].min, [effective_at, effective_at_was].max
+      ).pluck(:event_type)
     return unless (events_types_between & %w(contract_end hired)).present?
     errors.add(:effective_at, 'Can not update if before or after is contract end or hired event')
   end

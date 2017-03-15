@@ -97,7 +97,7 @@ class Employee < ActiveRecord::Base
   end
 
   def first_employee_event
-    events.find_by(event_type: 'hired') || events.find { |event| event.event_type.eql?('hired' ) }
+    events.find_by(event_type: 'hired') || events.find { |event| event.event_type.eql?('hired') }
   end
 
   def hired_date
@@ -170,7 +170,7 @@ class Employee < ActiveRecord::Base
   def last_civil_status_event_for(date)
     @last_civil_status_event_for ||=
       events
-      .where('event_type IN (?) AND effective_at <= ?',  CIVIL_STATUS.keys, date)
+      .where('event_type IN (?) AND effective_at <= ?', CIVIL_STATUS.keys, date)
       .order(:effective_at).last
   end
 end

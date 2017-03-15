@@ -138,6 +138,11 @@ class Account < ActiveRecord::Base
     (number_of_files.to_f / employees.count.to_f).round(2)
   end
 
+  def create_reset_presence_policy_and_working_place!
+    presence_policies.create!(name: 'Reset policy', reset: true)
+    working_places.create!(name: 'Reset working place', reset: true)
+  end
+
   private
 
   # Generate a subdomain from company name
@@ -183,10 +188,5 @@ class Account < ActiveRecord::Base
   def timezone_must_exist
     return if ActiveSupport::TimeZone[timezone].present?
     errors.add(:timezone, 'must be a valid time zone')
-  end
-
-  def create_reset_presence_policy_and_working_place!
-    presence_policies.create!(name: 'Reset policy', reset: true)
-    working_places.create!(name: 'Reset working place', reset: true)
   end
 end

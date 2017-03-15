@@ -19,6 +19,7 @@ namespace :attribute_definitions do
 
   task remove_not_used: :environment do
     manage_employee_civil_status
+    manage_employee_exit_date
     ids_to_remove = Employee::AttributeDefinition.where(name: definitions_to_remove).pluck(:id)
     Employee::AttributeVersion.where(attribute_definition_id: ids_to_remove).destroy_all
     Employee::AttributeDefinition.where(id: ids_to_remove).destroy_all
@@ -53,11 +54,24 @@ namespace :attribute_definitions do
   end
 
   def definitions_to_remove
-    %w(number_of_months child_is_student start_date civil_status civil_status_date)
+    Employee::AttributeDefinition.all.pluck(:name).uniq - Account::DEFAULT_ATTRIBUTES.values.flatten
+  end
+
+  def manage_employee_exit_date
+    ids_to_remove = Employee::AttributeDefinition.where(name: 'exit_date').pluck(:id)
+    Employee::AttributeVersion.where(attribute_definition_id: ids_to_remove).map do |version|
+      employee = version.employee
+      event_effective_at = version.data.date.to_date
+      next if event_effective_at <= employee.hired_date
+      Employee::Event.create!(
+        effective_at: event_effective_at, event_type: 'contract_end', employee: employee
+      )
+      HandleContractEnd.new(employee, event_effective_at).call
+    end
   end
 
   def manage_employee_civil_status
-    ids_to_remove = Employee::AttributeDefinition.where(name: 'civil_status')
+    ids_to_remove = Employee::AttributeDefinition.where(name: 'civil_status').pluck(:id)
     Employee::AttributeVersion.where(attribute_definition_id: ids_to_remove).map do |version|
       next if version.attribute_definition.name.eql?('start_date')
       event_type = find_event_type_for(version)

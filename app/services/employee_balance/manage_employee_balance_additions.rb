@@ -56,10 +56,10 @@ class ManageEmployeeBalanceAdditions
   def etops_between_dates
     @etops_between_dates =
       employee
-       .employee_time_off_policies
-       .where(time_off_category: resource.time_off_category)
-       .where('effective_at BETWEEN ? AND ?', starting_date, ending_date)
-       .not_reset
+      .employee_time_off_policies
+      .where(time_off_category: resource.time_off_category)
+      .where('effective_at BETWEEN ? AND ?', starting_date, ending_date)
+      .not_reset
   end
 
   def starting_date
