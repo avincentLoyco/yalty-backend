@@ -26,7 +26,7 @@ namespace :update_and_create_missing_balances do
     assignation_balance = etop.policy_assignation_balance
     @manual_amount = assignation_balance.try(:manual_amount).to_i
     etop.update!(effective_at: etop.employee.hired_date)
-    assignation_balance.update!(effective_at: etop.employee.hired_date) if assignation_balance
+    assignation_balance&.update!(effective_at: etop.employee.hired_date)
   end
 
   def remove_duplicated_employee_time_off_policies(etop)
@@ -35,10 +35,9 @@ namespace :update_and_create_missing_balances do
       .employee
       .employee_time_off_policies
       .where(time_off_category: etop.time_off_category, effective_at: etop.effective_at)
-    if duplicated.size > 1
-      older = duplicated.map(&:time_off_policy).sort_by { |policy| policy[:created_at] }.last
-      duplicated.where(time_off_policy: older).first.destroy!
-    end
+    return unless duplicated.size > 1
+    older = duplicated.map(&:time_off_policy).sort_by { |policy| policy[:created_at] }.last
+    duplicated.where(time_off_policy: older).first.destroy!
   end
 
   def update_or_create_assignation_balance(etop)
@@ -61,9 +60,8 @@ namespace :update_and_create_missing_balances do
 
   def create_missing_additions(etop)
     first_start_date = RelatedPolicyPeriod.new(etop).first_start_date
-    if first_start_date > etop.effective_at && first_start_date <= Time.zone.today
-      ManageEmployeeBalanceAdditions.new(etop).call
-    end
+    return unless first_start_date > etop.effective_at && first_start_date <= Time.zone.today
+    ManageEmployeeBalanceAdditions.new(etop).call
   end
 
   def update_time_off_employee_balances(balances)

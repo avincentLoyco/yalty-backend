@@ -6,21 +6,32 @@ notifications:
 bundler_args: "--without production staging review --deployment"
 before_install:
   - rvm @global do gem uninstall bundler -a -x
-  - rvm @global do gem install bundler -v 1.13.2
+  - rvm @global do gem install bundler -v 1.14.3
+  - rvm @global do gem install travis octokit
 before_script:
+  - ./.travis/before_script
   - mv tmp/parallel_test/parallel_runtime_rspec.log tmp/parallel_runtime_rspec.log || true
   - bundle exec rake parallel:setup
   - export COVERAGE=$(test "$TRAVIS_PULL_REQUEST" = "false" && test "$TRAVIS_BRANCH" = "master" && echo 'true')
-script: bundle exec rake ci
-after_script:
-  - test "$COVERAGE" = "true" && bundle exec codeclimate-test-reporter
+script:
+  - ./.travis/script
 before_cache:
   - mv tmp/parallel_runtime_rspec.log tmp/parallel_test/parallel_runtime_rspec.log
+after_success:
+  - test "$COVERAGE" = "true" && bundle exec codeclimate-test-reporter
+  - ./.travis/after_success
+after_script:
+  - ./.travis/after_script
 cache:
   bundler: true
   directories:
     - tmp/parallel_test
+services:
+  - docker
 addons:
+  apt:
+    packages:
+      - docker-engine
   postgresql: '9.4'
   code_climate:
     repo_token:

@@ -11,8 +11,7 @@ class Employee::AttributeDefinition < ActiveRecord::Base
   validates :name,
     presence: true,
     uniqueness: { scope: :account_id, case_sensitive: false }
-  validates :system, inclusion: { in: [true, false] }
-  validates :multiple, inclusion: { in: [true, false] }
+  validates :multiple, :system, :long_token_allowed, inclusion: { in: [true, false] }
   validates :attribute_type,
     presence: true,
     inclusion: { in: ->(_) { Attribute::Base.attribute_types } }

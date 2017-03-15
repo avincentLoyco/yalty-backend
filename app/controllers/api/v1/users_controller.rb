@@ -2,7 +2,7 @@ module API
   module V1
     class UsersController < ApplicationController
       authorize_resource class: 'Account::User', except: :create
-
+      include DoorkeeperAuthorization
       include UserSchemas
 
       def index
@@ -21,7 +21,7 @@ module API
 
           authorize! :create, resource
           resource.save!
-          send_user_credentials(resource)
+          send_user_invitation
           render_resource(resource, status: :created)
         end
       end
@@ -52,6 +52,10 @@ module API
         @resource ||= resources.find(params[:id])
       end
 
+      def current_resource_owner
+        resource
+      end
+
       def resource_representer
         ::Api::V1::UserRepresenter
       end
@@ -63,10 +67,10 @@ module API
         attributes[:employee] = employee_id ? Account.current.employees.find(employee_id) : nil
       end
 
-      def send_user_credentials(user)
-        UserMailer.credentials(
-          user.id,
-          user.password
+      def send_user_invitation
+        UserMailer.user_invitation(
+          resource.id,
+          authorization_uri
         ).deliver_later
       end
     end

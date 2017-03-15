@@ -24,7 +24,7 @@ namespace :intercom do
     task random: [:environment] do
       STDOUT.puts "Number of leads to invite: (default: 0, max: #{beta_requests.size})"
       invitation_count = STDIN.gets.chomp.to_i
-      invitation_count = 0 if invitation_count < 0
+      invitation_count = 0 if invitation_count.negative?
 
       if beta_requests.size > invitation_count
         add_registration_keys(beta_requests.sample(invitation_count))

@@ -25,13 +25,22 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
 
       context 'response body' do
         before do
-          create(:employee_presence_policy, presence_policy: presence_policy, employee: first_employee)
+          create(:employee_presence_policy,
+            presence_policy: presence_policy,
+            employee: first_employee)
           subject
         end
 
         it { expect_json(id: presence_policy.id, name: presence_policy.name) }
-        it { expect(response.body).to include( first_employee.id ) }
-        it { expect_json_keys( [ :id, :type, :name, :presence_days, :assigned_employees ] ) }
+        it { expect(response.body).to include(first_employee.id) }
+        it { expect_json_keys([:id, :type, :name, :deletable, :presence_days, :assigned_employees]) }
+        it { expect_json('deletable', false) }
+      end
+
+      context 'without employees' do
+        before { subject }
+
+        it { expect_json('deletable', true) }
       end
     end
 
@@ -66,13 +75,22 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
 
     context 'with account presence policy' do
       before { subject }
+      let(:presence_policy_with_employees) do
+        JSON.parse(response.body).select { |p| p['assigned_employees'].present? }.first
+      end
+      let(:presence_policy_without_employees) do
+        JSON.parse(response.body).select { |p| p['assigned_employees'].empty? }.first
+      end
 
       it { expect_json_sizes(3) }
       it { is_expected.to have_http_status(200) }
-      it { expect_json_keys( '*', [ :id, :type, :name, :presence_days, :assigned_employees ] ) }
-      it { expect(response.body).to include(
-        first_employee.id, second_employee.id
-      )}
+      it do
+        expect_json_keys('*', [:id, :type, :name, :deletable, :presence_days, :assigned_employees])
+      end
+      it { expect(response.body).to include(first_employee.id, second_employee.id) }
+
+      it { expect(presence_policy_with_employees['deletable']).to be false }
+      it { expect(presence_policy_without_employees['deletable']).to be true }
     end
 
     context 'with not account presence policy' do

@@ -186,12 +186,12 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
       end
 
       before do
-        Account::User.current.update!(account_manager: false)
+        Account::User.current.update!(role: 'user')
         employees.last.events.last.employee_attribute_versions << public_attribute
         subject
       end
 
-      after { Account::User.current.update!(account_manager: true) }
+      after { Account::User.current.update!(role: 'user') }
 
       context 'advanced when employee belongs to current user' do
         it { expect(employee_with_current_user['employee_attributes'].size).to eq(2) }

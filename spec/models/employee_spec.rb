@@ -113,4 +113,25 @@ RSpec.describe Employee, type: :model do
       end
     end
   end
+
+  context 'methods' do
+    context 'for employee_files' do
+      let(:employee) { create(:employee) }
+      let(:employee_files) { create_list(:employee_file, 2, :with_jpg) }
+      let!(:employee_attributes) do
+        employee_files.each do |file|
+          create(:employee_attribute, employee: employee, attribute_type: 'File', data: {
+            id: file.id,
+            size: file.file_file_size,
+            file_type: file.file_content_type,
+            file_sha: '123'
+          })
+        end
+      end
+      let(:total_amount_of_data) { employee_files.sum(&:file_file_size) / 1024.0 }
+
+      it { expect(employee.total_amount_of_data).to eq(total_amount_of_data) }
+      it { expect(employee.number_of_files).to eq(2) }
+    end
+  end
 end

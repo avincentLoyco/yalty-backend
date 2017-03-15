@@ -15,11 +15,12 @@ class CreateCompletePresencePolicy
           presence_policie.presence_days.new(presence_day_params.permit(:minutes, :order))
         verify_and_save(presence_day)
 
+        next unless time_entries_params.present?
         time_entries_params.each do |time_entry_params|
           time_entry =
             presence_day.time_entries.new(time_entry_params.permit(:start_time, :end_time))
           verify_and_save(time_entry)
-        end if time_entries_params.present?
+        end
       end
     end
   end
@@ -27,10 +28,7 @@ class CreateCompletePresencePolicy
   private
 
   def verify_and_save(resource)
-    if resource.valid?
-      resource.save!
-    else
-      raise InvalidResourcesError.new(resource, resource.errors.messages)
-    end
+    raise InvalidResourcesError.new(resource, resource.errors.messages) unless resource.valid?
+    resource.save!
   end
 end

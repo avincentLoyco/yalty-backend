@@ -18,7 +18,7 @@ class OverrideAmountTakenForBalancer
     @balance_difference = periods.map { |p| p[:period_result] }.sum - periods.last[:balance]
     periods.map.each_with_index do |period, index|
       next if period[:period_result].eql?(0) || periods[index + 1].blank?
-      if periods[index + 1][:amount_taken] > 0
+      if periods[index + 1][:amount_taken].positive?
         use_whole_period_amount(period)
       else
         next if previous_period(index).present? && previous_period(index)[:period_result].nonzero?

@@ -1,3 +1,11 @@
+# Ensure that RAILS_ENV is set
+ENV["RAILS_ENV"] ||= 'test'
+
+# Ensure that FILE_STORAGE_UPLOAD_PATH environment variable include parallel test
+# number to avoid usage of same storage directory on each parallel test process.
+ENV['FILE_STORAGE_UPLOAD_PATH'] += ENV['TEST_ENV_NUMBER'] unless ENV['TEST_ENV_NUMBER'].nil?
+
+# Load simplecov if coverage is enable
 require 'simplecov'
 SimpleCov.start if ENV['COVERAGE'] == 'true'
 
@@ -48,7 +56,7 @@ RSpec.configure do |config|
   # `:focus` metadata. When nothing is tagged with `:focus`, all examples
   # get run.
   config.filter_run :focus
-  config.filter_run_excluding intercom_required: !ENV['INTERCOM_APP_ID'] || !ENV['INTERCOM_API_KEY']
+  config.filter_run_excluding intercom_required: !ENV['INTERCOM_APP_ID'].nil? || !ENV['INTERCOM_API_KEY'].nil?
   config.run_all_when_everything_filtered = true
 
   # Limits the available syntax to the non-monkey patched syntax that is

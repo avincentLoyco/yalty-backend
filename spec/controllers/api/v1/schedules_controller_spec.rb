@@ -90,7 +90,7 @@ RSpec.describe API::V1::SchedulesController , type: :controller do
       end
 
       context 'when account user is not account manager but he has employee with given id' do
-        before { Account::User.current.update!(account_manager: false, employee: employee) }
+        before { Account::User.current.update!(role: 'user', employee: employee) }
 
         it { is_expected.to have_http_status(200) }
       end
@@ -112,7 +112,7 @@ RSpec.describe API::V1::SchedulesController , type: :controller do
       end
 
       context 'when employee id does not belong to employee and user is not account manager' do
-        before { Account::User.current.update!(account_manager: false) }
+        before { Account::User.current.update!(role: 'user') }
 
         it_behaves_like 'ScheduleForEmployee not called'
         it { is_expected.to have_http_status(403) }

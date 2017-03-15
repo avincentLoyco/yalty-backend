@@ -5,7 +5,7 @@ RSpec.describe 'create_missing_balances' do
   include_context 'shared_context_account_helper'
   include_context 'shared_context_timecop_helper'
 
-  let(:user) { create(:account_user, account_manager: true) }
+  let(:user) { create(:account_user, role: 'account_administrator') }
   let(:account) { user.account }
   let!(:employee) { create(:employee, account: account) }
   let(:employee_id) { employee.id }

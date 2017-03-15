@@ -33,8 +33,13 @@ RSpec.shared_examples 'example_crud_resources' do |settings|
       if actions.include?(:create)
         context 'POST #create' do
           context 'valid data and valid id' do
-            let(:resource_params) { attributes_for(settings[:resource_name]) }
             let(:params) { resource_params.merge("type": settings[:resource_name].pluralize) }
+
+            if settings[:resource_name].eql?('working_place')
+              let(:resource_params) { attributes_for(settings[:resource_name], :with_address) }
+            else
+              let(:resource_params) { attributes_for(settings[:resource_name]) }
+            end
 
             it 'should create resource' do
               expect { post :create, params }.to change { resource_name.classify.
@@ -60,14 +65,17 @@ RSpec.shared_examples 'example_crud_resources' do |settings|
       if actions.include?(:update)
         context 'PUT #update' do
           context 'valid data and valid id' do
+
             let(settings[:resource_name]) { create(settings[:resource_name], account: account)}
             let(:resource_param) { (attributes_for(settings[:resource_name])).keys.first }
+
             let(:params) do
-              {
-                resource_param => 'test',
-                "type": settings[:resource_name].pluralize.gsub('_', '-'),
-                "id": send(settings[:resource_name]).id
-              }
+              { resource_param => 'test' }.tap do |param|
+                param[:type] = settings[:resource_name].pluralize.gsub('_', '-')
+                param[:id] = send(settings[:resource_name]).id
+                param[:country] = 'Switzerland' if settings[:resource_name].eql?('working_place')
+                param[:city] = 'Zurich' if settings[:resource_name].eql?('working_place')
+              end
             end
 
             it 'should update resource attribute' do

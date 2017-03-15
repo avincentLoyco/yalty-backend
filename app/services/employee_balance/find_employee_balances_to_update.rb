@@ -74,7 +74,7 @@ class FindEmployeeBalancesToUpdate
   end
 
   def amounts_bigger_than_zero?
-    options[:resource_amount].to_i + options[:manual_amount].to_i > 0
+    (options[:resource_amount].to_i + options[:manual_amount].to_i).positive?
   end
 
   def active_balances_with_removals

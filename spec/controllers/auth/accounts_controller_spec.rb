@@ -35,12 +35,12 @@ RSpec.describe Auth::AccountsController, type: :controller do
 
       it { is_expected.to have_http_status(:found) }
 
-      it 'should send email with credentials' do
+      it 'should send email with account url' do
         expect do
           post :create, params
         end.to change(ActionMailer::Base.deliveries, :count)
 
-        expect(ActionMailer::Base.deliveries.last.body).to match(/password: .+/i)
+        expect(ActionMailer::Base.deliveries.last.body).to match(/https?:\/\/the-company/i)
       end
 
       context 'should create account when user has no password' do
@@ -51,11 +51,6 @@ RSpec.describe Auth::AccountsController, type: :controller do
         it { expect { subject }.to change(Account::User, :count).by(1)  }
 
         it { is_expected.to have_http_status(:found) }
-
-        it 'expect to add generated password to email' do
-          expect(subject).to have_http_status(:found)
-          expect(ActionMailer::Base.deliveries.last.body).to match(/password: .+/i)
-        end
       end
 
       context 'with referred_by key' do

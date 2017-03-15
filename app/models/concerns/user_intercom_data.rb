@@ -9,10 +9,11 @@ module UserIntercomData
 
   def intercom_attributes
     %w(
-      id created_at email account_manager referral_token
+      id created_at email role referral_token
       employee_id
       last_vacation_created_at last_other_time_off_created_at
       last_manual_working_time_created_at manual_working_time_ratio
+      number_of_files total_amount_of_data
     )
   end
 
@@ -27,7 +28,7 @@ module UserIntercomData
       custom_attributes: [
         {
           referral_token: referrer.try(:token),
-          account_manager: account_manager
+          role: role
         },
         intercom_employee_data
       ].inject(:merge)
@@ -38,11 +39,19 @@ module UserIntercomData
     if employee.present?
       {
         employee_id: employee.id,
-        last_vacation_created_at: TimeOff.vacations.for_employee(employee.id).pluck(:created_at).last,
-        last_other_time_off_created_at: TimeOff.not_vacations.for_employee(employee.id).pluck(:created_at).last,
+        last_vacation_created_at:
+          TimeOff.vacations.for_employee(employee.id).pluck(:created_at).last,
+        last_other_time_off_created_at:
+          TimeOff.not_vacations.for_employee(employee.id).pluck(:created_at).last,
         last_manual_working_time_created_at:
-          RegisteredWorkingTime.manually_created_by_employee_ordered(employee.id).pluck(:created_at).last,
-        manual_working_time_ratio: RegisteredWorkingTime.manually_created_ratio_per_employee(employee.id)
+          RegisteredWorkingTime
+            .manually_created_by_employee_ordered(employee.id)
+            .pluck(:created_at)
+            .last,
+        manual_working_time_ratio:
+          RegisteredWorkingTime.manually_created_ratio_per_employee(employee.id),
+        number_of_files: employee.number_of_files,
+        total_amount_of_data: employee.total_amount_of_data
       }
     else
       {
@@ -50,7 +59,9 @@ module UserIntercomData
         last_vacation_created_at: nil,
         last_other_time_off_created_at: nil,
         last_manual_working_time_created_at: nil,
-        manual_working_time_ratio: nil
+        manual_working_time_ratio: nil,
+        number_of_files: nil,
+        total_amount_of_data: nil
       }
     end
   end

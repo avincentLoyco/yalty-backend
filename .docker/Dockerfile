@@ -1,4 +1,4 @@
-FROM yalty/centos-ruby:2.2.2
+FROM yalty/centos-ruby:2.3.3
 MAINTAINER "Yann Lugrin" <yann.lugrin@yalty.io>
 
 # Versions
@@ -49,19 +49,33 @@ RUN mkdir -p  /code
 
 WORKDIR /code
 
+COPY .docker/update-yum-base-config.sed /update-yum-base-config.sed
+COPY .docker/update-yum-updates-config.sed /update-yum-updates-config.sed
+
 COPY Gemfile /code/Gemfile
 COPY Gemfile.lock /code/Gemfile.lock
 
 # Build
 RUN set -ex \
   \
+  && PATH=/usr/pgsql-9.4/bin:$PATH \
+  \
   && buildDeps=' \
     make \
     gcc-c++ \
-    postgresql-devel \
+    postgresql94-devel \
   ' \
+  && runDeps='\
+    ImageMagick-devel \
+  ' \
+  && cat /etc/yum.repos.d/CentOS-Base.repo \
+    | sed -n -f /update-yum-base-config.sed \
+    | sed -n -f /update-yum-updates-config.sed \
+    > /etc/yum.repos.d/CentOS-Base.repo.new \
+  && mv /etc/yum.repos.d/CentOS-Base.repo.new /etc/yum.repos.d/CentOS-Base.repo \
+  && yum install -y https://download.postgresql.org/pub/repos/yum/9.4/redhat/rhel-7-x86_64/pgdg-centos94-9.4-3.noarch.rpm \
   && yum -y update \
-  && yum -y install $buildDeps \
+  && yum -y install $buildDeps $runDeps \
   && yum clean all \
   && rm -rf /var/cache/yum/* \
   \
@@ -71,7 +85,9 @@ RUN set -ex \
   && bundle install --without development test --deployment --clean \
   && rm -rf $GEM_HOME/cache/* \
   && rm -rf $BUNDLE_PATH/cache/* \
-  && rm -rf $BUNDLE_PATH/*/*/cache/*
+  && rm -rf $BUNDLE_PATH/*/*/cache/* \
+  \
+  && yum -y remove $buildDeps
 
 # App
 COPY .docker/run.sh /docker-run.sh

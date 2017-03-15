@@ -58,10 +58,13 @@ class Account < ActiveRecord::Base
   ATTR_VALIDATIONS = {
     lastname: { presence: true },
     firstname: { presence: true },
-    start_date: { presence: true }
+    start_date: { presence: true },
+    file: { presence: true }
   }.with_indifferent_access
 
   MULTIPLE_ATTRIBUTES = %w(child).freeze
+
+  ATTRIBUTES_WITH_LONG_TOKEN = %w(profile_picture).freeze
 
   DEFAULT_ATTRIBUTES = {
     Attribute::String.attribute_type => %w(
@@ -75,13 +78,18 @@ class Account < ActiveRecord::Base
     Attribute::Date.attribute_type => %w(
       birthdate permit_expiry start_date exit_date civil_status_date
     ),
-    Attribute::Number.attribute_type => %w(occupation_rate monthly_payments),
+    Attribute::Number.attribute_type => %w(
+      occupation_rate monthly_payments tax_rate number_of_months
+    ),
     Attribute::Currency.attribute_type => %w(
       annual_salary hourly_salary representation_fees
     ),
     Attribute::Address.attribute_type => %w(address),
     Attribute::Child.attribute_type => %w(child),
-    Attribute::Person.attribute_type => %w(spouse)
+    Attribute::Person.attribute_type => %w(spouse),
+    Attribute::File.attribute_type => %w(
+      profile_picture salary_slip contract salary_certificate id_card work_permit avs_card
+    )
   }.freeze
 
   DEFAULT_ATTRIBUTE_DEFINITIONS = Account::DEFAULT_ATTRIBUTES.map do |type, attributes|
@@ -104,7 +112,8 @@ class Account < ActiveRecord::Base
           attribute_type: attr[:type],
           system: true,
           multiple: MULTIPLE_ATTRIBUTES.include?(attr[:name]),
-          validation: attr[:validation]
+          validation: attr[:validation],
+          long_token_allowed: ATTRIBUTES_WITH_LONG_TOKEN.include?(attr[:name])
         )
       end
 
@@ -118,11 +127,17 @@ class Account < ActiveRecord::Base
   end
 
   def default_attribute_definition
-    if Rails.env.test?
-      DEFAULT_ATTRIBUTE_DEFINITIONS.first(2)
-    else
-      DEFAULT_ATTRIBUTE_DEFINITIONS
-    end
+    DEFAULT_ATTRIBUTE_DEFINITIONS
+  end
+
+  def total_amount_of_data
+    employee_attribute_versions
+      .where("data -> 'attribute_type' = 'File'")
+      .sum("(data -> 'size')::float") / 1024.0
+  end
+
+  def number_of_files
+    employee_attribute_versions.where("data -> 'attribute_type' = 'File'").count
   end
 
   private

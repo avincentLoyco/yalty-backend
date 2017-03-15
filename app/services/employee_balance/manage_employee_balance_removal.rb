@@ -8,7 +8,7 @@ class ManageEmployeeBalanceRemoval
   end
 
   def call
-    return unless !resource.time_off_policy.counter? && validity_date_changed?
+    return if resource.time_off_policy.counter? || validity_date_didnt_changed?
     new_date.blank? ? unassign_from_removal : create_or_assign_to_new_removal
   end
 
@@ -32,7 +32,7 @@ class ManageEmployeeBalanceRemoval
     new_removal = find_or_create_new_removal
     new_removal.balance_credit_additions << resource
     return unless resource_removal
-    resource_removal.destroy! if resource_removal.balance_credit_additions.count == 0
+    resource_removal.destroy! if resource_removal.balance_credit_additions.count.zero?
   end
 
   def find_or_create_new_removal
@@ -44,15 +44,9 @@ class ManageEmployeeBalanceRemoval
     end
   end
 
-  def validity_date_changed?
-    ((new_date.blank? || moved_to_past? || moved_to_future?)) || new_date != current_date
-  end
-
-  def moved_to_past?
-    (current_date.blank? || current_date.to_date > Time.zone.today) && new_date <= Time.zone.today
-  end
-
-  def moved_to_future?
-    new_date > Time.zone.today
+  def validity_date_didnt_changed?
+    (new_date.blank? && current_date.blank?) ||
+      ((new_date.present? && resource.balance_credit_removal.try(:effective_at).eql?(new_date)) &&
+      new_date.try(:to_date).eql?(current_date.try(:to_date)))
   end
 end
