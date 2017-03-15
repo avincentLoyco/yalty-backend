@@ -3,8 +3,9 @@
 :logfile: log/sidekiq.log
 :queues:
   - mailers
-  - intercom
   - policies_and_balances
   - update_balance
+  - intercom
   - registered_working_times
+  - employee_files
   - default

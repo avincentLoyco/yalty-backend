@@ -8,27 +8,33 @@ class HolidayPolicy < ActiveRecord::Base
     inverse_of: :holiday_policy
 
   validates :name, :account_id, presence: true
-  validates :country, presence: true, inclusion: { in: :countries, allow_nil: true },
-                      if: :country_or_region_present?
-
+  validates :country, presence: true, inclusion: { in: :countries, allow_nil: true }
   validates :region, presence: true, inclusion: { in: :regions, allow_nil: true },
                      if: :region_required?
 
-  before_save :unset_region, unless: :region_required?
-  before_validation :downcase, if: :local?
+  before_validation :downcase_attributes
+  before_validation :unset_region, unless: :region_required?
 
-  COUNTRIES_WITH_CODES = %w(ch).freeze
+  COUNTRIES_WITH_REGIONS = %w(ch).freeze
+  COUNTRIES_WITHOUT_REGIONS = %w().freeze
+  COUNTRIES = (COUNTRIES_WITH_REGIONS + COUNTRIES_WITHOUT_REGIONS).freeze
 
-  COUNTRIES_WITHOUT_REGIONS = %w(ar at be br cl cr cz dk el fr je gg im hr hu ie is it li lt nl no
-                                 pl pt ro sk si fi jp ma ph se sg ve vi za).freeze
   HolidayStruct = Struct.new(:date, :name)
 
+  def self.country_with_regions?(country)
+    return false unless country.present?
+    return true if COUNTRIES_WITH_REGIONS.include?(country.downcase)
+    COUNTRIES_WITH_REGIONS.include?(
+      ISO3166::Country.find_country_by_translated_names(country)&.alpha2&.downcase
+    )
+  end
+
   def holidays
-    country_holidays if country.present? || region.present?
+    country_holidays if country.present?
   end
 
   def holidays_in_period(start_date, end_date)
-    country_holidays(start_date, end_date) if country.present? || region.present?
+    country_holidays(start_date, end_date) if country.present?
   end
 
   private
@@ -49,29 +55,21 @@ class HolidayPolicy < ActiveRecord::Base
     end
   end
 
-  def country_or_region_present?
-    country.present? || region.present?
-  end
-
   def unset_region
-    self[:region] = nil
-  end
-
-  def local?
-    country || region
+    self.region = nil
   end
 
   def region_required?
-    valid_country? && COUNTRIES_WITHOUT_REGIONS.exclude?(country)
+    valid_country? && COUNTRIES_WITH_REGIONS.include?(country)
   end
 
   def valid_country?
     country.present? && countries.include?(country)
   end
 
-  def downcase
-    self[:country] = country.try(:downcase)
-    self[:region] = region.try(:downcase)
+  def downcase_attributes
+    self.country = country&.downcase
+    self.region = region&.downcase
   end
 
   def countries

@@ -19,7 +19,7 @@ namespace :db do
         info "Dump database backup to #{dump_path}"
 
         execute :mkdir, '-p', File.dirname(dump_path)
-        execute :pg_dump, '--format=c --clean --if-exists --no-owner --no-privileges',
+        execute :pg_dump, '--format=c',
           "--dbname #{uri.path[1..-1]}",
           "-h #{uri.host} -p #{uri.port}",
           "-U #{uri.user}",

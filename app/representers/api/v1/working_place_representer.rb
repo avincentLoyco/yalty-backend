@@ -3,6 +3,14 @@ module Api::V1
     def complete
       {
         name: resource.name,
+        country: resource.country,
+        city: resource.city,
+        state: resource.state,
+        postalcode: resource.postalcode,
+        street: resource.street,
+        street_number: resource.street_number,
+        additional_address: resource.additional_address,
+        timezone: resource.timezone,
         deletable: assigned_employees_json.empty?
       }
         .merge(basic)
