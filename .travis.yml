@@ -20,6 +20,8 @@ before_cache:
 after_success:
   - test "$COVERAGE" = "true" && bundle exec codeclimate-test-reporter
   - ./.travis/after_success
+after_script:
+  - ./.travis/after_script
 cache:
   bundler: true
   directories:

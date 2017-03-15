@@ -125,6 +125,16 @@ class Account < ActiveRecord::Base
     DEFAULT_ATTRIBUTE_DEFINITIONS
   end
 
+  def total_amount_of_data
+    employee_attribute_versions
+      .where("data -> 'attribute_type' = 'File'")
+      .sum("(data -> 'size')::float") / 1024.0
+  end
+
+  def number_of_files
+    employee_attribute_versions.where("data -> 'attribute_type' = 'File'").count
+  end
+
   private
 
   # Generate a subdomain from company name
