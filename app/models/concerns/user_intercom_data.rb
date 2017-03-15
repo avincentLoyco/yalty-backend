@@ -9,7 +9,7 @@ module UserIntercomData
 
   def intercom_attributes
     %w(
-      id created_at email account_manager referral_token
+      id created_at email role referral_token
       employee_id
       last_vacation_created_at last_other_time_off_created_at
       last_manual_working_time_created_at manual_working_time_ratio
@@ -28,7 +28,7 @@ module UserIntercomData
       custom_attributes: [
         {
           referral_token: referrer.try(:token),
-          account_manager: account_manager
+          role: role
         },
         intercom_employee_data
       ].inject(:merge)

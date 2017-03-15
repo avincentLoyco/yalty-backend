@@ -49,11 +49,11 @@ RUN mkdir -p  /code
 
 WORKDIR /code
 
-COPY Gemfile /code/Gemfile
-COPY Gemfile.lock /code/Gemfile.lock
-
 COPY .docker/update-yum-base-config.sed /update-yum-base-config.sed
 COPY .docker/update-yum-updates-config.sed /update-yum-updates-config.sed
+
+COPY Gemfile /code/Gemfile
+COPY Gemfile.lock /code/Gemfile.lock
 
 # Build
 RUN set -ex \

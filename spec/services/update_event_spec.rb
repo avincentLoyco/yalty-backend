@@ -61,6 +61,72 @@ RSpec.describe do
       it { expect { subject }.to change { second_attribute.reload.data.value }.to eq 'Stark' }
     end
 
+    context 'for profile picture' do
+      let(:employee_file) { create(:employee_file) }
+      let(:employee_file_id) { employee_file.id }
+      let(:file_path) { ["#{Rails.root}/spec/fixtures/files/test.jpg"] }
+      let!(:picture_definition) do
+        create(:employee_attribute_definition,
+          name: 'profile_picture', account: employee.account, attribute_type: 'File')
+      end
+      let!(:picture_version) do
+        create(:employee_attribute_version,
+          employee: employee, employee_event_id: event.id, attribute_definition: picture_definition)
+      end
+
+      before do
+        allow_any_instance_of(EmployeeFile).to receive(:find_file_path) { file_path }
+        employee_attributes_params.push(
+          {
+            type: 'employee_attribute',
+            attribute_name: 'profile_picture',
+            value: employee_file_id,
+            id: picture_version.id
+          }
+        )
+      end
+
+      context 'when version does not have picture assigned' do
+        it { expect { subject }.to change { picture_version.reload.data.file_type } }
+        it { expect { subject }.to change { picture_version.reload.data.size } }
+        it { expect { subject }.to change { picture_version.reload.data.id } }
+      end
+
+      context 'when version has already picture assigned' do
+        let(:file_path) { ["#{Rails.root}/spec/fixtures/files/test.jpg", "test_route"] }
+
+        before do
+          picture_version[:data][:id] = employee_file.id
+          picture_version.save
+        end
+
+        context 'when more than one picture in file folder' do
+          context 'and the same picture send for version in params' do
+            it { expect { subject }.to_not change { picture_version.reload.data.id } }
+            it { expect { subject }.to_not raise_error }
+          end
+
+          context 'and different picture send for version in params' do
+            let(:employee_file_id) { create(:employee_file).id }
+
+            it { expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
+          end
+        end
+
+        context 'when no pictures in file folder' do
+          let(:file_path) { [] }
+
+          context 'and the same picture send for version in params' do
+            it { expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
+          end
+
+          context 'and different picture send for version in params' do
+            it { expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
+          end
+        end
+      end
+    end
+
     context 'when not all event attributes send' do
       before { employee_attributes_params.shift(2) }
 
@@ -84,7 +150,7 @@ RSpec.describe do
       end
 
       context 'when account manager updates event' do
-        before { Account::User.current.update!(account_manager: true) }
+        before { Account::User.current.update!(role: 'account_administrator') }
 
         context 'and forbiden attribute is send' do
           before do

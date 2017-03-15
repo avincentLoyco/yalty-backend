@@ -15,13 +15,15 @@ RSpec.describe API::V1::UsersController, type: :controller do
 
   describe 'POST #create' do
     let(:email) { 'test@example.com' }
+    let(:locale) { 'en' }
     let(:password) { '12345678' }
-    let(:account_manager) { true }
+    let(:role) { 'account_administrator' }
     let(:params) do
       {
         email: email,
+        locale: locale,
         password: password,
-        account_manager: account_manager,
+        role: role,
         employee: { id: employee_id }
       }
     end
@@ -35,7 +37,7 @@ RSpec.describe API::V1::UsersController, type: :controller do
       context 'response body' do
         before { subject }
 
-        it { expect_json_keys(:email, :account_manager, :is_employee, :employee) }
+        it { expect_json_keys(:email, :role, :is_employee, :employee) }
       end
 
       it 'should send email with generated login url' do
@@ -63,7 +65,7 @@ RSpec.describe API::V1::UsersController, type: :controller do
 
       context 'without optional params' do
         before do
-          params.delete(:account_manager)
+          params.delete(:role)
           params.delete(:is_employee)
           params.delete(:employee)
         end
@@ -167,19 +169,21 @@ RSpec.describe API::V1::UsersController, type: :controller do
     context 'response body' do
       before { subject }
 
-      it { expect_json_keys([:id, :type, :email, :account_manager, :employee, :is_employee]) }
+      it { expect_json_keys([:id, :type, :email, :role, :employee, :is_employee]) }
     end
   end
 
   describe 'PUT #update' do
     let!(:users) { create_list(:account_user, 3, account: Account.current) }
     let(:email) { 'test123@example.com' }
-    let(:account_manager) { true }
+    let(:locale) { 'en' }
+    let(:role) { 'account_administrator' }
     let(:params) do
       {
         id: users.first.id,
         email: email,
-        account_manager: account_manager,
+        locale: locale,
+        role: role,
         employee: { id: employee_id }
       }
     end
@@ -211,7 +215,8 @@ RSpec.describe API::V1::UsersController, type: :controller do
 
       context 'without optional params' do
         before do
-          params.delete(:account_manager)
+          params.delete(:role)
+          params.delete(:locale)
           params.delete(:is_employee)
           params.delete(:employee)
         end

@@ -20,7 +20,7 @@ module API
           authorize! :create, Employee::Event.new, attributes.except(:employee_attributes)
 
           verify_employee_attributes_values(attributes[:employee_attributes])
-          unless current_user.account_manager
+          unless current_user.owner_or_administrator?
             UpdateEventAttributeValidator.new(attributes[:employee_attributes]).call
           end
           resource = CreateEvent.new(attributes, attributes[:employee_attributes].to_a).call
@@ -32,13 +32,11 @@ module API
       def update
         verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :update, resource, attributes.except(:employee_attributes)
-
           verify_employee_attributes_values(attributes[:employee_attributes])
-          unless current_user.account_manager
+          unless current_user.owner_or_administrator?
             UpdateEventAttributeValidator.new(attributes[:employee_attributes]).call
           end
           UpdateEvent.new(attributes, attributes[:employee_attributes].to_a).call
-
           render_no_content
         end
       end

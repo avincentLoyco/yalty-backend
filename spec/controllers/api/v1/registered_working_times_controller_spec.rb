@@ -36,7 +36,7 @@ RSpec.describe API::V1::RegisteredWorkingTimesController, type: :controller do
 
     context 'with valid params' do
       shared_examples 'Authorized employee' do
-        before { Account::User.current.update!(account_manager: false, employee: employee) }
+        before { Account::User.current.update!(role: 'user', employee: employee) }
 
         it { is_expected.to have_http_status(204) }
       end
@@ -132,7 +132,7 @@ RSpec.describe API::V1::RegisteredWorkingTimesController, type: :controller do
 
     context 'with invalid params' do
       context 'when user is not an account manager or resource owner' do
-        before { Account::User.current.update!(account_manager: false) }
+        before { Account::User.current.update!(role: 'user') }
 
         it { expect { subject }.to_not change { RegisteredWorkingTime.count } }
         it { is_expected.to have_http_status(403) }

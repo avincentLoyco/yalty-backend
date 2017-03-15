@@ -12,7 +12,7 @@ RSpec.describe 'attribute_definitions:create_missing', type: :rake do
     end
   end
 
-  let(:user) { create :account_user, account_manager: true }
+  let(:user) { create :account_user, role: 'account_administrator' }
   let(:account) { user.account }
   let(:employee) { create(:employee, account: account) }
   let(:attribute_definitions) { account.employee_attribute_definitions }

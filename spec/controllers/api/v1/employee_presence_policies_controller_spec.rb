@@ -107,7 +107,7 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
       end
 
       context 'when current account is not account manager' do
-        before { Account::User.current.update!(account_manager: false) }
+        before { Account::User.current.update!(role: 'user') }
 
         it { is_expected.to have_http_status(403) }
       end
@@ -305,7 +305,7 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
       end
 
       context 'when current user is not account manager' do
-        before { Account::User.current.update!(account_manager: false) }
+        before { Account::User.current.update!(role: 'user') }
 
         it { expect { subject }.to_not change { employee.employee_presence_policies.count } }
         it { is_expected.to have_http_status(403) }
@@ -543,7 +543,7 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
       end
 
       context 'when user is not account manager' do
-        before { Account::User.current.update!(account_manager: false, employee: employee) }
+        before { Account::User.current.update!(role: 'user', employee: employee) }
 
         it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
         it { is_expected.to have_http_status(403) }
@@ -648,7 +648,7 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
       end
 
       context 'when user is not an account manager' do
-        before { Account::User.current.update!(account_manager: false, employee: employee) }
+        before { Account::User.current.update!(role: 'user', employee: employee) }
 
         it { expect { subject }.to_not change { EmployeePresencePolicy.count } }
         it { is_expected.to have_http_status(403) }

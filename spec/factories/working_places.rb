@@ -4,8 +4,8 @@ FactoryGirl.define do
     name { Faker::Lorem.word }
 
     trait :with_address do
-      country 'Switzerland'
       city 'Zurich'
+      country 'Switzerland'
     end
   end
 end

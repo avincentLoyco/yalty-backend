@@ -8,6 +8,7 @@ namespace :deploy do
       invoke 'maintenance:on' if test(:diff, "-qr #{release_path}/db #{current_path}/db")
     end
 
+    invoke 'db:dump'
     invoke 'deploy:rake:before_migrate_database'
 
     on fetch(:migration_server) do
@@ -23,7 +24,7 @@ namespace :deploy do
 
   task :quiet_workers do
     on roles(%w(worker)) do
-      execute(:sudo, '/etc/init.d/app-03 quiet')
+      execute(:sudo, '/etc/init.d/app-03 quiet') if test "[ -d #{current_path} ]"
     end
   end
 
@@ -54,5 +55,5 @@ namespace :deploy do
   before 'deploy:publishing', 'deploy:migrate_database'
   after 'deploy:publishing', 'restart:all'
   after 'deploy:publishing', 'maintenance:off'
-  after 'deploy:publishing', 'newrelic:notice_deployment'
+  # after 'deploy:publishing', 'newrelic:notice_deployment'
 end

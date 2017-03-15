@@ -211,4 +211,24 @@ RSpec.describe Account, type: :model do
       )
     end
   end
+
+  context 'for employee_files' do
+    let(:account) { create(:account) }
+    let(:employees) { create_list(:employee, 3, account: account) }
+    let(:employee_files) { create_list(:employee_file, 3, :with_jpg) }
+    let!(:employee_attributes) do
+      employee_files.each do |file|
+        create(:employee_attribute, employee: employees.sample, attribute_type: 'File', data: {
+          id: file.id,
+          size: file.file_file_size,
+          file_type: file.file_content_type,
+          file_sha: '123'
+        })
+      end
+    end
+    let(:total_amount_of_data) { employee_files.sum(&:file_file_size) / 1024.0 }
+
+    it { expect(account.total_amount_of_data).to eq(total_amount_of_data) }
+    it { expect(account.number_of_files).to eq(3) }
+  end
 end

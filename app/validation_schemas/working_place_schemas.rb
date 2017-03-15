@@ -9,8 +9,8 @@ module WorkingPlaceSchemas
           required(:id).filled(:str?)
         end
       end
-      required(:country).filled(:str?)
-      required(:city).filled(:str?)
+      optional(:country).maybe(:str?)
+      optional(:city).maybe(:str?)
       optional(:state).maybe(:str?)
       optional(:postalcode).maybe(:str?)
       optional(:additional_address).maybe(:str?)
