@@ -42,7 +42,7 @@ module AccountIntercomData
     {
       number_of_files: number_of_files,
       total_amount_of_data: total_amount_of_data,
-      employee_files_ratio: employees.count.zero? ? 0 : number_of_files / employees.count
+      employee_files_ratio: employee_files_ratio
     }
   end
 
