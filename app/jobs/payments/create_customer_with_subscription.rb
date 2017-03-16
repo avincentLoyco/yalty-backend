@@ -31,7 +31,11 @@ module Payments
 
     def create_subscription(account)
       return if account.customer_id.nil? || account.subscription_id.present?
-      subscription = Stripe::Subscription.create(customer: account.customer_id, plan: 'free-plan')
+      subscription = Stripe::Subscription.create(
+        customer: account.customer_id,
+        plan: 'free-plan',
+        quantity: account.employees.active_at_date(Time.zone.tomorrow).count
+      )
       account.update!(subscription_id: subscription.id)
     end
   end

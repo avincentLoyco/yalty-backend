@@ -5,9 +5,15 @@ module Api
         def complete
           {
             id: resource.id,
-            current_period_end: Time.zone.at(resource.current_period_end),
-            quantity: resource.quantity
+            current_period_end: current_period_end,
+            quantity: Account.current.employees.active_at_date(current_period_end).count
           }
+        end
+
+        private
+
+        def current_period_end
+          Time.zone.at(resource.current_period_end)
         end
       end
     end

@@ -5,11 +5,12 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
   include_context 'shared_context_timecop_helper'
 
   let(:account) { create(:account, :with_billing_information, available_modules: ['master-plan']) }
+  let!(:employees) { create_list(:employee, 5, account: account) }
   let(:user) { create(:account_user, role: 'account_administrator', account: account) }
 
   let!(:timestamp)   { Time.zone.now.to_i }
   let(:customer)     { StripeCustomer.new('cus_123', 'desc', 'ca_123') }
-  let(:subscription) { StripeSubscription.new('sub_123', timestamp, 5) }
+  let(:subscription) { StripeSubscription.new('sub_123', timestamp) }
   let(:invoice)      { StripeInvoice.new('in_123', 666, timestamp) }
   let(:card)         { StripeCard.new('ca_123', 4567, 'Visa', 12, 2018) }
   let(:plans) do
@@ -19,8 +20,8 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
   end
   let(:subscription_items) do
     [
-      StripeSubscriptionItem.new('si_123', plans.first),
-      StripeSubscriptionItem.new('si_456', plans.last)
+      StripeSubscriptionItem.new('si_123', plans.first, 5),
+      StripeSubscriptionItem.new('si_456', plans.last, 5)
     ]
   end
 
@@ -33,6 +34,7 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
     allow(Stripe::Subscription).to receive(:retrieve).and_return(subscription)
     allow(Stripe::Plan).to receive(:list).and_return(plans)
     allow(Stripe::SubscriptionItem).to receive(:list).and_return(subscription_items)
+    allow(subscription).to receive(:items).and_return(subscription_items)
     allow_any_instance_of(StripeCustomer).to receive(:sources).and_return([card])
     allow_any_instance_of(StripeInvoice).to receive(:lines).and_return([])
   end
@@ -42,7 +44,7 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
       {
         id: subscription.id,
         current_period_end: '2016-01-01T00:00:00.000Z',
-        quantity: subscription.quantity,
+        quantity: 5,
         plans: [
           {
             id: plans.first.id,
@@ -135,6 +137,18 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
 
       it { expect(json_plans.size).to eq(3) }
       it { expect(json_plans.map { |plan| plan['id'] }).to_not include('free-plan') }
+    end
+
+    context 'quantity shows active employee at next billing date' do
+      let!(:employee_after_period_end) { create(:employee, account: account) }
+
+      before do
+        effective_at = Time.zone.at(timestamp) + 1.month
+        employee_after_period_end.events.last.update!(effective_at: effective_at)
+        get_subscription
+      end
+
+      it { expect_json(quantity: 5) }
     end
   end
 

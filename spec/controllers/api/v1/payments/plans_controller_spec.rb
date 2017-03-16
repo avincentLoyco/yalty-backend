@@ -7,7 +7,12 @@ RSpec.describe API::V1::Payments::PlansController, type: :controller do
   let(:customer_id) { 'cus_123' }
   let(:plan_id)     { 'super-plan' }
   let(:plan)        { StripePlan.new('super-plan', 500, 'chf', 'month', 'Super Plan') }
-  let(:sub_item)    { StripeSubscriptionItem.new('si_123', plan) }
+
+  let(:sub_item) do
+    si = Stripe::SubscriptionItem.new(id: 'si_123')
+    si.plan = plan
+    si
+  end
   let(:sub_items)   { [sub_item] }
 
   before do
@@ -15,6 +20,9 @@ RSpec.describe API::V1::Payments::PlansController, type: :controller do
     user.update(role: 'account_owner')
     allow(Stripe::SubscriptionItem).to receive(:create).and_return(sub_item)
     allow(Stripe::SubscriptionItem).to receive(:list).and_return(sub_items)
+    invoice_date = Time.new(2016, 1, 1, 12, 25, 00, '+00:00').to_i
+    allow(Stripe::Invoice).to receive_message_chain(:upcoming, :date).and_return(invoice_date)
+    allow(sub_item).to receive(:delete).with(proration_date: invoice_date)
   end
 
   shared_examples_for 'errors' do |controller_method|

@@ -140,9 +140,18 @@ RSpec.describe Payments::UpdateSubscriptionQuantity, type: :job do
           end
         end
 
-        it 'updates quantity for 2 accouns' do
+        it 'updates quantity for 2 accounts' do
           expect(Stripe::SubscriptionItem).to receive(:list).exactly(2).times
           job
+        end
+
+        context 'run job for single account' do
+          subject(:job_for_single_account) { described_class.perform_now(account_2) }
+
+          it 'updates quantity for one account' do
+            expect(Stripe::SubscriptionItem).to receive(:list).exactly(1).times
+            job_for_single_account
+          end
         end
       end
     end

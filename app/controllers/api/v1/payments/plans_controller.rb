@@ -11,6 +11,7 @@ module API
               adjust_available_modules(:push, attributes[:id])
               create_plan(attributes[:id])
             end
+            ::Payments::UpdateSubscriptionQuantity.perform_later(Account.current)
             render json: resource_representer.new(plan).complete
           end
         end
@@ -31,7 +32,8 @@ module API
           plan = Stripe::SubscriptionItem.create(
             subscription: Account.current.subscription_id,
             plan: plan_id,
-            quantity: Account.current.users.count
+            quantity: Account.current.employees.active_at_date.count,
+            proration_date: proration_date
           ).plan
           plan.active = true
           plan
@@ -40,7 +42,7 @@ module API
         def delete_subscription_item(plan_id)
           subscription_item = find_subscription_item(plan_id)
           plan = subscription_item.plan
-          subscription_item.delete
+          subscription_item.delete(proration_date: proration_date)
           plan.active = false
           plan
         end
@@ -60,6 +62,14 @@ module API
 
         def resource_representer
           ::Api::V1::Payments::PlanRepresenter
+        end
+
+        def proration_date
+          today = Time.zone.today
+          invoice_date =
+            Time.zone.at(Stripe::Invoice.upcoming(customer: Account.current.customer_id).date)
+          DateTime.new(today.year, today.month, today.day, invoice_date.hour, invoice_date.min,
+            invoice_date.sec, invoice_date.zone).to_i
         end
       end
     end

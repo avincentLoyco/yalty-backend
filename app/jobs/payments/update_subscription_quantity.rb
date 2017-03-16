@@ -12,12 +12,9 @@ module Payments
       retry_job(wait: 10.seconds)
     end
 
-    def initialize
-      super
-      @tomorrow = Time.zone.tomorrow
-    end
+    def perform(single_account = nil)
+      return update_subscription_items(single_account) if single_account.present?
 
-    def perform
       accounts_with_quantity_to_update.each do |account|
         update_subscription_items(account)
       end
@@ -33,7 +30,7 @@ module Payments
     end
 
     def events_tomorrow
-      hired_or_contract_end_events.where('effective_at = ?::date', @tomorrow)
+      hired_or_contract_end_events.where('effective_at = ?::date', Time.zone.tomorrow)
     end
 
     def events_recently_updated
@@ -50,24 +47,24 @@ module Payments
     end
 
     def update_subscription_items(account)
-      employees_count = account.employees.active_at_date(@tomorrow).count
+      employees_count = account.employees.active_at_date(Time.zone.tomorrow).count
       proration_date = proration_date_for(account)
 
       Stripe::SubscriptionItem.list(subscription: account.subscription_id).each do |sub_item|
         next if sub_item.quantity.eql?(employees_count)
         sub_item.quantity = employees_count
-        sub_item.prorate = true
         sub_item.proration_date = proration_date
         sub_item.save
       end
     end
 
     def proration_date_for(account)
+      tomorrow = Time.zone.tomorrow
       invoice_date = Time.zone.at(Stripe::Invoice.upcoming(customer: account.customer_id).date)
       DateTime.new(
-        @tomorrow.year,
-        @tomorrow.month,
-        @tomorrow.day,
+        tomorrow.year,
+        tomorrow.month,
+        tomorrow.day,
         invoice_date.hour,
         invoice_date.min,
         invoice_date.sec,
