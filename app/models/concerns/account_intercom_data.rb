@@ -24,9 +24,11 @@ module AccountIntercomData
       company_id: id,
       name: company_name,
       remote_created_at: created_at,
-      referred_by: referred_by,
       custom_attributes: [
-        { subdomain: subdomain },
+        {
+          subdomain: subdomain,
+          referred_by: referred_by
+        },
         intercom_files_attributes,
         intercom_policies_attributes,
         intercom_employee_attributes,
