@@ -18,6 +18,12 @@ module API
           end
         end
 
+        def update
+          customer.default_source = params[:id]
+          customer.save
+          render_no_content
+        end
+
         def destroy
           authorize! :destroy, :payments
           customer.sources.retrieve(params[:id]).delete

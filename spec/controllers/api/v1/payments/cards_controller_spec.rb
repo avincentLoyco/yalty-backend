@@ -173,6 +173,36 @@ RSpec.describe API::V1::Payments::CardsController, type: :controller do
     end
   end
 
+  context 'PUT /v1/payments/cards/:card_id' do
+    let(:customer) { StripeCustomer.new(customer_id, 'desc', 'c_123') }
+    let(:account)  { create(:account, customer_id: customer.id) }
+    let(:user)     { create(:account_user, account: account, role: 'account_owner') }
+    let(:card_id)  { 'new_id' }
+    let(:params)   {{ id: card_id }}
+
+    subject(:update_card) { put(:update, params) }
+
+    before { allow(Stripe::Customer).to receive(:retrieve).and_return(customer) }
+
+    it { expect { update_card }.to change { customer.default_source }.from('c_123').to('new_id') }
+    it 'saves customer' do
+      expect(customer).to receive(:save).exactly(1).times
+      update_card
+    end
+
+    context 'response' do
+      before { update_card }
+
+      it { expect(response.status).to eq(204) }
+    end
+
+    context 'custumer not created' do
+      let(:customer_id) { nil }
+
+      it { is_expected.to have_http_status(502) }
+    end
+  end
+
   context 'DELETE #destroy' do
     subject(:destroy_subject) { delete :destroy, id_json }
     before { Account.current.update(customer_id: customer_id) }
