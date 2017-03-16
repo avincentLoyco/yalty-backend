@@ -20,6 +20,10 @@ class Auth::AccountsController < ApplicationController
   end
 
   def list
+    dry_validation_schema = Dry::Validation.Form do
+      required(:email).filled(:str?)
+    end
+
     verified_dry_params(dry_validation_schema) do |attributes|
       users = Account::User.includes(:account).where(email: attributes[:email])
 
