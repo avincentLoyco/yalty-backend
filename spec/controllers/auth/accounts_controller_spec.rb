@@ -152,9 +152,9 @@ RSpec.describe Auth::AccountsController, type: :controller do
       end
     end
 
-    context 'GET #list' do
-      subject { get :list, email: email }
-      let(:email) { 'test@test.com'}
+    context 'POST #list' do
+      subject { post :list, email: email }
+      let(:email) { 'test@test.com' }
 
       context 'when user with given email does not exist' do
         it { expect { subject }.to change(ActionMailer::Base.deliveries, :count) }
@@ -169,7 +169,7 @@ RSpec.describe Auth::AccountsController, type: :controller do
       end
 
       context 'when email is missing' do
-        subject { get :list }
+        let(:email) { nil }
 
         it { expect { subject }.to_not change(ActionMailer::Base.deliveries, :count) }
         it { is_expected.to have_http_status(422) }
