@@ -55,7 +55,9 @@ class UpdateEvent
   def update_employee_join_tables
     return if event.event_type != 'hired'
     @updated_assignations =
-      HandleMapOfJoinTablesToNewHiredDate.new(employee, event_params[:effective_at]).call
+      HandleMapOfJoinTablesToNewHiredDate.new(
+        employee, event_params[:effective_at], event.effective_at_was
+      ).call
   end
 
   def manage_versions

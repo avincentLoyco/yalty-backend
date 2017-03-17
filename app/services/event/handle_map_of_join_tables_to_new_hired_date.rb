@@ -1,18 +1,20 @@
 class HandleMapOfJoinTablesToNewHiredDate
-  attr_reader :employee, :new_hired_date, :join_table_class, :balances, :join_tables_in_range
+  attr_reader :employee, :new_hired_date, :join_table_class, :balances, :join_tables_in_range,
+    :old_hired_date
 
   JOIN_TABLES_CLASSES = %w(employee_working_places
                            employee_presence_policies
                            employee_time_off_policies).freeze
 
-  def initialize(employee, new_hired_date)
+  def initialize(employee, new_hired_date, old_hired_date)
     @employee = employee
     @new_hired_date = new_hired_date
+    @old_hired_date = old_hired_date
     @balances = []
   end
 
   def call
-    return {} if new_hired_date == employee.hired_date
+    return {} if new_hired_date.eql?(old_hired_date)
     { join_tables: updated_join_tables, employee_balances: balances }
   end
 
@@ -22,7 +24,7 @@ class HandleMapOfJoinTablesToNewHiredDate
     JOIN_TABLES_CLASSES.map do |join_table_class|
       @join_table_class = join_table_class
       @join_tables_in_range = find_join_tables_in_range
-      if new_hired_date < employee.hired_date
+      if new_hired_date < old_hired_date
         update_join_table_at_hired_date
       else
         update_or_remove_join_table
@@ -47,6 +49,7 @@ class HandleMapOfJoinTablesToNewHiredDate
 
     return unless join_tables_at_hired_date.present?
     join_tables_at_hired_date.compact.map do |join_table|
+      next if join_table.related_resource.reset?
       update_time_off_policy_assignation_balance(join_table) if employee_time_off_policy?
       join_table.tap { |table| table.assign_attributes(effective_at: new_hired_date) }
     end
@@ -92,7 +95,7 @@ class HandleMapOfJoinTablesToNewHiredDate
   end
 
   def find_join_tables_in_range
-    dates = [employee.hired_date, new_hired_date]
+    dates = [old_hired_date, new_hired_date]
     employee
       .send(join_table_class)
       .where(effective_at: dates.min..dates.max)

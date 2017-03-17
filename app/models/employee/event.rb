@@ -98,7 +98,15 @@ class Employee::Event < ActiveRecord::Base
   end
 
   def balances_before_hired_date
-    return unless event_type == 'hired' && balances_before_effective_at?
+    return unless event_type.eql?('hired')
+    hired_event =
+      employee
+      .events
+      .where(event_type: 'hired')
+      .where('effective_at <= ?', effective_at)
+      .where.not(id: id).order(:effective_at).last
+
+    return unless hired_event.blank? && balances_before_effective_at?
     errors.add(:base, 'There can\'t be balances before hired date')
   end
 

@@ -3,7 +3,11 @@ require 'rails_helper'
 RSpec.describe HandleMapOfJoinTablesToNewHiredDate, type: :service do
   include_context 'shared_context_account_helper'
   include_context 'shared_context_timecop_helper'
-  subject { HandleMapOfJoinTablesToNewHiredDate.new(employee, hired_date).call }
+  subject do
+    HandleMapOfJoinTablesToNewHiredDate.new(employee, hired_date, old_hired_date).call
+  end
+
+  let(:old_hired_date) { employee.events.first.effective_at }
 
   describe 'For EmployeeTimeOffPolicy' do
     let(:employee) { create(:employee) }
