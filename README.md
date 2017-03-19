@@ -194,22 +194,43 @@ How to deploy
 First, install [docker](https://docs.docker.com/engine/installation/). Review environment is
 automatically deploy, but for staging and production you should use capitrano.
 
+You must add following lines to your `.ssh/config` file:
+```
+Host 10.128.*.*
+  User <hosting ssh username>
+```
+
+and verify you don't have theses lines uncommented in your `/etc/ssh/ssh_config` file:
+```
+Host *
+  SendEnv LANG LC_*
+```
+
 To deploy release candidate to staging, run following commands. The release branch is automatically
 created and pushed on git, then you must create a pull request on master and wait on the docker
-build (you can see build status on the release branch pull request).
+build (you can see build status on the release branch pull request). Don't forgot to logged in with
+docker cli.
 ```bash
-git checkout master && git pull && bundle
+git checkout <branch to release> && git pull && bundle
 
-cap staging release:candidate
+# optionnal if you are already logged in
+docker login
+
+./bin/cap staging release:candidate
 # ... waiting on docker build ...
-cap staging deploy
+./bin/cap staging deploy
 ```
 
 Before deploying on staging you can run following commands to reset the database to
 a production state (usefull to have fresh data or test database migration).
 ```bash
-cap production db:download
-cap staging sync
+git checkout releases/X.X.X && git pull && bundle
+
+# optionnal if you are already logged in
+docker login
+
+./bin/cap production db:download
+./bin/cap staging sync
 ```
 
 To deploy a release on production, run following commands. The release tag is automatically created
@@ -217,8 +238,8 @@ and pushed on git and docker, then you can deploy and merge the release pull req
 ```bash
 git checkout releases/X.X.X && git pull && bundle
 
-cap production release:approve
-cap production deploy
+./bin/cap production release:approve
+./bin/cap production deploy
 ```
 
 Known issues
