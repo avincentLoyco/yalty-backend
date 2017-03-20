@@ -34,7 +34,7 @@ class AssignHolidayPolicy
   end
 
   def country_code
-    working_place.country_code.downcase
+    working_place.country_code&.downcase
   end
 
   def state_code

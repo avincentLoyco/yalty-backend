@@ -88,28 +88,21 @@ RSpec.describe ReferralsController, type: :controller do
     context 'without params' do
       let(:params) { { format: :csv } }
 
-      context 'non authorized' do
-        before { subject }
-        it { is_expected.to have_http_status(401) }
+      before do
+        referral_http_login
+        subject
       end
 
-      context 'authorized' do
-        before do
-          referral_http_login
-          subject
-        end
+      it { is_expected.to have_http_status(200) }
 
-        it { is_expected.to have_http_status(200) }
+      it 'does not include referrers without accounts' do
+        expect(Referrer.count).to eq(3)
+        expect(array_from_csv.size).to eq(4)
+      end
 
-        it 'does not include referrers without accounts' do
-          expect(Referrer.count).to eq(3)
-          expect(array_from_csv.size).to eq(4)
-        end
-
-        it 'counts referred accounts from all time' do
-          expect(array_from_csv[2][2]).to eq('3')
-          expect(array_from_csv[3][2]).to eq('3')
-        end
+      it 'counts referred accounts from all time' do
+        expect(array_from_csv[2][2]).to eq('3')
+        expect(array_from_csv[3][2]).to eq('3')
       end
     end
 
