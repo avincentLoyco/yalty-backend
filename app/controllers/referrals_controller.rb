@@ -1,11 +1,7 @@
 class ReferralsController < ApplicationController
-  protect_from_forgery with: :null_session
-  http_basic_authenticate_with(
-    name: ENV['REFERRAL_USER'],
-    password: ENV['REFERRAL_PASSWORD'],
-    only: :referrers_csv
-  )
   include ReferrersSchemas
+
+  protect_from_forgery with: :null_session
 
   def referrers_csv
     verified_dry_params(referrers_csv_schema) do |attributes|

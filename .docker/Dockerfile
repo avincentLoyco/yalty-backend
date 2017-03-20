@@ -82,7 +82,7 @@ RUN set -ex \
   && gem install rake --version "$RAKE_VERSION" \
   && gem install bundler --version "$BUNDLER_VERSION" \
   && gem install puma --version "$PUMA_VERSION" \
-  && bundle install --without development test --deployment --clean \
+  && bundle install --without development test --deployment --retry=5 --clean \
   && rm -rf $GEM_HOME/cache/* \
   && rm -rf $BUNDLE_PATH/cache/* \
   && rm -rf $BUNDLE_PATH/*/*/cache/* \
