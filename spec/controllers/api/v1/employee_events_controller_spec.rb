@@ -1,8 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe API::V1::EmployeeEventsController, type: :controller do
-  include_examples 'example_authorization',
-    resource_name: 'employee_event'
+  include_examples 'example_authorization', resource_name: 'employee_event'
   include_context 'shared_context_headers'
   include_context 'shared_context_remove_original_helper'
 
@@ -1482,6 +1481,239 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
         expect(response).to have_http_status(:success)
       end
+    end
+  end
+
+  context 'DELETE #destroy' do
+    shared_examples 'cannot destroy event' do
+      before { delete_event }
+
+      it { expect(response.status).to eq(403) }
+      it { expect(response.body).to match('Event cannot be destroyed') }
+    end
+
+    subject(:delete_event) { delete :destroy, { id: event_to_delete_id } }
+
+    before { employee.employee_working_places.map(&:destroy!) }
+
+    context 'removing hired event' do
+      let(:event_to_delete_id) { event.id }
+
+      context 'with other events after' do
+        let!(:other_event) do
+          create(:employee_event, employee: employee, effective_at: event.effective_at + 1.month)
+        end
+
+        it_behaves_like 'cannot destroy event'
+      end
+
+      context 'without other events after' do
+        context 'with assigned time_off_policies' do
+          let!(:etop) do
+            create(:employee_time_off_policy, :with_employee_balance, employee: employee,
+              effective_at: event.effective_at + 1.month)
+          end
+
+          it_behaves_like 'cannot destroy event'
+        end
+
+        context 'with assigned presence_policy' do
+          let!(:epp) do
+            create(:employee_presence_policy, employee: employee,
+              effective_at: event.effective_at + 1.month)
+          end
+
+          it_behaves_like 'cannot destroy event'
+        end
+
+        context 'with assigned working_place' do
+          let!(:ewp) do
+            create(:employee_working_place, employee: employee,
+              effective_at: event.effective_at + 1.month)
+          end
+
+          it_behaves_like 'cannot destroy event'
+        end
+
+        context 'without assigned join tables' do
+          context 'response' do
+            before { delete_event }
+
+            it { expect(response.status).to eq(204) }
+          end
+
+          context 'UpdateSubscriptionQuantity job' do
+            it 'is scheduled' do
+              expect(::Payments::UpdateSubscriptionQuantity).to receive(:perform_now).with(account)
+              delete_event
+            end
+          end
+
+          context 'RemoveEmployee service' do
+            it 'is invoked' do
+              expect(RemoveEmployee).to receive(:new).with(employee)
+              delete_event
+            end
+          end
+        end
+      end
+    end
+
+    # TODO: Uncomment when contrac_end feature will be merged
+    #   context 'when this is second hired event' do
+    #     let!(:contract_end) do
+    #       create(:employee_event, employee: employee, event_type: 'contract_end',
+    #         effective_at: event.effective_at + 1.month)
+    #     end
+    #     let!(:rehired) do
+    #       create(:employee_event, employee: employee, event_type: 'hired',
+    #         effective_at: contract_end.effective_at + 1.month)
+    #     end
+    #     let(:event_to_delete_id) { rehired.id }
+    #
+    #     context 'RemoveEmployee service' do
+    #       it 'is not invoked' do
+    #         expect(RemoveEmployee).to_not receive(:new).with(employee)
+    #         delete_event
+    #       end
+    #     end
+    #
+    #     context 'with ETOP and reset policy in previous hired period' do
+    #       let!(:etop) do
+    #         create(:employee_time_off_policy, :with_employee_balance, employee: employee,
+    #           effective_at: event.effective_at)
+    #       end
+    #
+    #       before { delete_event }
+    #
+    #       it { expect(response.status).to eq(204) }
+    #     end
+    #
+    #     context 'with ETOP and reset policy in current hired period' do
+    #       let!(:etop) do
+    #         create(:employee_time_off_policy, :with_employee_balance, employee: employee,
+    #           effective_at: rehired.effective_at)
+    #       end
+    #
+    #       it_behaves_like 'cannot destroy event'
+    #     end
+    #
+    #     context 'without ETOP' do
+    #       before { delete_event }
+    #
+    #       it { expect(response.status).to eq(204) }
+    #     end
+    #
+    #     context 'with EPP and reset policy in previous hired period' do
+    #       let!(:epp) do
+    #         create(:employee_presence_policy, employee: employee, effective_at: event.effective_at)
+    #       end
+    #
+    #       before { delete_event }
+    #
+    #       it { expect(response.status).to eq(204) }
+    #     end
+    #
+    #     context 'with EPP and reset policy in current hired period' do
+    #       let!(:epp) do
+    #         create(:employee_presence_policy, employee: employee, effective_at:rehired.effective_at)
+    #       end
+    #
+    #       it_behaves_like 'cannot destroy event'
+    #     end
+    #
+    #     context 'without EPP' do
+    #       before { delete_event }
+    #
+    #       it { expect(response.status).to eq(204) }
+    #     end
+    #
+    #     context 'with EWP and reset policy in previous hired period' do
+    #       let!(:ewp) do
+    #         create(:employee_working_place, employee: employee, effective_at: event.effective_at)
+    #       end
+    #
+    #       before { delete_event }
+    #
+    #       it { expect(response.status).to eq(204) }
+    #     end
+    #
+    #     context 'with EWP and reset policy in current hired period' do
+    #       let!(:epp) do
+    #         create(:employee_working_place, employee: employee, effective_at:rehired.effective_at)
+    #       end
+    #
+    #       it_behaves_like 'cannot destroy event'
+    #     end
+    #
+    #     context 'without EWP' do
+    #       before { delete_event }
+    #
+    #       it { expect(response.status).to eq(204) }
+    #     end
+    #   end
+    # end
+
+    # context 'removing contract_end' do
+    #   let!(:contract_end) do
+    #     create(:employee_event, employee: employee, effective_at: event.effective_at + 1.month,
+    #       event_type: 'contract_end')
+    #   end
+    #   let(:event_to_delete_id) { contract_end.id }
+    #
+    #   context 'without rehired' do
+    #     before { delete_event }
+    #
+    #     it { expect(response.status).to eq(204) }
+    #   end
+    #
+    #   context 'with rehired after' do
+    #     let!(:rehired) do
+    #       create(:employee_event, employee: employee, event_type: 'hired',
+    #         effective_at: contract_end.effective_at + 1.month)
+    #     end
+    #
+    #     it_behaves_like 'cannot destroy event'
+    #   end
+    #
+    #   context 'UpdateSubscriptionQuantity job' do
+    #     it 'is scheduled' do
+    #       expect(::Payments::UpdateSubscriptionQuantity).to receive(:perform_now).with(account)
+    #       delete_event
+    #     end
+    #   end
+    # end
+
+    context 'removing any other event' do
+      let!(:any_other_event) do
+        create(:employee_event, employee: employee, effective_at: event.effective_at + 1.month)
+      end
+      let(:event_to_delete_id) { any_other_event.id }
+
+      context 'response' do
+        before { delete_event }
+
+        it { expect(response.status).to eq(204) }
+      end
+
+      context 'UpdateSubscriptionQuantity job' do
+        it 'is not scheduled' do
+          expect(::Payments::UpdateSubscriptionQuantity).to_not receive(:perform_now).with(account)
+          delete_event
+        end
+      end
+    end
+
+    context 'wrong employee' do
+      let!(:user) { create(:account_user, role: 'user') }
+      let!(:other_employee) { create(:employee, account: account) }
+      let!(:event) { create(:employee_event, employee: other_employee) }
+      let(:event_to_delete_id) { event.id }
+
+      before { delete_event }
+
+      it { expect(response.status).to eq(403) }
+      it { expect(response.body).to match('You are not authorized to access this page.') }
     end
   end
 end

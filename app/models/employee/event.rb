@@ -51,6 +51,8 @@ class Employee::Event < ActiveRecord::Base
     on: :update
   validate :hired_and_contract_end_not_in_the_same_date, if: [:employee, :event_type]
 
+  before_destroy :check_if_event_deletable
+
   def self.event_types
     Employee::Event::EVENT_ATTRIBUTES.keys.map(&:to_s)
   end
@@ -84,6 +86,12 @@ class Employee::Event < ActiveRecord::Base
 
   def next_event
     next_events.first
+  end
+
+  def can_destroy_event?
+    hired_without_events_and_join_tables_after? ||
+      contract_end_without_rehired_after? ||
+      !%w(hired contract_end).include?(event_type)
   end
 
   private
@@ -151,5 +159,22 @@ class Employee::Event < ActiveRecord::Base
     existing_event = employee.events.where.not(id: id).where(effective_at: effective_at).first
     return unless existing_event.present? && existing_event.event_type.in?(work_types)
     errors.add(:effective_at, 'Hired and contract end event can not be at the same date')
+  end
+
+  def check_if_event_deletable
+    can_destroy_event? || errors.add(:base, 'Event cannot be destroyed')
+    errors.empty?
+  end
+
+  def hired_without_events_and_join_tables_after?
+    event_type.eql?('hired') &&
+      employee.events.where('effective_at >= ?', effective_at).where.not(id: id).empty? &&
+      employee.employee_time_off_policies.active_at(Time.zone.now).empty? &&
+      PresencePolicy.active_for_employee(employee.id, Time.zone.now).nil? &&
+      WorkingPlace.active_for_employee(employee.id, Time.zone.now).nil?
+  end
+
+  def contract_end_without_rehired_after?
+    event_type == 'contract_end' && employee.events_after(effective_at).first&.event_type != 'hired'
   end
 end

@@ -3,7 +3,8 @@ module Api::V1
     def complete
       {
         effective_at: resource.effective_at,
-        event_type: resource.event_type
+        event_type: resource.event_type,
+        deletable: resource.can_destroy_event?
       }
         .merge(basic)
         .merge(relationship)

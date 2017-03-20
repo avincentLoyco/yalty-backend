@@ -230,6 +230,14 @@ class Employee < ActiveRecord::Base
     !contract_periods.last.last.is_a?(DateTime::Infinity)
   end
 
+  def events_after(date = Time.zone.today)
+    events.where('effective_at > ?', date).order(:effective_at)
+  end
+
+  def hired_events?
+    events.where(event_type: 'hired').exists?
+  end
+
   private
 
   def employee_file_ids
