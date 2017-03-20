@@ -28,6 +28,12 @@ namespace :deploy do
     end
   end
 
+  task :permissions do
+    on release_roles(fetch(:docker_roles)) do
+      execute :chmod, '-R', 'g=u', release_path
+    end
+  end
+
   namespace :rake do
     task :before_migrate_database do
       on fetch(:running_task_server) do
@@ -51,6 +57,7 @@ namespace :deploy do
   end
 
   after 'deploy:starting', 'deploy:quiet_workers'
+  after 'docker_copy:create_release', 'deploy:permissions'
   before 'deploy:publishing', 'deploy:enable_maintenance'
   before 'deploy:publishing', 'deploy:migrate_database'
   after 'deploy:publishing', 'restart:all'
