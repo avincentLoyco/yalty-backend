@@ -21,6 +21,15 @@ RSpec.describe AssignHolidayPolicy do
 
   let(:working_place) { create :working_place, city: city, state: state_param, country: country }
 
+  context 'without country and holidays policy' do
+    subject { described_class.new(working_place, nil) }
+
+    let(:working_place) { create :working_place }
+
+    it { expect { subject.call }.to_not change { HolidayPolicy.count } }
+    it { subject.call; expect(working_place.holiday_policy_id).to be_nil }
+  end
+
   context 'with authorized country' do
     context 'when holiday policy is given' do
       subject { described_class.new(working_place, holiday_policy.id) }
