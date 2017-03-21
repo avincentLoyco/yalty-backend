@@ -16,8 +16,6 @@ class Account < ActiveRecord::Base
   validates :default_locale, inclusion: { in: I18n.available_locales.map(&:to_s) }
   validate :referrer_must_exist, if: :referred_by, on: :create
 
-  # It is assigned to account holiday_policy as default
-  belongs_to :holiday_policy, inverse_of: :assigned_account
   has_many :users,
     class_name: 'Account::User',
     inverse_of: :account
@@ -128,11 +126,16 @@ class Account < ActiveRecord::Base
   def total_amount_of_data
     employee_attribute_versions
       .where("data -> 'attribute_type' = 'File'")
-      .sum("(data -> 'size')::float") / 1024.0
+      .sum("(data -> 'size')::float / (1024.0 * 1024.0)").round(2)
   end
 
   def number_of_files
     employee_attribute_versions.where("data -> 'attribute_type' = 'File'").count
+  end
+
+  def employee_files_ratio
+    return 0 if employees.count.zero?
+    (number_of_files.to_f / employees.count.to_f).round(2)
   end
 
   private

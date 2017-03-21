@@ -24,9 +24,11 @@ module AccountIntercomData
       company_id: id,
       name: company_name,
       remote_created_at: created_at,
-      referred_by: referred_by,
       custom_attributes: [
-        { subdomain: subdomain },
+        {
+          subdomain: subdomain,
+          referred_by: referred_by
+        },
         intercom_files_attributes,
         intercom_policies_attributes,
         intercom_employee_attributes,
@@ -42,7 +44,7 @@ module AccountIntercomData
     {
       number_of_files: number_of_files,
       total_amount_of_data: total_amount_of_data,
-      employee_files_ratio: employees.count.zero? ? 0 : number_of_files / employees.count
+      employee_files_ratio: employee_files_ratio
     }
   end
 

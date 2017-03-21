@@ -1,11 +1,9 @@
 require 'rails_helper'
 
 RSpec.describe HolidayPolicy, type: :model do
-  it { is_expected.to have_db_column(:name) }
   it { is_expected.to have_db_column(:country) }
   it { is_expected.to have_db_column(:region) }
   it { is_expected.to have_db_column(:account_id).of_type(:uuid) }
-  it { is_expected.to validate_presence_of(:name) }
   it { is_expected.to validate_presence_of(:account_id) }
 
   let(:account) { create(:account) }
@@ -13,7 +11,7 @@ RSpec.describe HolidayPolicy, type: :model do
   context 'validations' do
     context 'country presence' do
       it 'should not be valid when region send but not country' do
-        params = { name: 'test', region: 'pl', account: account }
+        params = { region: 'pl', account: account }
         holiday_policy = HolidayPolicy.new(params)
 
         expect(holiday_policy).to_not be_valid
@@ -23,7 +21,7 @@ RSpec.describe HolidayPolicy, type: :model do
 
     context 'country inclusion' do
       it 'should not be valid when country code is empty' do
-        params = { name: 'test', account: account }
+        params = { account: account }
         holiday_policy = HolidayPolicy.new(params)
 
         expect(holiday_policy).to_not be_valid
@@ -31,7 +29,7 @@ RSpec.describe HolidayPolicy, type: :model do
       end
 
       it 'should be valid when valid country code send capitalized' do
-        params = { name: 'test', country: 'PL', account: account }
+        params = { country: 'PL', account: account }
         holiday_policy = HolidayPolicy.new(params)
 
         expect(holiday_policy).to be_valid
@@ -39,7 +37,7 @@ RSpec.describe HolidayPolicy, type: :model do
       end
 
       it 'should be valid when valid country code send downcased' do
-        params = { name: 'test', country: 'pl', account: account }
+        params = { country: 'pl', account: account }
         holiday_policy = HolidayPolicy.new(params)
 
         expect(holiday_policy).to be_valid
@@ -47,14 +45,14 @@ RSpec.describe HolidayPolicy, type: :model do
       end
 
       it 'should not be valid when worong country code send' do
-        params = { name: 'test', country: 'XYZ', account: account }
+        params = { country: 'XYZ', account: account }
         holiday_policy = HolidayPolicy.new(params)
 
         expect(holiday_policy).to_not be_valid
       end
 
       it 'should not be valid when country code not send' do
-        params = { name: 'test', region: 'DS', account: account  }
+        params = { region: 'DS', account: account  }
         holiday_policy = HolidayPolicy.new(params)
 
         expect(holiday_policy).to_not be_valid
@@ -63,27 +61,27 @@ RSpec.describe HolidayPolicy, type: :model do
 
     context 'region inclusion' do
       it 'should be valid when valid region code send capitalized' do
-        params = { name: 'test', country: 'ch', region: 'ZH', account: account }
+        params = { country: 'ch', region: 'ZH', account: account }
         holiday_policy = HolidayPolicy.new(params)
 
         expect(holiday_policy).to be_valid
       end
       it 'should be valid when valid country and region code send capitalized' do
-        params = { name: 'test', country: 'CH', region: 'ZH', account: account }
+        params = { country: 'CH', region: 'ZH', account: account }
         holiday_policy = HolidayPolicy.new(params)
 
         expect(holiday_policy).to be_valid
       end
 
       it 'should be valid when valid region code send downcased' do
-        params = { name: 'test', country: 'ch', region: 'zh', account: account }
+        params = { country: 'ch', region: 'zh', account: account }
         holiday_policy = HolidayPolicy.new(params)
 
         expect(holiday_policy).to be_valid
       end
 
       it 'should be valid when country need it regions' do
-        params = { name: 'test', country: 'ch', region: 'zh', account: account }
+        params = { country: 'ch', region: 'zh', account: account }
         holiday_policy = HolidayPolicy.new(params)
 
         expect(holiday_policy).to be_valid
@@ -91,22 +89,36 @@ RSpec.describe HolidayPolicy, type: :model do
       end
 
       it 'should not be valid when country require region and is wrong' do
-        params = { name: 'test', country: 'ch', region: 'xx', account: account }
+        params = { country: 'ch', region: 'xx', account: account }
         holiday_policy = HolidayPolicy.new(params)
 
         expect(holiday_policy).to_not be_valid
         expect(holiday_policy.region).to eq 'xx'
       end
 
+      it 'should not be valid when country code not received' do
+        params = { region: 'DS', account: account  }
+        holiday_policy = HolidayPolicy.new(params)
+
+        expect(holiday_policy).to_not be_valid
+      end
+
       it 'should not be valid when country require region and is not set' do
-        params = { name: 'test', country: 'CH', account: account  }
+        params = { country: 'CH', account: account  }
+        holiday_policy = HolidayPolicy.new(params)
+
+        expect(holiday_policy).to_not be_valid
+      end
+
+      it 'should not be valid when wrong country code received' do
+        params = { country: 'xyz', region: 'DS', account: account }
         holiday_policy = HolidayPolicy.new(params)
 
         expect(holiday_policy).to_not be_valid
       end
 
       it 'should ignore region when country not need it' do
-        params = { name: 'test', country: 'pl', region: 'ds', account: account }
+        params = { country: 'pl', region: 'ds', account: account }
         holiday_policy = HolidayPolicy.new(params)
 
         expect(holiday_policy).to be_valid

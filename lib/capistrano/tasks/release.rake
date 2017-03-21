@@ -16,7 +16,7 @@ namespace :release do
       execute :git, :commit, "-m \"Create release candidate #{version}\""
       execute :git, :push, "-u origin releases/#{version}"
 
-      info 'Wait on docker build, then deploy to staging environment:
+      info 'Create Pull Request, wait on docker build, then deploy to staging environment:
         cap staging deploy'
     end
   end

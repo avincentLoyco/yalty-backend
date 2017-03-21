@@ -99,9 +99,9 @@ RSpec.describe Employee, type: :model do
           })
         end
       end
-      let(:total_amount_of_data) { employee_files.sum(&:file_file_size) / 1024.0 }
+      let(:total_amount_of_data) { employee_files.sum(&:file_file_size) / (1024.0 * 1024.0) }
 
-      it { expect(employee.total_amount_of_data).to eq(total_amount_of_data) }
+      it { expect(employee.total_amount_of_data).to eq(total_amount_of_data.round(2)) }
       it { expect(employee.number_of_files).to eq(2) }
     end
 

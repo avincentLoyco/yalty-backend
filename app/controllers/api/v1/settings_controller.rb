@@ -17,11 +17,6 @@ module API
 
       def update
         verified_dry_params(dry_validation_schema) do |attributes|
-          if attributes.key?(:holiday_policy)
-            holiday_policy = attributes.delete(:holiday_policy)
-            assign_holiday_policy(holiday_policy)
-          end
-
           resource.attributes = attributes
           subdomain_change = resource.subdomain_changed?
 
@@ -34,16 +29,6 @@ module API
 
       def current_resource_owner
         user
-      end
-
-      def assign_holiday_policy(holiday_policy)
-        if holiday_policy.present?
-          holiday_policy_id = holiday_policy.try(:[], :id)
-          holiday_policy = resource.holiday_policies.find(holiday_policy_id)
-          resource.holiday_policy = holiday_policy
-        else
-          resource.holiday_policy = nil
-        end
       end
 
       def resource
