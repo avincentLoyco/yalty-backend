@@ -7,11 +7,6 @@ module SettingsSchemas
       optional(:company_name).filled(:str?)
       optional(:timezone).filled(:str?)
       optional(:default_locale).filled(:str?)
-      optional(:holiday_policy).maybe do
-        schema do
-          required(:id).filled(:str?)
-        end
-      end
     end
   end
 
@@ -21,11 +16,6 @@ module SettingsSchemas
       required(:company_name).filled(:str?)
       optional(:timezone).filled(:str?)
       optional(:default_locale).filled(:str?)
-      optional(:holiday_policy).maybe do
-        schema do
-          required(:id).filled(:str?)
-        end
-      end
     end
   end
 end

@@ -28,10 +28,10 @@ RSpec.shared_context 'shared_context_geoloc_helper' do
     end
   end
 
-  let(:city) { 'Zurich' }
-  let(:country) { 'Switzerland' }
-  let(:country_code) { 'CH' }
+  let(:city) { nil }
   let(:state_name) { 'Zurich' }
   let(:state_code) { 'ZH' }
+  let(:country) { 'Switzerland' }
+  let(:country_code) { 'CH' }
   let(:timezone) { 'Europe/Zurich' }
 end

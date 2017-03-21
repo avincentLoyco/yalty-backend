@@ -21,9 +21,9 @@ class WorkingPlace < ActiveRecord::Base
     format: { with: %r{\A([a-zA-Z0-9 \/]+\z)},
               message: 'only numbers, capital letters, spaces and /' },
     allow_nil: true
-  validate :correct_address, if: :coordinate_changed?
-  validate :correct_state, if: :coordinate_changed?
-  validate :correct_country, if: :coordinate_changed?
+  validate :correct_address, if: [:coordinate_changed?, :coordinate?]
+  validate :correct_state, if: [:coordinate_changed?, :coordinate?]
+  validate :correct_country, if: [:coordinate_changed?, :coordinate?]
 
   before_validation :assign_coordinate_related_attributes, if: :coordinate_changed?
 
@@ -37,6 +37,10 @@ class WorkingPlace < ActiveRecord::Base
 
   def country_code
     country_data(country)&.alpha2&.downcase
+  end
+
+  def coordinate?
+    %w(city state country).any? { |attr| send(:"#{attr}?") }
   end
 
   def coordinate_changed?
@@ -97,11 +101,14 @@ class WorkingPlace < ActiveRecord::Base
   end
 
   def assign_coordinate_related_attributes
-    return unless address_found? && right_country?
-
-    self.state = location_attributes.state if state_required? && !state.present?
-    self.state_code = location_attributes.state_code
-    self.timezone = location_timezone.name
+    if address_found? && right_country?
+      self.state = location_attributes.state if state_required? && !state.present?
+      self.state_code = location_attributes.state_code
+      self.timezone = location_timezone.name
+    else
+      self.state_code = nil
+      self.timezone = nil
+    end
   end
 
   def standardize(address_param)

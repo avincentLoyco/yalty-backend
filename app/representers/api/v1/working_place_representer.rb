@@ -3,13 +3,13 @@ module Api::V1
     def complete
       {
         name: resource.name,
-        country: resource.country,
-        city: resource.city,
-        state: resource.state,
-        postalcode: resource.postalcode,
         street: resource.street,
         street_number: resource.street_number,
         additional_address: resource.additional_address,
+        city: resource.city,
+        postalcode: resource.postalcode,
+        state: resource.state,
+        country: resource.country,
         timezone: resource.timezone,
         deletable: assigned_employees_json.empty?
       }
@@ -19,13 +19,8 @@ module Api::V1
 
     def relationships
       {
-        holiday_policy: holiday_policy_json,
         employees: assigned_employees_json
       }
-    end
-
-    def holiday_policy_json
-      HolidayPolicyRepresenter.new(resource.holiday_policy).basic
     end
 
     def assigned_employees_json

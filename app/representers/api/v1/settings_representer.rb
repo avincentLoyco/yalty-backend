@@ -8,21 +8,12 @@ module Api::V1
         default_locale:    resource.default_locale
       }
         .merge(basic)
-        .merge(relationships)
     end
 
     def public_data
       {
         company_name:      resource.company_name,
         default_locale:    resource.default_locale
-      }
-    end
-
-    def relationships
-      return {} unless Account::User.current.try(:owner_or_administrator?)
-      holiday_policy = HolidayPolicyRepresenter.new(resource.holiday_policy).basic
-      {
-        holiday_policy: holiday_policy
       }
     end
   end

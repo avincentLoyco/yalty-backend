@@ -264,6 +264,33 @@ RSpec.describe WorkingPlace, type: :model do
           it { expect(subject.timezone).to eql('Europe/Zurich') }
         end
 
+        context 'update address to empty' do
+          subject { create(:working_place, city: city, state: state_name, country: country) }
+
+          before do
+            allow(subject).to receive(:location_attributes) do
+              geoloc_instance(
+                city: nil,
+                state_name: nil,
+                state_code: nil,
+                country: nil,
+                country_code: nil,
+              )
+            end
+
+            subject.city = nil
+            subject.state = nil
+            subject.country = nil
+            subject.validate
+          end
+
+          it { expect(subject).to be_valid }
+          it { expect(subject.city).to eq(nil) }
+          it { expect(subject.state).to eq(nil) }
+          it { expect(subject.state_code).to eq(nil) }
+          it { expect(subject.timezone).to eql(nil) }
+        end
+
         context 'update anything else coordinate' do
           subject { spy(working_place) }
 

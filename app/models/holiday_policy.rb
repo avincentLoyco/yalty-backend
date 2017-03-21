@@ -2,12 +2,8 @@ class HolidayPolicy < ActiveRecord::Base
   belongs_to :account
   has_many :working_places
   has_many :employees
-  has_one :assigned_account,
-    class_name: 'Account',
-    foreign_key: :holiday_policy_id,
-    inverse_of: :holiday_policy
 
-  validates :name, :account_id, presence: true
+  validates :account_id, presence: true
   validates :country, presence: true, inclusion: { in: :countries, allow_nil: true }
   validates :region, presence: true, inclusion: { in: :regions, allow_nil: true },
                      if: :region_required?

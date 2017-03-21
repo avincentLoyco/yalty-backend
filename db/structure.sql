@@ -378,7 +378,6 @@ CREATE TABLE accounts (
     company_name character varying,
     default_locale character varying DEFAULT 'en'::character varying,
     timezone character varying,
-    holiday_policy_id uuid,
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
     referred_by character varying
 );
@@ -483,7 +482,7 @@ CREATE TABLE employee_balances (
 
 
 --
--- Name: employee_files; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: employee_files; Type: TABLE; Schema: public; Owner: -; Tablespace:
 --
 
 CREATE TABLE employee_files (
@@ -498,7 +497,7 @@ CREATE TABLE employee_files (
 
 
 --
--- Name: employee_presence_policies; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: employee_presence_policies; Type: TABLE; Schema: public; Owner: -; Tablespace:
 --
 
 CREATE TABLE employee_presence_policies (
@@ -560,7 +559,6 @@ CREATE TABLE employees (
 
 CREATE TABLE holiday_policies (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
-    name character varying NOT NULL,
     country character varying,
     region character varying,
     created_at timestamp without time zone NOT NULL,
@@ -921,7 +919,7 @@ ALTER TABLE ONLY employee_events
 
 
 --
--- Name: employee_files_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: employee_files_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY employee_files
@@ -929,7 +927,7 @@ ALTER TABLE ONLY employee_files
 
 
 --
--- Name: employee_presence_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: employee_presence_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY employee_presence_policies
@@ -1878,3 +1876,7 @@ INSERT INTO schema_migrations (version) VALUES ('20170111105844');
 INSERT INTO schema_migrations (version) VALUES ('20170209083140');
 
 INSERT INTO schema_migrations (version) VALUES ('20170302162303');
+
+INSERT INTO schema_migrations (version) VALUES ('20170310135249');
+
+INSERT INTO schema_migrations (version) VALUES ('20170313132722');
