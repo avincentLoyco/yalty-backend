@@ -9,8 +9,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     create(:employee_attribute_definition,
       account: Account.current,
       name: 'address',
-      attribute_type: 'Address'
-    )
+      attribute_type: 'Address')
   end
   let(:attribute_name) { 'profile_picture' }
   let!(:file_definition) do
@@ -29,8 +28,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         firstname: employee_first_name,
         lastname: employee_last_name,
         annual_salary: employee_annual_salary
-      }
-    )
+      })
   end
   let(:employee_id) { employee.id }
   let(:employee_first_name) { 'John' }
@@ -40,7 +38,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
   let!(:event) { employee.events.where(event_type: 'hired').first! }
   let(:event_id) { event.id }
 
-  let(:first_name_attribute_definition) { 'firstname'}
+  let(:first_name_attribute_definition) { 'firstname' }
   let(:first_name_attribute) do
     event.employee_attribute_versions.find do |attr|
       attr.attribute_name == 'firstname'
@@ -48,7 +46,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
   end
   let(:first_name_attribute_id) { first_name_attribute.id }
 
-  let(:annual_salary_attribute_definition) { 'annual_salary'}
+  let(:annual_salary_attribute_definition) { 'annual_salary' }
   let(:annual_salary_attribute_id) { annual_salary_attribute.id }
   let(:annual_salary_attribute) do
     event.employee_attribute_versions.find do |attr|
@@ -56,7 +54,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     end
   end
 
-  let(:last_name_attribute_definition) { 'lastname'}
+  let(:last_name_attribute_definition) { 'lastname' }
   let(:last_name_attribute) do
     event.employee_attribute_versions.find do |attr|
       attr.attribute_name == 'lastname'
@@ -95,7 +93,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       it { expect { subject }.to_not change { Employee::Event.count } }
       it { expect { subject }.to_not change { Employee.count } }
       it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
-      it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
 
       it 'should respond with 422' do
         expect(subject).to have_http_status(422)
@@ -111,7 +108,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         it { expect { subject }.to_not change { Employee::Event.count } }
         it { expect { subject }.to_not change { Employee.count } }
         it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
-        it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
 
         it 'should respond with 422' do
           expect(subject).to have_http_status(422)
@@ -126,7 +122,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         it { expect { subject }.to_not change { Employee::Event.count } }
         it { expect { subject }.to_not change { Employee.count } }
         it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
-        it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
 
         it 'should respond with 422' do
           expect(subject).to have_http_status(422)
@@ -141,7 +136,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         it { expect { subject }.to_not change { Employee::Event.count } }
         it { expect { subject }.to_not change { Employee.count } }
         it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
-        it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
 
         it 'should respond with 422' do
           expect(subject).to have_http_status(422)
@@ -154,7 +148,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         it { expect { subject }.to_not change { Employee::Event.count } }
         it { expect { subject }.to_not change { Employee.count } }
         it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
-        it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
 
         it 'should respond with 422' do
           expect(subject).to have_http_status(422)
@@ -167,7 +160,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         it { expect { subject }.to_not change { Employee::Event.count } }
         it { expect { subject }.to_not change { Employee.count } }
         it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
-        it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
 
         it { is_expected.to have_http_status(422) }
 
@@ -189,8 +181,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     let(:first_name) { 'Walter' }
     let(:last_name) { 'Smith' }
 
-    let(:working_place) { create(:working_place, account: Account.current) }
-
     context 'a new employee' do
       let(:json_payload) do
         {
@@ -199,8 +189,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           comment: comment,
           event_type: "hired",
           employee: {
-            type: 'employee',
-            working_place_id: working_place.id
+            type: 'employee'
           },
           employee_attributes: [
             {
@@ -220,20 +209,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       it { expect { subject }.to change { Employee::Event.count }.by(1) }
       it { expect { subject }.to change { Employee.count }.by(1) }
       it { expect { subject }.to change { Employee::AttributeVersion.count }.by(2) }
-
-      context 'when there is working place' do
-        it { expect { subject }.to change { EmployeeWorkingPlace.count }.by(1) }
-      end
-
-      context 'without working place' do
-        before { json_payload[:employee] = { type: 'employee' } }
-        it { expect { subject }.not_to change { EmployeeWorkingPlace.count } }
-      end
-
-      context 'with working_place_id nil' do
-        before { json_payload[:employee][:working_place_id] = nil }
-        it { expect { subject }.not_to change { EmployeeWorkingPlace.count } }
-      end
 
       context 'when file type attribute send' do
         let(:employee_file) { create(:employee_file) }
@@ -273,8 +248,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         expect(subject).to have_http_status(:success)
 
         expect_json(comment: json_payload[:comment],
-                    event_type: json_payload[:event_type]
-                   )
+                    event_type: json_payload[:event_type])
       end
 
       it 'should contain employee' do
@@ -287,8 +261,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         expect(subject).to have_http_status(:success)
 
         expect_json_keys('employee_attributes.0',
-                         [:value, :attribute_name, :id, :type, :order]
-                        )
+          [:value, :attribute_name, :id, :type, :order])
       end
 
       it 'should create event with multiple pet attributes' do
@@ -314,29 +287,16 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       end
 
       context 'json payload for nested value' do
-        let(:employee_attributes) {{ attribute_name: attribute_definition, value: value }}
+        let(:employee_attributes) { { attribute_name: attribute_definition, value: value } }
         let(:attribute_definition) { 'address' }
-        let(:value) {{ city: 'Wroclaw', country: 'Poland' }}
+        let(:value) { { city: 'Wroclaw', country: 'Poland' } }
         before { json_payload[:employee_attributes] = [employee_attributes] }
 
         it { expect { subject }.to change { Employee::Event.count }.by(1) }
         it { expect { subject }.to change { Employee.count }.by(1) }
         it { expect { subject }.to change { Employee::AttributeVersion.count }.by(1) }
-        it { expect { subject }.to change { EmployeeWorkingPlace.count }.by(1) }
 
         it { is_expected.to have_http_status(201) }
-      end
-
-      it 'should not create event when invalid working_place' do
-        json_payload[:employee][:working_place_id] = 'abc'
-
-        expect(subject).to have_http_status(404)
-      end
-
-      it 'should not create event when working_place is nil' do
-        json_payload[:employee][:working_place_id] = nil
-
-        expect(subject).to have_http_status(422)
       end
 
       it 'should not create event and attribute definitions when user is not an account manager' do
@@ -349,13 +309,12 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       context 'attributes validations' do
         before do
           Account.current.employee_attribute_definitions
-            .where(name: 'lastname').first.update!(validation: { presence: true })
+                 .where(name: 'lastname').first.update!(validation: { presence: true })
         end
 
         context 'when all params and values are given' do
           it { expect { subject }.to change { Employee::Event.count } }
           it { expect { subject }.to change { Employee.count } }
-          it { expect { subject }.to change { EmployeeWorkingPlace.count }.by(1) }
 
           it { is_expected.to have_http_status(201) }
         end
@@ -365,7 +324,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
           it { expect { subject }.to_not change { Employee::Event.count } }
           it { expect { subject }.to_not change { Employee.count } }
-          it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
 
           it { is_expected.to have_http_status(422) }
 
@@ -381,8 +339,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
           it { expect { subject }.to_not change { Employee::Event.count } }
           it { expect { subject }.to_not change { Employee.count } }
-          it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
-
 
           it { is_expected.to have_http_status(422) }
 
@@ -406,8 +362,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           event_type: "change",
           employee: {
             id: employee_id,
-            type: 'employee',
-            working_place_id: working_place.id
+            type: 'employee'
           },
           employee_attributes: [
             {
@@ -428,7 +383,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         it { expect { subject }.to change { Employee::Event.count }.by(1) }
         it { expect { subject }.to_not change { Employee.count } }
         it { expect { subject }.to change { Employee::AttributeVersion.count }.by(2) }
-        it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
 
         it 'should respond with success' do
           expect(subject).to have_http_status(201)
@@ -488,7 +442,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         it { expect { subject }.to change { Employee::Event.count }.by(1) }
         it { expect { subject }.to_not change { Employee.count } }
         it { expect { subject }.to change { Employee::AttributeVersion.count }.by(2) }
-        it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
 
         it 'should respond with success' do
           expect(subject).to have_http_status(201)
@@ -503,7 +456,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         it { expect { subject }.to change { Employee::Event.count }.by(1) }
         it { expect { subject }.to_not change { Employee.count } }
         it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
-        it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
 
         it 'should respond with success' do
           expect(subject).to have_http_status(201)
@@ -514,7 +466,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         let(:first_name) { nil }
 
         before do
-          json_payload[:employee_attributes].delete_if  do |attr|
+          json_payload[:employee_attributes].delete_if do |attr|
             attr[:attribute_name] != first_name_attribute_definition
           end
         end
@@ -522,7 +474,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         it { expect { subject }.to change { Employee::Event.count }.by(1) }
         it { expect { subject }.to_not change { Employee.count } }
         it { expect { subject }.to change { Employee::AttributeVersion.count }.by(1) }
-        it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
 
         it 'should respond with success' do
           expect(subject).to have_http_status(201)
@@ -663,7 +614,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       context 'response body' do
         before { subject }
 
-        it { expect(response.body).to include 'must be a string'}
+        it { expect(response.body).to include 'must be a string' }
       end
     end
 
@@ -845,7 +796,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
         context 'and there are not new working places between old and new effective_at' do
           it { expect { subject }.to change { first_working_place.reload.effective_at } }
-          it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
         end
 
         context 'and there are new working places between old and new effective_at' do
@@ -858,11 +808,16 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
           it { expect { subject }.to change { third_working_place.reload.effective_at } }
           it { expect { subject }.to change { EmployeeWorkingPlace.count }.by(-2) }
-          it { expect { subject }.to change { EmployeeWorkingPlace.exists?(second_working_place.id) } }
-          it { expect { subject }.to change { EmployeeWorkingPlace.exists?(first_working_place.id) } }
+          it do
+            expect { subject }.to change { EmployeeWorkingPlace.exists?(second_working_place.id) }
+          end
+          it do
+            expect { subject }.to change { EmployeeWorkingPlace.exists?(first_working_place.id) }
+          end
         end
       end
     end
+
     context 'when the user is not an account manager'do
       before { user.role = 'user' }
 
@@ -908,7 +863,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       context 'and there is not a forbidden attribute payload' do
         before do
           json_payload[:employee_attributes].delete_if do |attr|
-            attr[:attribute_name] ==annual_salary_attribute_definition
+            attr[:attribute_name] == annual_salary_attribute_definition
           end
           annual_salary_attribute.destroy
         end
@@ -953,7 +908,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     context 'attributes validations' do
       before do
         Account.current.employee_attribute_definitions
-          .where(name: 'lastname').first.update!(validation: { presence: true })
+               .where(name: 'lastname').first.update!(validation: { presence: true })
       end
 
       context 'when all params and values are given' do
@@ -1028,7 +983,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
       it { expect { subject }.to_not change { Employee::Event.count } }
       it { expect { subject }.to_not change { Employee.count } }
-      it { expect { subject }.to change { Employee::AttributeVersion.count}.by(1) }
+      it { expect { subject }.to change { Employee::AttributeVersion.count }.by(1) }
 
       it 'should have new attribute version with given value' do
         expect(subject).to have_http_status(:success)
@@ -1268,8 +1223,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
             .joins(:attribute_definition)
             .where
             .not(employee_attribute_definitions:
-                  { name: ActsAsAttribute::PUBLIC_ATTRIBUTES_FOR_OTHERS }
-                )
+                  { name: ActsAsAttribute::PUBLIC_ATTRIBUTES_FOR_OTHERS })
 
           public_attributes.each do |attr|
             expect(response.body).to include(attr.attribute_name)
@@ -1295,8 +1249,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
             .joins(:attribute_definition)
             .where
             .not(employee_attribute_definitions:
-                  { name: ActsAsAttribute::PUBLIC_ATTRIBUTES_FOR_OTHERS }
-                )
+                  { name: ActsAsAttribute::PUBLIC_ATTRIBUTES_FOR_OTHERS })
 
           public_attributes.each do |attr|
             expect(response.body).to include(attr.attribute_name)

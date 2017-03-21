@@ -22,8 +22,7 @@ RSpec.describe CreateEvent do
       event_type: event_type,
       comment: 'comment',
       employee: {
-        id: employee_id,
-        working_place_id: nil
+        id: employee_id
       }
     }
   end
@@ -46,7 +45,6 @@ RSpec.describe CreateEvent do
 
   context 'with valid params' do
     context 'when employee_id is present' do
-      it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
       it { expect { subject }.to change { Employee::AttributeVersion.count }.by(2) }
       it { expect { subject }.to change { employee.events.count }.by(1) }
 
@@ -91,7 +89,7 @@ RSpec.describe CreateEvent do
       context 'and definition has not validation' do
         before { definition.update(validation: nil) }
 
-        let(:value ) { nil }
+        let(:value) { nil }
 
         it { expect { subject }.to change { Employee::AttributeVersion.count }.by(2) }
         it { expect { subject }.to_not raise_error }
@@ -99,7 +97,7 @@ RSpec.describe CreateEvent do
     end
 
     context 'when employee_id is not present' do
-      let(:event_type) { 'hired'}
+      let(:event_type) { 'hired' }
       let(:value) { 'Ned' }
       let(:attribute_name) { 'firstname' }
       let(:attribute_name_second) { 'nationality' }
@@ -109,14 +107,11 @@ RSpec.describe CreateEvent do
           account: employee.account, name: attribute_name_second, multiple: true, validation: nil)
       end
 
-      let(:working_place) { create(:working_place, account: Account.current) }
-
       before do
         definition.update(name: attribute_name)
-        params[:employee] = { working_place_id: working_place.id }
+        params[:employee] = {}
       end
 
-      it { expect { subject }.to change { EmployeeWorkingPlace.count }.by(1) }
       it { expect { subject }.to change { Employee.count }.by(1) }
       it { expect { subject }.to change { Employee::AttributeVersion.count }.by(2) }
 
@@ -140,7 +135,7 @@ RSpec.describe CreateEvent do
       context 'and definition does not have validation' do
         before { definition.update(validation: nil) }
 
-        let(:value ) { nil }
+        let(:value) { nil }
 
         it { expect { subject }.to change { Employee::AttributeVersion.count }.by(2) }
         it { expect { subject }.to_not raise_error }
