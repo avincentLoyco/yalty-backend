@@ -38,7 +38,7 @@ module Api
 
         def default_card_json
           return unless @default_card.present?
-          ::Api::V1::Payments::CardsRepresenter.new(@default_card).complete
+          ::Api::V1::Payments::CardRepresenter.new(@default_card).complete
         end
 
         def billing_information_json

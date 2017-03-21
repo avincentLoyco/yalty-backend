@@ -6,7 +6,7 @@ module Api
           {
             id: resource.try(:id),
             amount_due: resource.amount_due,
-            date: Time.zone.at(resource.date),
+            date: resource.date.is_a?(Integer) ? Time.zone.at(resource.date) : resource.date,
             prorate_amount: prorate_amount,
             line_items: line_items_json
           }
@@ -15,7 +15,7 @@ module Api
         private
 
         def prorate_amount
-          resource.lines.inject(0) do |sum, item|
+          resource.lines.data.inject(0) do |sum, item|
             sum += item.amount if item.proration
             sum
           end
@@ -28,7 +28,7 @@ module Api
         end
 
         def line_items
-          resource.lines.select do |line|
+          resource.lines.data.select do |line|
             next if line.plan.present? && line.plan.id.eql?('free-plan')
             line.plan.active = active_plan_ids.include?(line.plan.id) if line.plan.present?
             line

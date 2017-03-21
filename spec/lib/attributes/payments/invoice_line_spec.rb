@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe Payments::InvoiceItem do
+RSpec.describe Payments::InvoiceLine do
   it { is_expected.to be_respond_to(:id) }
   it { is_expected.to be_respond_to(:amount) }
   it { is_expected.to be_respond_to(:currency) }

@@ -355,13 +355,13 @@ CREATE TABLE holidays (
 
 CREATE TABLE invoices (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
-    total_payed_amount integer NOT NULL,
+    amount_due integer NOT NULL,
     status character varying NOT NULL,
     attempts integer,
-    next_attempt date,
-    date date NOT NULL,
+    next_attempt timestamp without time zone,
+    date timestamp without time zone NOT NULL,
     address hstore,
-    invoice_items json,
+    lines json,
     account_id uuid
 );
 

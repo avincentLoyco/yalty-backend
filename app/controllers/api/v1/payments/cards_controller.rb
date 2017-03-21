@@ -6,7 +6,6 @@ module API
         include PaymentsHelper
 
         def index
-          authorize! :index, :payments
           render_resource(cards)
         end
 
@@ -25,7 +24,6 @@ module API
         end
 
         def destroy
-          authorize! :destroy, :payments
           customer.sources.retrieve(params[:id]).delete
           render_no_content
         end
@@ -41,7 +39,7 @@ module API
         end
 
         def resource_representer
-          ::Api::V1::Payments::CardsRepresenter
+          ::Api::V1::Payments::CardRepresenter
         end
       end
     end

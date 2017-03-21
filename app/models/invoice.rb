@@ -1,7 +1,10 @@
 class Invoice < ActiveRecord::Base
+  POSSIBLE_STATUSES = %w(pending failed success).freeze
+
   serialize :address, Payments::CompanyInformation
-  serialize :invoice_items, Payments::InvoiceItems
+  serialize :lines, Payments::InvoiceLines
 
   belongs_to :account
-  validates :total_payed_amount, :status, :date, presence: true
+  validates :status, :date, :amount_due, presence: true
+  validates :status, inclusion: { in: POSSIBLE_STATUSES }
 end

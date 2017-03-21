@@ -36,7 +36,7 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
     allow(Stripe::SubscriptionItem).to receive(:list).and_return(subscription_items)
     allow(subscription).to receive(:items).and_return(subscription_items)
     allow_any_instance_of(StripeCustomer).to receive(:sources).and_return([card])
-    allow_any_instance_of(StripeInvoice).to receive(:lines).and_return([])
+    allow_any_instance_of(StripeInvoice).to receive_message_chain(:lines, :data).and_return([])
   end
 
   describe '#GET /v1/payments/subscription' do

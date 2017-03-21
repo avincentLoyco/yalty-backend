@@ -7,6 +7,7 @@ Rails.application.routes.draw do
       namespace :payments do
         resources 'cards', except: [:show]
         resources 'plans', only: [:create, :destroy]
+        resources 'invoices', only: [:index]
         get 'subscription', to: 'subscriptions#index'
         put 'subscription/settings', to: 'subscriptions#settings'
         post 'webhook', to: 'webhooks#webhook'

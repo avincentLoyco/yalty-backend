@@ -1,5 +1,5 @@
 module Api::V1::Payments
-  class CardsRepresenter < Api::V1::BaseRepresenter
+  class CardRepresenter < Api::V1::BaseRepresenter
     def complete
       {
         id: resource.id,
