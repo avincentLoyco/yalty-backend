@@ -8,7 +8,6 @@ module EmployeeEventSchemas
       optional(:comment).filled(:str?)
       required(:employee).schema do
         optional(:id).filled(:str?)
-        optional(:working_place_id).filled(:str?)
       end
       optional(:employee_attributes).maybe do
         each do
