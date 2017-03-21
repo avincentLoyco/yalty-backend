@@ -97,7 +97,7 @@ RSpec.describe HolidayPolicy, type: :model do
       end
 
       it 'should not be valid when country code not received' do
-        params = { name: 'test', region: 'DS', account: account  }
+        params = { region: 'DS', account: account  }
         holiday_policy = HolidayPolicy.new(params)
 
         expect(holiday_policy).to_not be_valid
@@ -111,7 +111,7 @@ RSpec.describe HolidayPolicy, type: :model do
       end
 
       it 'should not be valid when wrong country code received' do
-        params = { name: 'test', country: 'xyz', region: 'DS', account: account }
+        params = { country: 'xyz', region: 'DS', account: account }
         holiday_policy = HolidayPolicy.new(params)
 
         expect(holiday_policy).to_not be_valid
