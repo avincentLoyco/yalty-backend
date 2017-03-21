@@ -238,8 +238,6 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
       context 'with name param that is empty' do
         let(:name) { '' }
 
-        it { is_expected.to have_http_status(422) }
-
         it_behaves_like 'Invalid Data'
 
         context 'response' do

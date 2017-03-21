@@ -9,6 +9,7 @@ module Api::V1
         city: resource.city,
         postalcode: resource.postalcode,
         state: resource.state,
+        state_code: resource.state_code,
         country: resource.country,
         timezone: resource.timezone,
         deletable: assigned_employees_json.empty?

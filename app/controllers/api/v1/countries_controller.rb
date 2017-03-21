@@ -4,7 +4,8 @@ module API
       def show
         authorize! :show, current_user
         raise ActiveRecord::RecordNotFound unless country_has_codes_for_holidays
-        render_resource(params[:id])
+        holidays = HolidaysForCountry.new(params[:id], params[:region], params[:filter]).call
+        render json: resource_representer.new(holidays[:holidays], holidays[:regions]).complete
       end
 
       private

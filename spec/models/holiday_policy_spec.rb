@@ -96,8 +96,22 @@ RSpec.describe HolidayPolicy, type: :model do
         expect(holiday_policy.region).to eq 'xx'
       end
 
+      it 'should not be valid when country code not received' do
+        params = { region: 'DS', account: account  }
+        holiday_policy = HolidayPolicy.new(params)
+
+        expect(holiday_policy).to_not be_valid
+      end
+
       it 'should not be valid when country require region and is not set' do
         params = { country: 'CH', account: account  }
+        holiday_policy = HolidayPolicy.new(params)
+
+        expect(holiday_policy).to_not be_valid
+      end
+
+      it 'should not be valid when wrong country code received' do
+        params = { country: 'xyz', region: 'DS', account: account }
         holiday_policy = HolidayPolicy.new(params)
 
         expect(holiday_policy).to_not be_valid
