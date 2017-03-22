@@ -5,15 +5,16 @@ RSpec.describe API::V1::SchedulesController , type: :controller do
   include_context 'shared_context_timecop_helper'
 
   describe 'GET #show' do
+    let(:employee) { create(:employee, account: account) }
     let(:working_place) { create(:working_place, account: account, holiday_policy: policy) }
-    let(:employee) { create(:employee, account: account, employee_working_places: [ewp]) }
     let(:policy) { create(:holiday_policy, country: 'ch', region: 'zh', ) }
     let(:employee_id) { employee.id }
     let(:from) { '25.12.2015' }
     let(:to) { '27.12.2015' }
     let(:params) {{ employee_id: employee_id, from: from, to: to }}
-    let(:ewp) do
-      create(:employee_working_place, working_place: working_place, effective_at: '1/1/2015')
+    let!(:ewp) do
+      create(:employee_working_place,
+        working_place: working_place, effective_at: '1/1/2015', employee: employee)
     end
 
     subject { get :schedule_for_employee, params }

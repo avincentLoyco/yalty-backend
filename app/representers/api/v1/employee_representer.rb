@@ -1,11 +1,22 @@
 module Api::V1
   class EmployeeRepresenter < BaseRepresenter
+    attr_reader :resource
+
     def complete
       {
         already_hired: hire_status
       }
         .merge(basic)
+        .merge(employee_data)
         .merge(relationships)
+    end
+
+    def employee_data
+      {
+        hired_date: resource.hired_date,
+        civil_status: resource.civil_status_for,
+        civil_status_date: resource.civil_status_date_for
+      }
     end
 
     def relationships

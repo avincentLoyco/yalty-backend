@@ -27,8 +27,19 @@ module Attribute
       end
     end
 
+    def validate_inclusion
+      allowed_values.map do |field, allowed|
+        next if self[field].blank? || allowed.include?(self[field])
+        errors.add(field, 'value not allowed')
+      end
+    end
+
     def optional_attributes
       []
+    end
+
+    def allowed_values
+      {}
     end
   end
 end

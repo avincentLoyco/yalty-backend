@@ -234,6 +234,52 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         it { is_expected.to have_http_status(201) }
       end
 
+      context 'when child attribute send' do
+        let!(:child_definition) do
+          create(:employee_attribute_definition,
+            account: account, name: 'child', attribute_type: 'Child',
+            validation: { inclusion: true })
+        end
+
+        before do
+          json_payload[:employee_attributes].push(
+            {
+              attribute_name: 'child',
+              value: {
+                firstname: 'Jon',
+                lastname: 'Snow',
+                other_parent_work_status: other_parent_work_status
+              }
+            }
+          )
+        end
+
+        context 'with invalid data' do
+          let(:other_parent_work_status) { 'salaried employee' }
+
+          it { expect { subject }.to change { Employee::Event.count }.by(1) }
+          it { expect { subject }.to change { Employee::AttributeVersion.count }.by(3) }
+          it { expect { subject }.to change { Employee.count }.by(1) }
+
+          it { is_expected.to have_http_status(201) }
+        end
+
+        context 'with invalid data' do
+          let(:other_parent_work_status) { 'Lannister' }
+
+          it { expect { subject }.to_not change { Employee::Event.count } }
+          it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
+          it { expect { subject }.to_not change { Employee.count } }
+
+          it { is_expected.to have_http_status(422) }
+          it do
+            subject
+
+            expect(response.body).to include 'value not allowed'
+          end
+        end
+      end
+
       it 'should respond with success' do
         expect(subject).to have_http_status(201)
       end

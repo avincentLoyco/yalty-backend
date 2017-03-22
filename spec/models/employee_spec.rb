@@ -2,6 +2,7 @@ require 'rails_helper'
 
 RSpec.describe Employee, type: :model do
   include_context 'shared_context_account_helper'
+
   it { is_expected.to have_db_column(:account_id).of_type(:uuid) }
   it { is_expected.to belong_to(:account).inverse_of(:employees) }
   it { is_expected.to respond_to(:account) }
@@ -17,37 +18,6 @@ RSpec.describe Employee, type: :model do
   it { is_expected.to have_many(:events).inverse_of(:employee) }
   it { is_expected.to have_many(:presence_policies) }
   it { is_expected.to have_many(:registered_working_times) }
-
-  context '#validations' do
-    let(:employee) { build(:employee_with_working_place) }
-    subject { employee }
-
-    context '#employee working places presence' do
-      context 'with employee working place' do
-        it { expect(subject.valid?).to eq true }
-      end
-
-      context 'without employee working place' do
-        before { employee.employee_working_places = [] }
-
-        it { expect(subject.valid?).to eq true }
-        it { expect { subject.valid? }
-          .not_to change { subject.errors.messages[:employee_working_places] } }
-      end
-    end
-
-    context '#hired_event_presence' do
-      context 'with hired event' do
-        it { expect(subject.valid?).to eq true }
-      end
-
-      context 'without hired event' do
-        before { employee.events = [] }
-
-        it { expect(subject.valid?).to eq false }
-      end
-    end
-  end
 
   context 'scopes' do
     let(:account) { create(:account) }
@@ -115,8 +85,9 @@ RSpec.describe Employee, type: :model do
   end
 
   context 'methods' do
+    let(:employee) { create(:employee) }
+
     context 'for employee_files' do
-      let(:employee) { create(:employee) }
       let(:employee_files) { create_list(:employee_file, 2, :with_jpg) }
       let!(:employee_attributes) do
         employee_files.each do |file|
@@ -132,6 +103,39 @@ RSpec.describe Employee, type: :model do
 
       it { expect(employee.total_amount_of_data).to eq(total_amount_of_data.round(2)) }
       it { expect(employee.number_of_files).to eq(2) }
+    end
+
+    context 'civil status' do
+      context 'when employee has civil status changes' do
+        include_context 'shared_context_timecop_helper'
+        before { employee.reload.events }
+
+        let!(:wedding_event) do
+          create(:employee_event,
+            effective_at: 1.year.ago, employee: employee, event_type: 'marriage')
+        end
+        let!(:divorce_event) do
+          create(:employee_event,
+            effective_at: Time.zone.today, employee: employee, event_type: 'divorce')
+        end
+
+        context 'and date param is not given' do
+          it { expect(employee.civil_status_for).to eq 'divorced' }
+          it { expect(employee.civil_status_date_for).to eq divorce_event.effective_at }
+        end
+
+        context 'and date param is given' do
+          it { expect(employee.civil_status_for(5.months.ago)).to eq 'married' }
+          it do
+            expect(employee.civil_status_date_for(5.months.ago)).to eq wedding_event.effective_at
+          end
+        end
+      end
+
+      context 'when employee does not have civil status changes' do
+        it { expect(employee.civil_status_for).to eq 'single' }
+        it { expect(employee.civil_status_date_for).to eq nil }
+      end
     end
   end
 end
