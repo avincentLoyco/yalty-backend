@@ -158,6 +158,11 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
     let(:invoice_company_info) do
       attributes_for(:account, :with_billing_information)[:invoice_company_info]
     end
+    let(:invoice_empty_company_info) do
+      info = attributes_for(:account, :with_billing_information)[:invoice_company_info]
+      info.each { |k, _| info[k] = nil }
+      info
+    end
 
     subject(:update_settings) { put :settings, params }
 
@@ -196,7 +201,7 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
         account.update(invoice_company_info: invoice_company_info, invoice_emails: invoice_emails)
       end
 
-      let(:params) {{ company_information: nil, emails: nil }}
+      let(:params) {{ company_information: invoice_empty_company_info, emails: [] }}
 
       it { expect { update_settings }.to change { account.invoice_company_info } }
       it { expect { update_settings }.to change { account.invoice_emails } }
@@ -205,24 +210,27 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
         before { update_settings }
 
         it 'invoice_company_info is valid' do
+          expect(account.invoice_company_info).to be_a(Payments::CompanyInformation)
+
           invoice_company_info.keys.each do |key|
             expect(account.invoice_company_info[key]).to eq(nil)
           end
         end
-        it { expect(account.invoice_emails).to eq(nil) }
+        it { expect(account.invoice_emails).to be_an(Array) }
+        it { expect(account.invoice_emails).to be_empty }
       end
     end
 
     context 'require params missing' do
       let(:params_error) { JSON.parse(response.body).fetch('errors').first }
-      let(:params) {{ company_information: {} }}
+      let(:params) {{ company_information: { address_2: 'test' } }}
 
       before { update_settings }
 
       it { expect(response.status).to eq(422) }
       it { expect(params_error['field']).to eq('company_information') }
       it 'returns missing params' do
-        invoice_company_info.except(:address_2).keys.each do |key|
+        invoice_company_info.except(:address_2).each_key do |key|
           expect(params_error['messages'][key.to_s]).to eq(['is missing'])
         end
       end

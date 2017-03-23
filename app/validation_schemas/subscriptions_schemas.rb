@@ -3,18 +3,18 @@ module SubscriptionsSchemas
 
   def settings_schema
     Dry::Validation.Form do
-      optional(:company_information).maybe do
+      optional(:company_information).filled(:hash?) do
         schema do
-          required(:company_name).filled(:str?)
-          required(:address_1).filled(:str?)
-          optional(:address_2).filled(:str?)
-          required(:city).filled(:str?)
-          required(:postalcode).filled(:str?)
-          required(:country).filled(:str?)
-          required(:region).filled(:str?)
+          required(:company_name).maybe(:str?)
+          required(:address_1).maybe(:str?)
+          required(:address_2).maybe(:str?)
+          required(:city).maybe(:str?)
+          required(:postalcode).maybe(:str?)
+          required(:country).maybe(:str?)
+          required(:region).maybe(:str?)
         end
       end
-      optional(:emails).maybe(:array?)
+      optional(:emails).each(:str?)
     end
   end
 end
