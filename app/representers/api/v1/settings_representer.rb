@@ -2,10 +2,11 @@ module Api::V1
   class SettingsRepresenter < BaseRepresenter
     def complete
       {
-        subdomain:         resource.subdomain,
         company_name:      resource.company_name,
-        timezone:          resource.timezone,
-        default_locale:    resource.default_locale
+        subdomain:         resource.subdomain,
+        available_modules: resource.available_modules,
+        default_locale:    resource.default_locale,
+        timezone:          resource.timezone
       }
         .merge(basic)
     end
