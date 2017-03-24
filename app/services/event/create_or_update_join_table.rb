@@ -134,11 +134,10 @@ class CreateOrUpdateJoinTable
   def create_reset_join_table(join_table, effective_at = nil)
     employee = join_table.employee
     join_table_name = resource_class.name.underscore.pluralize
-    time_off_category = join_table.try(:time_off_category)
-    if create_reset_join_table?(employee, join_table_name, time_off_category, effective_at)
-      AssignResetJoinTable.new(join_table_name, employee, time_off_category, effective_at).call
-      ClearResetJoinTables.new(employee, join_table_old_effective_at, time_off_category).call
-    end
+    to_category = join_table.try(:time_off_category)
+    return unless create_reset_join_table?(employee, join_table_name, to_category, effective_at)
+    AssignResetJoinTable.new(join_table_name, employee, to_category, effective_at).call
+    ClearResetJoinTables.new(employee, join_table_old_effective_at, to_category).call
   end
 
   def create_reset_join_table?(employee, join_table_name, time_off_category, effective_at)

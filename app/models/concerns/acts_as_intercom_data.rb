@@ -7,8 +7,7 @@ module ActsAsIntercomData
     after_save :create_or_update_on_intercom
   end
 
-  def intercom_type
-  end
+  def intercom_type; end
 
   def intercom_attributes
     []

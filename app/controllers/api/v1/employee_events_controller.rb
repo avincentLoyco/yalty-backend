@@ -77,7 +77,7 @@ module API
         return unless event_attributes[:employee][:id].present? && hired_or_contract_end
 
         cannot_create_event =
-          InvalidResourcesError.new(nil, { message: "Event can't be at this date" })
+          InvalidResourcesError.new(nil, message: "Event can't be at this date")
 
         raise cannot_create_event if events_too_close(event_attributes)
       end
