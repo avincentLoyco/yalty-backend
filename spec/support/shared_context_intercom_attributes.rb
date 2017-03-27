@@ -5,7 +5,7 @@ RSpec.shared_context 'shared_context_intercom_attributes' do
       number_of_files total_amount_of_data employee_files_ratio
       vacation_count other_time_offs_count last_vacation_created_at last_other_time_off_created_at
       manual_working_time_ratio last_manual_working_time_created_at
-      active_employee_count user_employee_ratio
+      active_employee_count user_employee_ratio employee_event_ratio
       presence_policy_count active_presence_policy_count
       time_off_policy_count active_time_off_policy_count
     )
@@ -17,7 +17,7 @@ RSpec.shared_context 'shared_context_intercom_attributes' do
       number_of_files total_amount_of_data employee_files_ratio
       vacation_count other_time_offs_count last_vacation_created_at last_other_time_off_created_at
       manual_working_time_ratio last_manual_working_time_created_at
-      active_employee_count user_employee_ratio
+      active_employee_count user_employee_ratio employee_event_ratio
       presence_policy_count active_presence_policy_count
       time_off_policy_count active_time_off_policy_count
     )
@@ -30,6 +30,7 @@ RSpec.shared_context 'shared_context_intercom_attributes' do
       last_vacation_created_at last_other_time_off_created_at
       last_manual_working_time_created_at manual_working_time_ratio
       number_of_files total_amount_of_data
+      number_of_events
     )
   end
 
@@ -40,6 +41,7 @@ RSpec.shared_context 'shared_context_intercom_attributes' do
       last_vacation_created_at last_other_time_off_created_at
       last_manual_working_time_created_at manual_working_time_ratio
       number_of_files total_amount_of_data
+      number_of_events
     )
   end
 end

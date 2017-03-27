@@ -13,7 +13,7 @@ module AccountIntercomData
       number_of_files total_amount_of_data employee_files_ratio
       vacation_count other_time_offs_count last_vacation_created_at last_other_time_off_created_at
       manual_working_time_ratio last_manual_working_time_created_at
-      active_employee_count user_employee_ratio
+      active_employee_count user_employee_ratio employee_event_ratio
       presence_policy_count active_presence_policy_count
       time_off_policy_count active_time_off_policy_count
     )
@@ -70,7 +70,8 @@ module AccountIntercomData
   def intercom_employee_attributes
     {
       active_employee_count: Employee.active_by_account(id).count,
-      user_employee_ratio: Employee.active_employee_ratio_per_account(id)
+      user_employee_ratio: Employee.active_employee_ratio_per_account(id),
+      employee_event_ratio: employees.exists? ? (employee_events.count / employees.count.to_f) : nil
     }
   end
 
