@@ -1,6 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe Invoice, type: :model do
+  it { is_expected.to have_db_column(:invoice_id).of_type(:string) }
   it { is_expected.to have_db_column(:amount_due).of_type(:integer) }
   it { is_expected.to have_db_column(:status).of_type(:string) }
   it { is_expected.to have_db_column(:attempts).of_type(:integer) }

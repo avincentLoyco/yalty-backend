@@ -10,20 +10,6 @@ SET check_function_bodies = false;
 SET client_min_messages = warning;
 
 --
--- Name: tiger; Type: SCHEMA; Schema: -; Owner: -
---
-
-CREATE SCHEMA tiger;
-
-
---
--- Name: topology; Type: SCHEMA; Schema: -; Owner: -
---
-
-CREATE SCHEMA topology;
-
-
---
 -- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: -
 --
 
@@ -35,20 +21,6 @@ CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 --
 
 COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
-
-
---
--- Name: btree_gist; Type: EXTENSION; Schema: -; Owner: -
---
-
-CREATE EXTENSION IF NOT EXISTS btree_gist WITH SCHEMA public;
-
-
---
--- Name: EXTENSION btree_gist; Type: COMMENT; Schema: -; Owner: -
---
-
-COMMENT ON EXTENSION btree_gist IS 'support for indexing common datatypes in GiST';
 
 
 --
@@ -355,6 +327,7 @@ CREATE TABLE holidays (
 
 CREATE TABLE invoices (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    invoice_id character varying NOT NULL,
     amount_due integer NOT NULL,
     status character varying NOT NULL,
     attempts integer,
@@ -624,8 +597,8 @@ CREATE TABLE working_places (
     street character varying(60),
     street_number character varying(10),
     timezone character varying,
-    state_code character varying(60),
-    reset boolean DEFAULT false
+    reset boolean DEFAULT false,
+    state_code character varying(60)
 );
 
 
@@ -864,6 +837,13 @@ ALTER TABLE ONLY time_offs
 
 ALTER TABLE ONLY working_places
     ADD CONSTRAINT working_places_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: employee_attribute_versions_uniqueness_partial; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX employee_attribute_versions_uniqueness_partial ON employee_attribute_versions USING btree (attribute_definition_id, employee_id, employee_event_id) WHERE (multiple = false);
 
 
 --
@@ -1688,3 +1668,5 @@ INSERT INTO schema_migrations (version) VALUES ('20170307081031');
 INSERT INTO schema_migrations (version) VALUES ('20170310135249');
 
 INSERT INTO schema_migrations (version) VALUES ('20170313132722');
+
+INSERT INTO schema_migrations (version) VALUES ('20170322084239');

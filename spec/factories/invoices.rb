@@ -1,6 +1,7 @@
 FactoryGirl.define do
   factory :invoice do
     account
+    invoice_id 'invoice_id'
     amount_due { Faker::Number.between(1000, 2000) }
     status { 'pending' }
     date { Faker::Date.backward(10) }

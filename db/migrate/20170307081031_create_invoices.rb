@@ -1,11 +1,12 @@
 class CreateInvoices < ActiveRecord::Migration
   def change
     create_table :invoices, id: :uuid do |t|
-      t.integer :amount_due, null: false
-      t.string :status, null: false
+      t.string :invoice_id
+      t.integer :amount_due
+      t.string :status
       t.integer :attempts
       t.datetime :next_attempt
-      t.datetime :date, null: false
+      t.datetime :date
       t.hstore :address
       t.json :lines
       t.belongs_to :account, type: :uuid, index: true
