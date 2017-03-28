@@ -208,6 +208,37 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
       }
     end
 
+    context 'status parameter' do
+      context 'when status not sent' do
+        it 'get all employees' do
+          expect(Account.current).to receive_message_chain(:employees, :all)
+          subject
+        end
+      end
+
+      context 'when status sent' do
+        subject(:index_with_status) { get :index, status }
+
+        context 'status active' do
+          let(:status) {{ status: 'active' }}
+
+          it 'get active employees' do
+            expect(Account.current).to receive_message_chain(:employees, :active_at_date)
+            index_with_status
+          end
+        end
+
+        context 'status inactive' do
+          let(:status) {{ status: 'inactive' }}
+
+          it 'get active employees' do
+            expect(Account.current).to receive_message_chain(:employees, :inactive_at_date)
+            index_with_status
+          end
+        end
+      end
+    end
+
     context 'attributes' do
       let!(:current_user_employee) do
         create(:employee_with_working_place, :with_attributes, user: Account::User.current, account: account)

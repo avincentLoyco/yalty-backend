@@ -24,11 +24,9 @@ RSpec.describe Employee, type: :model do
     let(:account) { create(:account) }
     let(:employee) { create(:employee, account: account) }
     let!(:account_user) { create(:account_user, account: account, employee: employee) }
-
-    before 'create employees' do
-      create_list(:employee, 3, account: account)
-      create_list(:employee, 3)
-    end
+    let!(:employees_same_account) { create_list(:employee, 3, account: account) }
+    let!(:employees_different_account) { create_list(:employee, 3) }
+    let(:all_employees) { [employee] + employees_same_account + employees_different_account }
 
     context '.active_by_account' do
       subject(:active_by_account_scope) { described_class.active_by_account(account.id) }
@@ -37,6 +35,86 @@ RSpec.describe Employee, type: :model do
         expect(active_by_account_scope.count).to eq(4)
         expect(active_by_account_scope).to include(employee)
       end
+    end
+
+    context 'active and inactive' do
+      subject(:active_at_date_scope) { described_class.active_at_date }
+      subject(:inactive_at_date_scope) { described_class.inactive_at_date }
+
+      context 'when last of hired or contract_end is hired' do
+        it { expect(active_at_date_scope.count).to eq(7) }
+        it { expect(inactive_at_date_scope.count).to eq(0) }
+        it { expect(active_at_date_scope).to match_array(all_employees) }
+      end
+
+      context 'when there is no hired event' do
+        before { employee.events.find_by(event_type: 'hired').destroy! }
+
+        it { expect(active_at_date_scope.count).to eq(6) }
+        it { expect(active_at_date_scope).to_not include(employee) }
+
+        it { expect(inactive_at_date_scope.count).to eq(1) }
+        it { expect(inactive_at_date_scope).to include(employee) }
+      end
+
+      context 'scopes to date' do
+        subject(:active_at_date_scope) { described_class.active_at_date(date) }
+        subject(:inactive_at_date_scope) { described_class.inactive_at_date(date) }
+
+        context 'no hired events before date' do
+          let(:date) { employee.events.find_by(event_type: 'hired').effective_at - 1.month }
+
+          it { expect(active_at_date_scope.count).to eq(0) }
+          it { expect(inactive_at_date_scope.count).to eq(7) }
+        end
+
+        context 'hired events before date' do
+          let(:date) { employee.events.find_by(event_type: 'hired').effective_at + 1.month }
+
+          it { expect(active_at_date_scope.count).to eq(7) }
+          it { expect(inactive_at_date_scope.count).to eq(0) }
+        end
+      end
+
+      # TODO: Uncomment when contract_end is merged
+      # context 'with contract_end' do
+      #   let!(:contract_end) do
+      #     create(:employee_event, employee: employee, event_type: 'contract_end',
+      #       effective_at: contract_end_effective_at)
+      #   end
+      #
+      #   context 'scope between hired and contract_end' do
+      #     let(:contract_end_effective_at) { 1.month.from_now }
+      #
+      #     it { expect(active_at_date_scope.count).to eq(7) }
+      #     it { expect(inactive_at_date_scope.count).to eq(0) }
+      #     it { expect(active_at_date_scope).to include(employee) }
+      #   end
+      #
+      #   context 'scope after contract_end' do
+      #     let(:contract_end_effective_at) { 1.month.ago }
+      #
+      #     it { expect(active_at_date_scope.count).to eq(6) }
+      #     it { expect(inactive_at_date_scope.count).to eq(1) }
+      #     it { expect(active_at_date_scope).to_not include(employee) }
+      #   end
+      #
+      #   context 'after rehired' do
+      #     let(:contract_end_effective_at) { 1.month.ago }
+      #     let!(:contract_end) do
+      #       create(:employee_event, employee: employee, event_type: 'contract_end',
+      #         effective_at: contract_end_effective_at)
+      #     end
+      #     let!(:contract_end) do
+      #       create(:employee_event, employee: employee, event_type: 'hired',
+      #         effective_at: Time.zone.yesterday)
+      #     end
+      #
+      #     it { expect(active_at_date_scope.count).to eq(7) }
+      #     it { expect(inactive_at_date_scope.count).to eq(0) }
+      #     it { expect(active_at_date_scope).to include(employee) }
+      #   end
+      # end
     end
 
     context 'active_employee_ratio_per_account' do
