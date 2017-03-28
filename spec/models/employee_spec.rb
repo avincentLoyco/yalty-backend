@@ -137,5 +137,115 @@ RSpec.describe Employee, type: :model do
         it { expect(employee.civil_status_date_for).to eq nil }
       end
     end
+
+    context '#hired_date' do
+      include_context 'shared_context_timecop_helper'
+      let(:employee) { create(:employee, hired_at: hired_at, contract_end_at: contract_end_at) }
+
+      let(:contract_end_at) { nil }
+      let(:rehired_at) { nil }
+      let(:contract_end_after_rehired_at) { nil }
+
+      before do
+        if rehired_at
+          employee.events << build(:employee_event,
+            event_type: 'hired',
+            employee: employee,
+            effective_at: rehired_at
+          )
+          if contract_end_after_rehired_at
+            employee.events << build(:employee_event,
+              event_type: 'contract_end',
+              employee: employee,
+              effective_at: contract_end_after_rehired_at
+            )
+          end
+        end
+
+        employee.events.reload
+      end
+
+      context 'when hired in past' do
+        let(:hired_at) { 1.month.ago.to_date }
+
+        it { expect(employee.hired_date).to eql(hired_at) }
+        it { expect(employee.contract_end_date).to be_nil }
+      end
+
+      context 'when hired in future' do
+        let(:hired_at) { 1.month.from_now.to_date }
+
+        it { expect(employee.hired_date).to eql(hired_at) }
+        it { expect(employee.contract_end_date).to be_nil }
+      end
+
+      context 'when hired in past and fired in past' do
+        let(:hired_at) { 2.month.ago.to_date }
+        let(:contract_end_at) { 1.month.ago.to_date }
+
+        it { expect(employee.hired_date).to eql(hired_at) }
+        it { expect(employee.contract_end_date).to eql(contract_end_at) }
+      end
+
+      context 'when hired in past and fired in future' do
+        let(:hired_at) { 1.month.ago.to_date }
+        let(:contract_end_at) { 1.month.from_now.to_date }
+
+        it { expect(employee.hired_date).to eql(hired_at) }
+        it { expect(employee.contract_end_date).to eql(contract_end_at) }
+      end
+
+      context 'when fired in past then rehired in past' do
+        let(:hired_at) { 3.month.ago.to_date }
+        let(:contract_end_at) { 2.month.ago.to_date }
+
+        let(:rehired_at) { 1.month.ago.to_date }
+
+        it { expect(employee.hired_date).to eql(rehired_at) }
+        it { expect(employee.contract_end_date).to be_nil }
+      end
+
+      context 'when fired in past then rehired in future' do
+        let(:hired_at) { 3.month.ago.to_date }
+        let(:contract_end_at) { 2.month.ago.to_date }
+
+        let(:rehired_at) { 1.month.from_now.to_date }
+
+        it { expect(employee.hired_date).to eql(rehired_at) }
+        it { expect(employee.contract_end_date).to be_nil }
+      end
+
+      context 'when fired in future then rehired' do
+        let(:hired_at) { 1.month.ago.to_date }
+        let(:contract_end_at) { 1.month.from_now.to_date }
+
+        let(:rehired_at) { 2.month.from_now.to_date }
+
+        it { expect(employee.hired_date).to eql(hired_at) }
+        it { expect(employee.contract_end_date).to eql(contract_end_at) }
+      end
+
+      context 'when fired in past then rehired in past and fired again in future' do
+        let(:hired_at) { 3.month.ago.to_date }
+        let(:contract_end_at) { 2.month.ago.to_date }
+
+        let(:rehired_at) { 1.month.ago.to_date }
+        let(:contract_end_after_rehired_at) { 1.month.from_now.to_date }
+
+        it { expect(employee.hired_date).to eql(rehired_at) }
+        it { expect(employee.contract_end_date).to eql(contract_end_after_rehired_at) }
+      end
+
+      context 'when fired in past then rehired in future and fired again' do
+        let(:hired_at) { 3.month.ago.to_date }
+        let(:contract_end_at) { 2.month.ago.to_date }
+
+        let(:rehired_at) { 1.month.from_now.to_date }
+        let(:contract_end_after_rehired_at) { 2.month.from_now.to_date }
+
+        it { expect(employee.hired_date).to eql(rehired_at) }
+        it { expect(employee.contract_end_date).to eql(contract_end_after_rehired_at) }
+      end
+    end
   end
 end

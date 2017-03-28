@@ -115,7 +115,7 @@ class Employee::Balance < ActiveRecord::Base
     return unless !reset_balance && contract_end.present? &&
         contract_end > employee.hired_date_for(effective_at) &&
         (contract_end + 1.day).beginning_of_day < effective_at
-    errors.add(:effective_at, 'Employee Balance can not be added after employee contract end date')
+    errors.add(:effective_at, 'can\'t be set outside of employee contract period')
   end
 
   def reset_effective_at_after_contract_end
@@ -161,8 +161,8 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   def effective_after_employee_start_date
-    return unless effective_at && effective_at < employee.hired_date
-    errors.add(:effective_at, 'Can not be added before employee start date')
+    return unless effective_at && effective_at < employee.hired_date_for(effective_at)
+    errors.add(:effective_at, 'can\'t be set outside of employee contract period')
   end
 
   def effective_at_equal_time_off_policy_dates

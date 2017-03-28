@@ -80,7 +80,7 @@ RSpec.describe RelatedPolicyPeriod do
 
       context '.validity_date_for' do
         subject { RelatedPolicyPeriod.new(related_policy).validity_date_for(date) }
-        let(:effective_at) { Date.today - 10.years }
+        let(:effective_at) { Date.today - 5.years }
         let(:date) { RelatedPolicyPeriod.new(related_policy).first_start_date  }
         let(:end_day) { 1 }
         let(:end_month) { 4 }
@@ -92,16 +92,16 @@ RSpec.describe RelatedPolicyPeriod do
             it { expect(subject).to eq nil }
           end
 
-          context 'when years to effect eqal 0' do
+          context 'when years to effect eqal 0'  do
             let(:years_to_effect) { 0 }
 
-            it { expect(subject).to eq(Time.zone.parse('01/04/2006 00:00:03')) }
+            it { expect(subject).to eq(Time.zone.parse('01/04/2011 00:00:03')) }
           end
 
           context 'when years to effect equal 1 or more' do
             let(:years_to_effect) { 1 }
 
-            it { expect(subject).to eq(Time.zone.parse('01/04/2007 00:00:03')) }
+            it { expect(subject).to eq(Time.zone.parse('01/04/2012 00:00:03')) }
           end
 
           context 'when end date is the same day as start day' do
@@ -111,13 +111,13 @@ RSpec.describe RelatedPolicyPeriod do
             context 'when years to effect eqal 0' do
               let(:years_to_effect) { 0 }
 
-              it { expect(subject).to eq(Time.zone.parse('01/01/2006 00:00:03')) }
+              it { expect(subject).to eq(Time.zone.parse('01/01/2011 00:00:03')) }
             end
 
             context 'when years to effect eqal 1' do
               let(:years_to_effect) { 1 }
 
-              it { expect(subject).to eq(Time.zone.parse('01/01/2007 00:00:03')) }
+              it { expect(subject).to eq(Time.zone.parse('01/01/2012 00:00:03')) }
             end
           end
         end
@@ -134,19 +134,19 @@ RSpec.describe RelatedPolicyPeriod do
           context 'when years to effect eqal 0' do
             let(:years_to_effect) { 0 }
 
-            it { expect(subject).to eq(Time.zone.parse('1/4/2007 00:00:03')) }
+            it { expect(subject).to eq(Time.zone.parse('1/4/2012 00:00:03')) }
           end
 
           context 'when years to effect equal 1' do
             let(:years_to_effect) { 1 }
 
-            it { expect(subject).to eq(Time.zone.parse('1/4/2008 00:00:03')) }
+            it { expect(subject).to eq(Time.zone.parse('1/4/2013 00:00:03')) }
           end
 
           context 'when years to effect equal 2 or more' do
             let(:years_to_effect) { 2 }
 
-            it { expect(subject).to eq(Time.zone.parse('1/4/2009 00:00:03')) }
+            it { expect(subject).to eq(Time.zone.parse('1/4/2014 00:00:03')) }
           end
 
           context 'for day before start date' do

@@ -66,7 +66,7 @@ class RelatedPolicyPeriod
     years_end_date = Date.new(date.year, end_month, end_day)
     validity_date += 1.year if date.to_date > years_end_date
     validity_date += 1.year if (validity_date.to_date - date.to_date).to_i / 365 < years_to_effect
-    verify_with_contract_end(validity_date)
+    verify_with_contract_periods(validity_date)
   end
 
   def validity_date_for_balance_at(date)
@@ -78,11 +78,14 @@ class RelatedPolicyPeriod
         related_policy.policy_assignation_balance.validity_date
       end
     validity_date = validity_date >= date ? validity_date : validity_date_for(date)
-    verify_with_contract_end(validity_date)
+    verify_with_contract_periods(validity_date)
   end
 
-  def verify_with_contract_end(validity_date)
-    if contract_end_for(validity_date) && validity_date >= contract_end_for(validity_date)
+  def verify_with_contract_periods(validity_date)
+    # TODO: Must test if it's the day after end of period for balances that
+    # can be the day after contract end at 00:00:0X
+    if related_policy.employee
+                     .contract_periods.none? { |period| period.include?(validity_date.to_date) }
       contract_end_for(validity_date)
     else
       validity_date
@@ -102,9 +105,12 @@ class RelatedPolicyPeriod
   end
 
   def contract_end_for(validity_date)
-    contract_end = related_policy.employee.contract_end_for(validity_date)&.in_time_zone
-    hired_date = related_policy.employee.hired_date_for(validity_date)&.in_time_zone
-    return unless contract_end && contract_end > hired_date
-    contract_end + 1.day + Employee::Balance::REMOVAL_OFFSET
+    contract_end = related_policy.employee
+                                 .events.where(event_type: 'contract_end')
+                                 .where('effective_at <= ?::date', validity_date)
+                                 .reorder('employee_events.effective_at DESC')
+                                 .limit(1).pluck(:effective_at).first&.in_time_zone
+    return unless contract_end
+    contract_end + Employee::Balance::REMOVAL_OFFSET
   end
 end

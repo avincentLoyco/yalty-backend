@@ -248,7 +248,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
           subject
 
           expect(response.body)
-            .to include 'Time Off can not be added after employee contract end date'
+            .to include 'can\'t be set outside of employee contract period'
         end
 
         context 'and rehired event' do
@@ -445,7 +445,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
           subject
 
           expect(response.body)
-            .to include 'Time Off can not be added after employee contract end date'
+            .to include 'can\'t be set outside of employee contract period'
         end
 
         context 'and rehired event' do

@@ -14,6 +14,7 @@ module Api::V1
     def employee_data
       {
         hired_date: resource.hired_date,
+        contract_end_date: resource.contract_end_date,
         civil_status: resource.civil_status_for,
         civil_status_date: resource.civil_status_date_for
       }

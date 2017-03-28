@@ -1,17 +1,34 @@
 FactoryGirl.define do
   factory :employee do
+    transient do
+      hired_at { 6.years.ago }
+      contract_end_at { nil }
+    end
+
     account
-    after(:build) do |employee|
-      effective_at = Time.zone.now - 6.years
+    after(:build) do |employee, evaluator|
       if employee.events.empty?
-        date = employee.employee_working_places.empty? ? effective_at : employee.employee_working_places.first.effective_at
+        hired_at = if employee.employee_working_places.empty?
+                     evaluator.hired_at
+                   else
+                     employee.employee_working_places.first.effective_at
+                   end
 
         hired_event = build(:employee_event,
           event_type: 'hired',
           employee: employee,
-          effective_at: date
+          effective_at: hired_at
         )
         employee.events << hired_event
+
+        if evaluator.contract_end_at
+          contract_end_event = build(:employee_event,
+            event_type: 'contract_end',
+            employee: employee,
+            effective_at: evaluator.contract_end_at
+          )
+          employee.events << contract_end_event
+        end
       end
     end
 

@@ -96,7 +96,7 @@ class CreateOrUpdateJoinTable
     assignation_balance = join_table_resource.policy_assignation_balance
     join_table_resource.update!(params)
     if assignation_balance &&
-        assignation_balance.effective_at < join_table_resource.employee.hired_date
+        join_table_resource.employee.contract_periods.none? { |period| period.include?(assignation_balance.effective_at) }
       if related_balances.present?
         assignation_balance.destroy!
       else

@@ -42,7 +42,8 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
           expect_json(
             civil_status: 'single',
             civil_status_date: nil,
-            hired_date: employee.hired_date.to_s
+            hired_date: employee.hired_date.to_s,
+            contract_end_date: nil
           )
         end
       end

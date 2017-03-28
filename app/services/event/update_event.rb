@@ -135,7 +135,7 @@ class UpdateEvent
   def save!
     if unique_attribute_versions? && attribute_version_valid?
       employee.save!
-      if event.effective_at.to_date < employee.hired_date && event.event_type.eql?('hired')
+      if event.event_type.eql?('hired') && event.effective_at.to_date < event.effective_at_was
         event.save!
         update_assignations_and_balances
         create_policy_additions_and_removals

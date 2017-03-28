@@ -79,29 +79,72 @@ class Employee < ActiveRecord::Base
     last_civil_status_event_for(date).try(:effective_at)
   end
 
-  def contract_end_for(date)
-    events
-      .where(event_type: 'contract_end')
-      .where('effective_at <= ?', date)
-      .order(:effective_at).last.try(:effective_at)
+  def hired_date
+    hired_date_for(Time.zone.today)
   end
 
   def hired_date_for(date)
-    hired_event_date =
-      events
-      .where(event_type: 'hired')
-      .where('effective_at <= ?', date)
-      .order(:effective_at).last.try(:effective_at)
+    if persisted?
+      previous_events = events.where(event_type: %w(hired contract_end))
+                              .where('effective_at < ?::date', date)
+                              .reorder('employee_events.effective_at DESC')
+                              .limit(2).pluck(:event_type, :effective_at)
 
-    hired_event_date ? hired_event_date : hired_date
+      if previous_events.present? && previous_events.first[0].eql?('hired')
+        previous_events.first[1]
+      else
+        events.where(event_type: 'hired')
+              .where('effective_at >= ?::date', date)
+              .reorder('employee_events.effective_at ASC')
+              .limit(1).pluck(:effective_at).first ||
+        previous_events.last&.fetch(1)
+      end
+    else
+      events.find { |e| e.event_type == 'hired' }.effective_at
+    end
+  end
+
+  def contract_end_date
+    contract_end_for(hired_date)
+  end
+
+  def contract_end_for(date)
+    if persisted?
+      contract_end_date = events.where(event_type: 'contract_end')
+                                .where('effective_at >= ?::date', date)
+                                .reorder('employee_events.effective_at ASC')
+                                .limit(1).pluck(:effective_at).first ||
+
+      if contract_end_date.nil? && date > hired_date_for(date)
+        events.where(event_type: 'contract_end')
+              .where('effective_at < ?::date', date)
+              .reorder('employee_events.effective_at DESC')
+              .limit(1).pluck(:effective_at).first
+      end
+    else
+      events.find { |e| e.event_type == 'contract_end' }.effective_at
+    end
+  end
+
+  def contract_periods
+    dates =
+      if persisted?
+        events.where(event_type: %w(hired contract_end))
+              .reorder('employee_events.effective_at ASC')
+              .pluck(:effective_at)
+      else
+        events.select { |e| e.event_type == 'hired' }.map(&:effective_at)
+      end
+
+    dates.each_slice(2)
+         .map { |period| period.first..(period.size > 1 ? period.last : DateTime::Infinity.new) }
   end
 
   def first_employee_event
-    events.find_by(event_type: 'hired') || events.find { |event| event.event_type.eql?('hired') }
-  end
-
-  def hired_date
-    first_employee_event.try(:effective_at)
+    events
+      .where(event_type: 'hired')
+      .reorder('employee_events.effective_at DESC')
+      .first
   end
 
   def active_policy_in_category_at_date(category_id, date = Time.zone.today)

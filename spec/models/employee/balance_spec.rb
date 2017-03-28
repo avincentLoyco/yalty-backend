@@ -121,6 +121,8 @@ RSpec.describe Employee::Balance, type: :model do
 
         subject { employee.reload.employee_balances.first  }
 
+        before { employee.events.reload }
+
         context 'with valid params' do
           let(:effective_at) { contract_end + 1.day + Employee::Balance::REMOVAL_OFFSET }
 
@@ -179,7 +181,7 @@ RSpec.describe Employee::Balance, type: :model do
             it { expect(subject.valid?).to eq false }
             it do
               expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
-                .to include 'Employee Balance can not be added after employee contract end date'
+                .to include 'can\'t be set outside of employee contract period'
             end
           end
 
@@ -225,7 +227,7 @@ RSpec.describe Employee::Balance, type: :model do
               it { expect(subject.valid?).to eq false }
               it do
                 expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
-                  .to include 'Employee Balance can not be added after employee contract end date'
+                  .to include 'can\'t be set outside of employee contract period'
               end
             end
 
@@ -235,7 +237,7 @@ RSpec.describe Employee::Balance, type: :model do
               it { expect(subject.valid?).to eq false }
               it do
                 expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
-                  .to include 'Employee Balance can not be added after employee contract end date'
+                  .to include 'can\'t be set outside of employee contract period'
               end
             end
           end
@@ -251,7 +253,7 @@ RSpec.describe Employee::Balance, type: :model do
 
           it { expect(subject.valid?).to eq false }
           it { expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
-            .to include('Can not be added before employee start date') }
+            .to include('can\'t be set outside of employee contract period') }
         end
 
         context 'when effective at after employee creation' do

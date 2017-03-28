@@ -1,23 +1,20 @@
 RSpec.shared_context 'shared_context_join_tables_effective_at' do |settings|
   include_context 'shared_context_account_helper'
 
-  let(:employee) { create(:employee) }
-  before do
-    create(:employee_event,
-      employee: employee, effective_at: Date.new(2014, 1, 1), event_type: 'contract_end'
-    )
-    employee.events.reload
-  end
+  let(:first_time_hired_at) { Date.new(2012, 1, 1) }
+  let(:first_contract_end_at) { Date.new(2014, 1, 1) }
+  let(:employee) { create(:employee, hired_at: first_time_hired_at, contract_end_at: first_contract_end_at) }
+  before { employee.events.reload }
 
   subject { build(settings[:join_table], employee: employee, effective_at: effective_at) }
 
-  describe 'effective_at_cannot_be_before_hired_date' do
-    let(:effective_at) { employee.hired_date - 10.days }
+  describe 'effective at cannot be before hired date' do
+    let(:effective_at) { first_time_hired_at - 10.days }
 
     it { expect(subject.valid?).to eq false }
     it do
       expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
-        .to include 'can\'t be set before employee hired date'
+        .to include 'can\'t be set outside of employee contract period'
     end
   end
 
@@ -49,22 +46,22 @@ RSpec.shared_context 'shared_context_join_tables_effective_at' do |settings|
     end
   end
 
-  describe 'effective_at_between_hired_date_and_contract_end' do
+  describe 'effective at cannot be after contract end date' do
     context 'when employee has one hired event and one contract end' do
       context 'with valid params' do
-        let(:effective_at) { Date.new(2012, 1, 1) }
+        let(:effective_at) { first_contract_end_at - 10.days }
 
         it { expect(subject.valid?).to eq true }
         it { expect { subject.valid? }.to_not change { subject.errors.messages.count } }
       end
 
       context 'with invalid params' do
-        let(:effective_at) { Date.new(2014, 2, 1) }
+        let(:effective_at) { first_contract_end_at + 10.days }
 
         it { expect(subject.valid?).to eq false }
         it do
           expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
-            .to include 'can\'t be set after employee contract end date'
+            .to include 'can\'t be set outside of employee contract period'
         end
       end
     end
@@ -94,7 +91,7 @@ RSpec.shared_context 'shared_context_join_tables_effective_at' do |settings|
           it { expect(subject.valid?).to eq false }
           it do
             expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
-              .to include 'can\'t be set after employee contract end date'
+              .to include 'can\'t be set outside of employee contract period'
           end
         end
 
@@ -104,7 +101,7 @@ RSpec.shared_context 'shared_context_join_tables_effective_at' do |settings|
           it { expect(subject.valid?).to eq false }
           it do
             expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
-              .to include 'can\'t be set after employee contract end date'
+              .to include 'can\'t be set outside of employee contract period'
           end
         end
       end

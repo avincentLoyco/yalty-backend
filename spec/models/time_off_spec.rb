@@ -55,7 +55,7 @@ RSpec.describe TimeOff, type: :model do
           it { expect(subject.valid?).to eq false }
           it do
             expect { subject.valid? }.to change { subject.errors.messages[:end_time] }
-              .to include 'Time Off can not be added after employee contract end date'
+              .to include 'can\'t be set outside of employee contract period'
           end
         end
 
@@ -109,7 +109,7 @@ RSpec.describe TimeOff, type: :model do
 
         it { expect(subject.valid?).to eq false }
         it { expect { subject.valid? }.to change { subject.errors.messages[:start_time] }
-          .to include('Can not be added before employee start date') }
+          .to include('can\'t be set outside of employee contract period') }
       end
 
       context 'with valid params' do

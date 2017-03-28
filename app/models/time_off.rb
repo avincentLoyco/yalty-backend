@@ -119,8 +119,8 @@ class TimeOff < ActiveRecord::Base
   end
 
   def start_time_after_employee_start_date
-    return unless start_time < employee.first_employee_event.effective_at
-    errors.add(:start_time, 'Can not be added before employee start date')
+    return if employee.contract_periods.any? { |period| period.include?(start_time.to_date) }
+    errors.add(:start_time, 'can\'t be set outside of employee contract period')
   end
 
   def first_day_overlaps?(registered_working_time, lenght)
@@ -193,10 +193,9 @@ class TimeOff < ActiveRecord::Base
   end
 
   def end_time_not_after_contract_end
-    contract_end = employee.contract_end_for(end_time)
-    return unless contract_end.present? && contract_end > employee.hired_date_for(end_time) &&
-        end_time > (contract_end + 1.day).beginning_of_day
-
-    errors.add(:end_time, 'Time Off can not be added after employee contract end date')
+    return if employee.contract_periods.any? do |period|
+      period.include?(end_time.to_date) || end_time == (period.end + 1.day).beginning_of_day
+    end
+    errors.add(:end_time, 'can\'t be set outside of employee contract period')
   end
 end
