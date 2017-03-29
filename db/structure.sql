@@ -132,13 +132,13 @@ CREATE TABLE employee_attribute_definitions (
     label character varying,
     system boolean DEFAULT false NOT NULL,
     attribute_type character varying NOT NULL,
-    validation hstore,
     account_id uuid NOT NULL,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
     multiple boolean DEFAULT false NOT NULL,
-    long_token_allowed boolean DEFAULT false NOT NULL
+    long_token_allowed boolean DEFAULT false NOT NULL,
+    validation json
 );
 
 
@@ -1670,3 +1670,5 @@ INSERT INTO schema_migrations (version) VALUES ('20170310135249');
 INSERT INTO schema_migrations (version) VALUES ('20170313132722');
 
 INSERT INTO schema_migrations (version) VALUES ('20170322084239');
+
+INSERT INTO schema_migrations (version) VALUES ('20170322103855');

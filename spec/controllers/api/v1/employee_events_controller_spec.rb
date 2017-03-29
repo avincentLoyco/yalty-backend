@@ -15,7 +15,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
   end
   let(:attribute_name) { 'profile_picture' }
   let!(:file_definition) do
-    create(:employee_attribute_definition, :required,
+    create(:employee_attribute_definition, :required_with_nil_allowed,
       account: Account.current,
       name: attribute_name,
       attribute_type: 'File'
@@ -883,6 +883,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
     context 'when account user wants to add file' do
       let(:employee_file) { create(:employee_file) }
+      let(:file_value) { employee_file.id }
 
       before do
         json_payload[:employee_attributes].pop
@@ -893,7 +894,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           {
             type: 'employee_attribute',
             attribute_name: file_definition.name,
-            value: employee_file.id
+            value: file_value
           }
         )
       end

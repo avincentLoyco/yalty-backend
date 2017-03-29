@@ -113,7 +113,7 @@ RSpec.describe Account, type: :model do
       required = account.employee_attribute_definitions.where(name: Account::ATTR_VALIDATIONS.keys)
 
       required.each do |attr|
-        expect(attr.validation).to eq({ 'presence' => 'true' })
+        expect(attr.validation).to eq({ 'presence' => true })
       end
     end
 

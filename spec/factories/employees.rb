@@ -172,8 +172,15 @@ FactoryGirl.define do
               employee: employee,
               event: event
             )
-            attribute.value = value
 
+            if attribute.data.attribute_type.eql?('File') && value
+              attribute.data.id = value[:value]
+              attribute.data.size = 1000
+              attribute.data.file_type = 'image/jpeg'
+              attribute.data.original_sha = '123456781234'
+            else
+              attribute.value = value
+            end
             event.employee_attribute_versions << attribute
           end
         end

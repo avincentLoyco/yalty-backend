@@ -64,8 +64,14 @@ class Account < ActiveRecord::Base
     lastname: { presence: true },
     firstname: { presence: true },
     start_date: { presence: true },
-    file: { presence: true },
-    child: { inclusion: true }
+    child: { inclusion: true },
+    profile_picture: { presence: { allow_nil: true } },
+    salary_slip: { presence: { allow_nil: true } },
+    contract: { presence: { allow_nil: true } },
+    salary_certificate: { presence: { allow_nil: true } },
+    id_card: { presence: { allow_nil: true } },
+    work_permit: { presence: { allow_nil: true } },
+    avs_card: { presence: { allow_nil: true } }
   }.with_indifferent_access
 
   MULTIPLE_ATTRIBUTES = %w(child).freeze
@@ -105,6 +111,10 @@ class Account < ActiveRecord::Base
   def update_default_attribute_definitions!
     default_attribute_definition.each do |attr|
       definition = employee_attribute_definitions.where(name: attr[:name]).first
+      if definition.present? && attr[:validation].present? &&
+          definition.validation != attr[:validation]
+        definition.validation = attr[:validation]
+      end
 
       if definition.nil?
         definition = employee_attribute_definitions.build(

@@ -67,10 +67,10 @@ module ActsAsAttribute
   private
 
   def definition_validations
-    attribute_definition.validation.each do |k, _v|
+    attribute_definition.validation.each do |k, v|
       validation_method = "validate_#{k}"
       return nil unless data.attribute_model.respond_to?(validation_method)
-      data.attribute_model.send(validation_method)
+      data.attribute_model.send(validation_method, v)
     end
     map_errors
   end
