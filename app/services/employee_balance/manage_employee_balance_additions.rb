@@ -15,7 +15,7 @@ class ManageEmployeeBalanceAdditions
     ActiveRecord::Base.transaction do
       create_additions_with_removals
       if update && balances.flatten.present?
-        PrepareEmployeeBalancesToUpdate.new(balances.flatten.first).call
+        PrepareEmployeeBalancesToUpdate.new(balances.flatten.first, update_all: true).call
       end
     end
     check_amount_and_update_balances
@@ -27,7 +27,7 @@ class ManageEmployeeBalanceAdditions
     if update && balances.flatten.present? &&
         balances.flatten.map { |b| [b[:manual_amount], b[:resource_amount]] }.flatten.uniq != [0]
       ActiveRecord::Base.after_transaction do
-        UpdateBalanceJob.perform_later(balances.flatten.first)
+        UpdateBalanceJob.perform_later(balances.flatten.first, update_all: true)
       end
     end
   end
@@ -80,7 +80,7 @@ class ManageEmployeeBalanceAdditions
 
   def addition_at(etop, date)
     employee.employee_balances.find_by(
-      'effective_at = ? AND time_off_category_id = ?',
+      'effective_at = ? AND time_off_category_id = ? AND policy_credit_addition = true',
       date + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
       etop.time_off_category_id
     )

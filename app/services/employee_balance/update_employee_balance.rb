@@ -54,6 +54,6 @@ class UpdateEmployeeBalance
   end
 
   def counter_and_addition?
-    employee_balance.time_off_policy.counter? && employee_balance.policy_credit_addition
+    employee_balance.time_off_policy&.counter? && employee_balance.policy_credit_addition
   end
 end

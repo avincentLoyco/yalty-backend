@@ -282,6 +282,70 @@ RSpec.describe do
 
             it { expect { subject }.to_not change { newest_balance.reload.policy_credit_addition } }
           end
+
+          context 'and employee has employee balances' do
+            before do
+              EmployeeTimeOffPolicy.all.map do |etop|
+                ManageEmployeeBalanceAdditions.new(etop).call
+              end
+            end
+
+            context 'and hired date moved to etop start date' do
+              it { expect { subject }.to change { EmployeeTimeOffPolicy.exists?(etops.first.id) } }
+              it { expect { subject }.to change { Employee::Balance.exists?(first_balance.id) } }
+              it { expect { subject }.to change { Employee::Balance.count }.by(-17) }
+              it do
+                expect { subject }.to change { Employee::Balance.pluck(:being_processed).uniq }
+                  .to ([true])
+              end
+              it 'assignations have valid manual amount' do
+                subject
+
+                expect(etops.last.reload.policy_assignation_balance.manual_amount)
+                  .to eq second_balance.manual_amount
+                expect(new_etop.reload.policy_assignation_balance.manual_amount)
+                  .to eq newest_balance.manual_amount
+              end
+
+              it 'assignations are policy credit additions' do
+                subject
+
+                expect(etops.last.reload.policy_assignation_balance.policy_credit_addition)
+                  .to eq true
+                expect(new_etop.reload.policy_assignation_balance.policy_credit_addition)
+                  .to eq true
+              end
+            end
+
+            context 'and hired date moved to not etop start date' do
+              let(:effective_at) { 1.year.since - 1.day }
+
+              it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(-1) }
+              it { expect { subject }.to change { Employee::Balance.exists?(first_balance.id) } }
+              it { expect { subject }.to change { Employee::Balance.count }.by(-15) }
+              it do
+                expect { subject }.to change { Employee::Balance.pluck(:being_processed).uniq }
+                  .to ([true])
+              end
+              it 'assignations have valid manual amount' do
+                subject
+
+                expect(etops.last.reload.policy_assignation_balance.manual_amount)
+                  .to eq second_balance.manual_amount
+                expect(new_etop.reload.policy_assignation_balance.manual_amount)
+                  .to eq newest_balance.manual_amount
+              end
+
+              it 'assignations are policy credit additions' do
+                subject
+
+                expect(etops.last.reload.policy_assignation_balance.policy_credit_addition)
+                  .to eq false
+                expect(new_etop.reload.policy_assignation_balance.policy_credit_addition)
+                  .to eq false
+              end
+            end
+          end
         end
 
         context 'and date move to the past' do

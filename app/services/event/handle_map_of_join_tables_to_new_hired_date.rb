@@ -85,13 +85,26 @@ class HandleMapOfJoinTablesToNewHiredDate
   def update_time_off_policy_assignation_balance(etop)
     assignation_balance = etop.policy_assignation_balance
     return unless assignation_balance.present?
-    validity_date = RelatedPolicyPeriod.new(etop).validity_date_for(new_hired_date)
-    assignation_balance.assign_attributes(
-      effective_at: new_hired_date + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
-      policy_credit_addition: time_off_policy_start_date?(etop),
-      validity_date: validity_date
-    )
-    balances.push(assignation_balance)
+    remove_employee_balances_between_hired_dates(assignation_balance, etop)
+    existing_balance = balance_at_new_hired(etop)
+    updated_balance =
+      if existing_balance
+        update_existing_balance(etop, existing_balance, assignation_balance)
+      else
+        assign_attributes_to_assignation(etop, assignation_balance)
+      end
+    balances.push(updated_balance)
+  end
+
+  def remove_employee_balances_between_hired_dates(assignation, etop)
+    return unless new_hired_date > old_hired_date
+    employee
+      .employee_balances
+      .in_category(assignation.time_off_category_id)
+      .where.not(id: [assignation.id, balance_at_new_hired(etop)])
+      .where(time_off_id: nil)
+      .where('effective_at <= ?', new_hired_date + Employee::Balance::REMOVAL_OFFSET)
+      .destroy_all
   end
 
   def find_join_tables_in_range
@@ -113,5 +126,33 @@ class HandleMapOfJoinTablesToNewHiredDate
   def time_off_policy_start_date?(etop)
     policy = etop.time_off_policy
     new_hired_date.to_date == Date.new(new_hired_date.year, policy.start_month, policy.start_day)
+  end
+
+  def balance_at_new_hired(etop)
+    employee
+      .employee_balances
+      .where(
+        time_off_category_id: etop.time_off_category_id,
+        effective_at: new_hired_date + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET
+      )
+      .first
+  end
+
+  def update_existing_balance(etop, existing_balance, assignation_balance)
+    existing_balance.manual_amount = assignation_balance.manual_amount
+    existing_balance.validity_date = RelatedPolicyPeriod.new(etop).validity_date_for(new_hired_date)
+    assignation_balance.destroy!
+    existing_balance
+  end
+
+  def assign_attributes_to_assignation(etop, assignation_balance)
+    assignation_balance.tap do |balance|
+      balance.assign_attributes(
+        effective_at: new_hired_date + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
+        policy_credit_addition: time_off_policy_start_date?(etop),
+        validity_date: RelatedPolicyPeriod.new(etop).validity_date_for(new_hired_date),
+        resource_amount: 0
+      )
+    end
   end
 end

@@ -142,6 +142,7 @@ class UpdateEvent
       else
         update_assignations_and_balances
         event.save!
+        update_balances
       end
       event.employee_attribute_versions.each(&:save!)
       event
@@ -183,5 +184,13 @@ class UpdateEvent
       { attr.attribute_definition.name => attr.data.errors.messages.values }
     end
     errors.reduce({}, :merge).delete_if { |_key, value| value.empty? }
+  end
+
+  def update_balances
+    return unless updated_assignations[:employee_balances].present?
+    updated_assignations[:employee_balances].map do |balance|
+      PrepareEmployeeBalancesToUpdate.new(balance, update_all: true).call
+      UpdateBalanceJob.perform_later(balance, update_all: true)
+    end
   end
 end
