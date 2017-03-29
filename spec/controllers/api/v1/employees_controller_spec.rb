@@ -238,7 +238,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
             )
           }
           it { expect(employee_body['id']).to eql(future_employee.id) }
-          it { expect(employee_body['already_hired']).to eql true }
+          it { expect(employee_body['hiring_status']).to eql false }
         end
       end
 
@@ -259,7 +259,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
             )
           }
           it { expect(employee_body['id']).to eql(future_employee.id) }
-          it { expect(employee_body['already_hired']).to eql false }
+          it { expect(employee_body['hiring_status']).to eql false }
         end
       end
     end

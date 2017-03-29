@@ -47,6 +47,10 @@ class Employee::Event < ActiveRecord::Base
     on: :update
   validate :hired_and_contract_end_not_in_the_same_date, if: [:employee, :event_type]
 
+  scope :newer_than, ->(date = Time.zone.today) { where('effective_at > ?::date', date) }
+  scope :older_than, ->(date = Time.zone.today) { where('effective_at <= ?::date', date) }
+  scope :hired_or_contract_end, -> { where(event_type: %w(hired contract_end)) }
+
   def self.event_types
     Employee::Event::EVENT_ATTRIBUTES.keys.map(&:to_s)
   end

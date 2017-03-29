@@ -174,6 +174,15 @@ class Employee < ActiveRecord::Base
       .first
   end
 
+  def can_be_hired?(date = Time.zone.today)
+    [
+      events.hired_or_contract_end.newer_than(date).first,
+      events.hired_or_contract_end.older_than(date).last
+    ].none? do |next_or_previous_event|
+      next_or_previous_event&.event_type.eql?('hired')
+    end
+  end
+
   private
 
   def employee_file_ids

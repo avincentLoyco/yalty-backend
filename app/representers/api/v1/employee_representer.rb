@@ -4,7 +4,7 @@ module Api::V1
 
     def complete
       {
-        already_hired: hire_status
+        hiring_status: resource.can_be_hired?
       }
         .merge(basic)
         .merge(employee_data)
@@ -42,11 +42,6 @@ module Api::V1
       attributes = resource.employee_attributes
       return attributes if attributes.present?
       resource.events.first.try(:employee_attribute_versions).to_a
-    end
-
-    def hire_status
-      hire_event = resource.events.where(event_type: 'hired').last.try(:effective_at)
-      hire_event <= Time.zone.today if hire_event
     end
 
     def active_employee_working_place

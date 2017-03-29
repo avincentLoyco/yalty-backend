@@ -2,6 +2,7 @@ require 'rails_helper'
 
 RSpec.describe Employee, type: :model do
   include_context 'shared_context_account_helper'
+  include_context 'shared_context_timecop_helper'
 
   it { is_expected.to have_db_column(:account_id).of_type(:uuid) }
   it { is_expected.to belong_to(:account).inverse_of(:employees) }
@@ -86,6 +87,36 @@ RSpec.describe Employee, type: :model do
 
   context 'methods' do
     let(:employee) { create(:employee) }
+
+    context 'can_be_hired?' do
+      let(:hired_event) { employee.events.find_by(event_type: 'hired') }
+
+      context 'when checked after hired event' do
+        it { expect(employee.can_be_hired?).to eq(false) }
+      end
+
+      context 'when checked before hired event' do
+        let(:date) { hired_event.effective_at - 1.month }
+
+        it { expect(employee.can_be_hired?(date)).to eq(false) }
+      end
+
+      context 'when no hired events' do
+        before { hired_event.destroy! }
+
+        it { expect(employee.can_be_hired?).to eq(true) }
+      end
+
+      context 'when checked after contract_end' do
+        let!(:contract_end) do
+          create(:employee_event, employee: employee, effective_at: 1.month.ago,
+            event_type: 'contract_end')
+        end
+
+        # TODO: Run this when YWA-664 contract_end is merged
+        xit { expect(employee.can_be_hired?).to eq(true) }
+      end
+    end
 
     context 'for employee_files' do
       let(:employee_files) { create_list(:employee_file, 2, :with_jpg) }
