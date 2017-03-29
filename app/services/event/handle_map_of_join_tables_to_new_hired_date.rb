@@ -14,11 +14,20 @@ class HandleMapOfJoinTablesToNewHiredDate
   end
 
   def call
-    return {} if new_hired_date.eql?(old_hired_date)
+    return {} if new_hired_date.eql?(old_hired_date) || contract_end_between?
     { join_tables: updated_join_tables, employee_balances: balances }
   end
 
   private
+
+  def contract_end_between?
+    return false unless employee && new_hired_date > old_hired_date
+    employee
+      .events
+      .where('effective_at > ? AND effective_at <= ?', old_hired_date, new_hired_date)
+      .pluck(:event_type)
+      .include?('contract_end')
+  end
 
   def updated_join_tables
     JOIN_TABLES_CLASSES.map do |join_table_class|
