@@ -61,5 +61,5 @@ if ENV['TRAVIS_PULL_REQUEST'] != 'false' && ENV['TRAVIS_BRANCH'] == 'master'
   end
 elsif ENV['TRAVIS_BRANCH'] == 'master'
   reset_git_working_tree('master')
-  build_docker_image('lastest')
+  build_docker_image('latest')
 end
