@@ -7,7 +7,7 @@ module API
 
         def create
           verified_dry_params(dry_validation_schema) do |attributes|
-            plan = Account.transaction do
+            plan = Account.current.with_lock do
               adjust_available_modules(:push, attributes[:id])
               create_plan(attributes[:id])
             end
@@ -18,7 +18,7 @@ module API
 
         def destroy
           verified_dry_params(dry_validation_schema) do |attributes|
-            plan = Account.transaction do
+            plan = Account.current.with_lock do
               adjust_available_modules(:delete, attributes[:id])
               delete_subscription_item(attributes[:id])
             end
