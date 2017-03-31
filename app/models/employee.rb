@@ -84,9 +84,11 @@ class Employee < ActiveRecord::Base
   end
 
   def hired_date_for(date)
-    period = contract_periods.find { |period| period.include?(date) || date < period.first }
-    period ||= contract_periods.last
-    period.first
+    date_period = contract_periods.find do |period|
+      period.include?(date.to_date) || date.to_date < period.first
+    end
+    date_period ||= contract_periods.last
+    date_period.first
   end
 
   def contract_end_date
@@ -94,9 +96,11 @@ class Employee < ActiveRecord::Base
   end
 
   def contract_end_for(date)
-    period = contract_periods.reverse.find { |period| period.include?(date) || date > period.last }
-    period ||= contract_periods.first
-    period.last.is_a?(DateTime::Infinity) ? nil : period.last
+    date_period = contract_periods.reverse.find do |period|
+      period.include?(date.to_date) || date.to_date > period.last
+    end
+    date_period ||= contract_periods.first
+    date_period.last.is_a?(DateTime::Infinity) ? nil : date_period.last
   end
 
   def contract_periods

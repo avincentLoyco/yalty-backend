@@ -111,6 +111,6 @@ class RelatedPolicyPeriod
                                  .reorder('employee_events.effective_at DESC')
                                  .limit(1).pluck(:effective_at).first&.in_time_zone
     return unless contract_end
-    contract_end + Employee::Balance::REMOVAL_OFFSET
+    contract_end + 1.day + Employee::Balance::REMOVAL_OFFSET
   end
 end

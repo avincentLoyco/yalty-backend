@@ -161,7 +161,8 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   def effective_after_employee_start_date
-    return unless effective_at && effective_at < employee.hired_date_for(effective_at)
+    return unless !reset_balance &&
+        effective_at && effective_at < employee.hired_date_for(effective_at)
     errors.add(:effective_at, 'can\'t be set outside of employee contract period')
   end
 
