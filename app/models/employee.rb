@@ -84,24 +84,9 @@ class Employee < ActiveRecord::Base
   end
 
   def hired_date_for(date)
-    if persisted?
-      previous_events = events.where(event_type: %w(hired contract_end))
-                              .where('effective_at < ?::date', date)
-                              .reorder('employee_events.effective_at DESC')
-                              .limit(2).pluck(:event_type, :effective_at)
-
-      if previous_events.present? && previous_events.first[0].eql?('hired')
-        previous_events.first[1]
-      else
-        events.where(event_type: 'hired')
-              .where('effective_at >= ?::date', date)
-              .reorder('employee_events.effective_at ASC')
-              .limit(1).pluck(:effective_at).first ||
-        previous_events.last&.fetch(1)
-      end
-    else
-      events.find { |e| e.event_type == 'hired' }.effective_at
-    end
+    period = contract_periods.find { |period| period.include?(date) || date < period.first }
+    period ||= contract_periods.last
+    period.first
   end
 
   def contract_end_date
@@ -109,21 +94,9 @@ class Employee < ActiveRecord::Base
   end
 
   def contract_end_for(date)
-    if persisted?
-      contract_end_date = events.where(event_type: 'contract_end')
-                                .where('effective_at >= ?::date', date)
-                                .reorder('employee_events.effective_at ASC')
-                                .limit(1).pluck(:effective_at).first ||
-
-      if contract_end_date.nil? && date > hired_date_for(date)
-        events.where(event_type: 'contract_end')
-              .where('effective_at < ?::date', date)
-              .reorder('employee_events.effective_at DESC')
-              .limit(1).pluck(:effective_at).first
-      end
-    else
-      events.find { |e| e.event_type == 'contract_end' }.effective_at
-    end
+    period = contract_periods.reverse.find { |period| period.include?(date) || date > period.last }
+    period ||= contract_periods.first
+    period.last.is_a?(DateTime::Infinity) ? nil : period.last
   end
 
   def contract_periods
