@@ -91,20 +91,8 @@ RSpec.describe Employee, type: :model do
     context 'can_be_hired?' do
       let(:hired_event) { employee.events.find_by(event_type: 'hired') }
 
-      context 'when checked after hired event' do
+      context 'when there is no contract end' do
         it { expect(employee.can_be_hired?).to eq(false) }
-      end
-
-      context 'when checked before hired event' do
-        let(:date) { hired_event.effective_at - 1.month }
-
-        it { expect(employee.can_be_hired?(date)).to eq(false) }
-      end
-
-      context 'when no hired events' do
-        before { hired_event.destroy! }
-
-        it { expect(employee.can_be_hired?).to eq(true) }
       end
 
       context 'when checked after contract_end' do
@@ -113,8 +101,7 @@ RSpec.describe Employee, type: :model do
             event_type: 'contract_end')
         end
 
-        # TODO: Run this when YWA-664 contract_end is merged
-        xit { expect(employee.can_be_hired?).to eq(true) }
+        it { expect(employee.can_be_hired?).to eq(true) }
       end
     end
 
