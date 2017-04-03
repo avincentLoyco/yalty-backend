@@ -14,6 +14,7 @@ module UserIntercomData
       last_vacation_created_at last_other_time_off_created_at
       last_manual_working_time_created_at manual_working_time_ratio
       number_of_files total_amount_of_data
+      number_of_events
     )
   end
 
@@ -51,7 +52,8 @@ module UserIntercomData
         manual_working_time_ratio:
           RegisteredWorkingTime.manually_created_ratio_per_employee(employee.id),
         number_of_files: employee.number_of_files,
-        total_amount_of_data: employee.total_amount_of_data
+        total_amount_of_data: employee.total_amount_of_data,
+        number_of_events: employee.events.count
       }
     else
       {
@@ -61,7 +63,8 @@ module UserIntercomData
         last_manual_working_time_created_at: nil,
         manual_working_time_ratio: nil,
         number_of_files: nil,
-        total_amount_of_data: nil
+        total_amount_of_data: nil,
+        number_of_events: nil
       }
     end
   end
