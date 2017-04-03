@@ -4,9 +4,9 @@ module Payments
 
     attr_reader :account
 
-    def perform(event)
+    def perform(event_id)
+      event = Stripe::Event.retrieve(event_id)
       @account = Account.find_by(customer_id: event.data.object.customer)
-
       case event.type
       when 'invoice.created' then
         invoice_lines = event.data.object.lines.data.map { |line| build_invoice_line(line) }
@@ -25,10 +25,13 @@ module Payments
     private
 
     def update_invoice_status(invoice, status)
+      if invoice.next_payment_attempt.present?
+        next_attempt = Time.zone.at(invoice.next_payment_attempt).to_datetime
+      end
       account.invoices.where(invoice_id: invoice.id).update_all(
         status: status,
         attempts: invoice.attempt_count,
-        next_attempt: Time.zone.at(invoice.next_payment_attempt).to_datetime
+        next_attempt: next_attempt
       )
     end
 
@@ -37,7 +40,6 @@ module Payments
         invoice_id: invoice.id,
         amount_due: invoice.amount_due,
         attempts: invoice.attempt_count,
-        next_attempt: Time.zone.at(invoice.next_payment_attempt).to_datetime,
         date: Time.zone.at(invoice.date).to_datetime,
         status: 'pending',
         address: account.invoice_company_info,

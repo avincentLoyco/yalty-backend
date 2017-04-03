@@ -10,13 +10,16 @@ RSpec.describe Payments::StripeEventsHandler do
     create :account, :with_billing_information, customer_id: customer_id,
       subscription_id: subscription.id
   end
+
+  before { allow(Stripe::Event).to receive(:retrieve).and_return(stripe_event) }
+
   let(:invoice_id) { 'invoice_123' }
   let(:status) { 'active' }
   let(:subscription) do
     StripeSubscription.new('subscription', 123, [invoice_item], status, customer_id, 'subscription')
   end
 
-  let(:event) do
+  let(:stripe_event) do
     stripe_event = Stripe::Event.new(id: 'ev_123')
     stripe_event.type = event_type
     stripe_event.data = object
@@ -80,7 +83,7 @@ RSpec.describe Payments::StripeEventsHandler do
 
   before { allow(Stripe::Subscription).to receive(:retrieve).and_return(subscription) }
 
-  subject(:job) { described_class.perform_now(event) }
+  subject(:job) { described_class.perform_now(stripe_event.id) }
 
   context 'when event status is invoice.created' do
     let(:event_type) { 'invoice.created' }
@@ -94,7 +97,8 @@ RSpec.describe Payments::StripeEventsHandler do
   end
 
   context 'when event is invoice.payment_failed' do
-    let(:existing_invoice) { create :invoice, account: account }
+    before { account.update(invoices: [existing_invoice]) }
+    let(:existing_invoice) { create :invoice }
     let(:event_type) { 'invoice.payment_failed' }
     let(:event_object) { invoice }
     let(:invoice_id) { existing_invoice.invoice_id }
@@ -106,7 +110,8 @@ RSpec.describe Payments::StripeEventsHandler do
   end
 
   context 'when event is invoice.payment_succeeded' do
-    let(:existing_invoice) { create :invoice, account: account }
+    before { account.update(invoices: [existing_invoice]) }
+    let(:existing_invoice) { create :invoice }
     let(:event_type) { 'invoice.payment_succeeded' }
     let(:event_object) { invoice }
     let(:invoice_id) { existing_invoice.invoice_id }

@@ -6,7 +6,7 @@ module API
         before_action :request_authentication
 
         def webhook
-          ::Payments::StripeEventsHandler.perform_later(Stripe::Event.retrieve(params[:id]).as_json)
+          ::Payments::StripeEventsHandler.perform_later(params[:id])
           head 200
         end
 
