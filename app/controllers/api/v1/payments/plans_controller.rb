@@ -33,6 +33,7 @@ module API
             subscription: Account.current.subscription_id,
             plan: plan_id,
             quantity: Account.current.employees.active_at_date.count,
+            prorate: Account.current.available_modules.size > 1,
             proration_date: proration_date
           ).plan
           plan.active = true

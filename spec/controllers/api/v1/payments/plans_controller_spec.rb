@@ -93,6 +93,30 @@ RSpec.describe API::V1::Payments::PlansController, type: :controller do
         it { expect_json(expected_json) }
       end
 
+      context 'subscribe to first plan' do
+        before do
+          account.update(available_modules: [])
+          create_plan
+        end
+
+        it 'should not prorate subscription' do
+          expect(Stripe::SubscriptionItem).to have_received(:create)
+            .with(hash_including(prorate: false))
+        end
+      end
+
+      context 'subscribe to second plan' do
+        before do
+          account.update(available_modules: ['any-plan'])
+          create_plan
+        end
+
+        it 'should prorate subscription' do
+          expect(Stripe::SubscriptionItem).to have_received(:create)
+            .with(hash_including(prorate: true))
+        end
+      end
+
       context 'available_modules' do
         it { expect { create_plan }.to change { account.available_modules }.from([]).to([plan.id]) }
       end
