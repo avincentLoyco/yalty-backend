@@ -56,7 +56,8 @@ class Employee::Event < ActiveRecord::Base
   end
 
   def attributes_presence
-    required = event_attributes & Employee::AttributeDefinition.required
+    # TODO: Refactor required attributes - excluding files is temporary
+    required = event_attributes & Employee::AttributeDefinition.not_file.required
     defined = attributes_defined_in_event + already_defined_attributes
     missing = required - defined
     return if missing.empty?

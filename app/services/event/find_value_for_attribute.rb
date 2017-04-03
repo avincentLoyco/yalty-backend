@@ -42,6 +42,7 @@ class FindValueForAttribute
 
   def shasum(employee_file)
     employee_file.file.styles.keys.map(&:to_s).push('original').each_with_object({}) do |v, sha|
+      next if employee_file.find_file_path(v).empty?
       sha[:"#{v}_sha"] = Digest::SHA256.file(employee_file.find_file_path(v).first).hexdigest
     end
   end
