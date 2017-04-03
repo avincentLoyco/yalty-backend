@@ -6,11 +6,12 @@ module Payments
 
     def perform(event_id)
       event = Stripe::Event.retrieve(event_id)
+
       @account = Account.find_by(customer_id: event.data.object.customer)
+
       case event.type
       when 'invoice.created' then
-        invoice_lines = event.data.object.lines.data.map { |line| build_invoice_line(line) }
-        create_invoice(event.data.object, InvoiceLines.new(data: invoice_lines))
+        create_invoice(event.data.object)
         update_avaiable_modules(event.data.object)
       when 'invoice.payment_failed' then
         update_invoice_status(event.data.object, 'failed')
@@ -26,9 +27,10 @@ module Payments
     private
 
     def update_invoice_status(invoice, status)
-      if invoice.next_payment_attempt.present?
-        next_attempt = Time.zone.at(invoice.next_payment_attempt).to_datetime
+      next_attempt = if invoice.next_payment_attempt.present?
+        Time.zone.at(invoice.next_payment_attempt).to_datetime
       end
+
       account.invoices.where(invoice_id: invoice.id).update_all(
         status: status,
         attempts: invoice.attempt_count,
@@ -36,7 +38,12 @@ module Payments
       )
     end
 
-    def create_invoice(invoice, invoice_lines)
+    def create_invoice(invoice)
+      invoice_lines =
+        invoice.lines.data.select { |line| !line.plan.id.eql?('free-plan') }
+               .map { |line| build_invoice_line(line) }
+      return if invoice_lines.empty?
+
       account.invoices.create(
         invoice_id: invoice.id,
         amount_due: invoice.amount_due,
@@ -44,7 +51,7 @@ module Payments
         date: Time.zone.at(invoice.date).to_datetime,
         status: 'pending',
         address: account.invoice_company_info,
-        lines: invoice_lines
+        lines: InvoiceLines.new(data: invoice_lines)
       )
     end
 
@@ -76,14 +83,15 @@ module Payments
     end
 
     def update_avaiable_modules(object)
-      plans = if object.status == 'canceled'
-                []
-              elsif object.object.eql?('subscription')
-                stripe_sub = Stripe::Subscription.retrieve(object.id)
-                stripe_sub.items.map { |si| si.plan.id unless si.plan.id.eql?('free-plan') }.compact
-              end
-      return if plans.nil?
-      account.update(available_modules: plans)
+      plans =
+        if object&.status.eql?('canceled')
+          []
+        elsif object.object.eql?('subscription')
+          stripe_sub = Stripe::Subscription.retrieve(object.id)
+          stripe_sub.items.map { |si| si.plan.id unless si.plan.id.eql?('free-plan') }.compact
+        end
+
+      account.update(available_modules: plans) unless plans.nil?
     end
   end
 end
