@@ -19,11 +19,11 @@ module Payments
     private
 
     def available_modules(account)
-      Stripe::Subscription.retrieve(account.subscription_id).items.reduce([]) do |modules, sub_item|
+      Stripe::Subscription.retrieve(account.subscription_id)
+                          .items.each_with_object([]) do |sub_item, modules|
         if sub_item.plan.present? && !sub_item.plan.id.eql?('free-plan')
           modules.push(sub_item.plan.id)
         end
-        modules
       end
     end
   end

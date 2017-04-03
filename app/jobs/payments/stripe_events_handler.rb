@@ -16,7 +16,8 @@ module Payments
         update_invoice_status(event.data.object, 'failed')
       when 'invoice.payment_succeeded' then
         update_invoice_status(event.data.object, 'success')
-        # TODO add pdf generation here
+        # TODO: Add pdf generation here
+
       when 'customer.subscription.updated' then
         update_avaiable_modules(event.data.object)
       end
@@ -76,11 +77,11 @@ module Payments
 
     def update_avaiable_modules(object)
       plans = if object.status == 'canceled'
-        []
-      elsif object.object.eql?('subscription')
-        stripe_sub = Stripe::Subscription.retrieve(object.id)
-        stripe_sub.items.map { |si| si.plan.id unless si.plan.id.eql?('free-plan') }.compact
-      end
+                []
+              elsif object.object.eql?('subscription')
+                stripe_sub = Stripe::Subscription.retrieve(object.id)
+                stripe_sub.items.map { |si| si.plan.id unless si.plan.id.eql?('free-plan') }.compact
+              end
       return if plans.nil?
       account.update(available_modules: plans)
     end

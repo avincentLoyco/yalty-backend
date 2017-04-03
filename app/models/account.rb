@@ -50,7 +50,7 @@ class Account < ActiveRecord::Base
   after_create :create_reset_presence_policy_and_working_place!
   after_create :create_stripe_customer_with_subscription, if: :stripe_enabled?
   after_update :update_stripe_customer_description,
-               if: -> { stripe_enabled? && (subdomain_changed? || company_name_changed?) }
+    if: -> { stripe_enabled? && (subdomain_changed? || company_name_changed?) }
 
   def self.current=(account)
     RequestStore.write(:current_account, account)

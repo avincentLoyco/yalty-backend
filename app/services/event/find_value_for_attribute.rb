@@ -10,7 +10,8 @@ class FindValueForAttribute
   end
 
   def call
-    return attribute[:value] unless attribute_type && attribute_type.eql?('File') && attribute[:value].present?
+    return attribute[:value] unless attribute_type && attribute_type.eql?('File') &&
+        attribute[:value].present?
     employee_file = assign_file_to_employee_file!(attribute[:value])
     form_employee_attribute_version(employee_file)
   end

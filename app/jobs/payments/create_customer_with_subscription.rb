@@ -25,8 +25,7 @@ module Payments
         Stripe::Customer.create(
           description: account.stripe_description,
           metadata: { account_id: account.id }
-        ).id
-      )
+        ).id)
     end
 
     def create_subscription(account)

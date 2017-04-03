@@ -33,7 +33,7 @@ class Employee < ActiveRecord::Base
   end)
 
   scope(:active_at_date, lambda do |date = Time.zone.now|
-    where("""
+    where("
       'hired' = (
         SELECT employee_events.event_type FROM employee_events
         WHERE employee_events.effective_at <= ?::date
@@ -42,7 +42,7 @@ class Employee < ActiveRecord::Base
         ORDER BY employee_events.effective_at DESC
         LIMIT 1
       )
-    """, date)
+    ", date)
   end)
 
   scope(:active_user_by_account, lambda do |account_id|

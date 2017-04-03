@@ -23,8 +23,8 @@ module Payments
     private
 
     def accounts_with_quantity_to_update
-      (events_tomorrow | events_recently_updated).reduce([]) do |accounts, event|
-        accounts.push(event.account) if !accounts.include?(event.account)
+      (events_tomorrow | events_recently_updated).each_with_object([]) do |event, accounts|
+        accounts.push(event.account) unless accounts.include?(event.account)
         accounts
       end
     end
