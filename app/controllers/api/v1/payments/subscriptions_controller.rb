@@ -64,6 +64,11 @@ module API
         def default_card
           customer.sources.find { |src| src.default = src.id.eql?(customer.default_source) }
         end
+
+        def stripe_error(exception)
+          error = StripeError.new(type: 'subscription', field: nil, message: exception.message)
+          render json: ::Api::V1::StripeErrorRepresenter.new(error).complete, status: 502
+        end
       end
     end
   end

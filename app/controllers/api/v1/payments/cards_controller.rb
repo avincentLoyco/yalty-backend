@@ -41,6 +41,22 @@ module API
         def resource_representer
           ::Api::V1::Payments::CardRepresenter
         end
+
+        def stripe_error(exception)
+          error = StripeError.new(
+            type: 'card',
+            field: error_field,
+            message: exception.message,
+            code: exception.try(:code) || 'proxy_gateway_error'
+          )
+          render json: ::Api::V1::StripeErrorRepresenter.new(error).complete, status: 502
+        end
+
+        def error_field
+          if params.key?(:token) then 'token'
+          elsif params.key?(:id) then 'id'
+          end
+        end
       end
     end
   end

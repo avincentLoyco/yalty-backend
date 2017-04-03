@@ -17,6 +17,10 @@ module API
             password == ENV['STRIPE_WEBHOOK_PASSWORD']
           end
         end
+
+        def stripe_error(message)
+          head 502
+        end
       end
     end
   end

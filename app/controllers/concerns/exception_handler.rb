@@ -14,24 +14,38 @@ module ExceptionHandler
     rescue_from InvalidPasswordError, with: :invalid_password_error
     rescue_from InvalidResourcesError, with: :invalid_resources_error
     rescue_from CanCan::AccessDenied, with: :forbidden_error
-    rescue_from CustomerNotCreated, with: :stripe_api_error
     rescue_from(
+      Stripe::CardError,
       Stripe::InvalidRequestError,
       Stripe::AuthenticationError,
       Stripe::PermissionError,
       Stripe::RateLimitError,
       Stripe::APIError
     ) do |exception|
-      stripe_api_error(exception)
+      stripe_error(exception)
     end
+    rescue_from(
+      CustomerNotCreated,
+      StripeError,
+    ) do |exception|
+      render_stripe_error(exception)
+    end
+  end
+
+  protected
+
+  def stripe_error(exception)
+    raise NotImplementedError, "#{__method__} must be implemented in #{self.class.name}"
+  end
+
+  def render_stripe_error(exception)
+    render json: ::Api::V1::StripeErrorRepresenter.new(exception).complete, status: 502
   end
 
   private
 
-  def stripe_api_error(exception = nil)
-    message = exception.try(:message) ? exception.message : 'Stripe API error'
-    render json:
-      ::Api::V1::ErrorsRepresenter.new(nil, message: message).complete, status: 502
+  def stripe_error(exception)
+    render json: ::Api::V1::StripeErrorRepresenter.new(exception).complete, status: 502
   end
 
   def render_no_content

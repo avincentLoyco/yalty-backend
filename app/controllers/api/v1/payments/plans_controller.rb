@@ -52,11 +52,13 @@ module API
         end
 
         def find_subscription_item(plan_id)
-          Stripe::SubscriptionItem
+          subscription_item = Stripe::SubscriptionItem
             .list(subscription: Account.current.subscription_id)
             .find do |subscription_item|
               subscription_item.plan.id.eql?(plan_id)
             end
+          subscription_item ||
+            raise(StripeError.new(type: 'plan', field: 'id', message: "No such plan: #{plan_id}"))
         end
 
         def add_to_available_modules(plan_id)
@@ -77,6 +79,11 @@ module API
           @current_period_end ||= Time.zone.at(
             Stripe::Subscription.retrieve(Account.current.subscription_id).current_period_end
           )
+        end
+
+        def stripe_error(exception)
+          error = StripeError.new(type: 'plan', field: 'id', message: exception.message)
+          render json: ::Api::V1::StripeErrorRepresenter.new(error).complete, status: 502
         end
       end
     end

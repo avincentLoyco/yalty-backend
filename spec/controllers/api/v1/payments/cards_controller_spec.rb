@@ -8,15 +8,17 @@ RSpec.describe API::V1::Payments::CardsController, type: :controller do
 
   shared_examples 'Stripe API errors' do
     context 'when API error' do
-      let(:stripe_error) { Stripe::APIError }
+      let(:stripe_error) { Stripe::APIError.new('message') }
 
       it { is_expected.to have_http_status(502) }
+      it { expect(JSON.parse(response.body)['errors'].first['type']).to eq('card') }
     end
 
     context 'when invalid resource' do
       let(:stripe_error) { Stripe::InvalidRequestError.new('message', 'something') }
 
       it { is_expected.to have_http_status(502) }
+      it { expect(JSON.parse(response.body)['errors'].first['type']).to eq('card') }
     end
   end
 
@@ -24,7 +26,7 @@ RSpec.describe API::V1::Payments::CardsController, type: :controller do
     let(:customer_id) { nil }
 
     it { is_expected.to have_http_status(502) }
-    it { expect_json(regex('customer_id is empty')) }
+    it { expect_json(regex('Customer is not created')) }
   end
 
   context 'GET #index' do

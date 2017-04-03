@@ -44,6 +44,7 @@ RSpec.describe API::V1::Payments::PlansController, type: :controller do
       end
 
       it { expect(response.status).to eq(502) }
+      it { expect(JSON.parse(response.body)['errors'].first['type']).to eq('plan') }
     end
 
     context 'when there is no customer_id' do
@@ -51,7 +52,8 @@ RSpec.describe API::V1::Payments::PlansController, type: :controller do
       before { shared_subject }
 
       it { expect(response.status).to eq(502) }
-      it { expect_json(regex('customer_id is empty')) }
+      it { expect(JSON.parse(response.body)['errors'].first['type']).to eq('account') }
+      it { expect_json(regex('Customer is not created')) }
     end
 
     context 'when User is administrator' do

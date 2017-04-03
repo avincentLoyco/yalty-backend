@@ -14,7 +14,7 @@ module API
         end
 
         def customer_exist
-          raise CustomerNotCreated, 'customer_id is empty' if Account.current.customer_id.nil?
+          raise CustomerNotCreated if Account.current.customer_id.nil?
         end
 
         def authorize_payments
