@@ -26,15 +26,21 @@ module API
         private
 
         def create_plan(plan_id)
-          plan = Stripe::SubscriptionItem.create(
+          plan = Stripe::SubscriptionItem.create(plan_creation_params(plan_id)).plan
+          plan.active = true
+          plan
+        end
+
+        def plan_creation_params(plan_id)
+          prorate = Account.current.available_modules.size > 1
+          creation_params = {
             subscription: Account.current.subscription_id,
             plan: plan_id,
             quantity: Account.current.employees.active_at_date.count,
-            prorate: Account.current.available_modules.size > 1,
-            proration_date: proration_date(Time.zone.today)
-          ).plan
-          plan.active = true
-          plan
+            prorate: prorate
+          }
+          return creation_params unless prorate
+          creation_params.merge(proration_date: proration_date(Time.zone.today))
         end
 
         def delete_subscription_item(plan_id)

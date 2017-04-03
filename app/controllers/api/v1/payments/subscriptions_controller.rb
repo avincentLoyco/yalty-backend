@@ -21,20 +21,34 @@ module API
 
         private
 
-        def upcoming_invoice
-          Stripe::Invoice.upcoming(customer: Account.current.customer_id)
+        def subscription_json
+          ::Api::V1::Payments::SubscriptionsRepresenter.new(
+            subscription,
+            plans,
+            upcoming_invoice,
+            default_card,
+            Account.current
+          ).complete
         end
 
-        def subscription
-          Stripe::Subscription.retrieve(Account.current.subscription_id)
+        def upcoming_invoice
+          Stripe::Invoice.upcoming(customer: Account.current.customer_id)
         end
 
         def plans
           Stripe::Plan.list.select do |plan|
             next if plan.id.eql?('free-plan')
-            plan.active = Account.current.available_modules.include?(plan.id)
+            plan.active = subscription_plans.include?(plan.id)
             plan
           end
+        end
+
+        def subscription_plans
+          @subscription_plans ||= subscription.items.map { |si| si.plan.id }
+        end
+
+        def subscription
+          @subscription ||= Stripe::Subscription.retrieve(Account.current.subscription_id)
         end
 
         def update_company_info!(attributes)
@@ -49,16 +63,6 @@ module API
 
         def default_card
           customer.sources.find { |src| src.default = src.id.eql?(customer.default_source) }
-        end
-
-        def subscription_json
-          ::Api::V1::Payments::SubscriptionsRepresenter.new(
-            subscription,
-            plans,
-            upcoming_invoice,
-            default_card,
-            Account.current
-          ).complete
         end
       end
     end
