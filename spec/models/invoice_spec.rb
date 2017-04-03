@@ -7,6 +7,12 @@ RSpec.describe Invoice, type: :model do
   it { is_expected.to have_db_column(:attempts).of_type(:integer) }
   it { is_expected.to have_db_column(:next_attempt).of_type(:datetime) }
   it { is_expected.to have_db_column(:date).of_type(:datetime) }
+  it { is_expected.to have_db_column(:receipt_number).of_type(:integer) }
+  it { is_expected.to have_db_column(:starting_balance).of_type(:integer) }
+  it { is_expected.to have_db_column(:subtotal).of_type(:integer) }
+  it { is_expected.to have_db_column(:tax).of_type(:integer) }
+  it { is_expected.to have_db_column(:tax_percent).of_type(:decimal) }
+  it { is_expected.to have_db_column(:total).of_type(:integer) }
   it { is_expected.to have_db_column(:address) }
   it { is_expected.to have_db_column(:lines) }
   it { is_expected.to respond_to(:account) }

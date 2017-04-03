@@ -20,6 +20,12 @@ RSpec.describe API::V1::Payments::InvoicesController, type: :controller do
           amount_due: invoice.amount_due,
           date: invoice.date.as_json,
           prorate_amount: invoice.lines.data.first.amount,
+          receipt_number: nil,
+          starting_balance: nil,
+          subtotal: nil,
+          tax: nil,
+          tax_percent: nil,
+          total: nil,
           line_items:  [{
             id: invoice.lines.data.first.id,
             amount: invoice.lines.data.first.amount,

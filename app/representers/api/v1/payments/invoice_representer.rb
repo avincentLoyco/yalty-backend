@@ -7,6 +7,12 @@ module Api
             id: resource.try(:id),
             amount_due: resource.amount_due,
             date: resource.date.is_a?(Integer) ? Time.zone.at(resource.date) : resource.date,
+            receipt_number: resource.receipt_number,
+            starting_balance: resource.starting_balance,
+            subtotal: resource.subtotal,
+            tax: resource.tax,
+            tax_percent: resource.tax_percent,
+            total: resource.total,
             prorate_amount: prorate_amount,
             line_items: line_items_json
           }

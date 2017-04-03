@@ -45,6 +45,12 @@ RSpec.describe Payments::StripeEventsHandler do
       lines: invoice_items,
       customer: customer_id,
       status: status,
+      receipt_number: 1234,
+      tax: 0,
+      tax_percent: 0,
+      starting_balance: 0,
+      subtotal: 0,
+      total: 0,
       subscription: subscription.id
     )
   end
