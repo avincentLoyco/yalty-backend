@@ -16,7 +16,7 @@ RSpec.describe Payments::StripeEventsHandler do
   let(:invoice_id) { 'invoice_123' }
   let(:status) { 'active' }
   let(:subscription) do
-    StripeSubscription.new('subscription', 123, [invoice_item], status, customer_id, 'subscription')
+    StripeSubscription.new('subscription', 123, invoice_items, status, customer_id, 'subscription')
   end
 
   let(:stripe_event) do
@@ -42,22 +42,37 @@ RSpec.describe Payments::StripeEventsHandler do
       date: 1_488_967_394,
       attempt_count: 3,
       next_payment_attempt: 1_490_194_636,
-      lines: list_object,
+      lines: invoice_items,
       customer: customer_id,
       status: status,
       subscription: subscription.id
     )
   end
 
-  let(:list_object) do
-    stripe_list_object = Stripe::ListObject.new
-    stripe_list_object.object = 'list'
-    stripe_list_object.data = [invoice_item]
-    stripe_list_object
+  let(:invoice_items) do
+    stripe_invoice_items = Stripe::ListObject.new
+    stripe_invoice_items.object = 'list'
+    stripe_invoice_items.data = [invoice_item_free, invoice_item_payed]
+    stripe_invoice_items
   end
 
-  let(:invoice_item) do
+  let(:invoice_item_free) do
     invoice_item = Stripe::StripeObject.new(id: 'invoice_item1')
+    invoice_item.amount = 0
+    invoice_item.currency = 'chf'
+    invoice_item.object = 'line_item'
+    invoice_item.period = { start: 1_488_553_442, end: 1_491_231_842 }
+    invoice_item.proration = true
+    invoice_item.quantity = 3
+    invoice_item.subscription = 'subscription'
+    invoice_item.subscription_item = 'subscription_item1'
+    invoice_item.type = 'subscription'
+    invoice_item.plan = free_plan
+    invoice_item
+  end
+
+  let(:invoice_item_payed) do
+    invoice_item = Stripe::StripeObject.new(id: 'invoice_item2')
     invoice_item.amount = 666
     invoice_item.currency = 'chf'
     invoice_item.object = 'line_item'
@@ -67,13 +82,23 @@ RSpec.describe Payments::StripeEventsHandler do
     invoice_item.subscription = 'subscription'
     invoice_item.subscription_item = 'subscription_item1'
     invoice_item.type = 'subscription'
-    invoice_item.plan = plan
+    invoice_item.plan = payed_plan
     invoice_item
   end
 
-  let(:plan) do
-    plan = Stripe::Plan.new(id: 'first_plan')
-    plan.name = 'First Plan'
+  let(:free_plan) do
+    plan = Stripe::Plan.new(id: 'free-plan')
+    plan.name = 'Free Plan'
+    plan.amount = 0
+    plan.currency = 'chf'
+    plan.interval = 'month'
+    plan.interval_count = 3
+    plan
+  end
+
+  let(:payed_plan) do
+    plan = Stripe::Plan.new(id: 'payed-plan')
+    plan.name = 'Payed Plan'
     plan.amount = 4
     plan.currency = 'chf'
     plan.interval = 'month'
@@ -93,6 +118,18 @@ RSpec.describe Payments::StripeEventsHandler do
     context 'change invoice status to pending' do
       before { job }
       it { expect(account.invoices.last.status).to eq('pending') }
+    end
+
+    context 'should create invoice if not only free-plan is subscribed' do
+      it { expect { job }.to change { account.invoices.count } }
+    end
+
+    context 'should not create invoice if only free-plan is subscribed' do
+      before do
+        invoice_items.data = [invoice_item_free]
+      end
+
+      it { expect { job }.to_not change { account.invoices.count } }
     end
   end
 
@@ -121,7 +158,7 @@ RSpec.describe Payments::StripeEventsHandler do
       it { expect(account.invoices.find_by(invoice_id: invoice_id).status).to eq('success') }
     end
 
-    it 'generates pdf file'
+    xit 'generates pdf file'
   end
 
   context 'when event is customer.subscription.updated' do
