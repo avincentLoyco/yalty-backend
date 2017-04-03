@@ -1,5 +1,5 @@
 class EmployeeWorkingPlace < ActiveRecord::Base
-  include ValidateEffectiveAtBeforeHired
+  include ValidateEffectiveAtBetweenHiredAndContractEndDates
 
   attr_accessor :effective_till
 
@@ -8,4 +8,9 @@ class EmployeeWorkingPlace < ActiveRecord::Base
 
   validates :employee, :working_place, :effective_at, presence: true
   validates :effective_at, uniqueness: { scope: [:employee_id, :working_place_id] }
+
+  scope :with_reset, -> { joins(:working_place).where(working_places: { reset: true }) }
+  scope :not_reset, -> { joins(:working_place).where(working_places: { reset: false }) }
+
+  alias related_resource working_place
 end

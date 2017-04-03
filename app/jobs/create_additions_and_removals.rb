@@ -33,7 +33,7 @@ class CreateAdditionsAndRemovals < ActiveJob::Base
     AND policies.effective_at = grouped.maxeffective
     AND policies.employee_id = grouped.employee_id
     WHERE top.start_day = '#{Time.zone.today.day}'
-    AND top.start_month = '#{Time.zone.today.month}';
+    AND top.start_month = '#{Time.zone.today.month}'
     "
   end
 end

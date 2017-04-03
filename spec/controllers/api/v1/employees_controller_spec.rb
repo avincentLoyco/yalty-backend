@@ -14,15 +14,21 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
   }
 
   context 'GET #show' do
-    let(:employee) { create(:employee_with_working_place, :with_attributes, account: account) }
-    let(:employee_working_place) { employee.first_employee_working_place }
-    let(:first_working_place) { employee_working_place.working_place }
-    let(:future_working_place) { future_employee_working_place.working_place }
+    let!(:employee) { create(:employee_with_working_place, :with_attributes, account: account) }
+    let!(:employee_working_place) { employee.first_employee_working_place }
+    let!(:first_working_place) { employee_working_place.working_place }
+    let!(:future_working_place) { future_employee_working_place.working_place }
     let!(:future_employee_working_place) do
       create(:employee_working_place, employee: employee, effective_at: Time.now + 1.month)
     end
 
     subject { get :show, id: employee.id }
+
+    context 'when employee does not have working place' do
+      before { EmployeeWorkingPlace.destroy_all }
+
+      it { is_expected.to have_http_status(200) }
+    end
 
     context 'with valid data' do
       it { is_expected.to have_http_status(200) }
@@ -42,8 +48,37 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
           expect_json(
             civil_status: 'single',
             civil_status_date: nil,
-            hired_date: employee.hired_date.to_s
+            hired_date: employee.hired_date.to_s,
+            contract_end_date: nil
           )
+        end
+      end
+
+      context 'when employee has contract end' do
+        before do
+          create(:employee_event,
+            event_type: 'contract_end', employee: employee, effective_at: contract_end_date
+          )
+          subject
+        end
+
+        context 'when contract end in the future' do
+          let(:contract_end_date) { 1.months.since }
+
+          it do
+            expect_json('working_place',
+              id: first_working_place.id,
+              type: 'working_place',
+              effective_till: (contract_end_date - 1.day).to_date.to_s,
+              assignation_id: employee_working_place.id
+            )
+          end
+        end
+
+        context 'when contract end today' do
+          let(:contract_end_date) { Time.zone.today - 1.day }
+
+          it { expect_json('working_place', {}) }
         end
       end
 
@@ -237,7 +272,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
             )
           }
           it { expect(employee_body['id']).to eql(future_employee.id) }
-          it { expect(employee_body['already_hired']).to eql true }
+          it { expect(employee_body['hiring_status']).to eql false }
         end
       end
 
@@ -258,7 +293,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
             )
           }
           it { expect(employee_body['id']).to eql(future_employee.id) }
-          it { expect(employee_body['already_hired']).to eql false }
+          it { expect(employee_body['hiring_status']).to eql false }
         end
       end
     end

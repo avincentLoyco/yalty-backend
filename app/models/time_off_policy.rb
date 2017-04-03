@@ -4,21 +4,18 @@ class TimeOffPolicy < ActiveRecord::Base
   belongs_to :time_off_category
   has_many :employee_time_off_policies
   has_many :employees, through: :employee_time_off_policies
-  validate :correct_dates
-  validates :start_day,
-    :start_month,
-    :policy_type,
-    :time_off_category,
-    :name,
-    presence: true
+  validate :correct_dates, unless: :reset?
+  validates :time_off_category, :name, presence: true
   validates :amount, presence: true, if: "policy_type == 'balancer'"
   validates :amount, absence: true, if: "policy_type == 'counter'"
-  validates :policy_type, inclusion: { in: %w(counter balancer) }
+  validates :policy_type, presence: true, inclusion: { in: %w(counter balancer) }, unless: :reset?
   validates :years_to_effect,
     numericality: { greater_than_or_equal_to: 0 }, if: 'years_to_effect.present?'
   validates :start_day,
     :start_month,
-    numericality: { greater_than_or_equal_to: 1 }
+    numericality: { greater_than_or_equal_to: 1 },
+    presence: true,
+    unless: :reset?
   validates :end_day,
     :end_month,
     numericality: { greater_than_or_equal_to: 1 },
@@ -27,6 +24,9 @@ class TimeOffPolicy < ActiveRecord::Base
   validate :no_end_dates, if: "policy_type == 'counter'"
   validate :end_date_after_start_date, if: [:start_day, :start_month, :end_day, :end_month]
   validate :no_end_date_when_years_to_effect_nil, if: [:end_day, :end_month]
+
+  scope :not_reset, -> { where(reset: false) }
+  scope :reset_policies, -> { where(reset: true) }
 
   scope(:for_account, lambda do |account_id|
     joins(:time_off_category).where(time_off_categories: { account_id: account_id })

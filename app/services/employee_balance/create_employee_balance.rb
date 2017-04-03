@@ -97,7 +97,8 @@ class CreateEmployeeBalance
   end
 
   def calculate_amount
-    return unless employee_balance.balance_credit_additions.present? || counter_addition? ||
+    return unless employee_balance.reset_balance ||
+        employee_balance.balance_credit_additions.present? || counter_addition? ||
         balance_removal.present?
     if balance_removal
       balance_removal.calculate_removal_amount

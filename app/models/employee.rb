@@ -50,6 +50,13 @@ class Employee < ActiveRecord::Base
     )
   end)
 
+  def last_event_for(date = Time.zone.today)
+    events
+      .where(event_type: %w(hired contract_end))
+      .where('effective_at <= ?', date)
+      .order(:effective_at).last
+  end
+
   def self.active_employee_ratio_per_account(account_id)
     active_employee_count = Employee.active_by_account(account_id).count
     return if active_employee_count.zero?
@@ -72,12 +79,49 @@ class Employee < ActiveRecord::Base
     last_civil_status_event_for(date).try(:effective_at)
   end
 
-  def first_employee_event
-    events.find_by(event_type: 'hired') || events.find { |event| event.event_type.eql?('hired' ) }
+  def hired_date
+    hired_date_for(Time.zone.today)
   end
 
-  def hired_date
-    first_employee_event.try(:effective_at)
+  def hired_date_for(date)
+    date_period = contract_periods.find do |period|
+      period.include?(date.to_date) || date.to_date < period.first
+    end
+    date_period ||= contract_periods.last
+    date_period.first
+  end
+
+  def contract_end_date
+    contract_end_for(hired_date)
+  end
+
+  def contract_end_for(date)
+    date_period = contract_periods.reverse.find do |period|
+      period.include?(date.to_date) || date.to_date > period.last
+    end
+    date_period ||= contract_periods.first
+    date_period.last.is_a?(DateTime::Infinity) ? nil : date_period.last
+  end
+
+  def contract_periods
+    dates =
+      if persisted?
+        events.where(event_type: %w(hired contract_end))
+              .reorder('employee_events.effective_at ASC')
+              .pluck(:effective_at)
+      else
+        events.select { |e| e.event_type == 'hired' }.map(&:effective_at)
+      end
+
+    dates.each_slice(2)
+         .map { |period| period.first..(period.size > 1 ? period.last : DateTime::Infinity.new) }
+  end
+
+  def first_employee_event
+    events
+      .where(event_type: 'hired')
+      .reorder('employee_events.effective_at DESC')
+      .first
   end
 
   def active_policy_in_category_at_date(category_id, date = Time.zone.today)
@@ -122,6 +166,18 @@ class Employee < ActiveRecord::Base
     employee_attribute_versions.where("data -> 'attribute_type' = 'File'").count
   end
 
+  def first_upcoming_contract_end(date = Time.zone.today)
+    events
+      .where(event_type: 'contract_end')
+      .where('effective_at > ?', date)
+      .order(:effective_at)
+      .first
+  end
+
+  def can_be_hired?
+    !contract_periods.last.last.is_a?(DateTime::Infinity)
+  end
+
   private
 
   def employee_file_ids
@@ -138,7 +194,7 @@ class Employee < ActiveRecord::Base
   def last_civil_status_event_for(date)
     @last_civil_status_event_for ||=
       events
-      .where('event_type IN (?) AND effective_at <= ?',  CIVIL_STATUS.keys, date)
+      .where('event_type IN (?) AND effective_at <= ?', CIVIL_STATUS.keys, date)
       .order(:effective_at).last
   end
 end

@@ -75,7 +75,7 @@ RSpec.describe ManageEmployeeBalanceAdditions, type: :service do
           context 'and years to effect eql 0' do
             let(:years) { 0 }
             let(:expected_dates) do
-              ['1/4/2013', '1/4/2014', '1/4/2015', '1/4/2016', '1/4/2017', '1/4/2018'].map &:to_date
+              ['1/4/2013', '1/4/2014', '1/4/2015', '1/4/2016', '1/4/2017', '1/4/2018'].map(&:to_date)
             end
 
             it { expect { subject }.to change { Employee::Balance.additions.count }.by(6) }
@@ -142,58 +142,116 @@ RSpec.describe ManageEmployeeBalanceAdditions, type: :service do
             end
 
             context 'and there is an employee time off policy after effective at' do
-              let!(:next_employee_time_off_policy) do
-                create(:employee_time_off_policy,
-                  employee: employee, effective_at: Time.now - 2.years + 1.day,
-                  time_off_policy: policy,
-                )
-              end
-
-              context 'in the past' do
-                it { expect { subject }.to change { Employee::Balance.additions.count }.by(6) }
-                it { expect { subject }.to change { Employee::Balance.removals.count }.by(6) }
-
-                it 'has valid additions effective at' do
-                  subject
-
-                  expect(Employee::Balance.additions.pluck(:effective_at).map(&:to_date))
-                    .to contain_exactly('1/1/2013'.to_date, '1/1/2014'.to_date, '1/1/2015'.to_date, '1/1/2016'.to_date,
-                    '1/1/2017'.to_date, '1/1/2018'.to_date)
+              context 'and it does not have reset policy assigned' do
+                let!(:next_employee_time_off_policy) do
+                  create(:employee_time_off_policy,
+                    employee: employee, effective_at: Time.now - 2.years + 1.day,
+                    time_off_policy: policy,
+                  )
                 end
 
-                it 'has valid removal effective at' do
-                  subject
+                context 'in the past' do
+                  it { expect { subject }.to change { Employee::Balance.additions.count }.by(6) }
+                  it { expect { subject }.to change { Employee::Balance.removals.count }.by(6) }
 
-                  expect(Employee::Balance.removals.pluck(:effective_at).map(&:to_date))
-                    .to contain_exactly('1/4/2014'.to_date, '1/4/2015'.to_date, '1/4/2016'.to_date,
-                    '1/4/2017'.to_date, '1/4/2018'.to_date, '1/4/2019'.to_date)
+                  it 'has valid additions effective at' do
+                    subject
+
+                    expect(Employee::Balance.additions.pluck(:effective_at).map(&:to_date))
+                      .to contain_exactly(
+                        '1/1/2013'.to_date, '1/1/2014'.to_date, '1/1/2015'.to_date,
+                        '1/1/2016'.to_date, '1/1/2017'.to_date, '1/1/2018'.to_date
+                      )
+                  end
+
+                  it 'has valid removal effective at' do
+                    subject
+
+                    expect(Employee::Balance.removals.pluck(:effective_at).map(&:to_date))
+                      .to contain_exactly(
+                        '1/4/2014'.to_date, '1/4/2015'.to_date, '1/4/2016'.to_date,
+                        '1/4/2017'.to_date, '1/4/2018'.to_date, '1/4/2019'.to_date
+                      )
+                  end
+                end
+
+                context 'in the future' do
+                  before do
+                    next_employee_time_off_policy.update!(effective_at: Time.now + 1.year + 1.day)
+                  end
+
+                  it { expect { subject }.to change { Employee::Balance.additions.count }.by(6) }
+                  it { expect { subject }.to change { Employee::Balance.removals.count }.by(6) }
+
+                  it 'has valid additions effective at' do
+                    subject
+
+                    expect(Employee::Balance.additions.pluck(:effective_at).map(&:to_date))
+                      .to contain_exactly(
+                        '1/1/2013'.to_date, '1/1/2014'.to_date, '1/1/2015'.to_date,
+                        '1/1/2016'.to_date, '1/1/2017'.to_date, '1/1/2018'.to_date
+                      )
+                  end
+
+                  it 'has valid removal effective at' do
+                    subject
+
+                    expect(Employee::Balance.removals.pluck(:effective_at).map(&:to_date))
+                      .to match_array(
+                        [
+                          '1/4/2014', '1/4/2015', '1/4/2016', '1/4/2017', '1/4/2018', '1/4/2019'
+                        ].map(&:to_date))
+                  end
                 end
               end
 
-              context 'in the future' do
+              context 'and it has reset policy assigned' do
                 before do
-                  next_employee_time_off_policy.update!(effective_at: Time.now + 1.year + 1.day)
+                  resource
+                  create(:employee_event,
+                    employee: employee, event_type: 'contract_end', effective_at: 1.week.ago)
                 end
 
-                it { expect { subject }.to change { Employee::Balance.additions.count }.by(6) }
-                it { expect { subject }.to change { Employee::Balance.removals.count }.by(6) }
-
-                it 'has valid additions effective at' do
-                  subject
-
-                  expect(Employee::Balance.additions.pluck(:effective_at).map(&:to_date))
-                    .to contain_exactly(
-                      '1/1/2013'.to_date, '1/1/2014'.to_date, '1/1/2015'.to_date, '1/1/2016'.to_date,
-                      '1/1/2017'.to_date, '1/1/2018'.to_date
-                    )
+                let(:policy_removal) do
+                  EmployeeTimeOffPolicy.with_reset.first.policy_assignation_balance
                 end
 
-                it 'has valid removal effective at' do
-                  subject
+                context 'and there no rehired date with new etop after it' do
+                  before { subject }
 
-                  expect(Employee::Balance.removals.pluck(:effective_at).map(&:to_date))
-                    .to match_array(
-                      ['1/4/2014', '1/4/2015', '1/4/2016', '1/4/2017', '1/4/2018', '1/4/2019'].map(&:to_date))
+                  it 'has valid balances effective at' do
+                    expect(Employee::Balance.order(:effective_at).pluck(:effective_at).map(&:to_date))
+                      .to match_array(
+                        %w(
+                            1/1/2013 31/12/2013 1/1/2014 1/4/2014 31/12/2014 1/1/2015 1/4/2015
+                            26/12/2015
+                          ).map(&:to_date)
+                      )
+                  end
+
+                  it { expect(policy_removal.balance_credit_additions.size).to eq 1 }
+                end
+
+                context 'and there is rehired date with the new etop after it' do
+                  before do
+                    create(:employee_event,
+                      employee: employee, event_type: 'hired', effective_at: 1.year.since + 1.week)
+                    create(:employee_time_off_policy,
+                      employee: employee, time_off_policy: policy, effective_at: 1.year.since + 1.week)
+                    subject
+                  end
+
+                  it 'has valid balances effective at' do
+                    expect(Employee::Balance.order(:effective_at).pluck(:effective_at).map(&:to_date))
+                      .to match_array(
+                        %w(
+                            1/1/2013 31/12/2013 1/1/2014 1/4/2014 31/12/2014 1/1/2015 1/4/2015
+                            26/12/2015 8/1/2017 31/12/2017 1/1/2018 1/4/2018 1/4/2019
+                          ).map(&:to_date)
+                      )
+                  end
+
+                  it { expect(policy_removal.balance_credit_additions.size).to eq 1 }
                 end
               end
             end

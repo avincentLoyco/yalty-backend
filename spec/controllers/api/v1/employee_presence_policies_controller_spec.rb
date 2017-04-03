@@ -9,6 +9,12 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
   let(:employee) { create(:employee, account: Account.current) }
   let(:presence_policy_id) { presence_policy.id }
 
+  describe 'reset join tables behaviour' do
+    include_context 'shared_context_join_tables_controller',
+      join_table: :employee_presence_policy,
+      resource: :presence_policy
+  end
+
   describe 'GET #index' do
     subject { get :index, presence_policy_id: presence_policy.id }
 
@@ -629,6 +635,25 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
         it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
 
         it { is_expected.to have_http_status(204) }
+      end
+
+      context 'when there is contract_end' do
+        let!(:contract_end) do
+          create(:employee_event, employee: employee, effective_at: 3.months.from_now,
+            event_type: 'contract_end')
+        end
+
+        context 'only one employee_presence_policy' do
+          it { expect { subject }.to change(EmployeePresencePolicy, :count).by(-2) }
+        end
+
+        context 'there are employee_presence_policies left' do
+          let!(:employee_presence_policy_2) do
+            create(:employee_presence_policy, employee: employee, effective_at: Time.zone.now)
+          end
+
+          it { expect { subject }.to change(EmployeePresencePolicy, :count).by(-1) }
+        end
       end
     end
 

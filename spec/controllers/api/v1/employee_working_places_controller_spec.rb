@@ -14,6 +14,12 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
     create(:employee_working_place, effective_at: 5.years.ago, working_place: working_place)
   end
 
+  describe 'reset join tables behaviour' do
+    include_context 'shared_context_join_tables_controller',
+      join_table: :employee_working_place,
+      resource: :working_place
+  end
+
   describe 'get #INDEX' do
     let!(:working_place_related) do
       create(:employee_working_place,
@@ -32,11 +38,11 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
 
       it { is_expected.to have_http_status(200) }
 
-      context 'response body' do
-        before { subject }
+      it 'has valid response body response body' do
+        subject
 
-        it { expect(response.body).to include(employee_working_place.id, employee_related.id) }
-        it { expect(response.body).to_not include(working_place_related.id) }
+        expect(response.body).to include(employee_working_place.id, employee_related.id)
+        expect(response.body).to_not include(working_place_related.id)
       end
     end
 
@@ -607,7 +613,7 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
         let!(:balances) { TimeOff.all.map(&:employee_balance) }
 
         context 'when previous employee working places has the same holiday policy' do
-          before { WorkingPlace.update_all(holiday_policy_id: holiday_policy.id) }
+          before { WorkingPlace.not_reset.update_all(holiday_policy_id: holiday_policy.id) }
 
           it { expect { subject }.to_not change { balances.first.reload.being_processed } }
           it { expect { subject }.to_not change { balances.last.reload.being_processed } }
@@ -617,7 +623,7 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
         end
 
         context 'when previous employee working place has different holiday policy' do
-          before { WorkingPlace.last.update!(holiday_policy_id: holiday_policy.id) }
+          before { WorkingPlace.not_reset.last.update!(holiday_policy_id: holiday_policy.id) }
 
           context 'and there are no employee balances with time offs assigned' do
             before { Employee::Balance.destroy_all }
@@ -664,6 +670,27 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
 
           expect(response.body).to include 'You are not authorized to access this page.'
         end
+      end
+    end
+
+    context 'when there is contract_end' do
+      let!(:contract_end) do
+        create(:employee_event, employee: employee, effective_at: 3.months.from_now,
+          event_type: 'contract_end')
+      end
+
+      context 'only one employee_working_place' do
+        before { employee.reload.employee_working_places.order(:effective_at).first.destroy }
+
+        it { expect { subject }.to change(EmployeeWorkingPlace, :count).by(-2) }
+      end
+
+      context 'there are employee_working_places left' do
+        let!(:employee_working_place_2) do
+          create(:employee_working_place, employee: employee, effective_at: Time.zone.now)
+        end
+
+        it { expect { subject }.to change(EmployeeWorkingPlace, :count).by(-1) }
       end
     end
   end

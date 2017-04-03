@@ -2,6 +2,7 @@ require 'rails_helper'
 
 RSpec.describe Employee, type: :model do
   include_context 'shared_context_account_helper'
+  include_context 'shared_context_timecop_helper'
 
   it { is_expected.to have_db_column(:account_id).of_type(:uuid) }
   it { is_expected.to belong_to(:account).inverse_of(:employees) }
@@ -87,6 +88,23 @@ RSpec.describe Employee, type: :model do
   context 'methods' do
     let(:employee) { create(:employee) }
 
+    context 'can_be_hired?' do
+      let(:hired_event) { employee.events.find_by(event_type: 'hired') }
+
+      context 'when there is no contract end' do
+        it { expect(employee.can_be_hired?).to eq(false) }
+      end
+
+      context 'when checked after contract_end' do
+        let!(:contract_end) do
+          create(:employee_event, employee: employee, effective_at: 1.month.ago,
+            event_type: 'contract_end')
+        end
+
+        it { expect(employee.can_be_hired?).to eq(true) }
+      end
+    end
+
     context 'for employee_files' do
       let(:employee_files) { create_list(:employee_file, 2, :with_jpg) }
       let!(:employee_attributes) do
@@ -135,6 +153,116 @@ RSpec.describe Employee, type: :model do
       context 'when employee does not have civil status changes' do
         it { expect(employee.civil_status_for).to eq 'single' }
         it { expect(employee.civil_status_date_for).to eq nil }
+      end
+    end
+
+    context '#hired_date' do
+      include_context 'shared_context_timecop_helper'
+      let(:employee) { create(:employee, hired_at: hired_at, contract_end_at: contract_end_at) }
+
+      let(:contract_end_at) { nil }
+      let(:rehired_at) { nil }
+      let(:contract_end_after_rehired_at) { nil }
+
+      before do
+        if rehired_at
+          employee.events << build(:employee_event,
+            event_type: 'hired',
+            employee: employee,
+            effective_at: rehired_at
+          )
+          if contract_end_after_rehired_at
+            employee.events << build(:employee_event,
+              event_type: 'contract_end',
+              employee: employee,
+              effective_at: contract_end_after_rehired_at
+            )
+          end
+        end
+
+        employee.events.reload
+      end
+
+      context 'when hired in past' do
+        let(:hired_at) { 1.month.ago.to_date }
+
+        it { expect(employee.hired_date).to eql(hired_at) }
+        it { expect(employee.contract_end_date).to be_nil }
+      end
+
+      context 'when hired in future' do
+        let(:hired_at) { 1.month.from_now.to_date }
+
+        it { expect(employee.hired_date).to eql(hired_at) }
+        it { expect(employee.contract_end_date).to be_nil }
+      end
+
+      context 'when hired in past and fired in past' do
+        let(:hired_at) { 2.month.ago.to_date }
+        let(:contract_end_at) { 1.month.ago.to_date }
+
+        it { expect(employee.hired_date).to eql(hired_at) }
+        it { expect(employee.contract_end_date).to eql(contract_end_at) }
+      end
+
+      context 'when hired in past and fired in future' do
+        let(:hired_at) { 1.month.ago.to_date }
+        let(:contract_end_at) { 1.month.from_now.to_date }
+
+        it { expect(employee.hired_date).to eql(hired_at) }
+        it { expect(employee.contract_end_date).to eql(contract_end_at) }
+      end
+
+      context 'when fired in past then rehired in past' do
+        let(:hired_at) { 3.month.ago.to_date }
+        let(:contract_end_at) { 2.month.ago.to_date }
+
+        let(:rehired_at) { 1.month.ago.to_date }
+
+        it { expect(employee.hired_date).to eql(rehired_at) }
+        it { expect(employee.contract_end_date).to be_nil }
+      end
+
+      context 'when fired in past then rehired in future' do
+        let(:hired_at) { 3.month.ago.to_date }
+        let(:contract_end_at) { 2.month.ago.to_date }
+
+        let(:rehired_at) { 1.month.from_now.to_date }
+
+        it { expect(employee.hired_date).to eql(rehired_at) }
+        it { expect(employee.contract_end_date).to be_nil }
+      end
+
+      context 'when fired in future then rehired' do
+        let(:hired_at) { 1.month.ago.to_date }
+        let(:contract_end_at) { 1.month.from_now.to_date }
+
+        let(:rehired_at) { 2.month.from_now.to_date }
+
+        it { expect(employee.hired_date).to eql(hired_at) }
+        it { expect(employee.contract_end_date).to eql(contract_end_at) }
+      end
+
+      context 'when fired in past then rehired in past and fired again in future' do
+        let(:hired_at) { 3.month.ago.to_date }
+        let(:contract_end_at) { 2.month.ago.to_date }
+
+        let(:rehired_at) { 1.month.ago.to_date }
+        let(:contract_end_after_rehired_at) { 1.month.from_now.to_date }
+
+        it { expect(employee.hired_date).to eql(rehired_at) }
+        it { expect(employee.contract_end_date).to eql(contract_end_after_rehired_at) }
+      end
+
+      context 'when fired in past then rehired in future and fired again' do
+        let(:hired_at) { 3.month.ago.to_date }
+        let(:contract_end_at) { 2.month.ago.to_date }
+
+        let(:rehired_at) { 1.month.from_now.to_date }
+        let(:contract_end_after_rehired_at) { 2.month.from_now.to_date }
+
+        it { expect(employee.hired_date).to eql(rehired_at) }
+        it { expect(employee.contract_end_date).to eql(contract_end_after_rehired_at) }
       end
     end
   end

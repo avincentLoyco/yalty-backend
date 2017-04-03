@@ -124,7 +124,6 @@ class RecreateBalancesHelper
 
   def recalculate_balances!
     balance = balance_at_starting_date_or_first_balance
-
     PrepareEmployeeBalancesToUpdate.new(balance, update_all: true).call
     UpdateBalanceJob.perform_later(balance.id, update_all: true)
   end

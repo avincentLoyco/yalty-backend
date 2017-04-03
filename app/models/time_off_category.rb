@@ -12,6 +12,8 @@ class TimeOffCategory < ActiveRecord::Base
 
   scope :editable, -> { where(system: false) }
 
+  after_create :create_reset_policy!
+
   def self.update_default_account_categories(account)
     TimeOffCategory::DEFAULT.each do |category|
       time_off_category = account.time_off_categories.where(name: category).first
@@ -25,5 +27,9 @@ class TimeOffCategory < ActiveRecord::Base
 
       time_off_category.save
     end
+  end
+
+  def create_reset_policy!
+    time_off_policies.create!(reset: true, name: 'Reset time off policy')
   end
 end

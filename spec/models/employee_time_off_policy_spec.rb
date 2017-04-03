@@ -20,19 +20,34 @@ RSpec.describe EmployeeTimeOffPolicy, type: :model do
     expect(etop.time_off_category_id).to eq(etop.time_off_policy.time_off_category_id)
   end
 
-  describe '#effective_at_cannot_be_before_hired_date' do
-    let(:employee) { create(:employee) }
-    subject(:create_invalid_etop) do
-      create(:employee_time_off_policy,
-        employee: employee, effective_at: employee.events.last.effective_at - 5.days
-      )
+  describe 'effective_at_cannot_be_before_hired_date and shared_context_join_tables_effective_at' do
+    include_context 'shared_context_join_tables_effective_at',
+      join_table: :employee_time_off_policy
+  end
+
+  describe '#balances_without_valid_policy_present?' do
+    subject { create(:employee_time_off_policy) }
+    let!(:employee_balance) do
+      create(:employee_balance, :with_time_off,
+        employee: subject.employee, time_off_category: subject.time_off_category)
     end
 
-    it do
-      expect { create_invalid_etop }.to raise_error(
-        ActiveRecord::RecordInvalid,
-        'Validation failed: Effective at can\'t be set before employee hired date'
-      )
+    context 'on update' do
+      before { subject.effective_at = employee_balance.effective_at + 1.month }
+
+      it { expect(subject.valid?).to eq false }
+      it do
+        expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
+          .to include 'Can \'t change if there are time offs after and there is no previous policy'
+      end
+    end
+
+    context 'on destroy' do
+      it { expect(subject.destroy).to eq false }
+      it do
+        expect { subject.destroy }.to change { subject.errors.messages[:effective_at] }
+          .to include 'Can \'t remove if there are time offs after and there is no previous policy'
+      end
     end
   end
 
@@ -104,7 +119,7 @@ RSpec.describe EmployeeTimeOffPolicy, type: :model do
       let(:employee) { create(:employee) }
       let(:effective_at) { Time.now + 1.day }
       let!(:balance) { create(:employee_balance, effective_at: effective_at, employee: employee) }
-      let(:policy) { TimeOffPolicy.first }
+      let(:policy) { TimeOffPolicy.not_reset.first }
       let(:new_policy) do
         build(:employee_time_off_policy,
           employee: balance.employee, time_off_policy: policy, effective_at: Time.now - 4.years
@@ -130,13 +145,16 @@ RSpec.describe EmployeeTimeOffPolicy, type: :model do
   end
 
   context 'callbacks' do
-    context '.trigger_intercom_update' do
-      let!(:account) { create(:account) }
-      let!(:category) { create(:time_off_category, account: account) }
-      let!(:employee) { create(:employee, account: account) }
-      let!(:policy) { create(:time_off_policy, time_off_category: category) }
-      let(:etop) { build(:employee_time_off_policy, employee: employee, time_off_policy: policy) }
+    let!(:account) { create(:account) }
+    let!(:category) { create(:time_off_category, account: account) }
+    let!(:employee) { create(:employee, account: account) }
+    let!(:policy) { create(:time_off_policy, time_off_category: category) }
+    let(:etop) do
+      build(:employee_time_off_policy, :with_employee_balance, employee: employee,
+        time_off_policy: policy)
+    end
 
+    context '.trigger_intercom_update' do
       it 'should invoke trigger_intercom_update' do
         expect(etop).to receive(:trigger_intercom_update)
         etop.save!

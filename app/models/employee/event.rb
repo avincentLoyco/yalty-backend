@@ -25,7 +25,7 @@ class Employee::Event < ActiveRecord::Base
     child_death: %w(child),
     partner_death: %w(spouse),
     child_studies: %w(child),
-    end_of_contract: %w()
+    contract_end: %w()
   }.with_indifferent_access
 
   belongs_to :employee, inverse_of: :events, required: true
@@ -40,8 +40,12 @@ class Employee::Event < ActiveRecord::Base
     presence: true,
     inclusion: { in: proc { Employee::Event.event_types }, allow_nil: true }
   validate :attributes_presence, if: [:event_attributes, :employee]
-  validate :only_one_hired_event_presence, if: :employee
   validate :balances_before_hired_date, if: :employee, on: :update
+  validate :no_two_contract_end_dates_or_hired_events_in_row, if: [:employee, :event_type]
+  validate :not_moved_after_or_before_hired_date,
+    if: [:employee, :event_type, :effective_at],
+    on: :update
+  validate :hired_and_contract_end_not_in_the_same_date, if: [:employee, :event_type]
 
   def self.event_types
     Employee::Event::EVENT_ATTRIBUTES.keys.map(&:to_s)
@@ -69,10 +73,40 @@ class Employee::Event < ActiveRecord::Base
     end
   end
 
+  def previous_event
+    previous_events.last
+  end
+
+  def next_event
+    next_events.first
+  end
+
   private
 
+  def not_moved_after_or_before_hired_date
+    return unless event_type.in?(%w(contract_end hired)) && effective_at_changed?
+    events_types_between =
+      employee
+      .events
+      .where.not(id: id)
+      .where(
+        'effective_at BETWEEN ? AND ?',
+        [effective_at, effective_at_was].min, [effective_at, effective_at_was].max
+      ).pluck(:event_type)
+    return unless (events_types_between & %w(contract_end hired)).present?
+    errors.add(:effective_at, 'Can not update if before or after is contract end or hired event')
+  end
+
   def balances_before_hired_date
-    return unless event_type == 'hired' && balances_before_effective_at?
+    return unless event_type.eql?('hired')
+    hired_event =
+      employee
+      .events
+      .where(event_type: 'hired')
+      .where('effective_at <= ?', effective_at)
+      .where.not(id: id).order(:effective_at).last
+
+    return unless hired_event.blank? && balances_before_effective_at?
     errors.add(:base, 'There can\'t be balances before hired date')
   end
 
@@ -80,10 +114,37 @@ class Employee::Event < ActiveRecord::Base
     employee.employee_balances.where('effective_at < ?', effective_at).present?
   end
 
-  def only_one_hired_event_presence
-    return unless event_type == 'hired'
-    employee_hired_events = employee.events.where(event_type: 'hired')
-    return unless employee_hired_events.present? && employee_hired_events.pluck(:id).exclude?(id)
-    errors.add(:event_type, 'Employee can have only one hired event')
+  def previous_events
+    employee.events.where.not(id: id).where('effective_at <= ?', effective_at).order(:effective_at)
+  end
+
+  def next_events
+    employee.events.where.not(id: id).where('effective_at > ?', effective_at).order(:effective_at)
+  end
+
+  def no_two_contract_end_dates_or_hired_events_in_row
+    return unless contract_end_and_hire_not_alternately?
+    errors.add(
+      :event_type,
+      "Employee can not two #{event_type} in a row and contract end must have hired event"
+    )
+  end
+
+  def contract_end_and_hire_not_alternately?
+    return unless event_type.eql?('hired') || event_type.eql?('contract_end')
+
+    previous = previous_events.where(event_type: %w(hired contract_end)).last
+    future = next_events.where(event_type: %w(hired contract_end)).first
+
+    (previous&.event_type.eql?(event_type) || future&.event_type.eql?(event_type)) ||
+      (event_type.eql?('contract_end') && previous.nil?)
+  end
+
+  def hired_and_contract_end_not_in_the_same_date
+    work_types = %w(contract_end hired)
+    return unless work_types.delete(event_type)
+    existing_event = employee.events.where.not(id: id).where(effective_at: effective_at).first
+    return unless existing_event.present? && existing_event.event_type.in?(work_types)
+    errors.add(:effective_at, 'Hired and contract end event can not be at the same date')
   end
 end

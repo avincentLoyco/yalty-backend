@@ -8,5 +8,14 @@ FactoryGirl.define do
     trait :with_time_entries do
       presence_policy { create(:presence_policy, :with_time_entries, account: employee.account) }
     end
+
+    after(:build) do |employee_presence_policy|
+      reset_policy =
+        employee_presence_policy.employee
+          .employee_presence_policies
+          .with_reset
+          .find_by(effective_at: employee_presence_policy.effective_at)
+      reset_policy.destroy if reset_policy.present?
+    end
   end
 end

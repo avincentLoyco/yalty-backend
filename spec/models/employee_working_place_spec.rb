@@ -1,6 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe EmployeeWorkingPlace, type: :model do
+  include_context 'shared_context_timecop_helper'
+
   it { is_expected.to have_db_column(:employee_id).of_type(:uuid) }
   it { is_expected.to have_db_column(:working_place_id).of_type(:uuid) }
   it { is_expected.to have_db_column(:effective_at).of_type(:date) }
@@ -15,22 +17,9 @@ RSpec.describe EmployeeWorkingPlace, type: :model do
   it { is_expected.to belong_to(:working_place) }
 
   context '#validations' do
-    context '#effective_at_cannot_be_before_hired_date' do
-      let(:employee) { create(:employee) }
-      subject(:create_invalid_ewp) do
-        create(
-          :employee_working_place,
-          employee: employee,
-          effective_at: employee.events.last.effective_at - 5.days
-        )
-      end
-
-      it do
-        expect { create_invalid_ewp }.to raise_error(
-          ActiveRecord::RecordInvalid,
-          'Validation failed: Effective at can\'t be set before employee hired date'
-        )
-      end
+    context 'effective_at_cannot_be_before_hired_date and shared_context_join_tables_effective_at' do
+      include_context 'shared_context_join_tables_effective_at',
+        join_table: :employee_working_place
     end
 
     context 'first_employee_working_place_at_start_date' do
@@ -52,7 +41,7 @@ RSpec.describe EmployeeWorkingPlace, type: :model do
         context 'with different than hired event\'s effective_at' do
           it { expect(subject).to eq false }
           it { expect { subject }.to change { employee_working_place.errors.messages[:effective_at] }
-            .to include 'can\'t be set before employee hired date' }
+            .to include 'can\'t be set outside of employee contract period' }
         end
       end
 
@@ -69,7 +58,7 @@ RSpec.describe EmployeeWorkingPlace, type: :model do
 
           it { expect(subject.valid?).to eq false }
           it { expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
-            .to include 'can\'t be set before employee hired date' }
+            .to include 'can\'t be set outside of employee contract period' }
         end
       end
     end

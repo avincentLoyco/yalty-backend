@@ -82,7 +82,7 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
       it 'should return current account time off policies' do
         subject
 
-        account.time_off_policies.each do |policy|
+        account.time_off_policies.not_reset.each do |policy|
           expect(response.body).to include policy[:id]
         end
       end
@@ -118,10 +118,10 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
         another_policy
         subject
 
-        time_off_category.time_off_policies.each do |policy|
+        time_off_category.time_off_policies.not_reset.each do |policy|
             expect(response.body).to include policy[:id]
         end
-        another_time_off_category.time_off_policies.each do |policy|
+        another_time_off_category.time_off_policies.not_reset.each do |policy|
             expect(response.body).to_not include policy[:id]
         end
       end

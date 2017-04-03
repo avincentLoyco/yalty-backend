@@ -18,6 +18,7 @@ class CreateEvent
       find_or_build_employee
       build_versions
       save!
+      event.tap { handle_contract_end }
     end
   end
 
@@ -101,5 +102,10 @@ class CreateEvent
       }
     end
     errors.delete_if { |error| error.values.first.empty? }.reduce({}, :merge)
+  end
+
+  def handle_contract_end
+    return unless event.event_type.eql?('contract_end')
+    HandleContractEnd.new(employee, event.effective_at).call
   end
 end

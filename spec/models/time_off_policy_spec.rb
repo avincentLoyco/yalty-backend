@@ -1,12 +1,12 @@
 require 'rails_helper'
 
 RSpec.describe TimeOffPolicy, type: :model do
-  it { is_expected.to have_db_column(:policy_type).of_type(:string).with_options(null: false) }
+  it { is_expected.to have_db_column(:policy_type).of_type(:string).with_options(null: true) }
   it { is_expected.to have_db_column(:id).of_type(:uuid) }
   it { is_expected.to have_db_column(:end_day).of_type(:integer).with_options(null: true) }
   it { is_expected.to have_db_column(:end_month).of_type(:integer).with_options(null: true) }
-  it { is_expected.to have_db_column(:start_day).of_type(:integer).with_options(null: false) }
-  it { is_expected.to have_db_column(:start_month).of_type(:integer).with_options(null: false) }
+  it { is_expected.to have_db_column(:start_day).of_type(:integer).with_options(null: true) }
+  it { is_expected.to have_db_column(:start_month).of_type(:integer).with_options(null: true) }
   it { is_expected.to have_db_column(:amount).of_type(:integer)
     .with_options(null: true) }
   it { is_expected.to have_db_column(:years_to_effect).of_type(:integer)
@@ -200,8 +200,10 @@ RSpec.describe TimeOffPolicy, type: :model do
       end
 
       it 'returns time_off policies for given account and category' do
-        expect(for_account_and_category.count).to eq(3)
-        expect(for_account_and_category).to match_array(time_off_policies_for_first_category)
+        expect(for_account_and_category.count).to eq(4)
+        expect(for_account_and_category).to match_array(
+          time_off_policies_for_first_category + first_category.time_off_policies.reset_policies
+        )
       end
     end
 
@@ -211,9 +213,12 @@ RSpec.describe TimeOffPolicy, type: :model do
       end
 
       it 'returns time_off policies for given account' do
-        expect(for_account.count).to eq(6)
-        expect(for_account)
-          .to match_array(time_off_policies_for_first_category + time_off_policies_for_second_category)
+        expect(for_account.count).to eq(13)
+        expect(for_account).to match_array(
+          time_off_policies_for_first_category +
+          time_off_policies_for_second_category +
+          account.time_off_policies.reset_policies
+        )
       end
     end
   end

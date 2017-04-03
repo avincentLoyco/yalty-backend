@@ -584,6 +584,55 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         end
       end
     end
+
+    context 'restrictions for rehired event' do
+      let(:json_payload) do
+        {
+          type: 'employee_event',
+          effective_at: effective_at,
+          comment: 'A comment',
+          event_type: event_type,
+          employee: { id: employee.id }
+        }
+      end
+
+      context 'when hired and contract_end exist' do
+        let(:event_type) { 'hired' }
+        let!(:contract_end) do
+          create(:employee_event, employee: employee, event_type: 'contract_end',
+            effective_at: event.effective_at + 2.months)
+        end
+
+        context 'when rehired is not right after contract_end' do
+          let(:effective_at) { contract_end.effective_at + 2.days }
+
+          it { expect { subject }.to change { Employee::Event.count }.by(1) }
+          it { expect { subject }.to_not change { Employee.count } }
+        end
+
+        context 'when rehired is right after contract_end' do
+          let(:effective_at) { contract_end.effective_at + 1.day }
+
+          it { expect { subject }.to_not change { Employee::Event.count } }
+          it { expect { subject }.to_not change { Employee.count } }
+
+          context 'response' do
+            before { subject }
+
+            it { expect(response.status).to eq(422) }
+            it { expect(response.body).to match("Event can't be at this date") }
+          end
+        end
+      end
+
+      context 'create contract_end right after hired' do
+        let(:event_type) { 'contract_end' }
+        let(:effective_at) { event.effective_at + 1.day }
+
+        it { expect { subject }.to change { Employee::Event.count }.by(1) }
+        it { expect { subject }.to_not change { Employee.count } }
+      end
+    end
   end
 
   shared_examples 'Unprocessable Entity on update' do
@@ -1168,6 +1217,64 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         ).to include(
           first_pet[:value], last_pet[:value]
         )
+      end
+    end
+
+    context 'restrictions for rehired event' do
+      let!(:contract_end) do
+        create(:employee_event, employee: employee, event_type: 'contract_end',
+          effective_at: event.effective_at + 2.months)
+      end
+      let!(:rehired) do
+        create(:employee_event, employee: employee, event_type: 'hired',
+          effective_at: contract_end.effective_at + 2.months)
+      end
+      let(:json_payload) do
+        {
+          id: update_event_id,
+          event_type: event_type,
+          effective_at: effective_at,
+          employee: { id: employee.id },
+          type: 'employee_event',
+        }
+      end
+
+      context 'when moving rehired right after contract_end' do
+        let(:update_event_id) { rehired.id }
+        let(:event_type) { rehired.event_type }
+        let(:effective_at) { contract_end.effective_at + 1.day }
+
+        before { subject }
+
+        it { expect(response.status).to eq(422) }
+        it { expect(response.body).to match("Event can't be at this date") }
+      end
+
+      context 'when moving contract_end right before rehired' do
+        let(:update_event_id) { contract_end.id }
+        let(:event_type) { contract_end.event_type }
+        let(:effective_at) { rehired.effective_at - 1.day }
+
+        before { subject }
+
+        it { expect(response.status).to eq(422) }
+        it { expect(response.body).to match("Event can't be at this date") }
+      end
+
+      context 'when moving contract_end right after hired' do
+        let(:update_event_id) { contract_end.id }
+        let(:event_type) { contract_end.event_type }
+        let(:effective_at) { event.effective_at + 1.day }
+
+        it { expect { subject }.to change { contract_end.reload.effective_at }.to(effective_at) }
+      end
+
+      context 'when moving hired right before contract_end' do
+        let(:update_event_id) { event.id }
+        let(:event_type) { event.event_type }
+        let(:effective_at) { contract_end.effective_at - 1.day }
+
+        it { expect { subject }.to change { event.reload.effective_at }.to(effective_at) }
       end
     end
   end

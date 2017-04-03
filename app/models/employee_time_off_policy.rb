@@ -2,7 +2,7 @@ require 'employee_policy_period'
 
 class EmployeeTimeOffPolicy < ActiveRecord::Base
   include ActsAsIntercomTrigger
-  include ValidateEffectiveAtBeforeHired
+  include ValidateEffectiveAtBetweenHiredAndContractEndDates
 
   attr_accessor :effective_till
 
@@ -25,16 +25,29 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
       .where(time_off_policies: { time_off_category_id: category_id }, employee_id: employee_id)
       .order(effective_at: :desc)
   }
+  scope :with_reset, -> { joins(:time_off_policy).where(time_off_policies: { reset: true }) }
+  scope :not_reset, -> { joins(:time_off_policy).where(time_off_policies: { reset: false }) }
+
+  alias related_resource time_off_policy
+
+  def not_reset?
+    time_off_policy.reset.eql?(false)
+  end
 
   def policy_assignation_balance(effective_at = self.effective_at)
+    balance_effective_at =
+      if related_resource.reset?
+        effective_at + Employee::Balance::REMOVAL_OFFSET
+      else
+        effective_at + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET
+      end
+
     employee
       .employee_balances
       .where(
         time_off_category_id: time_off_policy.time_off_category.id,
-        time_off_id: nil
-      )
-      .where(
-        'effective_at = ?', effective_at + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET
+        time_off_id: nil,
+        effective_at: balance_effective_at
       )
       .first
   end
@@ -102,10 +115,12 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
   end
 
   def verify_not_change_of_policy_type_in_category
+    return if time_off_policy.reset
     firts_etop =
       employee
       .employee_time_off_policies
       .where(time_off_category_id: time_off_policy.time_off_category_id)
+      .order(:effective_at)
       .first
     return unless
       firts_etop && firts_etop.time_off_policy.policy_type != time_off_policy.policy_type

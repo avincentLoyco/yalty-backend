@@ -53,6 +53,9 @@ module API
         transactions do
           destroy_join_tables_with_duplicated_resources
           resource.destroy!
+          clear_respective_reset_join_tables(
+            resource.employee, resource.effective_at, resource.time_off_category
+          )
           RecreateBalances::AfterEmployeeTimeOffPolicyDestroy.new(
             destroyed_effective_at: resource.effective_at,
             time_off_category_id: resource.time_off_category_id,
@@ -65,7 +68,7 @@ module API
       private
 
       def resource
-        @resource ||= Account.current.employee_time_off_policies.find(params[:id])
+        @resource ||= Account.current.employee_time_off_policies.not_reset.find(params[:id])
       end
 
       def time_off_policy

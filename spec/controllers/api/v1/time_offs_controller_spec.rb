@@ -4,10 +4,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
   include_context 'shared_context_headers'
   include_context 'shared_context_timecop_helper'
 
-  before do
-    time_off_category.update!(account: Account.current)
-  end
-
+  before { time_off_category.update!(account: Account.current) }
   let(:policy) { create(:presence_policy, :with_presence_day, account: Account.current) }
   let(:employee) do
     create(:employee, :with_time_off_policy, :with_presence_policy, account: account,
@@ -238,6 +235,50 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
           it { expect(Employee::Balance.last.amount).to eq 0 }
         end
       end
+
+      context 'when time off is created after contract end' do
+        before do
+          create(:employee_event,
+            employee: employee, event_type: 'contract_end',
+            effective_at: start_time.to_date - 10.days)
+        end
+
+        it { is_expected.to have_http_status(422) }
+        it do
+          subject
+
+          expect(response.body)
+            .to include 'can\'t be set outside of employee contract period'
+        end
+
+        context 'and rehired event' do
+          before do
+            create(:employee_event,
+              employee: employee, event_type: 'hired', effective_at: start_time.to_date - 1.day)
+          end
+
+          context 'and employee has employee time off policy assigned' do
+            before do
+              create(:employee_time_off_policy,
+                effective_at: start_time.to_date - 1.day, employee: employee,
+                time_off_policy: create(:time_off_policy, time_off_category: time_off_category))
+            end
+
+            it { is_expected.to have_http_status(201) }
+            it { expect { subject }.to change { TimeOff.count }.by(1) }
+            it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+          end
+
+          context 'and employee does not have employee time off policy assigned' do
+            it { is_expected.to have_http_status(422) }
+            it do
+              subject
+
+              expect(response.body).to include 'Time off policy in category required'
+            end
+          end
+        end
+      end
     end
 
     context 'with invalid params' do
@@ -388,6 +429,50 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
           end
           it do
             expect { subject }.to change { balance_after_time_off.reload.being_processed }.to true
+          end
+        end
+      end
+
+      context 'when time off is created after contract end' do
+        before do
+          create(:employee_event,
+            employee: employee, event_type: 'contract_end',
+            effective_at: start_time.to_date - 10.days)
+        end
+
+        it { is_expected.to have_http_status(422) }
+        it do
+          subject
+
+          expect(response.body)
+            .to include 'can\'t be set outside of employee contract period'
+        end
+
+        context 'and rehired event' do
+          before do
+            create(:employee_event,
+              employee: employee, event_type: 'hired', effective_at: start_time.to_date - 1.day)
+          end
+
+          context 'and employee has employee time off policy assigned' do
+            before do
+              create(:employee_time_off_policy,
+                effective_at: start_time.to_date - 1.day, employee: employee,
+                time_off_policy: create(:time_off_policy, time_off_category: time_off_category))
+            end
+
+            it { is_expected.to have_http_status(204) }
+            it { expect { subject }.to change { time_off.reload.start_time } }
+            it { expect { subject }.to change { time_off.reload.end_time } }
+          end
+
+          context 'and employee does not have employee time off policy assigned' do
+            it { is_expected.to have_http_status(422) }
+            it do
+              subject
+
+              expect(response.body).to include 'Time off policy in category required'
+            end
           end
         end
       end

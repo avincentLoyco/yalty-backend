@@ -45,4 +45,17 @@ RSpec.describe TimeOffCategory, type: :model do
         .to_not change { same_name_category.errors.messages } }
     end
   end
+
+  describe 'reset policy' do
+    let!(:account) { create(:account) }
+    let(:category) { build(:time_off_category, account: account) }
+
+    it { expect { category.save! }.to change(TimeOffPolicy, :count).by(1) }
+
+    context 'policy has reset flag' do
+      before { category.save! }
+
+      it { expect(category.time_off_policies.last.reset).to be(true) }
+    end
+  end
 end

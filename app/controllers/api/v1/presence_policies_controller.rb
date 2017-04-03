@@ -10,7 +10,7 @@ module API
 
       def index
         response =
-          resources_by_status(PresencePolicy, EmployeePresencePolicy).map do |item|
+          resources_by_status(PresencePolicy, EmployeePresencePolicy).not_reset.map do |item|
             resource_representer.new(item).with_relationships
           end
         render json: response

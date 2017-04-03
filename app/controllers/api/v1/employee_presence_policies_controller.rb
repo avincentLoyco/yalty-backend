@@ -35,6 +35,7 @@ module API
         authorize! :destroy, resource
         transactions do
           resource.destroy!
+          clear_respective_reset_join_tables(resource.employee, resource.effective_at)
           destroy_join_tables_with_duplicated_resources
           find_and_update_balances(resource)
         end
@@ -44,7 +45,7 @@ module API
       private
 
       def resource
-        @resource ||= Account.current.employee_presence_policies.find(params[:id])
+        @resource ||= Account.current.employee_presence_policies.not_reset.find(params[:id])
       end
 
       def presence_policy

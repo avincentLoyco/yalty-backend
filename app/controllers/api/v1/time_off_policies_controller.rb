@@ -10,7 +10,7 @@ module API
 
       def index
         render json:
-          resources.map { |item| resource_representer.new(item).with_relationships }
+          resources.not_reset.map { |item| resource_representer.new(item).with_relationships }
       end
 
       def create

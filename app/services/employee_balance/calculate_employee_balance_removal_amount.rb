@@ -7,8 +7,9 @@ class CalculateEmployeeBalanceRemovalAmount
   end
 
   def call
-    return 0 unless removal.present? && additions.present?
-    if active_time_off_policy.counter?
+    return 0 unless removal.reset_balance || (removal.present? && additions.present?) ||
+        (removal.policy_credit_addition && removal.time_off_policy.counter?)
+    if active_time_off_policy.counter? || removal.reset_balance
       calculate_amount_for_counter
     else
       calculate_amount_for_balancer
@@ -97,9 +98,10 @@ class CalculateEmployeeBalanceRemovalAmount
   end
 
   def active_time_off_policy
+    date = additions.present? ? additions.first.effective_at : removal.effective_at
     removal
       .employee
-      .active_policy_in_category_at_date(removal.time_off_category_id, additions.first.effective_at)
+      .active_policy_in_category_at_date(removal.time_off_category_id, date)
       .time_off_policy
   end
 

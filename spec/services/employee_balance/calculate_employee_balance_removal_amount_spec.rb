@@ -163,16 +163,15 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
                 end_time: '4/4/2016')
             end
 
-            # TODO change new_time_off.balance to related
-            it '' do
+            it 'has proper value' do
               expect(subject).to eq (
-                -(10100 + time_off.balance +
-                new_time_off.balance(nil, '1/4/2016'.to_time.end_of_day ) + removal_manual_amount)
+                -(
+                  10100 + time_off.balance - new_time_off.employee_balance.related_amount +
+                    removal_manual_amount)
                )
             end
 
             context 'when other policy addition added in the period' do
-              # TODO case where end month is the same
               before { new_employee_policy.policy_assignation_balance.update!(resource_amount: 0) }
               let(:new_policy) do
                 create(:time_off_policy, time_off_category: category, end_day: 1, end_month: 5)
@@ -256,7 +255,7 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
 
           it do
             expect(subject)
-              .to eq -(EmployeeTimeOffPolicy.first.policy_assignation_balance.resource_amount)
+              .to eq (-(EmployeeTimeOffPolicy.first.policy_assignation_balance.resource_amount))
           end
         end
 
@@ -294,15 +293,13 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
                 end_time: '4/4/2016')
             end
 
-            # TODO change new_time_off.balance to related
             it do
               expect(subject).to eq -(
-                10100 + time_off.balance + new_time_off.balance(nil, '1/4/2016'.to_time.end_of_day)
+                10100 + time_off.balance - new_time_off.employee_balance.related_amount
               )
             end
 
             context 'when other policy addition added in the period' do
-              # TODO case where end month is the same
               before { new_employee_policy.policy_assignation_balance.update!(resource_amount: 0) }
               let(:new_policy) do
                 create(:time_off_policy, time_off_category: category, end_day: 1, end_month: 5)

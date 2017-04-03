@@ -1,7 +1,7 @@
 class UpdateEvent
   include API::V1::Exceptions
   attr_reader :employee_params, :attributes_params, :event_params, :versions,
-    :event, :employee, :updated_assignations
+    :event, :employee, :updated_assignations, :old_effective_at
 
   def initialize(params, employee_attributes_params)
     @versions              = []
@@ -9,6 +9,8 @@ class UpdateEvent
     @attributes_params     = employee_attributes_params
     @event_params          = build_event_params(params)
     @updated_assignations  = {}
+    @event                 = Account.current.employee_events.find(event_params[:id])
+    @old_effective_at      = event.effective_at
   end
 
   def call
@@ -19,9 +21,24 @@ class UpdateEvent
       manage_versions
       save!
     end
+    event.tap { handle_contract_end }
   end
 
   private
+
+  def handle_contract_end
+    return unless event.event_type.eql?('contract_end') && old_effective_at != event.effective_at
+    tables = %w(employee_time_off_policies employee_presence_policies employee_working_places)
+    reset_effective_at = old_effective_at + 1.day
+    tables.each do |table_name|
+      event.employee.send(table_name).with_reset.where(effective_at: reset_effective_at).delete_all
+      next unless table_name.eql?('employee_time_off_policies')
+      event.employee.employee_balances.where(
+        'effective_at::date = ? AND reset_balance = true', reset_effective_at
+      ).delete_all
+    end
+    HandleContractEnd.new(employee, event.effective_at, reset_effective_at).call
+  end
 
   def build_event_params(params)
     params.tap { |attr| attr.delete(:employee) && attr.delete(:employee_attributes) }
@@ -32,14 +49,15 @@ class UpdateEvent
   end
 
   def find_and_update_event
-    @event = Account.current.employee_events.find(event_params[:id])
-    @event.attributes = event_params
+    event.attributes = event_params
   end
 
   def update_employee_join_tables
     return if event.event_type != 'hired'
     @updated_assignations =
-      HandleMapOfJoinTablesToNewHiredDate.new(employee, event_params[:effective_at]).call
+      HandleMapOfJoinTablesToNewHiredDate.new(
+        employee, event_params[:effective_at], event.effective_at_was
+      ).call
   end
 
   def manage_versions
@@ -117,13 +135,14 @@ class UpdateEvent
   def save!
     if unique_attribute_versions? && attribute_version_valid?
       employee.save!
-      if event.effective_at.to_date < employee.hired_date && event.event_type.eql?('hired')
+      if event.event_type.eql?('hired') && event.effective_at.to_date < event.effective_at_was
         event.save!
         update_assignations_and_balances
         create_policy_additions_and_removals
       else
         update_assignations_and_balances
         event.save!
+        update_balances
       end
       event.employee_attribute_versions.each(&:save!)
       event
@@ -165,5 +184,13 @@ class UpdateEvent
       { attr.attribute_definition.name => attr.data.errors.messages.values }
     end
     errors.reduce({}, :merge).delete_if { |_key, value| value.empty? }
+  end
+
+  def update_balances
+    return unless updated_assignations[:employee_balances].present?
+    updated_assignations[:employee_balances].map do |balance|
+      PrepareEmployeeBalancesToUpdate.new(balance, update_all: true).call
+      UpdateBalanceJob.perform_later(balance, update_all: true)
+    end
   end
 end

@@ -12,6 +12,7 @@ class TimeOff < ActiveRecord::Base
   validate :start_time_after_employee_start_date, if: [:employee, :start_time, :end_time]
   validate :does_not_overlap_with_other_users_time_offs, if: [:employee, :time_off_category_id]
   validate :does_not_overlap_with_registered_working_times, if: [:employee]
+  validate :end_time_not_after_contract_end, if: [:employee, :end_time]
 
   scope :for_employee, ->(employee_id) { where(employee_id: employee_id) }
 
@@ -112,13 +113,14 @@ class TimeOff < ActiveRecord::Base
   end
 
   def time_off_policy_presence
-    return if employee.active_policy_in_category_at_date(time_off_category_id, start_time).present?
+    active_policy = employee.active_policy_in_category_at_date(time_off_category_id, start_time)
+    return unless active_policy.blank? || active_policy.time_off_policy.reset?
     errors.add(:employee, 'Time off policy in category required')
   end
 
   def start_time_after_employee_start_date
-    return unless start_time < employee.first_employee_event.effective_at
-    errors.add(:start_time, 'Can not be added before employee start date')
+    return if employee.contract_periods.any? { |period| period.include?(start_time.to_date) }
+    errors.add(:start_time, 'can\'t be set outside of employee contract period')
   end
 
   def first_day_overlaps?(registered_working_time, lenght)
@@ -188,5 +190,12 @@ class TimeOff < ActiveRecord::Base
     return if (employee_time_offs_in_period - [self]).blank?
     errors.add(:start_time, 'Time off in period already exist')
     errors.add(:end_time, 'Time off in period already exist')
+  end
+
+  def end_time_not_after_contract_end
+    return if employee.contract_periods.any? do |period|
+      period.include?(end_time.to_date) || end_time == (period.end + 1.day).beginning_of_day
+    end
+    errors.add(:end_time, 'can\'t be set outside of employee contract period')
   end
 end

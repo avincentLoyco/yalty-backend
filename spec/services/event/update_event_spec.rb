@@ -9,10 +9,6 @@ RSpec.describe do
     Account::User.current = create(:account_user, account: employee.account)
   end
   subject { UpdateEvent.new(params, employee_attributes_params).call }
-  let!(:definition) do
-    create(:employee_attribute_definition,
-      account: employee.account, name: 'firstname', multiple: true, validation: { presence: true })
-  end
   let(:first_name_order) { 1 }
   let(:employee) { create(:employee, :with_attributes) }
   let(:event) { employee.events.first }
@@ -55,6 +51,11 @@ RSpec.describe do
   end
 
   context 'with valid params' do
+    let!(:definition) do
+      create(:employee_attribute_definition,
+        account: employee.account, name: 'firstname', multiple: true, validation: { presence: true })
+    end
+
     context 'when attributes id send' do
       it { expect { subject }.to change { event.employee_attribute_versions.count }.by(1) }
       it { expect { subject }.to change { first_attribute.reload.data.value }.to eq 'Snow' }
@@ -281,6 +282,70 @@ RSpec.describe do
 
             it { expect { subject }.to_not change { newest_balance.reload.policy_credit_addition } }
           end
+
+          context 'and employee has employee balances' do
+            before do
+              EmployeeTimeOffPolicy.all.map do |etop|
+                ManageEmployeeBalanceAdditions.new(etop).call
+              end
+            end
+
+            context 'and hired date moved to etop start date' do
+              it { expect { subject }.to change { EmployeeTimeOffPolicy.exists?(etops.first.id) } }
+              it { expect { subject }.to change { Employee::Balance.exists?(first_balance.id) } }
+              it { expect { subject }.to change { Employee::Balance.count }.by(-17) }
+              it do
+                expect { subject }.to change { Employee::Balance.pluck(:being_processed).uniq }
+                  .to ([true])
+              end
+              it 'assignations have valid manual amount' do
+                subject
+
+                expect(etops.last.reload.policy_assignation_balance.manual_amount)
+                  .to eq second_balance.manual_amount
+                expect(new_etop.reload.policy_assignation_balance.manual_amount)
+                  .to eq newest_balance.manual_amount
+              end
+
+              it 'assignations are policy credit additions' do
+                subject
+
+                expect(etops.last.reload.policy_assignation_balance.policy_credit_addition)
+                  .to eq true
+                expect(new_etop.reload.policy_assignation_balance.policy_credit_addition)
+                  .to eq true
+              end
+            end
+
+            context 'and hired date moved to not etop start date' do
+              let(:effective_at) { 1.year.since - 1.day }
+
+              it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(-1) }
+              it { expect { subject }.to change { Employee::Balance.exists?(first_balance.id) } }
+              it { expect { subject }.to change { Employee::Balance.count }.by(-15) }
+              it do
+                expect { subject }.to change { Employee::Balance.pluck(:being_processed).uniq }
+                  .to ([true])
+              end
+              it 'assignations have valid manual amount' do
+                subject
+
+                expect(etops.last.reload.policy_assignation_balance.manual_amount)
+                  .to eq second_balance.manual_amount
+                expect(new_etop.reload.policy_assignation_balance.manual_amount)
+                  .to eq newest_balance.manual_amount
+              end
+
+              it 'assignations are policy credit additions' do
+                subject
+
+                expect(etops.last.reload.policy_assignation_balance.policy_credit_addition)
+                  .to eq false
+                expect(new_etop.reload.policy_assignation_balance.policy_credit_addition)
+                  .to eq false
+              end
+            end
+          end
         end
 
         context 'and date move to the past' do
@@ -384,7 +449,181 @@ RSpec.describe do
     end
   end
 
+  context 'contract_end' do
+    let(:event_type) { 'contract_end' }
+    let(:categories) { create_list(:time_off_category, 2, account: employee.account) }
+    let(:policies) do
+      categories.map do |category|
+        create(:time_off_policy, :with_end_date, time_off_category: category)
+      end
+    end
+    let!(:epp) do
+      create(:employee_presence_policy, :with_time_entries,
+        employee: employee, effective_at: 1.years.ago)
+    end
+    let!(:ewp) { create(:employee_working_place, employee: employee, effective_at: 1.years.ago) }
+    let!(:etops) do
+      policies.map do |policy|
+        create(:employee_time_off_policy, :with_employee_balance,
+          employee: employee, effective_at: 1.years.ago, time_off_policy: policy)
+      end
+    end
+    let!(:time_offs) do
+      [
+        [1.year.ago - 2.days, 1.year.ago + 5.days], [4.months.ago, 4.months.ago + 3.days]
+      ].map do |starts, ends|
+        create(:time_off,
+          employee: employee, start_time: starts, end_time: ends,
+          time_off_category: categories.first)
+      end
+    end
+    let!(:etop_assignation_balance) do
+      create(:employee_balance_manual,
+        employee: employee, time_off_category: time_offs.first.time_off_category,
+        policy_credit_addition: true,
+        effective_at:
+          time_offs.first.start_time + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET
+      )
+    end
+    let!(:event) do
+      create(:employee_event,
+        employee: employee, event_type: 'contract_end', effective_at: Time.zone.today)
+    end
+    let(:employee_attributes_params) {{ }}
+    let(:reset_balance_effective_at) { effective_at + 1.day + Employee::Balance::REMOVAL_OFFSET }
+    before do
+      time_offs.map do |time_off|
+        validity_date =
+          RelatedPolicyPeriod
+            .new(time_off.employee_balance.employee_time_off_policy)
+            .validity_date_for(time_off.end_time)
+        UpdateEmployeeBalance.new(time_off.employee_balance, validity_date: validity_date).call
+      end
+      etops.map do |etop|
+        validity_date = RelatedPolicyPeriod.new(etop).validity_date_for(etop.effective_at)
+        UpdateEmployeeBalance.new(
+          etop.policy_assignation_balance, validity_date: validity_date
+        ).call
+        ManageEmployeeBalanceAdditions.new(etop).call
+      end
+      subject
+      event.reload
+      employee.reload
+    end
+
+    context 'move to the future' do
+      shared_examples 'Contract end in the future' do
+        it { expect(event.effective_at).to eq effective_at }
+        it { expect(employee.employee_time_off_policies.count).to eq(5) }
+        it { expect(employee.employee_working_places.count).to eq(2) }
+        it { expect(employee.employee_presence_policies.count).to eq(2) }
+        it { expect(employee.time_offs.count).to eq (2) }
+        it { expect(employee.employee_balances.where(reset_balance: true).count).to eq (2) }
+        it do
+          expect(time_offs.first.employee_balance.reload.validity_date.to_date)
+            .to eq ('2016/4/1').to_date
+        end
+        it do
+          expect(time_offs.last.employee_balance.reload.validity_date)
+            .to eq reset_balance_effective_at
+        end
+        it do
+          expect(employee.employee_balances.where(reset_balance: true)
+            .pluck(:effective_at).uniq).to eq ([reset_balance_effective_at])
+        end
+      end
+
+      context 'and contract end before policy start date' do
+        let(:effective_at) { 1.year.since - 1.days }
+
+        it { expect(employee.employee_balances.count).to eq (13) }
+        it { expect(Employee::Balance.additions.count).to eq (5) }
+
+        it_behaves_like 'Contract end in the future'
+      end
+
+      context 'when contract end in or after policy start date' do
+        shared_examples 'Contract end in or after policy start date' do
+          it { expect(Employee::Balance.additions.count).to eq (7) }
+          it { expect(employee.employee_balances.count).to eq (17) }
+        end
+
+        context 'and contract end in policy start date' do
+          let(:effective_at) { 1.year.since }
+
+          it_behaves_like 'Contract end in or after policy start date'
+          it_behaves_like 'Contract end in the future'
+        end
+
+        context 'and contract end after policy start date' do
+          let(:effective_at) { 1.year.since + 3.days }
+
+          it_behaves_like 'Contract end in or after policy start date'
+          it_behaves_like 'Contract end in the future'
+        end
+      end
+    end
+
+    context 'move to the past' do
+      context 'when all join tables effective at after contract end' do
+        let(:effective_at) { 1.year.ago - 3.days }
+
+        it { expect(event.effective_at).to eq effective_at }
+        it { expect(employee.employee_time_off_policies.count).to eq(0) }
+        it { expect(employee.employee_presence_policies.count).to eq(0) }
+        it { expect(employee.employee_working_places.count).to eq(0) }
+        it { expect(employee.employee_balances.count).to eq(0) }
+        it { expect(employee.time_offs.count).to eq(0) }
+      end
+
+      context 'when all join tables effective at before or in contract end' do
+        shared_examples 'Join tables effective_at before or in contract end' do
+          it { expect(event.effective_at).to eq effective_at }
+          it { expect(employee.employee_time_off_policies.count).to eq(5) }
+          it { expect(employee.employee_working_places.count).to eq(2) }
+          it { expect(employee.employee_presence_policies.count).to eq(2) }
+          it { expect(employee.time_offs.count).to eq (1) }
+
+          it { expect(employee.employee_balances.count).to eq (6) }
+          it { expect(employee.employee_balances.where(reset_balance: true).count).to eq (2) }
+          it do
+            expect(employee.employee_balances.where(reset_balance: true)
+              .pluck(:effective_at).uniq).to eq ([reset_balance_effective_at])
+          end
+          it do
+            expect(time_offs.first.reload.employee_balance.validity_date)
+              .to eq (reset_balance_effective_at)
+          end
+
+          it do
+            etops.map do |etop|
+              expect(etop.policy_assignation_balance.validity_date)
+                .to eq (reset_balance_effective_at)
+            end
+          end
+        end
+
+        context 'in contract end date' do
+          let(:effective_at) { 1.years.ago }
+
+          it_behaves_like 'Join tables effective_at before or in contract end'
+        end
+
+        context 'before contract end' do
+          let(:effective_at) { 1.years.ago + 1.day }
+
+          it_behaves_like 'Join tables effective_at before or in contract end'
+        end
+      end
+    end
+  end
+
   context 'with invalid params' do
+    let!(:definition) do
+      create(:employee_attribute_definition,
+        account: employee.account, name: 'firstname', multiple: true, validation: { presence: true })
+    end
+
     context 'when required attribute does not send or value set to nil' do
       before do
         Employee::AttributeDefinition

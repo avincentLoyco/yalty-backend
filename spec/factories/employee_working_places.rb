@@ -13,6 +13,13 @@ FactoryGirl.define do
 
         employee_working_place.working_place = working_place
       end
+
+      reset_working_place =
+        employee_working_place.employee
+          .employee_working_places
+          .with_reset
+          .find_by(effective_at: employee_working_place.effective_at)
+      reset_working_place.destroy if reset_working_place.present?
     end
   end
 end

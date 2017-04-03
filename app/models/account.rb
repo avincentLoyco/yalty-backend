@@ -35,7 +35,6 @@ class Account < ActiveRecord::Base
   has_many :time_entries, through: :presence_days
   has_many :time_off_policies, through: :time_off_categories
   has_many :employee_balances, through: :employees
-  has_many :time_off_policies, through: :time_off_categories
   has_many :employee_working_places, through: :employees
   has_many :employee_time_off_policies, through: :employees
   has_many :employee_presence_policies, through: :employees
@@ -44,6 +43,7 @@ class Account < ActiveRecord::Base
   before_validation :generate_subdomain, on: :create
   after_create :update_default_attribute_definitions!
   after_create :update_default_time_off_categories!
+  after_create :create_reset_presence_policy_and_working_place!
 
   def self.current=(account)
     RequestStore.write(:current_account, account)
@@ -136,6 +136,11 @@ class Account < ActiveRecord::Base
   def employee_files_ratio
     return 0 if employees.count.zero?
     (number_of_files.to_f / employees.count.to_f).round(2)
+  end
+
+  def create_reset_presence_policy_and_working_place!
+    presence_policies.create!(name: 'Reset policy', reset: true)
+    working_places.create!(name: 'Reset working place', reset: true)
   end
 
   private

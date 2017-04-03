@@ -1,6 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe EmployeePresencePolicy, type: :model do
+  include_context 'shared_context_timecop_helper'
+
   let(:epp) { create(:employee_presence_policy) }
 
   it { is_expected.to have_db_column(:employee_id).of_type(:uuid) }
@@ -14,22 +16,9 @@ RSpec.describe EmployeePresencePolicy, type: :model do
   it { is_expected.to have_db_index([:employee_id, :presence_policy_id, :effective_at]).unique }
 
   describe 'validations' do
-    context '#effective_at_cannot_be_before_hired_date' do
-      let(:employee) { create(:employee) }
-      subject(:create_invalid_epp) do
-        create(
-          :employee_presence_policy,
-          employee: employee,
-          effective_at: employee.events.last.effective_at - 5.days
-        )
-      end
-
-      it do
-        expect { create_invalid_epp }.to raise_error(
-          ActiveRecord::RecordInvalid,
-          'Validation failed: Effective at can\'t be set before employee hired date'
-        )
-      end
+    context 'effective_at_cannot_be_before_hired_date and shared_context_join_tables_effective_at' do
+      include_context 'shared_context_join_tables_effective_at',
+        join_table: :employee_presence_policy
     end
 
     context '#no_balances_after_effective_at' do
@@ -98,12 +87,12 @@ RSpec.describe EmployeePresencePolicy, type: :model do
   end
 
   context 'callbacks' do
-    context '.trigger_intercom_update' do
-      let!(:account) { create(:account) }
-      let!(:employee) { create(:employee, account: account) }
-      let!(:policy) { create(:presence_policy, :with_time_entries, account: account) }
-      let(:epp) { build(:employee_presence_policy, employee: employee, presence_policy: policy) }
+    let!(:account) { create(:account) }
+    let!(:employee) { create(:employee, account: account) }
+    let!(:policy) { create(:presence_policy, :with_time_entries, account: account) }
+    let(:epp) { build(:employee_presence_policy, employee: employee, presence_policy: policy) }
 
+    context '.trigger_intercom_update' do
       it 'should invoke trigger_intercom_update' do
         expect(epp).to receive(:trigger_intercom_update)
         epp.save!

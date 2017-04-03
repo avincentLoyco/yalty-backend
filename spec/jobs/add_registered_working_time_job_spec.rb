@@ -36,7 +36,6 @@ RSpec.describe AddRegisteredWorkingTimes do
     end
 
     context 'when there are days without registered working hours to add' do
-
       context 'and no time offs' do
         context 'when policy has length different than 7' do
           before do
@@ -150,6 +149,84 @@ RSpec.describe AddRegisteredWorkingTimes do
             ]
           )
           expect(second_employee_rwt.schedule_generated).to eq(true)
+        end
+      end
+
+      context 'when employee has contract end date' do
+        before do
+          create(:employee_event, :contract_end,
+            employee: first_employee, effective_at: effective_at)
+        end
+
+        context 'and it is in the future' do
+          let(:effective_at) { 1.month.since }
+
+          it do
+            expect { subject }
+              .to change { second_employee.reload.registered_working_times.count }.by(1)
+          end
+          it do
+            expect { subject }.to change { first_employee.registered_working_times.count }.by(1)
+          end
+        end
+
+        context 'and it is in the past' do
+          let(:effective_at) { 2.months.ago }
+
+
+          it do
+            expect { subject }
+              .to change { second_employee.reload.registered_working_times.count }.by(1)
+          end
+          it do
+            expect { subject }.to_not change { first_employee.registered_working_times.count }
+          end
+        end
+
+        context 'and it is today' do
+          let(:effective_at) { Date.today }
+
+
+          it do
+            expect { subject }
+              .to change { second_employee.reload.registered_working_times.count }.by(1)
+          end
+          it do
+            expect { subject }.to_not change { first_employee.registered_working_times.count }
+          end
+        end
+
+        context 'when employee is rehired' do
+          let(:effective_at) { 2.months.ago }
+
+          before do
+            create(:employee_event,
+              employee: first_employee, event_type: 'hired', effective_at: rehired_effective_at)
+          end
+
+          context 'and today is before rehired event' do
+            let(:rehired_effective_at) { 1.week.since }
+
+            it do
+              expect { subject }
+                .to change { second_employee.reload.registered_working_times.count }.by(1)
+            end
+            it do
+              expect { subject }.to_not change { first_employee.registered_working_times.count }
+            end
+          end
+
+          context 'and today is after hired event' do
+            let(:rehired_effective_at) { 1.week.ago }
+
+            it do
+              expect { subject }
+                .to change { second_employee.reload.registered_working_times.count }.by(1)
+            end
+            it do
+              expect { subject }.to change { first_employee.registered_working_times.count }
+            end
+          end
         end
       end
     end
