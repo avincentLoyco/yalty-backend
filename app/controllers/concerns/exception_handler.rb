@@ -32,19 +32,13 @@ module ExceptionHandler
     end
   end
 
-  protected
+  private
 
   def stripe_error(exception)
     raise NotImplementedError, "#{__method__} must be implemented in #{self.class.name}"
   end
 
   def render_stripe_error(exception)
-    render json: ::Api::V1::StripeErrorRepresenter.new(exception).complete, status: 502
-  end
-
-  private
-
-  def stripe_error(exception)
     render json: ::Api::V1::StripeErrorRepresenter.new(exception).complete, status: 502
   end
 
