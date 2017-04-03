@@ -48,6 +48,34 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
         end
       end
 
+      context 'when employee has contract end' do
+        before do
+          create(:employee_event,
+            event_type: 'contract_end', employee: employee, effective_at: contract_end_date
+          )
+          subject
+        end
+
+        context 'when contract end in the future' do
+          let(:contract_end_date) { 1.months.since }
+
+          it do
+            expect_json('working_place',
+              id: first_working_place.id,
+              type: 'working_place',
+              effective_till: (contract_end_date - 1.day).to_date.to_s,
+              assignation_id: employee_working_place.id
+            )
+          end
+        end
+
+        context 'when contract end today' do
+          let(:contract_end_date) { Time.zone.today - 1.day }
+
+          it { expect_json('working_place', {}) }
+        end
+      end
+
       context 'when future policy is now active one' do
         before do
           Timecop.freeze(Time.now + 1.month)
