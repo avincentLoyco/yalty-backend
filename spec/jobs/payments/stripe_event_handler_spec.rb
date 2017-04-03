@@ -5,10 +5,16 @@ require 'sidekiq/testing'
 RSpec.describe Payments::StripeEventsHandler do
   include ActiveJob::TestHelper
 
-  before { Account.current = account }
-
-  let(:account) { create :account, :with_billing_information }
+  let(:customer_id) { 'cus_123' }
+  let!(:account) do
+    create :account, :with_billing_information, customer_id: customer_id,
+      subscription_id: subscription.id
+  end
   let(:invoice_id) { 'invoice_123' }
+  let(:status) { 'active' }
+  let(:subscription) do
+    StripeSubscription.new('subscription', 123, [invoice_item], status, customer_id, 'subscription')
+  end
 
   let(:event) do
     stripe_event = Stripe::Event.new(id: 'ev_123')
@@ -24,16 +30,20 @@ RSpec.describe Payments::StripeEventsHandler do
   end
 
   let(:invoice) do
-    stripe_invoice = Stripe::Invoice.new(id: invoice_id)
-    stripe_invoice.object = 'invoice'
-    stripe_invoice.amount_due = 1234
-    stripe_invoice.currency = 'chf'
-    stripe_invoice.paid = false
-    stripe_invoice.date = 1_488_967_394
-    stripe_invoice.attempt_count = 3
-    stripe_invoice.next_payment_attempt = 1_490_194_636
-    stripe_invoice.lines = list_object
-    stripe_invoice
+    double(
+      id: invoice_id,
+      object: 'invoice',
+      amount_due: 1234,
+      currency: 'chf',
+      paid: false,
+      date: 1_488_967_394,
+      attempt_count: 3,
+      next_payment_attempt: 1_490_194_636,
+      lines: list_object,
+      customer: customer_id,
+      status: status,
+      subscription: subscription.id
+    )
   end
 
   let(:list_object) do
@@ -68,66 +78,61 @@ RSpec.describe Payments::StripeEventsHandler do
     plan
   end
 
+  before { allow(Stripe::Subscription).to receive(:retrieve).and_return(subscription) }
+
   subject(:job) { described_class.perform_now(event) }
 
   context 'when event status is invoice.created' do
     let(:event_type) { 'invoice.created' }
     let(:event_object) { invoice }
-    it { expect { job }.to change { Account.current.invoices.size }.by 1 }
+    it { expect { job }.to change { account.reload.invoices.size }.by 1 }
 
     context 'change invoice status to pending' do
       before { job }
-      it { expect(Account.current.invoices.last.status).to eq('pending') }
+      it { expect(account.invoices.last.status).to eq('pending') }
     end
   end
 
   context 'when event is invoice.payment_failed' do
-    let(:existing_invoice) { create :invoice, account: Account.current }
+    let(:existing_invoice) { create :invoice, account: account }
     let(:event_type) { 'invoice.payment_failed' }
     let(:event_object) { invoice }
     let(:invoice_id) { existing_invoice.invoice_id }
 
     context 'change invoice status to failed' do
       before { job }
-      it { expect(Account.current.invoices.find_by(invoice_id: invoice_id).status).to eq('failed') }
+      it { expect(account.invoices.find_by(invoice_id: invoice_id).status).to eq('failed') }
     end
   end
 
   context 'when event is invoice.payment_succeeded' do
-    let(:existing_invoice) { create :invoice, account: Account.current }
+    let(:existing_invoice) { create :invoice, account: account }
     let(:event_type) { 'invoice.payment_succeeded' }
     let(:event_object) { invoice }
     let(:invoice_id) { existing_invoice.invoice_id }
 
     context 'change invoice status to success' do
       before { job }
-      it { expect(Account.current.invoices.find_by(invoice_id: invoice_id).status).to eq('success') }
+      it { expect(account.invoices.find_by(invoice_id: invoice_id).status).to eq('success') }
     end
 
     it 'generates pdf file'
   end
 
   context 'when event is customer.subscription.updated' do
-    before { Account.current.update(available_modules: ['filevault']) }
+    before { account.update(available_modules: ['filevault']) }
     let(:event_type) { 'customer.subscription.updated' }
     let(:event_object) { subscription }
 
-    let(:subscription) do
-      subscription = Stripe::Subscription.new(id: 'subscription')
-      subscription.status = status
-      subscription
-    end
-
     context "when status is not 'canceled'" do
-      let(:status) { 'active' }
       before { job }
-      it { expect(Account.current.available_modules).to eq(['filevault']) }
+      it { expect(account.available_modules).to eq(['filevault']) }
     end
 
     context "when status is 'canceled'" do
       let(:status) { 'canceled' }
       before { job }
-      it { expect(Account.current.available_modules).to eq([]) }
+      it { expect(account.reload.available_modules).to eq([]) }
     end
   end
 end

@@ -2,26 +2,30 @@ module Payments
   class StripeEventsHandler < ActiveJob::Base
     queue_as :billing
 
+    attr_reader :account
+
     def perform(event)
+      @account = Account.find_by(customer_id: event.data.object.customer)
+
       case event.type
       when 'invoice.created' then
         invoice_lines = event.data.object.lines.data.map { |line| build_invoice_line(line) }
         create_invoice(event.data.object, InvoiceLines.new(data: invoice_lines))
+        update_avaiable_modules(event.data.object)
       when 'invoice.payment_failed' then
         update_invoice_status(event.data.object, 'failed')
       when 'invoice.payment_succeeded' then
         update_invoice_status(event.data.object, 'success')
         # TODO add pdf generation here
-
       when 'customer.subscription.updated' then
-        Account.current.update(available_modules: []) if event.data.object.status == 'canceled'
+        update_avaiable_modules(event.data.object)
       end
     end
 
     private
 
     def update_invoice_status(invoice, status)
-      Account.current.invoices.where(invoice_id: invoice.id).update_all(
+      account.invoices.where(invoice_id: invoice.id).update_all(
         status: status,
         attempts: invoice.attempt_count,
         next_attempt: Time.zone.at(invoice.next_payment_attempt).to_datetime
@@ -29,14 +33,14 @@ module Payments
     end
 
     def create_invoice(invoice, invoice_lines)
-      Account.current.invoices.create(
+      account.invoices.create(
         invoice_id: invoice.id,
         amount_due: invoice.amount_due,
         attempts: invoice.attempt_count,
         next_attempt: Time.zone.at(invoice.next_payment_attempt).to_datetime,
         date: Time.zone.at(invoice.date).to_datetime,
         status: 'pending',
-        address: Account.current.invoice_company_info,
+        address: account.invoice_company_info,
         lines: invoice_lines
       )
     end
@@ -66,6 +70,17 @@ module Payments
         interval: plan.interval,
         interval_count: plan.interval_count
       )
+    end
+
+    def update_avaiable_modules(object)
+      plans = if object.status == 'canceled'
+        []
+      elsif object.object.eql?('subscription')
+        stripe_sub = Stripe::Subscription.retrieve(object.id)
+        stripe_sub.items.map { |si| si.plan.id unless si.plan.id.eql?('free-plan') }.compact
+      end
+      return if plans.nil?
+      account.update(available_modules: plans)
     end
   end
 end

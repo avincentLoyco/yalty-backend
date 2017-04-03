@@ -4,9 +4,11 @@ RSpec.describe API::V1::Payments::PlansController, type: :controller do
   include_context 'shared_context_headers'
   include_context 'shared_context_timecop_helper'
 
-  let(:customer_id) { 'cus_123' }
-  let(:plan_id)     { 'super-plan' }
-  let(:plan)        { StripePlan.new('super-plan', 500, 'chf', 'month', 'Super Plan') }
+  let(:customer_id)  { 'cus_123' }
+  let(:plan_id)      { 'super-plan' }
+  let(:plan)         { StripePlan.new('super-plan', 500, 'chf', 'month', 'Super Plan') }
+  let(:invoice_date) { Time.new(2016, 1, 1, 12, 25, 00, '+00:00').to_i }
+  let(:subscription) { StripeSubscription.new('sub_123', invoice_date) }
 
   let(:sub_item) do
     si = Stripe::SubscriptionItem.new(id: 'si_123')
@@ -20,8 +22,8 @@ RSpec.describe API::V1::Payments::PlansController, type: :controller do
     user.update(role: 'account_owner')
     allow(Stripe::SubscriptionItem).to receive(:create).and_return(sub_item)
     allow(Stripe::SubscriptionItem).to receive(:list).and_return(sub_items)
-    invoice_date = Time.new(2016, 1, 1, 12, 25, 00, '+00:00').to_i
     allow(Stripe::Invoice).to receive_message_chain(:upcoming, :date).and_return(invoice_date)
+    allow(Stripe::Subscription).to receive(:retrieve).and_return(subscription)
     allow(sub_item).to receive(:delete).with(proration_date: invoice_date)
   end
 
@@ -189,7 +191,7 @@ RSpec.describe API::V1::Payments::PlansController, type: :controller do
       end
 
       context 'available_modules' do
-        it { expect { delete_plan }.to change { account.available_modules }.from([plan.id]).to([]) }
+        it { expect { delete_plan }.not_to change { account.available_modules } }
       end
     end
 

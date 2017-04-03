@@ -8,7 +8,7 @@ module API
         def create
           verified_dry_params(dry_validation_schema) do |attributes|
             plan = Account.current.with_lock do
-              adjust_available_modules(:push, attributes[:id])
+              add_to_available_modules(attributes[:id])
               create_plan(attributes[:id])
             end
             ::Payments::UpdateSubscriptionQuantity.perform_later(Account.current)
@@ -18,10 +18,7 @@ module API
 
         def destroy
           verified_dry_params(dry_validation_schema) do |attributes|
-            plan = Account.current.with_lock do
-              adjust_available_modules(:delete, attributes[:id])
-              delete_subscription_item(attributes[:id])
-            end
+            plan = delete_subscription_item(attributes[:id])
             render json: resource_representer.new(plan).complete
           end
         end
@@ -34,7 +31,7 @@ module API
             plan: plan_id,
             quantity: Account.current.employees.active_at_date.count,
             prorate: Account.current.available_modules.size > 1,
-            proration_date: proration_date
+            proration_date: proration_date(Time.zone.today)
           ).plan
           plan.active = true
           plan
@@ -43,7 +40,7 @@ module API
         def delete_subscription_item(plan_id)
           subscription_item = find_subscription_item(plan_id)
           plan = subscription_item.plan
-          subscription_item.delete(proration_date: proration_date)
+          subscription_item.delete(proration_date: proration_date(current_period_end))
           plan.active = false
           plan
         end
@@ -56,8 +53,8 @@ module API
             end
         end
 
-        def adjust_available_modules(method, plan_id)
-          Account.current.available_modules.send(method, plan_id)
+        def add_to_available_modules(plan_id)
+          Account.current.available_modules.push(plan_id)
           Account.current.save
         end
 
@@ -65,12 +62,15 @@ module API
           ::Api::V1::Payments::PlanRepresenter
         end
 
-        def proration_date
-          today = Time.zone.today
-          invoice_date =
-            Time.zone.at(Stripe::Invoice.upcoming(customer: Account.current.customer_id).date)
-          DateTime.new(today.year, today.month, today.day, invoice_date.hour, invoice_date.min,
-            invoice_date.sec, invoice_date.zone).to_i
+        def proration_date(date)
+          DateTime.new(date.year, date.month, date.day, current_period_end.hour,
+            current_period_end.min, current_period_end.sec, current_period_end.zone).to_i
+        end
+
+        def current_period_end
+          @current_period_end ||= Time.zone.at(
+            Stripe::Subscription.retrieve(Account.current.subscription_id).current_period_end
+          )
         end
       end
     end
