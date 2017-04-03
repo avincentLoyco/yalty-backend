@@ -67,7 +67,7 @@ class FindSequenceJoinTableInTime
     employee = join_tables.first.employee
 
     return unless current_join_table && current_join_table.related_resource.reset? &&
-      employee.contract_periods.none? { |period| period.include?(new_effective_at) }
+        employee.contract_periods.none? { |period| period.include?(new_effective_at) }
     raise InvalidResourcesError.new(
       join_tables.first.class, ['Can not assign in reset resource effective at']
     )
