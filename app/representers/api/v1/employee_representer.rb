@@ -47,7 +47,7 @@ module Api::V1
     def active_employee_working_place
       @active_employee_working_place ||=
         related_resources(EmployeeWorkingPlace, nil, resource.id).first
-      return if @active_employee_working_place.related_resource.reset?
+      return if @active_employee_working_place&.related_resource&.reset?
       @active_employee_working_place
     end
   end

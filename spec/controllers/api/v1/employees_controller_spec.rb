@@ -14,15 +14,21 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
   }
 
   context 'GET #show' do
-    let(:employee) { create(:employee_with_working_place, :with_attributes, account: account) }
-    let(:employee_working_place) { employee.first_employee_working_place }
-    let(:first_working_place) { employee_working_place.working_place }
-    let(:future_working_place) { future_employee_working_place.working_place }
+    let!(:employee) { create(:employee_with_working_place, :with_attributes, account: account) }
+    let!(:employee_working_place) { employee.first_employee_working_place }
+    let!(:first_working_place) { employee_working_place.working_place }
+    let!(:future_working_place) { future_employee_working_place.working_place }
     let!(:future_employee_working_place) do
       create(:employee_working_place, employee: employee, effective_at: Time.now + 1.month)
     end
 
     subject { get :show, id: employee.id }
+
+    context 'when employee does not have working place' do
+      before { EmployeeWorkingPlace.destroy_all }
+
+      it { is_expected.to have_http_status(200) }
+    end
 
     context 'with valid data' do
       it { is_expected.to have_http_status(200) }
