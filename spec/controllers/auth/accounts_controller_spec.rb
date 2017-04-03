@@ -10,7 +10,6 @@ RSpec.describe Auth::AccountsController, type: :controller do
   end
 
   describe 'POST #create' do
-    let(:password) { '12345678' }
     let(:company_name) { 'The Company' }
     let(:params) do
       {
@@ -21,8 +20,7 @@ RSpec.describe Auth::AccountsController, type: :controller do
           },
         user:
           {
-            email: 'test@test.com',
-            password: password
+            email: 'test@test.com'
           }
       }
     end
@@ -41,16 +39,6 @@ RSpec.describe Auth::AccountsController, type: :controller do
         end.to change(ActionMailer::Base.deliveries, :count)
 
         expect(ActionMailer::Base.deliveries.last.body).to match(/https?:\/\/the-company/i)
-      end
-
-      context 'should create account when user has no password' do
-        let(:password) { '' }
-        let(:company_name) { 'New Company' }
-
-        it { expect { subject }.to change(Account, :count).by(1)  }
-        it { expect { subject }.to change(Account::User, :count).by(1)  }
-
-        it { is_expected.to have_http_status(:found) }
       end
 
       context 'with referred_by key' do

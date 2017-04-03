@@ -9,7 +9,6 @@ module AccountSchemas
         optional(:referred_by).maybe(:str?)
       end
       required(:user).schema do
-        optional(:password).maybe
         required(:email).filled
       end
     end
