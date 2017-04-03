@@ -28,8 +28,8 @@ module Payments
 
     def update_invoice_status(invoice, status)
       next_attempt = if invoice.next_payment_attempt.present?
-        Time.zone.at(invoice.next_payment_attempt).to_datetime
-      end
+                       Time.zone.at(invoice.next_payment_attempt).to_datetime
+                     end
 
       account.invoices.where(invoice_id: invoice.id).update_all(
         status: status,

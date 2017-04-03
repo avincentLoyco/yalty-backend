@@ -53,12 +53,13 @@ module API
 
         def find_subscription_item(plan_id)
           subscription_item = Stripe::SubscriptionItem
-            .list(subscription: Account.current.subscription_id)
-            .find do |subscription_item|
-              subscription_item.plan.id.eql?(plan_id)
-            end
+                              .list(subscription: Account.current.subscription_id)
+                              .find do |subscription_element|
+                                subscription_element.plan.id.eql?(plan_id)
+                              end
           subscription_item ||
-            raise(StripeError.new(type: 'plan', field: 'id', message: "No such plan: #{plan_id}"))
+            raise(StripeError.new(type: 'plan', field: 'id', message: "No such plan: #{plan_id}"),
+              'No such plan')
         end
 
         def add_to_available_modules(plan_id)

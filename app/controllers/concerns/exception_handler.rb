@@ -26,7 +26,7 @@ module ExceptionHandler
     end
     rescue_from(
       CustomerNotCreated,
-      StripeError,
+      StripeError
     ) do |exception|
       render_stripe_error(exception)
     end
@@ -34,7 +34,7 @@ module ExceptionHandler
 
   private
 
-  def stripe_error(exception)
+  def stripe_error(_exception)
     raise NotImplementedError, "#{__method__} must be implemented in #{self.class.name}"
   end
 

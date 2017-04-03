@@ -18,7 +18,7 @@ module API
           end
         end
 
-        def stripe_error(message)
+        def stripe_error(_message)
           head 502
         end
       end
