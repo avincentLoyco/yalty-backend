@@ -2,8 +2,11 @@ class Ability
   include CanCan::Ability
 
   def initialize(user)
-    if user.owner_or_administrator?
+    if user.role.eql?('account_owner')
       can :manage, :all
+    elsif user.role.eql?('account_administrator')
+      can :manage, :all
+      cannot :manage, :payments
     elsif user.role.eql?('user')
       can :read, Employee::AttributeDefinition
       can :read, WorkingPlace

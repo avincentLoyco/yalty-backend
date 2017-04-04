@@ -2,6 +2,7 @@
 :pidfile: tmp/pids/sidekiq.pid
 :logfile: log/sidekiq.log
 :queues:
+  - billing
   - mailers
   - policies_and_balances
   - update_balance

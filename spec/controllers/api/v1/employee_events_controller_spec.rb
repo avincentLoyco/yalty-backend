@@ -5,6 +5,8 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     resource_name: 'employee_event'
   include_context 'shared_context_headers'
 
+  before { Account.current.update(available_modules: available_modules) }
+  let(:available_modules) { [] }
   let!(:employee_eattribute_definition) do
     create(:employee_attribute_definition,
       account: Account.current,
@@ -13,7 +15,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
   end
   let(:attribute_name) { 'profile_picture' }
   let!(:file_definition) do
-    create(:employee_attribute_definition, :required,
+    create(:employee_attribute_definition, :required_with_nil_allowed,
       account: Account.current,
       name: attribute_name,
       attribute_type: 'File'
@@ -213,25 +215,85 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       context 'when file type attribute send' do
         let(:employee_file) { create(:employee_file) }
 
-        before do
-          allow_any_instance_of(EmployeeFile).to receive(:find_file_path) do
-            ["#{Rails.root}/spec/fixtures/files/test.jpg"]
+        context 'when filevault is not subscribed' do
+          context 'when file type attribute send' do
+            let(:employee_file) { create(:employee_file) }
+
+            before do
+              allow_any_instance_of(EmployeeFile).to receive(:find_file_path) do
+                ["#{Rails.root}/spec/fixtures/files/test.jpg"]
+              end
+              json_payload[:employee_attributes].push(
+                {
+                  type: 'employee_attribute',
+                  attribute_name: file_definition.name,
+                  value: employee_file.id
+                }
+              )
+            end
+
+            context 'when profile_picture sent' do
+
+              it { expect { subject }.to change { employee_file.reload.file_content_type } }
+              it { expect { subject }.to change { employee_file.reload.file_file_size } }
+              it { expect { subject }.to change { Employee.count } }
+              it { expect { subject }.to change { Employee::Event.count } }
+
+              it { is_expected.to have_http_status(201) }
+            end
+
+            context 'when contract is sent' do
+              let(:attribute_name) { 'contract' }
+
+              it { expect { subject }.not_to change { Employee.count } }
+              it { expect { subject }.not_to change { Employee::Event.count } }
+
+              it { is_expected.to have_http_status(403) }
+            end
           end
-          json_payload[:employee_attributes].push(
-            {
-              type: 'employee_attribute',
-              attribute_name: file_definition.name,
-              value: employee_file.id
-            }
-          )
         end
+      end
 
-        it { expect { subject }.to change { employee_file.reload.file_content_type } }
-        it { expect { subject }.to change { employee_file.reload.file_file_size } }
-        it { expect { subject }.to change { Employee.count } }
-        it { expect { subject }.to change { Employee::Event.count } }
+      context 'when filevault is subscribed' do
+        let(:available_modules) { %w(filevault) }
 
-        it { is_expected.to have_http_status(201) }
+        context 'when file type attribute send' do
+          let(:employee_file) { create(:employee_file) }
+
+          before do
+            allow_any_instance_of(EmployeeFile).to receive(:find_file_path) do
+              ["#{Rails.root}/spec/fixtures/files/test.jpg"]
+            end
+            json_payload[:employee_attributes].push(
+              {
+                type: 'employee_attribute',
+                attribute_name: file_definition.name,
+                value: employee_file.id
+              }
+            )
+          end
+
+          context 'when profile_picture sent' do
+
+            it { expect { subject }.to change { employee_file.reload.file_content_type } }
+            it { expect { subject }.to change { employee_file.reload.file_file_size } }
+            it { expect { subject }.to change { Employee.count } }
+            it { expect { subject }.to change { Employee::Event.count } }
+
+            it { is_expected.to have_http_status(201) }
+          end
+
+          context 'when contract is sent' do
+            let(:attribute_name) { 'contract' }
+
+            it { expect { subject }.to change { employee_file.reload.file_content_type } }
+            it { expect { subject }.to change { employee_file.reload.file_file_size } }
+            it { expect { subject }.to change { Employee.count } }
+            it { expect { subject }.to change { Employee::Event.count } }
+
+            it { is_expected.to have_http_status(201) }
+          end
+        end
       end
 
       context 'when child attribute send' do
@@ -821,6 +883,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
     context 'when account user wants to add file' do
       let(:employee_file) { create(:employee_file) }
+      let(:file_value) { employee_file.id }
 
       before do
         json_payload[:employee_attributes].pop
@@ -831,7 +894,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           {
             type: 'employee_attribute',
             attribute_name: file_definition.name,
-            value: employee_file.id
+            value: file_value
           }
         )
       end

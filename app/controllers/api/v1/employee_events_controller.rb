@@ -21,9 +21,7 @@ module API
 
           verify_rehired_event(attributes.except(:employee_attributes))
           verify_employee_attributes_values(attributes[:employee_attributes])
-          unless current_user.owner_or_administrator?
-            UpdateEventAttributeValidator.new(attributes[:employee_attributes]).call
-          end
+          UpdateEventAttributeValidator.new(attributes[:employee_attributes]).call
           resource = CreateEvent.new(attributes, attributes[:employee_attributes].to_a).call
 
           render_resource(resource, status: :created)
@@ -33,12 +31,9 @@ module API
       def update
         verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :update, resource, attributes.except(:employee_attributes)
-
           verify_rehired_event(attributes.except(:employee_attributes))
           verify_employee_attributes_values(attributes[:employee_attributes])
-          unless current_user.owner_or_administrator?
-            UpdateEventAttributeValidator.new(attributes[:employee_attributes]).call
-          end
+          UpdateEventAttributeValidator.new(attributes[:employee_attributes]).call
           UpdateEvent.new(attributes, attributes[:employee_attributes].to_a).call
           render_no_content
         end

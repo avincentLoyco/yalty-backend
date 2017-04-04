@@ -162,6 +162,8 @@ GEM
     fantaskspec (0.9.10)
       rake (~> 10.0)
       rspec (~> 3.0)
+    faraday (0.11.0)
+      multipart-post (>= 1.2, < 3)
     ffi (1.9.10)
     formatador (0.2.5)
     geokit (1.10.0)
@@ -226,6 +228,7 @@ GEM
       equalizer (~> 0.0.9)
       ice_nine (~> 0.11.0)
       procto (~> 0.0.2)
+    multipart-post (2.0.0)
     mutant (0.8.9)
       abstract_type (~> 0.0.7)
       adamantium (~> 0.2.0)
@@ -388,6 +391,8 @@ GEM
     sshkit (1.12.0)
       net-scp (>= 1.1.2)
       net-ssh (>= 2.8.0)
+    stripe (2.0.0)
+      faraday (~> 0)
     temping (3.3.0)
       activerecord (>= 3.1)
       activesupport (>= 3.1)
@@ -476,6 +481,7 @@ DEPENDENCIES
   simplecov
   spring
   spring-commands-rspec
+  stripe (~> 2.0.0)
   temping
   therubyracer (~> 0.12.2)
   timecop

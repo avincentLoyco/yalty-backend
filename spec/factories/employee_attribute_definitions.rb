@@ -22,5 +22,9 @@ FactoryGirl.define do
     trait :required do
       validation { { presence: true } }
     end
+
+    trait :required_with_nil_allowed do
+      validation { { presence: { allow_nil: true } } }
+    end
   end
 end

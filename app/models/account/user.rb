@@ -1,6 +1,7 @@
 class Account::User < ActiveRecord::Base
   include ActsAsIntercomData
   include UserIntercomData
+  include StripeHelpers
 
   has_secure_password
 
@@ -18,6 +19,10 @@ class Account::User < ActiveRecord::Base
 
   before_validation :generate_password, on: :create
   after_create :create_referrer
+  after_update :update_stripe_customer_email,
+    if: -> { stripe_enabled? && (email_changed? || role_changed?) }
+  after_destroy :update_stripe_customer_email,
+    if: -> { stripe_enabled? && role_was.eql?('account_owner') }
 
   def self.current=(user)
     RequestStore.write(:current_account_user, user)
@@ -56,5 +61,10 @@ class Account::User < ActiveRecord::Base
   def create_referrer
     return if Referrer.where(email: email).exists?
     Referrer.create(email: email)
+  end
+
+  def update_stripe_customer_email
+    return unless role_change&.include?('account_owner') || email_changed? || destroyed?
+    Payments::UpdateStripeCustomerDescription.perform_later(account)
   end
 end

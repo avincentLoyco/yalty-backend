@@ -17,6 +17,8 @@ class Employee::AttributeDefinition < ActiveRecord::Base
     inclusion: { in: ->(_) { Attribute::Base.attribute_types } }
 
   scope :required, lambda {
-    where("(validation -> 'presence' = 'true') AND (account_id = ?)", Account.current).pluck(:name)
+    where("(((validation -> 'presence') is not null) AND (validation ->> 'presence' != 'false'))
+            AND (account_id = ?)", Account.current).pluck(:name)
   }
+  scope :not_file, -> { where.not(attribute_type: 'File') }
 end

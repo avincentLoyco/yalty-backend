@@ -14,11 +14,12 @@ RSpec.describe API::V1::SettingsController, type: :controller do
       before { subject }
 
       it { expect_json(
-          subdomain: account.subdomain,
-          company_name: account.company_name,
-          default_locale: account.default_locale,
           id: account.id,
           type: 'account',
+          company_name: account.company_name,
+          subdomain: account.subdomain,
+          available_modules: account.available_modules,
+          default_locale: account.default_locale,
           timezone: account.timezone
         )
       }
@@ -36,6 +37,7 @@ RSpec.describe API::V1::SettingsController, type: :controller do
       expect(response).to have_http_status(200)
       expect(data).to include('company_name')
       expect(data).to include('default_locale')
+      expect(data).to_not include('available_modules')
       expect(data).to_not include('subdomain')
       expect(data).to_not include('id')
       expect(data['company_name']).to eq(Account.current.company_name)

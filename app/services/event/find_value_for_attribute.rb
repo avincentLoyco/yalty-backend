@@ -10,7 +10,8 @@ class FindValueForAttribute
   end
 
   def call
-    return attribute[:value] unless attribute_type && attribute_type.eql?('File')
+    return attribute[:value] unless attribute_type && attribute_type.eql?('File') &&
+        attribute[:value].present?
     employee_file = assign_file_to_employee_file!(attribute[:value])
     form_employee_attribute_version(employee_file)
   end
@@ -41,6 +42,7 @@ class FindValueForAttribute
 
   def shasum(employee_file)
     employee_file.file.styles.keys.map(&:to_s).push('original').each_with_object({}) do |v, sha|
+      next if employee_file.find_file_path(v).empty?
       sha[:"#{v}_sha"] = Digest::SHA256.file(employee_file.find_file_path(v).first).hexdigest
     end
   end

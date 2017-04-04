@@ -1,7 +1,5 @@
 module AuthHelper
-  def referral_http_login
-    user = ENV['REFERRAL_USER']
-    pw = ENV['REFERRAL_PASSWORD']
+  def basic_http_login(user, pw)
     request.env['HTTP_AUTHORIZATION'] = ActionController::HttpAuthentication::Basic.encode_credentials(user,pw)
   end
 end
@@ -12,10 +10,8 @@ module AuthRequestHelper
   #
   # GET '/labels', {}, @env
   #
-  def referral_http_login
+  def basic_http_login(user, pw)
     @env ||= {}
-    user = ENV['REFERRAL_USER']
-    pw = ENV['REFERRAL_PASSWORD']
     @env['HTTP_AUTHORIZATION'] = ActionController::HttpAuthentication::Basic.encode_credentials(user,pw)
   end
 end

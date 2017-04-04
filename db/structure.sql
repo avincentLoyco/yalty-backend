@@ -10,20 +10,6 @@ SET check_function_bodies = false;
 SET client_min_messages = warning;
 
 --
--- Name: tiger; Type: SCHEMA; Schema: -; Owner: -
---
-
-CREATE SCHEMA tiger;
-
-
---
--- Name: topology; Type: SCHEMA; Schema: -; Owner: -
---
-
-CREATE SCHEMA topology;
-
-
---
 -- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: -
 --
 
@@ -35,20 +21,6 @@ CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 --
 
 COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
-
-
---
--- Name: btree_gist; Type: EXTENSION; Schema: -; Owner: -
---
-
-CREATE EXTENSION IF NOT EXISTS btree_gist WITH SCHEMA public;
-
-
---
--- Name: EXTENSION btree_gist; Type: COMMENT; Schema: -; Owner: -
---
-
-COMMENT ON EXTENSION btree_gist IS 'support for indexing common datatypes in GiST';
 
 
 --
@@ -141,7 +113,13 @@ CREATE TABLE accounts (
     default_locale character varying DEFAULT 'en'::character varying,
     timezone character varying,
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
-    referred_by character varying
+    referred_by character varying,
+    customer_id character varying,
+    available_modules text[] DEFAULT '{}'::text[],
+    subscription_renewal_date date,
+    subscription_id character varying,
+    invoice_company_info hstore,
+    invoice_emails text[] DEFAULT '{}'::text[]
 );
 
 
@@ -154,13 +132,13 @@ CREATE TABLE employee_attribute_definitions (
     label character varying,
     system boolean DEFAULT false NOT NULL,
     attribute_type character varying NOT NULL,
-    validation hstore,
     account_id uuid NOT NULL,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
     multiple boolean DEFAULT false NOT NULL,
-    long_token_allowed boolean DEFAULT false NOT NULL
+    long_token_allowed boolean DEFAULT false NOT NULL,
+    validation json
 );
 
 
@@ -340,6 +318,30 @@ CREATE TABLE holidays (
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
     holiday_policy_id uuid NOT NULL
+);
+
+
+--
+-- Name: invoices; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE invoices (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    invoice_id character varying NOT NULL,
+    amount_due integer NOT NULL,
+    status character varying NOT NULL,
+    attempts integer,
+    next_attempt timestamp without time zone,
+    date timestamp without time zone NOT NULL,
+    address hstore,
+    lines json,
+    account_id uuid,
+    receipt_number integer,
+    starting_balance integer,
+    subtotal integer,
+    tax integer,
+    tax_percent numeric,
+    total integer
 );
 
 
@@ -601,8 +603,8 @@ CREATE TABLE working_places (
     street character varying(60),
     street_number character varying(10),
     timezone character varying,
-    state_code character varying(60),
-    reset boolean DEFAULT false
+    reset boolean DEFAULT false,
+    state_code character varying(60)
 );
 
 
@@ -740,6 +742,14 @@ ALTER TABLE ONLY holidays
 
 
 --
+-- Name: invoices_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY invoices
+    ADD CONSTRAINT invoices_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: oauth_access_grants_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -833,6 +843,13 @@ ALTER TABLE ONLY time_offs
 
 ALTER TABLE ONLY working_places
     ADD CONSTRAINT working_places_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: employee_attribute_versions_uniqueness_partial; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE UNIQUE INDEX employee_attribute_versions_uniqueness_partial ON employee_attribute_versions USING btree (attribute_definition_id, employee_id, employee_event_id) WHERE (multiple = false);
 
 
 --
@@ -1029,6 +1046,13 @@ CREATE INDEX index_holiday_policies_on_account_id ON holiday_policies USING btre
 --
 
 CREATE INDEX index_holidays_on_holiday_policy_id ON holidays USING btree (holiday_policy_id);
+
+
+--
+-- Name: index_invoices_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE INDEX index_invoices_on_account_id ON invoices USING btree (account_id);
 
 
 --
@@ -1637,9 +1661,23 @@ INSERT INTO schema_migrations (version) VALUES ('20170123092622');
 
 INSERT INTO schema_migrations (version) VALUES ('20170209083140');
 
+INSERT INTO schema_migrations (version) VALUES ('20170219163252');
+
+INSERT INTO schema_migrations (version) VALUES ('20170221113046');
+
+INSERT INTO schema_migrations (version) VALUES ('20170301085412');
+
 INSERT INTO schema_migrations (version) VALUES ('20170302162303');
+
+INSERT INTO schema_migrations (version) VALUES ('20170307081031');
 
 INSERT INTO schema_migrations (version) VALUES ('20170310135249');
 
 INSERT INTO schema_migrations (version) VALUES ('20170313132722');
+
+INSERT INTO schema_migrations (version) VALUES ('20170322084239');
+
+INSERT INTO schema_migrations (version) VALUES ('20170322103855');
+
+INSERT INTO schema_migrations (version) VALUES ('20170403122406');
 

@@ -4,6 +4,14 @@ Rails.application.routes.draw do
   # API
   namespace :api, path: '', constraints: { subdomain: /^api/ } do
     namespace :v1 do
+      namespace :payments do
+        resources 'cards', except: [:show]
+        resources 'plans', only: [:create, :destroy]
+        resources 'invoices', only: [:index]
+        get 'subscription', to: 'subscriptions#index'
+        put 'subscription/settings', to: 'subscriptions#settings'
+        post 'webhook', to: 'webhooks#webhook'
+      end
       resources :working_places, except: [:edit, :new] do
         post '/employees', to: "employee_working_places#create"
         get '/employees', to: "employee_working_places#index"

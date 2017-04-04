@@ -1,6 +1,10 @@
 require 'rails_helper'
+require 'fakeredis/rspec'
+require 'sidekiq/testing'
 
 RSpec.describe Auth::AccountsController, type: :controller do
+  include ActiveJob::TestHelper
+
   let(:redirect_uri) { 'http://yalty.test/setup'}
   let(:client) { FactoryGirl.create(:oauth_client, redirect_uri: redirect_uri) }
 
@@ -78,6 +82,47 @@ RSpec.describe Auth::AccountsController, type: :controller do
 
         it { expect { subject }.to change(Account::User, :count).by(1) }
         it { expect { subject }.to change(Account, :count).by(1) }
+      end
+
+      context 'stripe customer and subscription' do
+        before { allow_any_instance_of(Account).to receive(:stripe_enabled?).and_return(true) }
+
+        context 'sync' do
+          before do
+            allow(Stripe::Customer).to receive(:create).and_return(customer)
+            allow(Stripe::Subscription).to receive(:create).and_return(subscription)
+          end
+
+          let(:customer) { StripeCustomer.new('cus_123') }
+          let(:subscription) { StripeSubscription.new('sub_123') }
+
+          it { expect { subject }.to change(Account::User, :count).by(1) }
+          it { expect { subject }.to change(Account, :count).by(1) }
+          it { expect { subject }.to_not change(enqueued_jobs, :size) }
+
+          context 'customer_id' do
+            before { subject }
+
+            it { expect(Account.last.customer_id).to eq(customer.id) }
+            it { expect(Account.last.subscription_id).to eq(subscription.id) }
+          end
+        end
+
+        context 'async' do
+          before { allow(Stripe::Customer).to receive(:create).and_raise(Stripe::APIError) }
+
+          it { expect { subject }.to change(Account::User, :count).by(1) }
+          it { expect { subject }.to change(Account, :count).by(1) }
+          it { expect { subject }.to change(enqueued_jobs, :size).by(1) }
+
+          context 'customer_id' do
+            before { subject }
+
+            it { expect(Account.last.customer_id).to be(nil) }
+            it { expect(Account.last.subscription_id).to be(nil) }
+            it { expect(enqueued_jobs.first[:job]).to eq(Payments::CreateCustomerWithSubscription) }
+          end
+        end
       end
      end
 
