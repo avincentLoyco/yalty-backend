@@ -26,6 +26,10 @@ module API
         private
 
         def create_plan(plan_id)
+          # TODO: Temporary trial
+          subscription.trial_end = 10.days.from_now.to_i
+          subscription.save
+
           plan = Stripe::SubscriptionItem.create(plan_creation_params(plan_id)).plan
           plan.active = true
           plan
@@ -77,9 +81,11 @@ module API
         end
 
         def current_period_end
-          @current_period_end ||= Time.zone.at(
-            Stripe::Subscription.retrieve(Account.current.subscription_id).current_period_end
-          )
+          @current_period_end ||= Time.zone.at(subscription.current_period_end)
+        end
+
+        def subscription
+          @subscription ||= Stripe::Subscription.retrieve(Account.current.subscription_id)
         end
 
         def stripe_error(exception)

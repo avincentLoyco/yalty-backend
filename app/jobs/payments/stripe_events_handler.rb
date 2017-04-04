@@ -92,7 +92,7 @@ module Payments
       plans =
         if object&.status.eql?('canceled')
           []
-        elsif object.object.eql?('subscription')
+        elsif object.object.eql?('invoice')
           stripe_sub = Stripe::Subscription.retrieve(object.id)
           stripe_sub.items.map { |si| si.plan.id unless si.plan.id.eql?('free-plan') }.compact
         end
