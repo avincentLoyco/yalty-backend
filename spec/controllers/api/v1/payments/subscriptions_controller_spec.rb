@@ -9,7 +9,7 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
   let(:user) { create(:account_user, role: 'account_administrator', account: account) }
 
   let!(:timestamp)   { Time.zone.now.to_i }
-  let(:customer)     { StripeCustomer.new('cus_123', 'desc', 'ca_123') }
+  let(:customer)     { StripeCustomer.new('cus_123', 'desc', 'test@email.com', 'ca_123') }
   let(:subscription) { StripeSubscription.new('sub_123', timestamp) }
   let(:invoice)      { StripeInvoice.new('in_123', 666, timestamp) }
   let(:card)         { StripeCard.new('ca_123', 4567, 'Visa', 12, 2018) }

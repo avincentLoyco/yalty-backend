@@ -10,11 +10,13 @@ RSpec.describe Payments::UpdateStripeCustomerDescription, type: :job do
   subject(:job) { described_class.perform_now(account) }
 
   context 'in case of success' do
-    let(:customer) { StripeCustomer.new('cus_123', 'Some desc') }
+    let(:customer) { StripeCustomer.new('cus_123', 'Some desc', 'test@emai.com') }
 
     before { allow(Stripe::Customer).to receive(:retrieve).and_return(customer) }
 
     it { expect { subject }.to change(customer, :description) }
+
+    it { expect { subject }.to change(customer, :email) }
 
     it 'methods are invoked' do
       expect(customer).to receive(:save)

@@ -164,6 +164,10 @@ class Account < ActiveRecord::Base
     "#{company_name} (#{subdomain})"
   end
 
+  def stripe_email
+    users.where(role: 'account_owner').reorder('created_at ASC').limit(1).pluck(:email).first
+  end
+
   private
 
   # Generate a subdomain from company name
