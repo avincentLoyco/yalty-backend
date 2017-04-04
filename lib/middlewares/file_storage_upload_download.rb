@@ -91,7 +91,8 @@ class FileStorageUploadDownload
     def path_for_download(file_id, version)
       file_storage_path = File.join(file_upload_root_path, file_id, version, '*')
       files_in_directory = Dir.glob(file_storage_path)
-      raise InvalidData if files_in_directory.size != 1
+      # TODO: https://yaltyapp.atlassian.net/browse/YWA-1171
+      # raise InvalidData if files_in_directory.size != 1
       files_in_directory.first
     end
 
