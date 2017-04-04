@@ -256,7 +256,7 @@ RSpec.describe Account, type: :model do
   end
 
   describe 'stripe callbacks' do
-    let(:customer) { StripeCustomer.new('cus123', 'Some description') }
+    let(:customer) { StripeCustomer.new('cus123', 'Some description', 'test@email.com') }
     let(:subscription) { StripeSubscription.new('sub_123') }
 
     before do

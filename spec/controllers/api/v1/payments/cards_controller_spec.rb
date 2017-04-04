@@ -176,7 +176,7 @@ RSpec.describe API::V1::Payments::CardsController, type: :controller do
   end
 
   context 'PUT /v1/payments/cards/:card_id' do
-    let(:customer) { StripeCustomer.new(customer_id, 'desc', 'c_123') }
+    let(:customer) { StripeCustomer.new(customer_id, 'desc', 'test@email.com', 'c_123') }
     let(:account)  { create(:account, customer_id: customer.id) }
     let(:user)     { create(:account_user, account: account, role: 'account_owner') }
     let(:card_id)  { 'new_id' }

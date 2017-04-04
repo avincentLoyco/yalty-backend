@@ -15,6 +15,7 @@ module Payments
     def perform(account)
       customer = Stripe::Customer.retrieve(account.customer_id)
       customer.description = account.stripe_description
+      customer.email = account.stripe_email
       customer.save
     end
   end

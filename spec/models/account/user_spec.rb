@@ -126,4 +126,82 @@ RSpec.describe Account::User, type: :model do
     it { expect(manager.owner_or_administrator?).to be(true) }
     it { expect(user.owner_or_administrator?).to be(false) }
   end
+
+  describe 'stripe callbacks' do
+    let(:customer) { StripeCustomer.new('cus123', 'Some description', 'test@email.com') }
+    let(:subscription) { StripeSubscription.new('sub_123') }
+
+    before do
+      allow_any_instance_of(Account::User).to receive(:stripe_enabled?).and_return(true)
+      allow(Stripe::Customer).to receive(:retrieve).and_return(customer)
+      allow(Stripe::Customer).to receive(:create).and_return(customer)
+      allow(Stripe::Subscription).to receive(:create).and_return(subscription)
+    end
+
+    context 'update_stripe_customer_email' do
+      shared_examples 'update stripe email' do
+        it 'triggers update method' do
+          expect(user).to receive(:update_stripe_customer_email)
+          subject
+        end
+
+        it 'triggers update job' do
+          expect(Payments::UpdateStripeCustomerDescription)
+            .to receive(:perform_later)
+            .with(account)
+          subject
+        end
+
+        it { expect { subject }.to change(account, :stripe_email) }
+      end
+
+      let(:account) do
+        create(:account, customer_id: 'cus_123', company_name: 'Omnics', subdomain: 'omnics')
+      end
+      let!(:first_user) do
+        create(:account_user,
+          account: account,
+          email: 'first@email.com', role: 'account_owner',
+          created_at: 1.month.ago)
+      end
+      let!(:second_user) do
+        create(:account_user,
+          account: account,
+          email: 'second@email.com', role: 'account_owner',
+          created_at: 1.day.ago)
+      end
+
+      context 'when non stripe user email changes' do
+        subject { user.update!(email: 'change@test.com') }
+
+        let(:user) { second_user }
+
+        it { expect { subject }.to_not change(account, :stripe_email) }
+      end
+
+      context 'when stripe user email changes' do
+        subject { user.update!(email: 'change@test.com') }
+
+        let(:user) { first_user }
+
+        it_behaves_like 'update stripe email'
+      end
+
+      context 'when stripe user is destroyed' do
+        subject { user.destroy }
+
+        let(:user) { first_user }
+
+        it_behaves_like 'update stripe email'
+      end
+
+      context 'when stripe user lose account ownership' do
+        subject { user.update!(role: 'account_administrator') }
+
+        let(:user) { first_user }
+
+        it_behaves_like 'update stripe email'
+      end
+    end
+  end
 end
