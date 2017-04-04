@@ -24,6 +24,7 @@ module Payments
       account.update!(customer_id:
         Stripe::Customer.create(
           description: account.stripe_description,
+          email: account.stripe_email,
           metadata: { account_id: account.id }
         ).id)
     end
