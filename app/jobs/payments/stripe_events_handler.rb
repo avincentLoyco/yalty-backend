@@ -41,9 +41,10 @@ module Payments
     def create_invoice(invoice)
       invoice_lines =
         invoice.lines.data
-               .select { |l| !l.plan.id.eql?('free-plan') && l.plan.trial_period_days.nil? }
+               .select { |l| !l.plan.id.eql?('free-plan') }
                .map { |l| build_invoice_line(l) }
-      return if invoice_lines.empty?
+      return if invoice_lines.empty? ||
+          Stripe::Subscription.retrieve(invoice.subscription).status == 'trialing'
 
       account.invoices.create(
         invoice_id: invoice.id,

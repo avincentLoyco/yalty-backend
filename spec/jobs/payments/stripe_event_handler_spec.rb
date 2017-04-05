@@ -142,7 +142,7 @@ RSpec.describe Payments::StripeEventsHandler do
 
     context 'should not create invoice if in trial period' do
       before do
-        invoice_item_payed.plan.trial_period_days = 10
+        subscription.status = 'trialing'
       end
 
       it { expect { job }.to_not change { account.invoices.count } }

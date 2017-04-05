@@ -7,4 +7,4 @@ StripePlan = Struct.new(:id, :amount, :currency, :interval, :name, :active, :tri
 StripeCard = Struct.new(:id, :last4, :brand, :exp_month, :exp_year, :default, :name)
 StripeEvent = Struct.new(:id, :type)
 StripeSubscriptionItem =
-  Struct.new(:id, :plan, :quantity, :delete, :save, :prorate, :proration_date)
+  Struct.new(:id, :plan, :quantity, :delete, :save, :prorate, :proration_date, :status)
