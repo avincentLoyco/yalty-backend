@@ -142,7 +142,7 @@ class HandleMapOfJoinTablesToNewHiredDate
       .employee_balances
       .where(
         time_off_category_id: etop.time_off_category_id,
-        effective_at: new_hired_date + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET
+        effective_at: new_hired_date + Employee::Balance::ASSIGNATION_OFFSET
       )
       .first
   end
@@ -156,10 +156,12 @@ class HandleMapOfJoinTablesToNewHiredDate
 
   def assign_attributes_to_assignation(etop, assignation_balance)
     assignation_balance.tap do |balance|
+      validity_date =
+        RelatedPolicyPeriod.new(etop).validity_date_for_balance_at(new_hired_date, 'assignation')
       balance.assign_attributes(
-        effective_at: new_hired_date + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
-        policy_credit_addition: time_off_policy_start_date?(etop),
-        validity_date: RelatedPolicyPeriod.new(etop).validity_date_for(new_hired_date),
+        effective_at: new_hired_date + Employee::Balance::ASSIGNATION_OFFSET,
+        balance_type: 'assignation',
+        validity_date: validity_date,
         resource_amount: 0
       )
     end

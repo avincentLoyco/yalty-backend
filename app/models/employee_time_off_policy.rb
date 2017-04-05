@@ -49,9 +49,9 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
   def policy_assignation_balance(effective_at = self.effective_at)
     balance_effective_at =
       if related_resource.reset?
-        effective_at + Employee::Balance::REMOVAL_OFFSET
+        effective_at + Employee::Balance::RESET_OFFSET
       else
-        effective_at + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET
+        effective_at + Employee::Balance::ASSIGNATION_OFFSET
       end
 
     employee

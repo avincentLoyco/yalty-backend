@@ -29,7 +29,7 @@ RSpec.describe HandleMapOfJoinTablesToNewHiredDate, type: :service do
         before do
           EmployeeTimeOffPolicy.all.update_all(effective_at: employee.hired_date)
           Employee::Balance.all.update_all(
-            effective_at: employee.hired_date + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET
+            effective_at: employee.hired_date + Employee::Balance::ASSIGNATION_OFFSET
           )
         end
 
@@ -49,7 +49,7 @@ RSpec.describe HandleMapOfJoinTablesToNewHiredDate, type: :service do
         before do
           first_policy.update!(effective_at: employee.hired_date)
           first_balance.update!(
-            effective_at: employee.hired_date + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET
+            effective_at: employee.hired_date + Employee::Balance::ASSIGNATION_OFFSET
           )
         end
 

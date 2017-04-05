@@ -23,8 +23,8 @@ class AssignResetEmployeeBalance
         @time_off_category.id,
         @employee.id,
         @employee.account.id,
-        reset_balance: true,
-        effective_at: @employee_time_off_policy.effective_at + Employee::Balance::REMOVAL_OFFSET
+        balance_type: 'reset',
+        effective_at: @employee_time_off_policy.effective_at + Employee::Balance::RESET_OFFSET
       ).call.first
   end
 
@@ -51,7 +51,7 @@ class AssignResetEmployeeBalance
       validity_date =
         RelatedPolicyPeriod
         .new(balance.employee_time_off_policy)
-        .validity_date_for(balance.effective_at)
+        .validity_date_for_balance_at(balance.effective_at, balance.balance_type)
 
       UpdateEmployeeBalance.new(balance, validity_date: validity_date).call
     end
@@ -59,6 +59,6 @@ class AssignResetEmployeeBalance
 
   def find_contract_end(old_contract_end)
     return unless old_contract_end.present?
-    old_contract_end.beginning_of_day + Employee::Balance::REMOVAL_OFFSET
+    old_contract_end.beginning_of_day + Employee::Balance::RESET_OFFSET
   end
 end

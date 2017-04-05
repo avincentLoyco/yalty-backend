@@ -34,7 +34,7 @@ class UpdateEvent
       event.employee.send(table_name).with_reset.where(effective_at: reset_effective_at).delete_all
       next unless table_name.eql?('employee_time_off_policies')
       event.employee.employee_balances.where(
-        'effective_at::date = ? AND reset_balance = true', reset_effective_at
+        'effective_at::date = ? AND balance_type = ?', reset_effective_at, 'reset'
       ).delete_all
     end
     HandleContractEnd.new(employee, event.effective_at, reset_effective_at).call

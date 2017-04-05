@@ -19,18 +19,18 @@ RSpec.describe CreateAdditionsAndRemovals do
     end
     let!(:etop_balance_assignation) do
       create(:employee_balance_manual, :addition, employee: employee, time_off_category: category,
-        effective_at: etop.effective_at + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
-        validity_date: '2017-04-01'.to_date + Employee::Balance::REMOVAL_OFFSET)
+        effective_at: etop.effective_at + Employee::Balance::ADDITION_OFFSET,
+        validity_date: '2017-04-01'.to_date + 1.day + Employee::Balance::REMOVAL_OFFSET)
     end
     let!(:etop_balance_removal) do
       create(:employee_balance_manual, employee: employee, time_off_category: category,
-        effective_at: '2017-04-01'.to_date + Employee::Balance::REMOVAL_OFFSET,
-        validity_date: nil)
+        effective_at: '2017-04-01'.to_date + 1.day + Employee::Balance::REMOVAL_OFFSET,
+        validity_date: nil, balance_type: 'removal')
     end
 
     context 'no other etops in category' do
       context 'there are no balances in periods yet' do
-        it { expect { execute_job }.to change(Employee::Balance, :count).by(6) }
+        it { expect { execute_job }.to change(Employee::Balance, :count).by(7) }
       end
 
       context 'there are already balances in upcoming period' do
@@ -56,7 +56,7 @@ RSpec.describe CreateAdditionsAndRemovals do
 
       before { execute_job }
 
-      it { expect(Employee::Balance.count).to eq(8) }
+      it { expect(Employee::Balance.count).to eq(11) }
       it { expect(Employee::Balance.additions.last.resource_amount).to eq(policy.amount) }
     end
 
@@ -71,18 +71,18 @@ RSpec.describe CreateAdditionsAndRemovals do
 
       before { execute_job }
 
-      it { expect(Employee::Balance.count).to eq(9) }
+      it { expect(Employee::Balance.count).to eq(10) }
     end
 
     context 'there is etop after active one' do
       let!(:existing_balance) do
         create(:employee_balance_manual, :addition, employee: employee, time_off_category: category,
-          effective_at: '2017-01-01'.to_date + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
-          validity_date: '2018-04-01'.to_date + Employee::Balance::REMOVAL_OFFSET,
+          effective_at: '2017-01-01'.to_date + Employee::Balance::ASSIGNATION_OFFSET,
+          validity_date: '2018-04-01'.to_date + 1.day + Employee::Balance::REMOVAL_OFFSET,
           created_at: 5.days.from_now, updated_at: 5.days.from_now)
       end
 
-      it { expect { execute_job }.to change(Employee::Balance, :count).by(5) }
+      it { expect { execute_job }.to change(Employee::Balance, :count).by(7) }
       it { expect { execute_job }.to_not change(existing_balance, :updated_at) }
     end
 
@@ -104,8 +104,15 @@ RSpec.describe CreateAdditionsAndRemovals do
         let(:reset_etop_effective_at) { 1.year.since }
 
         context 'and employee is not rehired' do
-          it { expect { subject }.to_not change { Employee::Balance.count } }
           it { expect { subject }.to_not raise_error }
+        end
+
+        context 'it created end of period balance for contract end' do
+          before { execute_job }
+
+          it { expect(Employee::Balance.where(balance_type: 'assignation').count).to eq 1 }
+          it { expect(Employee::Balance.additions.count).to eq 1 }
+          it { expect(Employee::Balance.where(balance_type: 'reset').count).to eq 1 }
         end
 
         context 'and employee is rehired' do
@@ -135,7 +142,7 @@ RSpec.describe CreateAdditionsAndRemovals do
               employee: employee, event_type: 'hired', effective_at: Time.zone.today)
           end
 
-          it { expect { subject }.to change { Employee::Balance.count }.by(7) }
+          it { expect { subject }.to change { Employee::Balance.count }.by(8) }
         end
       end
     end
@@ -178,7 +185,7 @@ RSpec.describe CreateAdditionsAndRemovals do
       it 'has proper amount' do
         subject
 
-        expect(Employee::Balance.additions.pluck(:resource_amount).second).to eq(-time_off.balance)
+        expect(Employee::Balance.additions.pluck(:resource_amount).first).to eq(-time_off.balance)
       end
     end
 
@@ -188,7 +195,7 @@ RSpec.describe CreateAdditionsAndRemovals do
         subject
 
         expect(Employee::Balance.additions.pluck(:resource_amount)).to match_array(
-          [0, 0, 0, 0]
+          [0, 0, 0]
         )
       end
     end

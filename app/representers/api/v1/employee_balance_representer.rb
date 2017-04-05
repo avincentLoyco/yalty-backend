@@ -9,7 +9,7 @@ module Api::V1
         effective_at: resource.effective_at,
         being_processed: resource.being_processed,
         validity_date: resource.validity_date,
-        policy_credit_addition: resource.policy_credit_addition
+        balance_type: resource.balance_type
       }
         .merge(basic)
         .merge(relationship)

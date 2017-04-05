@@ -20,30 +20,32 @@ RSpec.describe AssignResetEmployeeBalance do
         employee: employee, event_type: 'contract_end', effective_at: 1.month.since)
     end
     let(:etop) { employee.reload.employee_time_off_policies.with_reset.first }
-    before { Employee::Balance.reset.destroy_all }
+    before { Employee::Balance.where(balance_type: 'reset').destroy_all }
 
     context 'when there are no employee balances with validity dates' do
 
       it { expect { subject }.to change { Employee::Balance.count }.by(1) }
-      it { expect { subject }.to change { Employee::Balance.reset.count }.by(1) }
+      it do
+        expect { subject }.to change { Employee::Balance.where(balance_type: 'reset').count }.by(1)
+      end
     end
 
     context 'when there are employee balances with validity date after contract end' do
-      let(:removal_date) { contract_end.effective_at + 1.day + Employee::Balance::REMOVAL_OFFSET}
+      let(:removal_date) { contract_end.effective_at + 1.day + Employee::Balance::RESET_OFFSET}
       let(:date_for_not_reset) do
-        not_reset_etop.effective_at + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET
+        not_reset_etop.effective_at + Employee::Balance::ASSIGNATION_OFFSET
       end
 
       let!(:not_reset_assignation) do
         create(:employee_balance_manual,
-          employee: employee, time_off_category: category, policy_credit_addition: true,
+          employee: employee, time_off_category: category, balance_type: 'addition',
           effective_at: date_for_not_reset, manual_amount: 1000,
           validity_date: Time.new(2015, 4, 1) + Employee::Balance::REMOVAL_OFFSET)
       end
 
       let!(:first_start_date) do
         create(:employee_balance_manual,
-          employee: employee, time_off_category: category, policy_credit_addition: true,
+          employee: employee, time_off_category: category, balance_type: 'addition',
           effective_at: date_for_not_reset + 1.year, resource_amount: policy.amount,
           validity_date: Time.new(2016, 4, 1) + Employee::Balance::REMOVAL_OFFSET)
       end

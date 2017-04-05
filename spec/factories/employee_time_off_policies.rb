@@ -6,7 +6,10 @@ FactoryGirl.define do
 
     after(:build) do |etop|
       reset_policy =
-        etop.employee .employee_time_off_policies .with_reset .find_by(effective_at: etop.effective_at, time_off_category_id: etop.time_off_policy.time_off_category_id)
+        etop.employee.employee_time_off_policies.with_reset.find_by(
+          effective_at: etop.effective_at,
+          time_off_category_id: etop.time_off_policy.time_off_category_id
+        )
       reset_policy.destroy if reset_policy.present?
     end
 
@@ -19,9 +22,9 @@ FactoryGirl.define do
           resource_amount: amount,
           employee: policy.employee,
           time_off_category: policy.time_off_policy.time_off_category,
-          policy_credit_addition: true,
-          effective_at: policy.effective_at + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
-          validity_date: RelatedPolicyPeriod.new(policy).validity_date_for(policy.effective_at)
+          balance_type: 'assignation',
+          effective_at: policy.effective_at + Employee::Balance::ASSIGNATION_OFFSET,
+          validity_date: RelatedPolicyPeriod.new(policy).validity_date_for_balance_at(policy.effective_at)
         )
       end
     end
@@ -37,8 +40,8 @@ FactoryGirl.define do
             resource_amount: amount,
             employee: policy.employee,
             time_off_category: policy.time_off_policy.time_off_category,
-            reset_balance: true,
-            effective_at: policy.effective_at + Employee::Balance::REMOVAL_OFFSET
+            balance_type: 'reset',
+            effective_at: policy.effective_at + Employee::Balance::RESET_OFFSET
           )
         end
       end

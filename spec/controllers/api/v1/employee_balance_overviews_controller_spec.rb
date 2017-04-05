@@ -290,7 +290,7 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
             vacation_policy_A_assignation.update!(effective_at: assignation_date)
             create(:employee_balance_manual,
               effective_at:
-                assignation_date + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
+                assignation_date + Employee::Balance::ASSIGNATION_OFFSET,
               manual_amount: manual_amount_for_balance, time_off_category: vacation_category,
               resource_amount: 0, employee: employee)
           end

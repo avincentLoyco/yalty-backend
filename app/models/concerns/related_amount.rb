@@ -38,7 +38,7 @@ module RelatedAmount
     end_time =
       if counter_adition_or_balancer_removal
         if time_off.end_time.to_date > effective_at.to_date
-          (effective_at + 1.day).beginning_of_day
+          effective_at.beginning_of_day
         else
           time_off.end_time
         end

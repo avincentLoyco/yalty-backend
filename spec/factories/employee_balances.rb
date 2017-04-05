@@ -3,7 +3,7 @@ FactoryGirl.define do
     employee
     time_off_category { create(:time_off_category, account: employee.account) }
     resource_amount { Faker::Number.number(2) }
-    policy_credit_addition { true }
+    balance_type 'addition'
     after(:build) do |employee_balance|
       effective_at =
         if employee_balance.time_off.try(:start_time).present?
@@ -33,7 +33,7 @@ FactoryGirl.define do
           employee_balance
           .employee
           .employee_balances
-          .where(time_off_category_id: top.time_off_category_id, policy_credit_addition: true)
+          .where(time_off_category_id: top.time_off_category_id, balance_type: 'addition')
           .order('effective_at').last
         if last_balance_in_category.present?
           year = last_balance_in_category.effective_at.year + 1
@@ -50,7 +50,7 @@ FactoryGirl.define do
     end
 
     trait :with_time_off do
-      policy_credit_addition { false }
+      balance_type 'time_off'
       after(:build) do |employee_balance|
         time_off =
           create(:time_off, :without_balance, employee: employee_balance.employee, time_off_category: employee_balance.time_off_category)
@@ -83,14 +83,14 @@ FactoryGirl.define do
     time_off_category { create(:time_off_category, account: employee.account) }
     resource_amount { Faker::Number.number(2) }
     effective_at { nil }
-    policy_credit_addition false
+    balance_type 'addition'
 
     trait :processing do
       being_processed true
     end
 
     trait :addition do
-      policy_credit_addition true
+      balance_type 'addition'
     end
 
     trait :with_time_off do
@@ -102,6 +102,7 @@ FactoryGirl.define do
             time_off_category: employee_balance.time_off_category, start_time: start_time,
             end_time: end_time)
         employee_balance.time_off = time_off
+        employee_balance.balance_type = 'time_off'
       end
     end
   end

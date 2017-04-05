@@ -73,7 +73,7 @@ class RecreateBalancesHelper
       .not_time_off
       .where(
         'effective_at = ?',
-        old_effective_at + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET
+        old_effective_at + Employee::Balance::ASSIGNATION_OFFSET
       )
       .first
   end
@@ -89,10 +89,10 @@ class RecreateBalancesHelper
       employee.id,
       employee.account.id,
       effective_at: new_effective_at,
-      validity_date: RelatedPolicyPeriod.new(etop).validity_date_for(new_effective_at),
+      validity_date: find_validity_date(etop, new_effective_at, 'assignation'),
       manual_amount: manual_amount,
-      policy_credit_addition: assignation_in_start_date?,
-      resource_amount: assignation_in_start_date? ? etop.time_off_policy.amount : 0,
+      balance_type: 'assignation',
+      resource_amount: 0,
       skip_update: true
     ).call
   end
@@ -160,7 +160,7 @@ class RecreateBalancesHelper
   def update_time_offs_balances!
     balances_with_time_offs.each do |balance|
       balance_etop = etop.present? ? etop : first_etop_before(balance.effective_at)
-      new_date = RelatedPolicyPeriod.new(balance_etop).validity_date_for(balance.effective_at)
+      new_date = find_validity_date(balance_etop, balance.effective_at, 'time_off')
       if new_date != balance.validity_date
         UpdateEmployeeBalance.new(balance, validity_date: new_date).call
       end
@@ -171,5 +171,9 @@ class RecreateBalancesHelper
     balances_in_category = employee.employee_balances.with_time_off.in_category(time_off_category)
     return balances_in_category.between(starting_date, ending_date) if ending_date
     balances_in_category.where('effective_at >= ?', starting_date)
+  end
+
+  def find_validity_date(etop, date, balance_type)
+    RelatedPolicyPeriod.new(etop).validity_date_for_balance_at(date, balance_type)
   end
 end

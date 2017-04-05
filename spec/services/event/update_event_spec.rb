@@ -8,6 +8,7 @@ RSpec.describe do
   before do
     Account.current = employee.account
     Account::User.current = create(:account_user, account: employee.account)
+    employee.events.first.update!(effective_at: 2.years.ago - 2.days)
   end
   subject { UpdateEvent.new(params, employee_attributes_params).call }
   let(:first_name_order) { 1 }
@@ -223,7 +224,7 @@ RSpec.describe do
         employee_attributes_params.shift
         [[20, etops.first], [30, etops.last], [40, new_etop]].map do |manual_amount, etop|
           etop.policy_assignation_balance.update!(
-            manual_amount: manual_amount, policy_credit_addition: false
+            manual_amount: manual_amount, balance_type: 'assignation'
           )
         end
       end
@@ -265,9 +266,6 @@ RSpec.describe do
           it { expect { subject }.to change { new_etop.reload.effective_at } }
           it { expect { subject }.to change { newest_balance.reload.effective_at } }
           it { expect { subject }.to change { second_balance.reload.effective_at } }
-          it do
-            expect { subject }.to change { newest_balance.reload.policy_credit_addition }.to true
-          end
 
           it { expect { subject }.to change { EmployeeTimeOffPolicy.exists?(etops.first.id) } }
           it { expect { subject }.to change { Employee::Balance.exists?(first_balance.id) } }
@@ -280,7 +278,7 @@ RSpec.describe do
           context 'it does not change policy credit addition to true while not policy start date' do
             let(:effective_at) { 1.year.since + 1.day }
 
-            it { expect { subject }.to_not change { newest_balance.reload.policy_credit_addition } }
+            it { expect { subject }.to_not change { newest_balance.reload.balance_type } }
           end
 
           context 'and employee has employee balances' do
@@ -292,35 +290,6 @@ RSpec.describe do
 
             context 'and hired date moved to etop start date' do
               it { expect { subject }.to change { EmployeeTimeOffPolicy.exists?(etops.first.id) } }
-              it { expect { subject }.to change { Employee::Balance.exists?(first_balance.id) } }
-              it { expect { subject }.to change { Employee::Balance.count }.by(-17) }
-              it do
-                expect { subject }.to change { Employee::Balance.pluck(:being_processed).uniq }
-                  .to ([true])
-              end
-              it 'assignations have valid manual amount' do
-                subject
-
-                expect(etops.last.reload.policy_assignation_balance.manual_amount)
-                  .to eq second_balance.manual_amount
-                expect(new_etop.reload.policy_assignation_balance.manual_amount)
-                  .to eq newest_balance.manual_amount
-              end
-
-              it 'assignations are policy credit additions' do
-                subject
-
-                expect(etops.last.reload.policy_assignation_balance.policy_credit_addition)
-                  .to eq true
-                expect(new_etop.reload.policy_assignation_balance.policy_credit_addition)
-                  .to eq true
-              end
-            end
-
-            context 'and hired date moved to not etop start date' do
-              let(:effective_at) { 1.year.since - 1.day }
-
-              it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(-1) }
               it { expect { subject }.to change { Employee::Balance.exists?(first_balance.id) } }
               it { expect { subject }.to change { Employee::Balance.count }.by(-15) }
               it do
@@ -335,14 +304,25 @@ RSpec.describe do
                 expect(new_etop.reload.policy_assignation_balance.manual_amount)
                   .to eq newest_balance.manual_amount
               end
+            end
 
-              it 'assignations are policy credit additions' do
+            context 'and hired date moved to not etop start date' do
+              let(:effective_at) { 1.year.since - 1.day }
+
+              it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(-1) }
+              it { expect { subject }.to change { Employee::Balance.exists?(first_balance.id) } }
+              it { expect { subject }.to change { Employee::Balance.count }.by(-13) }
+              it do
+                expect { subject }.to change { Employee::Balance.pluck(:being_processed).uniq }
+                  .to ([true])
+              end
+              it 'assignations have valid manual amount' do
                 subject
 
-                expect(etops.last.reload.policy_assignation_balance.policy_credit_addition)
-                  .to eq false
-                expect(new_etop.reload.policy_assignation_balance.policy_credit_addition)
-                  .to eq false
+                expect(etops.last.reload.policy_assignation_balance.manual_amount)
+                  .to eq second_balance.manual_amount
+                expect(new_etop.reload.policy_assignation_balance.manual_amount)
+                  .to eq newest_balance.manual_amount
               end
             end
           end
@@ -364,7 +344,7 @@ RSpec.describe do
           it { expect { subject }.to change { second_balance.reload.effective_at } }
           it { expect { subject }.to change { Employee::Balance.additions.count }.by(4) }
           it { expect { subject }.to change { Employee::Balance.removals.count }.by(2) }
-          it { expect { subject }.to change { Employee::Balance.count}.by(6) }
+          it { expect { subject }.to change { Employee::Balance.count}.by(8) }
 
           it { expect { subject }.to_not change { first_balance.reload.manual_amount } }
           it { expect { subject }.to_not change { second_balance.reload.manual_amount } }
@@ -374,12 +354,6 @@ RSpec.describe do
           it { expect { subject }.to_not change { epp.reload.effective_at } }
 
           it { expect { subject }.to_not change { EmployeeTimeOffPolicy.exists?(etops.first.id) } }
-
-          context 'it does not change policy credit addition to true while not policy start date' do
-            let(:effective_at) { 3.years.ago + 1.day }
-
-            it { expect { subject }.to_not change { newest_balance.reload.policy_credit_addition } }
-          end
         end
       end
 
@@ -480,9 +454,9 @@ RSpec.describe do
     let!(:etop_assignation_balance) do
       create(:employee_balance_manual,
         employee: employee, time_off_category: time_offs.first.time_off_category,
-        policy_credit_addition: true,
+        balance_type: 'assignation',
         effective_at:
-          time_offs.first.start_time + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET
+          time_offs.first.start_time + Employee::Balance::ASSIGNATION_OFFSET
       )
     end
     let!(:event) do
@@ -490,17 +464,17 @@ RSpec.describe do
         employee: employee, event_type: 'contract_end', effective_at: Time.zone.today)
     end
     let(:employee_attributes_params) {{ }}
-    let(:reset_balance_effective_at) { effective_at + 1.day + Employee::Balance::REMOVAL_OFFSET }
+    let(:reset_balance_effective_at) { effective_at + 1.day + Employee::Balance::RESET_OFFSET }
     before do
       time_offs.map do |time_off|
         validity_date =
           RelatedPolicyPeriod
             .new(time_off.employee_balance.employee_time_off_policy)
-            .validity_date_for(time_off.end_time)
+            .validity_date_for_balance_at(time_off.end_time)
         UpdateEmployeeBalance.new(time_off.employee_balance, validity_date: validity_date).call
       end
       etops.map do |etop|
-        validity_date = RelatedPolicyPeriod.new(etop).validity_date_for(etop.effective_at)
+        validity_date = RelatedPolicyPeriod.new(etop).validity_date_for_balance_at(etop.effective_at)
         UpdateEmployeeBalance.new(
           etop.policy_assignation_balance, validity_date: validity_date
         ).call
@@ -518,17 +492,17 @@ RSpec.describe do
         it { expect(employee.employee_working_places.count).to eq(2) }
         it { expect(employee.employee_presence_policies.count).to eq(2) }
         it { expect(employee.time_offs.count).to eq (2) }
-        it { expect(employee.employee_balances.where(reset_balance: true).count).to eq (2) }
+        it { expect(employee.employee_balances.where(balance_type: 'reset').count).to eq (2) }
         it do
           expect(time_offs.first.employee_balance.reload.validity_date.to_date)
-            .to eq ('2016/4/1').to_date
+            .to eq ('2016/4/2').to_date
         end
         it do
-          expect(time_offs.last.employee_balance.reload.validity_date)
-            .to eq reset_balance_effective_at
+          expect(time_offs.last.employee_balance.reload.validity_date.to_date)
+            .to eq ('2016/4/2').to_date
         end
         it do
-          expect(employee.employee_balances.where(reset_balance: true)
+          expect(employee.employee_balances.where(balance_type: 'reset')
             .pluck(:effective_at).uniq).to eq ([reset_balance_effective_at])
         end
       end
@@ -536,16 +510,17 @@ RSpec.describe do
       context 'and contract end before policy start date' do
         let(:effective_at) { 1.year.since - 1.days }
 
-        it { expect(employee.employee_balances.count).to eq (13) }
-        it { expect(Employee::Balance.additions.count).to eq (5) }
+        it { expect(employee.employee_balances.count).to eq (16) }
+        it { expect(Employee::Balance.assignations.count).to eq (3) }
 
         it_behaves_like 'Contract end in the future'
       end
 
       context 'when contract end in or after policy start date' do
         shared_examples 'Contract end in or after policy start date' do
-          it { expect(Employee::Balance.additions.count).to eq (7) }
-          it { expect(employee.employee_balances.count).to eq (17) }
+          it { expect(Employee::Balance.additions.count).to eq (6) }
+          it { expect(Employee::Balance.assignations.count).to eq (3) }
+          it { expect(employee.employee_balances.count).to eq (20) }
         end
 
         context 'and contract end in policy start date' do
@@ -584,10 +559,10 @@ RSpec.describe do
           it { expect(employee.employee_presence_policies.count).to eq(2) }
           it { expect(employee.time_offs.count).to eq (1) }
 
-          it { expect(employee.employee_balances.count).to eq (6) }
-          it { expect(employee.employee_balances.where(reset_balance: true).count).to eq (2) }
+          it { expect(employee.employee_balances.count).to eq (9) }
+          it { expect(employee.employee_balances.where(balance_type: 'reset').count).to eq (2) }
           it do
-            expect(employee.employee_balances.where(reset_balance: true)
+            expect(employee.employee_balances.where(balance_type: 'reset')
               .pluck(:effective_at).uniq).to eq ([reset_balance_effective_at])
           end
           it do

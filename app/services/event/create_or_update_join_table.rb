@@ -102,6 +102,7 @@ class CreateOrUpdateJoinTable
       if related_balances.present?
         assignation_balance.destroy!
       else
+        # TODO what with validity date
         assignation_balance.update!(effective_at: assignation_effective_at)
       end
     end
@@ -175,7 +176,7 @@ class CreateOrUpdateJoinTable
   end
 
   def assignation_effective_at
-    params[:effective_at] + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET
+    params[:effective_at] + Employee::Balance::ASSIGNATION_OFFSET
   end
 
   def time_off_category_id

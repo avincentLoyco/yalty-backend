@@ -65,7 +65,10 @@ class FindEmployeeBalancesToUpdate
   end
 
   def next_addition
-    related_balances.additions.where('effective_at > ?', effective_at).order(:effective_at).first
+    related_balances
+      .where(balance_type: 'addition')
+      .where('effective_at > ?', effective_at)
+      .order(:effective_at).first
   end
 
   def no_removals_or_removals_bigger_than_amount?

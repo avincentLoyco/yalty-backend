@@ -380,7 +380,7 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
           assignation_balance = existing_join_table.policy_assignation_balance
           existing_join_table.update!(effective_at: 4.years.ago)
           assignation_balance.update!(
-            effective_at: 4.years.ago + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET
+            effective_at: 4.years.ago + Employee::Balance::ASSIGNATION_OFFSET
           )
         end
         let(:join_table_resource) { first_resource_tables.last }
