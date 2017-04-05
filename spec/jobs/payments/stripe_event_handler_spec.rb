@@ -44,7 +44,6 @@ RSpec.describe Payments::StripeEventsHandler do
       next_payment_attempt: 1_490_194_636,
       lines: invoice_items,
       customer: customer_id,
-      status: status,
       receipt_number: 1234,
       tax: 0,
       tax_percent: 0,
