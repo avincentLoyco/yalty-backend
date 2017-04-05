@@ -11,8 +11,10 @@ module Payments
 
       case event.type
       when 'invoice.created' then
-        create_invoice(event.data.object)
-        update_avaiable_modules(event.data.object)
+        ActiveRecord::Base.transaction do
+          update_avaiable_modules(Stripe::Subscription.retrieve(event.data.object.subscription))
+          create_invoice(event.data.object)
+        end
       when 'invoice.payment_failed' then
         update_invoice_status(event.data.object, 'failed')
       when 'invoice.payment_succeeded' then
@@ -90,15 +92,15 @@ module Payments
       )
     end
 
-    def update_avaiable_modules(object)
+    def update_avaiable_modules(subscription)
       plans =
-        if object&.status.eql?('canceled')
+        if subscription.status.eql?('canceled')
           []
-        elsif object.object.eql?('invoice')
-          stripe_sub = Stripe::Subscription.retrieve(object.id)
-          stripe_sub.items.map { |si| si.plan.id unless si.plan.id.eql?('free-plan') }.compact
+        else
+          subscription.items.map do |item|
+            item.plan.id unless item.plan.id.eql?('free-plan')
+          end.compact
         end
-
       account.update(available_modules: plans) unless plans.nil?
     end
   end
