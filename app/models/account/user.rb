@@ -71,17 +71,18 @@ class Account::User < ActiveRecord::Base
   end
 
   def validate_role_update
-    return unless role_change && role_change.first.eql?('account_owner') &&
+    return true unless role_changed? && role_was.eql?('account_owner') &&
         !account.users.where.not(id: id).where(role: 'account_owner').exists?
 
     errors.add(:role, 'last account owner cannot change role')
+    false
   end
 
   def check_if_last_owner
-    return unless role.eql?('account_owner') &&
+    return true unless role.eql?('account_owner') &&
         !account.users.where.not(id: id).where(role: 'account_owner').exists?
 
     errors.add(:role, 'last account owner cannot be deleted')
-    errors.blank?
+    false
   end
 end

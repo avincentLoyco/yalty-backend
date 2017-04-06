@@ -114,6 +114,7 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
     context 'when user is not an account_owner but' do
       context 'an account_administrator' do
         before do
+          create(:account_user, account: Account::User.current.account, role: 'account_owner')
           Account::User.current.update!(role: 'account_administrator')
           get_subscription
         end
@@ -123,7 +124,8 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
 
       context 'a regular user' do
         before do
-          Account::User.current.update(role: 'user')
+          create(:account_user, account: Account::User.current.account, role: 'account_owner')
+          Account::User.current.update!(role: 'user')
           get_subscription
         end
 
