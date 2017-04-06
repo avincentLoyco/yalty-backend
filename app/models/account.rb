@@ -216,7 +216,7 @@ class Account < ActiveRecord::Base
   end
 
   def create_stripe_customer_with_subscription
-    Payments::CreateCustomerWithSubscription.perform_now(self)
+    Payments::CreateOrUpdateCustomerWithSubscription.perform_now(self)
   end
 
   def update_stripe_customer_description

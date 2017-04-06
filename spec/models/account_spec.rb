@@ -277,7 +277,7 @@ RSpec.describe Account, type: :model do
       end
 
       it 'triggers cration job' do
-        expect(Payments::CreateCustomerWithSubscription).to receive(:perform_now).with(account)
+        expect(Payments::CreateOrUpdateCustomerWithSubscription).to receive(:perform_now).with(account)
         subject
       end
     end
