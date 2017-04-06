@@ -99,6 +99,7 @@ RSpec.describe Payments::StripeEventsHandler do
     plan.currency = 'chf'
     plan.interval = 'month'
     plan.interval_count = 3
+    plan.trial_period_ends = nil
     plan
   end
 
@@ -109,6 +110,7 @@ RSpec.describe Payments::StripeEventsHandler do
     plan.currency = 'chf'
     plan.interval = 'month'
     plan.interval_count = 3
+    plan.trial_period_days = nil
     plan
   end
 
@@ -133,6 +135,14 @@ RSpec.describe Payments::StripeEventsHandler do
     context 'should not create invoice if only free-plan is subscribed' do
       before do
         invoice_items.data = [invoice_item_free]
+      end
+
+      it { expect { job }.to_not change { account.invoices.count } }
+    end
+
+    context 'should not create invoice if in trial period' do
+      before do
+        subscription.status = 'trialing'
       end
 
       it { expect { job }.to_not change { account.invoices.count } }
