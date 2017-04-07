@@ -20,6 +20,7 @@ module API
           @resource = Account.current.users.new(attributes)
 
           authorize! :create, resource
+
           resource.save!
           send_user_invitation
           render_resource(resource, status: :created)
@@ -32,7 +33,10 @@ module API
 
           authorize! :update, attributes[:employee] if attributes[:employee]
           authorize! :update, resource
-          resource.update!(attributes)
+
+          check_old_password(attributes[:password_params]) if attributes[:password_params]
+
+          resource.update!(attributes.merge(attributes.delete(:password_params).to_h))
           render_no_content
         end
       end
@@ -65,6 +69,11 @@ module API
 
         employee_id = attributes.delete(:employee).try(:[], :id)
         attributes[:employee] = employee_id ? Account.current.employees.find(employee_id) : nil
+      end
+
+      def check_old_password(attributes)
+        return if resource.authenticate(attributes.delete(:old_password))
+        raise InvalidPasswordError.new(resource, message: 'Given Password Invalid')
       end
 
       def send_user_invitation

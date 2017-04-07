@@ -41,7 +41,6 @@ Rails.application.routes.draw do
       resources :presence_days, except: [:edit, :new, :index] do
         resources :time_entries, only: :index
       end
-      resource :user_settings, only: [:show, :update]
       resources :employee_event_types, only: [:index]
       resources :time_off_categories, except: [:edit, :new] do
         resources :time_offs, only: :index

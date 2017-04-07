@@ -4,8 +4,13 @@ module UserSchemas
   def post_schema
     Dry::Validation.Form do
       required(:email).filled(:str?)
-      optional(:password).filled(:str?)
-      optional(:role).filled(:str?)
+      required(:locale).maybe(:str?)
+      optional(:role).maybe(:str?)
+      optional(:password_params).schema do
+        required(:old_password).filled(:str?)
+        required(:password).filled(:str?)
+        required(:password_confirmation).filled(:str?)
+      end
       optional(:employee).maybe do
         schema do
           required(:id).filled(:str?)
@@ -17,9 +22,14 @@ module UserSchemas
   def put_schema
     Dry::Validation.Form do
       required(:id).filled(:str?)
-      optional(:email).filled(:str?)
-      optional(:password).filled(:str?)
+      required(:email).filled(:str?)
+      required(:locale).maybe(:str?)
       optional(:role).filled(:str?)
+      optional(:password_params).schema do
+        required(:old_password).filled(:str?)
+        required(:password).filled(:str?)
+        required(:password_confirmation).filled(:str?)
+      end
       optional(:employee).maybe do
         schema do
           required(:id).filled(:str?)
