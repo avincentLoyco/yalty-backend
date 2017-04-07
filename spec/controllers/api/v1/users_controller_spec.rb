@@ -37,7 +37,7 @@ RSpec.describe API::V1::UsersController, type: :controller do
       context 'response body' do
         before { subject }
 
-        it { expect_json_keys(:email, :role, :is_employee, :employee) }
+        it { expect_json_keys(:email, :role, :employee) }
       end
 
       it 'should send email with generated login url' do
@@ -66,7 +66,6 @@ RSpec.describe API::V1::UsersController, type: :controller do
       context 'without optional params' do
         before do
           params.delete(:role)
-          params.delete(:is_employee)
           params.delete(:employee)
         end
 
@@ -169,7 +168,7 @@ RSpec.describe API::V1::UsersController, type: :controller do
     context 'response body' do
       before { subject }
 
-      it { expect_json_keys([:id, :type, :email, :role, :employee, :is_employee]) }
+      it { expect_json_keys([:id, :type, :email, :role, :employee]) }
     end
   end
 
@@ -217,7 +216,6 @@ RSpec.describe API::V1::UsersController, type: :controller do
         before do
           params.delete(:role)
           params.delete(:locale)
-          params.delete(:is_employee)
           params.delete(:employee)
         end
 
