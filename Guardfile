@@ -6,8 +6,8 @@ guard :rspec, cmd: 'bin/rspec', failed_mode: :keep do
 
   # RSpec files
   rspec = dsl.rspec
-  # watch(rspec.spec_helper) { rspec.spec_dir }
-  # watch(rspec.spec_support) { rspec.spec_dir }
+  watch(rspec.spec_helper)
+  watch(rspec.spec_support)
   watch(rspec.spec_files)
 
   # Ruby files
@@ -29,8 +29,8 @@ guard :rspec, cmd: 'bin/rspec', failed_mode: :keep do
 
   # Rails config changes
   # watch(rails.spec_helper)     { rspec.spec_dir }
-  # watch(rails.routes)          { "#{rspec.spec_dir}/routing" }
-  # watch(rails.app_controller)  { "#{rspec.spec_dir}/controllers" }
+  watch(rails.routes)
+  watch(rails.app_controller)
 
   # Capybara features specs
   # watch(rails.view_dirs)     { |m| rspec.spec.call("features/#{m[1]}") }
