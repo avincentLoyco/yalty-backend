@@ -20,7 +20,7 @@ module Payments
     private
 
     def create_or_update_customer(account)
-      unless account.customer_id?
+      if account.customer_id.nil?
         customer = Stripe::Customer.create(
           description: account.stripe_description,
           email: account.stripe_email,
@@ -45,7 +45,7 @@ module Payments
     def create_or_update_subscription(account)
       return unless account.customer_id?
 
-      unless account.subscription_id?
+      if account.subscription_id.nil?
         subscription = Stripe::Subscription.create(
           customer: account.customer_id,
           plan: 'free-plan',

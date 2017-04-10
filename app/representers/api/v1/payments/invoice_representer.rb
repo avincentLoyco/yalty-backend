@@ -45,8 +45,8 @@ module Api
         def filtered_line_items(omit_canceled)
           resource.lines.data.map do |line|
             next if line.plan.present? &&
-                    line.plan.id.eql?('free-plan') ||
-                    (omit_canceled && canceled_modules.include?(line.plan.id))
+                line.plan.id.eql?('free-plan') ||
+                (omit_canceled && canceled_modules.include?(line.plan.id))
 
             line.plan.active = active_plan_ids.include?(line.plan.id) if line.plan.present?
             line

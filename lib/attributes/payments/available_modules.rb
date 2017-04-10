@@ -26,9 +26,7 @@ module Payments
       data.map(&:id).include?(plan_id)
     end
 
-    def size
-      data.size
-    end
+    delegate :size, to: :data
 
     private
 
