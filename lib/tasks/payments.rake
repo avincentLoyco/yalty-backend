@@ -20,4 +20,19 @@ namespace :payments do
     end
     Rake::Task['payments:create_customers_for_existing_accounts'].invoke
   end
+
+  desc 'Create missing receipt_numbers for paid invoices'
+  task create_missing_receipt_numbers: :environment do
+    ActiveRecord::Base.connection.execute(update_receipt_numbers)
+  end
+
+  def update_receipt_numbers
+    "
+      UPDATE invoices
+      SET receipt_number = nextval('receipt_number_seq')
+      WHERE
+        invoices.status = 'success' AND
+        invoices.receipt_number IS NULL
+    "
+  end
 end

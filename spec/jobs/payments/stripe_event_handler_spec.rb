@@ -123,9 +123,10 @@ RSpec.describe Payments::StripeEventsHandler do
     let(:event_object) { invoice }
     it { expect { job }.to change { account.reload.invoices.size }.by 1 }
 
-    context 'change invoice status to pending' do
+    context 'change invoice status to pending and does not update receipt_number' do
       before { job }
       it { expect(account.invoices.last.status).to eq('pending') }
+      it { expect(account.invoices.last.receipt_number).to eq(nil) }
     end
 
     context 'should create invoice if not only free-plan is subscribed' do
@@ -156,9 +157,10 @@ RSpec.describe Payments::StripeEventsHandler do
     let(:event_object) { invoice }
     let(:invoice_id) { existing_invoice.invoice_id }
 
-    context 'change invoice status to failed' do
+    context 'change invoice status to failed and does not change receipt number' do
       before { job }
       it { expect(account.invoices.find_by(invoice_id: invoice_id).status).to eq('failed') }
+      it { expect(account.invoices.last.receipt_number).to eq(nil) }
     end
   end
 
@@ -169,9 +171,10 @@ RSpec.describe Payments::StripeEventsHandler do
     let(:event_object) { invoice }
     let(:invoice_id) { existing_invoice.invoice_id }
 
-    context 'change invoice status to success' do
+    context 'change invoice status to success and changes receipt number' do
       before { job }
       it { expect(account.invoices.find_by(invoice_id: invoice_id).status).to eq('success') }
+      it { expect(account.invoices.last.reload.receipt_number).not_to eq(nil) }
     end
 
     xit 'generates pdf file'

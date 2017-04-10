@@ -67,6 +67,20 @@ COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UU
 
 SET search_path = public, pg_catalog;
 
+--
+-- Name: assign_receipt_number(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION assign_receipt_number() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+            BEGIN
+              NEW.receipt_number:=nextval('receipt_number_seq');
+              Return NEW;
+            END;
+          $$;
+
+
 SET default_tablespace = '';
 
 SET default_with_oids = false;
@@ -478,6 +492,18 @@ CREATE TABLE presence_policies (
     updated_at timestamp without time zone NOT NULL,
     reset boolean DEFAULT false
 );
+
+
+--
+-- Name: receipt_number_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE receipt_number_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
 
 
 --
@@ -1168,6 +1194,13 @@ CREATE UNIQUE INDEX unique_schema_migrations ON schema_migrations USING btree (v
 
 
 --
+-- Name: receipt_number_generator; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER receipt_number_generator BEFORE UPDATE ON invoices FOR EACH ROW WHEN ((((old.status)::text IS DISTINCT FROM (new.status)::text) AND ((new.status)::text = 'success'::text))) EXECUTE PROCEDURE assign_receipt_number();
+
+
+--
 -- Name: fk_rails_04a25b070a; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1680,4 +1713,6 @@ INSERT INTO schema_migrations (version) VALUES ('20170322084239');
 INSERT INTO schema_migrations (version) VALUES ('20170322103855');
 
 INSERT INTO schema_migrations (version) VALUES ('20170403122406');
+
+INSERT INTO schema_migrations (version) VALUES ('20170405183244');
 

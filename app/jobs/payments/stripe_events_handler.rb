@@ -54,7 +54,6 @@ module Payments
         attempts: invoice.attempt_count,
         date: Time.zone.at(invoice.date).to_datetime,
         status: 'pending',
-        receipt_number: invoice.receipt_number,
         starting_balance: invoice.starting_balance,
         subtotal: invoice.subtotal,
         tax: invoice.tax,
