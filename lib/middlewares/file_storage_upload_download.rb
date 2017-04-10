@@ -11,7 +11,7 @@ class FileStorageUploadDownload
 
   class << self
     InvalidData = Class.new(StandardError)
-    KEYS_WHITELIST = %w(token attachment action_type).freeze
+    KEYS_WHITELIST = %w(token attachment action_type disposition).freeze
 
     def call(env)
       request = Rack::Request.new(env)
@@ -50,11 +50,20 @@ class FileStorageUploadDownload
     end
 
     def download_file(token_data, params, file_id)
+      params['disposition'] ||= 'attachment'
       raise InvalidData if invalid_params_for_download?(token_data, params, file_id)
       path = path_for_download(file_id, token_data['version'])
       file = FileStreamer.open(path)
+      filename = token_data['file_name']
       raise InvalidData if sha_checksum_incorrect?(file, token_data)
-      [200, { 'Content-Type' => token_data['file_type'] }, file]
+      [
+        200,
+        {
+          'Content-Type' => token_data['file_type'],
+          'Content-Disposition' => "#{params['disposition']}; filename=\"#{filename}\""
+        },
+        file
+      ]
     end
 
     def invalid_params_for_upload?(token_data, params)
@@ -67,7 +76,8 @@ class FileStorageUploadDownload
     def invalid_params_for_download?(token_data, params, file_id)
       token_data['action_type'] != 'download' ||
         token_data['file_id'] != file_id ||
-        params['action_type'] != token_data['action_type']
+        params['action_type'] != token_data['action_type'] ||
+        !%w(inline attachment).include?(params['disposition'])
     end
 
     def get_file_id(path)

@@ -42,6 +42,7 @@ module API
         return unless file_id.present?
         Account
           .current.employee_attribute_versions
+          .includes(:attribute_definition)
           .where("data -> 'attribute_type' = 'File' AND data -> 'id' = '#{file_id}'")
           .first
       end

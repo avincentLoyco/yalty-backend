@@ -11,14 +11,15 @@ RSpec.describe FileStorageUploadDownload do
   let(:counter) { 1 }
   let(:file_sha) { nil }
   let(:file_type) { 'image/jpg' }
+  let(:file_name) { 'event.jpg' }
   let(:source_path) { File.join(Dir.pwd, '/spec/fixtures/files/test.jpg') }
   let(:file_id) { 'some_random_id' }
   let(:duration) { 'shortterm' }
 
   subject(:set_token_in_redis) do
     Redis.current.hmset(token, 'file_id', file_id, 'counter', counter, 'file_sha', file_sha,
-      'action_type', action_type, 'file_type', file_type, 'duration', duration,
-      'version', 'original')
+      'action_type', action_type, 'file_type', file_type, 'file_name', 'event.jpg',
+      'duration', duration, 'version', 'original')
   end
 
   subject(:get_token) { Redis.current.hgetall(token) }
@@ -167,8 +168,9 @@ RSpec.describe FileStorageUploadDownload do
     let(:destination_path) { "#{dir_path}/test.jpg" }
     let(:employee_file) { File.open(destination_path) }
     let(:action_type) { 'download' }
+    let(:disposition) { 'attachment' }
     let(:file_sha) { Digest::SHA256.file(employee_file).hexdigest }
-    let(:params) {{ token: token, action_type: action_type }}
+    let(:params) {{ token: token, action_type: action_type, disposition: disposition }}
 
     subject(:create_file) do
       FileUtils.mkdir_p(dir_path)
@@ -184,9 +186,36 @@ RSpec.describe FileStorageUploadDownload do
 
       it { expect(last_response.status).to eq(200) }
       it { expect(last_response.body).to_not be_empty }
-      it { expect(last_response.original_headers).to eq('Content-Type' => 'image/jpg') }
+      it { expect(last_response.original_headers).to include('Content-Type' => 'image/jpg') }
+      it { expect(last_response.original_headers).to include('Content-Disposition' => 'attachment; filename="event.jpg"') }
       it { expect(last_response.length).to eq(employee_file.size) }
       it { expect(get_token['counter']).to eq('0') }
+    end
+
+    context 'disposition' do
+      before do
+        create_file
+        set_token_in_redis
+        get_request
+      end
+
+      context 'inline' do
+        let(:disposition) { nil }
+
+        it { expect(last_response.original_headers).to include('Content-Disposition' => 'attachment; filename="event.jpg"') }
+      end
+
+      context 'inline' do
+        let(:disposition) { 'inline' }
+
+        it { expect(last_response.original_headers).to include('Content-Disposition' => 'inline; filename="event.jpg"') }
+      end
+
+      context 'attachment' do
+        let(:disposition) { 'attachment' }
+
+        it { expect(last_response.original_headers).to include('Content-Disposition' => 'attachment; filename="event.jpg"') }
+      end
     end
 
     context 'longterm token does not consider counter' do
