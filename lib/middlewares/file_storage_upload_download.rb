@@ -1,6 +1,14 @@
 require 'pathname'
 
 class FileStorageUploadDownload
+  class FileStreamer < ::File
+    def each(*args)
+      super
+    ensure
+      close
+    end
+  end
+
   class << self
     InvalidData = Class.new(StandardError)
     KEYS_WHITELIST = %w(token attachment action_type).freeze
@@ -44,7 +52,7 @@ class FileStorageUploadDownload
     def download_file(token_data, params, file_id)
       raise InvalidData if invalid_params_for_download?(token_data, params, file_id)
       path = path_for_download(file_id, token_data['version'])
-      file = File.open(path)
+      file = FileStreamer.open(path)
       raise InvalidData if sha_checksum_incorrect?(file, token_data)
       [200, { 'Content-Type' => token_data['file_type'] }, file]
     end
