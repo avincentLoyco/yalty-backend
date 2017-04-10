@@ -11,18 +11,14 @@ module Payments
 
       case event.type
       when 'invoice.created' then
-        ActiveRecord::Base.transaction do
-          update_avaiable_modules(Stripe::Subscription.retrieve(event.data.object.subscription))
-          create_invoice(event.data.object)
-        end
+        create_invoice(event.data.object)
       when 'invoice.payment_failed' then
         update_invoice_status(event.data.object, 'failed')
       when 'invoice.payment_succeeded' then
         update_invoice_status(event.data.object, 'success')
         # TODO: Add pdf generation here
-
       when 'customer.subscription.updated' then
-        update_avaiable_modules(event.data.object)
+        clear_modules_recreate_subscription(event.data.object)
       end
     end
 
@@ -43,7 +39,7 @@ module Payments
     def create_invoice(invoice)
       invoice_lines =
         invoice.lines.data
-               .select { |l| !l.plan.id.eql?('free-plan') }
+               .select { |l| !l.plan.id.eql?('free-plan') && !canceled_modules.include?(l.plan.id) }
                .map { |l| build_invoice_line(l) }
       return if invoice_lines.empty? ||
           Stripe::Subscription.retrieve(invoice.subscription).status == 'trialing'
@@ -91,16 +87,22 @@ module Payments
       )
     end
 
-    def update_avaiable_modules(subscription)
-      plans =
-        if subscription.status.eql?('canceled')
-          []
-        else
-          subscription.items.map do |item|
-            item.plan.id unless item.plan.id.eql?('free-plan')
-          end.compact
-        end
-      account.update(available_modules: plans) unless plans.nil?
+    def clear_modules_recreate_subscription(subscription)
+      return unless subscription.status.eql?('canceled')
+
+      modules = ::Payments::AvailableModules.new
+      subscription = Stripe::Subscription.create(
+        customer: account.customer_id,
+        plan: 'free-plan',
+        tax_percent: 8.0,
+        quantity: account.employees.active_at_date(Time.zone.tomorrow).count
+      )
+
+      account.update!(available_modules: modules, subscription_id: subscription.id)
+    end
+
+    def canceled_modules
+      @canceled_modules ||= @account.available_modules.canceled
     end
   end
 end

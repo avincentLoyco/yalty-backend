@@ -4,7 +4,11 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
   include_context 'shared_context_headers'
   include_context 'shared_context_timecop_helper'
 
-  let(:account) { create(:account, :with_billing_information, available_modules: ['master-plan']) }
+  let(:account) do
+    modules = [::Payments::PlanModule.new(id: 'master-plan', canceled: false)]
+    create(:account, :with_billing_information,
+      available_modules: ::Payments::AvailableModules.new(data: modules))
+  end
   let!(:employees) { create_list(:employee, 5, account: account) }
   let(:user) { create(:account_user, role: 'account_administrator', account: account) }
 

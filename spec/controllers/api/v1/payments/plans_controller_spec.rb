@@ -78,51 +78,97 @@ RSpec.describe API::V1::Payments::PlansController, type: :controller do
   describe '#POST /v1/payments/plans' do
     subject(:create_plan) { post :create, id: plan_id }
 
-    context 'success' do
-      let(:expected_json) do
-        {
-          id: plan.id,
-          amount: plan.amount,
-          currency: plan.currency,
-          interval: plan.interval,
-          name: plan.name,
-          active: true
-        }
-      end
-
+    shared_examples_for 'success POST response' do
       context 'response' do
+        let(:expected_json) do
+          {
+            id: plan.id,
+            amount: plan.amount,
+            currency: plan.currency,
+            interval: plan.interval,
+            name: plan.name,
+            active: true
+          }
+        end
+
         before { create_plan }
 
         it { expect(response.status).to eq(200) }
         it { expect_json(expected_json) }
       end
+    end
 
+    context 'success' do
       context 'subscribe to first plan' do
-        before do
-          account.update(available_modules: [])
+        before { account.update(available_modules: ::Payments::AvailableModules.new) }
+
+        it_should_behave_like 'success POST response'
+
+        it 'should not prorate subscription' do
+          expect(Stripe::SubscriptionItem)
+            .to receive(:create)
+            .with(hash_including(prorate: false))
           create_plan
         end
 
-        it 'should not prorate subscription' do
-          expect(Stripe::SubscriptionItem).to have_received(:create)
-            .with(hash_including(prorate: false))
+        it 'should add plan to available_modules' do
+          expect { create_plan }
+            .to change { account.reload.available_modules.plan_ids }
+            .from([])
+            .to([plan_id])
         end
       end
 
       context 'subscribe to second plan' do
         before do
-          account.update(available_modules: ['any-plan'])
+          modules = [::Payments::PlanModule.new(id: 'any-plan', canceled: false)]
+          account.update(available_modules: ::Payments::AvailableModules.new(data: modules))
+        end
+
+        it_should_behave_like 'success POST response'
+
+        it 'should prorate subscription' do
+          expect(Stripe::SubscriptionItem)
+            .to receive(:create)
+            .with(hash_including(prorate: true))
           create_plan
         end
 
-        it 'should prorate subscription' do
-          expect(Stripe::SubscriptionItem).to have_received(:create)
-            .with(hash_including(prorate: true))
+        it 'should add plan to available_modules' do
+          expect { create_plan }
+            .to change { account.reload.available_modules.size }
+            .from(1)
+            .to(2)
         end
       end
 
-      context 'available_modules' do
-        it { expect { create_plan }.to change { account.available_modules }.from([]).to([plan.id]) }
+      context 'subscribe again to active plan' do
+        before do
+          modules = [
+            ::Payments::PlanModule.new(id: 'any-plan', canceled: false),
+            ::Payments::PlanModule.new(id: plan_id, canceled: true)
+          ]
+          account.update(available_modules: ::Payments::AvailableModules.new(data: modules))
+        end
+
+        it_should_behave_like 'success POST response'
+
+        it 'should reactivate plan' do
+          expect { create_plan }
+            .to change { account.reload.available_modules.canceled.any? }
+            .from(true)
+            .to(false)
+        end
+
+        it 'should not create new SubscriptionItem' do
+          expect(Stripe::SubscriptionItem).to_not receive(:create)
+          create_plan
+        end
+
+        it 'should find existing SubscriptionItem' do
+          expect(Stripe::SubscriptionItem).to receive(:list)
+          create_plan
+        end
       end
     end
 
@@ -149,19 +195,45 @@ RSpec.describe API::V1::Payments::PlansController, type: :controller do
         end
       end
 
-      context 'when account save fails' do
-        before { allow(account).to receive(:save).and_raise('Cannot save') }
+      context 'when we subscribe to first plan' do
+        context 'and account save fails' do
+          before { allow(account).to receive(:save!).and_raise('Cannot save') }
 
-        it { expect { create_plan }.to_not change { account.reload.available_modules } }
-        it { expect(Stripe::SubscriptionItem).to_not receive(:create) }
-      end
-
-      context 'when Stripe fails' do
-        before do
-          allow(Stripe::SubscriptionItem).to receive(:create).and_raise(Stripe::InvalidRequestError)
+          it { expect(Stripe::SubscriptionItem).to_not have_received(:create) }
+          it { expect { create_plan }.to_not change { account.reload.available_modules.data } }
         end
 
-        it { expect { create_plan }.to_not change { account.reload.available_modules } }
+        context 'and Stripe fails' do
+          before do
+            allow(Stripe::SubscriptionItem)
+              .to receive(:create)
+              .and_raise(Stripe::InvalidRequestError)
+          end
+
+          it { expect { create_plan }.to_not change { account.reload.available_modules.data } }
+        end
+      end
+
+      context 'when plan is already active' do
+        before do
+          modules = [::Payments::PlanModule.new(id: plan_id, canceled: true)]
+          account.update(available_modules: ::Payments::AvailableModules.new(data: modules))
+        end
+
+        context 'and account update fails' do
+          before { allow(account).to receive(:save!).and_raise('Cannot save') }
+
+          it { expect(Stripe::SubscriptionItem).to_not have_received(:list) }
+          it { expect { create_plan }.to_not change { account.reload.available_modules.canceled } }
+        end
+
+        context 'and Stripe fails' do
+          before do
+            allow(Stripe::SubscriptionItem).to receive(:list).and_raise(Stripe::InvalidRequestError)
+          end
+
+          it { expect { create_plan }.to_not change { account.reload.available_modules.canceled } }
+        end
       end
 
       it_should_behave_like 'errors', :create
@@ -171,50 +243,62 @@ RSpec.describe API::V1::Payments::PlansController, type: :controller do
   describe '#DELETE /v1/payments/plans' do
     subject(:delete_plan) { delete :destroy, id: plan_id }
 
-    context 'success' do
-      let(:expected_json) do
-        {
-          id: plan.id,
-          amount: plan.amount,
-          currency: plan.currency,
-          interval: plan.interval,
-          name: plan.name,
-          active: false
-        }
-      end
-
-      before { account.update(available_modules: [plan_id]) }
-
+    shared_examples_for 'success DELETE response' do
       context 'response' do
+        let(:expected_json) do
+          {
+            id: plan.id,
+            amount: plan.amount,
+            currency: plan.currency,
+            interval: plan.interval,
+            name: plan.name,
+            active: false
+          }
+        end
+
         before { delete_plan }
 
         it { expect(response.status).to eq(200) }
         it { expect_json(expected_json) }
       end
+    end
 
-      context 'available_modules' do
-        it { expect { delete_plan }.not_to change { account.available_modules } }
+    context 'success' do
+      before do
+        modules = [::Payments::PlanModule.new(id: plan.id, canceled: false)]
+        account.update(available_modules: ::Payments::AvailableModules.new(data: modules))
+      end
+
+      context 'removing plan' do
+        it_should_behave_like 'success DELETE response'
+
+        it 'does not remove SubscriptionItem' do
+          expect_any_instance_of(Stripe::SubscriptionItem).to_not receive(:delete)
+          delete_plan
+        end
+
+        it 'returns existing plan from Stripe' do
+          expect(Stripe::SubscriptionItem).to receive(:list)
+          delete_plan
+        end
+
+        it 'changes canceled status' do
+          expect { delete_plan }
+            .to change { account.reload.available_modules.canceled.empty? }
+            .from(true)
+            .to(false)
+        end
       end
     end
 
     context 'errors' do
       it_should_behave_like 'errors', :destroy
 
-      context 'when account save fails' do
-        before { allow(account).to receive(:save).and_raise('Cannot save') }
+      context 'when account update fails' do
+        before { allow(account).to receive(:update!).and_raise('Cannot update') }
 
-        it { expect { delete_plan }.to_not change { account.reload.available_modules } }
+        it { expect { delete_plan }.to_not change { account.reload.available_modules.data } }
         it { expect(Stripe::SubscriptionItem).to_not receive(:list) }
-        it { expect(sub_item).to_not receive(:delete) }
-      end
-
-      context 'when Stripe fails' do
-        before do
-          allow(Stripe::SubscriptionItem).to receive(:list).and_raise(Stripe::InvalidRequestError)
-        end
-
-        it { expect { delete_plan }.to_not change { account.reload.available_modules } }
-        it { expect(sub_item).to_not receive(:delete) }
       end
     end
   end

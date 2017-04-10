@@ -50,7 +50,8 @@ RSpec.describe API::V1::Payments::InvoicesController, type: :controller do
       end
 
       before do
-        account.update!(available_modules: [invoice.lines.data.first.plan.id])
+        modules =[::Payments::PlanModule.new(id: invoice.lines.data.first.plan.id, canceled: false)]
+        account.update!(available_modules: Payments::AvailableModules.new(data: modules))
         get_invoices
       end
 

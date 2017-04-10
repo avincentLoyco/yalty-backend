@@ -4,6 +4,7 @@ class Account < ActiveRecord::Base
   include StripeHelpers
 
   serialize :invoice_company_info, Payments::CompanyInformation
+  serialize :available_modules, Payments::AvailableModules
 
   validates :subdomain,
     presence: true,
