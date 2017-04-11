@@ -474,6 +474,24 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
               expect(response.body).to include 'Time off policy in category required'
             end
           end
+
+          context 'and start time in previous period and end date in current' do
+            before do
+              create(:employee_time_off_policy,
+                effective_at: '1/1/2016', employee: employee,
+                time_off_policy: create(:time_off_policy, time_off_category: time_off_category))
+            end
+            let(:params) do
+              { id: id, start_time: Date.new(2015, 12, 20), end_time:  Date.new(2016, 1, 1)  }
+            end
+
+            it { is_expected.to have_http_status(422) }
+            it do
+              subject
+
+              expect(response.body).to include "can\'t be set outside of employee contract period"
+            end
+          end
         end
       end
     end

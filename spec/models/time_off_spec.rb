@@ -57,6 +57,20 @@ RSpec.describe TimeOff, type: :model do
             expect { subject.valid? }.to change { subject.errors.messages[:end_time] }
               .to include 'can\'t be set outside of employee contract period'
           end
+
+          context 'when time off start and end in different contract periods' do
+            let(:start_time) { Date.new(2013, 12, 31)}
+            let!(:rehired) do
+              create(:employee_event,
+                employee: employee, event_type: 'hired', effective_at: '3/1/2015')
+            end
+
+            it { expect(subject.valid?).to eq false }
+            it do
+              expect { subject.valid? }.to change { subject.errors.messages[:end_time] }
+                .to include "can\'t be set outside of employee contract period"
+            end
+          end
         end
 
         context 'when employee has more than one contract end date' do

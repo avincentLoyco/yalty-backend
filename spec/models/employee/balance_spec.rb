@@ -222,7 +222,7 @@ RSpec.describe Employee::Balance, type: :model do
 
           context 'with invalid data' do
             context 'effective_at between old contract end and new contract end' do
-              let(:effective_at) { Date.new(2014, 1, 1) + 1.day + 1.second }
+              let(:effective_at) { Date.new(2014, 1, 1) + 1.day + 2.second }
 
               it { expect(subject.valid?).to eq false }
               it do
@@ -253,7 +253,7 @@ RSpec.describe Employee::Balance, type: :model do
 
           it { expect(subject.valid?).to eq false }
           it { expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
-            .to include('can\'t be set outside of employee contract period') }
+            .to include("can't be set outside of employee contract period") }
         end
 
         context 'when effective at after employee creation' do
