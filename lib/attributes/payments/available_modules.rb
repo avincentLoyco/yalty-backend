@@ -14,12 +14,16 @@ module Payments
       change_canceled_status_to(plan_id, false)
     end
 
-    def plan_ids
+    def all
       data.map(&:id)
     end
 
     def canceled
       data.select(&:canceled).map(&:id)
+    end
+
+    def actives
+      data.reject(&:canceled).map(&:id)
     end
 
     def include?(plan_id)

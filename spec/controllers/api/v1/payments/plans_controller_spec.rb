@@ -113,7 +113,7 @@ RSpec.describe API::V1::Payments::PlansController, type: :controller do
 
         it 'should add plan to available_modules' do
           expect { create_plan }
-            .to change { account.reload.available_modules.plan_ids }
+            .to change { account.reload.available_modules.all }
             .from([])
             .to([plan_id])
         end

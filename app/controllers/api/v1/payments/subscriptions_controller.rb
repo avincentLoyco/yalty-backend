@@ -43,13 +43,13 @@ module API
         def plans
           Stripe::Plan.list.select do |plan|
             next if plan.id.eql?('free-plan')
-            plan.active = subscription_plans.include?(plan.id)
+            plan.active = subscribed_plans.include?(plan.id)
             plan
           end
         end
 
-        def subscription_plans
-          @subscription_plans ||= subscription.items.map { |si| si.plan.id }
+        def subscribed_plans
+          @subscribed_plans ||= Account.current.available_modules.actives
         end
 
         def subscription

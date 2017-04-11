@@ -54,7 +54,7 @@ module Api
         end
 
         def active_plan_ids
-          @active_plan_ids ||= Account.current.available_modules.plan_ids
+          @active_plan_ids ||= Account.current.available_modules.all
         end
 
         def canceled_modules

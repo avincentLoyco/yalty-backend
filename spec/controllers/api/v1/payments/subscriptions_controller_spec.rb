@@ -34,7 +34,14 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
   end
 
   before do
-    Account.current.update(customer_id: customer.id, subscription_id: subscription.id)
+    Account.current.update(
+      customer_id: customer.id,
+      subscription_id: subscription.id,
+      available_modules: Payments::AvailableModules.new(data: [
+        Payments::PlanModule.new(id: plans.first.id, canceled: false),
+        Payments::PlanModule.new(id: plans.second.id, canceled: true)
+      ])
+    )
     Account::User.current.update(role: 'account_owner')
 
     allow(Stripe::Customer).to receive(:retrieve).and_return(customer)
