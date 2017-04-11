@@ -14,8 +14,12 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
 
   let!(:timestamp)   { Time.zone.now.to_i }
   let(:customer)     { StripeCustomer.new('cus_123', 'desc', 'test@email.com', 'ca_123') }
-  let(:subscription) { StripeSubscription.new('sub_123', timestamp) }
-  let(:invoice)      { StripeInvoice.new('in_123', 666, timestamp) }
+  let(:subscription) do
+    subscription = StripeSubscription.new('sub_123', timestamp)
+    subscription.tax_percent = 8.0
+    subscription
+  end
+  let(:invoice) { StripeInvoice.new('in_123', 666, timestamp) }
   let(:card)         { StripeCard.new('ca_123', 4567, 'Visa', 12, 2018) }
   let(:plans) do
     ['master-plan', 'evil-plan', 'sweet-sweet-plan', 'free-plan'].map do |plan_id|
@@ -47,6 +51,7 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
     let(:expected_json) do
       {
         id: subscription.id,
+        tax_percent: 8.0,
         current_period_end: '2016-01-01T00:00:00.000Z',
         quantity: 5,
         plans: [
@@ -153,6 +158,27 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
       end
 
       it { expect_json(quantity: 5) }
+    end
+
+    context 'do not include invoice if all modules are canceled at billing date' do
+      before do
+        account.available_modules.data.each do |mod|
+          mod[:canceled] = true
+        end
+        account.save!
+        get_subscription
+      end
+
+      it { expect_json(invoice: nil) }
+    end
+
+    context 'do not include invoice if no module are active at billing date' do
+      before do
+        account.update!(available_modules: ::Payments::AvailableModules.new)
+        get_subscription
+      end
+
+      it { expect_json(invoice: nil) }
     end
   end
 

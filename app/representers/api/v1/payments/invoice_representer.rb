@@ -24,7 +24,7 @@ module Api
             starting_balance: resource.starting_balance,
             subtotal: resource.subtotal,
             tax: resource.tax,
-            tax_percent: resource.tax_percent,
+            tax_percent: resource.tax_percent.present? ? (resource.tax_percent / 100) : nil,
             total: resource.total
           }
         end
