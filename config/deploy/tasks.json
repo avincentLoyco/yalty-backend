@@ -1,0 +1,12 @@
+{
+  "before_migration": [
+  ],
+  "after_migration": [
+    {
+      "task_name": "attribute_definitions:update",
+      "description": [
+        "Create missing attribute definitions"
+      ]
+    }
+  ]
+}

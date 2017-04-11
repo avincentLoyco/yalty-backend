@@ -71,7 +71,8 @@ class Account < ActiveRecord::Base
     salary_certificate: { presence: { allow_nil: true } },
     id_card: { presence: { allow_nil: true } },
     work_permit: { presence: { allow_nil: true } },
-    avs_card: { presence: { allow_nil: true } }
+    avs_card: { presence: { allow_nil: true } },
+    performance_review: { presence: { allow_nil: true } }
   }.with_indifferent_access
 
   MULTIPLE_ATTRIBUTES = %w(child).freeze
@@ -95,6 +96,7 @@ class Account < ActiveRecord::Base
     Attribute::Person.attribute_type => %w(spouse),
     Attribute::File.attribute_type => %w(
       profile_picture salary_slip contract salary_certificate id_card work_permit avs_card
+      performance_review
     )
   }.freeze
 
