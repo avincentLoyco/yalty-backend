@@ -94,7 +94,7 @@ module Payments
       subscription = Stripe::Subscription.create(
         customer: account.customer_id,
         plan: 'free-plan',
-        tax_percent: 8.0,
+        tax_percent: Invoice::TAX_PERCENT,
         quantity: account.employees.active_at_date(Time.zone.tomorrow).count
       )
 

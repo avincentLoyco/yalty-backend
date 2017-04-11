@@ -50,12 +50,12 @@ module Payments
           customer: account.customer_id,
           plan: 'free-plan',
           quantity: account.employees.active_at_date(Time.zone.tomorrow).count,
-          tax_percent: 8.0
+          tax_percent: Invoice::TAX_PERCENT
         )
         account.update!(subscription_id: subscription.id)
       else
         subscription = Stripe::Subscription.retrieve(account.subscription_id)
-        subscription.tax_percent = 8.0
+        subscription.tax_percent = Invoice::TAX_PERCENT
         subscription.save
       end
     end
