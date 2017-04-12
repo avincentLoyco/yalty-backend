@@ -4,14 +4,22 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
   include_context 'shared_context_headers'
   include_context 'shared_context_timecop_helper'
 
-  let(:account) { create(:account, :with_billing_information, available_modules: ['master-plan']) }
+  let(:account) do
+    modules = [::Payments::PlanModule.new(id: 'master-plan', canceled: false)]
+    create(:account, :with_billing_information,
+      available_modules: ::Payments::AvailableModules.new(data: modules))
+  end
   let!(:employees) { create_list(:employee, 5, account: account) }
   let(:user) { create(:account_user, role: 'account_administrator', account: account) }
 
   let!(:timestamp)   { Time.zone.now.to_i }
   let(:customer)     { StripeCustomer.new('cus_123', 'desc', 'test@email.com', 'ca_123') }
-  let(:subscription) { StripeSubscription.new('sub_123', timestamp) }
-  let(:invoice)      { StripeInvoice.new('in_123', 666, timestamp) }
+  let(:subscription) do
+    subscription = StripeSubscription.new('sub_123', timestamp)
+    subscription.tax_percent = 8.0
+    subscription
+  end
+  let(:invoice) { StripeInvoice.new('in_123', 666, timestamp) }
   let(:card)         { StripeCard.new('ca_123', 4567, 'Visa', 12, 2018) }
   let(:plans) do
     ['master-plan', 'evil-plan', 'sweet-sweet-plan', 'free-plan'].map do |plan_id|
@@ -26,7 +34,14 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
   end
 
   before do
-    Account.current.update(customer_id: customer.id, subscription_id: subscription.id)
+    Account.current.update(
+      customer_id: customer.id,
+      subscription_id: subscription.id,
+      available_modules: Payments::AvailableModules.new(data: [
+        Payments::PlanModule.new(id: plans.first.id, canceled: false),
+        Payments::PlanModule.new(id: plans.second.id, canceled: true)
+      ])
+    )
     Account::User.current.update(role: 'account_owner')
 
     allow(Stripe::Customer).to receive(:retrieve).and_return(customer)
@@ -43,6 +58,7 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
     let(:expected_json) do
       {
         id: subscription.id,
+        tax_percent: 8.0,
         current_period_end: '2016-01-01T00:00:00.000Z',
         quantity: 5,
         plans: [
@@ -149,6 +165,27 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
       end
 
       it { expect_json(quantity: 5) }
+    end
+
+    context 'do not include invoice if all modules are canceled at billing date' do
+      before do
+        account.available_modules.data.each do |mod|
+          mod[:canceled] = true
+        end
+        account.save!
+        get_subscription
+      end
+
+      it { expect_json(invoice: nil) }
+    end
+
+    context 'do not include invoice if no module are active at billing date' do
+      before do
+        account.update!(available_modules: ::Payments::AvailableModules.new)
+        get_subscription
+      end
+
+      it { expect_json(invoice: nil) }
     end
   end
 

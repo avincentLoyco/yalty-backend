@@ -18,7 +18,7 @@ RSpec.describe API::V1::SettingsController, type: :controller do
           type: 'account',
           company_name: account.company_name,
           subdomain: account.subdomain,
-          available_modules: account.available_modules,
+          available_modules: account.available_modules.data.map(&:id),
           default_locale: account.default_locale,
           timezone: account.timezone
         )

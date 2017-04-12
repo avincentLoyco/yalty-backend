@@ -29,7 +29,12 @@ RSpec.describe Payments::UpdateAvailableModules, type: :job do
   end
 
   context 'success' do
-    it { expect { job }.to change { account.available_modules }.from([]).to(plan_ids) }
+    it 'changes available_modules' do
+      expect { job }
+        .to change { account.reload.available_modules.data.map(&:id) }
+        .from([])
+        .to(plan_ids)
+    end
   end
 
   context 'error' do

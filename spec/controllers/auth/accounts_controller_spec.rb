@@ -120,7 +120,7 @@ RSpec.describe Auth::AccountsController, type: :controller do
 
             it { expect(Account.last.customer_id).to be(nil) }
             it { expect(Account.last.subscription_id).to be(nil) }
-            it { expect(enqueued_jobs.first[:job]).to eq(Payments::CreateCustomerWithSubscription) }
+            it { expect(enqueued_jobs.first[:job]).to eq(Payments::CreateOrUpdateCustomerWithSubscription) }
           end
         end
       end

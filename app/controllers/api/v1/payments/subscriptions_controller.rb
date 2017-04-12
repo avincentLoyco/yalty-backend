@@ -32,19 +32,24 @@ module API
         end
 
         def upcoming_invoice
+          return if available_modules.size == available_modules.canceled.size
           Stripe::Invoice.upcoming(customer: Account.current.customer_id)
+        end
+
+        def available_modules
+          Account.current.available_modules
         end
 
         def plans
           Stripe::Plan.list.select do |plan|
             next if plan.id.eql?('free-plan')
-            plan.active = subscription_plans.include?(plan.id)
+            plan.active = subscribed_plans.include?(plan.id)
             plan
           end
         end
 
-        def subscription_plans
-          @subscription_plans ||= subscription.items.map { |si| si.plan.id }
+        def subscribed_plans
+          @subscribed_plans ||= Account.current.available_modules.actives
         end
 
         def subscription
