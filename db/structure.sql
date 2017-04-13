@@ -490,7 +490,7 @@ CREATE TABLE presence_policies (
     name character varying,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
-    reset boolean DEFAULT false
+    reset boolean DEFAULT false NOT NULL
 );
 
 
@@ -590,7 +590,7 @@ CREATE TABLE time_off_policies (
     created_at timestamp without time zone,
     updated_at timestamp without time zone,
     name character varying NOT NULL,
-    reset boolean DEFAULT false
+    reset boolean DEFAULT false NOT NULL
 );
 
 
@@ -629,8 +629,8 @@ CREATE TABLE working_places (
     street character varying(60),
     street_number character varying(10),
     timezone character varying,
-    reset boolean DEFAULT false,
-    state_code character varying(60)
+    state_code character varying(60),
+    reset boolean DEFAULT false NOT NULL
 );
 
 
@@ -1428,7 +1428,7 @@ ALTER TABLE ONLY time_offs
 -- PostgreSQL database dump complete
 --
 
-SET search_path TO "$user",public;
+SET search_path TO "$user", public;
 
 INSERT INTO schema_migrations (version) VALUES ('20150506171210');
 
@@ -1717,3 +1717,5 @@ INSERT INTO schema_migrations (version) VALUES ('20170403122406');
 INSERT INTO schema_migrations (version) VALUES ('20170404142827');
 
 INSERT INTO schema_migrations (version) VALUES ('20170405183244');
+
+INSERT INTO schema_migrations (version) VALUES ('20170413123051');
