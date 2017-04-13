@@ -1,5 +1,5 @@
 module Payments
-  class Plan < Basic
+  class Plan < ::BasicAttribute
     attribute :id, String
     attribute :name, String
     attribute :amount, Integer

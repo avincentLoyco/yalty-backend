@@ -1,5 +1,5 @@
 module Payments
-  class InvoiceLines < Basic
+  class InvoiceLines < ::BasicAttribute
     attribute :data, Array[InvoiceLine]
   end
 end

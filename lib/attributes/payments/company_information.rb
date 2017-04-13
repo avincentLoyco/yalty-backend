@@ -1,5 +1,5 @@
 module Payments
-  class CompanyInformation < Basic
+  class CompanyInformation < ::BasicAttribute
     attribute :company_name, String
     attribute :address_1, String
     attribute :address_2, String

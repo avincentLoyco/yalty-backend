@@ -305,7 +305,8 @@ CREATE TABLE generic_files (
     file_file_size integer,
     file_updated_at timestamp without time zone,
     fileable_id uuid,
-    fileable_type character varying
+    fileable_type character varying,
+    sha_sums json
 );
 
 

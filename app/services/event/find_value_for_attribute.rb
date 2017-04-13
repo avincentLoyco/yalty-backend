@@ -37,13 +37,6 @@ class FindValueForAttribute
       id: attribute[:value],
       size: generic_file.file_file_size.to_f,
       file_type: generic_file.file_content_type
-    }.merge(shasum(generic_file))
-  end
-
-  def shasum(generic_file)
-    generic_file.file.styles.keys.map(&:to_s).push('original').each_with_object({}) do |v, sha|
-      next if generic_file.find_file_path(v).empty?
-      sha[:"#{v}_sha"] = Digest::SHA256.file(generic_file.find_file_path(v).first).hexdigest
-    end
+    }.merge(generic_file.sha_sums)
   end
 end
