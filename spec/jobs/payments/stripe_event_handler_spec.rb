@@ -159,6 +159,15 @@ RSpec.describe Payments::StripeEventsHandler do
 
       it { expect { job }.to_not change { account.invoices.count } }
     end
+
+    context 'remove canceled plans from available_modules' do
+      it { expect { job }.to change { account.reload.available_modules.size }.from(2).to(1) }
+
+      it 'removes only canceled jobs' do
+        job
+        expect(account.reload.available_modules.all).to match_array(['filevault'])
+      end
+    end
   end
 
   context 'when event is invoice.payment_failed' do
@@ -186,15 +195,6 @@ RSpec.describe Payments::StripeEventsHandler do
       before { job }
       it { expect(account.invoices.find_by(invoice_id: invoice_id).status).to eq('success') }
       it { expect(account.invoices.last.reload.receipt_number).not_to eq(nil) }
-    end
-
-    context 'remove canceled plans from available_modules' do
-      it { expect { job }.to change { account.reload.available_modules.size }.from(2).to(1) }
-
-      it 'removes only canceled jobs' do
-        job
-        expect(account.reload.available_modules.all).to match_array(['filevault'])
-      end
     end
 
     xit 'generates pdf file'

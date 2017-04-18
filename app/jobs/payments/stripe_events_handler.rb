@@ -12,11 +12,11 @@ module Payments
       case event.type
       when 'invoice.created' then
         create_invoice(event.data.object)
+        clear_modules('canceled')
       when 'invoice.payment_failed' then
         update_invoice_status(event.data.object, 'failed')
       when 'invoice.payment_succeeded' then
         update_invoice_status(event.data.object, 'success')
-        clear_modules('canceled')
         # TODO: Add pdf generation here
       when 'customer.subscription.updated' then
         Account.transaction do
@@ -107,17 +107,16 @@ module Payments
     def clear_modules(scope, subscription = nil)
       return if subscription.present? && !subscription.status.eql?('canceled')
 
-      modules = ::Payments::AvailableModules.new(data:
-        case scope
-        when 'all' then []
-        when 'canceled' then @account.available_modules.full_active
-        end)
+      case scope
+      when 'all' then account.available_modules.delete_all
+      when 'canceled' then account.available_modules.clean
+      end
 
-      account.update!(available_modules: modules)
+      account.save!
     end
 
     def canceled_modules
-      @canceled_modules ||= @account.available_modules.canceled
+      @canceled_modules ||= account.available_modules.canceled
     end
   end
 end

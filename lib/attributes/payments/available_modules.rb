@@ -18,6 +18,14 @@ module Payments
       data.delete(find_plan_module(plan_id))
     end
 
+    def delete_all
+      self.data = []
+    end
+
+    def clean
+      self.data = data.reject(&:canceled)
+    end
+
     def all
       data.map(&:id)
     end
@@ -27,11 +35,7 @@ module Payments
     end
 
     def actives
-      full_active.map(&:id)
-    end
-
-    def full_active
-      data.reject(&:canceled)
+      data.reject(&:canceled).map(&:id)
     end
 
     def include?(plan_id)
