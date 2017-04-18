@@ -1,0 +1,22 @@
+language: ruby
+rvm:
+  - 2
+env:
+  global:
+    - YALTY_DOCKER_BUILD=master
+    - YALTY_DOCKER_BUILD_BRANCH=master
+    - YALTY_DOCKER_BUILD_SHA1=HEAD
+before_install:
+  - rvm @global do gem uninstall bundler -a -x
+  - rvm @global do gem install bundler -v 1.14.6
+script: ./.travis/build
+services:
+  - docker
+addons:
+  apt:
+    packages:
+      - docker-engine
+cache:
+  bundler: true
+notifications:
+  email: false

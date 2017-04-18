@@ -1,0 +1,68 @@
+#!/usr/bin/env ruby
+require 'bundler/setup'
+require 'octokit'
+
+#
+# Configure
+#
+
+if ENV['GITHUB_ACCESS_TOKEN'].nil?
+  puts 'GITHUB_ACCESS_TOKEN is not set'
+  exit 1
+end
+
+begin
+  repository = ENV['TRAVIS_REPO_SLUG']
+  branch = ENV['YALTY_DOCKER_BUILD_BRANCH']
+
+  Octokit.configure do |config|
+    config.access_token = ENV['GITHUB_ACCESS_TOKEN']
+  end
+  github = Octokit::Client.new
+  branch = github.branch(repository, branch) # validate repository and target branch exists
+  ENV['YALTY_DOCKER_BUILD_SHA1'] = branch.commit.sha if ENV['YALTY_DOCKER_BUILD_SHA1'] == 'HEAD'
+rescue Octokit::NotFound
+  puts "Repository (#{repository}) or branch (#{branch}) not found"
+  exit 0
+end
+
+github.create_status(
+  repository, ENV['YALTY_DOCKER_BUILD_SHA1'], 'pending',
+  context: 'yalty/build', description: 'Docker image buid in progress',
+  target_url: "https://travis-ci.com/#{ENV['TRAVIS_REPO_SLUG']}/builds/#{ENV['TRAVIS_BUILD_ID']}"
+)
+
+#
+# Build docker image
+#
+
+def reset_git_working_tree(ref, sha1)
+  puts "Fetch commit #{sha1} from #{ref}"
+  `git fetch --depth=20 origin #{ref}:#{ref} && git reset --hard #{sha1}`
+end
+
+def build_docker_image(docker_tag)
+  docker_repository = ENV['TRAVIS_REPO_SLUG'].gsub(%r{^yalty/yalty-}, 'yalty/')
+
+  puts "Build docker image #{docker_repository}:#{docker_tag}"
+  system("docker login -u=\"#{ENV['DOCKER_USERNAME']}\" -p=\"#{ENV['DOCKER_PASSWORD']}\"") &&
+    system("./bin/build #{docker_repository}:#{docker_tag}") &&
+    system("docker push #{docker_repository}:#{docker_tag}")
+end
+
+if ENV['YALTY_DOCKER_BUILD'] == 'master'
+  reset_git_working_tree('master', ENV['YALTY_DOCKER_BUILD_SHA1'])
+  result = build_docker_image('latest')
+elsif ENV['YALTY_DOCKER_BUILD_BRANCH'] =~ %r{^[^/]+/(ywa-[[:digit:]]+)}i
+  reset_git_working_tree("pull/#{ENV['YALTY_DOCKER_BUILD']}/head", ENV['YALTY_DOCKER_BUILD_SHA1'])
+  result = build_docker_image(Regexp.last_match(1).downcase)
+elsif ENV['YALTY_DOCKER_BUILD_BRANCH'] =~ %r{^releases?/(.+)}i
+  reset_git_working_tree(ENV['YALTY_DOCKER_BUILD_BRANCH'], ENV['YALTY_DOCKER_BUILD_SHA1'])
+  result = build_docker_image("#{Regexp.last_match(1)}-rc-#{ENV['YALTY_DOCKER_BUILD_SHA1']}")
+end
+
+github.create_status(
+  repository, ENV['YALTY_DOCKER_BUILD_SHA1'], result ? 'success' : 'failure',
+  context: 'yalty/build', description: 'Docker image builded',
+  target_url: "https://travis-ci.com/#{ENV['TRAVIS_REPO_SLUG']}/builds/#{ENV['TRAVIS_BUILD_ID']}"
+)
