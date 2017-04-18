@@ -14,6 +14,10 @@ module Payments
       change_canceled_status_to(plan_id, false)
     end
 
+    def delete(plan_id)
+      data.delete(find_plan_module(plan_id))
+    end
+
     def all
       data.map(&:id)
     end
@@ -23,7 +27,11 @@ module Payments
     end
 
     def actives
-      data.reject(&:canceled).map(&:id)
+      full_active.map(&:id)
+    end
+
+    def full_active
+      data.reject(&:canceled)
     end
 
     def include?(plan_id)
@@ -35,9 +43,13 @@ module Payments
     private
 
     def change_canceled_status_to(plan_id, status)
-      plan_module = data.find { |plan| plan[:id].eql?(plan_id) }
+      plan_module = find_plan_module(plan_id)
       return unless plan_module.present?
       plan_module[:canceled] = status
+    end
+
+    def find_plan_module(plan_id)
+      data.find { |plan| plan[:id].eql?(plan_id) }
     end
   end
 end

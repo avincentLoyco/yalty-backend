@@ -116,6 +116,11 @@ RSpec.describe Payments::StripeEventsHandler do
     allow(Stripe::Event).to receive(:retrieve).and_return(stripe_event)
     allow(Stripe::Subscription).to receive(:create).and_return(subscription)
     allow(Stripe::Subscription).to receive(:retrieve).and_return(subscription)
+    modules = [
+      ::Payments::PlanModule.new(id: 'filevault', canceled: false),
+      ::Payments::PlanModule.new(id: 'exports', canceled: true)
+    ]
+    account.update(available_modules: ::Payments::AvailableModules.new(data: modules))
   end
 
   subject(:job) { described_class.perform_now(stripe_event.id) }
@@ -183,21 +188,25 @@ RSpec.describe Payments::StripeEventsHandler do
       it { expect(account.invoices.last.reload.receipt_number).not_to eq(nil) }
     end
 
+    context 'remove canceled plans from available_modules' do
+      it { expect { job }.to change { account.reload.available_modules.size }.from(2).to(1) }
+
+      it 'removes only canceled jobs' do
+        job
+        expect(account.reload.available_modules.all).to match_array(['filevault'])
+      end
+    end
+
     xit 'generates pdf file'
   end
 
   context 'when event is customer.subscription.updated' do
-    before do
-      modules = [::Payments::PlanModule.new(id: 'filevault', canceled: false)]
-      account.update(available_modules: ::Payments::AvailableModules.new(data: modules))
-    end
-
     let(:event_type) { 'customer.subscription.updated' }
     let(:event_object) { subscription }
 
     context "when status is not 'canceled'" do
       before { job }
-      it { expect(account.available_modules.data.map(&:id)).to eq(['filevault']) }
+      it { expect(account.reload.available_modules.all).to match_array(['filevault', 'exports']) }
     end
 
     context "when status is 'canceled'" do

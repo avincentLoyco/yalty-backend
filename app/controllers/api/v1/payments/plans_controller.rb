@@ -56,19 +56,27 @@ module API
         end
 
         def cancel_plan_module(plan_id)
-          Account.current.available_modules.cancel(plan_id)
+          if subscription.status.eql?('trialing')
+            find_subscription_item(plan_id).delete
+            Account.current.available_modules.delete(plan_id)
+          else
+            Account.current.available_modules.cancel(plan_id)
+          end
           Account.current.save!
           find_plan(plan_id, false)
         end
 
         def find_plan(plan_id, active)
-          plan = Stripe::SubscriptionItem.list(subscription: Account.current.subscription_id)
-                                         .find { |si| si.plan.id.eql?(plan_id) }
-                                         .plan
+          plan = find_subscription_item(plan_id).plan
           plan.active = active
           plan ||
             raise(StripeError.new(type: 'plan', field: 'id', message: "No such plan: #{plan_id}"),
               'No such plan')
+        end
+
+        def find_subscription_item(plan_id)
+          Stripe::SubscriptionItem.list(subscription: Account.current.subscription_id)
+                                  .find { |si| si.plan.id.eql?(plan_id) }
         end
 
         def resource_representer
