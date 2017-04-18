@@ -30,7 +30,7 @@ module Payments
       else
         customer = Stripe::Customer.retrieve(account.customer_id)
         customer.email = account.stripe_email
-        customer.description = account.stripe_email
+        customer.description = account.stripe_description
         customer.metadata = customer_metadata(account)
         customer.save
       end

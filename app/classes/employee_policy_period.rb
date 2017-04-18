@@ -55,6 +55,7 @@ class EmployeePolicyPeriod
   end
 
   def current_start_date_from_previous
+    return active_related_policy.effective_at unless previous_related_policy.not_reset?
     previous_policy_period = RelatedPolicyPeriod.new(previous_related_policy)
     if previous_policy_period.last_start_date < active_related_policy.effective_at
       previous_policy_period.last_start_date

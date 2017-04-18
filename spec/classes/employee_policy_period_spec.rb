@@ -11,6 +11,30 @@ RSpec.describe EmployeePolicyPeriod do
   let(:employee) { create(:employee, account: account) }
   subject { EmployeePolicyPeriod.new(employee, category.id) }
 
+  context 'when current policy is a counter type and previous is reset' do
+    before do
+      create(:employee_time_off_policy,
+        employee: employee, time_off_policy: policy,
+        effective_at: employee.events.first.effective_at)
+      create(:employee_event,
+        event_type: 'contract_end', effective_at: 4.months.ago, employee: employee)
+      Timecop.freeze(2016, 4, 1, 0, 0)
+      create(:employee_event,
+        event_type: 'hired', effective_at: 1.week.ago, employee: employee)
+      create(:employee_time_off_policy,
+        employee: employee, time_off_policy: policy, effective_at: 1.week.ago)
+    end
+
+    after { Timecop.return }
+
+    let(:policy) { create(:time_off_policy, :as_counter, time_off_category: category) }
+    let(:category) { create(:time_off_category, account: account) }
+
+    it { expect(subject.previous_policy_period).to eq(Date.new(2015, 9, 2)...1.week.ago.to_date) }
+    it { expect(subject.current_policy_period).to eq(1.week.ago.to_date...Date.new(2017, 1, 1)) }
+    it { expect(subject.future_policy_period).to eq(Date.new(2017, 1, 1)...Date.new(2018, 1, 1)) }
+  end
+
   context 'when employee time off policy is a reset policy' do
     before do
       create(:employee_event, employee: employee, event_type: 'contract_end',
