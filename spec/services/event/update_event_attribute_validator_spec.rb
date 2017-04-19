@@ -110,12 +110,15 @@ RSpec.describe UpdateEventAttributeValidator, type: :service do
       let(:profile_picture_id) { profile_picture.id }
 
       context 'when Account has filevault plan' do
-        before { Account.current.update(available_modules: ['filevault']) }
+        before do
+          modules = [::Payments::PlanModule.new(id: 'filevault', canceled: false)]
+          Account.current.update(available_modules: ::Payments::AvailableModules.new(data: modules))
+        end
 
         it { expect { subject }.not_to raise_error }
       end
       context "when Account doesn't have filevault plan" do
-        before { Account.current.update(available_modules: []) }
+        before { Account.current.update(available_modules: ::Payments::AvailableModules.new) }
 
         context 'when attribute type is profile picture' do
           it { expect { subject }.not_to raise_error }

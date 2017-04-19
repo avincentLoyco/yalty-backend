@@ -7,10 +7,7 @@ module API
 
         def create
           verified_dry_params(dry_validation_schema) do |attributes|
-            plan = Account.current.with_lock do
-              add_to_available_modules(attributes[:id])
-              create_plan(attributes[:id])
-            end
+            plan = Account.current.with_lock { create_plan(attributes[:id]) }
             ::Payments::UpdateSubscriptionQuantity.perform_later(Account.current)
             render json: resource_representer.new(plan).complete
           end
@@ -18,18 +15,29 @@ module API
 
         def destroy
           verified_dry_params(dry_validation_schema) do |attributes|
-            plan = delete_subscription_item(attributes[:id])
-            render json: resource_representer.new(plan).complete
+            Account.current.with_lock { cancel_plan_module(attributes[:id]) }
+            render_no_content
           end
         end
 
         private
 
         def create_plan(plan_id)
+          if Account.current.available_modules.include?(plan_id)
+            Account.current.available_modules.reactivate(plan_id)
+            Account.current.save!
+            find_plan(plan_id, true)
+          else
+            Account.current.available_modules.add(id: plan_id)
+            Account.current.save!
+            subscribe_on_stripe(plan_id)
+          end
+        end
+
+        def subscribe_on_stripe(plan_id)
           # TODO: Temporary trial
           subscription.trial_end = 10.days.from_now.to_i
           subscription.save
-
           plan = Stripe::SubscriptionItem.create(plan_creation_params(plan_id)).plan
           plan.active = true
           plan
@@ -47,28 +55,28 @@ module API
           creation_params.merge(proration_date: proration_date(Time.zone.today))
         end
 
-        def delete_subscription_item(plan_id)
-          subscription_item = find_subscription_item(plan_id)
-          plan = subscription_item.plan
-          subscription_item.delete(proration_date: proration_date(current_period_end))
-          plan.active = false
-          plan
+        def cancel_plan_module(plan_id)
+          if subscription.status.eql?('trialing')
+            Account.current.available_modules.delete(plan_id)
+            Account.current.save!
+            find_subscription_item(plan_id).delete
+          else
+            Account.current.available_modules.cancel(plan_id)
+            Account.current.save!
+          end
         end
 
-        def find_subscription_item(plan_id)
-          subscription_item = Stripe::SubscriptionItem
-                              .list(subscription: Account.current.subscription_id)
-                              .find do |subscription_element|
-                                subscription_element.plan.id.eql?(plan_id)
-                              end
-          subscription_item ||
+        def find_plan(plan_id, active)
+          plan = find_subscription_item(plan_id).plan
+          plan.active = active
+          plan ||
             raise(StripeError.new(type: 'plan', field: 'id', message: "No such plan: #{plan_id}"),
               'No such plan')
         end
 
-        def add_to_available_modules(plan_id)
-          Account.current.available_modules.push(plan_id)
-          Account.current.save
+        def find_subscription_item(plan_id)
+          Stripe::SubscriptionItem.list(subscription: subscription.id)
+                                  .find { |si| si.plan.id.eql?(plan_id) }
         end
 
         def resource_representer

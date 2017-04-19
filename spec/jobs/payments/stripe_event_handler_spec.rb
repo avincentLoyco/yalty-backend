@@ -11,8 +11,6 @@ RSpec.describe Payments::StripeEventsHandler do
       subscription_id: subscription.id
   end
 
-  before { allow(Stripe::Event).to receive(:retrieve).and_return(stripe_event) }
-
   let(:invoice_id) { 'invoice_123' }
   let(:status) { 'active' }
   let(:subscription) do
@@ -114,38 +112,61 @@ RSpec.describe Payments::StripeEventsHandler do
     plan
   end
 
-  before { allow(Stripe::Subscription).to receive(:retrieve).and_return(subscription) }
+  before do
+    allow(Stripe::Event).to receive(:retrieve).and_return(stripe_event)
+    allow(Stripe::Subscription).to receive(:create).and_return(subscription)
+    allow(Stripe::Subscription).to receive(:retrieve).and_return(subscription)
+    modules = [
+      ::Payments::PlanModule.new(id: 'filevault', canceled: false),
+      ::Payments::PlanModule.new(id: 'exports', canceled: true)
+    ]
+    account.update(available_modules: ::Payments::AvailableModules.new(data: modules))
+  end
 
   subject(:job) { described_class.perform_now(stripe_event.id) }
 
   context 'when event status is invoice.created' do
     let(:event_type) { 'invoice.created' }
     let(:event_object) { invoice }
-    it { expect { job }.to change { account.reload.invoices.size }.by 1 }
 
-    context 'change invoice status to pending' do
+    context 'change invoice status to pending and does not update receipt_number' do
       before { job }
       it { expect(account.invoices.last.status).to eq('pending') }
+      it { expect(account.invoices.last.receipt_number).to eq(nil) }
     end
 
     context 'should create invoice if not only free-plan is subscribed' do
-      it { expect { job }.to change { account.invoices.count } }
+      it { expect { job }.to change { account.reload.invoices.size }.by 1 }
     end
 
     context 'should not create invoice if only free-plan is subscribed' do
-      before do
-        invoice_items.data = [invoice_item_free]
-      end
+      before { invoice_items.data = [invoice_item_free] }
 
       it { expect { job }.to_not change { account.invoices.count } }
     end
 
     context 'should not create invoice if in trial period' do
+      before { subscription.status = 'trialing' }
+
+      it { expect { job }.to_not change { account.invoices.count } }
+    end
+
+    context 'should not create invoice if plan is canceled' do
       before do
-        subscription.status = 'trialing'
+        modules = [::Payments::PlanModule.new(id: payed_plan.id, canceled: true)]
+        account.update!(available_modules: ::Payments::AvailableModules.new(data: modules))
       end
 
       it { expect { job }.to_not change { account.invoices.count } }
+    end
+
+    context 'remove canceled plans from available_modules' do
+      it { expect { job }.to change { account.reload.available_modules.size }.from(2).to(1) }
+
+      it 'removes only canceled jobs' do
+        job
+        expect(account.reload.available_modules.all).to match_array(['filevault'])
+      end
     end
   end
 
@@ -156,9 +177,10 @@ RSpec.describe Payments::StripeEventsHandler do
     let(:event_object) { invoice }
     let(:invoice_id) { existing_invoice.invoice_id }
 
-    context 'change invoice status to failed' do
+    context 'change invoice status to failed and does not change receipt number' do
       before { job }
       it { expect(account.invoices.find_by(invoice_id: invoice_id).status).to eq('failed') }
+      it { expect(account.invoices.last.receipt_number).to eq(nil) }
     end
   end
 
@@ -169,28 +191,28 @@ RSpec.describe Payments::StripeEventsHandler do
     let(:event_object) { invoice }
     let(:invoice_id) { existing_invoice.invoice_id }
 
-    context 'change invoice status to success' do
+    context 'change invoice status to success and changes receipt number' do
       before { job }
       it { expect(account.invoices.find_by(invoice_id: invoice_id).status).to eq('success') }
+      it { expect(account.invoices.last.reload.receipt_number).not_to eq(nil) }
     end
 
     xit 'generates pdf file'
   end
 
   context 'when event is customer.subscription.updated' do
-    before { account.update(available_modules: ['filevault']) }
     let(:event_type) { 'customer.subscription.updated' }
     let(:event_object) { subscription }
 
     context "when status is not 'canceled'" do
       before { job }
-      it { expect(account.available_modules).to eq(['filevault']) }
+      it { expect(account.reload.available_modules.all).to match_array(['filevault', 'exports']) }
     end
 
     context "when status is 'canceled'" do
       let(:status) { 'canceled' }
       before { job }
-      it { expect(account.reload.available_modules).to eq([]) }
+      it { expect(account.reload.available_modules.data.map(&:id)).to eq([]) }
     end
   end
 end

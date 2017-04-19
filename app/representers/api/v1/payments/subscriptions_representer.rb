@@ -33,7 +33,7 @@ module Api
 
         def invoice_json
           return unless @invoice.present?
-          ::Api::V1::Payments::InvoiceRepresenter.new(@invoice).complete
+          ::Api::V1::Payments::InvoiceRepresenter.new(@invoice).next_invoice
         end
 
         def default_card_json

@@ -5,7 +5,11 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     resource_name: 'employee_event'
   include_context 'shared_context_headers'
 
-  before { Account.current.update(available_modules: available_modules) }
+  before do
+    Account.current.update(
+      available_modules: ::Payments::AvailableModules.new(data: available_modules)
+    )
+  end
   let(:available_modules) { [] }
   let!(:employee_eattribute_definition) do
     create(:employee_attribute_definition,
@@ -255,7 +259,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       end
 
       context 'when filevault is subscribed' do
-        let(:available_modules) { %w(filevault) }
+        let(:available_modules) { [::Payments::PlanModule.new(id: 'filevault', canceled: false)] }
 
         context 'when file type attribute send' do
           let(:employee_file) { create(:employee_file) }

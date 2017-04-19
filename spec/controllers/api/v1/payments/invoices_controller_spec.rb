@@ -50,7 +50,8 @@ RSpec.describe API::V1::Payments::InvoicesController, type: :controller do
       end
 
       before do
-        account.update!(available_modules: [invoice.lines.data.first.plan.id])
+        modules =[::Payments::PlanModule.new(id: invoice.lines.data.first.plan.id, canceled: false)]
+        account.update!(available_modules: Payments::AvailableModules.new(data: modules))
         get_invoices
       end
 
@@ -71,6 +72,7 @@ RSpec.describe API::V1::Payments::InvoicesController, type: :controller do
       context 'user is not account_owner' do
         context 'user is account_administrator' do
           before do
+            create(:account_user, account: user.account, role: 'account_owner')
             user.update!(role: 'account_administrator')
             get_invoices
           end
@@ -80,6 +82,7 @@ RSpec.describe API::V1::Payments::InvoicesController, type: :controller do
 
         context 'user is regular user' do
           before do
+            create(:account_user, account: user.account, role: 'account_owner')
             user.update!(role: 'user')
             get_invoices
           end
