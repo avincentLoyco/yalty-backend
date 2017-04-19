@@ -193,6 +193,8 @@ How to deploy
 
 First, install [docker](https://docs.docker.com/engine/installation/). Review environment is
 automatically deploy, but for staging and production you should use capitrano.
+[Hub](https://hub.github.com/), the git extension for Github is also required to create Pull
+Request.
 
 You must add following lines to your `.ssh/config` file:
 ```
@@ -207,14 +209,14 @@ Host *
 ```
 
 To deploy release candidate to staging, run following commands. The release branch is automatically
-created and pushed on git, then you must create a pull request on master and wait on the docker
-build (you can see build status on the release branch pull request). Don't forgot to logged in with
-docker cli.
+created, pushed on git, and a pull request created, then wait on the docker build (you can see build
+status on the release branch pull request). Don't forgot to logged in with docker and hub cli.
 ```bash
 git checkout <branch to release> && git pull && bundle
 
 # optionnal if you are already logged in
 docker login
+hub ci-status
 
 ./bin/cap staging release:candidate
 # ... waiting on docker build ...
