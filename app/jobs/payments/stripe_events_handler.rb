@@ -12,13 +12,17 @@ module Payments
       case event.type
       when 'invoice.created' then
         create_invoice(event.data.object)
+        clear_modules('canceled')
       when 'invoice.payment_failed' then
         update_invoice_status(event.data.object, 'failed')
       when 'invoice.payment_succeeded' then
         update_invoice_status(event.data.object, 'success')
         # TODO: Add pdf generation here
       when 'customer.subscription.updated' then
-        clear_modules_recreate_subscription(event.data.object)
+        Account.transaction do
+          clear_modules('all', event.data.object)
+          recreate_subscription(event.data.object)
+        end
       end
     end
 
@@ -87,10 +91,9 @@ module Payments
       )
     end
 
-    def clear_modules_recreate_subscription(subscription)
+    def recreate_subscription(subscription)
       return unless subscription.status.eql?('canceled')
 
-      modules = ::Payments::AvailableModules.new
       subscription = Stripe::Subscription.create(
         customer: account.customer_id,
         plan: 'free-plan',
@@ -98,11 +101,22 @@ module Payments
         quantity: account.employees.active_at_date(Time.zone.tomorrow).count
       )
 
-      account.update!(available_modules: modules, subscription_id: subscription.id)
+      account.update!(subscription_id: subscription.id)
+    end
+
+    def clear_modules(scope, subscription = nil)
+      return if subscription.present? && !subscription.status.eql?('canceled')
+
+      case scope
+      when 'all' then account.available_modules.delete_all
+      when 'canceled' then account.available_modules.clean
+      end
+
+      account.save!
     end
 
     def canceled_modules
-      @canceled_modules ||= @account.available_modules.canceled
+      @canceled_modules ||= account.available_modules.canceled
     end
   end
 end
