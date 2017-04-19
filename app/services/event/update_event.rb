@@ -144,6 +144,7 @@ class UpdateEvent
         event.save!
         update_balances
       end
+      update_contract_end
       event.employee_attribute_versions.each(&:save!)
       event
     else
@@ -153,6 +154,13 @@ class UpdateEvent
 
       raise InvalidResourcesError.new(event, messages)
     end
+  end
+
+  def update_contract_end
+    contract_end_for = employee.contract_end_for(old_effective_at)
+    return unless contract_end_for.present? && old_effective_at < event.effective_at &&
+        contract_end_for + 1.day == old_effective_at
+    HandleContractEnd.new(employee, old_effective_at - 1.day, old_effective_at - 1.day).call
   end
 
   def update_assignations_and_balances
@@ -167,7 +175,6 @@ class UpdateEvent
       updated_assignations[:join_tables].select do |join_table|
         join_table.class.eql?(EmployeeTimeOffPolicy)
       end
-
     employee_time_off_policies.map do |policy|
       ManageEmployeeBalanceAdditions.new(policy).call
     end

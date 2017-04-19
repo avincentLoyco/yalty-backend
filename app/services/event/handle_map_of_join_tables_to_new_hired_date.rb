@@ -38,7 +38,7 @@ class HandleMapOfJoinTablesToNewHiredDate
       else
         update_or_remove_join_table
       end
-    end.compact.flatten.uniq
+    end.flatten.compact.uniq
   end
 
   def single_etop_by_category_in_range?
@@ -55,10 +55,10 @@ class HandleMapOfJoinTablesToNewHiredDate
       else
         [join_tables_in_range.last]
       end
-
     return unless join_tables_at_hired_date.present?
     join_tables_at_hired_date.compact.map do |join_table|
       next if join_table.related_resource.reset?
+      remove_reset_join_table(join_table) if contract_end_before?
       update_time_off_policy_assignation_balance(join_table) if employee_time_off_policy?
       join_table.tap { |table| table.assign_attributes(effective_at: new_hired_date) }
     end
@@ -71,6 +71,17 @@ class HandleMapOfJoinTablesToNewHiredDate
       return remove_older_join_tables_and_update_last unless employee_time_off_policy?
       remove_and_update_etops_by_category
     end
+  end
+
+  def remove_reset_join_table(join_table)
+    reset_join_table_at_date =
+      join_table.class.with_reset.where(effective_at: new_hired_date, employee: employee)
+
+    if join_table.class.eql?(EmployeeTimeOffPolicy)
+      reset_join_table_at_date.where(time_off_category_id: join_table.time_off_category_id).first
+    else
+      reset_join_table_at_date.first
+    end.try(:destroy!)
   end
 
   def remove_and_update_etops_by_category
@@ -112,7 +123,10 @@ class HandleMapOfJoinTablesToNewHiredDate
       .in_category(assignation.time_off_category_id)
       .where.not(id: [assignation.id, balance_at_new_hired(etop)])
       .where(time_off_id: nil)
-      .where('effective_at <= ?', new_hired_date + Employee::Balance::REMOVAL_OFFSET)
+      .where(
+        'effective_at BETWEEN ? AND ?',
+        old_hired_date, new_hired_date + Employee::Balance::REMOVAL_OFFSET
+      )
       .destroy_all
   end
 
@@ -165,5 +179,13 @@ class HandleMapOfJoinTablesToNewHiredDate
         resource_amount: 0
       )
     end
+  end
+
+  def contract_end_before?
+    @contract_end_before ||=
+      employee
+      .events
+      .where(effective_at: new_hired_date - 1.day, event_type: 'contract_end')
+      .present?
   end
 end

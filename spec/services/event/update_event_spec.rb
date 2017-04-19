@@ -281,6 +281,56 @@ RSpec.describe do
             it { expect { subject }.to_not change { newest_balance.reload.balance_type } }
           end
 
+          context 'and hired date was one day after contract end and now not' do
+            before do
+              create(:employee_event,
+                event_type: 'contract_end', employee: employee, effective_at: 1.year.ago)
+              EmployeeTimeOffPolicy.all.map do |etop|
+                ManageEmployeeBalanceAdditions.new(etop).call
+              end
+            end
+            let!(:rehired) do
+              create(:employee_event,
+                event_type: 'hired', employee: employee, effective_at: 1.year.ago + 1.day)
+            end
+            let(:event_id) { rehired.id }
+            let(:employee_attributes_params) { [] }
+
+            context 'and rehired event does not have etops and ewp assigned' do
+              it { expect { subject }.to_not change { EmployeeTimeOffPolicy.count } }
+              it { expect { subject }.to_not change { EmployeePresencePolicy.count } }
+              it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
+              it do
+                expect { subject }
+                  .to_not change { Employee::Balance.where(balance_type: 'reset').count }
+              end
+
+              it { expect { subject }.to change { rehired.reload.effective_at } }
+            end
+
+            context 'and rehired event has ewps and epps assigned' do
+              before do
+                create(:employee_working_place,
+                  employee: employee, effective_at: rehired.effective_at)
+                create(:employee_time_off_policy, :with_employee_balance,
+                  employee: employee, effective_at: rehired.effective_at,
+                  time_off_policy:
+                    create(:time_off_policy, :with_end_date, time_off_category: first_category)
+                )
+              end
+
+              it { expect { subject }.to change { EmployeeTimeOffPolicy.with_reset.count }.by(1) }
+              it { expect { subject }.to change { EmployeeWorkingPlace.with_reset.count }.by(1) }
+              it { expect { subject }.to change { rehired.reload.effective_at } }
+
+              it { expect { subject }.to_not change { EmployeePresencePolicy.with_reset.count } }
+              it do
+                expect { subject }
+                  .to_not change { Employee::Balance.where(balance_type: 'reset').count }
+              end
+            end
+          end
+
           context 'and employee has employee balances' do
             before do
               EmployeeTimeOffPolicy.all.map do |etop|
@@ -355,6 +405,137 @@ RSpec.describe do
 
           it { expect { subject }.to_not change { EmployeeTimeOffPolicy.exists?(etops.first.id) } }
         end
+
+        context 'when there is contract end at day before new effective' do
+          let(:employee_attributes_params) { [] }
+          let!(:epp) do
+            create(:employee_presence_policy, employee: employee, effective_at: event.effective_at)
+          end
+          let!(:contract_end) do
+            create(:employee_event,
+              event_type: 'contract_end', employee: employee, effective_at: 1.year.ago)
+          end
+          let!(:rehired) do
+            create(:employee_event,
+              event_type: 'hired', employee: employee, effective_at: 8.months.ago)
+          end
+
+          before do
+            validity_date =
+              RelatedPolicyPeriod.new(new_etop).validity_date_for_balance_at(new_etop.effective_at)
+
+            EmployeeTimeOffPolicy.order(:effective_at).map do |etop|
+              etop.policy_assignation_balance.update!(validity_date: validity_date)
+              ManageEmployeeBalanceAdditions.new(etop).call
+            end
+            params[:effective_at] = contract_end.effective_at + 1.day
+            params[:id] = rehired.id
+          end
+
+          context 'and there are no join tables assigned at rehired event effective_at' do
+            it { expect { subject }.to_not change { EmployeeTimeOffPolicy.with_reset.count } }
+            it { expect { subject }.to_not change { EmployeePresencePolicy.with_reset.count } }
+            it { expect { subject }.to_not change { EmployeeWorkingPlace.with_reset.count } }
+            it do
+              expect { subject }
+                .to_not change { Employee::Balance.where(balance_type: 'reset').count }
+            end
+            it do
+              expect { subject }.to change { rehired.reload.effective_at }
+                .to eq(contract_end.effective_at + 1.day)
+            end
+          end
+
+          context 'and there are join tables assigned at rehired event effective_at' do
+            let!(:rehired_etop) do
+              create(:employee_time_off_policy, :with_employee_balance,
+                employee: employee, effective_at: rehired.effective_at,
+                time_off_policy:
+                  create(:time_off_policy, :with_end_date, time_off_category: first_category))
+            end
+            let!(:rehired_epp) do
+              create(:employee_presence_policy,
+                employee: employee, effective_at: rehired.effective_at)
+            end
+            let!(:rehired_ewp) do
+              create(:employee_working_place,
+                employee: employee, effective_at: rehired.effective_at )
+            end
+
+            let(:balances_in_first_category) do
+              Employee::Balance.in_category(first_category).order(:effective_at)
+            end
+
+            let(:balances_in_second_category) do
+              Employee::Balance.in_category(second_category).order(:effective_at)
+            end
+
+            it { expect { subject }.to_not change { Employee::Balance.assignations.count } }
+            it do
+              expect { subject }.to change { EmployeeTimeOffPolicy.with_reset.count }.from(2).to(1)
+            end
+            it do
+              expect { subject }.to change { EmployeePresencePolicy.with_reset.count }.from(1).to(0)
+            end
+            it do
+              expect { subject }.to change { EmployeeWorkingPlace.with_reset.count }.from(1).to(0)
+            end
+            it do
+              expect { subject }
+                .to_not change { Employee::Balance.where(balance_type: 'reset').count }
+            end
+            it do
+              expect { subject }.to change { rehired.reload.effective_at }
+                .to eq(contract_end.effective_at + 1.day)
+            end
+
+            it 'has valid effective at for join tables' do
+              subject
+
+              expect(EmployeeWorkingPlace.not_reset.order(:effective_at).pluck(:effective_at))
+                .to match_array(
+                  %w(2/1/2014 2/1/2015).map(&:to_date)
+                )
+              expect(EmployeePresencePolicy.not_reset.order(:effective_at).pluck(:effective_at))
+                .to match_array(
+                  %w(2/1/2014 2/1/2015).map(&:to_date)
+                )
+
+              expect(EmployeeTimeOffPolicy.not_reset.order(:effective_at).pluck(:effective_at))
+                .to match_array(
+                  %w(2/1/2014 2/1/2014 6/1/2014 2/1/2015).map(&:to_date)
+                )
+            end
+
+            it 'has valid effective at for employee balance' do
+              subject
+              expect(balances_in_first_category.pluck(:effective_at).map(&:to_date)).to match_array(
+                %w(
+                  2/1/2014 6/1/2014 1/1/2015 1/1/2015 2/1/2015 2/1/2015 1/1/2016 1/1/2016
+                  2/4/2016 1/1/2017 1/1/2017 2/4/2017 1/1/2018 1/1/2018 2/4/2018 2/4/2019
+                ).map(&:to_date)
+              )
+              expect(balances_in_second_category.pluck(:effective_at).map(&:to_date)).to match_array(
+                %w(2/1/2014 1/1/2015 1/1/2015 2/1/2015).map(&:to_date)
+              )
+            end
+
+            it 'has valid types for balances' do
+              subject
+
+              expect(balances_in_first_category.pluck(:balance_type)).to match_array(
+                %w(
+                  assignation assignation end_of_period addition reset assignation end_of_period
+                  addition removal end_of_period addition removal end_of_period addition
+                  removal removal
+                )
+              )
+              expect(balances_in_second_category.pluck(:balance_type)).to match_array(
+                %w(assignation end_of_period addition reset)
+              )
+            end
+          end
+        end
       end
 
       context 'and this is not hired event' do
@@ -425,7 +606,7 @@ RSpec.describe do
 
   context 'contract_end' do
     let(:event_type) { 'contract_end' }
-    let(:categories) { create_list(:time_off_category, 2, account: employee.account) }
+    let!(:categories) { create_list(:time_off_category, 2, account: employee.account) }
     let(:policies) do
       categories.map do |category|
         create(:time_off_policy, :with_end_date, time_off_category: category)
@@ -442,6 +623,11 @@ RSpec.describe do
           employee: employee, effective_at: 1.years.ago, time_off_policy: policy)
       end
     end
+    let!(:etop_for_time_off) do
+      create(:employee_time_off_policy, :with_employee_balance,
+        employee: employee, effective_at: 1.year.ago - 2.days,
+        time_off_policy: create(:time_off_policy, :with_end_date, time_off_category: categories.first))
+    end
     let!(:time_offs) do
       [
         [1.year.ago - 2.days, 1.year.ago + 5.days], [4.months.ago, 4.months.ago + 3.days]
@@ -451,20 +637,13 @@ RSpec.describe do
           time_off_category: categories.first)
       end
     end
-    let!(:etop_assignation_balance) do
-      create(:employee_balance_manual,
-        employee: employee, time_off_category: time_offs.first.time_off_category,
-        balance_type: 'assignation',
-        effective_at:
-          time_offs.first.start_time + Employee::Balance::ASSIGNATION_OFFSET
-      )
-    end
     let!(:event) do
       create(:employee_event,
         employee: employee, event_type: 'contract_end', effective_at: Time.zone.today)
     end
     let(:employee_attributes_params) {{ }}
     let(:reset_balance_effective_at) { effective_at + 1.day + Employee::Balance::RESET_OFFSET }
+
     before do
       time_offs.map do |time_off|
         validity_date =
@@ -480,12 +659,131 @@ RSpec.describe do
         ).call
         ManageEmployeeBalanceAdditions.new(etop).call
       end
-      subject
-      event.reload
-      employee.reload
+    end
+
+    context 'and hired date was one day after and now it is more' do
+      before { params[:effective_at] = 10.months.ago }
+
+      let!(:rehired) do
+        create(:employee_event,
+          event_type: 'hired', employee: employee, effective_at: event.effective_at + 1.day)
+      end
+
+      context 'and there was not join tables assigned at hired date' do
+        it { expect { subject }.to_not change { EmployeeTimeOffPolicy.count } }
+        it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
+        it { expect { subject }.to_not change { EmployeePresencePolicy.count } }
+        it do
+          expect { subject }.to_not change { Employee::Balance.where(balance_type: 'reset').count }
+        end
+
+        it { expect { subject }.to change { TimeOff.count }.by(-1) }
+        it { expect { subject }.to change { event.reload.effective_at } }
+        it do
+          expect { subject }.to change { Employee::Balance.where.not(validity_date: nil)
+            .pluck(:validity_date).uniq.map(&:to_date) }.to([10.months.ago.to_date + 1.day])
+        end
+        it do
+          expect { subject }.to change { Employee::Balance.where(balance_type: 'removal').count }
+        end
+      end
+
+      context 'and there were join tables assigned at hired date' do
+        before do
+          create(:employee_time_off_policy, :with_employee_balance,
+            employee: employee, time_off_policy: policies.first, effective_at: rehired.effective_at)
+        end
+        let!(:rehired_balance) do
+          employee
+            .employee_balances.in_category(policies.first.time_off_category)
+            .where("effective_at::date = ? AND balance_type = 'assignation'", rehired.effective_at)
+            .first
+        end
+
+        it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
+        it { expect { subject }.to_not change { EmployeePresencePolicy.count } }
+        it { expect { subject }.to_not change { rehired_balance.reload.validity_date } }
+        it { expect { subject }.to change { EmployeeTimeOffPolicy.with_reset.count }.by(1) }
+        it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(1) }
+        it { expect { subject }.to change { TimeOff.count }.by(-1) }
+        it do
+          expect { subject }.to change { Employee::Balance.where(balance_type: 'removal').count }
+        end
+        it do
+          expect { subject }
+            .to change { Employee::Balance.where.not(validity_date: nil, id: rehired_balance.id)
+            .pluck(:validity_date).uniq.map(&:to_date) }.to([10.months.ago.to_date + 1.day])
+        end
+      end
+    end
+
+    context 'and hired day now one day after' do
+      before { params[:effective_at] = rehired.effective_at - 1.day }
+      let!(:rehired) do
+        create(:employee_event, event_type: 'hired', employee: employee, effective_at: 1.year.since)
+      end
+
+      context 'and there are no join tables assigned to the new etop' do
+        it { expect { subject }.to_not change { EmployeeTimeOffPolicy.with_reset.count } }
+        it { expect { subject }.to_not change { EmployeePresencePolicy.with_reset.count } }
+        it { expect { subject }.to_not change { EmployeeWorkingPlace.with_reset.count } }
+        it { expect { subject }.to change { event.reload.effective_at } }
+        it do
+          expect { subject }.to_not change { Employee::Balance.where(balance_type: 'reset').count }
+        end
+      end
+
+      context 'and there are join tables assigned to the new etop' do
+        let!(:rehired_etop) do
+          create(:employee_time_off_policy, :with_employee_balance,
+            effective_at: rehired.effective_at, employee: employee,
+            time_off_policy: create(:time_off_policy, :with_end_date,
+            time_off_category: categories.first))
+        end
+        let(:balances_in_first) do
+          Employee::Balance.where(time_off_category: categories.first).order(:effective_at)
+        end
+        let!(:rehired_ewp) do
+          create(:employee_working_place, employee: employee, effective_at: rehired.effective_at)
+        end
+
+        it { expect { subject }.to change { EmployeeTimeOffPolicy.with_reset.count }.from(2).to(1) }
+        it { expect { subject }.to change { EmployeeWorkingPlace.with_reset.count }.from(1).to(0) }
+        it { expect { subject }.to_not change { EmployeePresencePolicy.with_reset.count } }
+        it { expect { subject }.to change { event.reload.effective_at } }
+        it do
+          expect { subject }.to_not change { Employee::Balance.where(balance_type: 'reset').count }
+        end
+
+        it 'has valid effective at for employee balance' do
+          subject
+          expect(balances_in_first.pluck(:effective_at).map(&:to_date)).to match_array(
+            %w(
+              30/12/2014 1/1/2015 1/1/2015 1/1/2015 6/1/2015 2/4/2015 4/9/2015 1/1/2016 1/1/2016
+              2/4/2016 1/1/2017 1/1/2017 1/1/2017 1/1/2017 2/4/2018
+            ).map(&:to_date)
+          )
+        end
+
+        it 'has valid types for balances' do
+          subject
+          expect(balances_in_first.pluck(:balance_type)).to match_array(
+            %w(
+              assignation end_of_period assignation addition time_off removal time_off end_of_period
+              addition removal end_of_period reset assignation addition removal
+            )
+          )
+        end
+      end
     end
 
     context 'move to the future' do
+      before do
+        subject
+        event.reload
+        employee.reload
+      end
+
       shared_examples 'Contract end in the future' do
         it { expect(event.effective_at).to eq effective_at }
         it { expect(employee.employee_time_off_policies.count).to eq(5) }
@@ -510,7 +808,7 @@ RSpec.describe do
       context 'and contract end before policy start date' do
         let(:effective_at) { 1.year.since - 1.days }
 
-        it { expect(employee.employee_balances.count).to eq (16) }
+        it { expect(employee.employee_balances.count).to eq (17) }
         it { expect(Employee::Balance.assignations.count).to eq (3) }
 
         it_behaves_like 'Contract end in the future'
@@ -520,7 +818,7 @@ RSpec.describe do
         shared_examples 'Contract end in or after policy start date' do
           it { expect(Employee::Balance.additions.count).to eq (6) }
           it { expect(Employee::Balance.assignations.count).to eq (3) }
-          it { expect(employee.employee_balances.count).to eq (20) }
+          it { expect(employee.employee_balances.count).to eq (21) }
         end
 
         context 'and contract end in policy start date' do
@@ -540,6 +838,12 @@ RSpec.describe do
     end
 
     context 'move to the past' do
+      before do
+        subject
+        event.reload
+        employee.reload
+      end
+
       context 'when all join tables effective at after contract end' do
         let(:effective_at) { 1.year.ago - 3.days }
 

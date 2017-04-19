@@ -144,11 +144,22 @@ class Employee < ActiveRecord::Base
   end
 
   def contract_end_for(date)
-    date_period = contract_periods.reverse.find do |period|
-      period.include?(date.to_date) || date.to_date > period.last
-    end
+    date_period = contract_periods.reverse.map.each_with_index do |period, index|
+      if day_difference?(index, date)
+        contract_periods.reverse[index + 1]
+      elsif period.include?(date.to_date) || date.to_date > period.last
+        period
+      end
+    end.first
     date_period ||= contract_periods.first
-    date_period.last.is_a?(DateTime::Infinity) ? nil : date_period.last
+    date_period.blank? || date_period.last.is_a?(DateTime::Infinity) ? nil : date_period.last
+  end
+
+  def day_difference?(index, date)
+    periods = contract_periods.reverse
+    return false unless periods.size > 1 && periods[index + 1].present?
+    periods[index].first.eql?(date.to_date) &&
+      (periods[index].first.mjd - periods[index + 1].last.mjd).eql?(1)
   end
 
   def contract_periods

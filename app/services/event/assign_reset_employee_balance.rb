@@ -1,17 +1,15 @@
 class AssignResetEmployeeBalance
-  def initialize(employee_time_off_policy, old_contract_end = nil)
-    @employee_time_off_policy = employee_time_off_policy
-    @employee = employee_time_off_policy.employee
-    @time_off_category = employee_time_off_policy.time_off_category
+  def initialize(employee, time_off_category_id, new_contract_end, old_contract_end = nil)
+    @employee = employee
+    @time_off_category = employee.account.time_off_categories.find(time_off_category_id)
+    @new_contract_end = new_contract_end + 1.day
     @old_contract_end = find_contract_end(old_contract_end)
   end
 
   def call
-    return unless @employee_time_off_policy.time_off_policy.reset?
     create_reset_employee_balance
     update_balances_valid_after_contract_end
-    return unless @old_contract_end.present? &&
-        @employee_time_off_policy.effective_at > @old_contract_end
+    return unless @old_contract_end.present? && @new_contract_end > @old_contract_end
     update_previous_balances_validity_dates
   end
 
@@ -24,7 +22,7 @@ class AssignResetEmployeeBalance
         @employee.id,
         @employee.account.id,
         balance_type: 'reset',
-        effective_at: @employee_time_off_policy.effective_at + Employee::Balance::RESET_OFFSET
+        effective_at: @new_contract_end + Employee::Balance::RESET_OFFSET
       ).call.first
   end
 
@@ -34,8 +32,7 @@ class AssignResetEmployeeBalance
       .employee_balances
       .in_category(@time_off_category.id)
       .where(
-        'effective_at <= ? AND validity_date > ?',
-        @employee_time_off_policy.effective_at, @employee_time_off_policy.effective_at
+        'effective_at <= ? AND validity_date > ?', @new_contract_end, @new_contract_end
       ).order(:effective_at)
 
     balances_valid_after_contract_end.map do |balance|
@@ -45,14 +42,15 @@ class AssignResetEmployeeBalance
 
   def update_previous_balances_validity_dates
     old_contract_end_balances =
-      @employee.employee_balances.where(validity_date: @old_contract_end).order(:effective_at)
+      @employee.employee_balances.where(
+        validity_date: @old_contract_end, time_off_category: @time_off_category
+      ).order(:effective_at)
 
     old_contract_end_balances.map do |balance|
       validity_date =
         RelatedPolicyPeriod
         .new(balance.employee_time_off_policy)
         .validity_date_for_balance_at(balance.effective_at, balance.balance_type)
-
       UpdateEmployeeBalance.new(balance, validity_date: validity_date).call
     end
   end

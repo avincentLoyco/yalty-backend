@@ -67,24 +67,25 @@ class RelatedPolicyPeriod
       else
         validity_date_for_period_time(date)
       end
-    verify_with_contract_periods(validity_date)
+    verify_with_contract_periods(date, validity_date, balance_type)
   end
 
-  def verify_with_contract_periods(validity_date)
+  def verify_with_contract_periods(date, validity_date, balance_type)
     # TODO: Must test if it's the day after end of period for balances that
-    # can be the day after contract end at 00:00:0X
-    if related_policy.employee
-                     .contract_periods.none? { |period| period.include?(validity_date.to_date) }
-      contract_end_for(validity_date)
-    else
-      validity_date
-    end
+    no_period_with_dates =
+      related_policy.employee.contract_periods.none? do |period|
+        period.include?(validity_date.to_date) && period.include?(date.to_date) &&
+          !(balance_type.eql?('end_of_period') && period.first.eql?(date.to_date))
+      end
+    return validity_date unless no_period_with_dates
+    contract_end_for(date, validity_date, balance_type)
   end
 
   def validity_date_for_period_start(date)
     validity_date =
-      Date.new(date.year + years_to_effect, end_month, end_day) +
-        1.day + Employee::Balance::REMOVAL_OFFSET
+      Date.new(
+        date.year + years_to_effect, end_month, end_day
+      ) + 1.day + Employee::Balance::REMOVAL_OFFSET
     years_end_date = Date.new(date.year, end_month, end_day)
     validity_date += 1.year if date.to_date > years_end_date
     validity_date += 1.year if (validity_date.to_date - date.to_date).to_i / 365 < years_to_effect
@@ -111,14 +112,18 @@ class RelatedPolicyPeriod
       time_off_policy.years_to_effect.present?
   end
 
-  def contract_end_for(validity_date)
+  def contract_end_for(date, validity_date, balance_type)
     periods = related_policy.employee.contract_periods
-    return validity_date unless periods.none? { |period| period.include?(validity_date.to_date) }
-    contract_end =
-      periods.select do |period|
-        period.last.is_a?(Date) && period.last < validity_date.to_date
-      end.first.last + 1.day + Employee::Balance::RESET_OFFSET
-    contract_end > validity_date ? validity_date : contract_end
+    previous_periods =
+      periods.select { |period| period.last.is_a?(Date) && period.last < validity_date.to_date }
+    return validity_date unless previous_periods.present?
+    contract_end = previous_periods.last.last + 1.day + Employee::Balance::RESET_OFFSET
+    if contract_end > validity_date ||
+        date.eql?(contract_end.to_date) && balance_type.eql?('assignation')
+      validity_date
+    else
+      contract_end
+    end
   end
 
   def in_start_date?(date)

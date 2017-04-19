@@ -54,6 +54,7 @@ class Employee::Balance < ActiveRecord::Base
     .where('b.balance_credit_removal_id IS NULL')
   end)
   scope :removal_at_date, (lambda do |employee_id, time_off_category_id, date|
+
     employee_balances(employee_id, time_off_category_id)
       .where("effective_at::date = to_date('#{date}', 'YYYY-MM_DD')")
       .reset_or_removal.uniq
@@ -160,9 +161,18 @@ class Employee::Balance < ActiveRecord::Base
 
   def removal_effective_at_date
     additions_validity_dates = balance_credit_additions.map(&:validity_date).uniq
-    if additions_validity_dates.present? && (additions_validity_dates.size > 1 ||
-        effective_at && effective_at.to_date != additions_validity_dates.first.to_date)
-      errors.add(:effective_at, 'Removal effective at must equal addition validity date')
+
+    return unless balance_type.eql?('removal') && additions_validity_dates.present?
+    first_validity_date = additions_validity_dates.first.try(:to_date)
+
+    if additions_validity_dates.size > 1 ||
+        effective_at && effective_at.to_date != first_validity_date ||
+        employee.contract_periods.none? do |period|
+          period.include?(effective_at.to_date) && period.include?(first_validity_date)
+        end
+      errors.add(
+        :effective_at, 'Removal effective at must equal addition validity date and period'
+      )
     end
   end
 
