@@ -3,7 +3,11 @@ module Api
     module Payments
       class InvoiceRepresenter < Api::V1::BaseRepresenter
         def complete
-          basic_json.merge(line_items: line_items_json, prorate_amount: prorate_amount)
+          basic_json.merge(
+            line_items: line_items_json,
+            prorate_amount: prorate_amount,
+            file_id: resource.generic_file&.id
+          )
         end
 
         def next_invoice

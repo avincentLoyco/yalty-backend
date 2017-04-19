@@ -26,6 +26,7 @@ RSpec.describe API::V1::Payments::InvoicesController, type: :controller do
           tax: nil,
           tax_percent: nil,
           total: nil,
+          file_id: invoice.generic_file&.id,
           line_items:  [{
             id: invoice.lines.data.first.id,
             amount: invoice.lines.data.first.amount,
