@@ -166,7 +166,7 @@ RSpec.describe FileStorageUploadDownload do
 
     let(:dir_path) { FileStorageUploadDownload.file_upload_root_path.join(file_id, 'original') }
     let(:destination_path) { "#{dir_path}/test.jpg" }
-    let(:employee_file) { File.open(destination_path) }
+    let(:generic_file) { File.open(destination_path) }
     let(:action_type) { 'download' }
     let(:disposition) { 'attachment' }
     let(:file_sha) { Digest::SHA256.file(employee_file).hexdigest }

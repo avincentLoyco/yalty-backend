@@ -14,8 +14,8 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
     it { expect(response.status).to eq(201) }
     it 'return proper json' do
       expect_json(
-        token: 'employee_file_1234567887654321',
-        file_id: EmployeeFile.last.id,
+        token: 'generic_file_1234567887654321',
+        file_id: GenericFile.last.id,
         type: 'token',
         created_at: Time.zone.now.to_s,
         expires_at: (Time.zone.now + 30.seconds).to_s,
@@ -26,7 +26,7 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
   end
 
   describe 'for download' do
-    let(:employee_file) { create(:employee_file) }
+    let(:generic_file) { create(:generic_file) }
     let(:long_token_allowed) { false }
     let(:attribute_definition) do
       create(:employee_attribute_definition, :required, attribute_type: 'File', name: 'contract',
@@ -35,11 +35,11 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
     let(:employee_attribute) do
       create(:employee_attribute, account: account, attribute_type: 'File',
         attribute_definition: attribute_definition,
-        data: { size: 1000, file_type: 'application/pdf', id: employee_file.id, original_sha: '12' })
+        data: { size: 1000, file_type: 'pdf', id: generic_file.id, original_sha: '12' })
     end
 
     context 'return proper json' do
-      let(:params) {{ file_id: employee_file.id }}
+      let(:params) {{ file_id: generic_file.id }}
 
       before do
         employee_attribute
@@ -49,8 +49,8 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
       it { expect(response.status).to eq(201) }
       it 'return proper json' do
         expect_json(
-          token: 'employee_file_1234567887654321',
-          file_id: employee_file.id,
+          token: 'generic_file_1234567887654321',
+          file_id: generic_file.id,
           type: 'token',
           created_at: Time.zone.now.to_s,
           expires_at: (Time.zone.now + 30.seconds).to_s,
@@ -61,10 +61,10 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
     end
 
     context 'version' do
-      let(:params) {{ file_id: employee_file.id, version: 'thumbnail' }}
+      let(:params) {{ file_id: generic_file.id, version: 'thumbnail' }}
 
       context 'if sent and exists' do
-        let!(:employee_file) { create(:employee_file, :with_jpg).reload }
+        let!(:generic_file) { create(:generic_file, :with_jpg).reload }
 
         before do
           employee_attribute
@@ -75,7 +75,7 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
       end
 
       context 'if sent and exists' do
-        let(:employee_file) { create(:employee_file, :with_pdf) }
+        let(:generic_file) { create(:generic_file, :with_pdf) }
 
         before do
           employee_attribute
@@ -92,7 +92,7 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
         before { employee_attribute }
 
         context 'is default' do
-          let(:params) {{ file_id: employee_file.id }}
+          let(:params) {{ file_id: generic_file.id }}
           let(:expires_at) { JSON.parse(response.body)['expires_at'] }
 
           before { request_token }
@@ -101,7 +101,7 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
         end
 
         context 'fails when longterm param sent' do
-          let(:params) {{ file_id: employee_file.id, duration: 'longterm' }}
+          let(:params) {{ file_id: generic_file.id, duration: 'longterm' }}
           let(:expected_response) do
             {
               'field' => 'duration',
@@ -123,7 +123,7 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
         before { employee_attribute }
 
         context 'is valid for 12h' do
-          let(:params) {{ file_id: employee_file.id, duration: 'longterm' }}
+          let(:params) {{ file_id: generic_file.id, duration: 'longterm' }}
           let(:expires_at) { JSON.parse(response.body)['expires_at'] }
 
           before { request_token }
@@ -132,7 +132,7 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
         end
 
         context 'returns shortterm if asked in payload' do
-          let(:params) {{ file_id: employee_file.id, duration: 'shortterm' }}
+          let(:params) {{ file_id: generic_file.id, duration: 'shortterm' }}
           let(:expires_at) { JSON.parse(response.body)['expires_at'] }
 
           before { request_token }
@@ -180,8 +180,8 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
       end
 
       context 'can\'t request token for download' do
-        let(:employee_file) { create(:employee_file) }
-        let(:params) {{ file_id: employee_file.id }}
+        let(:generic_file) { create(:generic_file) }
+        let(:params) {{ file_id: generic_file.id }}
 
         before { request_token }
 
@@ -192,7 +192,7 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
     context 'user with employee' do
       let!(:employee) { create(:employee, account: account) }
       let(:different_employee) { create(:employee, account: account) }
-      let(:employee_file) { create(:employee_file) }
+      let(:generic_file) { create(:generic_file) }
       let(:attribute_definition) do
         create(:employee_attribute_definition, :required, attribute_type: 'File',
           name: file_type, long_token_allowed: true)
@@ -200,7 +200,7 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
       let(:employee_attribute) do
         create(:employee_attribute, account: account, attribute_type: 'File',
           attribute_definition: attribute_definition, employee: employee_for_file,
-          data: { size: 1000, file_type: 'image/jpeg', id: employee_file.id, original_sha: '12' })
+          data: { size: 1000, file_type: 'jpg', id: generic_file.id, original_sha: '12' })
       end
 
       context 'can request token for upload' do
@@ -213,7 +213,7 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
       context 'can request token for download every profile_picture' do
         let(:file_type) { 'profile_picture' }
         let(:employee_for_file) { different_employee }
-        let(:params) {{ file_id: employee_file.id }}
+        let(:params) {{ file_id: generic_file.id }}
 
         before do
           employee_attribute
@@ -226,7 +226,7 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
       context 'can\'t request download token for other users files' do
         let(:file_type) { 'contract' }
         let(:employee_for_file) { different_employee }
-        let(:params) { { file_id: employee_file.id } }
+        let(:params) { { file_id: generic_file.id } }
 
         before do
           employee_attribute
@@ -240,7 +240,7 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
       context 'can request token for download his files' do
         let(:file_type) { 'contract' }
         let(:employee_for_file) { employee }
-        let(:params) { { file_id: employee_file.id } }
+        let(:params) { { file_id: generic_file.id } }
 
         before do
           employee_attribute

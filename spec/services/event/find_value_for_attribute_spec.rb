@@ -29,11 +29,11 @@ RSpec.describe FindValueForAttribute do
   end
 
   context 'when attribute definition is File type' do
-    before { allow_any_instance_of(EmployeeFile).to receive(:find_file_path) { image_path } }
+    before { allow_any_instance_of(GenericFile).to receive(:find_file_path) { image_path } }
 
     let(:attribute_type) { Attribute::File.attribute_type }
     let(:attribute_name) { 'profile_picture' }
-    let(:employee_file) { create(:employee_file) }
+    let(:employee_file) { create(:generic_file) }
     let(:value) { employee_file.id }
     let(:image_path) { ["#{Rails.root}/spec/fixtures/files/test.jpg"] }
     let(:image) { File.open(File.join(image_path)) }

@@ -177,8 +177,8 @@ class Employee < ActiveRecord::Base
     employee_file_ids.include?(file_id)
   end
 
-  def employee_files
-    EmployeeFile.where(id: employee_file_ids)
+  def files
+    GenericFile.where(id: employee_file_ids)
   end
 
   def total_amount_of_data

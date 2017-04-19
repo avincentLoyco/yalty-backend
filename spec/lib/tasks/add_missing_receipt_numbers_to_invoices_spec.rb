@@ -7,8 +7,9 @@ RSpec.describe 'payments:create_missing_receipt_numbers', type: :rake do
   subject { rake['payments:create_missing_receipt_numbers'].invoke }
 
   context 'it should assign receipt_number to paid invoice' do
-    let!(:paid_invoice) { create :invoice, status: 'success' }
-    let!(:second_invoice) { create :invoice, status: 'success' }
+    let(:file) { create(:generic_file, :with_pdf) }
+    let!(:paid_invoice) { create :invoice, status: 'success', generic_file: file }
+    let!(:second_invoice) { create :invoice, status: 'success', generic_file: file }
 
     it { expect { subject }.to change { paid_invoice.reload.receipt_number } }
     it { expect { subject }.to change { second_invoice.reload.receipt_number } }

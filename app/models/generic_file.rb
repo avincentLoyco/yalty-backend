@@ -1,4 +1,6 @@
-class EmployeeFile < ActiveRecord::Base
+class GenericFile < ActiveRecord::Base
+  belongs_to :fileable, polymorphic: true
+
   IMAGES_TYPES   = %w(image/jpg image/jpeg image/png).freeze
   DOCUMENT_TYPES = %w(
     application/pdf application/msword
@@ -11,6 +13,7 @@ class EmployeeFile < ActiveRecord::Base
       Employee::AttributeVersion
       .where("data -> 'attribute_type' = 'File'")
       .select("(data -> 'id')::uuid"))
+    .where(fileable_id: nil)
   end)
 
   has_attached_file :file, styles: { thumbnail: ['296x235^'] }

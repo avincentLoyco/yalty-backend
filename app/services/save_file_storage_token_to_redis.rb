@@ -16,7 +16,7 @@ class SaveFileStorageTokenToRedis
     created_at = Time.zone.now
     @token_params = {
       token: generate_token,
-      file_id: attributes[:file_id] || EmployeeFile.create!.id,
+      file_id: attributes[:file_id] || GenericFile.create!.id,
       type: 'token',
       created_at: created_at.to_s,
       expires_at: (created_at + @time_to_expire.seconds).to_s,
@@ -54,7 +54,7 @@ class SaveFileStorageTokenToRedis
 
     3.times do |iterator|
       raise InvalidToken, 'Reached maximum number of regenerations.' if iterator == 2
-      token = 'employee_file_' + SecureRandom.hex(8)
+      token = 'generic_file_' + SecureRandom.hex(8)
       break unless @redis.exists(token)
     end
 

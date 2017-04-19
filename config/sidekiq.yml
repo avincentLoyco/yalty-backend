@@ -9,7 +9,7 @@
   - update_balance
   - intercom
   - registered_working_times
-  - employee_files
+  - generic_files
   - default
 :limits:
   update_balance: 1
