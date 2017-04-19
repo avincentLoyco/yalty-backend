@@ -44,7 +44,6 @@ RSpec.describe API::V1::Payments::PlansController, type: :controller do
       end
 
       it { expect(response.status).to eq(502) }
-      it { expect(JSON.parse(response.body)['errors'].first['type']).to eq('plan') }
     end
 
     context 'when there is no customer_id' do
@@ -258,8 +257,7 @@ RSpec.describe API::V1::Payments::PlansController, type: :controller do
 
         before { delete_plan }
 
-        it { expect(response.status).to eq(200) }
-        it { expect_json(expected_json) }
+        it { expect(response.status).to eq(204) }
       end
     end
 
@@ -271,11 +269,6 @@ RSpec.describe API::V1::Payments::PlansController, type: :controller do
 
       context 'removing plan' do
         it_should_behave_like 'success DELETE response'
-
-        it 'returns existing plan from Stripe' do
-          expect(Stripe::SubscriptionItem).to receive(:list)
-          delete_plan
-        end
 
         context 'when subscription is not trialing' do
           it 'does not remove SubscriptionItem' do
@@ -307,13 +300,15 @@ RSpec.describe API::V1::Payments::PlansController, type: :controller do
     end
 
     context 'errors' do
+      before { subscription.status = 'trialing' }
+
       it_should_behave_like 'errors', :destroy
 
-      context 'when account update fails' do
-        before { allow(account).to receive(:update!).and_raise('Cannot update') }
+      context 'when account save fails' do
+        before { allow(account).to receive(:save!).and_raise('Cannot save') }
 
         it { expect { delete_plan }.to_not change { account.reload.available_modules.data } }
-        it { expect(Stripe::SubscriptionItem).to_not receive(:list) }
+        it { expect(sub_item).to_not receive(:delete) }
       end
     end
   end

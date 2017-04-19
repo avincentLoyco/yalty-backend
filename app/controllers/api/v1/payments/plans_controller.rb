@@ -15,8 +15,8 @@ module API
 
         def destroy
           verified_dry_params(dry_validation_schema) do |attributes|
-            plan = Account.current.with_lock { cancel_plan_module(attributes[:id]) }
-            render json: resource_representer.new(plan).complete
+            Account.current.with_lock { cancel_plan_module(attributes[:id]) }
+            render_no_content
           end
         end
 
@@ -57,13 +57,13 @@ module API
 
         def cancel_plan_module(plan_id)
           if subscription.status.eql?('trialing')
-            find_subscription_item(plan_id).delete
             Account.current.available_modules.delete(plan_id)
+            Account.current.save!
+            find_subscription_item(plan_id).delete
           else
             Account.current.available_modules.cancel(plan_id)
+            Account.current.save!
           end
-          Account.current.save!
-          find_plan(plan_id, false)
         end
 
         def find_plan(plan_id, active)
@@ -75,7 +75,7 @@ module API
         end
 
         def find_subscription_item(plan_id)
-          Stripe::SubscriptionItem.list(subscription: Account.current.subscription_id)
+          Stripe::SubscriptionItem.list(subscription: subscription.id)
                                   .find { |si| si.plan.id.eql?(plan_id) }
         end
 
