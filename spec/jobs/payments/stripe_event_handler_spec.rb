@@ -193,7 +193,12 @@ RSpec.describe Payments::StripeEventsHandler, type: :job do
       it { expect(account.invoices.last.reload.receipt_number).not_to eq(nil) }
     end
 
-    xit 'generates pdf file'
+    it 'generates pdf file' do
+      serv = ::Payments::CreateInvoicePdf.new(existing_invoice)
+      allow(::Payments::CreateInvoicePdf).to receive(:new).with(existing_invoice).and_return(serv)
+      expect(::Payments::CreateInvoicePdf).to receive(:new).with(existing_invoice)
+      job
+    end
   end
 
   context 'when event is customer.subscription.updated' do

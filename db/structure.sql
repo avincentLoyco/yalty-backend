@@ -358,7 +358,10 @@ CREATE TABLE invoices (
     subtotal integer,
     tax integer,
     tax_percent numeric,
-    total integer
+    total integer,
+    period_start timestamp without time zone,
+    period_end timestamp without time zone,
+    charge_id character varying
 );
 
 
@@ -1732,5 +1735,7 @@ INSERT INTO schema_migrations (version) VALUES ('20170405183244');
 INSERT INTO schema_migrations (version) VALUES ('20170412064121');
 
 INSERT INTO schema_migrations (version) VALUES ('20170413123051');
+
+INSERT INTO schema_migrations (version) VALUES ('20170420050113');
 
 INSERT INTO schema_migrations (version) VALUES ('20170426111844');

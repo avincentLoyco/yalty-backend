@@ -16,8 +16,8 @@ module Payments
       when 'invoice.payment_failed' then
         update_invoice_status(event.data.object, 'failed')
       when 'invoice.payment_succeeded' then
-        update_invoice_status(event.data.object, 'success')
-        # TODO: Add pdf generation here
+        updated_invoice = update_invoice_status(event.data.object, 'success')
+        ::Payments::CreateInvoicePdf.new(updated_invoice).call
       when 'customer.subscription.updated' then
         Account.transaction do
           clear_modules('all', event.data.object)
@@ -33,18 +33,23 @@ module Payments
                        Time.zone.at(invoice.next_payment_attempt).to_datetime
                      end
 
-      account.invoices.where(invoice_id: invoice.id).update_all(
+      updated_invoice = account.invoices.find_by(invoice_id: invoice.id)
+      updated_invoice.update(
         status: status,
         attempts: invoice.attempt_count,
-        next_attempt: next_attempt
+        next_attempt: next_attempt,
+        charge_id: invoice.charge
       )
+      updated_invoice
     end
 
     def create_invoice(invoice)
-      invoice_lines =
-        invoice.lines.data
-               .select { |l| !l.plan.id.eql?('free-plan') && !canceled_modules.include?(l.plan.id) }
-               .map { |l| build_invoice_line(l) }
+      invoice_lines = []
+      invoice.lines.auto_paging_each do |line|
+        next if line.plan.id.eql?('free-plan') || canceled_modules.include?(line.plan.id)
+        invoice_lines.push(line)
+      end
+
       return if invoice_lines.empty? ||
           Stripe::Subscription.retrieve(invoice.subscription).status == 'trialing'
 
@@ -60,7 +65,9 @@ module Payments
         tax_percent: invoice.tax_percent,
         total: invoice.total,
         address: account.invoice_company_info,
-        lines: InvoiceLines.new(data: invoice_lines)
+        period_start: Time.zone.at(invoice.period_start),
+        period_end: Time.zone.at(invoice.period_end),
+        lines: InvoiceLines.new(data: invoice_lines.map { |line| build_invoice_line(line) })
       )
     end
 

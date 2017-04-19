@@ -8,3 +8,12 @@ fr:
       subject: Réinitialiser votre mot de passe
     accounts_list:
       subject: Votre équipe sur yalty
+  date_time_defaults: &date_time_defaults
+    month_names:
+      [~, janvier, février, mars, avril, mai, juin, juillet, août, septembre, octobre, novembre, décembre]
+    formats:
+      default: "%d %B %Y"
+  date:
+    <<: *date_time_defaults
+  time:
+    <<: *date_time_defaults
