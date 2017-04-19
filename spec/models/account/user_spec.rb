@@ -2,6 +2,9 @@ require 'rails_helper'
 
 RSpec.describe Account::User, type: :model do
   subject { build(:account_user) }
+
+  let(:account) { create(:account) }
+
   it { is_expected.to have_db_column(:id).of_type(:uuid) }
   it { is_expected.to have_db_column(:email).with_options(null: false) }
   it { is_expected.to have_db_index([:email, :account_id]).unique(true) }
@@ -55,6 +58,30 @@ RSpec.describe Account::User, type: :model do
     user.password = nil
 
     expect(user).to_not be_valid
+  end
+
+  it 'should not allow to change role of last owner' do
+    user = create(:account_user, account: account, role: 'account_owner')
+
+    expect { user.update(role: 'account_administrator') }.to_not change { user.reload.role }
+  end
+
+  it 'should allow to change role of not last owner' do
+    users = create_list(:account_user, 2, account: account, role: 'account_owner')
+
+    expect { users.first.update(role: 'account_administrator') }.to change { users.first.reload.role }
+  end
+
+  it 'should not allow to destroy last owner' do
+    user = create(:account_user, account: account, role: 'account_owner')
+
+    expect { user.destroy }.to_not change { Account::User.count }
+  end
+
+  it 'should allow to destroy not last owner' do
+    users = create_list(:account_user, 2, account: account,  role: 'account_owner')
+
+    expect { users.first.destroy }.to change { Account::User.count }.by(-1)
   end
 
   it { should have_db_column(:account_id).of_type(:uuid) }
