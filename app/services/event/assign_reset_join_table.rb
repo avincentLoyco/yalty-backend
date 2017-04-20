@@ -90,7 +90,7 @@ class AssignResetJoinTable
         @employee.time_off_categories.distinct.present?
       else
         @employee.send(@resources_name)
-                 .active_for_employee(@employee.id, @contract_end_date).first.present?
+                 .active_for_employee(@employee.id, @contract_end_date).present?
       end
     @time_off_category.present? || resources_present
   end

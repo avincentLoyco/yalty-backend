@@ -401,6 +401,7 @@ RSpec.describe Employee::Balance, type: :model do
         before do
           allow_any_instance_of(Employee::Balance).to receive(:find_effective_at) { true }
           balance.balance_credit_additions << balance_addition
+          balance.balance_type = 'removal'
           balance.effective_at = Date.today
         end
 
@@ -423,7 +424,7 @@ RSpec.describe Employee::Balance, type: :model do
           it { expect(subject.valid?).to eq false }
           it { expect { subject.valid? }.to change { balance.errors.size } }
           it { expect { subject.valid? }.to change { balance.errors.messages[:effective_at] }
-            .to include('Removal effective at must equal addition validity date') }
+            .to include('Removal effective at must equal addition validity date and period') }
         end
       end
     end

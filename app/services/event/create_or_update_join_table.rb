@@ -13,7 +13,7 @@ class CreateOrUpdateJoinTable
     @join_table_resource = join_table_resource
     @join_table_old_effective_at = join_table_resource.try(:effective_at)
     @status = 205
-    @current_account = Account.current || Employee.find(params[:employee_id]).account
+    @current_account = employee.account
   end
 
   def call
@@ -28,11 +28,8 @@ class CreateOrUpdateJoinTable
 
   def find_employees_join_tables
     join_tables_class = join_table_class.model_name.route_key
-    if join_table_resource
-      join_table_resource.employee.send(join_tables_class).where.not(id: join_table_resource.id)
-    else
-      current_account.employees.find(params[:employee_id]).send(join_tables_class)
-    end
+    return employee.send(join_tables_class) unless join_table_resource
+    employee.send(join_tables_class).where.not(id: join_table_resource.id)
   end
 
   def remove_duplicated_resources_join_tables
@@ -52,7 +49,9 @@ class CreateOrUpdateJoinTable
 
   def remove_policy_assignation_balances(join_tables_to_remove)
     return unless join_table_class.eql?(EmployeeTimeOffPolicy)
-    join_tables_to_remove.map(&:policy_assignation_balance).compact.map(&:destroy!)
+    join_tables_to_remove.map(&:policy_assignation_balance).compact.map do |balance|
+      balance.destroy! unless balance.balance_type.eql?('reset')
+    end
   end
 
   def find_reassignation(join_tables)
@@ -70,8 +69,10 @@ class CreateOrUpdateJoinTable
   end
 
   def new_current_join_table
-    if previous_join_table && previous_join_table.send(resource_class_id) == resource_id
+    if previous_join_table && previous_join_table.send(resource_class_id).eql?(resource_id) &&
+        previous_in_the_same_period?
       destroy_current_join_table if join_table_resource
+      create_reset_join_table_after_update(previous_join_table)
       previous_join_table
     else
       join_table_resource.present? ? update_current_join_table : create_join_table
@@ -120,10 +121,10 @@ class CreateOrUpdateJoinTable
   end
 
   def create_reset_join_table_after_update(join_table)
-    return if join_table_old_effective_at.eql?(join_table.effective_at)
-    employee = join_table.employee
+    return if join_table_old_effective_at.blank? ||
+        join_table_old_effective_at.eql?(join_table.effective_at)
 
-    before_contract_end = employee.contract_end_for(join_table.effective_at)
+    before_contract_end = employee.contract_end_for(join_table_old_effective_at)
     next_contract_end =
       employee.first_upcoming_contract_end(join_table.effective_at).try(:effective_at)
 
@@ -135,22 +136,10 @@ class CreateOrUpdateJoinTable
   end
 
   def create_reset_join_table(join_table, effective_at = nil)
-    employee = join_table.employee
     join_table_name = resource_class.name.underscore.pluralize
     to_category = join_table.try(:time_off_category)
-    return unless create_reset_join_table?(employee, join_table_name, to_category, effective_at)
     AssignResetJoinTable.new(join_table_name, employee, to_category, effective_at).call
     ClearResetJoinTables.new(employee, join_table_old_effective_at, to_category).call
-  end
-
-  def create_reset_join_table?(employee, join_table_name, time_off_category, effective_at)
-    reset_join_tables = employee.send("employee_#{join_table_name}").with_reset
-    reset_join_tables = reset_join_tables.where(effective_at: effective_at) if effective_at.present?
-    if time_off_category.present?
-      reset_join_tables.where(time_off_category: time_off_category.id).empty?
-    else
-      reset_join_tables.empty?
-    end
   end
 
   def previous_join_table
@@ -170,7 +159,7 @@ class CreateOrUpdateJoinTable
     Employee::Balance
       .where(
         time_off_category_id: join_table_resource.time_off_category_id,
-        employee_id: join_table_resource.employee_id,
+        employee_id: employee.id,
         effective_at: assignation_effective_at
       )
   end
@@ -181,5 +170,16 @@ class CreateOrUpdateJoinTable
 
   def time_off_category_id
     resource_class.where(id: resource_id).first.time_off_category_id
+  end
+
+  def employee
+    @employee ||= join_table_resource.try(:employee) || Employee.find(params[:employee_id])
+  end
+
+  def previous_in_the_same_period?
+    employee.contract_periods.any? do |period|
+      period.include?(params[:effective_at].to_date) &&
+        period.include?(previous_join_table.effective_at)
+    end
   end
 end

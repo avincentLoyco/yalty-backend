@@ -54,7 +54,6 @@ class Employee::Balance < ActiveRecord::Base
     .where('b.balance_credit_removal_id IS NULL')
   end)
   scope :removal_at_date, (lambda do |employee_id, time_off_category_id, date|
-
     employee_balances(employee_id, time_off_category_id)
       .where("effective_at::date = to_date('#{date}', 'YYYY-MM_DD')")
       .reset_or_removal.uniq

@@ -21,10 +21,14 @@ class FindSequenceJoinTableInTime
     join_tables_to_delete.compact
   end
 
+  private
+
   def duplicated_at_previous_effective_at
     return unless join_table_resource
-    previous = previous_join_table(join_table_resource.effective_at).try(:send, resource_class)
-    next_join_table(join_table_resource.effective_at, previous) if previous
+    previous = previous_join_table(join_table_resource.effective_at)
+    return unless previous
+    next_table = next_join_table(join_table_resource.effective_at, previous.send(resource_class))
+    next_table if next_table && same_period?(previous, next_table)
   end
 
   def current_join_table
@@ -38,7 +42,7 @@ class FindSequenceJoinTableInTime
       .order(:effective_at)
       .first
 
-    return next_table if next_table.try(:send, resource_class) == current_resource
+    return next_table if next_table && next_table.send(resource_class) == current_resource
   end
 
   def previous_join_table(effective_at = new_effective_at)
@@ -65,11 +69,16 @@ class FindSequenceJoinTableInTime
 
   def verify_if_not_at_reset_policy
     employee = join_tables.first.employee
-
     return unless current_join_table && current_join_table.related_resource.reset? &&
         employee.contract_periods.none? { |period| period.include?(new_effective_at) }
     raise InvalidResourcesError.new(
       join_tables.first.class, ['Can not assign in reset resource effective at']
     )
+  end
+
+  def same_period?(current_resource, next_resource)
+    current_resource.employee.contract_periods.any? do |period|
+      period.include?(current_resource.effective_at) && period.include?(next_resource.effective_at)
+    end
   end
 end

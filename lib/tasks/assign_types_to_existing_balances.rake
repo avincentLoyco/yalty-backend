@@ -1,6 +1,5 @@
 namespace :assign_types_to_existing_balances do
   task update: :environment do
-
     # Set balance type for end_of_period, removal, reset and time_off
     Employee::Balance.where('extract(second from effective_at) = 1')
                      .update_all(balance_type: 'end_of_period')
@@ -15,7 +14,8 @@ namespace :assign_types_to_existing_balances do
     Employee::Balance.includes(:balance_credit_additions)
                      .where(balance_type: 'removal')
                      .where(balance_credit_additions_employee_balances: {
-                        balance_credit_removal_id: nil })
+                              balance_credit_removal_id: nil
+                            })
                      .destroy_all
 
     # Set balance type for assignation and addition (first to assignation, then fix additions)
@@ -23,8 +23,8 @@ namespace :assign_types_to_existing_balances do
                      .update_all(balance_type: 'assignation')
 
     count = Employee::Balance.where(balance_type: 'assignation')
-                     .where(policy_credit_addition: true)
-                     .count
+                             .where(policy_credit_addition: true)
+                             .count
     Employee::Balance.where(balance_type: 'assignation')
                      .where(policy_credit_addition: true)
                      .find_each.with_index do |balance, index|

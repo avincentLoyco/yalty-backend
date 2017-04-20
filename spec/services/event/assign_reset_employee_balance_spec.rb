@@ -4,7 +4,7 @@ RSpec.describe AssignResetEmployeeBalance do
   include_context 'shared_context_timecop_helper'
   include_context 'shared_context_account_helper'
 
-  subject { described_class.new(etop).call }
+  subject { described_class.new(employee, category.id, etop.effective_at - 1.day).call }
 
   let(:employee) { create(:employee) }
   let(:category) { create(:time_off_category, account: employee.account) }
@@ -23,7 +23,6 @@ RSpec.describe AssignResetEmployeeBalance do
     before { Employee::Balance.where(balance_type: 'reset').destroy_all }
 
     context 'when there are no employee balances with validity dates' do
-
       it { expect { subject }.to change { Employee::Balance.count }.by(1) }
       it do
         expect { subject }.to change { Employee::Balance.where(balance_type: 'reset').count }.by(1)
@@ -57,11 +56,5 @@ RSpec.describe AssignResetEmployeeBalance do
           .to change { first_start_date.reload.validity_date }.to eq removal_date
       end
     end
-  end
-
-  context 'when employee time off policy does not have reset resource assigned' do
-    let(:etop) { not_reset_etop }
-
-    it { expect { subject }.to_not change { Employee::Balance.count } }
   end
 end

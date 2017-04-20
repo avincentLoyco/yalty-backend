@@ -7,6 +7,14 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
   let(:presence_policy) { create(:presence_policy, :with_presence_day, account: account) }
   let(:employee) { create(:employee, account: Account.current) }
   let(:presence_policy_id) { presence_policy.id }
+  let(:contract_end) do
+    create(:employee_event,
+      event_type: 'contract_end', employee: employee, effective_at: contract_end_date)
+  end
+  let(:rehired) do
+    create(:employee_event,
+      event_type: 'hired', employee: employee, effective_at: contract_end_date + 1.day)
+  end
 
   describe 'reset join tables behaviour' do
     include_context 'shared_context_join_tables_controller',
@@ -159,12 +167,62 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
       context 'when there are emloyee balances with time offs assigned' do
         let(:policy) { create(:time_off_policy) }
         let(:employee_policy) do
-          create(:employee_time_off_policy, employee: employee, effective_at: 5.years.ago)
+          create(:employee_time_off_policy, employee: employee, effective_at: 2.years.ago)
         end
         let!(:balances) do
           [2.months.ago, 2.months.since].map do |date|
             create(:employee_balance_manual, :with_time_off,
               employee: employee, effective_at: date, time_off_category: policy.time_off_category)
+          end
+        end
+
+        context 'when contract end one day before' do
+          let(:contract_end_date) { effective_at - 1.day }
+
+          context 'and in previous period no join tables were assigned' do
+            before do
+              contract_end
+              rehired
+            end
+
+            it { expect { subject }.to change { EmployeePresencePolicy.count }.by(1) }
+
+            it { is_expected.to have_http_status(201) }
+          end
+
+          context 'and in previous period join tables were assigned' do
+            let!(:epp) do
+              create(:employee_presence_policy,
+                employee: employee, presence_policy: presence_policy, effective_at: 2.years.ago)
+            end
+            before do
+              contract_end
+              rehired
+            end
+
+            it { expect { subject }.to change { EmployeePresencePolicy.not_reset.count }.by(1) }
+            it { expect { subject }.to change { EmployeePresencePolicy.with_reset.count }.by(-1) }
+            it do
+              expect { subject }
+                .to_not change { Employee::Balance.where(balance_type: 'reset').count }
+            end
+
+            it { is_expected.to have_http_status(201) }
+
+            context 'when join table with the same resource assigned in the future' do
+              let!(:duplicated_table) do
+                create(:employee_presence_policy,
+                  employee: employee, presence_policy: presence_policy, effective_at: 2.years.since)
+              end
+
+              it { is_expected.to have_http_status(201) }
+
+              it { expect { subject }.to_not change { EmployeePresencePolicy.not_reset.count } }
+              it { expect { subject }.to change { EmployeePresencePolicy.with_reset.count }.by(-1) }
+              it do
+                expect { subject }.to change { EmployeePresencePolicy.exists?(duplicated_table.id) }
+              end
+            end
           end
         end
 
@@ -347,6 +405,109 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
         [2.months.ago, 2.months.since, 6.months.since].map do |date|
           create(:employee_balance_manual, :with_time_off,
             employee: employee, effective_at: date, time_off_category: policy.time_off_category)
+        end
+      end
+
+      context 'contract end next to join table' do
+        context 'and in previous contract period no join tables assigned' do
+          before do
+            join_table_resource.update!(effective_at: 1.week.since)
+            contract_end
+            rehired
+          end
+
+          context 'after the update join table is one day after contract end' do
+            let(:contract_end_date) { params[:effective_at] - 1.day }
+
+            it { expect { subject }.to change { join_table_resource.reload.effective_at } }
+            it { expect { subject }.to_not change { EmployeePresencePolicy.count } }
+
+            it { is_expected.to have_http_status(200) }
+          end
+
+          context 'befote the update join table was one day after contract end' do
+            let(:effective_at) { 1.month.since }
+            let(:contract_end_date) { join_table_resource.effective_at - 1.day }
+
+            it { expect { subject }.to change { join_table_resource.reload.effective_at } }
+            it { is_expected.to have_http_status(200) }
+          end
+        end
+
+        context 'and in previous contract period join tables assigned' do
+          let!(:epp) do
+            create(:employee_presence_policy,
+              employee: employee, presence_policy: presence_policy, effective_at: 2.years.ago)
+          end
+          before do
+            join_table_resource.update!(effective_at: 1.week.since)
+            contract_end
+            rehired
+          end
+
+          context 'after the update join table is one day after contract end' do
+            let(:contract_end_date) { params[:effective_at] - 1.day }
+
+            it { expect { subject }.to change { EmployeePresencePolicy.with_reset.count }.by(-1) }
+            it { expect { subject }.to change { EmployeePresencePolicy.count }.by(-1) }
+
+            it { is_expected.to have_http_status(200) }
+
+            context 'and before and after it user had join tables with the same resource' do
+              let(:new_policy) { create(:presence_policy, :with_presence_day, account: account) }
+              let!(:new_epps) do
+                [-2, 2].map do |day|
+                  create(:employee_presence_policy,
+                    employee: employee, presence_policy: new_policy,
+                    effective_at: join_table_resource.effective_at + day.days)
+                end
+              end
+
+              it { expect { subject }.to change { EmployeePresencePolicy.count }.by(-2) }
+              it { expect { subject }.to change { EmployeePresencePolicy.with_reset.count }.by(-1) }
+              it do
+                expect { subject }.to change { EmployeePresencePolicy.exists?(new_epps.last.id) }
+              end
+
+              it { is_expected.to have_http_status(200) }
+            end
+          end
+
+          context 'before the update join table was one day after contract end' do
+            let(:effective_at) { 1.month.since }
+            let(:contract_end_date) { join_table_resource.effective_at - 1.day }
+
+            it { expect { subject }.to change { EmployeePresencePolicy.count }.by(1) }
+            it { expect { subject }.to change { EmployeePresencePolicy.with_reset.count }.by(1) }
+
+            it { is_expected.to have_http_status(200) }
+
+            context 'and before and after new date are join tables with the same resource' do
+              let!(:epp_between) do
+                create(:employee_presence_policy,
+                  employee: employee, effective_at: params[:effective_at] - 3.days)
+              end
+              let!(:new_epps) do
+                [-2, 2].map do |day|
+                  create(:employee_presence_policy,
+                    employee: employee, presence_policy: new_presence_policy,
+                    effective_at: params[:effective_at] + day.days)
+                end
+              end
+
+              it { expect { subject }.to change { EmployeePresencePolicy.with_reset.count }.by(1) }
+              it { expect { subject }.to change { EmployeePresencePolicy.not_reset.count }.by(-2) }
+              it do
+                expect { subject }.to change { EmployeePresencePolicy.exists?(new_epps.last.id) }
+              end
+              it do
+                expect { subject }
+                  .to change { EmployeePresencePolicy.exists?(join_table_resource.id) }
+              end
+
+              it { is_expected.to have_http_status(205) }
+            end
+          end
         end
       end
 
@@ -600,6 +761,39 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
         it { expect { subject }.to change { EmployeePresencePolicy.count }.by(-1) }
 
         it { is_expected.to have_http_status(204) }
+      end
+
+      context 'when there is contract end day before join table' do
+        let(:contract_end_date) { employee_presence_policy.effective_at - 1.day }
+
+        context 'and there is no join table after removed resource' do
+          before do
+            contract_end
+            rehired
+          end
+
+          it { expect { subject }.to change { EmployeePresencePolicy.not_reset.count }.by(-1) }
+          it { expect { subject }.to_not change { EmployeePresencePolicy.with_reset.count } }
+
+          it { is_expected.to have_http_status(204) }
+        end
+
+        context 'and there is join table after removed resource' do
+          before do
+            pp = create(:presence_policy, :with_presence_day, account: account)
+            create(:employee_presence_policy,
+              employee: employee, presence_policy: pp, effective_at: 1.year.ago)
+            create(:employee_presence_policy,
+              employee: employee, presence_policy: pp, effective_at: 1.year.since)
+            contract_end
+            rehired
+          end
+
+          it { expect { subject }.to change { EmployeePresencePolicy.not_reset.count }.by(-1) }
+          it { expect { subject }.to change { EmployeePresencePolicy.with_reset.count }.by(1) }
+
+          it { is_expected.to have_http_status(204) }
+        end
       end
 
       context 'when they are join tables with the same resources before and after' do

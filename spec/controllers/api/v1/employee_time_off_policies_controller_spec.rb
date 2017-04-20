@@ -242,22 +242,37 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
       context 'when effective at is in the future and before is reset policy' do
         before do
-          create(:employee_time_off_policy,
+          create(:employee_time_off_policy, :with_employee_balance,
             effective_at: employee.hired_date, employee: employee, time_off_policy: time_off_policy)
           create(:employee_event,
             employee: employee, event_type: 'contract_end', effective_at: 1.week.ago)
-          create(:employee_time_off_policy,
-            employee: employee, effective_at: 6.days.ago,
-            time_off_policy: create(:time_off_policy, :reset, time_off_category: category))
+        end
+        let!(:rehired) do
           create(:employee_event,
             employee: employee, effective_at: 2.years.since, event_type: 'hired')
         end
 
         let(:effective_at) { 2.years.since }
 
-        it { expect { subject }.to change { EmployeeTimeOffPolicy.count } }
-        it { expect { subject }.to change { Employee::Balance.count }.by(2) }
+        it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(1) }
+        it { expect { subject }.to change { Employee::Balance.count }.by(3) }
         it { is_expected.to have_http_status(201) }
+
+        context 'when new effective at one day after contract end' do
+          before do
+            rehired.update!(effective_at: 6.days.ago)
+            params[:effective_at] = 6.days.ago
+          end
+
+          it { expect { subject }.to change { EmployeeTimeOffPolicy.not_reset.count }.by(1) }
+          it { expect { subject }.to change { EmployeeTimeOffPolicy.with_reset.count }.by(-1) }
+          it do
+            expect { subject }
+              .to_not change { Employee::Balance.where(balance_type: 'reset').count }
+          end
+
+          it { is_expected.to have_http_status(201) }
+        end
       end
 
       context 'when creating etop in place of another' do
@@ -316,9 +331,6 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
             it do
               expect { subject }.to_not change {
                 employee.reload.employee_time_off_policies.pluck(:time_off_policy_id) }
-            end
-            it do
-              subject
             end
             it { is_expected.to have_http_status(422) }
           end
@@ -538,13 +550,6 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
             it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(1) }
             it { expect { subject }.to change { Employee::Balance.count }.by(8) }
 
-            # TODO
-            #it do
-            #   binding.pry
-            #   subject
-            #
-            #   binding.pry
-            # end
             it { is_expected.to have_http_status(201) }
           end
 
@@ -661,6 +666,56 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
             it { expect(balance_effective_ats).to match_array(expected_balances_dates) }
             it { expect(EmployeeTimeOffPolicy.count).to eq(1) }
           end
+
+          context 'when new effective_at is one day after contract end' do
+            let(:effective_at) { '31/12/2013' }
+
+            before do
+              create(:employee_event,
+                employee: employee, event_type: 'contract_end', effective_at: '30/12/2013')
+              create(:employee_event,
+                employee: employee, event_type: 'hired', effective_at: '31/12/2013')
+            end
+
+            context 'and there is join table with different resource after' do
+              it { expect { subject }.to change { EmployeeTimeOffPolicy.with_reset.count }.by(-1) }
+              it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(-1) }
+              it { expect { subject }.to change { join_table_resource.reload.effective_at } }
+
+              it do
+                expect { subject }
+                  .to_not change { Employee::Balance.where(balance_type: 'reset').count }
+              end
+              it { is_expected.to have_http_status(200) }
+            end
+
+            context 'and there is join table with the same resource after' do
+              before { etop_2.update!(time_off_policy: top_a) }
+
+              let!(:duplicated_etops) do
+                [-2, 2].map do |day|
+                  create(:employee_time_off_policy,
+                    employee: employee, time_off_policy: top_b,
+                    effective_at: join_table_resource.effective_at + day.days)
+                end
+              end
+
+              it { expect { subject }.to change { EmployeeTimeOffPolicy.with_reset.count }.by(-1) }
+              it { expect { subject }.to change { EmployeeTimeOffPolicy.not_reset.count }.by(-2) }
+              it { expect { subject }.to change { EmployeeTimeOffPolicy.exists?(etop_2.id) } }
+              it { expect { subject }.to change { join_table_resource.reload.effective_at } }
+              it do
+                expect { subject }
+                  .to_not change { Employee::Balance.where(balance_type: 'reset').count }
+              end
+              it do
+                expect { subject }
+                  .to change { EmployeeTimeOffPolicy.exists?(duplicated_etops.last.id) }
+              end
+
+              it { is_expected.to have_http_status(200) }
+            end
+          end
         end
 
         context 'to future' do
@@ -701,6 +756,27 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
             it { expect(balance_effective_ats).to match_array(expected_balances_dates) }
             it { expect(EmployeeTimeOffPolicy.count).to eq(2) }
+          end
+
+          context 'when previous effective at was one day after contract end day' do
+            before do
+              create(:employee_event,
+                event_type: 'contract_end', employee: employee, effective_at: '31/12/2013')
+              create(:employee_event,
+                event_type: 'hired', employee: employee, effective_at: '1/1/2014')
+            end
+
+            context 'and there are no duplicated etops after change' do
+              it { expect { subject }.to change { EmployeeTimeOffPolicy.not_reset.count }.by(-3) }
+              it { expect { subject }.to change { EmployeeTimeOffPolicy.with_reset.count }.by(1) }
+              it { expect { subject }.to change { EmployeeTimeOffPolicy.exists?(etops_b.last.id) } }
+              it { expect { subject }.to change { EmployeeTimeOffPolicy.exists?(etops_b.first.id) } }
+
+              it do
+                expect { subject }.to_not change { EmployeeTimeOffPolicy.exists?(etops_b.second.id) }
+              end
+              it { is_expected.to have_http_status(205) }
+            end
           end
         end
       end
@@ -1005,12 +1081,13 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
         end
         let!(:etops_1) do
           [Time.zone.parse('2013-01-01'), Time.zone.parse('2015-01-01')].map do |date|
-            create(:employee_time_off_policy, time_off_policy: top_a, employee: employee,
-              effective_at: date)
+            create(:employee_time_off_policy, :with_employee_balance,
+              time_off_policy: top_a, employee: employee, effective_at: date)
           end
         end
         let!(:etop_2) do
-          create(:employee_time_off_policy, time_off_policy: top_b, employee: employee,
+          create(:employee_time_off_policy, :with_employee_balance,
+            time_off_policy: top_b, employee: employee,
             effective_at: Time.zone.parse('2014-01-01'))
         end
         let(:balance_effective_ats) { Employee::Balance.pluck(:effective_at).map(&:to_date) }
@@ -1032,6 +1109,21 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
           it { expect(EmployeeTimeOffPolicy.count).to eq(1) }
           it { expect(balance_effective_ats).to match_array(expected_balances_dates) }
+        end
+
+        context 'when there is contract end day before removed resource' do
+          before do
+            create(:employee_event,
+              event_type: 'contract_end', employee: employee, effective_at: etop_2.effective_at - 1)
+            create(:employee_event,
+              event_type: 'hired', employee: employee, effective_at: etop_2.effective_at)
+          end
+
+          it { expect { subject }.to change { EmployeeTimeOffPolicy.not_reset.count }.by(-1) }
+          it { expect { subject }.to change { EmployeeTimeOffPolicy.exists?(etop_2.id) } }
+          it { expect { subject }.to change { EmployeeTimeOffPolicy.with_reset.count }.by(1) }
+
+          it { is_expected.to have_http_status(204) }
         end
       end
 

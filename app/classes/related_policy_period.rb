@@ -94,7 +94,7 @@ class RelatedPolicyPeriod
 
   def validity_date_for_period_time(date)
     start_date = Date.new(date.year, start_month, start_day)
-    start_date -= 1.year if date.to_date <= start_date && years_to_effect > 0
+    start_date -= 1.year if date.to_date <= start_date && years_to_effect.positive?
     validity_date_for_period_start(start_date)
   end
 

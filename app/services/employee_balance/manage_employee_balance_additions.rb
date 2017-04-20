@@ -25,12 +25,17 @@ class ManageEmployeeBalanceAdditions
   private
 
   def check_amount_and_update_balances
-    if update && balances.flatten.present? &&
-        balances.flatten.compact.map { |b| [b[:manual_amount], b[:resource_amount]] }.flatten.uniq != [0]
+    if update && balances.flatten.present? && amount_affect_balances?
       ActiveRecord::Base.after_transaction do
         UpdateBalanceJob.perform_later(balances.flatten.first, update_all: true)
       end
     end
+  end
+
+  def amount_affect_balances?
+    balances.flatten.compact.map do |balance|
+      [balance[:manual_amount], balance[:resource_amount]]
+    end.flatten.uniq != [0]
   end
 
   def create_additions_with_removals
