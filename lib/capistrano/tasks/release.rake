@@ -15,8 +15,12 @@ namespace :release do
       execute :git, :add, version_file
       execute :git, :commit, "-m \"Create release candidate #{version}\""
       execute :git, :push, "-u origin releases/#{version}"
+      execute :hub, :'pull-request', '--browse',
+        "-m \"Release #{version}\" -b yalty:master -h yalty:releases/#{version}",
+        raise_on_non_zero_exit: true ||
+          'hub extension for git is not installed, create Pull Request manually'
 
-      info 'Create Pull Request, wait on docker build, then deploy to staging environment:
+      info 'Wait on docker build, then deploy to staging environment:
         cap staging deploy'
     end
   end

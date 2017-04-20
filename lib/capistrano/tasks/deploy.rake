@@ -1,4 +1,11 @@
 namespace :deploy do
+  task :failed do
+    on release_roles(fetch(:docker_roles)) do
+      execute :rm, '-rf', release_path, raise_on_non_zero_exit: false
+    end
+    invoke 'restart:worker'
+  end
+
   task :enable_maintenance do
     invoke 'maintenance:on' if fetch(:maintenance_mode, false)
   end

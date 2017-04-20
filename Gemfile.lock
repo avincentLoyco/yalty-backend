@@ -1,8 +1,8 @@
 GIT
   remote: https://github.com/yalty/capistrano-docker-copy.git
-  revision: 1c80cb2217432481b61cf7a75fca0a1d01e3902c
+  revision: 871129b887580b64b28aa17c910b397eed4f6ae8
   specs:
-    capistrano-docker-copy (0.1.0)
+    capistrano-docker-copy (0.1.1)
       capistrano (~> 3.7)
 
 GEM
@@ -53,7 +53,7 @@ GEM
       rack-test (~> 0.6, >= 0.6.2)
       rest-client (~> 1.7, >= 1.7.3)
       rspec (~> 3.1, >= 3.1.0)
-    airbrussh (1.1.2)
+    airbrussh (1.2.0)
       sshkit (>= 1.6.1, != 1.7.0)
     anima (0.3.0)
       abstract_type (~> 0.0.7)
@@ -84,13 +84,11 @@ GEM
     byebug (8.2.2)
     callsite (0.0.11)
     cancancan (1.13.1)
-    capistrano (3.7.2)
+    capistrano (3.8.0)
       airbrussh (>= 1.0.0)
-      capistrano-harrow
       i18n
       rake (>= 10.0.0)
       sshkit (>= 1.9.0)
-    capistrano-harrow (0.5.3)
     climate_control (0.1.0)
     cocaine (0.5.8)
       climate_control (>= 0.0.3, < 1.0)
@@ -250,7 +248,7 @@ GEM
     nenv (0.2.0)
     net-scp (1.2.1)
       net-ssh (>= 2.6.5)
-    net-ssh (4.0.1)
+    net-ssh (4.1.0)
     netrc (0.11.0)
     newrelic_rpm (3.14.2.312)
     nokogiri (1.6.8.1)
@@ -388,7 +386,7 @@ GEM
       actionpack (>= 4.0)
       activesupport (>= 4.0)
       sprockets (>= 3.0.0)
-    sshkit (1.12.0)
+    sshkit (1.13.1)
       net-scp (>= 1.1.2)
       net-ssh (>= 2.8.0)
     stripe (2.0.0)
