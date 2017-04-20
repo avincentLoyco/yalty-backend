@@ -5,7 +5,7 @@ RSpec.describe Account, type: :model do
 
   it { is_expected.to have_db_column(:id).of_type(:uuid) }
   it { is_expected.to have_db_column(:customer_id).of_type(:string) }
-  it { is_expected.to have_db_column(:available_modules).of_type(:text) }
+  it { is_expected.to have_db_column(:available_modules).of_type(:json) }
   it { is_expected.to have_db_column(:subscription_renewal_date).of_type(:date) }
   it { is_expected.to have_db_column(:subdomain).with_options(null: false) }
   it { is_expected.to have_db_column(:invoice_company_info).of_type(:hstore) }
@@ -277,7 +277,7 @@ RSpec.describe Account, type: :model do
       end
 
       it 'triggers cration job' do
-        expect(Payments::CreateCustomerWithSubscription).to receive(:perform_now).with(account)
+        expect(Payments::CreateOrUpdateCustomerWithSubscription).to receive(:perform_now).with(account)
         subject
       end
     end

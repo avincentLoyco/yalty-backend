@@ -13,7 +13,9 @@ module Payments
     end
 
     def perform(account)
-      account.update!(available_modules: available_modules(account))
+      account.update!(
+        available_modules: ::Payments::AvailableModules.new(data: available_modules(account))
+      )
     end
 
     private
@@ -22,7 +24,7 @@ module Payments
       Stripe::Subscription.retrieve(account.subscription_id)
                           .items.each_with_object([]) do |sub_item, modules|
         if sub_item.plan.present? && !sub_item.plan.id.eql?('free-plan')
-          modules.push(sub_item.plan.id)
+          modules.push(::Payments::PlanModule.new(id: sub_item.plan.id, canceled: false))
         end
       end
     end

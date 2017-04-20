@@ -13,7 +13,11 @@ end
 
 begin
   repository = ENV['TRAVIS_REPO_SLUG']
-  branch = ENV['TRAVIS_BRANCH']
+  branch = if ENV['TRAVIS_PULL_REQUEST'] == 'false'
+             ENV['TRAVIS_BRANCH']
+           else
+             ENV['TRAVIS_PULL_REQUEST_BRANCH']
+           end
 
   Travis::Pro.github_auth(ENV['GITHUB_ACCESS_TOKEN'])
   travis = Travis::Pro::Repository.find(repository)
@@ -26,20 +30,6 @@ begin
 rescue Travis::Client::NotFound, Octokit::NotFound
   puts "Repository (#{repository}) or branch (#{branch}) not found"
   exit 0
-end
-
-#
-# Set docker build status to pending
-#
-
-if ENV['TRAVIS_PULL_REQUEST'] != 'false' && ENV['TRAVIS_BRANCH'] == 'master'
-  if ENV['TRAVIS_PULL_REQUEST_BRANCH'] =~ %r{^[^/]+/(ywa-[[:digit:]]+)}i ||
-      ENV['TRAVIS_PULL_REQUEST_BRANCH'] =~ %r{^releases?/(.+)}
-    github.create_status(
-      repository, ENV['TRAVIS_PULL_REQUEST_SHA'], 'pending',
-      context: 'yalty/build', description: 'Docker image build queued'
-    )
-  end
 end
 
 #

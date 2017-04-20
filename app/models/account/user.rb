@@ -6,12 +6,13 @@ class Account::User < ActiveRecord::Base
   has_secure_password
 
   validates :email, presence: true
-  validates :email, format: { with: /\b[A-Z0-9._%a-z\-]+@(?:[A-Z0-9a-z\-]+\.)+[A-Za-z]{2,4}\z/ }
+  validates :email, format: { with: /\b[A-Z0-9._%a-z\-]+@(?:[A-Z0-9a-z\-]+\.)+[A-Za-z]{2,}\z/ }
   validates :email, uniqueness: { scope: :account_id, case_sensitive: false }
   validates :password, length: { in: 8..74 }, if: ->() { !password.nil? }
   validates :reset_password_token, uniqueness: true, allow_nil: true
   validates :role, presence: true, inclusion: { in: %w(user account_administrator account_owner) }
   validates :locale, inclusion: { in: I18n.available_locales.map(&:to_s) }, allow_nil: true
+  validate :validate_role_update, if: :role_changed?, on: :update
 
   belongs_to :account, inverse_of: :users, required: true
   belongs_to :referrer, primary_key: :email, foreign_key: :email
@@ -19,6 +20,7 @@ class Account::User < ActiveRecord::Base
 
   before_validation :generate_password, on: :create
   after_create :create_referrer
+  before_destroy :check_if_last_owner
   after_update :update_stripe_customer_email,
     if: -> { stripe_enabled? && (email_changed? || role_changed?) }
   after_destroy :update_stripe_customer_email,
@@ -66,5 +68,21 @@ class Account::User < ActiveRecord::Base
   def update_stripe_customer_email
     return unless role_change&.include?('account_owner') || email_changed? || destroyed?
     Payments::UpdateStripeCustomerDescription.perform_later(account)
+  end
+
+  def validate_role_update
+    return true unless role_changed? && role_was.eql?('account_owner') &&
+        !account.users.where.not(id: id).where(role: 'account_owner').exists?
+
+    errors.add(:role, 'last account owner cannot change role')
+    false
+  end
+
+  def check_if_last_owner
+    return true unless role.eql?('account_owner') &&
+        !account.users.where.not(id: id).where(role: 'account_owner').exists?
+
+    errors.add(:role, 'last account owner cannot be deleted')
+    false
   end
 end

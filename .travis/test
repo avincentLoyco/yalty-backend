@@ -1,0 +1,17 @@
+#!/bin/bash
+(
+  test "$TRAVIS_PULL_REQUEST" != "false" &&
+  git fetch origin \
+    $TRAVIS_PULL_REQUEST_BRANCH:refs/remotes/origin/$TRAVIS_PULL_REQUEST_BRANCH \
+    $TRAVIS_BRANCH:refs/remotes/origin/$TRAVIS_BRANCH &&
+  test $(git rev-list --left-only --count origin/$TRAVIS_BRANCH...origin/$TRAVIS_PULL_REQUEST_BRANCH) = 0 &&
+  (echo "$TRAVIS_PULL_REQUEST_BRANCH is up to date." && true)
+) || (
+  (
+    test "$TRAVIS_PULL_REQUEST" = "false" ||
+    test $(git rev-parse origin/$TRAVIS_BRANCH) = $(echo $TRAVIS_COMMIT_MESSAGE | awk '{print $NF}') ||
+    (echo "$TRAVIS_PULL_REQUEST_BRANCH cannot be merged in $TRAVIS_BRANCH." && false)
+  ) && (
+    bundle exec rake parallel:spec
+  )
+)

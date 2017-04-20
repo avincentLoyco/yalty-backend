@@ -31,6 +31,7 @@ class ETagMiddleware
 
     digest << headers[Rack::ETag::ETAG_STRING][ETAG_REGEX, 1]
     digest << Account.current.id
+    digest << Account.current.subdomain
 
     digest.hexdigest.byteslice(0, 32)
   end

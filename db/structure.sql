@@ -67,6 +67,20 @@ COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UU
 
 SET search_path = public, pg_catalog;
 
+--
+-- Name: assign_receipt_number(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION assign_receipt_number() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+            BEGIN
+              NEW.receipt_number:=nextval('receipt_number_seq');
+              Return NEW;
+            END;
+          $$;
+
+
 SET default_tablespace = '';
 
 SET default_with_oids = false;
@@ -115,11 +129,11 @@ CREATE TABLE accounts (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
     referred_by character varying,
     customer_id character varying,
-    available_modules text[] DEFAULT '{}'::text[],
     subscription_renewal_date date,
     subscription_id character varying,
     invoice_company_info hstore,
-    invoice_emails text[] DEFAULT '{}'::text[]
+    invoice_emails text[] DEFAULT '{}'::text[],
+    available_modules json
 );
 
 
@@ -476,8 +490,20 @@ CREATE TABLE presence_policies (
     name character varying,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
-    reset boolean DEFAULT false
+    reset boolean DEFAULT false NOT NULL
 );
+
+
+--
+-- Name: receipt_number_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE receipt_number_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
 
 
 --
@@ -564,7 +590,7 @@ CREATE TABLE time_off_policies (
     created_at timestamp without time zone,
     updated_at timestamp without time zone,
     name character varying NOT NULL,
-    reset boolean DEFAULT false
+    reset boolean DEFAULT false NOT NULL
 );
 
 
@@ -603,7 +629,7 @@ CREATE TABLE working_places (
     street character varying(60),
     street_number character varying(10),
     timezone character varying,
-    reset boolean DEFAULT false,
+    reset boolean DEFAULT false NOT NULL,
     state_code character varying(60)
 );
 
@@ -1168,6 +1194,13 @@ CREATE UNIQUE INDEX unique_schema_migrations ON schema_migrations USING btree (v
 
 
 --
+-- Name: receipt_number_generator; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER receipt_number_generator BEFORE UPDATE ON invoices FOR EACH ROW WHEN ((((old.status)::text IS DISTINCT FROM (new.status)::text) AND ((new.status)::text = 'success'::text))) EXECUTE PROCEDURE assign_receipt_number();
+
+
+--
 -- Name: fk_rails_04a25b070a; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1680,4 +1713,10 @@ INSERT INTO schema_migrations (version) VALUES ('20170322084239');
 INSERT INTO schema_migrations (version) VALUES ('20170322103855');
 
 INSERT INTO schema_migrations (version) VALUES ('20170403122406');
+
+INSERT INTO schema_migrations (version) VALUES ('20170404142827');
+
+INSERT INTO schema_migrations (version) VALUES ('20170405183244');
+
+INSERT INTO schema_migrations (version) VALUES ('20170413123051');
 

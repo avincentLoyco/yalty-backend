@@ -12,15 +12,17 @@ module Payments
       case event.type
       when 'invoice.created' then
         create_invoice(event.data.object)
-        update_avaiable_modules(event.data.object)
+        clear_modules('canceled')
       when 'invoice.payment_failed' then
         update_invoice_status(event.data.object, 'failed')
       when 'invoice.payment_succeeded' then
         update_invoice_status(event.data.object, 'success')
         # TODO: Add pdf generation here
-
       when 'customer.subscription.updated' then
-        update_avaiable_modules(event.data.object)
+        Account.transaction do
+          clear_modules('all', event.data.object)
+          recreate_subscription(event.data.object)
+        end
       end
     end
 
@@ -41,7 +43,7 @@ module Payments
     def create_invoice(invoice)
       invoice_lines =
         invoice.lines.data
-               .select { |l| !l.plan.id.eql?('free-plan') }
+               .select { |l| !l.plan.id.eql?('free-plan') && !canceled_modules.include?(l.plan.id) }
                .map { |l| build_invoice_line(l) }
       return if invoice_lines.empty? ||
           Stripe::Subscription.retrieve(invoice.subscription).status == 'trialing'
@@ -52,7 +54,6 @@ module Payments
         attempts: invoice.attempt_count,
         date: Time.zone.at(invoice.date).to_datetime,
         status: 'pending',
-        receipt_number: invoice.receipt_number,
         starting_balance: invoice.starting_balance,
         subtotal: invoice.subtotal,
         tax: invoice.tax,
@@ -90,16 +91,32 @@ module Payments
       )
     end
 
-    def update_avaiable_modules(object)
-      plans =
-        if object&.status.eql?('canceled')
-          []
-        elsif object.object.eql?('invoice')
-          stripe_sub = Stripe::Subscription.retrieve(object.id)
-          stripe_sub.items.map { |si| si.plan.id unless si.plan.id.eql?('free-plan') }.compact
-        end
+    def recreate_subscription(subscription)
+      return unless subscription.status.eql?('canceled')
 
-      account.update(available_modules: plans) unless plans.nil?
+      subscription = Stripe::Subscription.create(
+        customer: account.customer_id,
+        plan: 'free-plan',
+        tax_percent: Invoice::TAX_PERCENT,
+        quantity: account.employees.active_at_date(Time.zone.tomorrow).count
+      )
+
+      account.update!(subscription_id: subscription.id)
+    end
+
+    def clear_modules(scope, subscription = nil)
+      return if subscription.present? && !subscription.status.eql?('canceled')
+
+      case scope
+      when 'all' then account.available_modules.delete_all
+      when 'canceled' then account.available_modules.clean
+      end
+
+      account.save!
+    end
+
+    def canceled_modules
+      @canceled_modules ||= account.available_modules.canceled
     end
   end
 end

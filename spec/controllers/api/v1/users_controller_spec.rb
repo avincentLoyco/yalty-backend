@@ -3,6 +3,7 @@ require 'rails_helper'
 RSpec.describe API::V1::UsersController, type: :controller do
   include_context 'shared_context_headers'
 
+  let(:user) { create(:account_user, role: 'account_owner') }
   let(:redirect_uri) { 'http://yalty.test/setup'}
   let(:client) { FactoryGirl.create(:oauth_client, redirect_uri: redirect_uri) }
   let(:employee) { create(:employee, account: account) }
@@ -185,10 +186,12 @@ RSpec.describe API::V1::UsersController, type: :controller do
     let!(:users) { create_list(:account_user, 3, account: Account.current) }
     let(:email) { 'test123@example.com' }
     let(:locale) { 'en' }
+    let(:role) { user.role }
     let(:params) do
       {
         id: user.id,
         email: email,
+        role: role,
         locale: locale
       }
     end
@@ -210,6 +213,32 @@ RSpec.describe API::V1::UsersController, type: :controller do
 
         it { is_expected.to have_http_status(204) }
         it { expect { subject }.to change { employee.reload.account_user_id } }
+      end
+
+      context 'account owner can change role when he is not last' do
+        before { users.last.update(role: 'account_owner') }
+        let(:user_id) { user.id }
+        let(:role) { 'user' }
+
+        it { is_expected.to have_http_status(204) }
+        it { expect { subject }.to change { user.reload.role } }
+      end
+
+      context "can't change last account owner" do
+        let(:user_id) { user.id }
+
+        %w(account_administrator user).each do |new_role|
+          let(:role) { new_role }
+
+          it { is_expected.to have_http_status(422) }
+          it { expect { subject }.not_to change { user.reload.role } }
+
+          context 'response' do
+            before { subject }
+
+            it { expect_json(regex('last account owner cannot change role')) }
+          end
+        end
       end
 
       context 'without employee id' do
@@ -270,6 +299,28 @@ RSpec.describe API::V1::UsersController, type: :controller do
           it { expect { subject }.to_not change { user.reload.role } }
         end
       end
+    end
+  end
+
+  context 'DELETE #destroy' do
+    subject { delete :destroy, id: user.id }
+    let!(:users) { create_list(:account_user, 3, account: Account.current) }
+
+    context 'cannot delete last account owner' do
+      it { is_expected.to have_http_status(403) }
+      it { expect { subject }.to_not change { Account::User.count } }
+
+      context 'response' do
+        before { subject }
+
+        it { expect_json(regex('last account owner cannot be deleted')) }
+      end
+    end
+
+    context 'can delete account owner when he is not last' do
+      before { users.last.update(role: 'account_owner') }
+      it { is_expected.to have_http_status(204) }
+      it { expect { subject }.to change { Account::User.count } }
     end
   end
 end

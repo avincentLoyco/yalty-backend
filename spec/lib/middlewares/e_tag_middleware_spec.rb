@@ -1,8 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe ETagMiddleware do
-  let(:account) { create(:account, id: 'c5cbba38-b738-44af-997a-5ab130d81726') }
-  let(:account_subdomain) { account.subdomain }
+  let(:account) { create(:account, id: 'c5cbba38-b738-44af-997a-5ab130d81726', subdomain: account_subdomain) }
+  let(:account_subdomain) { 'timecorps' }
   let(:env) { Rack::MockRequest.env_for('https://api.yalty.io', {
     'HTTP_YALTY_ACCOUNT_SUBDOMAIN' => "#{account_subdomain}"
   })}
@@ -19,7 +19,7 @@ RSpec.describe ETagMiddleware do
         status, headers, body = middleware.call(env)
 
         expect(headers).to have_key(Rack::ETag::ETAG_STRING)
-        expect(headers[Rack::ETag::ETAG_STRING]).to be_eql('W/"7dd6404fcaadfa6c248034efaca37c61"')
+        expect(headers[Rack::ETag::ETAG_STRING]).to be_eql('W/"c46dcc237cacf5dbe066b8cd750655af"')
       end
     end
 

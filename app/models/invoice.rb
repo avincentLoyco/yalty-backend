@@ -1,5 +1,6 @@
 class Invoice < ActiveRecord::Base
   POSSIBLE_STATUSES = %w(pending failed success).freeze
+  TAX_PERCENT = 8.0
 
   serialize :address, Payments::CompanyInformation
   serialize :lines, Payments::InvoiceLines
