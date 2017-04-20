@@ -1,4 +1,4 @@
-:concurrency: 1
+:concurrency: 5
 :pidfile: tmp/pids/sidekiq.pid
 :logfile: log/sidekiq.log
 :queues:
@@ -10,3 +10,5 @@
   - registered_working_times
   - employee_files
   - default
+:limits:
+  update_balance: 1

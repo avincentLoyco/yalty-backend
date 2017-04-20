@@ -25,6 +25,7 @@ gem 'virtus',               '~> 1.0.5'
 
 # background jobs
 gem 'sidekiq',              '~> 4.2.3'
+gem 'sidekiq-limit_fetch',  '~> 3.4.0'
 gem 'sidekiq-scheduler',    '~> 2.0.19'
 
 # Production environment dependencies
