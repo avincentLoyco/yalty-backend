@@ -36,10 +36,4 @@ RSpec.describe Payments::UpdateAvailableModules, type: :job do
         .to(plan_ids)
     end
   end
-
-  context 'error' do
-    before { allow(Stripe::Subscription).to receive(:retrieve).and_raise(Stripe::APIError) }
-
-    it { expect { job }.to change(enqueued_jobs, :size).by(1) }
-  end
 end

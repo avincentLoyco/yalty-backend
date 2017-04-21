@@ -32,29 +32,4 @@ RSpec.describe 'payments:create_customers_for_existing_accounts', type: :rake do
       it { expect { subject }.to change { Account.where('subscription_id IS NOT NULL').count }.from(0).to(4) }
     end
   end
-
-  context 'in case of failure' do
-    let(:customer)     { StripeCustomer.new(SecureRandom.hex) }
-    let(:subscription) { StripeSubscription.new(SecureRandom.hex) }
-
-    context 'when Striper::Customer fails' do
-      before do
-        allow(Stripe::Customer).to receive(:create).and_raise(Stripe::APIError)
-        allow(Stripe::Subscription).to receive(:create).and_return(subscription)
-      end
-
-      it { expect { subject }.to_not change { Account.pluck(:customer_id).compact.size } }
-      it { expect { subject }.to_not change { Account.pluck(:subscription_id).compact.size } }
-    end
-
-    context 'when Stripe::Subscription fails' do
-      before do
-        allow(Stripe::Customer).to receive(:create).and_return(customer)
-        allow(Stripe::Subscription).to receive(:create).and_raise(Stripe::APIError)
-      end
-
-      it { expect { subject }.to change { Account.pluck(:customer_id).compact.size }.from(1).to(4) }
-      it { expect { subject }.to_not change { Account.pluck(:subscription_id).compact.size } }
-    end
-  end
 end

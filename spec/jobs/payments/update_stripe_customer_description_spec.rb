@@ -23,10 +23,4 @@ RSpec.describe Payments::UpdateStripeCustomerDescription, type: :job do
       subject
     end
   end
-
-  context 'in case of error' do
-    before { allow(Stripe::Customer).to receive(:retrieve).and_raise(Stripe::APIError) }
-
-    it { expect { job }.to change(enqueued_jobs, :size).by(1) }
-  end
 end
