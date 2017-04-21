@@ -1,5 +1,6 @@
-:concurrency: 5
-:pidfile: tmp/pids/sidekiq.pid
+:concurrency: <%= ENV['SIDEKIQ_CONCURRENCY'] || 3 %>
+:workers: <%= ENV['SIDEKIQ_WORKERS'] || 1 %>
+:pidfile: tmp/pids/sidekiq.%i.pid
 :logfile: log/sidekiq.log
 :queues:
   - billing
