@@ -1,8 +1,13 @@
-
 {
   "before_migration": [
   ],
   "after_migration": [
+    {
+      "task_name": "attribute_definitions:update",
+      "description": [
+        "Create missing attribute definitions"
+      ]
+    },
     {
       "task_name": "update_time_offs:for_contract_end",
       "description": [
