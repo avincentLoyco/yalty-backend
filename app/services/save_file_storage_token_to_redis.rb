@@ -1,3 +1,5 @@
+require 'mime/types'
+
 class SaveFileStorageTokenToRedis
   InvalidToken = Class.new(StandardError)
   SHORTTERM_TOKEN = 30
@@ -10,6 +12,7 @@ class SaveFileStorageTokenToRedis
     @version = attributes[:version].present? ? attributes[:version] : 'original'
     @file_sha = file_sha(attribute_version)
     @file_type = file_type(attribute_version)
+    @file_name = file_name(attribute_version)
     created_at = Time.zone.now
     @token_params = {
       token: generate_token,
@@ -39,6 +42,7 @@ class SaveFileStorageTokenToRedis
       'action_type', @token_params[:action_type],
       'file_sha', @file_sha,
       'file_type', @file_type,
+      'file_name', @file_name,
       'duration', @duration,
       'version', @version
     )
@@ -65,5 +69,12 @@ class SaveFileStorageTokenToRedis
   def file_type(attribute_version)
     return unless attribute_version.present?
     attribute_version.data.file_type
+  end
+
+  def file_name(attribute_version)
+    return unless attribute_version.present?
+    event_name = attribute_version.attribute_definition.name
+    ext = MIME::Types[attribute_version.data.file_type].first.extensions.first
+    "#{event_name}.#{ext}"
   end
 end
