@@ -26,6 +26,23 @@ namespace :payments do
     ActiveRecord::Base.connection.execute(update_receipt_numbers)
   end
 
+  desc 'Generate missing PDF for invoices'
+  task generate_pdf_for_invoices: :environment do
+    Invoice.includes(:generic_file).where(generic_files: { id: nil }).each do |invoice|
+      Stripe::Invoice.list(customer: invoice.account.customer_id).auto_paging_each do |stripe_in|
+        next unless stripe_in.id.eql?(invoice.invoice_id)
+        invoice.update!(
+          period_start: Time.zone.at(stripe_in.period_start),
+          period_end: Time.zone.at(stripe_in.period_end),
+          charge_id: stripe_in.charge
+        )
+        break
+      end
+      next unless invoice.status.eql?('success')
+      ::Payments::CreateInvoicePdf.new(invoice).call
+    end
+  end
+
   def update_receipt_numbers
     "
       UPDATE invoices

@@ -1,4 +1,4 @@
-class BasicAttribute
+class SimpleAttribute
   include Virtus.model
 
   def self.dump(data)

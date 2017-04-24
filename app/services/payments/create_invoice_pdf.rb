@@ -1,12 +1,12 @@
 module Payments
   class CreateInvoicePdf
-    TABLE_HEADERS = ["DESCRIPTION", "PERIOD", "UNITS", "UNIT PRICE (chf)", "AMOUNT (chf)"].freeze
     PERIOD_FORMAT = '%d.%m.%Y'.freeze
 
     def initialize(invoice)
       @invoice = invoice
-      @charge = Stripe::Charge.retrieve(invoice.charge_id)
       @account = invoice.account
+      customer = Stripe::Customer.retrieve(@account.customer_id)
+      @card = customer.sources.find { |src| src.id.eql?(customer.default_source) }
       @address = invoice.address
       @path_to_assets = Rails.root.join('assets').to_s
     end
@@ -35,7 +35,7 @@ module Payments
       I18n.with_locale(@account.default_locale) do
         pdf.image "#{@path_to_assets}/images/logotype-yalty.png", width: 130
 
-        pdf.text '<u>Invoiced to:</u>', align: :right, inline_format: true
+        pdf.text "<u>#{I18n.t('invoice_pdf.invoiced_to')}:</u>", align: :right, inline_format: true
 
         if @adress.present?
           pdf.move_down 5
@@ -48,13 +48,13 @@ module Payments
           pdf.move_down 50
         end
 
-        pdf.text '<u>INVOICE DETAILS</u>', inline_format: true, size: 16
-        pdf.text "Billing Date: #{localized_date(@invoice.date)}"
-        pdf.text "Period: #{localized_date(@invoice.period_start)} - #{localized_date(@invoice.period_end)}"
-        pdf.text "Invoice N<sup>o</sup>: #{@invoice.receipt_number}", inline_format: true
+        pdf.text "<u>#{I18n.t('invoice_pdf.invoice_details')}</u>", inline_format: true, size: 16
+        pdf.text "#{I18n.t('invoice_pdf.billing_date')}: #{localized_date(@invoice.date)}"
+        pdf.text "#{I18n.t('invoice_pdf.period')}: #{localized_date(@invoice.period_start)} - #{localized_date(@invoice.period_end)}"
+        pdf.text "#{I18n.t('invoice_pdf.invoice')} N<sup>o</sup>: #{@invoice.receipt_number}", inline_format: true
 
         pdf.move_down 20
-        pdf.text "Billing account: #{@account.subdomain}.#{ENV['YALTY_APP_DOMAIN']}"
+        pdf.text "#{I18n.t('invoice_pdf.billing_account')}: #{@account.subdomain}.#{ENV['YALTY_APP_DOMAIN']}"
         pdf.move_down 20
 
         pdf.table(table_data) do
@@ -71,14 +71,20 @@ module Payments
         end
 
         pdf.move_down 20
-        pdf.text "Your <b>#{@charge.source.brand}</b> ending in <b>#{@charge.source.last4}</b> " +
-          "was charged CHF <b>#{in_chf(@invoice.amount_due)}</b>. This charge will appear from " +
-          "\"yalty\" on your statement. <b>Questions?</b> Please contact us: " +
-          "<b>#{ENV['YALTY_BILLING_EMAIL']}</b>", inline_format: true
+        pdf.text I18n.t(
+          'invoice_pdf.card_charged',
+          brand: @card.brand,
+          last4: @card.last4,
+          amount_due: in_chf(@invoice.amount_due),
+          email: ENV['YALTY_BILLING_EMAIL']
+        ), inline_format: true
 
         pdf.bounding_box([0, pdf.bounds.bottom + 25], width: 595.28) do
-          pdf.text "YALTY SA, c/o Y. LUGRIN, Ch. du Boisy 10, 1004 Lausanne, " +
-            "#{ENV['YALTY_BILLING_EMAIL']}\nTVA Number: #{ENV['YALTY_TVA_NUMBER']}"
+          pdf.text I18n.t(
+            'invoice_pdf.yalty_data',
+            email: ENV['YALTY_BILLING_EMAIL'],
+            tva: ENV['YALTY_TVA_NUMBER']
+          )
         end
       end
 
@@ -88,7 +94,14 @@ module Payments
     end
 
     def table_data
-      line_items.unshift(TABLE_HEADERS).push(subtotal_and_tax, total)
+      table_headers = [
+        I18n.t('invoice_pdf.description'),
+        I18n.t('invoice_pdf.period').upcase,
+        I18n.t('invoice_pdf.units'),
+        I18n.t('invoice_pdf.unit_price'),
+        I18n.t('invoice_pdf.amount')
+      ]
+      line_items.unshift(table_headers).push(subtotal_and_tax, total)
     end
 
     def line_items
@@ -115,7 +128,7 @@ module Payments
           amount_sum = set.second.sum(&:amount)
           next if amount_sum.zero?
           [
-            "Adjustment\n#{set.first[0]}",
+            "#{I18n.t('invoice_pdf.adjustment')}\n#{set.first[0]}",
             period(set.first[1], set.first[2]),
             nil,
             nil,
@@ -126,17 +139,17 @@ module Payments
 
     def subtotal_and_tax
       [nil, nil, nil,
-        "Subtotal in CHF\n#{in_chf(@invoice.subtotal)} * TVA(#{@invoice.tax_percent.to_s}%)",
+        "#{I18n.t('invoice_pdf.subtotal_in_chf')}\n#{in_chf(@invoice.subtotal)} * TVA(#{@invoice.tax_percent.to_s}%)",
         "#{in_chf(@invoice.subtotal)}\n#{in_chf(@invoice.tax)}"
       ]
     end
 
     def total
-      [nil, nil, nil, "TOTAL DUE IN CHF", "#{in_chf(@invoice.amount_due)}"]
+      [nil, nil, nil, "#{I18n.t('invoice_pdf.total_due_in_chf')}", "#{in_chf(@invoice.amount_due)}"]
     end
 
     def period(start_date, end_date)
-      "#{start_date.strftime(PERIOD_FORMAT)} to #{end_date.strftime(PERIOD_FORMAT)}"
+      "#{start_date.strftime(PERIOD_FORMAT)} - #{end_date.strftime(PERIOD_FORMAT)}"
     end
 
     def units(line)

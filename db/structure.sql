@@ -360,8 +360,7 @@ CREATE TABLE invoices (
     tax_percent numeric,
     total integer,
     period_start timestamp without time zone,
-    period_end timestamp without time zone,
-    charge_id character varying
+    period_end timestamp without time zone
 );
 
 

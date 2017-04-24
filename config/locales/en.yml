@@ -15,6 +15,22 @@ en:
       subject: Payment failure! Check your yalty Account
     subscription_canceled:
       subject: Payment failure - your premium features are deactivated
+  invoice_pdf:
+    invoiced_to: Invoiced to
+    invoice_details: INVOICE_DETAILS
+    billing_date: Billing Date
+    period: Period
+    invoice: Invoice
+    billing_account: Billing account
+    card_charged: "Your <b>%{brand}</b> ending in <b>%{last4}</b> was charged CHF <b>%{amount_due}</b>. This charge will appear from \"yalty\" on your statement. <b>Questions?</b> Please contact us: <b>%{email}</b>"
+    yalty_data: "YALTY SA, c/o Y. LUGRIN, Ch. du Boisy 10, 1004 Lausanne, %{email}\nTVA Number: %{tva}"
+    adjustment: Adjustment
+    subtotal_in_chf: Subtotal in CHF
+    total_due_in_chf: TOTAL DUE IN CHF
+    description: DESCRIPTION
+    units: UNITS
+    unit_price: UNIT PRICE (chf)
+    amount: AMOUNT (chf)
   date_time_defaults: &date_time_defaults
     formats:
       default: "%d %B %Y"

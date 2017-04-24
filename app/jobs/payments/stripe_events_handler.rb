@@ -40,8 +40,7 @@ module Payments
       updated_invoice.update!(
         status: status,
         attempts: invoice.attempt_count,
-        next_attempt: next_attempt,
-        charge_id: invoice.charge
+        next_attempt: next_attempt
       )
       updated_invoice
     end
