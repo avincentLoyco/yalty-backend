@@ -14,15 +14,18 @@ module Payments
         create_invoice(event.data.object)
         clear_modules('canceled')
       when 'invoice.payment_failed' then
-        update_invoice_status(event.data.object, 'failed')
+        updated_invoice = update_invoice_status(event.data.object, 'failed')
+        PaymentsMailer.payment_failed(updated_invoice.id).deliver_now
       when 'invoice.payment_succeeded' then
         updated_invoice = update_invoice_status(event.data.object, 'success')
         ::Payments::CreateInvoicePdf.new(updated_invoice).call
+        PaymentsMailer.payment_succeeded(updated_invoice.id).deliver_now
       when 'customer.subscription.updated' then
         Account.transaction do
           clear_modules('all', event.data.object)
           recreate_subscription(event.data.object)
         end
+        PaymentsMailer.subscription_canceled(account.id).deliver_now
       end
     end
 
@@ -34,7 +37,7 @@ module Payments
                      end
 
       updated_invoice = account.invoices.find_by(invoice_id: invoice.id)
-      updated_invoice.update(
+      updated_invoice.update!(
         status: status,
         attempts: invoice.attempt_count,
         next_attempt: next_attempt,

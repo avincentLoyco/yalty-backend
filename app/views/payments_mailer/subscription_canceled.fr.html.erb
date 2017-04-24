@@ -1,0 +1,14 @@
+<h3 style='color: #2ab27b'>Nous avons quelques problèmes au moment de la facturation de votre compte</h3>
+Bonjour,
+
+Nous avons le regret de vous informer comme nous avons à nouveau essayé de procéder au paiement de votre facture mais votre carte de crédit a été refusée. Nous avons désactivé les fonctionnalités premium de votre compte pour le moment.
+Si vous avez une nouvelle carte de crédit,merci de modifier les informations bancaires de votre compte direct sur l’application afin que nous puissions réactiver les fonctionnalités premium.
+
+<%= link_to(payments_url_for(@account), { style: 'color: #2ab27b' }) do %>
+  <h3>Modifier vos paramètres de facturation</h3>
+<% end %>
+
+Si vous pensez qu’il s’agit d’une erreur ou si vous avez une question au sujet de la facturation des fonctionnalités premium, envoyez nous un email à billing@yalty.io.
+La yalteam
+
+<small style='color: #aaaaaa'>Merci de noter qu’uniquement le propriétaire du compte a accès aux informations de paiement et est le seul à pouvoir les modifier.</small>

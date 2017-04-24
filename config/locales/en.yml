@@ -8,9 +8,17 @@ en:
       subject: Reset your password
     accounts_list:
       subject: Your team on yalty
+  payments_mailer:
+    payment_succeeded:
+      subject: Your plan has been renewed
+    payment_failed:
+      subject: Payment failure! Check your yalty Account
+    subscription_canceled:
+      subject: Payment failure - your premium features are deactivated
   date_time_defaults: &date_time_defaults
     formats:
       default: "%d %B %Y"
+      mailer: "%B %d, %Y"
   date:
     <<: *date_time_defaults
   time:

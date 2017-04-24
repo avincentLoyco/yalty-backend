@@ -1,0 +1,14 @@
+<h3 style="color: #2ab27b">Your yalty payment has failed</h3>
+
+Our attempt to bill <%= @invoice.amount_due %> to your current payment card, <%= @card.brand %> ending in <%= @card.last4 %>, failed.
+Update your billing settings for <%= @invoice.account.company_name %> to continue using the premium features.
+We will automatically retry the charge using your current payment card on  <%= @invoice.next_attempt %>
+
+<%= link_to(payments_url_for(@invoice.account), { style: 'color: #2ab27b' }) do %>
+  <h3>Update your billing settings</h3>
+<% end %>
+
+Thank you for using yalty to manage Human Resources administration!
+the yalteam
+
+<small style='color: #aaaaaa'>Please note that only Account Owners can access and make changes to billing information.</small>

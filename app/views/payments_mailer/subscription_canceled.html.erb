@@ -1,0 +1,14 @@
+<h3 style='color: #2ab27b'>We had a problem billing your account</h3>
+Hi,
+
+We regret to inform you that we tried several times to process your payment, but your credit card was declined again. We have deactivated the premium features from your account for the moment.
+If you have a new credit card, please update your billing settings directly in the app, so we can re-activate your premium features.
+
+<%= link_to(payments_url_for(@account), { style: 'color: #2ab27b' }) do %>
+  <h3>Update your billing settings</h3>
+<% end %>
+
+If you feel there’s been a mistake or have any questions, please email us at billing@yalty.io.
+The yalteam
+
+<small style='color: #aaaaaa'>Please note that only Account Owners can access and make changes to billing information.</small>

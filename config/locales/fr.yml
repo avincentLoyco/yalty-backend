@@ -8,6 +8,13 @@ fr:
       subject: Réinitialiser votre mot de passe
     accounts_list:
       subject: Votre équipe sur yalty
+  payments_mailer:
+    payment_succeeded:
+      subject: Votre abonnement a été renouvelé
+    payment_failed:
+      subject: échec du paiement! Vérifiez votre compte yalty
+    subscription_canceled:
+      subject: échec du paiement - vos fonctionnalités premium sont désactivées
   date_time_defaults: &date_time_defaults
     month_names:
       [~, janvier, février, mars, avril, mai, juin, juillet, août, septembre, octobre, novembre, décembre]

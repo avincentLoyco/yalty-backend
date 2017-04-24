@@ -1,0 +1,17 @@
+<h3 style="color: #2ab27b">Your plan has been renewed</h3>
+
+Thank you for using yalty to manage Human Resources administration!
+
+Your monthly subscription has been renewed for the <b><%= @active_employees_count %> active employees</b> on your team.
+<ul>
+  <li><b>Payment date:</b> <%= I18n.localize(@invoice.date, format: :mailer) %></li>
+  <li><b>Payment method:</b> <%= @card.brand %> card ending in <%= @card.last4 %></li>
+  <li><b>Account:</b> <%= @account.subdomain %>.<%= ENV['YALTY_APP_DOMAIN'] %></li>
+  <li><b>Invoice number:</b> <%= @invoice.receipt_number %></li>
+</ul>
+Your next renewal date is <%= I18n.localize(@next_payment_date, format: :mailer) %>. You can see your billing history and make changes to your plan on your billing page.
+
+Feel free to contact us if you have any question by simply responding to this email. Thank you. We appreciate your support!
+the yalteam
+
+<small style='color: #aaaaaa'>Please note that only Account Owners can access and make changes to billing information.</small>
