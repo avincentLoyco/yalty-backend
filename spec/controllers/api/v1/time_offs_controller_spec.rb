@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe API::V1::TimeOffsController, type: :controller do
+RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
   include_context 'shared_context_headers'
   include_context 'shared_context_timecop_helper'
 
@@ -366,15 +366,11 @@ RSpec.describe API::V1::TimeOffsController, type: :controller do
         let(:params_with_manual_amount) { params.merge!(manual_amount: 200) }
         subject(:update_with_manual_amount) { put :update, params_with_manual_amount }
 
-        before do
-          ActiveJob::Base.queue_adapter = :inline
-          update_with_manual_amount
-        end
-
-        after { ActiveJob::Base.queue_adapter = :sidekiq }
-
-        it do
-          expect(employee_balance.reload.manual_amount).to eq(200)
+        it 'should update balance' do
+          perform_enqueued_jobs do
+            update_with_manual_amount
+            expect(employee_balance.reload.manual_amount).to eq(200)
+          end
         end
       end
 

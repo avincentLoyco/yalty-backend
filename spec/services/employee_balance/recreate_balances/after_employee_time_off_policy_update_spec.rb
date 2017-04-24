@@ -2,7 +2,6 @@ require 'rails_helper'
 
 RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyUpdate, type: :service do
   include_context 'shared_context_timecop_helper'
-  include ActiveJob::TestHelper
 
   let!(:account) { create(:account) }
   let!(:employee) { create(:employee, account: account) }

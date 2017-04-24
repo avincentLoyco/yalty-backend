@@ -1,6 +1,4 @@
 require 'rails_helper'
-require 'fakeredis/rspec'
-require 'sidekiq/testing'
 require 'rake'
 
 RSpec.describe 'payments:create_customers_for_existing_accounts', type: :rake do

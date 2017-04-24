@@ -1,7 +1,9 @@
-class SendDataToIntercom
-  include Sidekiq::Worker
+class SendDataToIntercom < ActiveJob::Base
+  queue_as :intercom
 
-  @queue = :intercom
+  class JobWrapper < CustomJobAdapter::JobWrapper
+    sidekiq_options unique: :until_executing, unique_args: ->(args) { args.first['arguments'] }
+  end
 
   def perform(resource_id, resource_class)
     return unless intercom_client.present?

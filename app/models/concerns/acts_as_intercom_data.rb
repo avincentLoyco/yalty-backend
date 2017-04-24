@@ -22,30 +22,10 @@ module ActsAsIntercomData
   end
 
   def create_or_update_on_intercom(force = false)
-    return unless (intercom_data_changed? || force) && job_not_on_queue
+    return unless intercom_data_changed? || force
 
-    Sidekiq::Client.enqueue_to_in(
-      'intercom',
-      3.minutes.from_now,
-      SendDataToIntercom,
-      id,
-      self.class.name
-    )
-  end
-
-  private
-
-  def job_not_on_queue
-    delayed_jobs.none? do |job|
-      job.args.to_s.match(id)
-    end
-  end
-
-  def delayed_jobs
-    intercom_jobs.select { |job| job.queue.eql?('intercom') && job.args.include?(self.class.name) }
-  end
-
-  def intercom_jobs
-    Sidekiq::ScheduledSet.new
+    SendDataToIntercom
+      .set(wait: 3.minutes)
+      .perform_later(id, self.class.name)
   end
 end

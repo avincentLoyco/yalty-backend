@@ -31,6 +31,9 @@ RSpec.configure do |config|
   # Basic HTTP Auth
   config.include AuthRequestHelper, type: :request
   config.include AuthHelper, type: :controller
+  config.include ActiveJob::TestHelper, type: :job
+  config.include RSpec::Rails::JobExampleGroup, jobs: true
+  config.include ActiveJob::TestHelper, jobs: true
   config.include Paperclip::Shoulda::Matchers
 
   # If you're not using ActiveRecord, or you'd prefer not to run each of your
@@ -67,15 +70,8 @@ RSpec.configure do |config|
   end
 
   config.before(:each) do
-    Sidekiq::Worker.clear_all
-    allow_any_instance_of(ActsAsIntercomData).to receive(:intercom_jobs) do
-      SendDataToIntercom.jobs.map { |job| OpenStruct.new(job) }
-    end
     allow_any_instance_of(Account).to receive(:default_attribute_definition) do
       Account::DEFAULT_ATTRIBUTE_DEFINITIONS.first(2)
-    end
-    allow_any_instance_of(ActsAsIntercomData).to receive(:intercom_jobs) do
-      SendDataToIntercom.jobs.map { |job| OpenStruct.new(job) }
     end
   end
 

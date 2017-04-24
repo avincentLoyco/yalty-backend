@@ -1,7 +1,6 @@
 require 'rails_helper'
 
 RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
-  include ActiveJob::TestHelper
   include_context 'shared_context_headers'
   include_context 'shared_context_timecop_helper'
 
@@ -152,7 +151,7 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
 
             it { expect { subject }.to_not change { balances.first.reload.being_processed } }
             it { expect { subject }.to_not change { balances.last.reload.being_processed } }
-            it { expect { subject }.to_not change { enqueued_jobs.size } }
+            it { expect { subject }.to_not have_enqueued_job(UpdateBalanceJob) }
 
             it { is_expected.to have_http_status(201) }
           end
@@ -163,7 +162,7 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
 
             it { expect { subject }.to change { balances.first.reload.being_processed }.to true }
             it { expect { subject }.to change { balances.last.reload.being_processed }.to true }
-            it { expect { subject }.to change { enqueued_jobs.size }.by(2) }
+            it { expect { subject }.to have_enqueued_job(UpdateBalanceJob).exactly(2) }
 
             it { is_expected.to have_http_status(201) }
           end
@@ -172,7 +171,7 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
             before { EmployeeWorkingPlace.destroy_all }
 
             context 'and new working place does not have holiday policy assigned' do
-              it { expect { subject }.to_not change { enqueued_jobs.size } }
+              it { expect { subject }.to_not have_enqueued_job(UpdateBalanceJob) }
 
               it { is_expected.to have_http_status(201) }
             end
@@ -182,7 +181,7 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
 
               it { expect { subject }.to change { balances.first.reload.being_processed }.to true }
               it { expect { subject }.to change { balances.last.reload.being_processed }.to true }
-              it { expect { subject }.to change { enqueued_jobs.size }.by(2) }
+              it { expect { subject }.to have_enqueued_job(UpdateBalanceJob).exactly(2) }
 
               it { is_expected.to have_http_status(201) }
             end
@@ -374,7 +373,7 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
 
           it { expect { subject }.to_not change { balances.first.reload.being_processed } }
 
-          it { expect { subject }.to change { enqueued_jobs.size }.by(2) }
+          it { expect { subject }.to have_enqueued_job(UpdateBalanceJob).exactly(2) }
         end
 
         context 'when join table was destroyed' do
@@ -387,7 +386,7 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
 
             it { expect { subject }.to change { balances.second.reload.being_processed } }
             it { expect { subject }.to change { balances.last.reload.being_processed } }
-            it { expect { subject }.to change { enqueued_jobs.size }.by(2) }
+            it { expect { subject }.to have_enqueued_job(UpdateBalanceJob).exactly(2) }
           end
 
           context 'and there was not an assignation join table' do
@@ -398,7 +397,7 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
 
             it { expect { subject }.to change { balances.last.reload.being_processed } }
 
-            it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+            it { expect { subject }.to have_enqueued_job(UpdateBalanceJob).exactly(1) }
           end
         end
       end
@@ -617,7 +616,7 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
 
           it { expect { subject }.to_not change { balances.first.reload.being_processed } }
           it { expect { subject }.to_not change { balances.last.reload.being_processed } }
-          it { expect { subject }.to_not change { enqueued_jobs.size } }
+          it { expect { subject }.to_not have_enqueued_job(UpdateBalanceJob) }
 
           it { is_expected.to have_http_status(204) }
         end
@@ -628,7 +627,7 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
           context 'and there are no employee balances with time offs assigned' do
             before { Employee::Balance.destroy_all }
 
-            it { expect { subject }.to_not change { enqueued_jobs.size } }
+            it { expect { subject }.to_not have_enqueued_job(UpdateBalanceJob) }
 
             it { is_expected.to have_http_status(204) }
           end
@@ -636,7 +635,7 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
           context 'and there are employee balances with time offs assigned' do
             it { expect { subject }.to change { balances.first.reload.being_processed }.to true }
             it { expect { subject }.to change { balances.last.reload.being_processed }.to true }
-            it { expect { subject }.to change { enqueued_jobs.size }.by(2) }
+            it { expect { subject }.to have_enqueued_job(UpdateBalanceJob).exactly(2) }
 
             it { is_expected.to have_http_status(204) }
           end

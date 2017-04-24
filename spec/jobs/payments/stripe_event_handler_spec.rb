@@ -1,10 +1,6 @@
 require 'rails_helper'
-require 'fakeredis/rspec'
-require 'sidekiq/testing'
 
-RSpec.describe Payments::StripeEventsHandler do
-  include ActiveJob::TestHelper
-
+RSpec.describe Payments::StripeEventsHandler, type: :job do
   let(:customer_id) { 'cus_123' }
   let!(:account) do
     create :account, :with_billing_information, customer_id: customer_id,

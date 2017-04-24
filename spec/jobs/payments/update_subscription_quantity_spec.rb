@@ -1,9 +1,6 @@
 require 'rails_helper'
-require 'fakeredis/rspec'
-require 'sidekiq/testing'
 
 RSpec.describe Payments::UpdateSubscriptionQuantity, type: :job do
-  include ActiveJob::TestHelper
   include_context 'shared_context_timecop_helper'
 
   let(:tomorrow) { Time.zone.tomorrow }

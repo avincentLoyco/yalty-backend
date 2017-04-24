@@ -1,10 +1,6 @@
 require 'rails_helper'
-require 'fakeredis/rspec'
-require 'sidekiq/testing'
 
 RSpec.describe Payments::UpdateAvailableModules, type: :job do
-  include ActiveJob::TestHelper
-
   let!(:account) { create(:account) }
   let(:plan_ids) { ['master-plan', 'super-plan', 'ultra-plan'] }
   let(:plans) do

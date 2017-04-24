@@ -1,5 +1,4 @@
 require 'rails_helper'
-require 'fakeredis/rspec'
 
 RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
   include_context 'shared_context_headers'

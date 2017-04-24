@@ -1,7 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe FindAndUpdateEmployeeBalancesForJoinTables do
-  include ActiveJob::TestHelper
+RSpec.describe FindAndUpdateEmployeeBalancesForJoinTables, type: :service, jobs: true do
   include_context 'shared_context_account_helper'
   include_context 'shared_context_timecop_helper'
 
@@ -31,19 +30,19 @@ RSpec.describe FindAndUpdateEmployeeBalancesForJoinTables do
   shared_examples 'Only newest balance update' do
     it { expect { subject }.to change { balances.last.reload.being_processed } }
     it { expect { subject }.to_not change { balances.first.reload.being_processed } }
-    it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+    it { expect { subject }.to have_enqueued_job(UpdateBalanceJob).exactly(1) }
   end
 
   shared_examples 'All balances update' do
     it { expect { subject }.to change { balances.first.reload.being_processed }.to true }
     it { expect { subject }.to change { balances.last.reload.being_processed }.to true }
-    it { expect { subject }.to change { enqueued_jobs.size }.by(2) }
+    it { expect { subject }.to have_enqueued_job(UpdateBalanceJob).exactly(2) }
   end
 
   shared_examples 'No balances update' do
     it { expect { subject }.to_not change { balances.first.reload.being_processed } }
     it { expect { subject }.to_not change { balances.last.reload.being_processed } }
-    it { expect { subject }.to_not change { enqueued_jobs.size } }
+    it { expect { subject }.to_not have_enqueued_job(UpdateBalanceJob) }
   end
 
   describe 'For EmployeeWorkingPlace' do
@@ -165,7 +164,7 @@ RSpec.describe FindAndUpdateEmployeeBalancesForJoinTables do
         it { expect { subject }.to change { balances.third.reload.being_processed } }
         it { expect { subject }.to change { balances.last.reload.being_processed } }
 
-        it { expect { subject }.to change { enqueued_jobs.size }.by(2) }
+        it { expect { subject }.to have_enqueued_job(UpdateBalanceJob).exactly(2) }
       end
 
       shared_examples 'All balances update' do
@@ -174,7 +173,7 @@ RSpec.describe FindAndUpdateEmployeeBalancesForJoinTables do
         it { expect { subject }.to change { balances.third.reload.being_processed } }
         it { expect { subject }.to change { balances.last.reload.being_processed } }
 
-        it { expect { subject }.to change { enqueued_jobs.size }.by(2) }
+        it { expect { subject }.to have_enqueued_job(UpdateBalanceJob).exactly(2) }
       end
 
       shared_examples 'No balances update' do
@@ -183,7 +182,7 @@ RSpec.describe FindAndUpdateEmployeeBalancesForJoinTables do
         it { expect { subject }.to_not change { balances.third.reload.being_processed } }
         it { expect { subject }.to_not change { balances.last.reload.being_processed } }
 
-        it { expect { subject }.to_not change { enqueued_jobs.size } }
+        it { expect { subject }.to_not have_enqueued_job(UpdateBalanceJob) }
       end
 
       shared_examples 'Only last balance update' do
@@ -193,7 +192,7 @@ RSpec.describe FindAndUpdateEmployeeBalancesForJoinTables do
 
         it { expect { subject }.to change { balances.last.reload.being_processed } }
 
-        it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+        it { expect { subject }.to have_enqueued_job(UpdateBalanceJob).exactly(1) }
       end
 
       shared_examples 'All except first update' do
@@ -203,7 +202,7 @@ RSpec.describe FindAndUpdateEmployeeBalancesForJoinTables do
         it { expect { subject }.to change { balances.third.reload.being_processed } }
         it { expect { subject }.to change { balances.last.reload.being_processed } }
 
-        it { expect { subject }.to change { enqueued_jobs.size }.by(2) }
+        it { expect { subject }.to have_enqueued_job(UpdateBalanceJob).exactly(2) }
       end
 
       context 'when there is reassignation join table' do

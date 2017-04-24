@@ -27,6 +27,7 @@ gem 'virtus',               '~> 1.0.5'
 gem 'sidekiq',              '~> 4.2.3'
 gem 'sidekiq-limit_fetch',  '~> 3.4.0'
 gem 'sidekiq-scheduler',    '~> 2.0.19'
+gem 'sidekiq-unique-jobs',  '~> 5.0.4'
 
 # Production environment dependencies
 group :production, :staging, :review do
@@ -69,7 +70,6 @@ group :test do
   gem 'fantaskspec'
   gem 'guard-rspec'
   gem 'rspec-rails', '3.4.0'
-  gem 'rspec-sidekiq'
   gem 'shoulda-matchers'
   gem 'temping'
   gem 'timecop'

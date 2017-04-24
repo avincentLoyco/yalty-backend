@@ -1,10 +1,6 @@
 require 'rails_helper'
-require 'fakeredis/rspec'
-require 'sidekiq/testing'
 
 RSpec.describe Payments::UpdateStripeCustomerDescription, type: :job do
-  include ActiveJob::TestHelper
-
   let!(:account) { create(:account) }
 
   subject(:job) { described_class.perform_now(account) }
