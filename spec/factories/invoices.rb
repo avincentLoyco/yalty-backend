@@ -32,5 +32,10 @@ FactoryGirl.define do
         }
       )])
     }
+
+    trait :with_file do
+      status { 'success' }
+      generic_file { create(:generic_file, :with_pdf) }
+    end
   end
 end

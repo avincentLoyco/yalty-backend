@@ -30,12 +30,35 @@ class GenericFile < ActiveRecord::Base
     Dir.glob(Rails.application.config.file_upload_root_path.join(id, version, '*'))
   end
 
+  def user_friendly_name
+    send("#{fileable_type.underscore}_friendly_name") + ".#{extension}"
+  end
+
   private
 
+  def invoice_friendly_name
+    date = fileable.date.strftime('%Y%m%d')
+    "invoice-#{date}"
+  end
+
+  def employee_file_friendly_name
+    attribute_name = Employee::AttributeVersion
+      .includes(:attribute_definition)
+      .where("data -> 'attribute_type' = 'File' AND data -> 'id' = '#{id}'")
+      .first
+      .attribute_definition
+      .name
+    "#{attribute_name}"
+  end
+
   def rename_file
-    new_name = "file_#{id}#{File.extname(file.path).downcase}"
+    new_name = "file_#{id}.#{extension}"
     return if file_file_name.eql?(new_name)
     file.instance_write(:file_name, new_name)
+  end
+
+  def extension
+    MIME::Types[file_content_type].first.extensions.first
   end
 
   def generate_sha

@@ -23,7 +23,11 @@ class FindValueForAttribute
     file_path = generic_file.find_file_path
     verify_if_one_file_in_directory!(file_path, generic_file)
     file_name = "file_#{file_id}#{File.extname(file_path.first).downcase}"
-    generic_file.update!(file: File.open(file_path.first, 'r'), file_file_name: file_name)
+    generic_file.update!(
+      file: File.open(file_path.first, 'r'),
+      file_file_name: file_name,
+      fileable_type: 'EmployeeFile'
+    )
     generic_file
   end
 

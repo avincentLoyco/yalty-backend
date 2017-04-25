@@ -26,7 +26,7 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
   end
 
   describe 'for download' do
-    let(:generic_file) { create(:generic_file) }
+    let(:generic_file) { create(:generic_file, :with_pdf) }
     let(:long_token_allowed) { false }
     let(:attribute_definition) do
       create(:employee_attribute_definition, :required, attribute_type: 'File', name: 'contract',
@@ -192,7 +192,7 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
     context 'user with employee' do
       let!(:employee) { create(:employee, account: account) }
       let(:different_employee) { create(:employee, account: account) }
-      let(:generic_file) { create(:generic_file) }
+      let(:generic_file) { create(:generic_file, :with_jpg) }
       let(:attribute_definition) do
         create(:employee_attribute_definition, :required, attribute_type: 'File',
           name: file_type, long_token_allowed: true)

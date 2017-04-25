@@ -35,7 +35,7 @@ RSpec.describe GenericFile, type: :model do
   context 'processing' do
     let(:generic_file) { create(:generic_file, :with_jpg) }
 
-    it { expect(generic_file.file_file_name).to eq("file_#{generic_file.id}.jpg") }
+    it { expect(generic_file.file_file_name).to eq("file_#{generic_file.id}.jpeg") }
     it { expect(generic_file.file.styles.keys).to include(:thumbnail) }
     it { expect(generic_file.sha_sums[:original_sha]).to_not be(nil) }
     it { expect(generic_file.sha_sums[:thumbnail_sha]).to_not be(nil) }
@@ -54,5 +54,20 @@ RSpec.describe GenericFile, type: :model do
 
       it { expect(GenericFile.orphans).to match_array([orphan_file]) }
     end
+  end
+
+  context '#user_friendly_name' do
+    let(:invoice) { create(:invoice, :with_file, date: Date.new(2016,1,1)) }
+    let(:file_with_attr_version) { create(:generic_file, :with_jpg) }
+    let!(:attr_version) do
+      create(:employee_attribute, attribute_type: 'File',
+        data: { size: 1000, file_type: 'jpg', file_sha: '123', id: file_with_attr_version.id })
+    end
+    let(:definition_name) { attr_version.attribute_definition.name }
+
+    it { expect(invoice.generic_file.fileable_type).to eq('Invoice') }
+    it { expect(invoice.generic_file.user_friendly_name).to eq('invoice-20160101.pdf') }
+    it { expect(file_with_attr_version.fileable_type).to eq('EmployeeFile') }
+    it { expect(file_with_attr_version.user_friendly_name).to eq("#{definition_name}.jpeg") }
   end
 end

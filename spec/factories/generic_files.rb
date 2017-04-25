@@ -1,5 +1,7 @@
 FactoryGirl.define do
   factory :generic_file do
+    fileable_type { 'EmployeeFile' }
+
     trait :with_jpg do
       file File.open(File.join(Rails.root, "/spec/fixtures/files/test.jpg"))
     end
