@@ -111,7 +111,7 @@ module Payments
     def subscription_items
       @invoice.lines.data.select { |line| line.type.eql?('subscription') }.map do |line|
         [
-          line.plan.name,
+          I18n.t("invoice_pdf.plans.#{line.plan.id}"),
           period(line.period_start, line.period_end),
           units(line),
           unit_price(line),

@@ -10,7 +10,7 @@ module API
           attr_version = find_attribute_version(attributes[:file_id])
           wrong_duration!(attr_version, attributes[:duration])
           authorize! :create, :tokens, attributes[:file_id], attr_version
-          render json: SaveFileStorageTokenToRedis.new(attributes).call, status: 201
+          render json: SaveFileStorageTokenToRedis.new(attributes, attr_version).call, status: 201
         end
       end
 

@@ -5,7 +5,7 @@ class SaveFileStorageTokenToRedis
   SHORTTERM_TOKEN = 30
   LONGTERM_TOKEN = 43_200
 
-  def initialize(attributes)
+  def initialize(attributes, attribute_version)
     @redis = Redis.current
     @time_to_expire = attributes[:duration].eql?('longterm') ? LONGTERM_TOKEN : SHORTTERM_TOKEN
     @duration = attributes[:duration].eql?('shortterm') ? 'shortterm' : 'longterm'

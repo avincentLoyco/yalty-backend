@@ -35,7 +35,7 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
     let(:employee_attribute) do
       create(:employee_attribute, account: account, attribute_type: 'File',
         attribute_definition: attribute_definition,
-        data: { size: 1000, file_type: 'pdf', id: generic_file.id, original_sha: '12' })
+        data: { size: 1000, file_type: 'application/pdf', id: generic_file.id, original_sha: '12' })
     end
 
     context 'return proper json' do
@@ -200,7 +200,7 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
       let(:employee_attribute) do
         create(:employee_attribute, account: account, attribute_type: 'File',
           attribute_definition: attribute_definition, employee: employee_for_file,
-          data: { size: 1000, file_type: 'jpg', id: generic_file.id, original_sha: '12' })
+          data: { size: 1000, file_type: 'image/jpeg', id: generic_file.id, original_sha: '12' })
       end
 
       context 'can request token for upload' do

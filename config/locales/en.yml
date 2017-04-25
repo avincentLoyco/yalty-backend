@@ -31,6 +31,8 @@ en:
     units: UNITS
     unit_price: UNIT PRICE (chf)
     amount: AMOUNT (chf)
+    plans:
+      file-vault: File Vault
   date_time_defaults: &date_time_defaults
     formats:
       default: "%d %B %Y"
