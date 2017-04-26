@@ -14,14 +14,16 @@ class UpdateEmployeeBalance
     update_attributes unless options.blank?
     recalculate_amount
     update_status
-    manage_removal if options.key?(:validity_date)
+    manage_removal if options.key?(:validity_date) || employee_balance.validity_date.present?
     save!
   end
 
   private
 
   def manage_removal
-    ManageEmployeeBalanceRemoval.new(options[:validity_date], employee_balance, current_date).call
+    ManageEmployeeBalanceRemoval.new(
+      options[:validity_date] || employee_balance.validity_date, employee_balance, current_date
+    ).call
   end
 
   def update_attributes
@@ -54,6 +56,6 @@ class UpdateEmployeeBalance
   end
 
   def counter_and_addition?
-    employee_balance.time_off_policy.counter? && employee_balance.balance_type.eql?('addition')
+    employee_balance.time_off_policy&.counter? && employee_balance.balance_type.eql?('addition')
   end
 end

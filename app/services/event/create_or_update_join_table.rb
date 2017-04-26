@@ -103,8 +103,13 @@ class CreateOrUpdateJoinTable
       if related_balances.present?
         assignation_balance.destroy!
       else
-        # TODO what with validity date
-        assignation_balance.update!(effective_at: assignation_effective_at)
+        validity_date =
+          RelatedPolicyPeriod
+          .new(join_table_resource)
+          .validity_date_for_balance_at(assignation_effective_at, 'assignation')
+        UpdateEmployeeBalance.new(
+          assignation_balance, effective_at: assignation_effective_at, validity_date: validity_date
+        ).call
       end
     end
     join_table_resource.tap { |join_table| create_reset_join_table_after_update(join_table) }

@@ -1,10 +1,11 @@
 class OverrideAmountTakenForBalancer
-  attr_reader :periods, :already_added_amount, :balance_difference
+  attr_reader :periods, :already_added_amount, :balance_difference, :contract_periods
 
-  def initialize(periods)
+  def initialize(periods, contract_periods)
     @periods = periods
     @already_added_amount = 0
     @balance_difference = 0
+    @contract_periods = contract_periods
   end
 
   def call
@@ -15,10 +16,13 @@ class OverrideAmountTakenForBalancer
   private
 
   def override_amount_for_periods
-    @balance_difference = periods.map { |p| p[:period_result] }.sum - periods.last[:balance]
+    @balance_difference = find_balance_difference
     periods.map.each_with_index do |period, index|
-      next if period[:period_result].eql?(0) || periods[index + 1].blank?
-      if periods[index + 1][:amount_taken].positive?
+      next_index = index + 1
+      next if period[:period_result].eql?(0) || periods[next_index].blank? ||
+          contract_end_index.present? && next_index.eql?(contract_end_index)
+
+      if periods[next_index][:amount_taken].positive?
         use_whole_period_amount(period)
       else
         next if previous_period(index).present? && previous_period(index)[:period_result].nonzero?
@@ -49,5 +53,38 @@ class OverrideAmountTakenForBalancer
       period[:amount_taken] = previous_result - period[:period_result] + previous_amount
       @already_added_amount += previous_amount - period[:amount_taken]
     end
+  end
+
+  def find_balance_difference
+    if periods_in_the_same_contract_dates?
+      periods.map { |p| p[:period_result] }.sum - periods.last[:balance]
+    else
+      balance_difference_from_contract_end
+    end
+  end
+
+  def periods_in_the_same_contract_dates?
+    contract_periods.any? do |period|
+      period.include?(periods.first[:start_date].to_date) &&
+        period.include?(periods.last[:start_date].to_date)
+    end
+  end
+
+  def contract_end_index
+    contract_end =
+      contract_periods.select do |period|
+        period.last.is_a?(Date) && period.last < periods.last[:start_date]
+      end.last
+
+    return unless contract_end.present?
+
+    first_after_contract_end = periods.select { |p| p[:start_date] > contract_end.last }.first
+    periods.index(first_after_contract_end)
+  end
+
+  def balance_difference_from_contract_end
+    first_period_before_index = contract_end_index - 1
+    periods[0..first_period_before_index].map { |p| p[:period_result] }.sum -
+      periods[first_period_before_index][:balance]
   end
 end

@@ -180,7 +180,8 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   def time_off_policy_presence
-    return if time_off_policy
+    return if time_off_policy && (balance_type.eql?('reset') || balance_type.eql?('time_off') ||
+      (!balance_type.eql?('reset') && !time_off_policy.reset))
     errors.add(:employee, 'Must have an associated time off policy in the balance category')
   end
 

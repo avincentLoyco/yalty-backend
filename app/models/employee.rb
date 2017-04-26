@@ -150,7 +150,7 @@ class Employee < ActiveRecord::Base
       elsif period.include?(date.to_date) || date.to_date > period.last
         period
       end
-    end.first
+    end.compact.first
     date_period ||= contract_periods.first
     date_period.blank? || date_period.last.is_a?(DateTime::Infinity) ? nil : date_period.last
   end

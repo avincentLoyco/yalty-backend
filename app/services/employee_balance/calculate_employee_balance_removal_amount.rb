@@ -44,8 +44,7 @@ class CalculateEmployeeBalanceRemovalAmount
   end
 
   def sum
-    amount_to_expire -
-      (previous_balance - positive_amounts - amount_difference + time_off_in_period_end_amount)
+    amount_to_expire - (previous_balance - positive_amounts + time_off_in_period_end_amount)
   end
 
   def positive_amounts

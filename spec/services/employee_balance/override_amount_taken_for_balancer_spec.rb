@@ -1,8 +1,9 @@
 require 'rails_helper'
 
 RSpec.describe OverrideAmountTakenForBalancer do
-  subject { described_class.new(periods).call }
+  subject { described_class.new(periods, employee.contract_periods).call }
 
+  let(:employee) { create(:employee) }
   let(:periods) do
     [
       {

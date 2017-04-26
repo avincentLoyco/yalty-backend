@@ -178,8 +178,8 @@ class TimeOff < ActiveRecord::Base
 
   def start_and_end_time_in_employee_periods
     return if employee.contract_periods.any? do |period|
-      (period.include?(end_time.to_date) || end_time == (period.end + 1.day).beginning_of_day) &&
-          period.include?(start_time.to_date)
+      (period.include?(end_time.to_date) || (period.end.is_a?(Date) &&
+        end_time == (period.end + 1.day).beginning_of_day)) && period.include?(start_time.to_date)
     end
     errors.add(:end_time, 'can\'t be set outside of employee contract period')
     errors.add(:start_time, 'can\'t be set outside of employee contract period')

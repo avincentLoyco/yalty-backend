@@ -27,10 +27,10 @@ class HandleContractEnd
     join_tables = JOIN_TABLES.map do |table_name|
       @employee.send(table_name).where('effective_at > ?', @contract_end_date)
     end
-    return join_tables.map(&:delete_all) unless @next_hire_date.present?
+    return join_tables.map(&:delete_all) if @next_hire_date.nil?
     join_tables.map do |table|
       if @contract_end_date.eql?(@old_contract_end)
-        table.where('effective_at <= ?', @next_hire_date).not_reset.delete_all
+        table.where('effective_at < ?', @next_hire_date).not_reset.delete_all
       else
         table.where('effective_at < ?', @next_hire_date).delete_all
       end

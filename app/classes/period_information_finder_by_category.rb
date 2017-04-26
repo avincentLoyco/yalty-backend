@@ -14,14 +14,17 @@ class PeriodInformationFinderByCategory
       type: current_etop.time_off_policy.policy_type,
       start_date: start_date_of_period,
       end_date: end_date_of_period,
-      validity_date:
-        RelatedPolicyPeriod
-          .new(current_etop)
-          .validity_date_for_balance_at(start_date_of_period).try(:to_date)
+      validity_date: find_validity_date_for_period(current_etop, start_date_of_period)
     }
   end
 
   private
+
+  def find_validity_date_for_period(etop, start_date_of_period)
+    validity_date = RelatedPolicyPeriod.new(etop).validity_date_for_balance_at(start_date_of_period)
+    return unless validity_date.present?
+    validity_date.to_date - 1.day
+  end
 
   def find_period_start_date(date, top, etop)
     top_start_date = Date.new(date.year, top.start_month, top.start_day)
@@ -49,9 +52,10 @@ class PeriodInformationFinderByCategory
   def assigned_time_off_policy_at(date)
     @current_etop ||=
       EmployeeTimeOffPolicy
+      .not_reset
       .assigned_at(date)
       .by_employee_in_category(@employee.id, @time_off_category.id)
-      .last
+      .first
   end
 
   def assigned_time_off_policy_after(date)

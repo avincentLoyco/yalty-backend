@@ -269,7 +269,10 @@ RSpec.describe do
 
           it { expect { subject }.to change { EmployeeTimeOffPolicy.exists?(etops.first.id) } }
           it { expect { subject }.to change { Employee::Balance.exists?(first_balance.id) } }
-          it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
+          it do
+            expect { subject }
+              .to change { Employee::Balance.where(balance_type: 'assignation').count }.by(-1)
+          end
 
           it { expect { subject }.to_not change { second_balance.reload.manual_amount } }
           it { expect { subject }.to_not change { newest_balance.reload.manual_amount } }
@@ -324,6 +327,7 @@ RSpec.describe do
               it { expect { subject }.to change { rehired.reload.effective_at } }
 
               it { expect { subject }.to_not change { EmployeePresencePolicy.with_reset.count } }
+              it { expect { subject }.to_not change { EmployeeTimeOffPolicy.not_reset.count } }
               it do
                 expect { subject }
                   .to_not change { Employee::Balance.where(balance_type: 'reset').count }

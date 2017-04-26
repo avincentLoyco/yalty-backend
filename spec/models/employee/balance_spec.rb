@@ -214,6 +214,7 @@ RSpec.describe Employee::Balance, type: :model do
           end
 
           context 'with valid data' do
+            before { subject.balance_type = 'time_off' }
             let(:effective_at) { Date.new(2015, 1, 1) }
 
             it { expect(subject.valid?).to eq true }

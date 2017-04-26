@@ -25,10 +25,9 @@ class ManageEmployeeBalanceAdditions
   private
 
   def check_amount_and_update_balances
-    if update && balances.flatten.present? && amount_affect_balances?
-      ActiveRecord::Base.after_transaction do
-        UpdateBalanceJob.perform_later(balances.flatten.first, update_all: true)
-      end
+    return unless update && balances.flatten.present? && amount_affect_balances?
+    ActiveRecord::Base.after_transaction do
+      UpdateBalanceJob.perform_later(balances.flatten.first, update_all: true)
     end
   end
 

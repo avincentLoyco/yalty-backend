@@ -167,6 +167,9 @@ class UpdateEvent
     return unless updated_assignations.present?
     updated_assignations[:join_tables].to_a.map(&:save!)
     updated_assignations[:employee_balances].to_a.map(&:save!)
+    updated_assignations[:employee_balances].map do |balance|
+      UpdateEmployeeBalance.new(balance).call
+    end
   end
 
   def create_policy_additions_and_removals
