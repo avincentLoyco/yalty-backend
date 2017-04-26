@@ -5,7 +5,7 @@ FactoryGirl.define do
 
     trait :with_address do
       city 'Zurich'
-      country 'Switzerland'
+      country_code 'CH'
     end
   end
 end
