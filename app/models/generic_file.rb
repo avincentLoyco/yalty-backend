@@ -42,13 +42,12 @@ class GenericFile < ActiveRecord::Base
   end
 
   def employee_file_friendly_name
-    attribute_name = Employee::AttributeVersion
+    Employee::AttributeVersion
       .includes(:attribute_definition)
       .where("data -> 'attribute_type' = 'File' AND data -> 'id' = '#{id}'")
       .first
       .attribute_definition
       .name
-    "#{attribute_name}"
   end
 
   def rename_file
