@@ -12,4 +12,8 @@ end
 
 Sidekiq.configure_client do |config|
   config.redis = { url: ENV['REDIS_URL'] || 'redis://localhost:6379' }
+
+  config.client_middleware do |chain|
+    chain.add SidekiqAccountMiddleware
+  end
 end
