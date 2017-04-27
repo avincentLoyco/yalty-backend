@@ -6,9 +6,9 @@ class WorkingPlace < ActiveRecord::Base
   has_many :employees, through: :employee_working_places
 
   validates :name, :account_id, presence: true
-  validates :country, :city, :additional_address, length: { maximum: 60 }
+  validates :country_code, :city, :additional_address, length: { maximum: 60 }
   validates :street, length: { maximum: 72 }
-  validates :state,
+  validates :state_code,
     length: { maximum: 60 },
     format: { with: /\A[\D]+\z/, message: 'only nondigit' },
     allow_nil: true
@@ -36,16 +36,12 @@ class WorkingPlace < ActiveRecord::Base
       .first
   }
 
-  def country_code
-    country_data(country)&.alpha2&.downcase
-  end
-
   def coordinate?
-    %w(city state country).any? { |attr| send(:"#{attr}?") }
+    %w(city state_code country_code).any? { |attr| send(:"#{attr}?") }
   end
 
   def coordinate_changed?
-    (changed_attributes.keys & %w(city state country)).present?
+    (changed_attributes.keys & %w(city state_code country_code)).present?
   end
 
   private
@@ -53,7 +49,7 @@ class WorkingPlace < ActiveRecord::Base
   def location_attributes
     @location_attributes ||=
       Geokit::Geocoders::GoogleGeocoder
-      .geocode([city, state, country_code, country].compact.join(', '), language: 'en')
+      .geocode([city, state_code, country_code].compact.join(', '), language: 'en')
   end
 
   def location_timezone
@@ -62,14 +58,14 @@ class WorkingPlace < ActiveRecord::Base
 
   def address_found?
     (!state_required? || location_attributes.state_code.present?) &&
-      location_attributes.country.present?
+      location_attributes.country_code.present?
   end
 
   def right_country?
-    country_data(country).present? &&
-      country_data(location_attributes.country).present? &&
-      standardize(country_data(location_attributes.country).translations['en']).eql?(
-        standardize(country_data(country).translations['en'])
+    country_data?(country_code) &&
+      country_data?(location_attributes.country_code) &&
+      standardize(country_data(location_attributes.country_code).translations['en']).eql?(
+        standardize(country_data(country_code).translations['en'])
       )
   end
 
@@ -78,15 +74,8 @@ class WorkingPlace < ActiveRecord::Base
   end
 
   def right_state?
-    !state_required? || !state.present? || state == state_code ||
-      country_data(location_attributes.country).present? &&
-        country_data(location_attributes.country).states.key?(state_code) &&
-        (
-          state == state_code ||
-          country_data(location_attributes.country).states[state_code]['name'].include?(state) ||
-          country_data(location_attributes.country)
-            .states[state_code]['names'].any? { |name| name.include?(state) }
-        )
+    !state_required? || !state_code.present? || state == state_code ||
+      country_data(location_attributes.country_code)&.states&.key?(state_code)
   end
 
   def correct_address
@@ -94,20 +83,22 @@ class WorkingPlace < ActiveRecord::Base
   end
 
   def correct_state
-    errors.add(:state, 'does not match given address') unless right_state?
+    errors.add(:state_code, 'does not match given address') unless right_state?
   end
 
   def correct_country
-    errors.add(:country, 'does not exist') unless !country? || country_data(country).present?
+    errors.add(:country_code, 'does not exist') unless !country_code? || country_data?(country_code)
   end
 
   def assign_coordinate_related_attributes
-    if address_found? && right_country?
-      self.state = location_attributes.state if state_required? && !state.present?
-      self.state_code = location_attributes.state_code
+    if address_found? && right_country? && right_state?
+      self.state_code ||= location_attributes.state_code if state_required?
+      self.state = location_attributes.state_name if state_code.present?
+      self.country = location_attributes.country
       self.timezone = location_timezone.name
     else
-      self.state_code = nil
+      self.state = nil
+      self.country = nil
       self.timezone = nil
     end
   end
@@ -116,9 +107,13 @@ class WorkingPlace < ActiveRecord::Base
     I18n.transliterate(address_param).downcase.capitalize unless address_param.nil?
   end
 
-  def country_data(country_name)
-    return unless country_name.present?
-    ISO3166::Country.find_country_by_translated_names(country_name) ||
-      ISO3166::Country.find_country_by_alpha2(country_name)
+  def country_data(country_code)
+    return unless country_code.present?
+    ISO3166::Country.find_country_by_alpha2(country_code) ||
+      ISO3166::Country.find_country_by_translated_names(country_code)
+  end
+
+  def country_data?(country_code)
+    country_data(country_code).present?
   end
 end
