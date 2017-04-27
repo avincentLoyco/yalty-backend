@@ -9,27 +9,35 @@ module Payments
       @card = customer.sources.find { |src| src.id.eql?(customer.default_source) }
       @address = invoice.address
       @path_to_assets = Rails.root.join('assets').to_s
-
-      @pdf = Prawn::Document.new(page_size: 'A4')
-      @pdf.font_families.update(
-        'Lato' => {
-          normal: "#{@path_to_assets}/fonts/Lato-Regular.ttf",
-          bold: "#{@path_to_assets}/fonts/Lato-Bold.ttf"
-        }
-      )
-      @pdf.font 'Lato', size: 11
-      @pdf.fill_color '1A3F4D'
+      @pdf = initialize_pdf
     end
 
     def call
       pdf_file = File.open(generate_pdf_file)
-      generic_file = GenericFile.create!(file: pdf_file)
-      @invoice.update!(generic_file: generic_file)
+
+      ActiveRecord::Base.transaction do
+        generic_file = GenericFile.create!(file: pdf_file)
+        @invoice.update!(generic_file: generic_file)
+      end
+
       pdf_file.close
       FileUtils.rm_f(pdf_file)
     end
 
     private
+
+    def initialize_pdf
+      Prawn::Document.new(page_size: 'A4').tap do |pdf|
+        pdf.font_families.update(
+          'Lato' => {
+            normal: "#{@path_to_assets}/fonts/Lato-Regular.ttf",
+            bold: "#{@path_to_assets}/fonts/Lato-Bold.ttf"
+          }
+        )
+        pdf.font 'Lato', size: 11
+        pdf.fill_color '1A3F4D'
+      end
+    end
 
     def generate_pdf_file
       I18n.with_locale(@account.default_locale) do
@@ -172,13 +180,11 @@ module Payments
     end
 
     def units(line)
-      return unless line.type.eql?('subscription')
-      line.quantity
+      line.quantity if line.type.eql?('subscription')
     end
 
     def unit_price(line)
-      return unless line.type.eql?('subscription')
-      in_chf(line.plan.amount)
+      in_chf(line.plan.amount) if line.type.eql?('subscription')
     end
 
     def in_chf(amount)

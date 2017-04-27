@@ -11,8 +11,10 @@ module Payments
 
       case event.type
       when 'invoice.created' then
-        create_invoice(event.data.object)
-        clear_modules('canceled')
+        account.transaction do
+          create_invoice(event.data.object)
+          clear_modules('canceled')
+        end
       when 'invoice.payment_failed' then
         updated_invoice = update_invoice_status(event.data.object, 'failed')
         PaymentsMailer.payment_failed(updated_invoice.id).deliver_now
@@ -21,10 +23,11 @@ module Payments
         ::Payments::CreateInvoicePdf.new(updated_invoice).call
         PaymentsMailer.payment_succeeded(updated_invoice.id).deliver_now
       when 'customer.subscription.updated' then
-        Account.transaction do
+        account.transaction do
           clear_modules('all', event.data.object)
           recreate_subscription(event.data.object)
         end
+
         PaymentsMailer.subscription_canceled(account.id).deliver_now
       end
     end
@@ -36,13 +39,13 @@ module Payments
                        Time.zone.at(invoice.next_payment_attempt).to_datetime
                      end
 
-      updated_invoice = account.invoices.find_by(invoice_id: invoice.id)
-      updated_invoice.update!(
-        status: status,
-        attempts: invoice.attempt_count,
-        next_attempt: next_attempt
-      )
-      updated_invoice
+      account.invoices.find_by(invoice_id: invoice.id).tap do |updated_invoice|
+        updated_invoice.update!(
+          status: status,
+          attempts: invoice.attempt_count,
+          next_attempt: next_attempt
+        )
+      end
     end
 
     def create_invoice(invoice)
