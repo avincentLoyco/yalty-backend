@@ -18,7 +18,7 @@ RSpec.describe AssignHolidayPolicy do
   let(:country_param) { 'CH' }
   let(:timezone) { 'Europe/Zurich' }
 
-  let(:working_place) { create :working_place, city: city, state: state_param, country: country }
+  let(:working_place) { create :working_place, city: city, state_code: state_param, country_code: country_code }
 
   context 'with authorized country' do
     subject { described_class.new(working_place) }

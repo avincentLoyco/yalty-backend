@@ -81,8 +81,8 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
       {
         name: name,
         type: 'working_place',
-        state: state_param,
-        country: country_code
+        state_code: state_param,
+        country_code: country_code
       }
     end
 
@@ -103,8 +103,8 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
 
           it { is_expected.to have_http_status(201) }
 
-          it { expect_json('state', 'ZH') }
-          it { expect_json('country', 'CH') }
+          it { expect_json('state_code', 'ZH') }
+          it { expect_json('country_code', 'CH') }
           it { expect_json('timezone', 'Europe/Zurich') }
         end
       end
@@ -123,8 +123,8 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
 
           it { is_expected.to have_http_status(201) }
 
-          it { expect_json('state', 'ZH') }
-          it { expect_json('country', 'CH') }
+          it { expect_json('state_code', 'ZH') }
+          it { expect_json('country_code', 'CH') }
           it { expect_json('timezone', 'Europe/Zurich') }
         end
       end
@@ -175,8 +175,8 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
 
           it { is_expected.to have_http_status(201) }
 
-          it { expect_json('state', 'Podkarpacie') }
-          it { expect_json('country', 'PL') }
+          it { expect_json('state_code', 'Podkarpacie') }
+          it { expect_json('country_code', 'PL') }
           it { expect_json('timezone', 'Europe/Warsaw') }
         end
       end
@@ -190,8 +190,8 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
 
           it { is_expected.to have_http_status(201) }
 
-          it { expect_json('state', nil) }
-          it { expect_json('country', 'PL') }
+          it { expect_json('state_code', nil) }
+          it { expect_json('country_code', 'PL') }
           it { expect_json('timezone', 'Europe/Warsaw') }
         end
       end
@@ -211,8 +211,8 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
 
           it { is_expected.to have_http_status(201) }
 
-          it { expect_json('state', nil) }
-          it { expect_json('country', nil) }
+          it { expect_json('state_code', nil) }
+          it { expect_json('country_code', nil) }
           it { expect_json('timezone', nil) }
         end
       end
@@ -270,8 +270,8 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
         id: working_place.id,
         name: name,
         type: 'working_place',
-        state: state_param,
-        country: country_code
+        state_code: state_param,
+        country_code: country_code
       }
     end
 
@@ -315,7 +315,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
             )
           end
 
-          valid_data_json[:state] = 'VD'
+          valid_data_json[:state_code] = 'VD'
         end
 
         it { expect { subject }.to change { working_place.reload.holiday_policy_id } }
@@ -340,7 +340,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
             )
           end
 
-          valid_data_json[:state] = 'VD'
+          valid_data_json[:state_code] = 'VD'
         end
 
         it { expect { subject }.to change { working_place.reload.holiday_policy_id } }
@@ -363,7 +363,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
             )
           end
 
-          valid_data_json[:state] = nil
+          valid_data_json[:state_code] = nil
         end
 
         it { expect { subject }.to_not change { HolidayPolicy.count } }
@@ -385,8 +385,8 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
           )
         end
 
-        valid_data_json[:state] = nil
-        valid_data_json[:country] = nil
+        valid_data_json[:state_code] = nil
+        valid_data_json[:country_code] = nil
       end
 
       it { expect { subject }.to change { working_place.reload.holiday_policy_id }.to(nil) }
