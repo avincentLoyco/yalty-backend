@@ -45,8 +45,9 @@ namespace :deploy do
     task :before_migrate_database do
       on fetch(:running_task_server) do
         within release_path do
-          fetch(:tasks_before_migration, []).each do |task|
-            execute :rake, task
+          tasks = JSON.parse(capture(:cat, 'config/deploy/tasks.json'))
+          tasks['before_migration'].each do |task|
+            execute :rake, task['task_name']
           end
         end
       end
@@ -55,8 +56,9 @@ namespace :deploy do
     task :after_migrate_database do
       on fetch(:running_task_server) do
         within release_path do
-          fetch(:tasks_after_migration, []).each do |task|
-            execute :rake, task
+          tasks = JSON.parse(capture(:cat, 'config/deploy/tasks.json'))
+          tasks['after_migration'].each do |task|
+            execute :rake, task['task_name']
           end
         end
       end

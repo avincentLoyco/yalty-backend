@@ -15,11 +15,6 @@ set :linked_dirs, %w(
 
 set :maintenance_mode, false
 
-set :tasks_before_migration, %w(
-)
-set :tasks_after_migration, %w(
-)
-
 set :docker_roles, %w(api launchpad worker)
 set :docker_repository, 'yalty/backend'
 set :docker_source, '/code'
