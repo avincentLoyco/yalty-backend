@@ -1,14 +1,14 @@
 <h3 style="color: #2ab27b">Votre paiement yalty a échoué</h3>
 
-Notre tentative de débit de <%= @invoice.amount_due %> de votre carte de crédit actuelle, <%= @card.brand %> finissant par <%= @card.last4 %>, a échoué.
+<p>Notre tentative de débit de <%= @invoice.amount_due %> de votre carte de crédit actuelle, <%= @card.brand %> finissant par <%= @card.last4 %>, a échoué.
 Modifiez vos paramètres de facturation pour <%= @invoice.account.company_name %> afin de pouvoir continuer à utiliser les fonctionnalités premium de yalty.
-Nous réessayerons automatiquement le <%= @invoice.next_attempt %>
+Nous réessayerons automatiquement le <%= @invoice.next_attempt %></p>
 
-<%= link_to(payments_url_for(@invoice.account), { style: 'color: #2ab27b' }) do %>
-  <h3>Modifier vos paramètres de facturation</h3>
-<% end %>
+<h3><%= link_to(payments_url_for(@invoice.account), { style: 'color: #2ab27b' }) do %>
+  Modifier vos paramètres de facturation
+<% end %></h3>
 
-Merci d’utiliser yalty pour la gestion de vos ressources humaines!
-la yalteam
+<p>Merci d’utiliser yalty pour la gestion de vos ressources humaines !<br/>
+la yalteam</p>
 
-<small style='color: #aaaaaa'>Veuillez noter qu’uniquement les propriétaires de ce compte peuvent avoir accès aux données de facturation et ainsi les modifier.</small>
+<p><small style='color: #aaaaaa'>Veuillez noter qu’uniquement les propriétaires de ce compte peuvent avoir accès aux données de facturation et ainsi les modifier.</small></p>

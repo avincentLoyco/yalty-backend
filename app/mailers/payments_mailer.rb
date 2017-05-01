@@ -8,7 +8,7 @@ class PaymentsMailer < ApplicationMailer
     customer = Stripe::Customer.retrieve(account.customer_id)
     @card = customer.sources.find { |src| src.id.eql?(customer.default_source) }
     @next_payment_date = Time.zone.at(customer.subscriptions.first.current_period_end)
-    @active_employees_count = account.employees.active_at_date(Time.zone.tomorrow)
+    @active_employees_count = account.employees.active_at_date(Time.zone.tomorrow).count
 
     I18n.with_locale(account.default_locale) do
       attachments[@invoice.generic_file.file_file_name] = File.read(@invoice.generic_file.file.path)
