@@ -23,12 +23,14 @@ module Payments
         ::Payments::CreateInvoicePdf.new(updated_invoice).call
         PaymentsMailer.payment_succeeded(updated_invoice.id).deliver_now
       when 'customer.subscription.updated' then
-        account.transaction do
-          clear_modules('all', event.data.object)
-          recreate_subscription(event.data.object)
-        end
+        if event.data.object.status.eql?('canceled')
+          account.transaction do
+            clear_modules('all')
+            recreate_subscription
+          end
 
-        PaymentsMailer.subscription_canceled(account.id).deliver_now
+          PaymentsMailer.subscription_canceled(account.id).deliver_now
+        end
       end
     end
 
@@ -103,9 +105,7 @@ module Payments
       )
     end
 
-    def recreate_subscription(subscription)
-      return unless subscription.status.eql?('canceled')
-
+    def recreate_subscription
       subscription = Stripe::Subscription.create(
         customer: account.customer_id,
         plan: 'free-plan',
@@ -116,9 +116,7 @@ module Payments
       account.update!(subscription_id: subscription.id)
     end
 
-    def clear_modules(scope, subscription = nil)
-      return if subscription.present? && !subscription.status.eql?('canceled')
-
+    def clear_modules(scope)
       case scope
       when 'all' then account.available_modules.delete_all
       when 'canceled' then account.available_modules.clean

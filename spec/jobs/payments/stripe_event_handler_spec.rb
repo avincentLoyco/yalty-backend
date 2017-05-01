@@ -224,6 +224,8 @@ RSpec.describe Payments::StripeEventsHandler, type: :job do
     context "when status is not 'canceled'" do
       before { job }
       it { expect(account.reload.available_modules.all).to match_array(['filevault', 'exports']) }
+      it { expect(PaymentsMailer).to_not have_received(:subscription_canceled) }
+      it { expect(Stripe::Subscription).to_not have_received(:create) }
     end
 
     context "when status is 'canceled'" do
