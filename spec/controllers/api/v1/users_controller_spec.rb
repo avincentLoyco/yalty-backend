@@ -258,10 +258,24 @@ RSpec.describe API::V1::UsersController, type: :controller do
         it { expect { subject }.to change { employee.reload.account_user_id } }
       end
 
-      context 'with password' do
+      context 'with password and existing password' do
         before do
           params[:password_params] =  {
             old_password: '1234567890',
+            password: 'newlongpassword',
+            password_confirmation: 'newlongpassword',
+          }
+        end
+
+        let(:user) { create(:account_user, password: '1234567890') }
+
+        it { is_expected.to have_http_status(204) }
+        it { expect { subject }.to change { user.reload.password_digest } }
+      end
+
+      context 'with password without existing password' do
+        before do
+          params[:password_params] =  {
             password: 'newlongpassword',
             password_confirmation: 'newlongpassword',
           }

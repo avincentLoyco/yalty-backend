@@ -34,7 +34,9 @@ module API
           authorize! :update, attributes[:employee] if attributes[:employee]
           authorize! :update, resource
 
-          check_old_password(attributes[:password_params]) if attributes[:password_params]
+          if attributes[:password_params]&.key?(:old_password)
+            check_old_password(attributes[:password_params])
+          end
 
           resource.update!(attributes.merge(attributes.delete(:password_params).to_h))
           render_no_content

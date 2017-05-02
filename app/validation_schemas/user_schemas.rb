@@ -7,7 +7,7 @@ module UserSchemas
       required(:locale).maybe(:str?)
       optional(:role).maybe(:str?)
       optional(:password_params).schema do
-        required(:old_password).filled(:str?)
+        optional(:old_password).filled(:str?)
         required(:password).filled(:str?)
         required(:password_confirmation).filled(:str?)
       end
@@ -26,7 +26,7 @@ module UserSchemas
       required(:locale).maybe(:str?)
       optional(:role).filled(:str?)
       optional(:password_params).schema do
-        required(:old_password).filled(:str?)
+        optional(:old_password).filled(:str?)
         required(:password).filled(:str?)
         required(:password_confirmation).filled(:str?)
       end
