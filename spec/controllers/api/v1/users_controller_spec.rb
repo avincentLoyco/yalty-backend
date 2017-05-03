@@ -38,7 +38,7 @@ RSpec.describe API::V1::UsersController, type: :controller do
       context 'response body' do
         before { subject }
 
-        it { expect_json_keys(:email, :role, :is_employee, :employee) }
+        it { expect_json_keys(:email, :role, :employee) }
       end
 
       it 'should send email with generated login url' do
@@ -67,7 +67,6 @@ RSpec.describe API::V1::UsersController, type: :controller do
       context 'without optional params' do
         before do
           params.delete(:role)
-          params.delete(:is_employee)
           params.delete(:employee)
         end
 
@@ -156,21 +155,30 @@ RSpec.describe API::V1::UsersController, type: :controller do
   end
 
   describe 'GET #show' do
-    let!(:users) { create_list(:account_user, 3, account: Account.current) }
-    let(:params) {{ id: users.first.id}}
+    let!(:users) { create_list(:account_user, 3, account: account) }
+    let(:params) { { id: user.id } }
 
     subject { get :show, params }
-
-    context 'show user' do
-      before { subject }
-
-      it { is_expected.to have_http_status(200) }
-    end
 
     context 'response body' do
       before { subject }
 
-      it { expect_json_keys([:id, :type, :email, :role, :employee, :is_employee]) }
+      it { is_expected.to have_http_status(200) }
+
+      it { expect_json_keys([:id, :type, :email, :locale, :role, :employee, :referral_token]) }
+      it { expect_json(email: user.email, id: user.id, type: 'account_user', locale: nil) }
+
+      context 'when locale is set' do
+        let(:user) { create(:account_user, locale: 'en') }
+
+        it { expect_json(locale: 'en') }
+      end
+
+      context 'when is an employee' do
+        let(:user) { create(:account_user, :with_employee) }
+
+        it { expect_json_keys('employee', [:id, :type]) }
+      end
     end
   end
 
@@ -178,15 +186,13 @@ RSpec.describe API::V1::UsersController, type: :controller do
     let!(:users) { create_list(:account_user, 3, account: Account.current) }
     let(:email) { 'test123@example.com' }
     let(:locale) { 'en' }
-    let(:role) { 'account_owner' }
-    let(:user_id) { users.first.id }
+    let(:role) { user.role }
     let(:params) do
       {
-        id: user_id,
+        id: user.id,
         email: email,
-        locale: locale,
         role: role,
-        employee: { id: employee_id }
+        locale: locale
       }
     end
 
@@ -195,10 +201,17 @@ RSpec.describe API::V1::UsersController, type: :controller do
     context 'with valid data' do
       it { expect { subject }.to_not change { Account::User.count } }
       it { is_expected.to have_http_status(204) }
-      it { expect { subject }.to change { users.first.reload.email } }
-      it { expect { subject }.to change { users.first.reload.employee } }
+      it { expect { subject }.to change { user.reload.email } }
+      it { expect { subject }.to change { user.reload.locale } }
 
       context 'assign employee' do
+        before do
+          params[:employee] = {
+            id: employee.id
+          }
+        end
+
+        it { is_expected.to have_http_status(204) }
         it { expect { subject }.to change { employee.reload.account_user_id } }
       end
 
@@ -229,41 +242,76 @@ RSpec.describe API::V1::UsersController, type: :controller do
       end
 
       context 'without employee id' do
-        before do
-          params.delete(:employee)
-        end
-
         it { is_expected.to have_http_status(204) }
-        it { expect { subject }.to_not change { Account::User.count } }
-
-        context 'with blank id' do
-          it { expect { subject }.to_not change { employee.reload.account_user_id } }
-        end
+        it { expect { subject }.to_not change { employee.reload.account_user_id } }
       end
 
-      context 'without optional params' do
+      context 'that remove employee' do
         before do
-          params.delete(:role)
-          params.delete(:locale)
-          params.delete(:is_employee)
-          params.delete(:employee)
-        end
-
-        it { expect { subject }.to_not change { Account::User.count } }
-        it { is_expected.to have_http_status(204) }
-        it { expect { subject }.to change { users.first.reload.email } }
-      end
-
-      context 'with null employee' do
-        before do
-          users.first.employee = employee
-          users.first.save
           params[:employee] = nil
         end
 
-        it { expect { subject }.to_not change { Account::User.count } }
+        let(:user) { create(:account_user, :with_employee) }
+        let(:employee) { user.employee }
+
         it { is_expected.to have_http_status(204) }
         it { expect { subject }.to change { employee.reload.account_user_id } }
+      end
+
+      context 'with password and existing password' do
+        before do
+          params[:password_params] =  {
+            old_password: '1234567890',
+            password: 'newlongpassword',
+            password_confirmation: 'newlongpassword',
+          }
+        end
+
+        let(:user) { create(:account_user, password: '1234567890') }
+
+        it { is_expected.to have_http_status(204) }
+        it { expect { subject }.to change { user.reload.password_digest } }
+      end
+
+      context 'with password without existing password' do
+        before do
+          params[:password_params] =  {
+            password: 'newlongpassword',
+            password_confirmation: 'newlongpassword',
+          }
+        end
+
+        let(:user) { create(:account_user, password: '1234567890') }
+
+        it { is_expected.to have_http_status(204) }
+        it { expect { subject }.to change { user.reload.password_digest } }
+      end
+
+      context 'with role' do
+        context 'when administrator' do
+          let(:user) { create(:account_user, role: 'account_administrator') }
+          let(:other_user) { users.last }
+
+          before do
+            other_user.update!(role: 'user')
+            params[:id] = other_user.id
+            params[:role] = 'account_administrator'
+          end
+
+          it { is_expected.to have_http_status(204) }
+          it { expect { subject }.to change { other_user.reload.role } }
+        end
+
+        xcontext 'when user' do
+          let(:user) { create(:account_user, role: 'user') }
+
+          before do
+            params[:role] = 'account_administrator'
+          end
+
+          it { is_expected.to have_http_status(403) }
+          it { expect { subject }.to_not change { user.reload.role } }
+        end
       end
     end
   end
