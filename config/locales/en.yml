@@ -29,8 +29,8 @@ en:
     total_due_in_chf: TOTAL DUE IN CHF
     description: DESCRIPTION
     units: UNITS
-    unit_price: UNIT PRICE (chf)
-    amount: AMOUNT (chf)
+    unit_price: UNIT PRICE
+    amount: AMOUNT
     plans:
       file-vault: File Vault
   date_time_defaults: &date_time_defaults

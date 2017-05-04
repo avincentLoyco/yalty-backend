@@ -3,7 +3,7 @@ module Payments
     PERIOD_FORMAT = '%d.%m.%Y'.freeze
 
     def initialize(invoice)
-      @invoice = invoice
+      @invoice = invoice.reload
       @account = invoice.account
       customer = Stripe::Customer.retrieve(@account.customer_id)
       @card = customer.sources.find { |src| src.id.eql?(customer.default_source) }
@@ -93,6 +93,8 @@ module Payments
         row(-2).borders = []
         row(-2).columns(-2..-1).borders = [:top, :bottom, :left, :right]
 
+        column(1).width = 75
+        column(2).width = 45
         column(3).width = 120
       end
 
@@ -124,8 +126,8 @@ module Payments
         I18n.t('invoice_pdf.description'),
         I18n.t('invoice_pdf.period').upcase,
         I18n.t('invoice_pdf.units'),
-        I18n.t('invoice_pdf.unit_price'),
-        I18n.t('invoice_pdf.amount')
+        I18n.t('invoice_pdf.unit_price') + "\n(chf)",
+        I18n.t('invoice_pdf.amount') + "\n(chf)"
       ]
       line_items.unshift(table_headers).push(subtotal_and_tax, total)
     end
@@ -167,7 +169,7 @@ module Payments
 
     def subtotal_and_tax
       headers = "#{I18n.t('invoice_pdf.subtotal_in_chf')}\n#{in_chf(@invoice.subtotal)} " \
-        "* TVA(#{0 || @invoice.tax_percent}%)"
+        "* TVA(#{@invoice.tax_percent.to_i}%)"
       [nil, nil, nil, headers, "#{in_chf(@invoice.subtotal)}\n#{in_chf(@invoice.tax)}"]
     end
 
@@ -189,7 +191,7 @@ module Payments
 
     def in_chf(amount)
       return 0 unless amount.present?
-      amount / 100.0
+      format('%.2f', amount / 100.00)
     end
 
     def localized_date(date)
