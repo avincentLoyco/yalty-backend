@@ -1,8 +1,6 @@
 require 'rails_helper'
-require 'fakeredis/rspec'
 
 RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
-  include ActiveJob::TestHelper
   include_context 'shared_context_headers'
 
   let(:previous_start) { related_period.first_start_date - policy.years_to_effect.years }
@@ -152,7 +150,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
         context 'and in current policy period' do
           let(:id) { balance.id }
 
-          it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+          it { expect { subject }.to have_enqueued_job(UpdateBalanceJob).exactly(1) }
           it { expect { subject }.to change { balance.reload.being_processed }.to true }
 
           it { expect { subject }.to_not change { balance_add.reload.being_processed } }
@@ -163,7 +161,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
         context 'and in previous policy period' do
           let(:id) { previous_balance.id }
 
-          it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+          it { expect { subject }.to have_enqueued_job(UpdateBalanceJob).exactly(1) }
           it { expect { subject }.to change { previous_removal.reload.being_processed }.to true }
           it { expect { subject }.to change { previous_balance.reload.being_processed }.to true }
           it { expect { subject }.to change { balance_add.reload.being_processed }.to true }

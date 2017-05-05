@@ -2,14 +2,9 @@ module Payments
   class UpdateAvailableModules < ActiveJob::Base
     queue_as :billing
 
-    rescue_from(
-      Stripe::InvalidRequestError,
-      Stripe::AuthenticationError,
-      Stripe::PermissionError,
-      Stripe::RateLimitError,
-      Stripe::APIError
-    ) do
-      retry_job(wait: 10.seconds)
+    class JobWrapper < CustomJobAdapter::JobWrapper
+      sidekiq_options retry: 6
+      sidekiq_retry_in { 10 }
     end
 
     def perform(account)

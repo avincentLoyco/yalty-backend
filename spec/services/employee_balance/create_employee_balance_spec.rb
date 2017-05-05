@@ -1,9 +1,8 @@
 require 'rails_helper'
 
-RSpec.describe CreateEmployeeBalance, type: :service do
+RSpec.describe CreateEmployeeBalance, type: :service, jobs: true do
   include_context 'shared_context_account_helper'
   include_context 'shared_context_timecop_helper'
-  include ActiveJob::TestHelper
 
   before do
     Account.current = create(:account)
@@ -34,19 +33,19 @@ RSpec.describe CreateEmployeeBalance, type: :service do
     end
 
     it { expect { subject }.to change { employee_balance.reload.being_processed }.from(false).to(true) }
-    it { expect { subject }.to change { enqueued_jobs.size } }
+    it { expect { subject }.to have_enqueued_job(UpdateBalanceJob).exactly(1) }
 
     context 'and skip_update options is given' do
       let(:options) {{ skip_update: true }}
 
       it { expect { subject }.not_to change { employee_balance.reload.being_processed } }
-      it { expect { subject }.not_to change { enqueued_jobs.size } }
+      it { expect { subject }.to_not have_enqueued_job(UpdateBalanceJob) }
     end
   end
 
   shared_examples 'employee balance without any employee balances after' do
     it { expect(subject.first.being_processed).to eq false }
-    it { expect { subject }.not_to change { enqueued_jobs.size } }
+    it { expect { subject }.to_not have_enqueued_job(UpdateBalanceJob) }
   end
 
   context 'with valid data' do
@@ -54,7 +53,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
       let(:options) {{}}
 
       it { expect { subject }.to change { Employee::Balance.count }.by(1) }
-      it { expect { subject }.to_not change { enqueued_jobs.size } }
+      it { expect { subject }.to_not have_enqueued_job(UpdateBalanceJob) }
 
       it { expect(subject.first.amount).to eq -100 }
       it { expect(subject.first.validity_date).to eq nil }
@@ -69,7 +68,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
         let(:options) {{ effective_at: 1.year.since, resource_amount: amount }}
 
         it { expect { subject }.to change { Employee::Balance.count }.by(1) }
-        it { expect { subject }.to_not change { enqueued_jobs.size } }
+        it { expect { subject }.to_not have_enqueued_job(UpdateBalanceJob) }
 
         it { expect(subject.first.amount).to eq 100 }
         it { expect(subject.first.validity_date).to eq nil }
@@ -130,7 +129,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
             end
 
             it { expect { subject }.to change { employee_balance.reload.being_processed } }
-            it { expect { subject }.to change { enqueued_jobs.size } }
+            it { expect { subject }.to have_enqueued_job(UpdateBalanceJob).exactly(1) }
             it { expect(subject.last.amount).to eq 0 }
           end
         end
@@ -159,7 +158,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
               resource_amount: 100
             )
           end
-          it { expect { subject }.not_to change { enqueued_jobs.size } }
+          it { expect { subject }.to_not have_enqueued_job(UpdateBalanceJob) }
           it { expect(subject.first.balance).to eq 200 }
         end
 
@@ -181,7 +180,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
             )
           end
 
-          it { expect { subject }.not_to change { enqueued_jobs.size } }
+          it { expect { subject }.to_not have_enqueued_job(UpdateBalanceJob) }
           it { expect(subject.first.balance).to eq 100 }
         end
       end
@@ -194,7 +193,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
         end
 
         it { expect { subject }.to change { Employee::Balance.count }.by(1) }
-        it { expect { subject }.to_not change { enqueued_jobs.size } }
+        it { expect { subject }.to_not have_enqueued_job(UpdateBalanceJob) }
 
         it { expect(subject.first.amount).to eq time_off.balance }
         it { expect(subject.first.validity_date).to be nil }
@@ -216,7 +215,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
             expect { subject }.to change { policy_start_balance.reload.being_processed }.to true
           end
           it { expect { subject }.to change { Employee::Balance.count }.by(1) }
-          it { expect { subject }.to change { enqueued_jobs.size } }
+          it { expect { subject }.to have_enqueued_job(UpdateBalanceJob).exactly(1) }
         end
       end
 
@@ -230,7 +229,7 @@ RSpec.describe CreateEmployeeBalance, type: :service do
         let(:options) {{ balance_credit_additions: [employee_balance], resource_amount: 0 }}
 
         it { expect { subject }.to change { Employee::Balance.count }.by(1) }
-        it { expect { subject }.to_not change { enqueued_jobs.size } }
+        it { expect { subject }.to_not have_enqueued_job(UpdateBalanceJob) }
 
         it { expect(subject.first.amount).to eq -1000 }
         it { expect(subject.first.validity_date).to be nil }

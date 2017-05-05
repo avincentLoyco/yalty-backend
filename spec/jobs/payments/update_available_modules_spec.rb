@@ -1,10 +1,6 @@
 require 'rails_helper'
-require 'fakeredis/rspec'
-require 'sidekiq/testing'
 
 RSpec.describe Payments::UpdateAvailableModules, type: :job do
-  include ActiveJob::TestHelper
-
   let!(:account) { create(:account) }
   let(:plan_ids) { ['master-plan', 'super-plan', 'ultra-plan'] }
   let(:plans) do
@@ -35,11 +31,5 @@ RSpec.describe Payments::UpdateAvailableModules, type: :job do
         .from([])
         .to(plan_ids)
     end
-  end
-
-  context 'error' do
-    before { allow(Stripe::Subscription).to receive(:retrieve).and_raise(Stripe::APIError) }
-
-    it { expect { job }.to change(enqueued_jobs, :size).by(1) }
   end
 end

@@ -8,6 +8,7 @@ require 'active_record/railtie'
 require 'action_controller/railtie'
 require 'action_mailer/railtie'
 require 'action_view/railtie'
+require_relative '../lib/sidekiq/custom_job_adapter.rb'
 require 'csv'
 # require "sprockets/railtie"
 # require "rails/test_unit/railtie"
@@ -30,6 +31,7 @@ module Yalty
     # add middlewares to load path
     config.autoload_once_paths << config.root.join('lib', 'middlewares')
     config.autoload_once_paths << config.root.join('lib', 'attributes')
+    config.autoload_once_paths << config.root.join('lib', 'sidekiq')
     config.autoload_once_paths << config.root.join('lib', 'doorkeeper')
 
     config.autoload_once_paths << config.root.join('app', 'services', 'employee_balance')
@@ -109,7 +111,7 @@ module Yalty
     }
 
     # Active Job adapter
-    config.active_job.queue_adapter = :sidekiq
+    config.active_job.queue_adapter = CustomJobAdapter
 
     # File upload root path
     config.file_upload_root_path = begin

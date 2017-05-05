@@ -2,11 +2,11 @@ require 'rails_helper'
 require 'sidekiq/testing'
 Sidekiq::Testing.fake!
 
-RSpec.describe RemoveOrphanEmployeeFiles do
+RSpec.describe RemoveOrphanEmployeeFiles, type: :job do
   describe 'queue' do
     it 'puts a job on proper queue' do
       expect { described_class.perform_later }
-        .to change(Sidekiq::Queues['employee_files'], :size).by(1)
+        .to have_enqueued_job(RemoveOrphanEmployeeFiles).exactly(1)
     end
   end
 

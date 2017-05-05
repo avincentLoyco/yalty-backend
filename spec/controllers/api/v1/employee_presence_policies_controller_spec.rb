@@ -1,7 +1,6 @@
 require 'rails_helper'
 
 RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
-  include ActiveJob::TestHelper
   include_context 'shared_context_headers'
   include_context 'shared_context_timecop_helper'
 
@@ -174,7 +173,7 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
             it { expect { subject }.to change { balances.last.reload.being_processed} }
             it { expect { subject }.to_not change { balances.first.reload.being_processed } }
 
-            it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+            it { expect { subject }.to have_enqueued_job(UpdateBalanceJob).exactly(1) }
             it { is_expected.to have_http_status(201) }
           end
 
@@ -184,7 +183,7 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
             it { expect { subject }.to_not change { balances.last.reload.being_processed } }
             it { expect { subject }.to_not change { balances.first.reload.being_processed } }
 
-            it { expect { subject }.to_not change { enqueued_jobs.size } }
+            it { expect { subject }.to_not have_enqueued_job(UpdateBalanceJob) }
             it { is_expected.to have_http_status(201) }
           end
         end
@@ -198,7 +197,7 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
           it { expect { subject }.to change { balances.last.reload.being_processed } }
           it { expect { subject }.to_not change { balances.first.reload.being_processed } }
 
-          it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+          it { expect { subject }.to have_enqueued_job(UpdateBalanceJob).exactly(1) }
           it { is_expected.to have_http_status(205) }
         end
       end
@@ -357,7 +356,7 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
           it { expect { subject }.to change { balances.last.reload.being_processed } }
           it { expect { subject }.to_not change { balances.first.reload.being_processed } }
 
-          it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+          it { expect { subject }.to have_enqueued_job(UpdateBalanceJob).exactly(1) }
           it { is_expected.to have_http_status(200) }
         end
 
@@ -366,7 +365,7 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
           it { expect { subject }.to_not change { balances.last.reload.being_processed } }
           it { expect { subject }.to_not change { balances.first.reload.being_processed } }
 
-          it { expect { subject }.to change { enqueued_jobs.size }.by(0) }
+          it { expect { subject }.to_not have_enqueued_job(UpdateBalanceJob) }
           it { is_expected.to have_http_status(200) }
         end
 
@@ -408,7 +407,7 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
           it { expect { subject }.to change { balances.last.reload.being_processed } }
           it { expect { subject }.to change { balances.first.reload.being_processed } }
 
-          it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+          it { expect { subject }.to have_enqueued_job(UpdateBalanceJob).exactly(1) }
           it { is_expected.to have_http_status(200) }
         end
       end
@@ -425,7 +424,7 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
         it { expect { subject }.to change { balances.last.reload.being_processed } }
         it { expect { subject }.to_not change { balances.first.reload.being_processed } }
 
-        it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+        it { expect { subject }.to have_enqueued_job(UpdateBalanceJob).exactly(1) }
         it { is_expected.to have_http_status(205) }
       end
     end
@@ -622,7 +621,7 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
         it { expect { subject }.to change { EmployeePresencePolicy.count }.by(-1) }
         it { expect { subject }.to_not change { time_off.employee_balance.reload.being_processed } }
 
-        it { expect { subject }.to_not change { enqueued_jobs.size } }
+        it { expect { subject }.to_not have_enqueued_job(UpdateBalanceJob) }
         it { is_expected.to have_http_status(204) }
       end
 
@@ -632,7 +631,7 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
         end
 
         it { expect { subject }.to change { time_off.employee_balance.reload.being_processed } }
-        it { expect { subject }.to change { enqueued_jobs.size }.by(1) }
+        it { expect { subject }.to have_enqueued_job(UpdateBalanceJob).exactly(1) }
 
         it { is_expected.to have_http_status(204) }
       end

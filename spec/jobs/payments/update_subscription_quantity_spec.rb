@@ -1,9 +1,6 @@
 require 'rails_helper'
-require 'fakeredis/rspec'
-require 'sidekiq/testing'
 
 RSpec.describe Payments::UpdateSubscriptionQuantity, type: :job do
-  include ActiveJob::TestHelper
   include_context 'shared_context_timecop_helper'
 
   let(:tomorrow) { Time.zone.tomorrow }
@@ -278,32 +275,5 @@ RSpec.describe Payments::UpdateSubscriptionQuantity, type: :job do
 
     it_behaves_like 'changes quantity by', 3
     it_behaves_like 'proration_date is set for tomorrow'
-  end
-
-  context 'in case of error' do
-    let!(:events_1) do
-      employees_1.map do |employee|
-        employee.events.find_by(event_type: 'hired').update!(effective_at: tomorrow)
-      end
-    end
-
-    context 'list retrieve error' do
-      before { allow(Stripe::SubscriptionItem).to receive(:list).and_raise(Stripe::APIError) }
-
-      it_behaves_like 'does not change quantity'
-      it { expect { job }.to change(enqueued_jobs, :size).by(1) }
-    end
-
-    context 'saving fails' do
-      let(:new_employee_1) { create(:employee, account: account_1) }
-      let!(:new_hired_event) do
-        new_employee_1.events.find_by(event_type: 'hired').update!(effective_at: tomorrow)
-      end
-
-      before { allow(subscription_items.second).to receive(:save).and_raise(Stripe::APIError) }
-
-      it { expect { job }.to change { subscription_items.first.quantity }.by(1) }
-      it { expect { job }.to change(enqueued_jobs, :size).by(1) }
-    end
   end
 end

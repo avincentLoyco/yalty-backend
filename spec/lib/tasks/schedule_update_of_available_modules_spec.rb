@@ -1,6 +1,4 @@
 require 'rails_helper'
-require 'fakeredis/rspec'
-require 'sidekiq/testing'
 require 'rake'
 
 RSpec.describe 'payments:schedule_update_of_available_modules', type: :rake do
