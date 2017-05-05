@@ -32,6 +32,7 @@ module Yalty
     config.autoload_once_paths << config.root.join('lib', 'middlewares')
     config.autoload_once_paths << config.root.join('lib', 'attributes')
     config.autoload_once_paths << config.root.join('lib', 'sidekiq')
+    config.autoload_once_paths << config.root.join('lib', 'doorkeeper')
 
     config.autoload_once_paths << config.root.join('app', 'services', 'employee_balance')
     config.autoload_once_paths << config.root.join('app', 'services', 'schedule')

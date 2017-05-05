@@ -629,8 +629,9 @@ CREATE TABLE working_places (
     street character varying(60),
     street_number character varying(10),
     timezone character varying,
+    state_code character varying(60),
     reset boolean DEFAULT false NOT NULL,
-    state_code character varying(60)
+    country_code character varying
 );
 
 
@@ -1719,4 +1720,6 @@ INSERT INTO schema_migrations (version) VALUES ('20170404142827');
 INSERT INTO schema_migrations (version) VALUES ('20170405183244');
 
 INSERT INTO schema_migrations (version) VALUES ('20170413123051');
+
+INSERT INTO schema_migrations (version) VALUES ('20170426111844');
 

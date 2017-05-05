@@ -11,6 +11,7 @@ module Api::V1
         state: resource.state,
         state_code: resource.state_code,
         country: resource.country,
+        country_code: resource.country_code,
         timezone: resource.timezone,
         deletable: assigned_employees_json.empty?
       }

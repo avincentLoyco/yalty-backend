@@ -45,6 +45,18 @@ class Employee < ActiveRecord::Base
     ", date)
   end)
 
+  scope(:inactive_at_date, lambda do |date = Time.zone.now|
+    joins("
+      LEFT JOIN employee_events AS events
+      ON events.employee_id = employees.id
+      AND events.event_type IN ('hired', 'contract_end')
+      AND events.effective_at <= '#{date}'::date
+    ").where("
+      events IS NULL
+      OR 'contract_end' = (SELECT events.event_type ORDER BY events.effective_at LIMIT 1)
+    ")
+  end)
+
   scope(:active_user_by_account, lambda do |account_id|
     active_by_account(account_id).where('account_user_id IS NOT NULL')
   end)

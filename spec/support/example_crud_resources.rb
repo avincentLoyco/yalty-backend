@@ -73,7 +73,7 @@ RSpec.shared_examples 'example_crud_resources' do |settings|
               { resource_param => 'test' }.tap do |param|
                 param[:type] = settings[:resource_name].pluralize.gsub('_', '-')
                 param[:id] = send(settings[:resource_name]).id
-                param[:country] = 'Switzerland' if settings[:resource_name].eql?('working_place')
+                param[:country_code] = 'CH' if settings[:resource_name].eql?('working_place')
                 param[:city] = 'Zurich' if settings[:resource_name].eql?('working_place')
               end
             end
