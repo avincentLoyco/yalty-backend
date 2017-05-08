@@ -1,3 +1,5 @@
+require 'json'
+
 namespace :deploy do
   task :failed do
     on release_roles(fetch(:docker_roles)) do
@@ -11,18 +13,22 @@ namespace :deploy do
   end
 
   task :migrate_database do
+    stage = fetch(:stage)
+    do_migrate = false
+
     on fetch(:migration_server) do
-      invoke 'maintenance:on' if test(:diff, "-qr #{release_path}/db #{current_path}/db")
+      do_migrate = (stage == :staging) || !test(:diff, "-qr #{release_path}/db #{current_path}/db")
+      invoke 'maintenance:on' if do_migrate
     end
 
     invoke 'db:dump'
     invoke 'deploy:rake:before_migrate_database'
 
     on fetch(:migration_server) do
-      if test(:diff, "-qr #{release_path}/db #{current_path}/db")
-        info 'Skip migration because not new migration files found'
-      else
+      if do_migrate
         invoke 'db:migrate'
+      else
+        info 'Skip migration because not new migration files found'
       end
     end
 

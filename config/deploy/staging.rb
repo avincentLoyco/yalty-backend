@@ -2,7 +2,14 @@ server '10.128.102.11', roles: %w(api launchpad worker), primary: true
 
 # Docker tag
 ask :docker_tag, proc {
-  [fetch(:app_version), 'rc', fetch(:app_version_sha1)].join('-')
+  run_locally do
+    branch = capture(:git, 'rev-parse --abbrev-ref HEAD')
+    if branch =~ /^releases?\/[\d\.]+$/
+      [fetch(:app_version), 'rc', fetch(:app_version_sha1)].join('-')
+    else
+      branch[/ywa-\d+/]
+    end
+  end
 }
 
 # Application version
@@ -18,6 +25,7 @@ ask :release_candidate_version, proc {
 
 # Sync database with production dump
 ask :local_database_dump_path, 'tmp/dump.production.pgsql'
+ask :active_subdomains, %w(yalty pika timecorps exemple1 exemple-2 test)
 
 desc 'Sync database from tmp/dump.production.pgsql'
 task :sync do
@@ -46,6 +54,7 @@ task :sync do
           "-U #{uri.user}",
           dump_path
         execute :rake, :setup
+        execute :rake, :'staging:reset:stripe'
 
         execute :rm, '-f', dump_path
       end
