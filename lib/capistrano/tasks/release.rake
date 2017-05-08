@@ -30,6 +30,11 @@ namespace :release do
     version = fetch(:app_version)
     sha1 = fetch(:app_version_sha1)
 
+    tasks_file = File.expand_path('../../../config/deploy/tasks.json', __dir__)
+    tasks_json = JSON.parse(File.read(tasks_file))
+    tasks_json['before_migration'].clear
+    tasks_json['after_migration'].clear
+
     run_locally do
       info 'Create release tag'
       execute :docker, :pull, "yalty/backend:#{version}-rc-#{sha1}"
@@ -37,6 +42,12 @@ namespace :release do
       execute :git, :tag, "v#{version}", sha1
       execute :docker, :push, "yalty/backend:#{version}"
       execute :git, :push, '--tags'
+
+      info 'Cleanup tasks list'
+      File.write(tasks_file, JSON.pretty_generate(tasks_json))
+      execute :git, :add, tasks_file
+      execute :git, :commit, '-m "Cleanup list of deploy tasks"'
+      execute :git, :push, "-u origin releases/#{version}"
 
       info 'Deploy to production environment:
         cap production deploy'
