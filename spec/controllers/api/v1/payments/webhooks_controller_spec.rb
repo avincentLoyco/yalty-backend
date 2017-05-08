@@ -58,7 +58,11 @@ RSpec.describe API::V1::Payments::WebhooksController, type: :controller do
     subscription_item
   end
 
-  subject(:send_webhook) { post :webhook, { id: event.id }, @env }
+  subject(:send_webhook) do
+    post :webhook,
+      { id: event.id, type: event_type, data: { object: { customer: customer_id }}},
+      @env
+  end
 
   before do
     allow(::Payments::StripeEventsHandler).to receive(:perform_later)
@@ -149,7 +153,11 @@ RSpec.describe API::V1::Payments::WebhooksController, type: :controller do
     end
 
     context 'fetching Event fails' do
-      before { allow(Stripe::Event).to receive(:retrieve).and_raise(Stripe::APIError) }
+      before do
+        modules = [::Payments::PlanModule.new(id: 'filevault', canceled: true)]
+        account.update!(available_modules: ::Payments::AvailableModules.new(data: modules))
+        allow(Stripe::Event).to receive(:retrieve).and_raise(Stripe::APIError)
+      end
 
       it { is_expected.to have_http_status(502) }
     end

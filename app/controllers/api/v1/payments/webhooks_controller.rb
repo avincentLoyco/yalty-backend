@@ -6,19 +6,19 @@ module API
         before_action :request_authentication
 
         def webhook
-          event = Stripe::Event.retrieve(params[:id])
-          remove_canceled_plans(event)
+          remove_canceled_plans
           ::Payments::StripeEventsHandler.perform_later(params[:id])
           head 200
         end
 
         private
 
-        def remove_canceled_plans(event)
-          return unless event.type.eql?('invoice.created')
+        def remove_canceled_plans
+          return unless params[:type].eql?('invoice.created')
 
-          account = Account.find_by!(customer_id: event.data.object.customer)
-          return unless account.available_modules.canceled.any?
+          account = Account.find_by!(customer_id: params[:data][:object][:customer])
+          return unless account.available_modules.canceled.any? &&
+              event.data.object.customer == account.customer_id
 
           Stripe::SubscriptionItem.list(subscription: account.subscription_id).each do |item|
             item.delete if account.available_modules.canceled.include?(item.plan.id)
@@ -33,6 +33,10 @@ module API
 
         def stripe_error(_message)
           head 502
+        end
+
+        def event
+          @event ||= Stripe::Event.retrieve(params[:id])
         end
       end
     end
