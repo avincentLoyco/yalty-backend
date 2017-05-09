@@ -1,6 +1,6 @@
 module Payments
   class CreateInvoicePdf
-    PERIOD_FORMAT = '%d.%m.%Y'.freeze
+    delegate :t, :l, to: I18n
 
     def initialize(invoice)
       @invoice = invoice.reload
@@ -55,7 +55,8 @@ module Payments
     end
 
     def pdf_address
-      @pdf.text "<u>#{I18n.t('invoice_pdf.invoiced_to')}:</u>", align: :right, inline_format: true
+      @pdf.text "<u>#{t('payment.pdf.header.invoiced_to')}</u>",
+        align: :right, inline_format: true
       if @adress.present?
         @pdf.move_down 5
         @pdf.text @address.company_name, align: :right
@@ -69,16 +70,19 @@ module Payments
     end
 
     def pdf_invoice_details
-      @pdf.text "<u>#{I18n.t('invoice_pdf.invoice_details')}</u>", inline_format: true, size: 16
-      @pdf.text "#{I18n.t('invoice_pdf.billing_date')}: #{localized_date(@invoice.date)}"
-      @pdf.text "#{I18n.t('invoice_pdf.period')}: #{localized_date(@invoice.period_start)}" \
-        "- #{localized_date(@invoice.period_end)}"
-      @pdf.text "#{I18n.t('invoice_pdf.invoice')} N<sup>o</sup>: #{@invoice.receipt_number}",
+      @pdf.text "<u>#{t('payment.pdf.header.title')}</u>", inline_format: true, size: 16
+      @pdf.text t('payment.pdf.header.billing_date',
+        billing_date: l(@invoice.date.to_date, format: :long))
+      @pdf.text t('payment.pdf.header.period',
+        period_start: l(@invoice.period_start.to_date, format: :long),
+        period_end: l(@invoice.period_end.to_date, format: :long))
+      @pdf.text t('payment.pdf.header.receipt_number',
+        receipt_number: @invoice.receipt_number),
         inline_format: true
 
       @pdf.move_down 20
-      @pdf.text "#{I18n.t('invoice_pdf.billing_account')}: " \
-        "#{@account.subdomain}.#{ENV['YALTY_APP_DOMAIN']}"
+      @pdf.text t('payment.pdf.header.account',
+        domain: "#{@account.subdomain}.#{ENV['YALTY_APP_DOMAIN']}")
       @pdf.move_down 20
     end
 
@@ -93,8 +97,8 @@ module Payments
         row(-2).borders = []
         row(-2).columns(-2..-1).borders = [:top, :bottom, :left, :right]
 
-        column(1).width = 75
-        column(2).width = 45
+        column(1).width = 80
+        column(2).width = 50
         column(3).width = 120
       end
 
@@ -102,8 +106,8 @@ module Payments
     end
 
     def pdf_charge_details
-      @pdf.text I18n.t(
-        'invoice_pdf.card_charged',
+      @pdf.text t(
+        'payment.pdf.items.card_charged',
         brand: @card.brand,
         last4: @card.last4,
         amount_due: in_chf(@invoice.amount_due),
@@ -113,8 +117,8 @@ module Payments
 
     def pdf_footer
       @pdf.bounding_box([0, @pdf.bounds.bottom + 25], width: 595.28) do
-        @pdf.text I18n.t(
-          'invoice_pdf.yalty_data',
+        @pdf.text t(
+          'payment.pdf.footer',
           email: ENV['YALTY_BILLING_EMAIL'],
           tva: ENV['YALTY_TVA_NUMBER']
         )
@@ -123,11 +127,11 @@ module Payments
 
     def table_data
       table_headers = [
-        I18n.t('invoice_pdf.description'),
-        I18n.t('invoice_pdf.period').upcase,
-        I18n.t('invoice_pdf.units'),
-        I18n.t('invoice_pdf.unit_price') + "\n(chf)",
-        I18n.t('invoice_pdf.amount') + "\n(chf)"
+        t('payment.pdf.items.header.description'),
+        t('payment.pdf.items.header.period'),
+        t('payment.pdf.items.header.units'),
+        t('payment.pdf.items.header.unit_price'),
+        t('payment.pdf.items.header.amount')
       ]
       line_items.unshift(table_headers).push(subtotal_and_tax, total)
     end
@@ -139,7 +143,7 @@ module Payments
     def subscription_items
       @invoice.lines.data.select { |line| line.type.eql?('subscription') }.map do |line|
         [
-          I18n.t("invoice_pdf.plans.#{line.plan.id}"),
+          t("payment.plan.#{line.plan.id}"),
           period(line.period_start, line.period_end),
           units(line),
           unit_price(line),
@@ -158,7 +162,8 @@ module Payments
           amount_sum = set.second.sum(&:amount)
           next if amount_sum.zero?
           [
-            "#{I18n.t('invoice_pdf.adjustment')}\n#{set.first[0]}",
+            t('payment.pdf.items.value.adjustment',
+              plan: t("payment.plan.#{set.first[0]}")),
             period(set.first[1], set.first[2]),
             nil,
             nil,
@@ -168,17 +173,20 @@ module Payments
     end
 
     def subtotal_and_tax
-      headers = "#{I18n.t('invoice_pdf.subtotal_in_chf')}\n#{in_chf(@invoice.subtotal)} " \
-        "* TVA(#{@invoice.tax_percent.to_i}%)"
+      headers = t('payment.pdf.items.subtotal',
+        subtotal: in_chf(@invoice.subtotal),
+        tva: @invoice.tax_percent.to_i)
       [nil, nil, nil, headers, "#{in_chf(@invoice.subtotal)}\n#{in_chf(@invoice.tax)}"]
     end
 
     def total
-      [nil, nil, nil, I18n.t('invoice_pdf.total_due_in_chf'), in_chf(@invoice.amount_due)]
+      [nil, nil, nil, t('payment.pdf.items.total_due'), in_chf(@invoice.amount_due)]
     end
 
-    def period(start_date, end_date)
-      "#{start_date.strftime(PERIOD_FORMAT)} - #{end_date.strftime(PERIOD_FORMAT)}"
+    def period(period_start, period_end)
+      t('payment.pdf.items.value.period',
+        period_start: l(period_start.to_date, format: :short),
+        period_end: l(period_end.to_date, format: :short))
     end
 
     def units(line)
@@ -190,12 +198,8 @@ module Payments
     end
 
     def in_chf(amount)
-      return 0 unless amount.present?
+      amount = 0 unless amount.present?
       format('%.2f', amount / 100.00)
-    end
-
-    def localized_date(date)
-      I18n.localize(date)
     end
   end
 end

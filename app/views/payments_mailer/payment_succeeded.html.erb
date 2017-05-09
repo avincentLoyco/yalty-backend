@@ -4,12 +4,13 @@
 
 <p>Your monthly subscription has been renewed for the <b><%= @active_employees_count %> active employees</b> on your team.</p>
 <ul>
-  <li><b>Payment date:</b> <%= I18n.localize(@invoice.date, format: :mailer) %></li>
+  <li><b>Payment date:</b> <%= l(@invoice.date.to_date, format: :long) %></li>
+  <li><b>Amount (CHF):</b> <%= in_chf(@invoice.amount_due) %></li>
   <li><b>Payment method:</b> <%= @card.brand %> card ending in <%= @card.last4 %></li>
   <li><b>Account:</b> <%= @invoice.account.subdomain %>.<%= ENV['YALTY_APP_DOMAIN'] %></li>
   <li><b>Invoice number:</b> <%= @invoice.receipt_number %></li>
 </ul>
-<p>Your next renewal date is <%= I18n.localize(@next_payment_date, format: :mailer) %>. You can see your billing history and make changes to your plan on your billing page.</p>
+<p>Your next renewal date is <%= l(@next_payment_date.to_date, format: :long) %>. You can see your billing history and make changes to your plan on your billing page.</p>
 
 <p>Feel free to contact us if you have any question by simply responding to this email. Thank you. We appreciate your support!<br/>
 the yalteam</p>

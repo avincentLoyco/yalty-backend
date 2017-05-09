@@ -1,6 +1,6 @@
 <h3 style="color: #2ab27b">Your yalty payment has failed</h3>
 
-<p>Our attempt to bill <%= @invoice.amount_due %> to your current payment card, <%= @card.brand %> ending in <%= @card.last4 %>, failed.
+<p>Our attempt to bill <%= in_chf(@invoice.amount_due) %> to your current payment card, <%= @card.brand %> ending in <%= @card.last4 %>, failed.
 Update your billing settings for <%= @invoice.account.company_name %> to continue using the premium features.
 We will automatically retry the charge using your current payment card on  <%= @invoice.next_attempt %></p>
 

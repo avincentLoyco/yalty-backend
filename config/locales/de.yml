@@ -1,10 +1,10 @@
 de:
-  date_time_defaults: &date_time_defaults
-    month_names:
-      [~, Januar, Februar, März, April, Mai, Juni, Juli, August, September, Oktober, November, Dezember]
-    formats:
-      default: "%d %B %Y"
   date:
-    <<: *date_time_defaults
-  time:
-    <<: *date_time_defaults
+    abbr_month_names:
+    - '~'
+    month_names:
+    - '~'
+    order:
+    - :day
+    - :month
+    - :year

@@ -1,6 +1,6 @@
 <h3 style="color: #2ab27b">Votre paiement yalty a échoué</h3>
 
-<p>Notre tentative de débit de <%= @invoice.amount_due %> de votre carte de crédit actuelle, <%= @card.brand %> finissant par <%= @card.last4 %>, a échoué.
+<p>Notre tentative de débit de <%= in_chf(@invoice.amount_due) %> de votre carte de crédit actuelle, <%= @card.brand %> finissant par <%= @card.last4 %>, a échoué.
 Modifiez vos paramètres de facturation pour <%= @invoice.account.company_name %> afin de pouvoir continuer à utiliser les fonctionnalités premium de yalty.
 Nous réessayerons automatiquement le <%= @invoice.next_attempt %></p>
 

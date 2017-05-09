@@ -8,36 +8,104 @@ en:
       subject: Reset your password
     accounts_list:
       subject: Your team on yalty
+  payment:
+    pdf:
+      header:
+        invoiced_to: 'Invoiced to:'
+        title: INVOICE DETAILS
+        billing_date: 'Billing Date:  %{billing_date}'
+        period: 'Period: %{period_start} - %{period_end}'
+        receipt_number: 'Invoice N<sup>o</sup>: %{receipt_number}'
+        account: 'Billing account: %{domain}'
+      items:
+        card_charged: "Your <b>%{brand}</b> ending in <b>%{last4}</b> was charged\
+          \ CHF <b>%{amount_due}</b>. This charge will appear from \"yalty\" on your\
+          \ statement. <b>Questions?</b> Please contact us: <b>%{email}</b>"
+        value:
+          adjustment: |-
+            Adjustment
+            %{plan}
+          period: '%{period_start} - %{period_end}'
+        subtotal: |-
+          Subtotal in CHF
+          %{subtotal} * TVA(%{tva}%)
+        total_due: TOTAL DUE IN CHF
+        header:
+          description: DESCRIPTION
+          units: UNITS
+          unit_price: |-
+            UNIT PRICE
+            (CHF)
+          amount: |-
+            AMOUNT
+            (CHF)
+          period: PERIOD
+      footer: "YALTY SA, c/o Y. LUGRIN, Ch. du Boisy 10, 1004 Lausanne, %{email}\n\
+        TVA Number: %{tva}"
+    plan:
+      filevault: File Vault
   payments_mailer:
     payment_succeeded:
-      subject: Your plan has been renewed
+      subject: '%{company_name}: Your plan has been renewed'
     payment_failed:
-      subject: Payment failure! Check your yalty Account
+      subject: '%{company_name}: Payment failure! Check your yalty Account'
     subscription_canceled:
-      subject: Payment failure - your premium features are deactivated
-  invoice_pdf:
-    invoiced_to: Invoiced to
-    invoice_details: INVOICE_DETAILS
-    billing_date: Billing Date
-    period: Period
-    invoice: Invoice
-    billing_account: Billing account
-    card_charged: "Your <b>%{brand}</b> ending in <b>%{last4}</b> was charged CHF <b>%{amount_due}</b>. This charge will appear from \"yalty\" on your statement. <b>Questions?</b> Please contact us: <b>%{email}</b>"
-    yalty_data: "YALTY SA, c/o Y. LUGRIN, Ch. du Boisy 10, 1004 Lausanne, %{email}\nTVA Number: %{tva}"
-    adjustment: Adjustment
-    subtotal_in_chf: Subtotal in CHF
-    total_due_in_chf: TOTAL DUE IN CHF
-    description: DESCRIPTION
-    units: UNITS
-    unit_price: UNIT PRICE
-    amount: AMOUNT
-    plans:
-      file-vault: File Vault
-  date_time_defaults: &date_time_defaults
+      subject: '%{company_name}: Payment failure - your premium features are deactivated'
+  date:
     formats:
       default: "%d %B %Y"
-      mailer: "%B %d, %Y"
-  date:
-    <<: *date_time_defaults
+      long: "%B %d, %Y"
+      short: "%b %d"
+    abbr_day_names:
+    - Sun
+    - Mon
+    - Tue
+    - Wed
+    - Thu
+    - Fri
+    - Sat
+    abbr_month_names:
+    - '~'
+    - Jan
+    - Feb
+    - Mar
+    - Apr
+    - May
+    - Jun
+    - Jul
+    - Aug
+    - Sep
+    - Oct
+    - Nov
+    - Dec
+    day_names:
+    - Sunday
+    - Monday
+    - Tuesday
+    - Wednesday
+    - Thursday
+    - Friday
+    - Saturday
+    month_names:
+    - '~'
+    - January
+    - February
+    - March
+    - April
+    - May
+    - June
+    - July
+    - August
+    - September
+    - October
+    - November
+    - December
+    order:
+    - :year
+    - :month
+    - :day
   time:
-    <<: *date_time_defaults
+    formats:
+      default: "%a, %d %b %Y %H:%M:%S %z"
+      long: "%B %d, %Y %H:%M"
+      short: "%d %b %H:%M"
