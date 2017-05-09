@@ -8,6 +8,9 @@ en:
       subject: Reset your password
     accounts_list:
       subject: Your team on yalty
+  export_mailer:
+    archive_generation:
+      subject: "%{company_name}: Your archive is ready to download!"
   payment:
     pdf:
       header:
