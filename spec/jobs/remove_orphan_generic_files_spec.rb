@@ -42,4 +42,18 @@ RSpec.describe RemoveOrphanGenericFiles, type: :job do
     it { expect(Dir.exist?(removed_dir)).to be(false) }
     it { expect(GenericFile.count).to eq(2) }
   end
+
+  context 'old archive files' do
+    let(:old_archive) { create(:generic_file, :with_zip, created_at: 2.days.ago) }
+    let(:removed_dir) { Rails.application.config.file_upload_root_path.join(old_archive.id) }
+    let(:account) { create(:account, archive_file: old_archive) }
+
+    before do
+      Export::CreateArchiveZip.new(account).call
+      described_class.new.perform
+    end
+
+    it { expect(Dir.exist?(removed_dir)).to be(false) }
+    it { expect(GenericFile.count).to eq(1) }
+  end
 end
