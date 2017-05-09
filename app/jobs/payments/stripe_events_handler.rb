@@ -72,8 +72,8 @@ module Payments
         tax_percent: invoice.tax_percent,
         total: invoice.total,
         address: account.invoice_company_info,
-        period_start: Time.zone.at(invoice.period_start),
-        period_end: Time.zone.at(invoice.period_end),
+        period_start: Time.zone.at(invoice_lines.map { |l| l.period.start }.max),
+        period_end: Time.zone.at(invoice_lines.map { |l| l.period.end }.max),
         lines: InvoiceLines.new(data: invoice_lines.map { |line| build_invoice_line(line) })
       )
     end
