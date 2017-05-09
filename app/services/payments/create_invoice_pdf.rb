@@ -55,17 +55,20 @@ module Payments
     end
 
     def pdf_address
-      @pdf.text "<u>#{t('payment.pdf.header.invoiced_to')}</u>",
-        align: :right, inline_format: true
-      if @adress.present?
-        @pdf.move_down 5
-        @pdf.text @address.company_name, align: :right
-        @pdf.text @address.address_1, align: :right
-        @pdf.text @address.address_2, align: :right
-        @pdf.text "#{@address.postalcode} #{@address.city}, #{@address.country}", align: :right
-        @pdf.text @address.region, align: :right
+      @pdf.text_box "<u>#{t('payment.pdf.header.invoiced_to')}</u>",
+        inline_format: true, at: [350, @pdf.cursor - 15]
+      @pdf.move_down 15
+
+      if @address.present?
+        text = []
+        text << @address.company_name if @address.company_name.present?
+        text << @address.address_1 if @address.address_1.present?
+        text << @address.address_2 if @address.address_2.present?
+        text << @address.region if @address.region.present?
+        text << "#{@address.postalcode} #{@address.city}, #{@address.country}"
+        @pdf.text_box text.join("\n"), at: [350, @pdf.cursor - 15]
       else
-        @pdf.move_down 50
+        @pdf.text_box @account.company_name, at: [350, @pdf.cursor - 15]
       end
     end
 

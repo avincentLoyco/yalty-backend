@@ -19,6 +19,10 @@ module Attribute
       self.class.attribute_type
     end
 
+    def present?
+      attributes.values.any?
+    end
+
     def validate_presence(additional_validation)
       except_type = attributes.except(:attribute_type, *optional_attributes)
       return if additional_validation.try(:[], 'allow_nil').eql?(true) &&

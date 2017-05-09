@@ -8,4 +8,8 @@ class SimpleAttribute
   def self.load(data)
     new(data)
   end
+
+  def present?
+    attributes.values.any?
+  end
 end
