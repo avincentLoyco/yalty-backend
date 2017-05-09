@@ -133,7 +133,8 @@ CREATE TABLE accounts (
     subscription_id character varying,
     invoice_company_info hstore,
     invoice_emails text[] DEFAULT '{}'::text[],
-    available_modules json
+    available_modules json,
+    archive_processing boolean DEFAULT false
 );
 
 
@@ -236,6 +237,24 @@ CREATE TABLE employee_balances (
 
 
 --
+<<<<<<< HEAD
+=======
+-- Name: employee_files; Type: TABLE; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE TABLE employee_files (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    created_at timestamp without time zone,
+    updated_at timestamp without time zone,
+    file_file_name character varying,
+    file_content_type character varying,
+    file_file_size integer,
+    file_updated_at timestamp without time zone
+);
+
+
+--
+>>>>>>> [YWA-1347] Add ExportsController (#359)
 -- Name: employee_presence_policies; Type: TABLE; Schema: public; Owner: -; Tablespace:
 --
 
@@ -293,6 +312,7 @@ CREATE TABLE employees (
 
 
 --
+<<<<<<< HEAD
 -- Name: generic_files; Type: TABLE; Schema: public; Owner: -; Tablespace:
 --
 
@@ -311,6 +331,8 @@ CREATE TABLE generic_files (
 
 
 --
+=======
+>>>>>>> [YWA-1347] Add ExportsController (#359)
 -- Name: holiday_policies; Type: TABLE; Schema: public; Owner: -; Tablespace:
 --
 
@@ -1067,6 +1089,7 @@ CREATE UNIQUE INDEX index_employees_on_id_and_account_id ON employees USING btre
 
 
 --
+<<<<<<< HEAD
 -- Name: index_generic_files_on_fileable_id_and_fileable_type; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
@@ -1074,6 +1097,8 @@ CREATE INDEX index_generic_files_on_fileable_id_and_fileable_type ON generic_fil
 
 
 --
+=======
+>>>>>>> [YWA-1347] Add ExportsController (#359)
 -- Name: index_holiday_policies_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
@@ -1738,3 +1763,5 @@ INSERT INTO schema_migrations (version) VALUES ('20170413123051');
 INSERT INTO schema_migrations (version) VALUES ('20170420050113');
 
 INSERT INTO schema_migrations (version) VALUES ('20170426111844');
+
+INSERT INTO schema_migrations (version) VALUES ('20170427084526');
