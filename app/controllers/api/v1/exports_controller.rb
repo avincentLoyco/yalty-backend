@@ -2,8 +2,8 @@ module API
   module V1
     class ExportsController < ApplicationController
       def create
-        # TODO: Implement that service
-        ::Export::CreateArchive.perform_later(Account.current)
+        Account.current.update!(archive_processing: true)
+        ::Export::ScheduleArchiveProcess.perform_later(Account.current)
         render_json_response
       end
 

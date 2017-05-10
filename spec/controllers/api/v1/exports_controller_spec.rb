@@ -4,21 +4,29 @@ require 'fakeredis/rspec'
 RSpec.describe API::V1::ExportsController, type: :controller do
   include_context 'shared_context_headers'
 
-  before do
-    allow(::Export::CreateArchive).to receive(:perform_later).with(account) do
-      account.update!(archive_processing: true)
-    end
-  end
-
   shared_examples 'archive is processing' do
+    it { expect(account.archive_processing).to be(true) }
     it { expect(response.status).to eq(202) }
     it { expect_json({ status: 'processing', file_id: nil, archive_date: nil }) }
   end
 
   context 'initialize archive' do
-    before { post :create }
+    subject(:init_archive) { post :create }
 
-    it_behaves_like 'archive is processing'
+    it 'updates account' do
+      expect(account).to receive(:update!).with(archive_processing: true)
+      init_archive
+    end
+
+    it 'schdules the archive job' do
+      expect { init_archive }.to change { ActiveJob::Base.queue_adapter.enqueued_jobs.size }.by(1)
+    end
+
+    context 'response' do
+      before { init_archive }
+
+      it_behaves_like 'archive is processing'
+    end
   end
 
   context 'check status' do
