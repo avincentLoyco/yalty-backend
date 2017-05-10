@@ -9,6 +9,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     Account.current.update(
       available_modules: ::Payments::AvailableModules.new(data: available_modules)
     )
+    allow_any_instance_of(::Payments::UpdateSubscriptionQuantity).to receive(:perform_now).and_return(true)
   end
   let(:available_modules) { [] }
   let!(:employee_eattribute_definition) do

@@ -201,8 +201,10 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
 
                   let(:new_removal) do
                     create(:employee_balance_manual,
-                      employee: employee, time_off_category: category, effective_at: '1/5/2016',
-                      balance_credit_additions: [new_employee_policy.policy_assignation_balance])
+                      employee: employee, time_off_category: category,
+                      effective_at: '2/5/2016'.to_date + Employee::Balance::REMOVAL_OFFSET,
+                      balance_credit_additions: [new_employee_policy.policy_assignation_balance],
+                      balance_type: 'removal')
                   end
 
                   subject { described_class.new(new_removal).call }
@@ -231,7 +233,8 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
 
                   let(:new_removal) do
                     create(:employee_balance_manual,
-                      employee: employee, time_off_category: category, effective_at: '1/5/2016',
+                      employee: employee, time_off_category: category,
+                      effective_at: '2/5/2016'.to_date + Employee::Balance::REMOVAL_OFFSET,
                       balance_credit_additions: [new_employee_policy.policy_assignation_balance])
                   end
 
@@ -329,7 +332,8 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
 
                   let(:new_removal) do
                     create(:employee_balance_manual,
-                      employee: employee, time_off_category: category, effective_at: '2/5/2016',
+                      employee: employee, time_off_category: category,
+                      effective_at: '2/5/2016'.to_date + Employee::Balance::REMOVAL_OFFSET,
                       balance_credit_additions: [new_employee_policy.policy_assignation_balance],
                       balance_type: 'removal')
                   end
@@ -359,7 +363,8 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
 
                   let(:new_removal) do
                     create(:employee_balance_manual,
-                      employee: employee, time_off_category: category, effective_at: '1/5/2016',
+                      employee: employee, time_off_category: category,
+                      effective_at: '2/5/2016'.to_date + Employee::Balance::REMOVAL_OFFSET,
                       balance_credit_additions: [new_employee_policy.policy_assignation_balance])
                   end
 

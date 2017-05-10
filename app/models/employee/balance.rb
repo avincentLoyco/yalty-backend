@@ -45,7 +45,6 @@ class Employee::Balance < ActiveRecord::Base
   end)
   scope :additions, -> { where(balance_type: 'addition').order(:effective_at) }
   scope :removals, -> { Employee::Balance.joins(:balance_credit_additions).distinct }
-  scope :reset_or_removal, -> { where(balance_type: %w(reset removal)) }
   scope :assignations, -> { where(balance_type: 'assignation').order(:effective_at) }
   scope :end_of_periods, -> { where(balance_type: 'end_of_period').order(:effective_at) }
   scope :not_removals, (lambda do
@@ -55,8 +54,7 @@ class Employee::Balance < ActiveRecord::Base
   end)
   scope :removal_at_date, (lambda do |employee_id, time_off_category_id, date|
     employee_balances(employee_id, time_off_category_id)
-      .where("effective_at::date = to_date('#{date}', 'YYYY-MM_DD')")
-      .reset_or_removal.uniq
+      .where(balance_type: %w(reset removal)).where(effective_at: date).uniq
   end)
   scope :reset, -> { where(reset_balance: true) }
 
@@ -96,7 +94,7 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   def now_or_effective_at
-    return effective_at if effective_at && balance_credit_additions.blank? && time_off.blank?
+    return effective_at if effective_at && time_off.blank?
     if balance_credit_additions.present?
       balance_credit_additions.map(&:validity_date).first
     else
@@ -167,7 +165,8 @@ class Employee::Balance < ActiveRecord::Base
     if additions_validity_dates.size > 1 ||
         effective_at && effective_at.to_date != first_validity_date ||
         employee.contract_periods.none? do |period|
-          period.include?(effective_at.to_date) && period.include?(first_validity_date)
+          period.include?(effective_at.to_date - 1.day) &&
+              period.include?(first_validity_date - 1.day)
         end
       errors.add(
         :effective_at, 'Removal effective at must equal addition validity date and period'

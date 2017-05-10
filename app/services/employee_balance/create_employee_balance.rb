@@ -109,7 +109,9 @@ class CreateEmployeeBalance
   def update_next_employee_balances
     return if only_in_balance_period? || options[:skip_update]
     PrepareEmployeeBalancesToUpdate.new(employee_balance).call
-    UpdateBalanceJob.perform_later(employee_balance.id)
+    ActiveRecord::Base.after_transaction do
+      UpdateBalanceJob.perform_later(employee_balance.id)
+    end
   end
 
   def only_in_balance_period?

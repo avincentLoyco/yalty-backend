@@ -71,7 +71,6 @@ class RelatedPolicyPeriod
   end
 
   def verify_with_contract_periods(date, validity_date, balance_type)
-    # TODO: Must test if it's the day after end of period for balances that
     no_period_with_dates =
       related_policy.employee.contract_periods.none? do |period|
         period.include?(validity_date.to_date) && period.include?(date.to_date) &&
@@ -118,8 +117,8 @@ class RelatedPolicyPeriod
       periods.select { |period| period.last.is_a?(Date) && period.last < validity_date.to_date }
     return validity_date unless previous_periods.present?
     contract_end = previous_periods.last.last + 1.day + Employee::Balance::RESET_OFFSET
-    if contract_end > validity_date ||
-        date.eql?(contract_end.to_date) && balance_type.eql?('assignation')
+    if contract_end > validity_date || (balance_type.eql?('assignation') &&
+        (date.eql?(contract_end.to_date) || related_policy.effective_at > contract_end.to_date))
       validity_date
     else
       contract_end

@@ -31,6 +31,7 @@ class ManageEmployeeBalanceRemoval
     resource_removal = resource.balance_credit_removal
     new_removal = find_or_create_new_removal
     new_removal.balance_credit_additions << resource
+    new_removal.save
     return unless resource_removal
     resource_removal.destroy! if resource_removal.balance_credit_additions.count.zero?
   end

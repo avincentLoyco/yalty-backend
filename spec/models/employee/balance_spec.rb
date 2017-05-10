@@ -69,7 +69,11 @@ RSpec.describe Employee::Balance, type: :model do
         end
 
          context 'when balance is removal' do
-          before { balance.balance_credit_additions << addition }
+          before do
+            balance.effective_at = nil
+            balance.balance_credit_additions << addition
+          end
+
           let(:addition) do
             create(:employee_balance,
               time_off_category: time_off_category,

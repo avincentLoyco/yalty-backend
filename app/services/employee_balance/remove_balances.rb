@@ -70,7 +70,7 @@ class RemoveBalances
 
   def balances_after_starting_date
     @balances_after_starting_date ||=
-      balances_in_category.where('employee_balances.effective_at::date > ?', starting_date.to_date)
+      balances_in_category.where('employee_balances.effective_at::date >= ?', starting_date.to_date)
   end
 
   def etops_in_category

@@ -3,14 +3,13 @@ class UpdateEmployeeBalance
   attr_reader :employee_balance, :time_off, :options, :current_date
 
   def initialize(employee_balance, options = {})
-    @employee_balance = employee_balance
+    @employee_balance = employee_balance.reload
     @time_off = employee_balance.time_off
     @options = options
     @current_date = employee_balance.validity_date
   end
 
   def call
-    employee_balance.reload
     update_attributes unless options.blank?
     recalculate_amount
     update_status
