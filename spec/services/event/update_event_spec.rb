@@ -63,8 +63,8 @@ RSpec.describe do
     end
 
     context 'for profile picture' do
-      let(:employee_file) { create(:employee_file) }
-      let(:employee_file_id) { employee_file.id }
+      let(:generic_file) { create(:generic_file) }
+      let(:generic_file_id) { generic_file.id }
       let(:file_path) { ["#{Rails.root}/spec/fixtures/files/test.jpg"] }
       let!(:picture_definition) do
         create(:employee_attribute_definition,
@@ -76,12 +76,12 @@ RSpec.describe do
       end
 
       before do
-        allow_any_instance_of(EmployeeFile).to receive(:find_file_path) { file_path }
+        allow_any_instance_of(GenericFile).to receive(:find_file_path) { file_path }
         employee_attributes_params.push(
           {
             type: 'employee_attribute',
             attribute_name: 'profile_picture',
-            value: employee_file_id,
+            value: generic_file_id,
             id: picture_version.id
           }
         )
@@ -97,7 +97,7 @@ RSpec.describe do
         let(:file_path) { ["#{Rails.root}/spec/fixtures/files/test.jpg", "test_route"] }
 
         before do
-          picture_version[:data][:id] = employee_file.id
+          picture_version[:data][:id] = generic_file.id
           picture_version.save
         end
 
@@ -108,7 +108,7 @@ RSpec.describe do
           end
 
           context 'and different picture send for version in params' do
-            let(:employee_file_id) { create(:employee_file).id }
+            let(:generic_file_id) { create(:generic_file).id }
 
             it { expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
           end

@@ -1,5 +1,5 @@
 module Payments
-  class InvoiceLine < Basic
+  class InvoiceLine < ::SimpleAttribute
     attribute :id, String
     attribute :amount, Integer
     attribute :currency, String

@@ -221,7 +221,7 @@ RSpec.describe Account, type: :model do
   context 'for employee_files' do
     let(:account) { create(:account) }
     let(:employees) { create_list(:employee, 3, account: account) }
-    let(:employee_files) { create_list(:employee_file, 3, :with_jpg) }
+    let(:employee_files) { create_list(:generic_file, 3, :with_jpg) }
     let!(:employee_attributes) do
       employee_files.each do |file|
         create(:employee_attribute, employee: employees.sample, attribute_type: 'File', data: {

@@ -1,0 +1,18 @@
+<h3 style="color: #2ab27b">Votre abonnement a été renouvelé</h3>
+
+<p>Merci d’utiliser yalty pour gérer l’administration de vos ressources humaines !</p>
+
+<p>Votre abonnement mensuel a été renouvelé pour les <b><%= @active_employees_count %> employés actifs</b> que comporte votre équipe.</p>
+<ul>
+  <li><b>Date de paiement :</b> <%= l(@invoice.date.to_date, format: :long) %></li>
+  <li><b>Montant (CHF) :</b> <%= in_chf(@invoice.amount_due) %></li>
+  <li><b>Méthode de paiement: </b> <%= @card.brand %> se terminant par <%= @card.last4 %></li>
+  <li><b>Compte :</b> <%= @invoice.account.subdomain %>.<%= ENV['YALTY_APP_DOMAIN'] %></li>
+  <li><b>Numéro de facture :</b> <%= @invoice.receipt_number %></li>
+</ul>
+<p>La date du prochain renouvellement est le <%= l(@next_payment_date.to_date, format: :long) %>. Vous pouvez visualiser l’historique de paiement et modifier votre abonnement depuis la page de facturation.</p>
+
+<p>N’hésitez pas à nous contacter si vous avez des questions en répondant simplement à cet email. Merci pour votre confiance !<br/>
+La yalteam</p>
+
+<p><small style='color: #aaaaaa'>Merci de noter qu’uniquement le propriétaire du compte a accès aux informations de paiement et est le seul à pouvoir les modifier.</small></p>

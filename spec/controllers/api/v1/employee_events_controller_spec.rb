@@ -217,29 +217,29 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       it { expect { subject }.to change { Employee::AttributeVersion.count }.by(2) }
 
       context 'when file type attribute send' do
-        let(:employee_file) { create(:employee_file) }
+        let(:generic_file) { create(:generic_file) }
 
         context 'when filevault is not subscribed' do
           context 'when file type attribute send' do
-            let(:employee_file) { create(:employee_file) }
+            let(:generic_file) { create(:generic_file) }
 
             before do
-              allow_any_instance_of(EmployeeFile).to receive(:find_file_path) do
+              allow_any_instance_of(GenericFile).to receive(:find_file_path) do
                 ["#{Rails.root}/spec/fixtures/files/test.jpg"]
               end
               json_payload[:employee_attributes].push(
                 {
                   type: 'employee_attribute',
                   attribute_name: file_definition.name,
-                  value: employee_file.id
+                  value: generic_file.id
                 }
               )
             end
 
             context 'when profile_picture sent' do
 
-              it { expect { subject }.to change { employee_file.reload.file_content_type } }
-              it { expect { subject }.to change { employee_file.reload.file_file_size } }
+              it { expect { subject }.to change { generic_file.reload.file_content_type } }
+              it { expect { subject }.to change { generic_file.reload.file_file_size } }
               it { expect { subject }.to change { Employee.count } }
               it { expect { subject }.to change { Employee::Event.count } }
 
@@ -262,25 +262,25 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         let(:available_modules) { [::Payments::PlanModule.new(id: 'filevault', canceled: false)] }
 
         context 'when file type attribute send' do
-          let(:employee_file) { create(:employee_file) }
+          let(:generic_file) { create(:generic_file) }
 
           before do
-            allow_any_instance_of(EmployeeFile).to receive(:find_file_path) do
+            allow_any_instance_of(GenericFile).to receive(:find_file_path) do
               ["#{Rails.root}/spec/fixtures/files/test.jpg"]
             end
             json_payload[:employee_attributes].push(
               {
                 type: 'employee_attribute',
                 attribute_name: file_definition.name,
-                value: employee_file.id
+                value: generic_file.id
               }
             )
           end
 
           context 'when profile_picture sent' do
 
-            it { expect { subject }.to change { employee_file.reload.file_content_type } }
-            it { expect { subject }.to change { employee_file.reload.file_file_size } }
+            it { expect { subject }.to change { generic_file.reload.file_content_type } }
+            it { expect { subject }.to change { generic_file.reload.file_file_size } }
             it { expect { subject }.to change { Employee.count } }
             it { expect { subject }.to change { Employee::Event.count } }
 
@@ -290,8 +290,8 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           context 'when contract is sent' do
             let(:attribute_name) { 'contract' }
 
-            it { expect { subject }.to change { employee_file.reload.file_content_type } }
-            it { expect { subject }.to change { employee_file.reload.file_file_size } }
+            it { expect { subject }.to change { generic_file.reload.file_content_type } }
+            it { expect { subject }.to change { generic_file.reload.file_file_size } }
             it { expect { subject }.to change { Employee.count } }
             it { expect { subject }.to change { Employee::Event.count } }
 
@@ -501,23 +501,23 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         end
 
         context 'when account manager wants to upload a file' do
-          let(:employee_file) { create(:employee_file) }
+          let(:generic_file) { create(:generic_file) }
 
           before do
-            allow_any_instance_of(EmployeeFile).to receive(:find_file_path) do
+            allow_any_instance_of(GenericFile).to receive(:find_file_path) do
               ["#{Rails.root}/spec/fixtures/files/test.jpg"]
             end
             json_payload[:employee_attributes].push(
               {
                 type: 'employee_attribute',
                 attribute_name: file_definition.name,
-                value: employee_file.id
+                value: generic_file.id
               }
             )
           end
 
-          it { expect { subject }.to change { employee_file.reload.file_file_size } }
-          it { expect { subject }.to change { employee_file.reload.file_content_type } }
+          it { expect { subject }.to change { generic_file.reload.file_file_size } }
+          it { expect { subject }.to change { generic_file.reload.file_content_type } }
           it { expect { subject }.to change { Employee::AttributeVersion.count } }
           it { expect { subject }.to change { Employee::Event.count } }
 
@@ -526,8 +526,8 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           context 'when owner wants to upload a file' do
             before { Account::User.current.update!(role: 'user') }
 
-            it { expect { subject }.to change { employee_file.reload.file_file_size } }
-            it { expect { subject }.to change { employee_file.reload.file_content_type } }
+            it { expect { subject }.to change { generic_file.reload.file_file_size } }
+            it { expect { subject }.to change { generic_file.reload.file_content_type } }
             it { expect { subject }.to change { Employee::AttributeVersion.count } }
             it { expect { subject }.to change { Employee::Event.count } }
 
@@ -536,8 +536,8 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
             context 'and file type is forbidden for him' do
               let(:attribute_name) { 'salary_slip' }
 
-              it { expect { subject }.to_not change { employee_file.reload.file_file_size } }
-              it { expect { subject }.to_not change { employee_file.reload.file_content_type } }
+              it { expect { subject }.to_not change { generic_file.reload.file_file_size } }
+              it { expect { subject }.to_not change { generic_file.reload.file_content_type } }
               it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
               it { expect { subject }.to_not change { Employee::Event.count } }
 
@@ -886,12 +886,12 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     end
 
     context 'when account user wants to add file' do
-      let(:employee_file) { create(:employee_file) }
-      let(:file_value) { employee_file.id }
+      let(:generic_file) { create(:generic_file) }
+      let(:file_value) { generic_file.id }
 
       before do
         json_payload[:employee_attributes].pop
-        allow_any_instance_of(EmployeeFile).to receive(:find_file_path) do
+        allow_any_instance_of(GenericFile).to receive(:find_file_path) do
           ["#{Rails.root}/spec/fixtures/files/test.jpg"]
         end
         json_payload[:employee_attributes].push(
@@ -903,8 +903,8 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         )
       end
 
-      it { expect { subject }.to change { employee_file.reload.file_content_type  } }
-      it { expect { subject }.to change { employee_file.reload.file_file_size } }
+      it { expect { subject }.to change { generic_file.reload.file_content_type  } }
+      it { expect { subject }.to change { generic_file.reload.file_file_size } }
       it { expect { subject }.to change { last_name_attribute.reload.value } }
       it { expect { subject }.to change { first_name_attribute.reload.value } }
 
@@ -915,8 +915,8 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           Account::User.current = create(:account_user, account: account, employee: employee)
         end
 
-        it { expect { subject }.to change { employee_file.reload.file_content_type  } }
-        it { expect { subject }.to change { employee_file.reload.file_file_size } }
+        it { expect { subject }.to change { generic_file.reload.file_content_type  } }
+        it { expect { subject }.to change { generic_file.reload.file_file_size } }
         it { expect { subject }.to change { Employee::AttributeVersion.count } }
 
         it { is_expected.to have_http_status(204) }
@@ -924,8 +924,8 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         context 'and its is in forbidden type' do
           let(:attribute_name) { 'salary_slip' }
 
-          it { expect { subject }.to_not change { employee_file.reload.file_content_type  } }
-          it { expect { subject }.to_not change { employee_file.reload.file_file_size } }
+          it { expect { subject }.to_not change { generic_file.reload.file_content_type  } }
+          it { expect { subject }.to_not change { generic_file.reload.file_file_size } }
           it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
 
           it { is_expected.to have_http_status(403) }
@@ -942,8 +942,8 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
             Account::User.current = create(:account_user, account: account)
           end
 
-          it { expect { subject }.to_not change { employee_file.reload.file_content_type  } }
-          it { expect { subject }.to_not change { employee_file.reload.file_file_size } }
+          it { expect { subject }.to_not change { generic_file.reload.file_content_type  } }
+          it { expect { subject }.to_not change { generic_file.reload.file_file_size } }
           it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
 
           it { is_expected.to have_http_status(403) }

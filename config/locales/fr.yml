@@ -8,3 +8,105 @@ fr:
       subject: Réinitialiser votre mot de passe
     accounts_list:
       subject: Votre équipe sur yalty
+  payment:
+    pdf:
+      header:
+        invoiced_to: 'Facturé à :'
+        title: DÉTAILS DE LA FACTURE
+        billing_date: 'Date de facturation :  %{billing_date}'
+        period: 'Période : %{period_start} - %{period_end}'
+        receipt_number: 'Facture N<sup>o</sup> : %{receipt_number}'
+        account: 'Facturation du compte : %{domain}'
+      items:
+        card_charged: "Votre <b>%{brand}</b> finissant par <b>%{last4}</b> a été dé\
+          bitée de CHF <b>%{amount_due}</b>. Ce paiement apparaîtra sous \"yalty\"\
+          \ sur votre relevé bancaire. <b>Questions ?</b> Contactez-nous: <b>%{email}</b>"
+        value:
+          adjustment: |-
+            Ajustement
+            %{plan}
+          period: '%{period_start} - %{period_end}'
+        subtotal: |-
+          Sous-total en CHF
+          %{subtotal} * TVA(%{tva}%)
+        total_due: TOTAL EN CHF
+        header:
+          description: LIBELLÉ
+          units: UNITÉS
+          unit_price: |-
+            PRIX PAR UNITÉ
+            (CHF)
+          amount: |-
+            MONTANT
+            (CHF)
+          period: PÉRIODE
+      footer: "YALTY SA, c/o Y. LUGRIN, Ch. du Boisy 10, 1004 Lausanne, %{email}\n\
+        Numéro de TVA: %{tva}"
+    plan:
+      filevault: Coffre-fort de documents
+  payments_mailer:
+    payment_succeeded:
+      subject: '%{company_name} : Votre abonnement a été renouvelé'
+    payment_failed:
+      subject: '%{company_name} : Échec du paiement ! Vérifiez votre compte yalty'
+    subscription_canceled:
+      subject: '%{company_name} : Échec du paiement - les fonctionnalités premium
+        ont été désactivées'
+  date:
+    formats:
+      default: "%d %B %Y"
+      long: "%d %B %Y"
+      short: "%e %b"
+    abbr_day_names:
+    - dim.
+    - lun.
+    - mar.
+    - mer.
+    - jeu.
+    - ven.
+    - sam.
+    abbr_month_names:
+    - '~'
+    - janv.
+    - févr.
+    - mars
+    - avr.
+    - mai
+    - juin
+    - juill.
+    - août
+    - sept.
+    - oct.
+    - nov.
+    - déc.
+    day_names:
+    - dimanche
+    - lundi
+    - mardi
+    - mercredi
+    - jeudi
+    - vendredi
+    - samedi
+    month_names:
+    - '~'
+    - janvier
+    - février
+    - mars
+    - avril
+    - mai
+    - juin
+    - juillet
+    - août
+    - septembre
+    - octobre
+    - novembre
+    - décembre
+    order:
+    - :day
+    - :month
+    - :year
+  time:
+    formats:
+      default: "%d. %B %Y %H h %M"
+      long: "%A, %d %B %Y %H h %M min %S s %Z"
+      short: "%d %b %H h %M"

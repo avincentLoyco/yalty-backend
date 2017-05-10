@@ -1,5 +1,5 @@
 module Payments
-  class PlanModule < Basic
+  class PlanModule < ::SimpleAttribute
     attribute :id, String
     attribute :canceled, Boolean
   end

@@ -149,13 +149,13 @@ class Account < ActiveRecord::Base
       .sum("(data -> 'size')::float / (1024.0 * 1024.0)").round(2)
   end
 
-  def number_of_files
-    employee_attribute_versions.where("data -> 'attribute_type' = 'File'").count
-  end
-
   def employee_files_ratio
     return 0 if employees.count.zero?
     (number_of_files.to_f / employees.count.to_f).round(2)
+  end
+
+  def number_of_files
+    employee_attribute_versions.where("data -> 'attribute_type' = 'File'").count
   end
 
   def create_reset_presence_policy_and_working_place!

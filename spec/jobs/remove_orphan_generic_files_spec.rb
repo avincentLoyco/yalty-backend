@@ -1,22 +1,20 @@
 require 'rails_helper'
-require 'sidekiq/testing'
-Sidekiq::Testing.fake!
 
-RSpec.describe RemoveOrphanEmployeeFiles, type: :job do
+RSpec.describe RemoveOrphanGenericFiles, type: :job do
   describe 'queue' do
     it 'puts a job on proper queue' do
       expect { described_class.perform_later }
-        .to have_enqueued_job(RemoveOrphanEmployeeFiles).exactly(1)
+        .to have_enqueued_job(RemoveOrphanGenericFiles).exactly(1)
     end
   end
 
   describe '#perform' do
     let(:created_at) { 7.days.ago }
     let(:employee) { create(:employee) }
-    let!(:employee_files) { create_list(:employee_file, 2, :with_jpg, created_at: created_at) }
-    let(:orphan_file) { create(:employee_file, :without_file, created_at: created_at) }
+    let!(:generic_files) { create_list(:generic_file, 2, :with_jpg, created_at: created_at) }
+    let(:orphan_file) { create(:generic_file, :without_file, created_at: created_at) }
     let!(:employee_attributes) do
-      employee_files.each do |file|
+      generic_files.each do |file|
         create(:employee_attribute, employee: employee, attribute_type: 'File', data: {
           id: file.id,
           size: file.file_file_size,
@@ -42,6 +40,6 @@ RSpec.describe RemoveOrphanEmployeeFiles, type: :job do
     end
 
     it { expect(Dir.exist?(removed_dir)).to be(false) }
-    it { expect(EmployeeFile.count).to eq(2) }
+    it { expect(GenericFile.count).to eq(2) }
   end
 end

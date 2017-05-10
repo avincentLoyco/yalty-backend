@@ -1,1 +1,10 @@
 de:
+  date:
+    abbr_month_names:
+    - '~'
+    month_names:
+    - '~'
+    order:
+    - :day
+    - :month
+    - :year

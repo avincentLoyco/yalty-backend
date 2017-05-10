@@ -1,5 +1,5 @@
 module Payments
-  class AvailableModules < Basic
+  class AvailableModules < ::SimpleAttribute
     attribute :data, Array[PlanModule]
 
     def add(id:, canceled: false)

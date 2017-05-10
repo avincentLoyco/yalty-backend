@@ -11,17 +11,25 @@ module Payments
 
       case event.type
       when 'invoice.created' then
-        create_invoice(event.data.object)
-        clear_modules('canceled')
+        account.transaction do
+          create_invoice(event.data.object)
+          clear_modules('canceled')
+        end
       when 'invoice.payment_failed' then
-        update_invoice_status(event.data.object, 'failed')
+        updated_invoice = update_invoice_status(event.data.object, 'failed')
+        PaymentsMailer.payment_failed(updated_invoice.id).deliver_now
       when 'invoice.payment_succeeded' then
-        update_invoice_status(event.data.object, 'success')
-        # TODO: Add pdf generation here
+        updated_invoice = update_invoice_status(event.data.object, 'success')
+        ::Payments::CreateInvoicePdf.new(updated_invoice).call
+        PaymentsMailer.payment_succeeded(updated_invoice.id).deliver_now
       when 'customer.subscription.updated' then
-        Account.transaction do
-          clear_modules('all', event.data.object)
-          recreate_subscription(event.data.object)
+        if event.data.object.status.eql?('canceled')
+          account.transaction do
+            clear_modules('all')
+            recreate_subscription
+          end
+
+          PaymentsMailer.subscription_canceled(account.id).deliver_now
         end
       end
     end
@@ -33,18 +41,22 @@ module Payments
                        Time.zone.at(invoice.next_payment_attempt).to_datetime
                      end
 
-      account.invoices.where(invoice_id: invoice.id).update_all(
-        status: status,
-        attempts: invoice.attempt_count,
-        next_attempt: next_attempt
-      )
+      account.invoices.find_by(invoice_id: invoice.id).tap do |updated_invoice|
+        updated_invoice.update!(
+          status: status,
+          attempts: invoice.attempt_count,
+          next_attempt: next_attempt
+        )
+      end
     end
 
     def create_invoice(invoice)
-      invoice_lines =
-        invoice.lines.data
-               .select { |l| !l.plan.id.eql?('free-plan') && !canceled_modules.include?(l.plan.id) }
-               .map { |l| build_invoice_line(l) }
+      invoice_lines = []
+      invoice.lines.auto_paging_each do |line|
+        next if line.plan.id.eql?('free-plan') || canceled_modules.include?(line.plan.id)
+        invoice_lines.push(line)
+      end
+
       return if invoice_lines.empty? ||
           Stripe::Subscription.retrieve(invoice.subscription).status == 'trialing'
 
@@ -60,7 +72,9 @@ module Payments
         tax_percent: invoice.tax_percent,
         total: invoice.total,
         address: account.invoice_company_info,
-        lines: InvoiceLines.new(data: invoice_lines)
+        period_start: Time.zone.at(invoice_lines.map { |l| l.period.start }.max),
+        period_end: Time.zone.at(invoice_lines.map { |l| l.period.end }.max),
+        lines: InvoiceLines.new(data: invoice_lines.map { |line| build_invoice_line(line) })
       )
     end
 
@@ -91,9 +105,7 @@ module Payments
       )
     end
 
-    def recreate_subscription(subscription)
-      return unless subscription.status.eql?('canceled')
-
+    def recreate_subscription
       subscription = Stripe::Subscription.create(
         customer: account.customer_id,
         plan: 'free-plan',
@@ -104,9 +116,7 @@ module Payments
       account.update!(subscription_id: subscription.id)
     end
 
-    def clear_modules(scope, subscription = nil)
-      return if subscription.present? && !subscription.status.eql?('canceled')
-
+    def clear_modules(scope)
       case scope
       when 'all' then account.available_modules.delete_all
       when 'canceled' then account.available_modules.clean

@@ -11,6 +11,14 @@ FactoryGirl.define do
       subscription_id { SecureRandom.hex }
     end
 
+    trait :with_available_modules do
+      available_modules {
+        modules = Payments::AvailableModules.new
+        modules.add(id: 'filevault')
+        modules
+      }
+    end
+
     trait :with_billing_information do
       invoice_company_info {
         {

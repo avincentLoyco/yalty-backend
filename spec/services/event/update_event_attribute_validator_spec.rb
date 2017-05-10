@@ -7,7 +7,7 @@ RSpec.describe UpdateEventAttributeValidator, type: :service do
     create(:employee_event, event_type: 'hired', effective_at: 2.days.from_now.at_beginning_of_day)
   end
 
-  let(:profile_picture) { create :employee_file, :with_jpg }
+  let(:profile_picture) { create :generic_file, :with_jpg }
   let!(:employee) do
     create(:employee, :with_attributes,
       account: account,

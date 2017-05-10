@@ -2,5 +2,17 @@
   "before_migration": [
   ],
   "after_migration": [
+    {
+      "task_name": "add_fileable_type_to_employee_files",
+      "description": [
+        "Set file type for existing files"
+      ]
+    },
+    {
+      "task_name": "payments:generate_pdf_for_invoices",
+      "description": [
+        "Generate PDF for existing invoices"
+      ]
+    }
   ]
 }

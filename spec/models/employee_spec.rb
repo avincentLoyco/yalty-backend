@@ -183,10 +183,10 @@ RSpec.describe Employee, type: :model do
       end
     end
 
-    context 'for employee_files' do
-      let(:employee_files) { create_list(:employee_file, 2, :with_jpg) }
+    context 'for generic_files' do
+      let(:generic_files) { create_list(:generic_file, 2, :with_jpg) }
       let!(:employee_attributes) do
-        employee_files.each do |file|
+        generic_files.each do |file|
           create(:employee_attribute, employee: employee, attribute_type: 'File', data: {
             id: file.id,
             size: file.file_file_size,
@@ -195,7 +195,7 @@ RSpec.describe Employee, type: :model do
           })
         end
       end
-      let(:total_amount_of_data) { employee_files.sum(&:file_file_size) / (1024.0 * 1024.0) }
+      let(:total_amount_of_data) { generic_files.sum(&:file_file_size) / (1024.0 * 1024.0) }
 
       it { expect(employee.total_amount_of_data).to eq(total_amount_of_data.round(2)) }
       it { expect(employee.number_of_files).to eq(2) }

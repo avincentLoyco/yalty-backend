@@ -45,13 +45,17 @@ RSpec.describe Payments::StripeEventsHandler, type: :job do
       starting_balance: 0,
       subtotal: 0,
       total: 0,
-      subscription: subscription.id
+      subscription: subscription.id,
+      charge: 'charge_id',
+      period_start: Time.zone.now.to_i,
+      period_end: 1.month.from_now.to_i
     )
   end
 
   let(:invoice_items) do
     stripe_invoice_items = Stripe::ListObject.new
     stripe_invoice_items.object = 'list'
+    stripe_invoice_items.has_more = false
     stripe_invoice_items.data = [invoice_item_free, invoice_item_payed]
     stripe_invoice_items
   end
@@ -117,6 +121,10 @@ RSpec.describe Payments::StripeEventsHandler, type: :job do
       ::Payments::PlanModule.new(id: 'exports', canceled: true)
     ]
     account.update(available_modules: ::Payments::AvailableModules.new(data: modules))
+    allow(::Payments::CreateInvoicePdf).to receive_message_chain(:new, :call)
+    allow(PaymentsMailer).to receive_message_chain(:subscription_canceled, :deliver_now)
+    allow(PaymentsMailer).to receive_message_chain(:payment_succeeded, :deliver_now)
+    allow(PaymentsMailer).to receive_message_chain(:payment_failed, :deliver_now)
   end
 
   subject(:job) { described_class.perform_now(stripe_event.id) }
@@ -178,6 +186,11 @@ RSpec.describe Payments::StripeEventsHandler, type: :job do
       it { expect(account.invoices.find_by(invoice_id: invoice_id).status).to eq('failed') }
       it { expect(account.invoices.last.receipt_number).to eq(nil) }
     end
+
+    it 'sends email' do
+      expect(PaymentsMailer).to receive(:payment_failed).with(existing_invoice.id).once
+      job
+    end
   end
 
   context 'when event is invoice.payment_succeeded' do
@@ -193,7 +206,15 @@ RSpec.describe Payments::StripeEventsHandler, type: :job do
       it { expect(account.invoices.last.reload.receipt_number).not_to eq(nil) }
     end
 
-    xit 'generates pdf file'
+    it 'generates pdf file' do
+      expect(::Payments::CreateInvoicePdf).to receive(:new).with(existing_invoice)
+      job
+    end
+
+    it 'sends email' do
+      expect(PaymentsMailer).to receive(:payment_succeeded).with(existing_invoice.id).once
+      job
+    end
   end
 
   context 'when event is customer.subscription.updated' do
@@ -203,12 +224,24 @@ RSpec.describe Payments::StripeEventsHandler, type: :job do
     context "when status is not 'canceled'" do
       before { job }
       it { expect(account.reload.available_modules.all).to match_array(['filevault', 'exports']) }
+      it { expect(PaymentsMailer).to_not have_received(:subscription_canceled) }
+      it { expect(Stripe::Subscription).to_not have_received(:create) }
     end
 
     context "when status is 'canceled'" do
       let(:status) { 'canceled' }
-      before { job }
-      it { expect(account.reload.available_modules.data.map(&:id)).to eq([]) }
+
+      it 'clears modules' do
+        expect { job }
+          .to change { account.reload.available_modules.actives }
+          .from(['filevault'])
+          .to([])
+      end
+
+      it 'sends email' do
+        expect(PaymentsMailer).to receive(:subscription_canceled).with(account.id).once
+        job
+      end
     end
   end
 end
