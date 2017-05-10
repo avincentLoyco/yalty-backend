@@ -27,8 +27,7 @@ namespace :payments do
         next unless stripe_in.id.eql?(invoice.invoice_id)
         invoice.update!(
           period_start: Time.zone.at(stripe_in.period_start),
-          period_end: Time.zone.at(stripe_in.period_end),
-          charge_id: stripe_in.charge
+          period_end: Time.zone.at(stripe_in.period_end)
         )
         break
       end
