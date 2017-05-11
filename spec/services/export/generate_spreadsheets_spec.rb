@@ -6,9 +6,9 @@ RSpec.describe Export::GenerateSpreadsheets, type: :service do
     it { expect(FileUtils.compare_file(file_path, fixture)).to be true }
   end
 
-  # let(:folder_path)  { Rails.application.config.file_upload_root_path }
   before(:all) { ENV['TEST_ENV_NUMBER'] = '1' if ENV['TEST_ENV_NUMBER'].nil? }
-  let(:folder_path) { Rails.root.join('spec', 'tmp', ENV['TEST_ENV_NUMBER']) }
+
+  let(:folder_path)  { Rails.root.join('spec', 'tmp', ENV['TEST_ENV_NUMBER']) }
   let(:file_path)    { folder_path.join(file_name) }
   let(:fixture)      { Rails.root.join('spec', 'fixtures', 'files', fixture_name) }
 

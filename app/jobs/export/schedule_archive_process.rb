@@ -13,7 +13,7 @@ module Export
 
     def perform(account)
       ::Export::CreateArchiveZip.new(account).call
-      ExportMailer.archive_generation(account.id).deliver_now
+      ExportMailer.archive_generation(account).deliver_now
       account.update!(archive_processing: false)
     end
   end
