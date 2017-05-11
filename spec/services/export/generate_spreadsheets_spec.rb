@@ -6,7 +6,9 @@ RSpec.describe Export::GenerateSpreadsheets, type: :service do
     it { expect(FileUtils.compare_file(file_path, fixture)).to be true }
   end
 
-  let!(:folder_path) { Rails.application.config.file_upload_root_path }
+  # let(:folder_path)  { Rails.application.config.file_upload_root_path }
+  before(:all) { ENV['TEST_ENV_NUMBER'] = '1' if ENV['TEST_ENV_NUMBER'].nil? }
+  let(:folder_path) { Rails.root.join('spec', 'tmp', ENV['TEST_ENV_NUMBER']) }
   let(:file_path)    { folder_path.join(file_name) }
   let(:fixture)      { Rails.root.join('spec', 'fixtures', 'files', fixture_name) }
 
@@ -23,11 +25,13 @@ RSpec.describe Export::GenerateSpreadsheets, type: :service do
   subject { described_class.new(account, folder_path).call }
 
   before { FileUtils.mkdir_p(folder_path) }
+  after { FileUtils.rm_rf(folder_path) }
 
   context 'generates time_off csv file' do
     let(:file_name) { 'time_offs.csv' }
 
     context 'without time offs' do
+      let(:spec_name) { "without_time_offs" }
       let(:fixture_name) { 'empty_time_offs_test.csv' }
 
       before { subject }
@@ -37,6 +41,7 @@ RSpec.describe Export::GenerateSpreadsheets, type: :service do
 
     context 'with time offs' do
       let(:fixture_name)      { 'time_offs_test.csv' }
+      let(:spec_name) { "with_time_offs" }
 
       let(:sickness_category) { account.time_off_categories.find_by(name: 'sickness') }
       let(:accident_category) { account.time_off_categories.find_by(name: 'accident') }
@@ -63,6 +68,7 @@ RSpec.describe Export::GenerateSpreadsheets, type: :service do
     let(:file_name) { 'working_hours.csv' }
 
     context 'with no registered working times' do
+      let(:spec_name) { "without_registered" }
       let(:fixture_name) { 'empty_working_hours_test.csv' }
       before { subject }
 
@@ -70,6 +76,7 @@ RSpec.describe Export::GenerateSpreadsheets, type: :service do
     end
 
     context 'with registered working time' do
+      let(:spec_name) { "with_registered" }
       let(:fixture_name) { 'working_hours_test.csv' }
 
       before do
