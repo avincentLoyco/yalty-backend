@@ -127,7 +127,7 @@ class Employee::Balance < ActiveRecord::Base
 
     return unless !balance_type.eql?('reset') && contract_end.present? &&
         contract_end > employee.hired_date_for(effective_at) &&
-        (contract_end + 1.day) + Employee::Balance::END_OF_PERIOD_OFFSET < effective_at
+        (contract_end + 1.day) + Employee::Balance::REMOVAL_OFFSET < effective_at
     errors.add(:effective_at, 'Employee Balance can not be added after employee contract end date')
   end
 

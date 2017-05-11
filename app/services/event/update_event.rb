@@ -28,9 +28,8 @@ class UpdateEvent
 
   def handle_contract_end
     return unless event.event_type.eql?('contract_end') && old_effective_at != event.effective_at
-    tables = %w(employee_time_off_policies employee_presence_policies employee_working_places)
     reset_effective_at = old_effective_at + 1.day
-    tables.each do |table_name|
+    Employee::RESOURCE_JOIN_TABLES.each do |table_name|
       event.employee.send(table_name).with_reset.where(effective_at: reset_effective_at).delete_all
       next unless table_name.eql?('employee_time_off_policies')
       event.employee.employee_balances.where(

@@ -65,7 +65,7 @@ class RelatedPolicyPeriod
       if %w(addition assignation).include?(balance_type) && in_start_date?(date)
         validity_date_for_period_start(date)
       else
-        validity_date_for_period_time(date)
+        validity_date_for_period_time(date, balance_type)
       end
     verify_with_contract_periods(date, validity_date, balance_type)
   end
@@ -91,10 +91,14 @@ class RelatedPolicyPeriod
     validity_date
   end
 
-  def validity_date_for_period_time(date)
+  def validity_date_for_period_time(date, balance_type)
     start_date = Date.new(date.year, start_month, start_day)
-    start_date -= 1.year if date.to_date <= start_date && years_to_effect.positive?
-    validity_date_for_period_start(start_date)
+    if date.to_date <= start_date && years_to_effect.positive? && !balance_type.eql?('time_off')
+      start_date -= 1.year
+    end
+    validity_date = validity_date_for_period_start(start_date)
+    validity_date += 1.year if validity_date < date
+    validity_date
   end
 
   def previous_addition(date)

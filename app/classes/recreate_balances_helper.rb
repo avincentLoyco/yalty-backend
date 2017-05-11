@@ -163,9 +163,7 @@ class RecreateBalancesHelper
     balances_with_time_offs.each do |balance|
       balance_etop = etop.present? ? etop : first_etop_before(balance.effective_at)
       new_date = find_validity_date(balance_etop, balance.effective_at, 'time_off')
-      if new_date != balance.validity_date
-        UpdateEmployeeBalance.new(balance, validity_date: new_date).call
-      end
+      UpdateEmployeeBalance.new(balance).call if new_date != balance.validity_date
     end
   end
 

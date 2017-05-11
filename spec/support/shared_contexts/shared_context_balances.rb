@@ -45,7 +45,7 @@ RSpec.shared_context 'shared_context_balances' do |settings|
       let!(:previous_removal) do
         create(:employee_balance_manual,
           resource_amount: -900, employee: employee, time_off_category: category,
-          balance_credit_additions: [previous_add],
+          balance_credit_additions: [previous_add], balance_type: 'removal',
           effective_at: previous.last + Employee::Balance::REMOVAL_OFFSET
         )
       end
@@ -90,7 +90,7 @@ RSpec.shared_context 'shared_context_balances' do |settings|
       create(:employee_balance_manual,
         resource_amount: 1000, employee: employee, time_off_category: category,
         effective_at: current.first + Employee::Balance::ADDITION_OFFSET,
-        validity_date: current.last, balance_type: 'addition'
+        validity_date: current.last + Employee::Balance::REMOVAL_OFFSET, balance_type: 'addition'
       )
     end
   else

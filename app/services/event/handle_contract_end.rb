@@ -1,7 +1,4 @@
 class HandleContractEnd
-  JOIN_TABLES =
-    %w(employee_time_off_policies employee_presence_policies employee_working_places).freeze
-
   def initialize(employee, contract_end_date, old_contract_end = nil)
     @employee = employee
     @contract_end_date = contract_end_date
@@ -24,7 +21,7 @@ class HandleContractEnd
   private
 
   def remove_join_tables
-    join_tables = JOIN_TABLES.map do |table_name|
+    join_tables = Employee::RESOURCE_JOIN_TABLES.map do |table_name|
       @employee.send(table_name).where('effective_at > ?', @contract_end_date)
     end
     return join_tables.map(&:delete_all) if @next_hire_date.nil?
@@ -52,7 +49,9 @@ class HandleContractEnd
 
   def remove_balances
     balances_after =
-      @employee.employee_balances.where('effective_at > ?', @contract_end_date + 1.day).not_time_off
+      @employee
+      .employee_balances
+      .not_time_off.where('effective_at > ?', @contract_end_date + 1.day + 2.seconds)
     return balances_after.delete_all unless @next_hire_date.present?
     balances_after.where('effective_at < ?', @next_hire_date).delete_all
   end

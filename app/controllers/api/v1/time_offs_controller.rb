@@ -100,7 +100,6 @@ module API
           balance_type: 'time_off',
           resource_amount: resource.balance,
           manual_amount: params[:manual_amount] || 0,
-          validity_date: find_validity_date(resource),
           effective_at: resource.end_time
         ).call
       end
@@ -123,21 +122,9 @@ module API
         params[:end_time] = params.delete(:end_time) + '+00:00'
       end
 
-      def find_validity_date(resource)
-        active_policy =
-          employee.active_policy_in_category_at_date(time_off_category.id, resource.end_time)
-
-        RelatedPolicyPeriod
-          .new(active_policy)
-          .validity_date_for_balance_at(resource.end_time, 'time_off')
-      end
-
       def find_effective_at(previous_start_time)
-        if previous_start_time && previous_start_time < resource.start_time
-          previous_start_time
-        else
-          resource.start_time
-        end
+        previous_start_time if previous_start_time && previous_start_time < resource.start_time
+        resource.start_time
       end
     end
   end

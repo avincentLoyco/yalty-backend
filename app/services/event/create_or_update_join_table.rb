@@ -103,12 +103,8 @@ class CreateOrUpdateJoinTable
       if related_balances.present?
         assignation_balance.destroy!
       else
-        validity_date =
-          RelatedPolicyPeriod
-          .new(join_table_resource)
-          .validity_date_for_balance_at(assignation_effective_at, 'assignation')
         UpdateEmployeeBalance.new(
-          assignation_balance, effective_at: assignation_effective_at, validity_date: validity_date
+          assignation_balance, effective_at: assignation_effective_at
         ).call
       end
     end

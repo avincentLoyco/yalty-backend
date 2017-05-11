@@ -169,9 +169,9 @@ class Employee::Event < ActiveRecord::Base
   def hired_without_events_and_join_tables_after?
     event_type.eql?('hired') &&
       employee.events.where('effective_at >= ?', effective_at).where.not(id: id).empty? &&
-      employee.employee_time_off_policies.active_at(Time.zone.now).empty? &&
-      PresencePolicy.active_for_employee(employee.id, Time.zone.now).nil? &&
-      WorkingPlace.active_for_employee(employee.id, Time.zone.now).nil?
+      employee.employee_time_off_policies.not_reset.active_at(Time.zone.now).empty? &&
+      PresencePolicy.not_reset.active_for_employee(employee.id, Time.zone.now).nil? &&
+      WorkingPlace.not_reset.active_for_employee(employee.id, Time.zone.now).nil?
   end
 
   def contract_end_without_rehired_after?

@@ -6,6 +6,9 @@ class Employee < ActiveRecord::Base
                    'partnership_dissolution' => 'dissolved partnership',
                    'partner_death' => 'dissolved partnership due to death' }.freeze
 
+  RESOURCE_JOIN_TABLES =
+    %w(employee_time_off_policies employee_working_places employee_presence_policies).freeze
+
   belongs_to :account, inverse_of: :employees, required: true
   belongs_to :user,
     class_name: 'Account::User',

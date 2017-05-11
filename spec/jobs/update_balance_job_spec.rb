@@ -139,9 +139,11 @@ RSpec.describe UpdateBalanceJob do
 
         shared_examples 'Update of current period balances params' do
           it { expect { subject }.to change { balance.reload.being_processed } }
-          it { expect { subject }.to change { balance.reload.balance } }
           it { expect { subject }.to change { balance_add.reload.being_processed } }
           it { expect { subject }.to change { balance_add.reload.balance } }
+          it do
+            expect { subject }.to change { Employee::Balance.where(balance_type: 'removal').count }
+          end
         end
 
         shared_examples 'Update of previous period balances params' do
@@ -197,7 +199,7 @@ RSpec.describe UpdateBalanceJob do
           let(:options) { { manual_amount: -500, effective_at: '1/3/2017' } }
 
           it { expect { subject }.to change { previous_balance.reload.effective_at } }
-          it { expect { subject }.to change { previous_balance.reload.balance }.to(500) }
+          it { expect { subject }.to change { previous_balance.reload.manual_amount }.to(-500) }
           it { expect { subject }.to change { previous_removal.reload.amount }.to(-1000) }
 
           it { expect { subject }.to change { balance.reload.being_processed } }

@@ -39,10 +39,7 @@ module API
 
       def destroy
         authorize! :destroy, resource
-        employee = resource.employee
-        resource.destroy!
-        ::Payments::UpdateSubscriptionQuantity.perform_now(employee.account) if run_quantity_job?
-        RemoveEmployee.new(employee).call unless employee.hired_events?
+        DeleteEvent.new(resource).call
         render_no_content
       end
 

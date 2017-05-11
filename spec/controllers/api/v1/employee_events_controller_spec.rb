@@ -823,7 +823,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     end
   end
 
-  context 'PUT #update' do
+  describe 'PUT #update' do
     subject { put :update, json_payload }
 
     let(:json_payload) do
@@ -1349,7 +1349,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     end
   end
 
-  context 'GET #index' do
+  describe 'GET #index' do
     before(:each) do
       create_list(:employee_event, 3, account: account, employee: employee)
     end
@@ -1507,7 +1507,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     end
   end
 
-  context 'DELETE #destroy' do
+  describe 'DELETE #destroy' do
     shared_examples 'cannot destroy event' do
       before { delete_event }
 
@@ -1640,7 +1640,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           create(:employee_presence_policy, employee: employee, effective_at:rehired.effective_at)
         end
 
-        # it_behaves_like 'cannot destroy event'
+        it_behaves_like 'cannot destroy event'
       end
 
       context 'without EPP' do
@@ -1675,16 +1675,50 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     end
 
     context 'removing contract_end' do
-      let!(:contract_end) do
-        create(:employee_event, employee: employee, effective_at: event.effective_at + 1.month,
+      let(:contract_end) do
+        create(:employee_event, employee: employee, effective_at: Time.zone.today,
           event_type: 'contract_end')
       end
       let(:event_to_delete_id) { contract_end.id }
 
       context 'without rehired' do
-        before { delete_event }
+        context 'when employee does not have join tables assigned' do
+          before { delete_event }
 
-        it { expect(response.status).to eq(204) }
+          it { expect(response.status).to eq(204) }
+        end
+
+        context 'when employee has join tables assigned' do
+          before do
+            create(:employee_working_place, employee: employee, effective_at: 1.year.ago)
+            create(:employee_presence_policy, employee: employee, effective_at: 1.year.ago)
+            categories = create_list(:time_off_category, 2, account: account)
+            policies =
+              categories.map do |category|
+                create(:time_off_policy, time_off_category: category)
+              end
+            policies.map do |policy|
+              create(:employee_time_off_policy, :with_employee_balance,
+                employee: employee, effective_at: 1.year.ago, time_off_policy: policy)
+            end
+            create(:employee_time_off_policy, :with_employee_balance,
+              employee: employee, effective_at: 2.years.ago, time_off_policy: policies.first)
+            contract_end
+          end
+
+          it { expect { subject }.to change { EmployeePresencePolicy.with_reset.count }.by(-1) }
+          it { expect { subject }.to change { EmployeeWorkingPlace.with_reset.count }.by(-1) }
+          it { expect { subject }.to change { EmployeeTimeOffPolicy.with_reset.count }.by(-2) }
+          it do
+            expect { subject }
+              .to change { Employee::Balance.where(balance_type: 'reset').count }.by(-2)
+          end
+          it do
+            expect { subject }.to change { Employee::Balance.where(balance_type: 'addition').count }
+          end
+
+          it { is_expected.to have_http_status(204) }
+        end
       end
 
       context 'with rehired after' do
@@ -1702,24 +1736,24 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           delete_event
         end
       end
+    end
 
-      context 'removing any other event' do
-        let!(:any_other_event) do
-          create(:employee_event, employee: employee, effective_at: event.effective_at + 1.month)
-        end
-        let(:event_to_delete_id) { any_other_event.id }
+    context 'removing any other event' do
+      let!(:any_other_event) do
+        create(:employee_event, employee: employee, effective_at: event.effective_at + 1.month)
+      end
+      let(:event_to_delete_id) { any_other_event.id }
 
-        context 'response' do
-          before { delete_event }
+      context 'response' do
+        before { delete_event }
 
-          it { expect(response.status).to eq(204) }
-        end
+        it { expect(response.status).to eq(204) }
+      end
 
-        context 'UpdateSubscriptionQuantity job' do
-          it 'is not scheduled' do
-            expect(::Payments::UpdateSubscriptionQuantity).to_not receive(:perform_now).with(account)
-            delete_event
-          end
+      context 'UpdateSubscriptionQuantity job' do
+        it 'is not scheduled' do
+          expect(::Payments::UpdateSubscriptionQuantity).to_not receive(:perform_now).with(account)
+          delete_event
         end
       end
 
