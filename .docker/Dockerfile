@@ -67,6 +67,7 @@ RUN set -ex \
   ' \
   && runDeps='\
     ImageMagick-devel \
+    zip \
   ' \
   && cat /etc/yum.repos.d/CentOS-Base.repo \
     | sed -n -f /update-yum-base-config.sed \
@@ -95,6 +96,8 @@ COPY . /code
 
 RUN mkdir -p  /code/log
 RUN mkdir -p  /code/tmp/pids
+
+VOLUME /code/files
 
 EXPOSE $RAILS_PORT
 CMD ["/docker-run.sh"]
