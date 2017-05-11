@@ -34,7 +34,7 @@ module Export
 
     def zip_and_assign_archive(archive_dir_path)
       archive_zip_path = archive_dir_path.to_s + '.zip'
-      system("zip -r -9 #{archive_zip_path} #{archive_dir_path}")
+      `zip -r -9 "#{archive_zip_path}" "#{archive_dir_path}"`
       zip_file = File.open(archive_zip_path)
 
       @account.transaction do

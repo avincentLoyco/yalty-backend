@@ -6,8 +6,8 @@ RSpec.describe Export::GenerateSpreadsheets, type: :service do
     it { expect(FileUtils.compare_file(file_path, fixture)).to be true }
   end
 
-  let!(:folder_path) { Rails.root.join('spec', 'tmp', 'files') }
-  let(:file_path)    { "#{folder_path}/#{file_name}" }
+  let!(:folder_path) { Rails.application.config.file_upload_root_path }
+  let(:file_path)    { folder_path.join(file_name) }
   let(:fixture)      { Rails.root.join('spec', 'fixtures', 'files', fixture_name) }
 
   let!(:employees) do
@@ -22,8 +22,7 @@ RSpec.describe Export::GenerateSpreadsheets, type: :service do
 
   subject { described_class.new(account, folder_path).call }
 
-  before(:context) { FileUtils.mkdir_p(Rails.root.join('spec', 'tmp', 'files')) }
-  after(:context)  { FileUtils.rm_r(Rails.root.join('spec', 'tmp')) }
+  before { FileUtils.mkdir_p(folder_path) }
 
   context 'generates time_off csv file' do
     let(:file_name) { 'time_offs.csv' }

@@ -237,24 +237,6 @@ CREATE TABLE employee_balances (
 
 
 --
-<<<<<<< HEAD
-=======
--- Name: employee_files; Type: TABLE; Schema: public; Owner: -; Tablespace:
---
-
-CREATE TABLE employee_files (
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
-    created_at timestamp without time zone,
-    updated_at timestamp without time zone,
-    file_file_name character varying,
-    file_content_type character varying,
-    file_file_size integer,
-    file_updated_at timestamp without time zone
-);
-
-
---
->>>>>>> [YWA-1347] Add ExportsController (#359)
 -- Name: employee_presence_policies; Type: TABLE; Schema: public; Owner: -; Tablespace:
 --
 
@@ -312,7 +294,6 @@ CREATE TABLE employees (
 
 
 --
-<<<<<<< HEAD
 -- Name: generic_files; Type: TABLE; Schema: public; Owner: -; Tablespace:
 --
 
@@ -331,8 +312,6 @@ CREATE TABLE generic_files (
 
 
 --
-=======
->>>>>>> [YWA-1347] Add ExportsController (#359)
 -- Name: holiday_policies; Type: TABLE; Schema: public; Owner: -; Tablespace:
 --
 
@@ -656,8 +635,8 @@ CREATE TABLE working_places (
     street character varying(60),
     street_number character varying(10),
     timezone character varying,
-    state_code character varying(60),
     reset boolean DEFAULT false NOT NULL,
+    state_code character varying(60),
     country_code character varying
 );
 
@@ -1089,7 +1068,6 @@ CREATE UNIQUE INDEX index_employees_on_id_and_account_id ON employees USING btre
 
 
 --
-<<<<<<< HEAD
 -- Name: index_generic_files_on_fileable_id_and_fileable_type; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
@@ -1097,8 +1075,6 @@ CREATE INDEX index_generic_files_on_fileable_id_and_fileable_type ON generic_fil
 
 
 --
-=======
->>>>>>> [YWA-1347] Add ExportsController (#359)
 -- Name: index_holiday_policies_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
