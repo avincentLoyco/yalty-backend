@@ -1,4 +1,5 @@
 class CreateCompletePresencePolicy
+  include API::V1::Exceptions
   attr_reader :presence_policie, :params
 
   def initialize(presence_policie, params)
