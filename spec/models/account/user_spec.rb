@@ -231,4 +231,55 @@ RSpec.describe Account::User, type: :model do
       end
     end
   end
+
+  context 'yalty role' do
+    subject { create(:account_user, email: email, role: 'yalty') }
+
+    let!(:email) { ENV['YALTY_ACCESS_EMAIL'] = 'access@example.com' }
+
+    it 'should not be changed to another role' do
+      subject.role = 'account_owner'
+      expect(subject).to_not be_valid
+    end
+
+    it 'should not allowed to update email' do
+      subject.email = 'another@email.com'
+      expect(subject).to_not be_valid
+    end
+
+    it 'should not allowed to update password' do
+      subject.password = '1234567890'
+      subject.password_confirmation = '1234567890'
+      expect(subject).to_not be_valid
+    end
+
+    it 'should not allowed to add related employee' do
+      user = build(:account_user, email: email, role: 'yalty')
+      user.employee = create(:employee)
+      expect(user).to_not be_valid
+
+      subject.employee = create(:employee)
+      expect(subject).to_not be_valid
+    end
+
+    it 'should not be allowed to exist more than once per account' do
+      user = build(:account_user, account: subject.account, email: email, role: 'yalty')
+      expect(user).to_not be_valid
+    end
+
+    it 'should not allow usage of yalty user email to user withtout yalty role' do
+      user = build(:account_user, email: email, role: 'account_administrator')
+      expect(user).to_not be_valid
+    end
+
+    it 'should allow usage of yalty user email to user with yalty role' do
+      user = build(:account_user, email: email, role: 'yalty')
+      expect(user).to be_valid
+    end
+
+    it 'should require yalty user email for user with yalty role' do
+      user = build(:account_user, email: 'another.email@example.com', role: 'yalty')
+      expect(user).to_not be_valid
+    end
+  end
 end

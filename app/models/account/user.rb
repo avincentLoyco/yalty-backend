@@ -8,11 +8,15 @@ class Account::User < ActiveRecord::Base
   validates :email, presence: true
   validates :email, format: { with: /\b[A-Z0-9._%a-z\-]+@(?:[A-Z0-9a-z\-]+\.)+[A-Za-z]{2,}\z/ }
   validates :email, uniqueness: { scope: :account_id, case_sensitive: false }
+  validates :email, exclusion: { in: [ENV['YALTY_ACCESS_EMAIL']] }, if: ->() { !role.eql?('yalty') }
   validates :password, length: { in: 8..74 }, if: ->() { !password.nil? }
   validates :reset_password_token, uniqueness: true, allow_nil: true
-  validates :role, presence: true, inclusion: { in: %w(user yalty account_administrator account_owner) }
+  validates :role,
+    presence: true,
+    inclusion: { in: %w(user yalty account_administrator account_owner) }
   validates :locale, inclusion: { in: I18n.available_locales.map(&:to_s) }, allow_nil: true
   validate :validate_role_update, if: :role_changed?, on: :update
+  validate :validate_yalty_role, if: -> { role.eql?('yalty') }
 
   belongs_to :account, inverse_of: :users, required: true
   belongs_to :referrer, primary_key: :email, foreign_key: :email
@@ -73,10 +77,31 @@ class Account::User < ActiveRecord::Base
   end
 
   def validate_role_update
-    return true unless role_changed? && role_was.eql?('account_owner') &&
-        !account.users.where.not(id: id).where(role: 'account_owner').exists?
+    if role_changed? && role_was.eql?('yalty')
+      errors.add(:role, "yalty role cannot be changed to #{role}")
+    elsif role_changed? && role_was.eql?('account_owner') &&
+      !account.users.where.not(id: id).where(role: 'account_owner').exists?
+      errors.add(:role, 'last account owner cannot change role')
+    else
+      return true
+    end
+    false
+  end
 
-    errors.add(:role, 'last account owner cannot change role')
+  def validate_yalty_role
+    if persisted? && email_changed?
+      errors.add(:email, 'is not allowed to be changed for yalty role')
+    elsif persisted? && password_digest_changed?
+      errors.add(:password, 'is not allowed to be changed for yalty role')
+    elsif employee.present?
+      errors.add(:employee, 'is not allowed to be an employee for yalty role')
+    elsif account.users.where.not(id: id).where(role: 'yalty').exists?
+      errors.add(:role, 'is allowed only once per account')
+    elsif !email.eql?(ENV['YALTY_ACCESS_EMAIL'])
+      errors.add(:email, "is restricted to #{ENV['YALTY_ACCESS_EMAIL']} for yalty role")
+    else
+      return true
+    end
     false
   end
 
