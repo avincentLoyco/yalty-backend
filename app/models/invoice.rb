@@ -9,4 +9,5 @@ class Invoice < ActiveRecord::Base
   has_one :generic_file, as: :fileable
   validates :invoice_id, :status, :date, :amount_due, presence: true
   validates :status, inclusion: { in: POSSIBLE_STATUSES }
+  validates :invoice_id, uniqueness: true
 end

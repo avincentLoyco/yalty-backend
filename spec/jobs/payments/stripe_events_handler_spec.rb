@@ -127,6 +127,21 @@ RSpec.describe Payments::StripeEventsHandler, type: :job do
     allow(PaymentsMailer).to receive_message_chain(:payment_failed, :deliver_now)
   end
 
+  shared_examples 'not creating invoice with free-plan only' do
+    before { invoice_items.data = [invoice_item_free] }
+
+    it { expect { job }.to_not change { account.invoices.count } }
+    it { expect { job }.to_not change { account.available_modules.size } }
+
+    context 'does not invoke any other serivces' do
+      before { job }
+
+      it { expect(PaymentsMailer).to_not have_received(:payment_succeeded) }
+      it { expect(PaymentsMailer).to_not have_received(:payment_failed) }
+      it { expect(::Payments::CreateInvoicePdf).to_not have_received(:new) }
+    end
+  end
+
   subject(:job) { described_class.perform_now(stripe_event.id) }
 
   context 'when event status is invoice.created' do
@@ -143,11 +158,7 @@ RSpec.describe Payments::StripeEventsHandler, type: :job do
       it { expect { job }.to change { account.reload.invoices.size }.by 1 }
     end
 
-    context 'should not create invoice if only free-plan is subscribed' do
-      before { invoice_items.data = [invoice_item_free] }
-
-      it { expect { job }.to_not change { account.invoices.count } }
-    end
+    it_behaves_like 'not creating invoice with free-plan only'
 
     context 'should not create invoice if in trial period' do
       before { subscription.status = 'trialing' }
@@ -172,48 +183,83 @@ RSpec.describe Payments::StripeEventsHandler, type: :job do
         expect(account.reload.available_modules.all).to match_array(['filevault'])
       end
     end
+
+    context 'but invoice was created already' do
+      let(:existing_invoice) { create(:invoice, invoice_id: event_object.id) }
+
+      before { account.update(invoices: [existing_invoice]) }
+
+      it { expect { job }.to_not change { Invoice.count } }
+      it { expect { job }.to change { account.reload.available_modules.size }.from(2).to(1) }
+    end
   end
 
   context 'when event is invoice.payment_failed' do
-    before { account.update(invoices: [existing_invoice]) }
-    let(:existing_invoice) { create :invoice }
     let(:event_type) { 'invoice.payment_failed' }
     let(:event_object) { invoice }
-    let(:invoice_id) { existing_invoice.invoice_id }
+    let(:existing_invoice) { create(:invoice, invoice_id: event_object.id) }
+    let(:account_invoice) { account.invoices.find_by(invoice_id: event_object.id) }
 
-    context 'change invoice status to failed and does not change receipt number' do
+    shared_examples 'failed status and unchanged receipt_number' do
       before { job }
-      it { expect(account.invoices.find_by(invoice_id: invoice_id).status).to eq('failed') }
-      it { expect(account.invoices.last.receipt_number).to eq(nil) }
+
+      it { expect(account_invoice.status).to eq('failed') }
+      it { expect(account_invoice.receipt_number).to eq(nil) }
     end
 
-    it 'sends email' do
-      expect(PaymentsMailer).to receive(:payment_failed).with(existing_invoice.id).once
-      job
+    shared_examples 'email is sent' do
+      before { job }
+
+      it { expect(PaymentsMailer).to have_received(:payment_failed).with(account_invoice.id).once }
+    end
+
+    context 'invoice was created before' do
+      before { account.update(invoices: [existing_invoice]) }
+
+      it_behaves_like 'failed status and unchanged receipt_number'
+      it_behaves_like 'email is sent'
+    end
+
+    context 'invoice was not created yet' do
+      it { expect { job }.to change { Invoice.count }.by(1) }
+      it_behaves_like 'failed status and unchanged receipt_number'
+      it_behaves_like 'email is sent'
+      it_behaves_like 'not creating invoice with free-plan only'
     end
   end
 
   context 'when event is invoice.payment_succeeded' do
-    before { account.update(invoices: [existing_invoice]) }
-    let(:existing_invoice) { create :invoice }
     let(:event_type) { 'invoice.payment_succeeded' }
     let(:event_object) { invoice }
-    let(:invoice_id) { existing_invoice.invoice_id }
+    let(:existing_invoice) { create(:invoice, invoice_id: event_object.id) }
+    let(:account_invoice) { account.invoices.find_by(invoice_id: event_object.id) }
 
-    context 'change invoice status to success and changes receipt number' do
+    shared_examples 'success status and updated receipt_number' do
       before { job }
-      it { expect(account.invoices.find_by(invoice_id: invoice_id).status).to eq('success') }
-      it { expect(account.invoices.last.reload.receipt_number).not_to eq(nil) }
+
+      it { expect(account_invoice.status).to eq('success') }
+      it { expect(account_invoice.receipt_number).to_not eq(nil) }
     end
 
-    it 'generates pdf file' do
-      expect(::Payments::CreateInvoicePdf).to receive(:new).with(existing_invoice)
-      job
+    shared_examples 'pdf is generated and emails is sent' do
+      before { job }
+
+      it { expect(::Payments::CreateInvoicePdf).to have_received(:new).with(account_invoice) }
+      it { expect(PaymentsMailer).to have_received(:payment_succeeded).with(account_invoice.id).once }
     end
 
-    it 'sends email' do
-      expect(PaymentsMailer).to receive(:payment_succeeded).with(existing_invoice.id).once
-      job
+    context 'invoice was created before' do
+      before { account.update(invoices: [existing_invoice]) }
+
+      it_behaves_like 'success status and updated receipt_number'
+      it_behaves_like 'pdf is generated and emails is sent'
+    end
+
+    context 'invoice was not created yet' do
+      it { expect { job }.to change { Invoice.count }.by(1) }
+      it_behaves_like 'success status and updated receipt_number'
+      it_behaves_like 'pdf is generated and emails is sent'
+      it_behaves_like 'not creating invoice with free-plan only'
     end
   end
 

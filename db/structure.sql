@@ -634,8 +634,8 @@ CREATE TABLE working_places (
     street character varying(60),
     street_number character varying(10),
     timezone character varying,
-    state_code character varying(60),
     reset boolean DEFAULT false NOT NULL,
+    state_code character varying(60),
     country_code character varying
 );
 
@@ -1092,6 +1092,13 @@ CREATE INDEX index_holidays_on_holiday_policy_id ON holidays USING btree (holida
 --
 
 CREATE INDEX index_invoices_on_account_id ON invoices USING btree (account_id);
+
+
+--
+-- Name: index_invoices_on_invoice_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE UNIQUE INDEX index_invoices_on_invoice_id ON invoices USING btree (invoice_id);
 
 
 --
@@ -1738,3 +1745,5 @@ INSERT INTO schema_migrations (version) VALUES ('20170413123051');
 INSERT INTO schema_migrations (version) VALUES ('20170420050113');
 
 INSERT INTO schema_migrations (version) VALUES ('20170426111844');
+
+INSERT INTO schema_migrations (version) VALUES ('20170515081935');
