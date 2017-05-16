@@ -10,7 +10,7 @@ class Account::User < ActiveRecord::Base
   validates :email, uniqueness: { scope: :account_id, case_sensitive: false }
   validates :password, length: { in: 8..74 }, if: ->() { !password.nil? }
   validates :reset_password_token, uniqueness: true, allow_nil: true
-  validates :role, presence: true, inclusion: { in: %w(user account_administrator account_owner) }
+  validates :role, presence: true, inclusion: { in: %w(user yalty account_administrator account_owner) }
   validates :locale, inclusion: { in: I18n.available_locales.map(&:to_s) }, allow_nil: true
   validate :validate_role_update, if: :role_changed?, on: :update
 
@@ -25,6 +25,8 @@ class Account::User < ActiveRecord::Base
     if: -> { stripe_enabled? && (email_changed? || role_changed?) }
   after_destroy :update_stripe_customer_email,
     if: -> { stripe_enabled? && role_was.eql?('account_owner') }
+
+  skip_callback :save, :after, :create_or_update_on_intercom, if: -> { self.role.eql?('yalty') }
 
   def self.current=(user)
     RequestStore.write(:current_account_user, user)
@@ -55,7 +57,7 @@ class Account::User < ActiveRecord::Base
   end
 
   def owner_or_administrator?
-    %w(account_owner account_administrator).include?(role)
+    %w(account_owner account_administrator yalty).include?(role)
   end
 
   private
