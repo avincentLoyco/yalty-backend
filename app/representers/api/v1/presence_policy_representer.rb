@@ -3,6 +3,7 @@ module Api::V1
     def complete
       {
         name: resource.name,
+        standard_day_duration: resource.standard_day_duration,
         deletable: assigned_employees_json.empty?
       }
         .merge(basic)

@@ -114,10 +114,12 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
     let(:first_employee_id) { first_employee.id }
     let(:second_employee_id) { second_employee.id }
     let(:working_place_id) { working_place.id }
+    let(:standard_day_duration) { 123 }
     let(:valid_data_json) do
       {
         name: name,
-        type: "presence_policy",
+        type: 'presence_policy',
+        standard_day_duration: standard_day_duration
       }
     end
 
@@ -140,10 +142,14 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
       it { expect { subject }.to change { PresencePolicy.count }.by(1) }
 
       context 'response' do
+        let(:json_keys) do
+          [:id, :type, :name, :presence_days, :assigned_employees, :standard_day_duration]
+        end
+
         before { subject }
 
         it { is_expected.to have_http_status(201) }
-        it { expect_json_keys( [ :id, :type, :name, :presence_days, :assigned_employees ] ) }
+        it { expect_json_keys(json_keys) }
       end
 
       context 'when days params are present' do
@@ -198,16 +204,29 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
       end
 
       context 'with data that do not pass validation' do
-        let(:name) { '' }
-        subject { post :create, valid_data_json }
+        shared_examples 'params invalid' do |message|
+          subject { post :create, valid_data_json }
 
-        it { expect { subject }.to_not change { PresencePolicy.count } }
+          it { expect { subject }.to_not change { PresencePolicy.count } }
 
-        context 'response' do
-          before { subject }
+          context 'response' do
+            before { subject }
 
-          it { is_expected.to have_http_status(422) }
-          it { expect_json(regex("must be filled")) }
+            it { is_expected.to have_http_status(422) }
+            it { expect_json(regex(message)) }
+          end
+        end
+
+        context 'invalid name' do
+          let(:name) { '' }
+
+          it_behaves_like 'params invalid', 'must be filled'
+        end
+
+        context 'invalid standard_day_duration' do
+          let(:standard_day_duration) { 'asd' }
+
+          it_behaves_like 'params invalid', 'must be an integer'
         end
       end
 
@@ -246,10 +265,12 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
     let(:first_employee_id) { first_employee.id }
     let(:second_employee_id) { second_employee.id }
     let(:working_place_id) { working_place.id }
+    let(:standard_day_duration) { 456 }
     let(:valid_data_json) do
       {
         id: id,
         name: name,
+        standard_day_duration: standard_day_duration,
         type: "presence_policy"
       }
     end
@@ -269,6 +290,8 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
 
     context 'with valid data' do
       subject { put :update, valid_data_json }
+
+      it { expect { subject }.to change { presence_policy.reload.standard_day_duration } }
 
       context 'response' do
         before { subject }

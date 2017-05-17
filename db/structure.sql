@@ -496,7 +496,8 @@ CREATE TABLE presence_policies (
     name character varying,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
-    reset boolean DEFAULT false NOT NULL
+    reset boolean DEFAULT false NOT NULL,
+    standard_day_duration integer
 );
 
 
@@ -1748,5 +1749,7 @@ INSERT INTO schema_migrations (version) VALUES ('20170426111844');
 INSERT INTO schema_migrations (version) VALUES ('20170427084526');
 
 INSERT INTO schema_migrations (version) VALUES ('20170515081935');
+
+INSERT INTO schema_migrations (version) VALUES ('20170517075057');
 
 INSERT INTO schema_migrations (version) VALUES ('20170523121718');

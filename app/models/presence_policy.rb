@@ -11,6 +11,9 @@ class PresencePolicy < ActiveRecord::Base
 
   validates :account_id, :name, presence: true
 
+  before_create :set_standard_day_duration,
+    if: -> { !standard_day_duration.present? && presence_days.any? }
+
   scope :not_reset, -> { where(reset: false) }
   scope :for_account, ->(account_id) { not_reset.where(account_id: account_id) }
 
@@ -24,5 +27,9 @@ class PresencePolicy < ActiveRecord::Base
 
   def last_day_order
     presence_days.pluck(:order).max
+  end
+
+  def set_standard_day_duration
+    self.standard_day_duration = presence_days.map(&:minutes).compact.max
   end
 end
