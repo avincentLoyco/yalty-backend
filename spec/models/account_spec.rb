@@ -134,6 +134,13 @@ RSpec.describe Account, type: :model do
 
   it { is_expected.to have_many(:users).class_name('Account::User').inverse_of(:account) }
 
+  it '#users should not include user with yalty role' do
+    account = create(:account)
+    user = create(:account_user, :with_yalty_role, account: account)
+
+    expect(account.reload.users).to_not include(user)
+  end
+
   it { is_expected.to have_many(:employees).inverse_of(:account) }
 
   it { is_expected.to have_many(:employee_attribute_definitions).class_name('Employee::AttributeDefinition').inverse_of(:account) }

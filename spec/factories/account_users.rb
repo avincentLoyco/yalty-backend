@@ -13,5 +13,10 @@ FactoryGirl.define do
         create(:employee, account: user.account, user: user)
       end
     end
+
+    trait :with_yalty_role do
+      email { ENV['YALTY_ACCESS_EMAIL'] }
+      role { 'yalty' }
+    end
   end
 end

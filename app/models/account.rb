@@ -20,7 +20,7 @@ class Account < ActiveRecord::Base
   validates :default_locale, inclusion: { in: I18n.available_locales.map(&:to_s) }
   validate :referrer_must_exist, if: :referred_by, on: :create
 
-  has_many :users,
+  has_many :users, -> { where.not(role: 'yalty') },
     class_name: 'Account::User',
     inverse_of: :account
   has_many :employees, inverse_of: :account
