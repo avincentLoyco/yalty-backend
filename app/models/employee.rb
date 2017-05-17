@@ -32,29 +32,21 @@ class Employee < ActiveRecord::Base
     where(account_id: account_id)
   end)
 
+  scope(:chargeable_at_date, lambda do |date = Time.zone.now|
+    where(previous_event_sql('hired', date))
+  end)
+
   scope(:active_at_date, lambda do |date = Time.zone.now|
-    where("
-      'hired' = (
-        SELECT employee_events.event_type FROM employee_events
-        WHERE employee_events.effective_at <= ?::date
-        AND employee_events.employee_id = employees.id
-        AND employee_events.event_type IN ('hired', 'contract_end')
-        ORDER BY employee_events.effective_at DESC
-        LIMIT 1
-      )
-    ", date)
+    joins(:events)
+      .where("
+        employee_events.event_type = 'hired' AND
+        employee_events.effective_at >= ?::date OR
+        #{previous_event_sql('hired', date)}", date)
+      .distinct
   end)
 
   scope(:inactive_at_date, lambda do |date = Time.zone.now|
-    joins("
-      LEFT JOIN employee_events AS events
-      ON events.employee_id = employees.id
-      AND events.event_type IN ('hired', 'contract_end')
-      AND events.effective_at <= '#{date}'::date
-    ").where("
-      events IS NULL
-      OR 'contract_end' = (SELECT events.event_type ORDER BY events.effective_at LIMIT 1)
-    ")
+    where.not(id: active_at_date(date).pluck(:id))
   end)
 
   scope(:active_user_by_account, lambda do |account_id|
@@ -75,18 +67,38 @@ class Employee < ActiveRecord::Base
     )
   end)
 
+  class << self
+    def active_employee_ratio_per_account(account_id)
+      active_employee_count = Employee.active_by_account(account_id).count
+      return if active_employee_count.zero?
+      active_user_count = Employee.active_user_by_account(account_id).count
+      ((active_user_count * 100.0) / active_employee_count).round(2)
+    end
+
+    private
+
+    def previous_event_sql(type, date)
+      return unless %w(hired contract_end).include?(type)
+
+      formatted_date = date.strftime('%Y-%m-%d')
+      "
+        '#{type}' = (
+          SELECT employee_events.event_type FROM employee_events
+          WHERE employee_events.effective_at <= '#{formatted_date}'
+          AND employee_events.employee_id = employees.id
+          AND employee_events.event_type IN ('hired', 'contract_end')
+          ORDER BY employee_events.effective_at DESC
+          LIMIT 1
+        )
+      "
+    end
+  end
+
   def last_event_for(date = Time.zone.today)
     events
       .where(event_type: %w(hired contract_end))
       .where('effective_at <= ?', date)
       .order(:effective_at).last
-  end
-
-  def self.active_employee_ratio_per_account(account_id)
-    active_employee_count = Employee.active_by_account(account_id).count
-    return if active_employee_count.zero?
-    active_user_count = Employee.active_user_by_account(account_id).count
-    ((active_user_count * 100.0) / active_employee_count).round(2)
   end
 
   def first_employee_working_place

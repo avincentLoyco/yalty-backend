@@ -124,7 +124,7 @@ module Payments
         customer: account.customer_id,
         plan: 'free-plan',
         tax_percent: Invoice::TAX_PERCENT,
-        quantity: account.employees.active_at_date(Time.zone.tomorrow).count
+        quantity: account.employees.chargeable_at_date(Time.zone.tomorrow).count
       )
 
       account.update!(subscription_id: subscription.id)
