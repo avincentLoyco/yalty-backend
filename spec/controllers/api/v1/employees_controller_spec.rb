@@ -171,6 +171,16 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
           end
         end
       end
+
+      context 'active_presence_policy' do
+        let!(:epp) { create(:employee_presence_policy, employee: employee, effective_at: 1.day.ago)}
+
+        before { subject }
+
+        it 'returns proper policy data' do
+          expect_json_keys('active_presence_policy', [:id, :type, :standard_day_duration])
+        end
+      end
     end
 
     context 'with invalid data' do
