@@ -18,6 +18,7 @@ RSpec.describe API::V1::SettingsController, type: :controller do
           type: 'account',
           company_name: account.company_name,
           subdomain: account.subdomain,
+          yalty_access: account.yalty_access,
           available_modules: account.available_modules.data.map(&:id),
           default_locale: account.default_locale,
           timezone: account.timezone
@@ -40,6 +41,7 @@ RSpec.describe API::V1::SettingsController, type: :controller do
       expect(data).to_not include('available_modules')
       expect(data).to_not include('subdomain')
       expect(data).to_not include('id')
+      expect(data).to_not include('yalty_access')
       expect(data['company_name']).to eq(Account.current.company_name)
     end
 

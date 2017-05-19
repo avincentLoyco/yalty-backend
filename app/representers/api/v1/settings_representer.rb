@@ -4,6 +4,7 @@ module Api::V1
       {
         company_name:      resource.company_name,
         subdomain:         resource.subdomain,
+        yalty_access:      resource.yalty_access,
         available_modules: resource.available_modules.all,
         default_locale:    resource.default_locale,
         timezone:          resource.timezone

@@ -329,4 +329,49 @@ RSpec.describe Account, type: :model do
       end
     end
   end
+
+  context '#yalty_access' do
+    subject { create(:account) }
+
+    it 'should be true when account have a user with yalty role' do
+      user = create(:account_user, :with_yalty_role, account: subject)
+
+      expect(subject.reload.yalty_access).to be_truthy
+    end
+
+    it 'should be false when account doesn\'t have a user with yalty role' do
+      expect(subject.reload.yalty_access).to be_falsey
+    end
+  end
+
+  context '#yalty_access=' do
+    subject { create(:account) }
+
+    describe 'when set to true' do
+      it 'should create user with yalty role if not exists' do
+        subject.yalty_access = true
+        expect(subject.yalty_access).to be_falsey
+        expect(subject.changes).to include(:yalty_access)
+        expect { subject.save! }.to change { Account::User.where(account_id: subject.id, role: 'yalty').count }.by(1)
+      end
+
+      it 'should not create user with yalty role if already exists' do
+        create(:account_user, :with_yalty_role, account: subject)
+        subject.yalty_access = true
+        expect(subject.yalty_access).to be_truthy
+        expect(subject.changes).to_not include(:yalty_access)
+        expect { subject.save! }.to_not change { Account::User.where(account_id: subject.id, role: 'yalty').count }
+      end
+
+      it 'should be able to authenticate user with configured password and email' do
+        ENV['YALTY_ACCESS_EMAIL'] = 'access@example.com'
+        ENV['YALTY_ACCESS_PASSWORD_DIGEST'] = BCrypt::Password.create('1234567890', cost: 10)
+
+        subject.update!(yalty_access: true)
+
+        user = Account::User.where(account: subject, email: ENV['YALTY_ACCESS_EMAIL']).first!
+        expect(user.authenticate('1234567890')).to_not be_falsey
+      end
+    end
+  end
 end

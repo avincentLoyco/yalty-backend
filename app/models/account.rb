@@ -52,6 +52,7 @@ class Account < ActiveRecord::Base
   after_create :create_stripe_customer_with_subscription, if: :stripe_enabled?
   after_update :update_stripe_customer_description,
     if: -> { stripe_enabled? && (subdomain_changed? || company_name_changed?) }
+  after_save :update_yalty_access
 
   def self.current=(account)
     RequestStore.write(:current_account, account)
@@ -171,6 +172,16 @@ class Account < ActiveRecord::Base
     users.where(role: 'account_owner').reorder('created_at ASC').limit(1).pluck(:email).first
   end
 
+  def yalty_access
+    Account::User.where(account_id: id, role: 'yalty').exists?
+  end
+
+  def yalty_access=(value)
+    value = (value == true)
+    attribute_will_change!(:yalty_access) unless value == yalty_access
+    @yalty_access = value
+  end
+
   private
 
   # Generate a subdomain from company name
@@ -225,5 +236,18 @@ class Account < ActiveRecord::Base
   def update_stripe_customer_description
     return if subdomain_was.nil? || company_name_was.nil?
     Payments::UpdateStripeCustomerDescription.perform_later(self)
+  end
+
+  def update_yalty_access
+    return unless attribute_changed?(:yalty_access)
+
+    if @yalty_access
+      Account::User.find_or_create_by(
+        account_id: id,
+        email: ENV['YALTY_ACCESS_EMAIL'],
+        password_digest: ENV['YALTY_ACCESS_PASSWORD_DIGEST'],
+        role: 'yalty'
+      )
+    end
   end
 end

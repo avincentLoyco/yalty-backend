@@ -22,7 +22,7 @@ class Account::User < ActiveRecord::Base
   belongs_to :referrer, primary_key: :email, foreign_key: :email
   has_one :employee, foreign_key: :account_user_id
 
-  before_validation :generate_password, on: :create
+  before_validation :generate_password, unless: :password_digest?, on: :create
   after_create :create_referrer
   before_destroy :check_if_last_owner
   after_update :update_stripe_customer_email,
