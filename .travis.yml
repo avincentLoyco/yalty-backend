@@ -10,13 +10,15 @@ before_install:
   - rvm @global do gem uninstall bundler -a -x
   - rvm @global do gem install bundler -v 1.14.6
 script: ./.travis/build
+before_cache:
+  - git reset --hard travis-docker-build
+cache:
+  bundler: true
+notifications:
+  email: false
 services:
   - docker
 addons:
   apt:
     packages:
       - docker-engine
-cache:
-  bundler: true
-notifications:
-  email: false
