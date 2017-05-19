@@ -182,10 +182,9 @@ class Account < ActiveRecord::Base
 
   def yalty_access=(value)
     value = (value == true)
-    unless value == yalty_access
-      attribute_will_change!(:yalty_access)
-      @yalty_access = value
-    end
+    return value if value == yalty_access
+    attribute_will_change!(:yalty_access)
+    @yalty_access = value
   end
 
   private

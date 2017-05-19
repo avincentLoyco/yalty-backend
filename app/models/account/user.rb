@@ -30,7 +30,7 @@ class Account::User < ActiveRecord::Base
   after_destroy :update_stripe_customer_email,
     if: -> { stripe_enabled? && role_was.eql?('account_owner') }
 
-  skip_callback :save, :after, :create_or_update_on_intercom, if: -> { self.role.eql?('yalty') }
+  skip_callback :save, :after, :create_or_update_on_intercom, if: -> { role.eql?('yalty') }
 
   def self.current=(user)
     RequestStore.write(:current_account_user, user)
@@ -61,7 +61,7 @@ class Account::User < ActiveRecord::Base
   end
 
   def owner_or_administrator?
-    %w(account_owner account_administrator yalty).include?(role)
+    role.in?(%w(account_owner account_administrator yalty))
   end
 
   private
@@ -80,7 +80,7 @@ class Account::User < ActiveRecord::Base
     if role_changed? && role_was.eql?('yalty')
       errors.add(:role, "yalty role cannot be changed to #{role}")
     elsif role_changed? && role_was.eql?('account_owner') &&
-      !account.users.where.not(id: id).where(role: 'account_owner').exists?
+        !account.users.where.not(id: id).where(role: 'account_owner').exists?
       errors.add(:role, 'last account owner cannot change role')
     else
       return true

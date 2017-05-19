@@ -4,7 +4,7 @@ class Ability
   def initialize(user)
     if user.role.eql?('account_owner')
       can :manage, :all
-    elsif user.role.eql?('account_administrator') || user.role.eql?('yalty')
+    elsif user.role.in?(%w(account_administrator yalty))
       can :manage, :all
       cannot :manage, :payments
     elsif user.role.eql?('user')
