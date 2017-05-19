@@ -27,6 +27,8 @@ guard :rspec, cmd: 'bin/rspec', failed_mode: :keep do
     ]
   end
 
+  watch(%r{^lib/tasks/(.+)\.rake$}) { |m| rspec.spec.call("lib/tasks/#{m[1]}") }
+
   # Rails config changes
   # watch(rails.spec_helper)     { rspec.spec_dir }
   watch(rails.routes)
