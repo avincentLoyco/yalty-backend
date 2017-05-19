@@ -108,6 +108,18 @@ class Employee < ActiveRecord::Base
     end
   end
 
+  def contract_periods_include?(*dates)
+    contract_periods.any? do |period|
+      if period.last.is_a?(Date::Infinity) || dates.all? { |d| d.is_a?(Date) }
+        dates.map { |date| date.to_date.in?(period) }
+      else
+        dates.map do |date|
+          period.first <= date && date <= period.last + 1.day + Employee::Balance::REMOVAL_OFFSET
+        end
+      end.uniq.eql?([true])
+    end
+  end
+
   def last_event_for(date = Time.zone.today)
     events
       .where(event_type: %w(hired contract_end))

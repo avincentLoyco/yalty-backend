@@ -45,8 +45,6 @@ class Employee::Balance < ActiveRecord::Base
   end)
   scope :additions, -> { where(balance_type: 'addition').order(:effective_at) }
   scope :removals, -> { Employee::Balance.joins(:balance_credit_additions).distinct }
-  scope :assignations, -> { where(balance_type: 'assignation').order(:effective_at) }
-  scope :end_of_periods, -> { where(balance_type: 'end_of_period').order(:effective_at) }
   scope :not_removals, (lambda do
     joins('LEFT JOIN employee_balances AS b ON employee_balances.id = b.balance_credit_removal_id')
     .distinct
@@ -61,7 +59,6 @@ class Employee::Balance < ActiveRecord::Base
   scope :in_category, ->(category_id) { where(time_off_category_id: category_id) }
   scope :with_time_off, -> { where.not(time_off_id: nil) }
   scope :not_time_off, -> { where(time_off_id: nil) }
-  scope :from_time_offs, -> { where.not(time_off_id: nil) }
 
   def amount
     return unless resource_amount && manual_amount
@@ -164,10 +161,9 @@ class Employee::Balance < ActiveRecord::Base
 
     if additions_validity_dates.size > 1 ||
         effective_at && effective_at.to_date != first_validity_date ||
-        employee.contract_periods.none? do |period|
-          period.include?(effective_at.to_date - 1.day) &&
-              period.include?(first_validity_date - 1.day)
-        end
+        !employee.contract_periods_include?(
+          effective_at.to_date - 1.day, first_validity_date - 1.day
+        )
       errors.add(
         :effective_at, 'Removal effective at must equal addition validity date and period'
       )
@@ -185,10 +181,7 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   def effective_after_employee_start_date
-    return if balance_type.eql?('reset') ||
-        employee.contract_periods.any? { |p| p.include?(effective_at.to_date) } ||
-        (%w(time_off removal).include?(balance_type) && effective_at <
-         employee.contract_end_for(effective_at) + 1.day + Employee::Balance::RESET_OFFSET)
+    return if balance_type.eql?('reset') || employee.contract_periods_include?(effective_at)
 
     errors.add(:effective_at, 'can\'t be set outside of employee contract period')
   end
@@ -290,9 +283,9 @@ class Employee::Balance < ActiveRecord::Base
       start_day,
       time_off_policy
     )
-
+    years_to_compare = years_to_effect.eql?(0) ? 1 : years_to_effect
     year_in_range = year >= etop_effective_at.year &&
-      (etop_effective_till.nil? || year <= etop_effective_till.year + years_to_effect)
+      (etop_effective_till.nil? || year <= etop_effective_till.year + years_to_compare)
     correct_day_and_month = (day == end_day && month == end_month)
     year_in_range && correct_day_and_month
   end

@@ -474,7 +474,7 @@ RSpec.describe do
               Employee::Balance.in_category(second_category).order(:effective_at)
             end
 
-            it { expect { subject }.to_not change { Employee::Balance.assignations.count } }
+            it { expect { subject }.to_not change { Employee::Balance.where(balance_type: 'assignation').count } }
             it do
               expect { subject }.to change { EmployeeTimeOffPolicy.with_reset.count }.from(2).to(1)
             end
@@ -813,7 +813,7 @@ RSpec.describe do
         let(:effective_at) { 1.year.since - 1.days }
 
         it { expect(employee.employee_balances.count).to eq (17) }
-        it { expect(Employee::Balance.assignations.count).to eq (3) }
+        it { expect(Employee::Balance.where(balance_type: 'assignation').count).to eq (3) }
 
         it_behaves_like 'Contract end in the future'
       end
@@ -821,7 +821,7 @@ RSpec.describe do
       context 'when contract end in or after policy start date' do
         shared_examples 'Contract end in or after policy start date' do
           it { expect(Employee::Balance.additions.count).to eq (6) }
-          it { expect(Employee::Balance.assignations.count).to eq (3) }
+          it { expect(Employee::Balance.where(balance_type: 'assignation').count).to eq (3) }
           it { expect(employee.employee_balances.count).to eq (21) }
         end
 

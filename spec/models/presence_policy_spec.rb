@@ -42,23 +42,6 @@ RSpec.describe PresencePolicy, type: :model do
     end
   end
 
-  context 'helper methods' do
-    context '#last_day_order' do
-      let(:bigger_order) { 5 }
-      let(:smaller_order) { 2 }
-
-      before do
-        create(:presence_day, order: bigger_order, presence_policy: employee.presence_policies.first)
-        create(:presence_day, order: smaller_order, presence_policy: employee.presence_policies.first)
-      end
-
-      subject { employee.presence_policies.first.last_day_order }
-
-      it { expect(subject).to eq bigger_order }
-      it { expect(subject).not_to eq smaller_order }
-    end
-  end
-
   context 'callbacks' do
     context '.set_standard_day_duration' do
       let(:presence_days) { build_list(:presence_day, 3, minutes: 140) }

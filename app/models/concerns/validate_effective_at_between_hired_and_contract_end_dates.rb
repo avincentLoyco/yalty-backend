@@ -17,10 +17,7 @@ module ValidateEffectiveAtBetweenHiredAndContractEndDates
   end
 
   def effective_at_between_hired_date_and_contract_end
-    return if related_resource.reset? ||
-        employee.contract_periods.any? do |period|
-          period.include?(effective_at) && effective_at < period.last
-        end
+    return if related_resource.reset? || employee.contract_periods_include?(effective_at)
     errors.add(:effective_at, 'can\'t be set outside of employee contract period')
   end
 end

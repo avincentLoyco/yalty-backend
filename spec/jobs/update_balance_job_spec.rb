@@ -346,7 +346,7 @@ RSpec.describe UpdateBalanceJob do
           context 'and removal is in the past' do
             let(:existing_balances) { Employee::Balance.order(:effective_at) }
             let(:options) {{ resource_amount: 1200 }}
-            let(:addition) { existing_balances.assignations.first }
+            let(:addition) { existing_balances.where(balance_type: 'assignation').first }
             let!(:addition_removal) { addition.balance_credit_removal }
             let(:balance_id) { addition.id }
 
@@ -369,7 +369,9 @@ RSpec.describe UpdateBalanceJob do
 
             context 'and now it is in the future' do
               before { top_first.update!(years_to_effect: 3) }
-              let(:options) {{ validity_date: 15.months.since  + 1.day }}
+              let(:options) do
+                { validity_date: 15.months.since  + 1.day + Employee::Balance::REMOVAL_OFFSET }
+              end
 
               it { expect { subject }.to change { addition.reload.validity_date } }
               it { expect { subject }.to_not change { addition.reload.effective_at } }
@@ -403,9 +405,9 @@ RSpec.describe UpdateBalanceJob do
                 before { subject }
 
                 it { expect(Employee::Balance.order(:effective_at).map(&:amount))
-                  .to eq([1000, 4000, 2000, -1000, 100, -4000]) }
+                  .to eq([1000, 4000, 2000, -1000, 100, -6000, -100]) }
                 it { expect(Employee::Balance.order(:effective_at).pluck(:balance))
-                  .to eq([1000, 5000, 7000, 6000, 6100, 2100]) }
+                  .to eq([1000, 5000, 7000, 6000, 6100, 100, 0]) }
               end
             end
           end

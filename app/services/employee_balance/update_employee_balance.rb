@@ -60,16 +60,11 @@ class UpdateEmployeeBalance
   end
 
   def find_validity_date
-    return if employee_balance.balance_type.in?(%w(reset removal))
+    return if employee_balance.balance_type.in?(%w(reset removal)) || !employee_balance.valid?
     etop = employee_balance.employee_time_off_policy
     return unless etop.time_off_policy.end_month.present? && etop.time_off_policy.end_day.present?
-    if options[:effective_at] || employee_balance.balance_type.eql?('time_off') ||
-        employee_balance.validity_date&.strftime('%S').eql?('03')
-      RelatedPolicyPeriod
-        .new(etop)
-        .validity_date_for_balance_at(employee_balance.effective_at, employee_balance.balance_type)
-    else
-      employee_balance.validity_date
-    end
+    RelatedPolicyPeriod
+      .new(etop)
+      .validity_date_for_balance_at(employee_balance.effective_at, employee_balance.balance_type)
   end
 end

@@ -74,9 +74,7 @@ class API::ApplicationController < ApplicationController
   def clear_respective_reset_join_tables(employee, effective_at, time_off_category = nil,
     contract_end_destroy = nil)
 
-    ClearResetJoinTables.new(
-      employee, effective_at, time_off_category, contract_end_destroy
-    ).call
+    ClearResetJoinTables.new(employee, effective_at, time_off_category, contract_end_destroy).call
   end
 
   def resources_with_effective_till(join_table, join_table_id, related_id = nil, employee_id = nil)

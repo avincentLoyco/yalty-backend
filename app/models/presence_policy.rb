@@ -35,10 +35,6 @@ class PresencePolicy < ActiveRecord::Base
     actives_for_employee(employee_id, date).first
   end
 
-  def last_day_order
-    presence_days.pluck(:order).max
-  end
-
   def set_standard_day_duration
     self.standard_day_duration = presence_days.map(&:minutes).compact.max
   end

@@ -49,16 +49,6 @@ class RelatedPolicyPeriod
     last_start_date
   end
 
-  def last_validity_date
-    return unless end_month && end_day && years_to_effect
-    Date.new(last_start_date.year + years_to_effect, end_month, end_day)
-  end
-
-  def first_validity_date
-    return unless end_month && end_day && years_to_effect
-    Date.new(first_start_date.year + years_to_effect, end_month, end_day)
-  end
-
   def validity_date_for_balance_at(date, balance_type = 'addition')
     return unless end_date?
     validity_date =

@@ -138,7 +138,7 @@ RSpec.describe ManageEmployeeBalanceAdditions, type: :service do
               it 'has valid assignations effective at' do
                 subject
 
-                assignations_dates = Employee::Balance.assignations.pluck(:effective_at)
+                assignations_dates = Employee::Balance.where(balance_type: 'assignation').pluck(:effective_at)
                 type_offset = Employee::Balance::ASSIGNATION_OFFSET
 
                 expect(assignations_dates.map(&:to_date)).to contain_exactly('1/1/2013'.to_date)
@@ -149,7 +149,7 @@ RSpec.describe ManageEmployeeBalanceAdditions, type: :service do
               it 'has valid end of period effective at' do
                 subject
 
-                end_of_periods_dates = Employee::Balance.end_of_periods.pluck(:effective_at)
+                end_of_periods_dates = Employee::Balance.where(balance_type: 'end_of_period').pluck(:effective_at)
                 type_offset = Employee::Balance::END_OF_PERIOD_OFFSET
 
                 expect(end_of_periods_dates.map(&:to_date))
@@ -207,7 +207,7 @@ RSpec.describe ManageEmployeeBalanceAdditions, type: :service do
                   .pluck(:effective_at)
               end
 
-              it { expect(Employee::Balance.assignations.count).to eq 2 }
+              it { expect(Employee::Balance.where(balance_type: 'assignation').count).to eq 2 }
               it 'has valid end of period balances' do
                 end_of_periods =
                   Employee::Balance.where(balance_type: 'end_of_period').order(:effective_at)

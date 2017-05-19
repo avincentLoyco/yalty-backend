@@ -291,21 +291,6 @@ RSpec.describe RelatedPolicyPeriod do
         it { expect(subject).to eq '1/1/2018'.to_date }
       end
     end
-
-    context '.last_validity_date' do
-      subject { RelatedPolicyPeriod.new(related_policy).last_validity_date }
-
-      context 'when time off policy has end dates' do
-        let(:end_day) { 1 }
-        let(:end_month) { 2 }
-
-        it { expect(subject).to eq '1/2/2018'.to_date }
-      end
-
-      context 'when time off policy does not have end date' do
-        it { expect(subject).to eq nil }
-      end
-    end
   end
 
   context 'for employee time off policy' do

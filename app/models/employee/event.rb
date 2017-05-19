@@ -80,14 +80,6 @@ class Employee::Event < ActiveRecord::Base
     end
   end
 
-  def previous_event
-    previous_events.last
-  end
-
-  def next_event
-    next_events.first
-  end
-
   def can_destroy_event?
     hired_without_events_and_join_tables_after? ||
       contract_end_without_rehired_after? ||

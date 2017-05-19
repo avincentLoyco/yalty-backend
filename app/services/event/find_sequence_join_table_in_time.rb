@@ -70,15 +70,15 @@ class FindSequenceJoinTableInTime
   def verify_if_not_at_reset_policy
     employee = join_tables.first.employee
     return unless current_join_table && current_join_table.related_resource.reset? &&
-        employee.contract_periods.none? { |period| period.include?(new_effective_at) }
+        !employee.contract_periods_include?(new_effective_at)
     raise InvalidResourcesError.new(
       join_tables.first.class, ['Can not assign in reset resource effective at']
     )
   end
 
   def same_period?(current_resource, next_resource)
-    current_resource.employee.contract_periods.any? do |period|
-      period.include?(current_resource.effective_at) && period.include?(next_resource.effective_at)
-    end
+    current_resource
+      .employee
+      .contract_periods_include?(current_resource.effective_at, next_resource.effective_at)
   end
 end

@@ -80,8 +80,7 @@ class AssignResetJoinTable
   end
 
   def date_in_contract_periods?
-    @date_in_contract_periods ||=
-      !@employee.contract_periods.none? { |period| period.include?(@effective_at) }
+    @date_in_contract_periods ||= @employee.contract_periods_include?(@effective_at)
   end
 
   def create_reset_join_table?

@@ -46,7 +46,7 @@ class ManageEmployeeBalanceAdditions
 
       while balance_date <= date_to_which_create_balances
         balances << create_employee_balance!(etop, balance_date, 'addition')
-        balances <<  create_end_of_period_balance!(etop, balance_date)
+        balances << create_end_of_period_balance!(etop, balance_date)
         balance_date += 1.year
       end
     end

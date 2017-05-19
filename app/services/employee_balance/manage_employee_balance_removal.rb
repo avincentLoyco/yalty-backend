@@ -22,18 +22,19 @@ class ManageEmployeeBalanceRemoval
 
   def unassign_from_removal
     resource_removal = resource.balance_credit_removal
-    return unless resource_removal
+    return unless resource.balance_credit_removal_id.present?
     resource.update!(balance_credit_removal_id: nil)
-    resource_removal.destroy! if resource_removal.reload.balance_credit_additions.blank?
+    resource_removal.try(:destroy!) if resource_removal&.reload&.balance_credit_additions.blank?
   end
 
   def create_or_assign_to_new_removal
     resource_removal = resource.balance_credit_removal
     new_removal = find_or_create_new_removal
     new_removal.balance_credit_additions << resource
+    new_removal.resource_amount = CalculateEmployeeBalanceRemovalAmount.new(new_removal).call
     new_removal.save
     return unless resource_removal
-    resource_removal.destroy! if resource_removal.balance_credit_additions.count.zero?
+    resource_removal.try(:destroy!) if resource_removal.balance_credit_additions.count.zero?
   end
 
   def find_or_create_new_removal

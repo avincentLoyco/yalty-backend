@@ -67,7 +67,7 @@ class GenerateBalanceOverview
 
   def find_active_periods_from_balances(category, period)
     period_start =
-      if @employee.contract_periods.none? { |p| p.include?(Time.zone.today) }
+      if !@employee.contract_periods_include?(Time.zone.today)
         contract_end.effective_at
       else
         period.to_h[:start_date]

@@ -45,7 +45,7 @@ class CreateEmployeeBalance
       Employee::Balance.new(
         employee_id: employee.id,
         time_off_category_id: category.id,
-        balance_type:  employee_balance.validity_date.second.eql?(3) ? 'reset' : 'removal',
+        balance_type: employee_balance.validity_date.second.eql?(3) ? 'reset' : 'removal',
         effective_at: employee_balance.validity_date
       )
     balance_removal.balance_credit_additions << [employee_balance]

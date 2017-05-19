@@ -180,7 +180,7 @@ RSpec.describe Employee::Balance, type: :model do
           end
 
           context 'with invalid data' do
-            let(:effective_at) { Date.new(2014, 1, 1) + 1.day + 1.second }
+            let(:effective_at) { Date.new(2014, 1, 2) + 1.day + 1.second }
 
             it { expect(subject.valid?).to eq false }
             it do
@@ -227,7 +227,7 @@ RSpec.describe Employee::Balance, type: :model do
 
           context 'with invalid data' do
             context 'effective_at between old contract end and new contract end' do
-              let(:effective_at) { Date.new(2014, 1, 1) + 1.day + 2.second }
+              let(:effective_at) { Date.new(2014, 1, 1) + 1.day + 3.seconds }
 
               it { expect(subject.valid?).to eq false }
               it do
@@ -237,7 +237,7 @@ RSpec.describe Employee::Balance, type: :model do
             end
 
             context 'effective at after new contract end' do
-              let(:effective_at) { Date.new(2016, 1, 1) + 1.day + 1.second  }
+              let(:effective_at) { Date.new(2016, 1, 1) + 1.day + 3.seconds  }
 
               it { expect(subject.valid?).to eq false }
               it do
@@ -369,7 +369,6 @@ RSpec.describe Employee::Balance, type: :model do
           end
 
           context ' matches the TOP end date' do
-
             let(:policy) { create(:time_off_policy, :with_end_date) }
 
             let(:effective_at) do
@@ -462,7 +461,8 @@ RSpec.describe Employee::Balance, type: :model do
 
       let(:policy) do
         create(:time_off_policy, time_off_category: time_off_category,
-          start_day: top_start_day, amount: 4800, end_day: top_end_day, end_month: 1)
+          start_day: top_start_day, amount: 4800,
+          end_day: top_end_day, end_month: 1, years_to_effect: 1)
       end
 
       let!(:etop) do
@@ -484,7 +484,7 @@ RSpec.describe Employee::Balance, type: :model do
       end
       let(:top_end_balance) do
         create(:employee_balance_manual, employee: employee, time_off_category: time_off_category,
-          effective_at: end_balance_effective_at + Employee::Balance::REMOVAL_OFFSET,
+          effective_at: etop_balance.validity_date,
           balance_type: 'removal', balance_credit_additions: [etop_balance])
       end
 
@@ -502,7 +502,7 @@ RSpec.describe Employee::Balance, type: :model do
         let!(:time_off_amount) { time_off.balance }
 
         context 'time off overlaps TOP start date' do
-          let(:etop_effective_at) { Time.zone.parse('01/01/2014') }
+          let(:etop_effective_at) { Time.zone.parse('07/01/2014') }
           before(:each) do
             time_off_balance
             top_end_balance
@@ -576,7 +576,7 @@ RSpec.describe Employee::Balance, type: :model do
         end
 
         context 'time_off starts middle of day' do
-          let(:etop_effective_at) { Time.zone.parse('01/01/2014') }
+          let(:etop_effective_at) { Time.zone.parse('07/01/2014') }
           before do
             time_off.update!(start_time: time_off_start + 13.hours)
             time_off_balance

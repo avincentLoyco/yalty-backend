@@ -97,9 +97,7 @@ class CreateOrUpdateJoinTable
     assignation_balance = join_table_resource.policy_assignation_balance
     join_table_resource.update!(params)
     if assignation_balance &&
-        join_table_resource.employee.contract_periods.none? do |period|
-          period.include?(assignation_balance.effective_at)
-        end
+        !join_table_resource.employee.contract_periods_include?(assignation_balance.effective_at)
       if related_balances.present?
         assignation_balance.destroy!
       else
@@ -178,9 +176,6 @@ class CreateOrUpdateJoinTable
   end
 
   def previous_in_the_same_period?
-    employee.contract_periods.any? do |period|
-      period.include?(params[:effective_at].to_date) &&
-        period.include?(previous_join_table.effective_at)
-    end
+    employee.contract_periods_include?(params[:effective_at], previous_join_table.effective_at)
   end
 end

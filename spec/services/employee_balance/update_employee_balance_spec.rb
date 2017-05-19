@@ -117,8 +117,13 @@ RSpec.describe UpdateEmployeeBalance, type: :service do
     context 'and employee balances is a reset_balance' do
       let(:options) { {} }
       before do
-        employee_balance.balance_type = 'reset'
-        employee_balance.save
+        create(:employee_event,
+          employee: employee, event_type: 'contract_end', effective_at: Date.new(2016, 1, 1)
+        )
+        Employee::Balance.find_by(balance_type: 'reset').destroy!
+        employee_balance.update!(
+          balance_type: 'reset', effective_at: Date.new(2016, 1, 2) + Employee::Balance::RESET_OFFSET
+        )
       end
       it { expect { subject }.to change { employee_balance.reload.being_processed }.to false }
       it { expect { subject }.to_not change { Employee::Balance.count } }
@@ -132,7 +137,7 @@ RSpec.describe UpdateEmployeeBalance, type: :service do
     let(:options) {{ resource_amount: 100 }}
 
     it { expect { subject }.to change { employee_balance.reload.being_processed }.to false }
-    it { expect { subject }.to_not change { Employee::Balance.count } }
+    it { expect { subject }.to change { Employee::Balance.where(balance_type: 'removal').count } }
     it { expect { subject }.to change { employee_balance.reload.balance } }
     it { expect { subject }.to change { employee_balance.reload.amount } }
   end
