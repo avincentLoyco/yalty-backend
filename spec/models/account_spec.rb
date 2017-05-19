@@ -349,18 +349,22 @@ RSpec.describe Account, type: :model do
 
     describe 'when set to true' do
       it 'should create user with yalty role if not exists' do
-        subject.yalty_access = true
         expect(subject.yalty_access).to be_falsey
+        subject.yalty_access = true
+        expect(subject.yalty_access).to be_truthy
         expect(subject.changes).to include(:yalty_access)
-        expect { subject.save! }.to change { Account::User.where(account_id: subject.id, role: 'yalty').count }.by(1)
+        expect { subject.save! }.to change { Account::User.count }.by(1)
+        expect(Account::User.where(account_id: subject.id, role: 'yalty')).to be_exist
       end
 
       it 'should not create user with yalty role if already exists' do
         create(:account_user, :with_yalty_role, account: subject)
+        expect(subject.yalty_access).to be_truthy
         subject.yalty_access = true
         expect(subject.yalty_access).to be_truthy
         expect(subject.changes).to_not include(:yalty_access)
-        expect { subject.save! }.to_not change { Account::User.where(account_id: subject.id, role: 'yalty').count }
+        expect { subject.save! }.to_not change { Account::User.count }
+        expect(Account::User.where(account_id: subject.id, role: 'yalty')).to be_exist
       end
 
       it 'should be able to authenticate user with configured password and email' do
@@ -371,6 +375,29 @@ RSpec.describe Account, type: :model do
 
         user = Account::User.where(account: subject, email: ENV['YALTY_ACCESS_EMAIL']).first!
         expect(user.authenticate('1234567890')).to_not be_falsey
+      end
+    end
+
+    describe 'when set to false' do
+      let!(:yalty_user) { create(:account_user, :with_yalty_role, account: subject) }
+
+      it 'should destroy user with yalty role if exists' do
+        expect(subject.yalty_access).to be_truthy
+        subject.yalty_access = false
+        expect(subject.yalty_access).to be_falsey
+        expect(subject.changes).to include(:yalty_access)
+        expect { subject.save! }.to change { Account::User.count }.by(-1)
+        expect(Account::User.where(account_id: subject.id, role: 'yalty')).to_not be_exist
+      end
+
+      it 'should not destroy user with yalty role if not exists' do
+        yalty_user.destroy!
+        expect(subject.yalty_access).to be_falsey
+        subject.yalty_access = false
+        expect(subject.yalty_access).to be_falsey
+        expect(subject.changes).to_not include(:yalty_access)
+        expect { subject.save! }.to_not change { Account::User.count }
+        expect(Account::User.where(account_id: subject.id, role: 'yalty')).to_not be_exist
       end
     end
   end

@@ -173,13 +173,19 @@ class Account < ActiveRecord::Base
   end
 
   def yalty_access
-    Account::User.where(account_id: id, role: 'yalty').exists?
+    if @yalty_access.nil?
+      Account::User.where(account_id: id, role: 'yalty').exists?
+    else
+      @yalty_access
+    end
   end
 
   def yalty_access=(value)
     value = (value == true)
-    attribute_will_change!(:yalty_access) unless value == yalty_access
-    @yalty_access = value
+    unless value == yalty_access
+      attribute_will_change!(:yalty_access)
+      @yalty_access = value
+    end
   end
 
   private
@@ -248,6 +254,10 @@ class Account < ActiveRecord::Base
         password_digest: ENV['YALTY_ACCESS_PASSWORD_DIGEST'],
         role: 'yalty'
       )
+    else
+      Account::User.where(account_id: id, role: 'yalty').destroy_all
     end
+  ensure
+    @yalty_access = nil
   end
 end
