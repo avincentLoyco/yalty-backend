@@ -55,6 +55,7 @@ RSpec.describe API::V1::SettingsController, type: :controller do
 
   describe 'PUT #update' do
     let(:company_name) { 'My Company' }
+    let(:yalty_access) { false }
     let(:timezone) { 'Europe/Madrid' }
     let(:subdomain) { Account.current.subdomain }
 
@@ -63,6 +64,7 @@ RSpec.describe API::V1::SettingsController, type: :controller do
         type: 'settings',
         company_name: company_name,
         subdomain: subdomain,
+        yalty_access: yalty_access,
         timezone: timezone,
         default_locale: 'en'
       }
@@ -108,6 +110,24 @@ RSpec.describe API::V1::SettingsController, type: :controller do
 
             it { expect_json(redirect_uri: regex("^http://#{subdomain}.yalty.test/setup")) }
           end
+        end
+
+        context 'when yalty access is enable' do
+          let(:yalty_access) { true }
+
+          it { expect { subject }.to change { Account.current.yalty_access } }
+
+          it { is_expected. to have_http_status(204) }
+        end
+
+        context 'when yalty access is disable' do
+          let(:yalty_access) { false }
+
+          before { Account.current.update!(yalty_access: true) }
+
+          it { expect { subject }.to change { Account.current.yalty_access } }
+
+          it { is_expected. to have_http_status(204) }
         end
       end
     end
