@@ -1,12 +1,17 @@
 class YaltyAccessMailer < ApplicationMailer
-  attr_reader :account, :user
-  helper_method :account, :user, :subdomain_url_for
+  attr_reader :account
+  helper_method :account, :subdomain_url_for
 
   def access_enable(account)
     @account = account
-    @user = Account::User.where(account: account, role: 'yalty').first
 
-    mail to: user.email
+    mail to: ENV['YALTY_ACCESS_EMAIL']
+  end
+
+  def access_disable(account)
+    @account = account
+
+    mail to: ENV['YALTY_ACCESS_EMAIL']
   end
 
   private

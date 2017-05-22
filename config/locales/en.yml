@@ -15,6 +15,8 @@ en:
   yalty_access_mailer:
     access_enable:
       subject: A company enable yalty's access!
+    access_disable:
+      subject: A company disable yalty's access!
   payment:
     pdf:
       header:

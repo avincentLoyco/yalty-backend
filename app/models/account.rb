@@ -256,6 +256,7 @@ class Account < ActiveRecord::Base
       YaltyAccessMailer.access_enable(self).deliver_later
     else
       Account::User.where(account_id: id, role: 'yalty').destroy_all
+      YaltyAccessMailer.access_disable(self).deliver_later
     end
   ensure
     @yalty_access = nil

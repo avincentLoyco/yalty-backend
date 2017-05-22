@@ -405,6 +405,12 @@ RSpec.describe Account, type: :model do
         expect { subject.save! }.to_not change { Account::User.count }
         expect(Account::User.where(account_id: subject.id, role: 'yalty')).to_not be_exist
       end
+
+      it 'should send an email to yalty access email' do
+        expect(YaltyAccessMailer).to receive_message_chain(:access_disable, :deliver_later)
+        expect(subject.yalty_access).to be_truthy
+        subject.update!(yalty_access: false)
+      end
     end
   end
 end
