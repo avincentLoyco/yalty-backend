@@ -1,12 +1,15 @@
 class ApplicationMailer < ActionMailer::Base
   default from: ENV['YALTY_APP_EMAIL']
 
-  def send_mail(email, subject, body)
-    mail(
-      to:           email,
-      subject:      subject,
-      body:         body,
-      content_type: 'text/plain'
-    )
+  helper_method :subdomain_url_for
+
+  private
+
+  def subdomain_url_for(account)
+    url = ''
+    url << (Rails.configuration.force_ssl ? 'https://' : 'http://')
+    url << "#{account.subdomain}.#{ENV['YALTY_APP_DOMAIN']}"
+    url << ":#{ENV['EMBER_PORT']}" if Rails.env == 'e2e-testing'
+    url
   end
 end

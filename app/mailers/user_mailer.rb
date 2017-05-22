@@ -1,6 +1,4 @@
 class UserMailer < ApplicationMailer
-  helper_method :subdomain_url_for
-
   def account_creation_confirmation(user_id)
     @user = Account::User.where(id: user_id).includes(:account).readonly.first!
 
@@ -39,15 +37,5 @@ class UserMailer < ApplicationMailer
     I18n.with_locale(@user.account.default_locale) do
       mail to: @user.email
     end
-  end
-
-  private
-
-  def subdomain_url_for(account)
-    url = ''
-    url << (Rails.configuration.force_ssl ? 'https://' : 'http://')
-    url << "#{account.subdomain}.#{ENV['YALTY_APP_DOMAIN']}"
-    url << ":#{ENV['EMBER_PORT']}" if Rails.env == 'e2e-testing'
-    url
   end
 end
