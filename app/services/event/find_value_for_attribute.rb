@@ -28,7 +28,12 @@ class FindValueForAttribute
       file_file_name: file_name,
       fileable_type: 'EmployeeFile'
     )
+    remove_original(file_path)
     generic_file
+  end
+
+  def remove_original(file_path)
+    FileUtils.rm_f(file_path)
   end
 
   def verify_if_one_file_in_directory!(file_path, generic_file)

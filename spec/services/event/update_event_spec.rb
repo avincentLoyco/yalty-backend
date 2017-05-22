@@ -3,6 +3,7 @@ require 'rails_helper'
 RSpec.describe do
   include_context 'shared_context_account_helper'
   include_context 'shared_context_timecop_helper'
+  include_context 'shared_context_remove_original_helper'
 
   before do
     Account.current = employee.account

@@ -2,11 +2,13 @@ require 'rails_helper'
 
 RSpec.describe FindValueForAttribute do
   include_context 'shared_context_account_helper'
+  include_context 'shared_context_remove_original_helper'
+
   subject { FindValueForAttribute.new(attribute, version).call }
 
   let(:attribute) { { value: value } }
-  let(:employee) { create(:employee) }
-  let(:version) { Employee::AttributeVersion.new(attribute_definition: definition) }
+  let(:employee)  { create(:employee) }
+  let(:version)   { Employee::AttributeVersion.new(attribute_definition: definition) }
   let(:definition) do
     create(:employee_attribute_definition,
       account: employee.account, attribute_type: attribute_type, name: attribute_name)
@@ -31,11 +33,13 @@ RSpec.describe FindValueForAttribute do
   context 'when attribute definition is File type' do
     before { allow_any_instance_of(GenericFile).to receive(:find_file_path) { image_path } }
 
+    let(:image_path) { ["#{Rails.root}/spec/fixtures/files/test.jpg"] }
+
     let(:attribute_type) { Attribute::File.attribute_type }
     let(:attribute_name) { 'profile_picture' }
-    let(:employee_file) { create(:generic_file) }
+    let(:employee_file)  { create(:generic_file) }
+
     let(:value) { employee_file.id }
-    let(:image_path) { ["#{Rails.root}/spec/fixtures/files/test.jpg"] }
     let(:image) { File.open(File.join(image_path)) }
 
     it { expect(subject[:id]).to eq employee_file.id }
