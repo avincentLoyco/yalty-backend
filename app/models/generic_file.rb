@@ -37,6 +37,11 @@ class GenericFile < ActiveRecord::Base
 
   private
 
+  def account_friendly_name
+    date = file_updated_at.strftime('%Y%m%d')
+    "archive-#{fileable.subdomain}-#{date}"
+  end
+
   def invoice_friendly_name
     date = fileable.date.strftime('%Y%m%d')
     "invoice-#{date}"
