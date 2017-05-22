@@ -253,6 +253,7 @@ class Account < ActiveRecord::Base
         password_digest: ENV['YALTY_ACCESS_PASSWORD_DIGEST'],
         role: 'yalty'
       )
+      YaltyAccessMailer.access_enable(self).deliver_later
     else
       Account::User.where(account_id: id, role: 'yalty').destroy_all
     end

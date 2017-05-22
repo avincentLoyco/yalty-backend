@@ -1,4 +1,8 @@
 en:
+  locale:
+    en: English
+    fr: French
+    de: German
   user_mailer:
     account_creation_confirmation:
       subject: Welcome to yalty
@@ -8,6 +12,9 @@ en:
       subject: Reset your password
     accounts_list:
       subject: Your team on yalty
+  yalty_access_mailer:
+    access_enable:
+      subject: A company enable yalty's access!
   payment:
     pdf:
       header:

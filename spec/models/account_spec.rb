@@ -376,6 +376,12 @@ RSpec.describe Account, type: :model do
         user = Account::User.where(account: subject, email: ENV['YALTY_ACCESS_EMAIL']).first!
         expect(user.authenticate('1234567890')).to_not be_falsey
       end
+
+      it 'should send an email to yalty access email' do
+        expect(YaltyAccessMailer).to receive_message_chain(:access_enable, :deliver_later)
+        expect(subject.yalty_access).to be_falsey
+        subject.update!(yalty_access: true)
+      end
     end
 
     describe 'when set to false' do
