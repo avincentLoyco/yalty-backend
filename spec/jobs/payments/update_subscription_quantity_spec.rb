@@ -46,7 +46,7 @@ RSpec.describe Payments::UpdateSubscriptionQuantity, type: :job do
       Employee::Event.update_all(effective_at: 14.days.from_now, updated_at: date)
     end
 
-    it { expect(account_1.employees.active_at_date(tomorrow).count).to eq(0) }
+    it { expect(account_1.employees.chargeable_at_date(tomorrow).count).to eq(0) }
 
     it 'does not update quantity for any account' do
       expect(Stripe::SubscriptionItem).to receive(:list).exactly(0).times
@@ -84,7 +84,7 @@ RSpec.describe Payments::UpdateSubscriptionQuantity, type: :job do
 
     context 'events with effective_at tomorrow' do
       context 'quantity matches the employees count' do
-        it { expect(account_1.employees.active_at_date(tomorrow).count).to eq(3) }
+        it { expect(account_1.employees.chargeable_at_date(tomorrow).count).to eq(3) }
 
         it 'updates quantity for 1 account' do
           expect(Stripe::SubscriptionItem).to receive(:list).exactly(1).times
@@ -100,7 +100,7 @@ RSpec.describe Payments::UpdateSubscriptionQuantity, type: :job do
           new_employee_1.events.find_by(event_type: 'hired').update!(effective_at: tomorrow)
         end
 
-        it { expect(account_1.employees.active_at_date(tomorrow).count).to eq(4) }
+        it { expect(account_1.employees.chargeable_at_date(tomorrow).count).to eq(4) }
 
         it 'updates quantity for 1 account' do
           expect(Stripe::SubscriptionItem).to receive(:list).exactly(1).times
@@ -117,7 +117,7 @@ RSpec.describe Payments::UpdateSubscriptionQuantity, type: :job do
         #       I'm just updating it without validations
         before { account_1.employees.last.events.last.update_attribute(:event_type, 'contract_end') }
 
-        it { expect(account_1.employees.active_at_date(tomorrow).count).to eq(2) }
+        it { expect(account_1.employees.chargeable_at_date(tomorrow).count).to eq(2) }
 
         it 'updates quantity for 1 account' do
           expect(Stripe::SubscriptionItem).to receive(:list).exactly(1).times
@@ -211,7 +211,7 @@ RSpec.describe Payments::UpdateSubscriptionQuantity, type: :job do
           Employee::Event.last.update!(effective_at: 14.days.from_now, updated_at: 6.hours.ago)
         end
 
-        it { expect(account_1.employees.active_at_date(tomorrow).count).to eq(2) }
+        it { expect(account_1.employees.chargeable_at_date(tomorrow).count).to eq(2) }
 
         it_behaves_like 'does not change quantity'
       end
@@ -221,7 +221,7 @@ RSpec.describe Payments::UpdateSubscriptionQuantity, type: :job do
           Employee::Event.last.update!(effective_at: 14.days.ago, updated_at: 6.hours.ago)
         end
 
-        it { expect(account_1.employees.active_at_date(tomorrow).count).to eq(3) }
+        it { expect(account_1.employees.chargeable_at_date(tomorrow).count).to eq(3) }
 
         it_behaves_like 'changes quantity by', 1
         it_behaves_like 'proration_date is set for tomorrow'

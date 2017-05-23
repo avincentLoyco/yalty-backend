@@ -44,7 +44,7 @@ module Payments
         subscription = Stripe::Subscription.create(
           customer: account.customer_id,
           plan: 'free-plan',
-          quantity: account.employees.active_at_date(Time.zone.tomorrow).count,
+          quantity: account.employees.chargeable_at_date(Time.zone.tomorrow).count,
           tax_percent: Invoice::TAX_PERCENT
         )
         account.update!(subscription_id: subscription.id)
