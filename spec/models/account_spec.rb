@@ -412,5 +412,17 @@ RSpec.describe Account, type: :model do
         subject.update!(yalty_access: false)
       end
     end
+
+    describe 'using with_yalty_access scope' do
+      before do
+        create_list(:account_user, 2)
+        create_list(:account_user, 3, :with_yalty_role)
+      end
+
+      it 'should return all accounts with yalty access enable' do
+        expect(Account.with_yalty_access.count).to eql(3)
+        expect(Account.count).to be > 3
+      end
+    end
   end
 end

@@ -45,6 +45,11 @@ class Account < ActiveRecord::Base
   has_many :invoices
   belongs_to :referrer, primary_key: :token, foreign_key: :referred_by
 
+  scope :with_yalty_access, lambda {
+    joins('INNER JOIN account_users ON account_users.account_id = accounts.id')
+      .where('account_users.role = \'yalty\'')
+  }
+
   before_validation :generate_subdomain, on: :create
   after_create :update_default_attribute_definitions!
   after_create :update_default_time_off_categories!
