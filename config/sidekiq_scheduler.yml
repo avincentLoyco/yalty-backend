@@ -25,3 +25,10 @@ every_day_check_if_update_quantity:
   args:
   queue: billing
   description: "Check if any new or leaving employess tomorrow and update quantity of plans"
+
+every_hour_employees_journal_export:
+  cron: "0 * * * *"
+  class: "::Export::ScheduleEmployeesJournalExport"
+  args:
+  queue: export
+  description: "Schedule export of employees journal for accounts with yalty special access"

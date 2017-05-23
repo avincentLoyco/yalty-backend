@@ -24,7 +24,6 @@ RSpec.describe do
       id: event_id,
       effective_at: effective_at,
       event_type: event_type,
-      comment: 'comment',
       employee: {
         id: employee_id
       }

@@ -20,7 +20,6 @@ RSpec.describe CreateEvent do
     {
       effective_at: effective_at,
       event_type: event_type,
-      comment: 'comment',
       employee: {
         id: employee_id
       }

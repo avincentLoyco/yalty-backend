@@ -468,6 +468,7 @@ DEPENDENCIES
   letter_opener (~> 1.4.1)
   meta_request
   mutant-rspec
+  net-scp (~> 1.2)
   newrelic_rpm (~> 3.14.2)
   paperclip (~> 5.0.0)
   parallel_tests
