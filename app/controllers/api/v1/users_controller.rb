@@ -56,6 +56,9 @@ module API
 
       def resource
         @resource ||= resources.find(params[:id])
+      rescue ActiveRecord::RecordNotFound => e
+        Account::User.where(account: Account.current, id: params[:id], role: 'yalty').first ||
+          raise(e)
       end
 
       def current_resource_owner

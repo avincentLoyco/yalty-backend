@@ -152,6 +152,13 @@ RSpec.describe API::V1::UsersController, type: :controller do
         expect(response.body).to_not include user[:id]
       end
     end
+
+    it 'should not include yalty user' do
+      user = create(:account_user, :with_yalty_role, account: account)
+      subject
+
+      expect(response.body).to_not include user[:id]
+    end
   end
 
   describe 'GET #show' do
@@ -312,6 +319,59 @@ RSpec.describe API::V1::UsersController, type: :controller do
           it { is_expected.to have_http_status(403) }
           it { expect { subject }.to_not change { user.reload.role } }
         end
+      end
+    end
+
+    context 'with yalty user' do
+      let(:user) { create(:account_user, :with_yalty_role, password: '1234567890') }
+
+      let(:email) { user.email }
+      let(:role) { 'yalty' }
+      let(:locale) { nil }
+
+      describe 'when email changes' do
+        let(:email) { 'test123@example.com' }
+
+        it { is_expected.to have_http_status(422) }
+        it { expect { subject }.to_not change { user.reload.attributes } }
+      end
+
+      describe 'when role changes' do
+        let(:role) { 'user' }
+
+        it { is_expected.to have_http_status(422) }
+        it { expect { subject }.to_not change { user.reload.attributes } }
+      end
+
+      describe 'when employee is assigned' do
+        before do
+          params[:employee] = {
+            id: employee.id
+          }
+        end
+
+        it { is_expected.to have_http_status(422) }
+        it { expect { subject }.to_not change { user.reload.attributes } }
+      end
+
+      describe 'when password changes' do
+        before do
+          params[:password_params] =  {
+            old_password: '1234567890',
+            password: 'newlongpassword',
+            password_confirmation: 'newlongpassword',
+          }
+        end
+
+        it { is_expected.to have_http_status(422) }
+        it { expect { subject }.to_not change { user.reload.attributes } }
+      end
+
+      describe 'when authorized attributes change' do
+        let(:locale) { 'en' }
+
+        it { is_expected.to have_http_status(204) }
+        it { expect { subject }.to change { user.reload.locale } }
       end
     end
   end
