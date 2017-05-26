@@ -24,7 +24,7 @@ class Employee < ActiveRecord::Base
   has_many :working_places, through: :employee_working_places
   has_many :employee_presence_policies
   has_many :presence_policies, through: :employee_presence_policies
-  has_many :registered_working_times
+  has_many :registered_working_times, dependent: :destroy
 
   validate :hired_event_presence, on: :create
 
