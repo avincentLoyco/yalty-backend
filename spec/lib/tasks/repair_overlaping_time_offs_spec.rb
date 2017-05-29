@@ -77,7 +77,6 @@ RSpec.describe 'repair_overlaping_time_offs', type: :rake do
           { start_time: '8:00:00', end_time: '9:00:00' },
           { start_time: '15:00:00', end_time: '16:00:00' }
         ])
-      # working_time.save(validate: false)
     end
     let(:working_time) { employee.registered_working_times.first }
 
