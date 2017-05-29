@@ -1,5 +1,5 @@
 task repair_overlaping_time_offs: [:environment] do
-  invalid_time_offs = TimeOff.all.map { |time_off| time_off unless time_off.valid? }.compact
+  invalid_time_offs = TimeOff.all.select { |time_off| !time_off.valid? }
 
   working_hours_overlap = invalid_time_offs - time_offs_overlap(invalid_time_offs)
 
@@ -8,13 +8,13 @@ task repair_overlaping_time_offs: [:environment] do
 end
 
 def time_offs_overlap(invalid_time_offs)
-  invalid_time_offs.map do |time_off|
-    time_off unless time_off.send(:does_not_overlap_with_other_users_time_offs).nil?
-  end.compact
+  invalid_time_offs.select do |time_off|
+    !time_off.send(:does_not_overlap_with_other_users_time_offs).nil?
+  end
 end
 
-def registered_working_times_overlap(time_offs_overlap)
-  dominant_time_offs(time_offs_overlap).each do |invalid_time_off|
+def registered_working_times_overlap(overlaping_time_offs)
+  leading_time_offs(overlaping_time_offs).each do |invalid_time_off|
     time_offs_to_delete(invalid_time_off).each do |time_off|
       ActiveRecord::Base.transaction do
         time_off.employee_balance.destroy!
@@ -35,23 +35,24 @@ def balance_to_update(invalid_time_off)
     ).order(:effective_at).first
 end
 
-def dominant_time_offs(time_offs_overlap)
-  time_offs_overlap.map do |time_off|
-    employee = time_off.employee
+def leading_time_offs(overlaping_time_offs)
+  overlaping_time_offs.select do |time_off|
     employee_time_offs_in_period =
-      employee
+      time_off
+      .employee
       .time_offs
       .where(
         'id != ? AND ((start_time >= ? AND start_time < ?) OR (end_time > ? AND end_time <= ?))',
         time_off.id, time_off.start_time, time_off.end_time, time_off.start_time, time_off.end_time
       )
-    time_off unless employee_time_offs_in_period.empty?
-  end.compact
+    employee_time_offs_in_period.present?
+  end
 end
 
 def time_offs_to_delete(invalid_time_off)
   invalid_time_off
-    .employee.time_offs
+    .employee
+    .time_offs
     .where(
       'start_time >= ? AND end_time < ? AND time_off_category_id = ?',
       invalid_time_off.start_time, invalid_time_off.end_time, invalid_time_off.time_off_category
@@ -61,12 +62,12 @@ end
 def working_times_overlap(working_hours_overlap)
   working_hours_overlap.each do |invalid_time_off|
     registered_working_times(invalid_time_off).each do |registered_working_time|
-      if registered_working_time.date == invalid_time_off.start_time.to_date
+      if registered_working_time.date.eql?(invalid_time_off.start_time.to_date)
         start_time = TimeEntry.hour_as_time(invalid_time_off.start_time.strftime('%H:%M:%S'))
         end_time = TimeEntry.hour_as_time('24:00:00')
 
         overlaps_with_registered_working_time?(registered_working_time, start_time, end_time)
-      elsif registered_working_time.date == invalid_time_off.end_time.to_date
+      elsif registered_working_time.date.eql?(invalid_time_off.end_time.to_date)
         start_time = TimeEntry.hour_as_time('00:00:00')
         end_time = TimeEntry.hour_as_time(invalid_time_off.end_time.strftime('%H:%M:%S'))
 
@@ -91,6 +92,6 @@ def overlaps_with_registered_working_time?(registered_working_time, start_time, 
       time_entry if time_entry_start > start_time && time_entry_end < end_time
     end
   new_time_entries = registered_working_time.time_entries - entries_to_be_deleted
-  registered_working_time.delete if new_time_entries.empty?
+  registered_working_time.delete! if new_time_entries.empty?
   registered_working_time.update(time_entries: new_time_entries) if new_time_entries.present?
 end

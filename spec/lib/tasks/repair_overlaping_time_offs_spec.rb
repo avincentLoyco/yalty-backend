@@ -9,21 +9,16 @@ RSpec.describe 'repair_overlaping_time_offs', type: :rake do
   let!(:account)           { create(:account) }
   let(:employee)           { create(:employee, account: account) }
   let!(:vacation_category) { create(:time_off_category, account: account) }
-
   let(:vacation_balancer_policy) do
     create(:time_off_policy, :with_end_date,
       time_off_category: vacation_category, amount: 200, years_to_effect: 1)
   end
-
   let!(:presence_policy) { create(:presence_policy, :with_time_entries, account: account) }
-
   let!(:employee_presence_policy) do
     create(:employee_presence_policy,
       employee: employee, effective_at: start_time - 5.months, presence_policy: presence_policy)
   end
-
   let(:start_time) { Time.new(2016, 6, 6, 14, 0, 0) }
-
   let!(:time_off) do
     create(:time_off,
       employee: employee, time_off_category: vacation_category,
@@ -64,10 +59,10 @@ RSpec.describe 'repair_overlaping_time_offs', type: :rake do
       it { expect { subject }.to change { employee.employee_balances.count } }
       it { expect { subject }.to change { employee.time_offs.count } }
 
-      context 'Leaves dominant balance' do
+      context 'Leaves leading balance' do
         before { subject }
 
-        it { expect(employee.time_offs.ids).to eq([time_off.id])}
+        it { expect(employee.time_offs.reload.ids).to eq([time_off.id]) }
         it { expect(employee.employee_balances.ids).to eq([time_off.employee_balance.id]) }
       end
     end
@@ -75,13 +70,14 @@ RSpec.describe 'repair_overlaping_time_offs', type: :rake do
 
   context 'overlaping registered working time' do
     before do
-      working_time = build(:registered_working_time,
+      allow_any_instance_of(RegisteredWorkingTime).to receive(:valid?) { true }
+      create(:registered_working_time,
         employee: employee, date: date, time_entries:
         [
           { start_time: '8:00:00', end_time: '9:00:00' },
           { start_time: '15:00:00', end_time: '16:00:00' }
         ])
-      working_time.save(validate: false)
+      # working_time.save(validate: false)
     end
     let(:working_time) { employee.registered_working_times.first }
 
