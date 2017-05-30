@@ -62,6 +62,7 @@ RUN set -ex \
   \
   && buildDeps=' \
     make \
+    patch \
     gcc-c++ \
     postgresql94-devel \
   ' \
