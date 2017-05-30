@@ -23,4 +23,10 @@ RSpec.describe CustomTokenResponse do
   it { expect(subject[:user][:role]).to eql('account_owner') }
   it { expect(subject[:user][:locale]).to eql('fr') }
   it { expect(subject[:user][:employee]).to include(id: user.employee.id) }
+
+  context 'for user with yalty role' do
+    let(:user) { create(:account_user, :with_yalty_role, account: account, id: uuid) }
+
+    it { expect(subject[:user]).to_not have_key(:intercom_hash) }
+  end
 end
