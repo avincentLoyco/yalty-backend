@@ -46,15 +46,45 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
     end
 
     context 'when working_place_id given' do
+      let!(:new_ewp) do
+        create(:employee_working_place,
+          employee: employee, working_place: employee_working_place.working_place,
+          effective_at: 1.week.ago
+        )
+      end
       let(:params) {{ working_place_id: employee_working_place.working_place.id }}
 
       it { is_expected.to have_http_status(200) }
 
-      context 'response body' do
+      context 'when no filter given' do
         before { subject }
 
-        it { expect(response.body).to include(working_place_related.id, employee_working_place.id) }
-        it { expect(response.body).to_not include(employee_related.id) }
+        it { expect(response.body).to include(working_place_related.id, new_ewp.id) }
+        it { expect(response.body).to_not include(employee_related.id, employee_working_place.id) }
+      end
+
+      context 'when active filter given' do
+        before do
+          params.merge!({ filter: 'active' })
+          subject
+        end
+
+        it { expect(response.body).to include(working_place_related.id, new_ewp.id) }
+        it { expect(response.body).to_not include(employee_related.id, employee_working_place.id) }
+      end
+
+      context 'when inactive filter given' do
+        before do
+          params.merge!({ filter: 'inactive' })
+          subject
+        end
+
+        it { expect(response.body).to include(employee_working_place.id) }
+        it do
+          expect(response.body).to_not include(
+            employee_related.id, working_place_related.id, new_ewp.id
+          )
+        end
       end
     end
 
