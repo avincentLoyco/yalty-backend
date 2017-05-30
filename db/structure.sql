@@ -111,7 +111,8 @@ CREATE TABLE account_users (
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
     reset_password_token character varying,
     role character varying DEFAULT 'user'::character varying NOT NULL,
-    locale character varying
+    locale character varying,
+    balance_in_hours boolean DEFAULT false NOT NULL
 );
 
 
@@ -1753,3 +1754,5 @@ INSERT INTO schema_migrations (version) VALUES ('20170515081935');
 INSERT INTO schema_migrations (version) VALUES ('20170517075057');
 
 INSERT INTO schema_migrations (version) VALUES ('20170523121718');
+
+INSERT INTO schema_migrations (version) VALUES ('20170530113419');

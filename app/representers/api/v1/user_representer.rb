@@ -2,10 +2,11 @@ module Api::V1
   class UserRepresenter < BaseRepresenter
     def complete
       {
-        email:          resource.email,
-        locale:         resource.locale,
-        role:           resource.role,
-        referral_token: resource.referrer.try(:token)
+        email:            resource.email,
+        locale:           resource.locale,
+        balance_in_hours: resource.balance_in_hours,
+        role:             resource.role,
+        referral_token:   resource.referrer.try(:token)
       }
         .merge(basic)
         .merge(relationships)
@@ -13,8 +14,9 @@ module Api::V1
 
     def session
       {
-        locale:        resource.locale,
-        role:          resource.role
+        locale:           resource.locale,
+        balance_in_hours: resource.balance_in_hours,
+        role:             resource.role
       }
         .merge(basic)
         .merge(intercom_hash)

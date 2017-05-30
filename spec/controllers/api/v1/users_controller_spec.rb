@@ -20,6 +20,7 @@ RSpec.describe API::V1::UsersController, type: :controller do
     let(:email) { 'test@example.com' }
     let(:locale) { 'en' }
     let(:password) { '12345678' }
+    let(:balance_in_hours) { false }
     let(:role) { 'account_administrator' }
     let(:employee) { create(:employee, account: account) }
     let(:params) do
@@ -28,6 +29,7 @@ RSpec.describe API::V1::UsersController, type: :controller do
         locale: locale,
         password: password,
         role: role,
+        balance_in_hours: balance_in_hours,
         employee: { id: employee_id }
       }
     end
@@ -171,14 +173,33 @@ RSpec.describe API::V1::UsersController, type: :controller do
 
       it { is_expected.to have_http_status(200) }
 
-      it { expect_json_keys([:id, :type, :email, :locale, :role, :employee, :referral_token]) }
-      it { expect_json(email: user.email, id: user.id, type: 'account_user', locale: nil) }
-      it { expect_json_keys('employee', [:id, :type]) }
+      it do
+        expect_json_keys(
+          [:id, :type, :email, :locale, :role, :balance_in_hours, :employee, :referral_token]
+        )
+      end
+      it do
+        expect_json(
+          email: user.email, id: user.id, type: 'account_user', locale: nil, balance_in_hours: false
+        )
+      end
 
       context 'when locale is set' do
         let(:user) { create(:account_user, account: account, locale: 'en') }
 
         it { expect_json(locale: 'en') }
+      end
+
+      context 'when balance_in_hours is true' do
+        let(:user) { create(:account_user, account: account, balance_in_hours: true) }
+
+        it { expect_json(balance_in_hours: true) }
+      end
+
+      context 'when is an employee' do
+        let(:user) { create(:account_user, account: account) }
+
+        it { expect_json_keys('employee', [:id, :type]) }
       end
     end
   end
@@ -186,15 +207,17 @@ RSpec.describe API::V1::UsersController, type: :controller do
   describe 'PUT #update' do
     let!(:users) { create_list(:account_user, 3, account: account) }
     let(:email) { 'test123@example.com' }
-    let(:locale) { 'en' }
     let(:role) { user.role }
+    let(:balance_in_hours) { true }
+    let(:locale) { 'en' }
     let(:params) do
       {
         id: user.id,
         email: email,
         role: role,
         locale: locale,
-        employee: { id: user.employee&.id }
+        employee: { id: user.employee&.id },
+        balance_in_hours: balance_in_hours
       }
     end
 
@@ -205,6 +228,7 @@ RSpec.describe API::V1::UsersController, type: :controller do
       it { is_expected.to have_http_status(204) }
       it { expect { subject }.to change { user.reload.email } }
       it { expect { subject }.to change { user.reload.locale } }
+      it { expect { subject }.to change { user.reload.balance_in_hours } }
 
       context 'assign another employee' do
         before do
