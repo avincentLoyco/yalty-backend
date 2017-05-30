@@ -18,7 +18,7 @@ class CurrentAccountMiddleware
   end
 
   def account_from_user
-    Account.joins(:users).where(account_users: { id: Account::User.current.id }).first
+    Account::User.current.account
   end
 
   def account_from_subdomain
