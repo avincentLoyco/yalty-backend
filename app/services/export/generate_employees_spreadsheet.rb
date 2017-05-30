@@ -39,7 +39,7 @@ module Export
         if attribute_fields.count > 1
           attribute_fields.map do |field|
             ["#{attribute_definition['name']}_#{field}",
-              "#{attribute_definition['name']}_#{field} (effective since)"]
+             "#{attribute_definition['name']}_#{field} (effective since)"]
           end
         else
           [attribute_definition['name'], "#{attribute_definition['name']} (effective since)"]
@@ -120,7 +120,7 @@ module Export
 
     def attribute_versions_data
       attribute_names = uniq_employee_attribute_definitions.map do |attr|
-        "'#{attr["name"]}'"
+        "'#{attr['name']}'"
       end + ["'firstname'", "'lastname'"]
 
       @attribute_versions_data ||=
@@ -141,7 +141,7 @@ module Export
             AND employee_attribute_definitions.name IN (#{attribute_names.join(', ')})
           ORDER BY employee_events.effective_at DESC
         ").to_hash
-      end
+    end
 
     def uniq_employee_attribute_definitions
       @uniq_employee_attribute_definitions ||=
