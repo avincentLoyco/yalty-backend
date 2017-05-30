@@ -1,24 +1,24 @@
 source 'https://rubygems.org'
 
-ruby '2.3.3'
+ruby '2.4.1'
 
 gem 'ar_after_transaction', '~> 0.4.1'
 gem 'bcrypt',               '~> 3.1.10'
 gem 'cancancan',            '~> 1.13.1'
 gem 'countries',            '~> 1.2.5'
 gem 'doorkeeper',           '~> 4.2.0'
-gem 'dry-validation',       '~> 0.9.2'
+gem 'dry-validation',       '~> 0.10.5'
 gem 'geokit',               '~> 1.10.0'
 gem 'holidays',             '~> 4.0'
 gem 'intercom',             '~> 3.3.0'
 gem 'net-sftp',             '~> 2.1.2'
-gem 'newrelic_rpm',         '~> 3.14.2'
+gem 'newrelic_rpm',         '~> 3.18.1'
 gem 'paperclip',            '~> 5.0.0'
 gem 'pg',                   '~> 0.19.0'
 gem 'prawn',                '~> 2.2.2'
 gem 'prawn-table',          '~> 0.2.2'
 gem 'rack-cors',            '~> 0.4.0', require: 'rack/cors'
-gem 'rails',                '4.2.7.1'
+gem 'rails',                '4.2.8'
 gem 'request_store',        '~> 1.3.0'
 gem 'scenic',               '~> 1.1.0'
 gem 'stripe',               '~> 2.0.0'
@@ -80,7 +80,6 @@ end
 
 # Development environment dependencies (only)
 group :development do
-  gem 'apiaryio'
   gem 'better_errors'
   gem 'binding_of_caller'
   gem 'letter_opener', '~> 1.4.1'
