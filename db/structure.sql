@@ -133,7 +133,8 @@ CREATE TABLE accounts (
     subscription_id character varying,
     invoice_company_info hstore,
     invoice_emails text[] DEFAULT '{}'::text[],
-    available_modules json
+    available_modules json,
+    archive_processing boolean DEFAULT false
 );
 
 
@@ -1743,5 +1744,7 @@ INSERT INTO schema_migrations (version) VALUES ('20170413123051');
 INSERT INTO schema_migrations (version) VALUES ('20170420050113');
 
 INSERT INTO schema_migrations (version) VALUES ('20170426111844');
+
+INSERT INTO schema_migrations (version) VALUES ('20170427084526');
 
 INSERT INTO schema_migrations (version) VALUES ('20170515081935');

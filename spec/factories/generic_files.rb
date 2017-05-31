@@ -3,7 +3,7 @@ FactoryGirl.define do
     fileable_type { 'EmployeeFile' }
 
     trait :with_jpg do
-      file File.open(File.join(Rails.root, "/spec/fixtures/files/test.jpg"))
+      file File.open(File.join(Rails.root, '/spec/fixtures/files/test.jpg'))
     end
 
     trait :with_pdf do
@@ -16,6 +16,10 @@ FactoryGirl.define do
 
     trait :with_docx do
       file File.open(File.join(Rails.root, '/spec/fixtures/files/test.docx'))
+    end
+
+    trait :with_zip do
+      file File.open(File.join(Rails.root, '/spec/fixtures/files/test.zip'))
     end
 
     trait :without_file do

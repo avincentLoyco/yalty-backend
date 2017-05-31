@@ -3,6 +3,7 @@
 :pidfile: tmp/pids/sidekiq.%i.pid
 :logfile: log/sidekiq.log
 :queues:
+  - export
   - billing
   - mailers
   - policies_and_balances
