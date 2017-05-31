@@ -1,14 +1,14 @@
 require 'rails_helper'
 require 'rake'
 
-RSpec.describe 'add_missing_days_to_presence_policies:update_policies', type: :rake do
+RSpec.describe 'presence_policies:add_missing_days', type: :rake do
   include_context 'shared_context_account_helper'
   include_context 'rake'
 
   let!(:account) { create(:account) }
   let!(:policy) { create(:presence_policy, :with_time_entries, number_of_days: 7, account: account) }
 
-  subject { rake['add_missing_days_to_presence_policies:update_policies'].invoke }
+  subject { rake['presence_policies:add_missing_days'].invoke }
 
   context 'when policy has different number of days than 7' do
     let!(:employee) { create(:employee, account: account) }
