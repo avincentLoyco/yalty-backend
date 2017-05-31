@@ -42,7 +42,7 @@ module Payments
     end
 
     def update_subscription_items(account)
-      employees_count = account.employees.active_at_date(Time.zone.tomorrow).count
+      employees_count = account.employees.chargeable_at_date(Time.zone.tomorrow).count
       proration_date = proration_date_for(account)
 
       Stripe::SubscriptionItem.list(subscription: account.subscription_id).each do |sub_item|

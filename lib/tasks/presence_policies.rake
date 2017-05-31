@@ -1,7 +1,6 @@
-namespace :add_missing_days_to_presence_policies do
-  desc 'Tasks update presence policies to have seven days and updates balances if needed'
-
-  task update_policies: :environment do
+namespace :presence_policies do
+  desc 'Update presence policies to have seven presence days assigned, updates balances if needed'
+  task add_missing_days: :environment do
     ActiveRecord::Base.transaction do
       not_seven_days_policies.map do |policy|
         missing_days_for_policy = (1..7).to_a - policy.presence_days.pluck(:order)

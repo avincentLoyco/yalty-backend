@@ -23,7 +23,7 @@ class Account < ActiveRecord::Base
   has_many :users,
     class_name: 'Account::User',
     inverse_of: :account
-  has_many :employees, inverse_of: :account
+  has_many :employees, inverse_of: :account, dependent: :destroy
   has_many :employee_attribute_definitions,
     class_name: 'Employee::AttributeDefinition',
     inverse_of: :account
@@ -34,7 +34,7 @@ class Account < ActiveRecord::Base
   has_many :presence_policies
   has_many :presence_days, through: :presence_policies
   has_one :registration_key, class_name: 'Account::RegistrationKey'
-  has_many :time_off_categories
+  has_many :time_off_categories, dependent: :destroy
   has_many :time_offs, through: :time_off_categories
   has_many :time_entries, through: :presence_days
   has_many :time_off_policies, through: :time_off_categories
@@ -42,7 +42,7 @@ class Account < ActiveRecord::Base
   has_many :employee_working_places, through: :employees
   has_many :employee_time_off_policies, through: :employees
   has_many :employee_presence_policies, through: :employees
-  has_many :invoices
+  has_many :invoices, dependent: :destroy
   belongs_to :referrer, primary_key: :token, foreign_key: :referred_by
   has_one :archive_file, as: :fileable, class_name: 'GenericFile'
 

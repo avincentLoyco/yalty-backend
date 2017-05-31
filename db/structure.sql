@@ -1096,6 +1096,13 @@ CREATE INDEX index_invoices_on_account_id ON invoices USING btree (account_id);
 
 
 --
+-- Name: index_invoices_on_invoice_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE UNIQUE INDEX index_invoices_on_invoice_id ON invoices USING btree (invoice_id);
+
+
+--
 -- Name: index_oauth_access_grants_on_token; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
@@ -1616,8 +1623,6 @@ INSERT INTO schema_migrations (version) VALUES ('20160309100705');
 
 INSERT INTO schema_migrations (version) VALUES ('20160316092439');
 
-INSERT INTO schema_migrations (version) VALUES ('20160324094939');
-
 INSERT INTO schema_migrations (version) VALUES ('20160401084042');
 
 INSERT INTO schema_migrations (version) VALUES ('20160401104731');
@@ -1741,3 +1746,5 @@ INSERT INTO schema_migrations (version) VALUES ('20170420050113');
 INSERT INTO schema_migrations (version) VALUES ('20170426111844');
 
 INSERT INTO schema_migrations (version) VALUES ('20170427084526');
+
+INSERT INTO schema_migrations (version) VALUES ('20170515081935');

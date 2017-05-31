@@ -18,7 +18,7 @@ module Payments
         params = {
           subscription: account.subscription_id,
           plan: plan_id,
-          quantity: account.employees.active_at_date.count,
+          quantity: account.employees.chargeable_at_date.count,
           prorate: index.positive? || !subscribed_plans.empty?
         }
         params[:proration_date] = proration_date(Time.zone.today) if params[:prorate]

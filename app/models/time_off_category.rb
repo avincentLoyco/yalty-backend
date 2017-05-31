@@ -5,7 +5,6 @@ class TimeOffCategory < ActiveRecord::Base
   has_many :time_offs
   has_many :time_off_policies
   has_many :employee_balances, class_name: 'Employee::Balance'
-  has_many :time_off_policies
 
   validates :account, :name, presence: true
   validates :name, uniqueness: { scope: :account }

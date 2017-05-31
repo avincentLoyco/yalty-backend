@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe 'create_missing_balances' do
+RSpec.describe 'db:cleanup:create_missing_balances', type: :rake do
   include_context 'rake'
   include_context 'shared_context_account_helper'
   include_context 'shared_context_timecop_helper'
@@ -10,6 +10,8 @@ RSpec.describe 'create_missing_balances' do
   let!(:employee) { create(:employee, account: account) }
   let(:employee_id) { employee.id }
   let(:vacation_category) { create(:time_off_category, account: account, name: 'vacation_xsd') }
+
+  let!(:task_path) { "lib/tasks/#{task_name.gsub(":", "/")}" }
 
   context 'when the policy is of type balancer' do
     let(:vacation_balancer_policy_amount) { 50 }
@@ -24,6 +26,7 @@ RSpec.describe 'create_missing_balances' do
         time_off_policy: vacation_balancer_policy
       )
     end
+
     context 'when there is an alternation between existing and non existing balances over the time ' do
       context 'when there is only one policy in the category' do
         before do

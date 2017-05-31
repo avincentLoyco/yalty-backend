@@ -43,11 +43,13 @@ namespace :release do
       execute :docker, :push, "yalty/backend:#{version}"
       execute :git, :push, '--tags'
 
-      info 'Cleanup tasks list'
-      File.write(tasks_file, JSON.pretty_generate(tasks_json))
-      execute :git, :add, tasks_file
-      execute :git, :commit, '-m "Cleanup list of deploy tasks"'
-      execute :git, :push, "-u origin releases/#{version}"
+      unless test "git diff-index --quiet HEAD -- #{tasks_file}"
+        info 'Cleanup tasks list'
+        File.write(tasks_file, JSON.pretty_generate(tasks_json))
+        execute :git, :add, tasks_file
+        execute :git, :commit, '-m "Cleanup list of deploy tasks"'
+        execute :git, :push, "-u origin releases/#{version}"
+      end
 
       info 'Deploy to production environment:
         cap production deploy'

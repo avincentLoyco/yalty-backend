@@ -48,7 +48,7 @@ module API
           creation_params = {
             subscription: Account.current.subscription_id,
             plan: plan_id,
-            quantity: Account.current.employees.active_at_date.count,
+            quantity: Account.current.employees.chargeable_at_date.count,
             prorate: prorate
           }
           return creation_params unless prorate

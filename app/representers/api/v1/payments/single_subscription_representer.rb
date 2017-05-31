@@ -7,7 +7,7 @@ module Api
             id: resource.id,
             tax_percent: resource.tax_percent,
             current_period_end: current_period_end,
-            quantity: Account.current.employees.active_at_date(current_period_end).count
+            quantity: Account.current.employees.chargeable_at_date(current_period_end).count
           }
         end
 

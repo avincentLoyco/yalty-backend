@@ -210,6 +210,31 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
           it { expect_json(regex("must be filled")) }
         end
       end
+
+      context 'when day params are present and days are not valid' do
+        subject { post :create, valid_data_json.merge(presence_days: days_params) }
+        let(:days_params) do
+          [
+            {
+              time_entries: [{ start_time: '12:00:00', end_time: '16:00:00' }],
+              minutes: 40,
+              order: 1
+            },
+            {
+              time_entries: [{ start_time: '12:00:00', end_time: '16:00:00' }],
+              minutes: 40,
+              order: 1
+            }
+          ]
+        end
+
+        it { is_expected.to have_http_status(422) }
+        it do
+          subject
+
+          expect(response.body).to include 'has already been taken'
+        end
+      end
     end
   end
 

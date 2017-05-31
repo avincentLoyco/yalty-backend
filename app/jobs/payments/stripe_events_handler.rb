@@ -12,16 +12,19 @@ module Payments
       case event.type
       when 'invoice.created' then
         account.transaction do
-          create_invoice(event.data.object)
+          invoice = create_or_find_invoice(event.data.object)
+          return unless invoice.present?
           clear_modules('canceled')
         end
       when 'invoice.payment_failed' then
-        updated_invoice = update_invoice_status(event.data.object, 'failed')
-        PaymentsMailer.payment_failed(updated_invoice.id).deliver_now
+        invoice = create_or_update_invoice(event.data.object, 'failed')
+        return unless invoice.present?
+        PaymentsMailer.payment_failed(invoice.id).deliver_now
       when 'invoice.payment_succeeded' then
-        updated_invoice = update_invoice_status(event.data.object, 'success')
-        ::Payments::CreateInvoicePdf.new(updated_invoice).call
-        PaymentsMailer.payment_succeeded(updated_invoice.id).deliver_now
+        invoice = create_or_update_invoice(event.data.object, 'success')
+        return unless invoice.present?
+        ::Payments::CreateInvoicePdf.new(invoice).call
+        PaymentsMailer.payment_succeeded(invoice.id).deliver_now
       when 'customer.subscription.updated' then
         if event.data.object.status.eql?('canceled')
           account.transaction do
@@ -36,21 +39,29 @@ module Payments
 
     private
 
-    def update_invoice_status(invoice, status)
-      next_attempt = if invoice.next_payment_attempt.present?
-                       Time.zone.at(invoice.next_payment_attempt).to_datetime
-                     end
-
-      account.invoices.find_by(invoice_id: invoice.id).tap do |updated_invoice|
-        updated_invoice.update!(
-          status: status,
-          attempts: invoice.attempt_count,
-          next_attempt: next_attempt
-        )
-      end
+    def create_or_update_invoice(stripe_invoice, status)
+      existing_invoice = create_or_find_invoice(stripe_invoice)
+      return unless existing_invoice.present?
+      options = {
+        status: status,
+        next_attempt: stripe_invoice.next_payment_attempt,
+        attempts: stripe_invoice.attempt_count
+      }
+      update_invoice_status(existing_invoice, options)
     end
 
-    def create_invoice(invoice)
+    def update_invoice_status(invoice, options)
+      if options[:next_attempt].present?
+        options[:next_attempt] = Time.zone.at(options[:next_attempt]).to_datetime
+      end
+
+      invoice.tap { |i| i.update!(options) }
+    end
+
+    def create_or_find_invoice(invoice)
+      existing_invoice = account.invoices.find_by(invoice_id: invoice.id)
+      return existing_invoice if existing_invoice.present?
+
       invoice_lines = []
       invoice.lines.auto_paging_each do |line|
         next if line.plan.id.eql?('free-plan') || canceled_modules.include?(line.plan.id)
@@ -60,7 +71,7 @@ module Payments
       return if invoice_lines.empty? ||
           Stripe::Subscription.retrieve(invoice.subscription).status == 'trialing'
 
-      account.invoices.create(
+      account.invoices.create!(
         invoice_id: invoice.id,
         amount_due: invoice.amount_due,
         attempts: invoice.attempt_count,
@@ -76,6 +87,9 @@ module Payments
         period_end: Time.zone.at(invoice_lines.map { |l| l.period.end }.max),
         lines: InvoiceLines.new(data: invoice_lines.map { |line| build_invoice_line(line) })
       )
+
+    rescue ActiveRecord::RecordInvalid
+      account.invoices.find_by(invoice_id: invoice.id)
     end
 
     def build_invoice_line(line_item)
@@ -110,7 +124,7 @@ module Payments
         customer: account.customer_id,
         plan: 'free-plan',
         tax_percent: Invoice::TAX_PERCENT,
-        quantity: account.employees.active_at_date(Time.zone.tomorrow).count
+        quantity: account.employees.chargeable_at_date(Time.zone.tomorrow).count
       )
 
       account.update!(subscription_id: subscription.id)
