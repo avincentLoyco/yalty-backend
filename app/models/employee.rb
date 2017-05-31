@@ -84,7 +84,7 @@ class Employee < ActiveRecord::Base
       "
         '#{type}' = (
           SELECT employee_events.event_type FROM employee_events
-          WHERE employee_events.effective_at <= '#{formatted_date}'
+          WHERE employee_events.effective_at < '#{formatted_date}'
           AND employee_events.employee_id = employees.id
           AND employee_events.event_type IN ('hired', 'contract_end')
           ORDER BY employee_events.effective_at DESC
