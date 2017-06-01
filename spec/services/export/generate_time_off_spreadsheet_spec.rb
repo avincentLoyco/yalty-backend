@@ -2,6 +2,7 @@ require 'rails_helper'
 
 RSpec.describe Export::GenerateTimeOffSpreadsheet, type: :service do
   include_context 'shared_context_spreadsheets'
+
   shared_examples 'Valid CSV' do
     it { expect(File.exist?(file_path)).to be true }
     it { expect(FileUtils.compare_file(file_path, fixture)).to be true }
@@ -13,7 +14,6 @@ RSpec.describe Export::GenerateTimeOffSpreadsheet, type: :service do
     let(:file_name) { 'time_offs.csv' }
 
     context 'without time offs' do
-      let(:spec_name) { "without_time_offs" }
       let(:fixture_name) { 'empty_time_offs_test.csv' }
 
       before { subject }
@@ -23,7 +23,6 @@ RSpec.describe Export::GenerateTimeOffSpreadsheet, type: :service do
 
     context 'with time offs' do
       let(:fixture_name)      { 'time_offs_test.csv' }
-      let(:spec_name) { "with_time_offs" }
 
       let(:sickness_category) { account.time_off_categories.find_by(name: 'sickness') }
       let(:accident_category) { account.time_off_categories.find_by(name: 'accident') }
