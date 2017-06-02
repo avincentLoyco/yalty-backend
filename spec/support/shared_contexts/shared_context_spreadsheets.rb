@@ -1,7 +1,5 @@
 RSpec.shared_context 'shared_context_spreadsheets' do
-  before(:all) { ENV['TEST_ENV_NUMBER'] = '1' if ENV['TEST_ENV_NUMBER'].nil? }
-
-  let(:folder_path)  { Rails.root.join('spec', 'tmp', ENV['TEST_ENV_NUMBER']) }
+  let(:folder_path)  { Rails.root.join('spec', 'tmp', "spreadsheets#{ENV['TEST_ENV_NUMBER']}") }
   let(:file_path)    { folder_path.join(file_name) }
   let(:fixture)      { Rails.root.join('spec', 'fixtures', 'files', fixture_name) }
 
