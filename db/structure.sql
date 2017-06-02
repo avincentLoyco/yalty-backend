@@ -141,6 +141,21 @@ CREATE TABLE accounts (
 
 
 --
+-- Name: company_events; Type: TABLE; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE TABLE company_events (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    title character varying NOT NULL,
+    effective_at date,
+    comment character varying,
+    account_id uuid,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL
+);
+
+
+--
 -- Name: employee_attribute_definitions; Type: TABLE; Schema: public; Owner: -; Tablespace:
 --
 
@@ -308,7 +323,8 @@ CREATE TABLE generic_files (
     file_updated_at timestamp without time zone,
     fileable_id uuid,
     fileable_type character varying,
-    sha_sums json
+    sha_sums json,
+    original_filename character varying
 );
 
 
@@ -689,6 +705,14 @@ ALTER TABLE ONLY accounts
 
 
 --
+-- Name: company_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
+--
+
+ALTER TABLE ONLY company_events
+    ADD CONSTRAINT company_events_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: employee_attribute_definitions_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
@@ -913,6 +937,13 @@ CREATE UNIQUE INDEX index_account_users_on_email_and_account_id ON account_users
 --
 
 CREATE UNIQUE INDEX index_accounts_on_subdomain ON accounts USING btree (subdomain);
+
+
+--
+-- Name: index_company_events_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE INDEX index_company_events_on_account_id ON company_events USING btree (account_id);
 
 
 --
@@ -1756,3 +1787,7 @@ INSERT INTO schema_migrations (version) VALUES ('20170517075057');
 INSERT INTO schema_migrations (version) VALUES ('20170523121718');
 
 INSERT INTO schema_migrations (version) VALUES ('20170530113419');
+
+INSERT INTO schema_migrations (version) VALUES ('20170531090517');
+
+INSERT INTO schema_migrations (version) VALUES ('20170605054342');
