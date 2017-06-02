@@ -4,7 +4,8 @@ class GenericFile < ActiveRecord::Base
     application/pdf application/msword
     application/vnd.openxmlformats-officedocument.wordprocessingml.document
   ).freeze
-  CONTENT_TYPES = (IMAGES_TYPES + DOCUMENT_TYPES).freeze
+  EXPORT_TYPES = %w(application/zip).freeze
+  CONTENT_TYPES = (IMAGES_TYPES + DOCUMENT_TYPES + EXPORT_TYPES).freeze
 
   belongs_to :fileable, polymorphic: true
 
@@ -35,6 +36,11 @@ class GenericFile < ActiveRecord::Base
   end
 
   private
+
+  def account_friendly_name
+    date = file_updated_at.strftime('%Y%m%d')
+    "archive-#{fileable.subdomain}-#{date}"
+  end
 
   def invoice_friendly_name
     date = fileable.date.strftime('%Y%m%d')

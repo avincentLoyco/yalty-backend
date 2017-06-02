@@ -10,6 +10,7 @@ RSpec.describe Account, type: :model do
   it { is_expected.to have_db_column(:subdomain).with_options(null: false) }
   it { is_expected.to have_db_column(:invoice_company_info).of_type(:hstore) }
   it { is_expected.to have_db_column(:invoice_emails).of_type(:text) }
+  it { is_expected.to have_db_column(:archive_processing).of_type(:boolean).with_options(default: false) }
   it { is_expected.to have_db_index(:subdomain).unique(true) }
   it { is_expected.to validate_presence_of(:subdomain).on(:update) }
   it { is_expected.to validate_uniqueness_of(:subdomain).case_insensitive }
@@ -24,6 +25,7 @@ RSpec.describe Account, type: :model do
   it { is_expected.to have_many(:time_off_categories) }
   it { is_expected.to have_many(:invoices) }
   it { is_expected.to have_one(:registration_key) }
+  it { is_expected.to have_one(:archive_file).class_name('GenericFile') }
 
   context 'generate subdomain from company name on create' do
 

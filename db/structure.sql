@@ -133,7 +133,8 @@ CREATE TABLE accounts (
     subscription_id character varying,
     invoice_company_info hstore,
     invoice_emails text[] DEFAULT '{}'::text[],
-    available_modules json
+    available_modules json,
+    archive_processing boolean DEFAULT false
 );
 
 
@@ -634,8 +635,8 @@ CREATE TABLE working_places (
     street character varying(60),
     street_number character varying(10),
     timezone character varying,
-    state_code character varying(60),
     reset boolean DEFAULT false NOT NULL,
+    state_code character varying(60),
     country_code character varying
 );
 
@@ -1092,6 +1093,13 @@ CREATE INDEX index_holidays_on_holiday_policy_id ON holidays USING btree (holida
 --
 
 CREATE INDEX index_invoices_on_account_id ON invoices USING btree (account_id);
+
+
+--
+-- Name: index_invoices_on_invoice_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
+--
+
+CREATE UNIQUE INDEX index_invoices_on_invoice_id ON invoices USING btree (invoice_id);
 
 
 --
@@ -1615,8 +1623,6 @@ INSERT INTO schema_migrations (version) VALUES ('20160309100705');
 
 INSERT INTO schema_migrations (version) VALUES ('20160316092439');
 
-INSERT INTO schema_migrations (version) VALUES ('20160324094939');
-
 INSERT INTO schema_migrations (version) VALUES ('20160401084042');
 
 INSERT INTO schema_migrations (version) VALUES ('20160401104731');
@@ -1738,3 +1744,7 @@ INSERT INTO schema_migrations (version) VALUES ('20170413123051');
 INSERT INTO schema_migrations (version) VALUES ('20170420050113');
 
 INSERT INTO schema_migrations (version) VALUES ('20170426111844');
+
+INSERT INTO schema_migrations (version) VALUES ('20170427084526');
+
+INSERT INTO schema_migrations (version) VALUES ('20170515081935');

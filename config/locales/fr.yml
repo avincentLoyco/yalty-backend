@@ -8,6 +8,9 @@ fr:
       subject: Réinitialiser votre mot de passe
     accounts_list:
       subject: Votre équipe sur yalty
+  export_mailer:
+    archive_generation:
+      subject: "%{company_name}: Vos archives sont prêtes à télécharger!"
   payment:
     pdf:
       header:

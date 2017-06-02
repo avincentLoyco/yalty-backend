@@ -1,22 +1,23 @@
 namespace :attribute_definitions do
-  desc 'Creates missing attribute definitions for account'
+  desc 'Creates missing attribute definitions, updates their validations, remove the unused ones.'
 
   MARRIAGE_STATUSES = %w(Marié Mariée).freeze
 
   task update: :environment do
-    puts 'Removing unused attribute definitions'
+    puts 'Remove unused attribute definitions'
     Rake::Task['attribute_definitions:remove_not_used'].invoke
 
-    puts 'Creating new definitions'
+    puts 'Create new definitions'
     Rake::Task['attribute_definitions:create_missing'].invoke
 
-    puts 'Updte existing nested attributes'
+    puts 'Update existing nested attributes'
     Rake::Task['attribute_definitions:update_existing_nested_attributes'].invoke
 
     puts 'Update existing definitions validations'
     Rake::Task['attribute_definitions:update_existing_definitions_validations'].invoke
   end
 
+  desc 'Creates events for contract end and status change, remove not used attribute definitions'
   task remove_not_used: :environment do
     manage_employee_civil_status
     manage_employee_exit_date
@@ -25,23 +26,26 @@ namespace :attribute_definitions do
     Employee::AttributeDefinition.where(id: ids_to_remove).destroy_all
   end
 
+  desc 'Creates missing employee attributes definitions'
   task create_missing: :environment do
-    Account.all.each do |account|
+    Account.find_each do |account|
       account.update_default_attribute_definitions! unless all_attribute_definitions?(account)
     end
   end
 
+  desc 'Updates values for existing nested employee attributes'
   task update_existing_nested_attributes: :environment do
-    Employee::AttributeVersion.where("data -> 'attribute_type' = 'Child'").map do |version|
+    Employee::AttributeVersion.where("data -> 'attribute_type' = 'Child'").find_each do |version|
       values = version.data.instance_values['data']
       values['other_parent_working'] = values.delete('mother_is_working')
       version.save!
     end
   end
 
+  desc 'Updates validations for existing employee attribute definitions'
   task update_existing_definitions_validations: :environment do
     attributes = Account::ATTR_VALIDATIONS.keys
-    Employee::AttributeDefinition.where(name: attributes, system: true).map do |definition|
+    Employee::AttributeDefinition.where(name: attributes, system: true).find_each do |definition|
       definition.update!(validation: Account::ATTR_VALIDATIONS[definition.name])
     end
   end
@@ -72,7 +76,7 @@ namespace :attribute_definitions do
 
   def manage_employee_civil_status
     ids_to_remove = Employee::AttributeDefinition.where(name: 'civil_status').pluck(:id)
-    Employee::AttributeVersion.where(attribute_definition_id: ids_to_remove).map do |version|
+    Employee::AttributeVersion.where(attribute_definition_id: ids_to_remove).find_each do |version|
       next if version.attribute_definition.name.eql?('start_date')
       event_type = find_event_type_for(version)
       next if event_type.nil?
