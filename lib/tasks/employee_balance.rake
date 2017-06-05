@@ -9,7 +9,7 @@ namespace :employee_balance do
     puts 'create missing additions and removals'
     create_missing_additions_and_removals
     puts 'recalculate'
-    recalculate_balances
+    Rake::Task['db:cleanup:recalculate_all_balances'].invoke
   end
 
   def update_additions_and_assignations
@@ -56,29 +56,5 @@ namespace :employee_balance do
     EmployeeTimeOffPolicy.order(:effective_at).not_reset.map do |policy|
       ManageEmployeeBalanceAdditions.new(policy, false).call
     end
-  end
-
-  def recalculate_balances
-    Employee.all.map do |employee|
-      grouped_balances =
-        employee.employee_balances.order(:effective_at).group_by do |balance|
-          balance[:time_off_category_id]
-        end
-
-      next unless grouped_balances.present?
-      grouped_balances.map do |_category, balances|
-        if balances.first.balance_type.eql?('reset')
-          remove_reset_resources(balances)
-        else
-          PrepareEmployeeBalancesToUpdate.new(balances.first, update_all: true).call
-          UpdateBalanceJob.perform_later(balances.first.id, update_all: true)
-        end
-      end
-    end
-  end
-
-  def remove_reset_resources(balances)
-    balances.first.employee_time_off_policy&.destroy!
-    balances.first.destroy!
   end
 end
