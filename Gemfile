@@ -34,9 +34,9 @@ gem 'sidekiq-unique-jobs',  '~> 5.0.4'
 
 # Production environment dependencies
 group :production, :staging, :review do
-  gem 'puma',             '~> 3.6.2'
+  gem 'puma',             '~> 3.8.2'
   gem 'rails_12factor',   '~> 0.0.3'
-  gem 'therubyracer',     '~> 0.12.2'
+  gem 'therubyracer',     '~> 0.12.3'
 end
 
 # Development environment dependencies (also needed by test environement)
