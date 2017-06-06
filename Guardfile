@@ -9,6 +9,7 @@ guard :rspec, cmd: 'bin/rspec', failed_mode: :keep do
   watch(rspec.spec_helper)
   watch(rspec.spec_support)
   watch(rspec.spec_files)
+  watch(%r{spec/factories/.+\.rb$})
 
   # Ruby files
   ruby = dsl.ruby
@@ -30,16 +31,7 @@ guard :rspec, cmd: 'bin/rspec', failed_mode: :keep do
   watch(%r{^lib/tasks/(.+)\.rake$}) { |m| rspec.spec.call("lib/tasks/#{m[1]}") }
 
   # Rails config changes
-  # watch(rails.spec_helper)     { rspec.spec_dir }
+  watch(rails.spec_helper)
   watch(rails.routes)
   watch(rails.app_controller)
-
-  # Capybara features specs
-  # watch(rails.view_dirs)     { |m| rspec.spec.call("features/#{m[1]}") }
-
-  # Turnip features and steps
-  # watch(%r{^spec/acceptance/(.+)\.feature$})
-  # watch(%r{^spec/acceptance/steps/(.+)_steps\.rb$}) do |m|
-  #   Dir[File.join("**/#{m[1]}.feature")][0] || "spec/acceptance"
-  # end
 end
