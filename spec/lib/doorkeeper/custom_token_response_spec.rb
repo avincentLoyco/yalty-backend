@@ -5,7 +5,7 @@ RSpec.describe CustomTokenResponse do
 
   let(:token) { double(resource_owner_id: user.id).as_null_object }
   let(:uuid) { 'b10c846f-945e-4079-8c37-cbc91e377bdb' }
-  let(:user) { create(:account_user, :with_employee, account: account, id: uuid, role: 'account_owner', locale: 'fr') }
+  let(:user) { create(:account_user, account: account, id: uuid, role: 'account_owner', locale: 'fr') }
   let(:account) { create(:account, default_locale: 'en') }
 
   before(:all) do

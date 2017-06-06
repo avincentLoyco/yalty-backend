@@ -162,94 +162,71 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
   describe 'authorization' do
     let(:account) { create(:account) }
     let(:user) { create(:account_user, account: account, employee: employee) }
+    let!(:employee) { create(:employee, account: account) }
+
+    let(:different_employee) { create(:employee, account: account) }
+    let(:generic_file) { create(:generic_file, :with_jpg) }
+    let(:attribute_definition) do
+      create(:employee_attribute_definition, :required, attribute_type: 'File',
+        name: file_type, long_token_allowed: true)
+    end
+    let(:employee_attribute) do
+      create(:employee_attribute, account: account, attribute_type: 'File',
+        attribute_definition: attribute_definition, employee: employee_for_file,
+        data: { size: 1000, file_type: 'image/jpeg', id: generic_file.id, original_sha: '12' })
+    end
 
     before do
       Account::User.current = user
       Account.current = account
     end
 
-    context 'user without employee' do
-      let(:employee) { nil }
+    context 'can request token for upload' do
+      let(:params) { {} }
+      before { request_token }
 
-      context 'can request token for upload' do
-        let(:params) {{}}
-
-        before { request_token }
-
-        it { expect(response.status).to eq(201) }
-      end
-
-      context 'can\'t request token for download' do
-        let(:generic_file) { create(:generic_file) }
-        let(:params) {{ file_id: generic_file.id }}
-
-        before { request_token }
-
-        it { expect(response.status).to eq(403) }
-      end
+      it { expect(response.status).to eq(201) }
     end
 
-    context 'user with employee' do
-      let!(:employee) { create(:employee, account: account) }
-      let(:different_employee) { create(:employee, account: account) }
-      let(:generic_file) { create(:generic_file, :with_jpg) }
-      let(:attribute_definition) do
-        create(:employee_attribute_definition, :required, attribute_type: 'File',
-          name: file_type, long_token_allowed: true)
-      end
-      let(:employee_attribute) do
-        create(:employee_attribute, account: account, attribute_type: 'File',
-          attribute_definition: attribute_definition, employee: employee_for_file,
-          data: { size: 1000, file_type: 'image/jpeg', id: generic_file.id, original_sha: '12' })
+    context 'can request token for download every profile_picture' do
+      let(:file_type) { 'profile_picture' }
+      let(:employee_for_file) { different_employee }
+      let(:params) {{ file_id: generic_file.id }}
+
+      before do
+        employee_attribute
+        request_token
       end
 
-      context 'can request token for upload' do
-        let(:params) { {} }
-        before { request_token }
+      it { expect(response.status).to eq(201) }
+    end
 
-        it { expect(response.status).to eq(201) }
+    context 'can\'t request download token for other users files' do
+      let(:file_type) { 'contract' }
+      let(:employee_for_file) { different_employee }
+      let(:params) { { file_id: generic_file.id } }
+
+      before do
+        employee_attribute
+        employee.reload
+        request_token
       end
 
-      context 'can request token for download every profile_picture' do
-        let(:file_type) { 'profile_picture' }
-        let(:employee_for_file) { different_employee }
-        let(:params) {{ file_id: generic_file.id }}
+      it { expect(response.status).to eq(403) }
+    end
 
-        before do
-          employee_attribute
-          request_token
-        end
+    context 'can request token for download his files' do
+      let(:file_type) { 'contract' }
+      let(:employee_for_file) { employee }
+      let(:params) { { file_id: generic_file.id } }
 
-        it { expect(response.status).to eq(201) }
+      before do
+        employee_attribute
+        employee.reload
+        request_token
       end
 
-      context 'can\'t request download token for other users files' do
-        let(:file_type) { 'contract' }
-        let(:employee_for_file) { different_employee }
-        let(:params) { { file_id: generic_file.id } }
-
-        before do
-          employee_attribute
-          employee.reload
-          request_token
-        end
-
-        it { expect(response.status).to eq(403) }
-      end
-
-      context 'can request token for download his files' do
-        let(:file_type) { 'contract' }
-        let(:employee_for_file) { employee }
-        let(:params) { { file_id: generic_file.id } }
-
-        before do
-          employee_attribute
-          employee.reload
-          request_token
-        end
-
-        it { expect(response.status).to eq(201) }
-      end
+      it { expect(response.status).to eq(201) }
     end
   end
 end

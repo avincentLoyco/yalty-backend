@@ -1,11 +1,12 @@
 FactoryGirl.define do
   factory :employee do
+    account { create(:account) }
+
     transient do
       hired_at { 6.years.ago }
       contract_end_at { nil }
     end
 
-    account
     after(:build) do |employee, evaluator|
       if employee.events.empty?
         hired_at = if employee.employee_working_places.empty?

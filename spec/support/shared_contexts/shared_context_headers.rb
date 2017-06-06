@@ -1,6 +1,6 @@
 RSpec.shared_context 'shared_context_headers', :a => :b do
-  let(:user) { create(:account_user, role: 'account_administrator') }
-  let(:account) { user.account }
+  let(:account) { create(:account) }
+  let(:user) { create(:account_user, account: account, role: 'account_administrator') }
 
   unless described_class == API::V1::EmployeeAttributeDefinitionsController
     include_context 'shared_context_account_helper'

@@ -52,6 +52,7 @@ class Account < ActiveRecord::Base
   }
 
   before_validation :generate_subdomain, on: :create
+  before_validation :set_recently_created, on: :create
   after_create :update_default_attribute_definitions!
   after_create :update_default_time_off_categories!
   after_create :create_reset_presence_policy_and_working_place!
@@ -193,6 +194,10 @@ class Account < ActiveRecord::Base
     @yalty_access = value
   end
 
+  def recently_created?
+    new_record? || @recently_created
+  end
+
   private
 
   # Generate a subdomain from company name
@@ -228,6 +233,10 @@ class Account < ActiveRecord::Base
         break
       end
     end
+  end
+
+  def set_recently_created
+    @recently_created = new_record?
   end
 
   def referrer_must_exist

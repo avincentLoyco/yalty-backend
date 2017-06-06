@@ -193,7 +193,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
 
   context 'GET #index' do
     let!(:employees) do
-      create_list(:employee_with_working_place, 3, :with_attributes, account: account)
+      create_list(:employee_with_working_place, 3, :with_attributes, account: account) << user.employee
     end
     subject { get :index }
 
@@ -202,7 +202,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
     context 'response' do
       before { subject }
 
-      it { expect_json_sizes(3) }
+      it { expect_json_sizes(4) }
       it { expect_json_types(
         '*', id: :string, type: :string, employee_attributes: :array)
       }
@@ -240,39 +240,35 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
     end
 
     context 'attributes' do
-      let!(:current_user_employee) do
-        create(:employee_with_working_place, :with_attributes, user: Account::User.current, account: account)
-      end
       let!(:public_definition) do
         create(:employee_attribute_definition, name: 'firstname',
           attribute_type: Attribute::String.attribute_type, account: account)
       end
-      let(:public_attribute) do
-        build(:employee_attribute_version, attribute_definition: public_definition,
-          attribute_name: 'firstname', value: 'Mirek', employee: employees.last,
-          event: employees.last.events.last)
-      end
-      let(:employee_with_public_attribute) do
-        JSON.parse(response.body).select { |e| e["id"] == employees.last.id }.first
-      end
-      let(:employee_with_current_user) do
-        JSON.parse(response.body).select { |e| e["id"] == current_user_employee.id }.first
-      end
+      let!(:user) { create(:account_user, account: account, employee: employee, role: 'user') }
+      let(:employee) { create(:employee_with_working_place, :with_attributes, account: account) }
+      let(:employee_with_public_attribute) { employees.find { |e| e.id != user.employee.id } }
 
       before do
-        Account::User.current.update!(role: 'user')
-        employees.last.events.last.employee_attribute_versions << public_attribute
+        employee_with_public_attribute.events.last.employee_attribute_versions << build(
+          :employee_attribute_version, attribute_definition: public_definition,
+          attribute_name: 'firstname', value: 'Mirek', employee: employee_with_public_attribute,
+          event: employee_with_public_attribute.events.last)
+
         subject
       end
 
-      after { Account::User.current.update!(role: 'user') }
-
       context 'advanced when employee belongs to current user' do
-        it { expect(employee_with_current_user['employee_attributes'].size).to eq(2) }
+        it do
+          result = JSON.parse(response.body).find { |e| e["id"] == user.employee.id }
+          expect(result['employee_attributes'].size).to eq(2)
+        end
       end
 
       context 'simple for other employees' do
-        it { expect(employee_with_public_attribute['employee_attributes'].size).to eq(1) }
+        it do
+          result = JSON.parse(response.body).find { |e| e["id"] == employee_with_public_attribute.id }
+          expect(result['employee_attributes'].size).to eq(1)
+        end
       end
     end
 
@@ -340,7 +336,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
       context 'response' do
         before { subject }
 
-        it { expect_json_sizes(0) }
+        it { expect_json_sizes(1) }
       end
     end
   end

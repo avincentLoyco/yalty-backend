@@ -7,7 +7,10 @@ class Employee < ActiveRecord::Base
                    'partner_death' => 'dissolved partnership due to death' }.freeze
 
   belongs_to :account, inverse_of: :employees, required: true
-  belongs_to :user, class_name: 'Account::User', foreign_key: :account_user_id
+  belongs_to :user,
+    class_name: 'Account::User',
+    foreign_key: :account_user_id,
+    inverse_of: :employee
   has_many :employee_attribute_versions,
     class_name: 'Employee::AttributeVersion',
     inverse_of: :employee
@@ -26,6 +29,8 @@ class Employee < ActiveRecord::Base
   has_many :presence_policies, through: :employee_presence_policies
   has_many :registered_working_times, dependent: :destroy
 
+  validates :user, uniqueness: { scope: :account_id }, allow_nil: true
+  validates :user, presence: true, if: :account_user_id_changed?
   validate :hired_event_presence, on: :create
 
   scope(:active_by_account, lambda do |account_id|

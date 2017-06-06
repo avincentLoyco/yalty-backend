@@ -104,8 +104,8 @@ RSpec.describe EmployeePresencePolicy, type: :model do
       end
 
       context 'with user' do
-        let!(:user) { create(:account_user, account: account) }
-        let!(:employee) { create(:employee, account: account, user: user) }
+        let!(:user) { create(:account_user, employee: employee, account: account) }
+        let(:employee) { create(:employee, account: account) }
 
         it 'should trigger intercom update on user' do
           expect(user).to receive(:create_or_update_on_intercom).with(true)

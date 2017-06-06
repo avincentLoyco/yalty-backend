@@ -27,6 +27,46 @@ RSpec.describe Account::User, type: :model do
   it { is_expected.to have_db_column(:locale).of_type(:string).with_options(null: true) }
   it { is_expected.to validate_inclusion_of(:locale).in_array(I18n.available_locales.map(&:to_s)) }
 
+  it { is_expected.to have_one(:employee) }
+  it { is_expected.to validate_presence_of(:employee) }
+
+
+  context 'on account creation (account owner)' do
+    subject { build(:account_user, role: 'account_owner') }
+
+    it 'should validate presence of employee if account is created in another transaction' do
+      subject.account = Account.find(account.id)
+      is_expected.to validate_presence_of(:employee)
+    end
+
+    it 'should not validate presence of employee if account is not set' do
+      subject.account = nil
+      is_expected.to_not validate_presence_of(:employee)
+    end
+
+    it 'should not validate presence of employee if account is not persisted yet' do
+      subject.account = build(:account)
+      is_expected.to_not validate_presence_of(:employee)
+    end
+
+    it 'should not validate presence of employee if account is created in same transaction' do
+      Account.transaction do
+        subject.account = account
+        is_expected.to_not validate_presence_of(:employee)
+      end
+    end
+  end
+
+  context 'on update password when account is recent (on boarding)' do
+    subject { create(:account_user, role: 'account_owner').reload }
+
+    it 'should not validate presence of employee if only password is updated' do
+      subject.password = '12456790'
+      subject.password_confirmation = '12456790'
+      is_expected.to_not validate_presence_of(:employee)
+    end
+  end
+
   it 'should validate length of password only when is updated' do
     user = create(:account_user)
     user = Account::User.find(user.id)
@@ -132,16 +172,7 @@ RSpec.describe Account::User, type: :model do
 
     it { expect(user.intercom_type).to eq(:users) }
     it { expect(user.intercom_attributes).to eq(proper_user_intercom_attributes) }
-
-    context 'as user only' do
-      it { expect(data_keys).to match_array(proper_user_data_keys) }
-    end
-
-    context 'as employee' do
-      before { create(:employee, account: account, user: user) }
-
-      it { expect(data_keys).to match_array(proper_user_data_keys) }
-    end
+    it { expect(data_keys).to match_array(proper_user_data_keys) }
   end
 
   describe '#owner_or_administrator?' do
@@ -233,7 +264,7 @@ RSpec.describe Account::User, type: :model do
   end
 
   context 'yalty role' do
-    subject { create(:account_user, email: email, role: 'yalty') }
+    subject { create(:account_user, :with_yalty_role, email: email) }
 
     let!(:email) { ENV['YALTY_ACCESS_EMAIL'] = 'access@example.com' }
 
@@ -254,7 +285,7 @@ RSpec.describe Account::User, type: :model do
     end
 
     it 'should not allowed to add related employee' do
-      user = build(:account_user, email: email, role: 'yalty')
+      user = build(:account_user, :with_yalty_role, email: email)
       user.employee = create(:employee)
       expect(user).to_not be_valid
 
@@ -263,7 +294,7 @@ RSpec.describe Account::User, type: :model do
     end
 
     it 'should not be allowed to exist more than once per account' do
-      user = build(:account_user, account: subject.account, email: email, role: 'yalty')
+      user = build(:account_user, :with_yalty_role, account: subject.account, email: email)
       expect(user).to_not be_valid
     end
 
@@ -273,12 +304,12 @@ RSpec.describe Account::User, type: :model do
     end
 
     it 'should allow usage of yalty user email to user with yalty role' do
-      user = build(:account_user, email: email, role: 'yalty')
+      user = build(:account_user, :with_yalty_role, email: email)
       expect(user).to be_valid
     end
 
     it 'should require yalty user email for user with yalty role' do
-      user = build(:account_user, email: 'another.email@example.com', role: 'yalty')
+      user = build(:account_user, :with_yalty_role, email: 'another.email@example.com')
       expect(user).to_not be_valid
     end
   end

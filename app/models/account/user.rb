@@ -15,12 +15,13 @@ class Account::User < ActiveRecord::Base
     presence: true,
     inclusion: { in: %w(user yalty account_administrator account_owner) }
   validates :locale, inclusion: { in: I18n.available_locales.map(&:to_s) }, allow_nil: true
+  validates :employee, presence: true, unless: :empty_employee_allowed
   validate :validate_role_update, if: :role_changed?, on: :update
   validate :validate_yalty_role, if: -> { role.eql?('yalty') }
 
   belongs_to :account, inverse_of: :users, required: true
   belongs_to :referrer, primary_key: :email, foreign_key: :email
-  has_one :employee, foreign_key: :account_user_id
+  has_one :employee, inverse_of: :user, foreign_key: :account_user_id
 
   before_validation :generate_password, unless: :password_digest?, on: :create
   after_create :create_referrer
@@ -94,7 +95,7 @@ class Account::User < ActiveRecord::Base
     elsif persisted? && password_digest_changed?
       errors.add(:password, 'is not allowed to be changed for yalty role')
     elsif employee.present?
-      errors.add(:employee, 'is not allowed to be an employee for yalty role')
+      errors.add(:employee, 'is not allowed to be set for yalty role')
     elsif account.users.where.not(id: id).where(role: 'yalty').exists?
       errors.add(:role, 'is allowed only once per account')
     elsif !email.eql?(ENV['YALTY_ACCESS_EMAIL'])
@@ -111,5 +112,12 @@ class Account::User < ActiveRecord::Base
 
     errors.add(:role, 'last account owner cannot be deleted')
     false
+  end
+
+  def empty_employee_allowed
+    role.eql?('yalty') ||
+      role.eql?('account_owner') && (
+        account.nil? || account.recently_created? || changed.eql?(%w(password_digest))
+      )
   end
 end

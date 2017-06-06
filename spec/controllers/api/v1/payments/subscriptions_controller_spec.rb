@@ -60,7 +60,7 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
         id: subscription.id,
         tax_percent: 8.0,
         current_period_end: '2016-01-01T00:00:00.000Z',
-        quantity: 5,
+        quantity: 6,
         plans: [
           {
             id: plans.first.id,
@@ -166,7 +166,7 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
         get_subscription
       end
 
-      it { expect_json(quantity: 5) }
+      it { expect_json(quantity: 6) }
     end
 
     context 'do not include invoice if all modules are canceled at billing date' do
