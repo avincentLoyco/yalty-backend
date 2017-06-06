@@ -32,7 +32,6 @@ module API
 
       def update
         verified_dry_params(dry_validation_schema) do |attributes|
-          return locked_error if resource_locked?
           resource.attributes = attributes
           save!(resource, {})
           render_no_content

@@ -291,15 +291,17 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
     context 'with valid data' do
       subject { put :update, valid_data_json }
 
-      it { expect { subject }.to change { presence_policy.reload.standard_day_duration } }
+      context 'when policy is not assigned' do
+        it { expect { subject }.to change { presence_policy.reload.standard_day_duration } }
 
-      context 'response' do
-        before { subject }
+        context 'response' do
+          before { subject }
 
-        it { is_expected.to have_http_status(204) }
+          it { is_expected.to have_http_status(204) }
+        end
       end
 
-      context 'and the policy is already assigned to an employee' do
+      context 'when policy is assigned' do
         before do
           presence_policy.update!(presence_days: [create(:presence_day)])
           create(:employee_presence_policy,
@@ -308,8 +310,9 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
           )
         end
 
-        it { is_expected.to have_http_status(423) }
-        it { expect { subject }.to_not change { presence_policy.reload.name } }
+        it { is_expected.to have_http_status(204) }
+        it { expect { subject }.to change { presence_policy.reload.name } }
+        it { expect { subject }.to change { presence_policy.reload.standard_day_duration } }
         it { expect { subject }.to_not change { presence_policy.reload.presence_days.count } }
       end
 
