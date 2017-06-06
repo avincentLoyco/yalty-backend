@@ -4,7 +4,7 @@ server '10.128.102.11', roles: %w(api launchpad worker), primary: true
 ask :docker_tag, proc {
   run_locally do
     branch = capture(:git, 'rev-parse --abbrev-ref HEAD')
-    if branch =~ /^releases?\/[\d\.]+$/
+    if branch.match?(/^releases?\/[\d\.]+$/)
       [fetch(:app_version), 'rc', fetch(:app_version_sha1)].join('-')
     else
       branch[/ywa-\d+/]

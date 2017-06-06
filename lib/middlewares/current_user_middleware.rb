@@ -33,6 +33,6 @@ class CurrentUserMiddleware
   end
 
   def bearer_auth?(env)
-    env['HTTP_AUTHORIZATION'].present? && env['HTTP_AUTHORIZATION'] =~ /^Bearer/
+    env['HTTP_AUTHORIZATION'].present? && env['HTTP_AUTHORIZATION'].match?(/^Bearer/)
   end
 end
