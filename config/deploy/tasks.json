@@ -1,6 +1,11 @@
 {
   "before_migration": [
-
+    {
+      "task_name": "repair_overlaping_time_offs",
+      "description": [
+        "Repair overlaping time offs"
+      ]
+    }
   ],
   "after_migration": [
 
