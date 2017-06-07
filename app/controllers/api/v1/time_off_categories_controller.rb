@@ -9,8 +9,8 @@ module API
       end
 
       def index
-        authorize! :index, Account.current
-        render_resource(resources)
+        authorize! :index, TimeOffCategory.new, params[:employee_id]
+        params[:employee_id].present? ? render_resources_for_employee : render_resource(resources)
       end
 
       def create
@@ -43,6 +43,16 @@ module API
 
       private
 
+      def render_resources_for_employee
+        response =
+          employee.time_off_categories.uniq.map do |resource|
+            resource_representer.new(
+              resource, PeriodsForTimeOffCategory.new(employee, resource).call
+            ).complete
+          end
+        render json: response
+      end
+
       def resource
         @resource ||= resources.find(params[:id])
       end
@@ -53,6 +63,10 @@ module API
 
       def resources
         @resources ||= Account.current.time_off_categories
+      end
+
+      def employee
+        Account.current.employees.find(params[:employee_id])
       end
 
       def resource_representer

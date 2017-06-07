@@ -8,6 +8,9 @@ class Ability
       can :manage, :all
       cannot :manage, :payments
     elsif user.role.eql?('user')
+      can [:index], TimeOffCategory do |_time_off_category, employee_id|
+        employee_id.nil? || Account::User.current&.employee&.id == employee_id
+      end
       can :read, Employee::AttributeDefinition
       can :read, WorkingPlace
       can [:show, :index], Employee
