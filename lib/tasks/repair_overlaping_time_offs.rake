@@ -87,7 +87,7 @@ def overlaps_with_registered_working_time?(registered_working_time, start_time, 
     end
   new_time_entries = registered_working_time.time_entries - entries_to_be_deleted
   if new_time_entries.empty?
-    registered_working_time.delete!
+    registered_working_time.delete
   else
     registered_working_time.update(time_entries: new_time_entries)
   end
