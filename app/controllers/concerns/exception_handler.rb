@@ -58,19 +58,19 @@ module ExceptionHandler
 
     if type == 'presence_policy'
       message = 'Resource is locked because it has assigned employees to it'
-      code = 'presence_policy.assigned_employees_present'
+      code = 'presence_policy_assigned_employees_present'
     elsif type == 'time_off_policy'
       message = 'Resource is locked because it has assigned employees to it'
-      code = 'time_off_policy.assigned_employees_present'
+      code = 'time_off_policy_assigned_employees_present'
     elsif type == 'time_off_category'
       message = 'Resource is locked because there are time-offs in that category'
-      code = 'time_off_category.time_offs_present'
+      code = 'time_off_category_time_offs_present'
     elsif type == 'working_place'
       message = 'Resource is locked because working place has assigned employees'
-      code = 'working_place.assigned_employees_present'
+      code = 'working_place_assigned_employees_present'
     elsif type == 'employee_attribute_definitions'
       message = 'Resource is locked because employee attributes are not blank'
-      code = 'employee_attributes.not_blank'
+      code = 'employee_attributes_not_blank'
     end
 
     error = CustomError.new(
@@ -89,7 +89,7 @@ module ExceptionHandler
       type: resource,
       field: 'id',
       messages: ['Record Not Found'],
-      codes: ['error.record_not_found']
+      codes: ['error_record_not_found']
     )
     render json:
       ::Api::V1::CustomizedErrorRepresenter.new(error).complete, status: 404
@@ -99,7 +99,7 @@ module ExceptionHandler
     NewRelic::Agent.notice_error(exception) if exception
     error = CustomError.new(
       messages: ['internal server error'],
-      codes: ['error.internal_server_error']
+      codes: ['error_internal_server_error']
     )
     render json:
       ::Api::V1::CustomizedErrorRepresenter.new(error).complete, status: 500
@@ -108,7 +108,7 @@ module ExceptionHandler
   def bad_request_error
     error = CustomError.new(
       messages: ['Bad request'],
-      codes: ['error.bad_request']
+      codes: ['error_bad_request']
     )
     render json:
       ::Api::V1::CustomizedErrorRepresenter.new(error).complete, status: 400

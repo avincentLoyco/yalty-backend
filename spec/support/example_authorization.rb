@@ -23,7 +23,7 @@ RSpec.shared_examples 'example_authorization' do |settings|
               messages: ['User unauthorized'],
               status: 'invalid',
               type: 'nil_class',
-              codes: ['error.user_unauthorized']
+              codes: ['error_user_unauthorized']
             }
           ]
         )}
@@ -45,7 +45,7 @@ RSpec.shared_examples 'example_authorization' do |settings|
               messages: ['User unauthorized'],
               status: 'invalid',
               type: 'nil_class',
-              codes: ['error.user_unauthorized']
+              codes: ['error_user_unauthorized']
             }
           ]
         )}

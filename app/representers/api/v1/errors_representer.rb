@@ -40,7 +40,7 @@ module Api::V1
           if message && !message.is_a?(Array)
             message_without_apostrophes = message.gsub(/'/, "")
             message_with_underscores = message_without_apostrophes.gsub(" ", "_")
-            codes << field.to_s + '.' + message_with_underscores.downcase
+            codes << field.to_s + '_' + message_with_underscores.downcase
           end
         end
       end

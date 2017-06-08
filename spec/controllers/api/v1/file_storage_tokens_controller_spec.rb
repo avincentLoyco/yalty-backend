@@ -149,7 +149,7 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
           'type' => nil,
           'messages' => ['Record Not Found'],
           'field' => 'id',
-          'codes' => ['error.record_not_found']
+          'codes' => ['error_record_not_found']
         }
       end
 
