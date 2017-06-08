@@ -154,4 +154,9 @@ class API::ApplicationController < ApplicationController
     return render_resource(resource, status: status) unless status.eql?(205)
     head :reset_content
   end
+
+  def verify_if_resource_not_locked!(resource_type, resource_field = 'employees')
+    return unless resource_type.send(resource_field).present?
+    raise generate_locked_error(resource_type.class.name.underscore, resource_field)
+  end
 end

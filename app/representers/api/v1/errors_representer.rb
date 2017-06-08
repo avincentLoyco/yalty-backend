@@ -9,6 +9,26 @@ module Api::V1
 
     def complete
       response = {}
+
+      response[:errors] = if resource.is_a?(API::V1::Exceptions::CustomError)
+                            get_errors_from_exception(resource)
+                          else
+                            get_errors_from_resource(resource)
+                          end
+
+      response
+    end
+
+    def get_errors_from_exception(exception)
+      [{
+        type: exception.type,
+        messages: exception.messages,
+        field: exception.field,
+        codes: exception.codes
+      }]
+    end
+
+    def get_errors_from_resource(resource)
       if @messages.blank?
         @messages = if resource.is_a?(ActiveRecord::Base)
                       resource.errors.messages
@@ -28,24 +48,16 @@ module Api::V1
           codes: generate_codes(field, messages)
         }
       end
-
-      response[:errors] = errors
-      response
+      errors
     end
 
     def generate_codes(field, messages)
-      codes = []
-      if messages
-        messages.each do |message|
-          if message && !message.is_a?(Array)
-            message_without_apostrophes = message.gsub(/'/, "")
-            message_with_underscores = message_without_apostrophes.gsub(" ", "_")
-            codes << field.to_s + '_' + message_with_underscores.downcase
-          end
-        end
+      return [] if messages.blank?
+      messages.each_with_object([]) do |message, codes|
+        next unless message && !message.is_a?(Array)
+        codes << field.to_s + '_' + message.gsub(/[^a-z0-9\s]/i, '').tr(' ', '_').downcase
+        codes
       end
-      codes
     end
-
   end
 end

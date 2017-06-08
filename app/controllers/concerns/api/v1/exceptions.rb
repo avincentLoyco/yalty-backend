@@ -46,6 +46,9 @@ module API
         end
       end
 
+      class LockedError < CustomError
+      end
+
       class BaseError < StandardError
         attr_reader :type, :field, :message, :code
 

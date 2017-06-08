@@ -102,7 +102,7 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
         !previous_policy_for(time_off_after.start_time).present?
 
     errors.add(
-      :effective_at, 'Can \'t change if there are time offs after and there is no previous policy'
+      :effective_at, 'Can\'t change if there are time offs after and there is no previous policy'
     )
   end
 
@@ -121,7 +121,7 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
     return unless time_off_after.present? && time_off_after.employee_time_off_policy.id.eql?(id) &&
         !previous_policy_for(effective_at_was).present?
     errors.add(
-      :effective_at, 'Can \'t remove if there are time offs after and there is no previous policy'
+      :effective_at, 'Can\'t remove if there are time offs after and there is no previous policy'
     )
     errors.blank?
   end

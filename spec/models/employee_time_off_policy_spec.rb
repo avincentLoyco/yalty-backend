@@ -38,7 +38,7 @@ RSpec.describe EmployeeTimeOffPolicy, type: :model do
       it { expect(subject.valid?).to eq false }
       it do
         expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
-          .to include 'Can \'t change if there are time offs after and there is no previous policy'
+          .to include 'Can\'t change if there are time offs after and there is no previous policy'
       end
     end
 
@@ -46,7 +46,7 @@ RSpec.describe EmployeeTimeOffPolicy, type: :model do
       it { expect(subject.destroy).to eq false }
       it do
         expect { subject.destroy }.to change { subject.errors.messages[:effective_at] }
-          .to include 'Can \'t remove if there are time offs after and there is no previous policy'
+          .to include 'Can\'t remove if there are time offs after and there is no previous policy'
       end
     end
   end
@@ -64,7 +64,7 @@ RSpec.describe EmployeeTimeOffPolicy, type: :model do
       it { expect(subject.valid?).to eq false }
       it do
         expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
-          .to include 'Can \'t change if there are time offs after and there is no previous policy'
+          .to include 'Can\'t change if there are time offs after and there is no previous policy'
       end
     end
 
@@ -72,7 +72,7 @@ RSpec.describe EmployeeTimeOffPolicy, type: :model do
       it { expect(subject.destroy).to eq false }
       it do
         expect { subject.destroy }.to change { subject.errors.messages[:effective_at] }
-          .to include 'Can \'t remove if there are time offs after and there is no previous policy'
+          .to include 'Can\'t remove if there are time offs after and there is no previous policy'
       end
     end
   end
