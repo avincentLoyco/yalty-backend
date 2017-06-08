@@ -43,7 +43,7 @@ RSpec.shared_context 'shared_context_join_tables_controller' do |settings|
 
     let(:params) do
       {
-        id: employee.id,
+        employee_id: employee.id,
         effective_at: reset_resource.effective_at,
         resource_name => resource.id
       }

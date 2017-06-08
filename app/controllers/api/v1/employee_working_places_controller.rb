@@ -21,7 +21,6 @@ module API
           authorize! :create, working_place
 
           join_table_resource = previous_join_table_resource
-          attributes[:employee_id] = attributes.delete(:id)
           response = create_or_update_join_table(WorkingPlace, attributes)
           if response[:status] == 201 || join_table_resource
             find_and_update_balances(response[:result], attributes, nil, join_table_resource)

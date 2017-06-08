@@ -4,7 +4,7 @@ module EmployeeWorkingPlacesSchemas
   def post_schema
     Dry::Validation.Form do
       required(:working_place_id).filled(:str?)
-      required(:id).filled(:str?)
+      required(:employee_id).filled(:str?)
       required(:effective_at).filled(:date?)
     end
   end

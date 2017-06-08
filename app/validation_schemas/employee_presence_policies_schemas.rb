@@ -4,7 +4,7 @@ module EmployeePresencePoliciesSchemas
   def post_schema
     Dry::Validation.Form do
       required(:presence_policy_id).filled(:str?)
-      required(:id).filled(:str?)
+      required(:employee_id).filled(:str?)
       required(:effective_at).filled(:date?)
       required(:order_of_start_day).filled
     end

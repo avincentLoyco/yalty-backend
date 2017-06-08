@@ -223,7 +223,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
     let(:effective_at) { Time.now - 1.day }
     let(:params) do
       {
-        id: employee.id,
+        employee_id: employee.id,
         time_off_policy_id: time_off_policy_id,
         effective_at: effective_at
       }
@@ -259,11 +259,10 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
             employee: employee, effective_at: 2.years.since, event_type: 'hired')
         end
 
-        # TODO verify amount of balances needed
         let(:effective_at) { 2.years.since }
 
         it { expect { subject }.to change { EmployeeTimeOffPolicy.count } }
-        xit { expect { subject }.to change { Employee::Balance.count }.by(3) }
+        it { expect { subject }.to change { Employee::Balance.count }.by(2) }
         it { is_expected.to have_http_status(201) }
       end
 

@@ -101,7 +101,7 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
     let(:working_place_id) { new_working_place.id }
     let(:params) do
       {
-        id: employee_id,
+        employee_id: employee_id,
         working_place_id: working_place_id,
         effective_at: effective_at
       }

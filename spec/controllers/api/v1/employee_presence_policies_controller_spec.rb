@@ -124,7 +124,7 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
 
     let(:params) do
       {
-        id: employee.id,
+        employee_id: employee.id,
         presence_policy_id: presence_policy_id,
         effective_at: effective_at,
         order_of_start_day: 1

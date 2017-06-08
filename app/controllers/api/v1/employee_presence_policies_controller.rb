@@ -12,7 +12,6 @@ module API
       def create
         verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :create, presence_policy
-          attributes[:employee_id] = attributes.delete(:id)
           response = create_or_update_join_table(PresencePolicy, attributes)
           find_and_update_balances(response[:result], attributes)
           render_join_table(response[:result], response[:status])
