@@ -38,7 +38,12 @@ module API
       def parse_or_raise_error
         Date.parse(params[:date])
       rescue
-        raise InvalidParamTypeError.new('RegisteredWorkingTime', 'Date must be valid date')
+        raise (CustomError.new(
+          type: 'registered_working_time',
+          field: 'date',
+          messages: ['Date must be valid date'],
+          codes: ['registered_working_time.must_be_valid_date']
+        ))
       end
     end
   end

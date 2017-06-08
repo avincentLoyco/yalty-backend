@@ -24,13 +24,13 @@ class API::ApplicationController < ApplicationController
   def authenticate!
     return unless Account.current.nil? || Account::User.current.nil?
     render json:
-      ::Api::V1::ErrorsRepresenter.new(nil, message: 'User unauthorized').complete, status: 401
+      ::Api::V1::ErrorsRepresenter.new(nil, error: ['User unauthorized']).complete, status: 401
   end
 
   def subdomain_access!
     return unless Account.current.nil?
     render json:
-      ::Api::V1::ErrorsRepresenter.new(nil, message: 'User unauthorized').complete, status: 401
+      ::Api::V1::ErrorsRepresenter.new(nil, error: ['User unauthorized']).complete, status: 401
   end
 
   def update_affected_balances(presence_policy, employees = [])

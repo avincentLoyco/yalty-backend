@@ -104,10 +104,10 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
           let(:params) {{ file_id: generic_file.id, duration: 'longterm' }}
           let(:expected_response) do
             {
-              'field' => 'duration',
-              'messages' => 'Requested longterm token when not allowed',
-              'status' => 'invalid',
-              'type' => 'employee_attribute_version'
+              "type" => 'employee_attribute_version',
+              "field" => 'duration',
+              "messages" => ['Requested longterm token when not allowed'],
+              "codes" => ['duration.requested_longterm_token_when_not_allowed']
             }
           end
 
@@ -146,10 +146,10 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
       let(:params) {{ file_id: '123abc-random' }}
       let(:expected_response) do
         {
+          'type' => nil,
+          'messages' => ['Record Not Found'],
           'field' => 'id',
-          'messages' => 'Record Not Found',
-          'status' => 'invalid',
-          'type' => 'nil_class'
+          'codes' => ['error.record_not_found']
         }
       end
 

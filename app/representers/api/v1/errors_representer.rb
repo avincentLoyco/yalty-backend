@@ -19,17 +19,33 @@ module Api::V1
                     end
       end
 
-      errors = @messages.map do |field, message|
+      errors = @messages.map do |field, messages|
         {
           field: field.to_s,
-          messages: message,
+          messages: messages,
           status: 'invalid',
-          type: resource_type
+          type: resource_type,
+          codes: generate_codes(field, messages)
         }
       end
 
       response[:errors] = errors
       response
     end
+
+    def generate_codes(field, messages)
+      codes = []
+      if messages
+        messages.each do |message|
+          if message && !message.is_a?(Array)
+            message_without_apostrophes = message.gsub(/'/, "")
+            message_with_underscores = message_without_apostrophes.gsub(" ", "_")
+            codes << field.to_s + '.' + message_with_underscores.downcase
+          end
+        end
+      end
+      codes
+    end
+
   end
 end

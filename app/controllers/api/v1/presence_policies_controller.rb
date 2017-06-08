@@ -32,6 +32,7 @@ module API
 
       def update
         verified_dry_params(dry_validation_schema) do |attributes|
+          return locked_error('presence_policy', 'employees') if resource_locked?
           resource.attributes = attributes
           save!(resource, {})
           render_no_content
@@ -39,7 +40,7 @@ module API
       end
 
       def destroy
-        return locked_error if resource_locked?
+        return locked_error('presence_policy', 'employees') if resource_locked?
         resource.destroy!
         render_no_content
       end

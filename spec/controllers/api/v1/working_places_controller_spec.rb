@@ -418,7 +418,8 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
         context 'response' do
           before { subject }
 
-          it { expect_json(regex('Locked')) }
+          it { expect(response.body).to match('Resource is locked because working place has assigned employees') }
+          # it { expect_json(regex('Locked')) }
         end
       end
     end

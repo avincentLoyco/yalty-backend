@@ -39,7 +39,7 @@ module API
           resource.destroy!
           render_no_content
         else
-          locked_error
+          locked_error('time_off_policy', 'employees')
         end
       end
 

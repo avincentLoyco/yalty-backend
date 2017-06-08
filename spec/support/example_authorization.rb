@@ -19,10 +19,11 @@ RSpec.shared_examples 'example_authorization' do |settings|
         it { expect_json(
           errors: [
             {
-              field: 'message',
-              messages: 'User unauthorized',
+              field: 'error',
+              messages: ['User unauthorized'],
               status: 'invalid',
-              type: 'nil_class'
+              type: 'nil_class',
+              codes: ['error.user_unauthorized']
             }
           ]
         )}
@@ -40,10 +41,11 @@ RSpec.shared_examples 'example_authorization' do |settings|
         it { expect_json(
           errors: [
             {
-              field: 'message',
-              messages: 'User unauthorized',
+              field: 'error',
+              messages: ['User unauthorized'],
               status: 'invalid',
-              type: 'nil_class'
+              type: 'nil_class',
+              codes: ['error.user_unauthorized']
             }
           ]
         )}

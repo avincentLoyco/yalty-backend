@@ -16,7 +16,7 @@ module API
         verified_dry_params(dry_validation_schema) do |attributes|
           resource = resources.new(time_entry_params(attributes))
           authorize! :create, resource
-          return locked_error if resource_locked?(resource.presence_day)
+          return locked_error('presence_policy', 'employees') if resource_locked?(resource.presence_day)
           resource.save!
           render_resource(resource, status: :created)
         end
@@ -24,14 +24,14 @@ module API
 
       def update
         verified_dry_params(dry_validation_schema) do |attributes|
-          return locked_error if resource_locked?(resource.presence_day)
+          return locked_error('presence_policy', 'employees') if resource_locked?(resource.presence_day)
           resource.update!(attributes)
           render_no_content
         end
       end
 
       def destroy
-        return locked_error if resource_locked?(resource.presence_day)
+        return locked_error('presence_policy', 'employees') if resource_locked?(resource.presence_day)
         resource.destroy!
         resource.presence_day.update_minutes!
         render_no_content

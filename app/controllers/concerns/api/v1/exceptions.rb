@@ -18,29 +18,31 @@ module API
       end
 
       class InvalidPasswordError < StandardError
-        attr_reader :resource, :message
+        attr_reader :resource, :messages
 
-        def initialize(resource, message)
+        def initialize(resource, messages)
           @resource = resource
-          @message = message
+          @messages = messages
         end
       end
 
       class EventTypeNotFoundError < StandardError
-        attr_reader :resource, :message
+        attr_reader :resource, :messages
 
-        def initialize(resource, message)
+        def initialize(resource, messages)
           @resource = resource
-          @message = message
+          @messages = messages
         end
       end
 
-      class InvalidParamTypeError < StandardError
-        attr_reader :resource, :message
+      class CustomError < StandardError
+        attr_reader :type, :field, :messages, :codes
 
-        def initialize(resource, message)
-          @resource = resource
-          @message = message
+        def initialize(type: nil, field: nil, messages:, codes:)
+          @type = type
+          @field = field
+          @messages = messages
+          @codes = codes
         end
       end
 

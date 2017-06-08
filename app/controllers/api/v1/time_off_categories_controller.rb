@@ -37,7 +37,7 @@ module API
           editable_resource.destroy!
           render_no_content
         else
-          locked_error
+          locked_error('time_off_category', 'time-off')
         end
       end
 

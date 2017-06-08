@@ -25,7 +25,12 @@ module API
       def parse_or_raise_error(string)
         Date.parse(string)
       rescue
-        raise InvalidParamTypeError.new('Schedule', 'From and to params must be in date format')
+        raise(CustomError.new(
+          type: 'schedule',
+          field: 'date',
+          messages: ['From and to params must be in date format'],
+          codes: ['schedule.from_and_to_must_be_in_date_format']
+        ))
       end
     end
   end

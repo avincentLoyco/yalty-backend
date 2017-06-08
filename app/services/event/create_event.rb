@@ -84,7 +84,7 @@ class CreateEvent
       event
     else
       messages = {}
-      messages = messages.merge(employee_attributes: 'Not unique') unless unique_attribute_versions?
+      messages = messages.merge(employee_attributes: ['Not unique']) unless unique_attribute_versions?
       messages = messages
                  .merge(event.errors.messages)
                  .merge(employee.errors.messages)
