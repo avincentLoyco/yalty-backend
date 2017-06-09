@@ -154,7 +154,8 @@ module Export
           INNER JOIN employee_attribute_definitions
             ON employee_attribute_versions.attribute_definition_id=employee_attribute_definitions.id
           WHERE employees.account_id='#{account.id}'
-            AND employee_attribute_definitions.name NOT IN ('firstname', 'lastname');
+            AND employee_attribute_definitions.name NOT IN ('firstname', 'lastname')
+          ORDER BY employee_attribute_definitions.name
         ").to_hash
     end
 
