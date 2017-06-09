@@ -1,6 +1,6 @@
 class PaymentsMailer < ApplicationMailer
   helper_method :payments_url_for, :in_chf
-  default from: ENV['YALTY_BILLING_EMAIL']
+  default from: "yalty <#{ENV['YALTY_BILLING_EMAIL']}>"
 
   def payment_succeeded(invoice_id)
     @invoice = Invoice.find(invoice_id)
