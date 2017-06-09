@@ -93,9 +93,9 @@ class TimeOff < ActiveRecord::Base
   def overlap_check_for_longer_than_one_day_time_off(registered_working_times)
     registered_working_times.each do |registered_working_time|
       if registered_working_time.date == start_time.to_date
-        first_day_overlaps?(registered_working_time, registered_working_times.size)
+        first_day_overlaps?(registered_working_time)
       elsif registered_working_time.date == end_time.to_date
-        last_day_overlaps?(registered_working_time, registered_working_times.size)
+        last_day_overlaps?(registered_working_time)
       else
         overlaps_with_middle_days?(registered_working_time)
       end
@@ -117,14 +117,9 @@ class TimeOff < ActiveRecord::Base
     errors.add(:employee, 'Time off policy in category required')
   end
 
-  def first_day_overlaps?(registered_working_time, lenght)
+  def first_day_overlaps?(registered_working_time)
     first_day_start_time = TimeEntry.hour_as_time(start_time.strftime('%H:%M:%S'))
-    first_day_end_time =
-      if lenght > 1
-        TimeEntry.hour_as_time('24:00:00')
-      else
-        TimeEntry.hour_as_time(end_time.strftime('%H:%M:%S'))
-      end
+    first_day_end_time = TimeEntry.hour_as_time('24:00:00')
     overlaps_with_registered_working_time?(
       registered_working_time,
       first_day_start_time,
@@ -132,14 +127,8 @@ class TimeOff < ActiveRecord::Base
     )
   end
 
-  def last_day_overlaps?(registered_working_time, lenght)
-    last_day_start_time =
-      if lenght > 1
-        TimeEntry.hour_as_time('00:00:00')
-      else
-        TimeEntry.hour_as_time(start_time.strftime('%H:%M:%S'))
-      end
-
+  def last_day_overlaps?(registered_working_time)
+    last_day_start_time = TimeEntry.hour_as_time('00:00:00')
     last_day_end_time = TimeEntry.hour_as_time(end_time.strftime('%H:%M:%S'))
     overlaps_with_registered_working_time?(
       registered_working_time,
@@ -178,8 +167,9 @@ class TimeOff < ActiveRecord::Base
       employee
       .time_offs
       .where(
-        '(start_time >= ? AND start_time < ?) OR (end_time > ? AND end_time <= ?)',
-        start_time, end_time, start_time, end_time
+        '((start_time >= ? AND start_time < ?) OR (end_time > ? AND end_time <= ?))
+         OR (start_time <= ? AND end_time >= ?)',
+        start_time, end_time, start_time, end_time, start_time, end_time
       )
     return if (employee_time_offs_in_period - [self]).blank?
     errors.add(:start_time, 'Time off in period already exist')

@@ -1,16 +1,14 @@
 <body style="font-family: Lato, Sans-Serif; color: #172024; margin: 40px 40px 40px 40px;">
     <div style="margin-bottom: 10px">
-        <!-- TODO: Change image tag to external one -->
-        <%= image_tag("http://www.startup.ch/demandit/files/M_BB941CC4DCEF687AD98/dms//Image/logotype-yalty.jpg", size: "110x60") %>
+        <%= image_tag("https://yalty.staging.yaltyapp.com/ember-cli-yalty-base/assets/icons/icon-yalty-logo.png", size: "167x60", alt: "yalty") %>
     </div>
     <div style="border-radius: 5px;  border: 2px solid #EFF3F6; float: left">
-        <!-- TODO: Translate content to french -->
         <div style="margin: 40px 0px 60px 30px; width: 500px;">
             <h3 style="margin-bottom: 40px">
-                Your latest archive is <span style="background-color: #FFFECE">ready</span>
+                Votre dernière archive est <span style="background-color: #FFFECE">prête</span>
             </h3>
             <%= link_to(archive_url_for(@account), {style: "background-color: #8BCFB6; color: #172024; border-radius: 5px; border: none; padding: 18px 20px 18px 20px; text-decoration: none;"}) do %>
-                <b>View Archive</b>
+                <b>Voir archive</b>
             <% end %>
         </div>
     </div>

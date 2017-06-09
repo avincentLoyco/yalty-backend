@@ -15,7 +15,7 @@ module Export
       CSV.open("#{archive_dir_path}/time_offs.csv", 'wb') do |time_offs_csv|
         time_offs_csv << DEFAULT_TIME_OFFS_COLUMNS
 
-        account.time_offs.each do |time_off|
+        account.time_offs.order(:start_time, :employee_id).each do |time_off|
           time_offs_csv << [
             time_off.employee_id,
             time_off.time_off_category.name,
