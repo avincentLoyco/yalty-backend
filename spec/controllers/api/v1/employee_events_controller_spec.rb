@@ -1348,7 +1348,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
   context 'GET #index' do
     before(:each) do
-      create_list(:employee_event, 3, employee: employee)
+      create_list(:employee_event, 3, account: account, employee: employee)
     end
 
     let(:subject) { get :index, employee_id: employee.id }
@@ -1385,6 +1385,17 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       get :index, employee_id: '12345678-1234-1234-1234-123456789012'
 
       expect(response).to have_http_status(404)
+    end
+
+    context 'with regular user role' do
+      let(:user) { create(:account_user, account: account, employee: employee, role: 'user') }
+
+      it 'should respond with success' do
+        subject
+
+        expect(response).to have_http_status(:success)
+        expect_json_sizes(4)
+      end
     end
   end
 
@@ -1479,6 +1490,16 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
             expect(response.body).to_not include(attr.attribute_name)
           end
         end
+      end
+    end
+
+    context 'with regular user role' do
+      let(:user) { create(:account_user, account: account, employee: employee, role: 'user') }
+
+      it 'should respond with success' do
+        subject
+
+        expect(response).to have_http_status(:success)
       end
     end
   end

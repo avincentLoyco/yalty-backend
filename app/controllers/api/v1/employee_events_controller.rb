@@ -11,7 +11,7 @@ module API
       end
 
       def index
-        authorize! :read, resources
+        authorize! :index, resources.first
         render_resource(resources)
       end
 
