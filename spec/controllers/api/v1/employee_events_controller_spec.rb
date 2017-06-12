@@ -4,6 +4,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
   include_examples 'example_authorization',
     resource_name: 'employee_event'
   include_context 'shared_context_headers'
+  include_context 'shared_context_remove_original_helper'
 
   before do
     Account.current.update(
