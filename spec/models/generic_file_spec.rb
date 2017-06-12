@@ -32,6 +32,17 @@ RSpec.describe GenericFile, type: :model do
     end
   end
 
+  it 'accepts archive bigger than 20 MB' do
+    archive = build(:generic_file, :with_zip, file_file_size: 66_666_666_666)
+    expect(archive.valid?).to eq true
+  end
+
+  it 'does not accept not-archive files bigger than 20 MB' do
+    archive = build(:generic_file, :with_jpg, file_file_size: 66_666_666_666)
+    expect(archive.valid?).to eq false
+    expect(archive.errors.messages[:file].first).to eq('must be less than 20 MB')
+  end
+
   context 'processing' do
     let(:generic_file) { create(:generic_file, :with_jpg) }
 
