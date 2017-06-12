@@ -1,17 +1,16 @@
 require 'rails_helper'
 
 RSpec.describe UpdateEventAttributeValidator, type: :service do
-  let(:user) { create(:account_user, role: 'user') }
-  let(:account) { user.account }
+  let!(:account) { create(:account) }
+  let!(:user) { create(:account_user, account: account, employee: employee, role: 'user') }
+
   let(:hired_event) do
     create(:employee_event, event_type: 'hired', effective_at: 2.days.from_now.at_beginning_of_day)
   end
 
-  let(:profile_picture) { create :generic_file, :with_jpg }
-  let!(:employee) do
+  let(:employee) do
     create(:employee, :with_attributes,
       account: account,
-      account_user_id: user.id,
       events: [hired_event],
       employee_attributes: {
         firstname: employee_first_name,
@@ -22,8 +21,9 @@ RSpec.describe UpdateEventAttributeValidator, type: :service do
   let(:employee_id) { employee.id }
   let(:employee_first_name) { 'John' }
   let(:employee_annual_salary) { '2000' }
+  let(:profile_picture) { create :generic_file, :with_jpg }
 
-  let!(:event) { employee.events.where(event_type: 'hired').first! }
+  let(:event) { employee.events.where(event_type: 'hired').first! }
 
   let(:first_name_attribute_definition) { 'firstname' }
   let(:first_name_attribute_id) { first_name_attribute.id }

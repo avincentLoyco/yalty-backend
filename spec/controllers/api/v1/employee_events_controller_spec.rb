@@ -26,10 +26,10 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     )
   end
 
-  let!(:employee) do
+  let!(:user) { create(:account_user, employee: employee, role: 'account_administrator') }
+  let(:employee) do
     create(:employee_with_working_place, :with_attributes,
       account: account,
-      account_user_id: user.id,
       employee_attributes: {
         firstname: employee_first_name,
         lastname: employee_last_name,
@@ -41,7 +41,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
   let(:employee_last_name) { 'Doe' }
   let(:employee_annual_salary) { '2000' }
 
-  let!(:event) { employee.events.where(event_type: 'hired').first! }
+  let(:event) { employee.events.where(event_type: 'hired').first! }
   let(:event_id) { event.id }
 
   let(:first_name_attribute_definition) { 'firstname' }
@@ -1348,7 +1348,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
   context 'GET #index' do
     before(:each) do
-      create_list(:employee_event, 3, employee: employee)
+      create_list(:employee_event, 3, account: account, employee: employee)
     end
 
     let(:subject) { get :index, employee_id: employee.id }
@@ -1385,6 +1385,17 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       get :index, employee_id: '12345678-1234-1234-1234-123456789012'
 
       expect(response).to have_http_status(404)
+    end
+
+    context 'with regular user role' do
+      let(:user) { create(:account_user, account: account, employee: employee, role: 'user') }
+
+      it 'should respond with success' do
+        subject
+
+        expect(response).to have_http_status(:success)
+        expect_json_sizes(4)
+      end
     end
   end
 
@@ -1430,10 +1441,12 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       expect(response).to have_http_status(404)
     end
 
-    context 'if current_user is not the empoyee requested and not manager' do
+    context 'if current_user is not the empoyee requested' do
       subject { get :show, id: event_id }
 
-      context 'when current user is account manager' do
+      context 'when current user is an administrator' do
+        let!(:user) { create(:account_user, account: account, role: 'account_administrator') }
+
         it 'should include some attributes' do
           subject
           event_attributes = employee.events.first.employee_attribute_versions
@@ -1455,10 +1468,8 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         end
       end
 
-      context 'when current user is not account manager' do
-        before do
-          Account::User.current.update!(role: 'user', employee: nil)
-        end
+      context 'when current user is a standard user' do
+        let!(:user) { create(:account_user, account: account, role: 'user') }
 
         it 'should not include some attributes' do
           subject
@@ -1479,6 +1490,16 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
             expect(response.body).to_not include(attr.attribute_name)
           end
         end
+      end
+    end
+
+    context 'with regular user role' do
+      let(:user) { create(:account_user, account: account, employee: employee, role: 'user') }
+
+      it 'should respond with success' do
+        subject
+
+        expect(response).to have_http_status(:success)
       end
     end
   end

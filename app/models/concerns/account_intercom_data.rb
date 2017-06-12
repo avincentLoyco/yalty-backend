@@ -9,7 +9,7 @@ module AccountIntercomData
 
   def intercom_attributes
     %w(
-      id created_at company_name subdomain referred_by
+      id created_at company_name subdomain referred_by yalty_access
       number_of_files total_amount_of_data employee_files_ratio
       vacation_count other_time_offs_count last_vacation_created_at last_other_time_off_created_at
       manual_working_time_ratio last_manual_working_time_created_at
@@ -27,6 +27,7 @@ module AccountIntercomData
       custom_attributes: [
         {
           subdomain: subdomain,
+          yalty_access: yalty_access,
           referred_by: referred_by
         },
         intercom_files_attributes,

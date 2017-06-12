@@ -6,12 +6,12 @@ module API
       DryValidationResult = Struct.new(:attributes, :errors)
 
       def show
-        authorize! :show, Account.current
+        authorize! :show, resource
         render_resource(resource)
       end
 
       def index
-        authorize! :read, Account.current
+        authorize! :index, resources.first
         render_resource(resources)
       end
 

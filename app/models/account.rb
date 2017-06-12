@@ -20,7 +20,7 @@ class Account < ActiveRecord::Base
   validates :default_locale, inclusion: { in: I18n.available_locales.map(&:to_s) }
   validate :referrer_must_exist, if: :referred_by, on: :create
 
-  has_many :users,
+  has_many :users, -> { where.not(role: 'yalty') },
     class_name: 'Account::User',
     inverse_of: :account
   has_many :employees, inverse_of: :account, dependent: :destroy
@@ -46,13 +46,20 @@ class Account < ActiveRecord::Base
   belongs_to :referrer, primary_key: :token, foreign_key: :referred_by
   has_one :archive_file, as: :fileable, class_name: 'GenericFile'
 
+  scope :with_yalty_access, lambda {
+    joins('INNER JOIN account_users ON account_users.account_id = accounts.id')
+      .where('account_users.role = \'yalty\'')
+  }
+
   before_validation :generate_subdomain, on: :create
+  before_validation :set_recently_created, on: :create
   after_create :update_default_attribute_definitions!
   after_create :update_default_time_off_categories!
   after_create :create_reset_presence_policy_and_working_place!
   after_create :create_stripe_customer_with_subscription, if: :stripe_enabled?
   after_update :update_stripe_customer_description,
     if: -> { stripe_enabled? && (subdomain_changed? || company_name_changed?) }
+  after_save :update_yalty_access
 
   def self.current=(account)
     RequestStore.write(:current_account, account)
@@ -172,6 +179,25 @@ class Account < ActiveRecord::Base
     users.where(role: 'account_owner').reorder('created_at ASC').limit(1).pluck(:email).first
   end
 
+  def yalty_access
+    if @yalty_access.nil?
+      Account::User.where(account_id: id, role: 'yalty').exists?
+    else
+      @yalty_access
+    end
+  end
+
+  def yalty_access=(value)
+    value = (value == true)
+    return value if value == yalty_access
+    attribute_will_change!(:yalty_access)
+    @yalty_access = value
+  end
+
+  def recently_created?
+    new_record? || @recently_created
+  end
+
   private
 
   # Generate a subdomain from company name
@@ -209,6 +235,10 @@ class Account < ActiveRecord::Base
     end
   end
 
+  def set_recently_created
+    @recently_created = new_record?
+  end
+
   def referrer_must_exist
     return if Referrer.where(token: referred_by).exists?
     errors.add(:referred_by, 'must belong to existing referrer')
@@ -226,5 +256,24 @@ class Account < ActiveRecord::Base
   def update_stripe_customer_description
     return if subdomain_was.nil? || company_name_was.nil?
     Payments::UpdateStripeCustomerDescription.perform_later(self)
+  end
+
+  def update_yalty_access
+    return unless attribute_changed?(:yalty_access)
+
+    if @yalty_access
+      Account::User.find_or_create_by(
+        account_id: id,
+        email: ENV['YALTY_ACCESS_EMAIL'],
+        password_digest: ENV['YALTY_ACCESS_PASSWORD_DIGEST'],
+        role: 'yalty'
+      )
+      YaltyAccessMailer.access_enable(self).deliver_later
+    else
+      Account::User.where(account_id: id, role: 'yalty').destroy_all
+      YaltyAccessMailer.access_disable(self).deliver_later
+    end
+  ensure
+    @yalty_access = nil
   end
 end

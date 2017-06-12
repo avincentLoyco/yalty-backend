@@ -4,6 +4,8 @@ RSpec.describe Employee, type: :model do
   include_context 'shared_context_account_helper'
   include_context 'shared_context_timecop_helper'
 
+  subject { build(:employee) }
+
   it { is_expected.to have_db_column(:account_id).of_type(:uuid) }
   it { is_expected.to belong_to(:account).inverse_of(:employees) }
   it { is_expected.to respond_to(:account) }
@@ -19,6 +21,23 @@ RSpec.describe Employee, type: :model do
   it { is_expected.to have_many(:events).inverse_of(:employee) }
   it { is_expected.to have_many(:presence_policies) }
   it { is_expected.to have_many(:registered_working_times) }
+
+  it { is_expected.to belong_to(:user).inverse_of(:employee) }
+  it do
+    subject.user = create(:account_user, account: subject.account)
+    is_expected.to validate_uniqueness_of(:user).scoped_to(:account_id).allow_nil
+  end
+
+  it do
+    user = create(:account_user)
+    employee = user.employee
+    expect(employee).to validate_presence_of(:user)
+  end
+
+  it do
+    employee = create(:employee, user: nil)
+    expect(employee).to_not validate_presence_of(:user)
+  end
 
   context 'scopes' do
     let(:account) { create(:account) }
@@ -102,22 +121,18 @@ RSpec.describe Employee, type: :model do
       let!(:account) { create(:account) }
       let(:employee) { build(:employee, account: account) }
 
-      it 'should invoke trigger_intercom_update on account' do
-        expect(employee).to receive(:trigger_intercom_update)
-        employee.save!
-      end
-
       it 'should trigger create_or_update_on_intercom on account' do
         expect(account).to receive(:create_or_update_on_intercom).with(true)
         employee.save!
       end
 
       context 'with user' do
-        let!(:user) { create(:account_user, account: account) }
-        let!(:employee) { build(:employee, account: account, user: user) }
+        let!(:user) { build(:account_user, account: account) }
+        let!(:employee) { create(:employee, account: account) }
 
         it 'should trigger intercom update on user' do
-          expect(user).to receive(:create_or_update_on_intercom).with(true)
+          expect(user).to receive(:create_or_update_on_intercom)
+          employee.user = user
           employee.save!
         end
       end
@@ -125,7 +140,7 @@ RSpec.describe Employee, type: :model do
       context 'without user' do
         it 'should not trigger intercom update on user' do
           expect_any_instance_of(Account::User)
-            .not_to receive(:create_or_update_on_intercom).with(true)
+            .not_to receive(:create_or_update_on_intercom)
           employee.save!
         end
       end

@@ -21,6 +21,16 @@ RSpec.describe CurrentAccountMiddleware do
     it { expect(Account::User.current).to eql(account_user) }
   end
 
+  context 'when Account::User set with yalty user' do
+    let(:account_user) { create(:account_user, :with_yalty_role) }
+
+    before { Account::User.current = account_user }
+    before { middleware.call(env) }
+
+    it { expect(Account.current).to eql(account_user.account) }
+    it { expect(Account::User.current).to eql(account_user) }
+  end
+
   context 'when Account::User not set' do
     context 'when YALTY_ACCOUNT_SUBDOMAIN header send' do
       context 'and subdomain valid' do

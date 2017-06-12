@@ -20,6 +20,14 @@ RSpec.describe CurrentUserMiddleware do
       it { expect(Account::User.current).to eql(account_user) }
     end
 
+    context 'and token valid for a yalty user' do
+      let(:account_user) { create(:account_user, :with_yalty_role) }
+
+      before { middleware.call(env) }
+
+      it { expect(Account::User.current).to eql(account_user) }
+    end
+
     context 'and token invalid' do
       let(:token) { '123' }
 

@@ -136,6 +136,13 @@ RSpec.describe Account, type: :model do
 
   it { is_expected.to have_many(:users).class_name('Account::User').inverse_of(:account) }
 
+  it '#users should not include user with yalty role' do
+    account = create(:account)
+    user = create(:account_user, :with_yalty_role, account: account)
+
+    expect(account.reload.users).to_not include(user)
+  end
+
   it { is_expected.to have_many(:employees).inverse_of(:account) }
 
   it { is_expected.to have_many(:employee_attribute_definitions).class_name('Employee::AttributeDefinition').inverse_of(:account) }
@@ -321,6 +328,102 @@ RSpec.describe Account, type: :model do
         subject { account.update(subdomain: 'lumeri-co', company_name: 'LumeriCo') }
 
         it_behaves_like 'update stripe description'
+      end
+    end
+  end
+
+  context '#yalty_access' do
+    subject { create(:account) }
+
+    it 'should be true when account have a user with yalty role' do
+      user = create(:account_user, :with_yalty_role, account: subject)
+
+      expect(subject.reload.yalty_access).to be_truthy
+    end
+
+    it 'should be false when account doesn\'t have a user with yalty role' do
+      expect(subject.reload.yalty_access).to be_falsey
+    end
+  end
+
+  context '#yalty_access=' do
+    subject { create(:account) }
+
+    describe 'when set to true' do
+      it 'should create user with yalty role if not exists' do
+        expect(subject.yalty_access).to be_falsey
+        subject.yalty_access = true
+        expect(subject.yalty_access).to be_truthy
+        expect(subject.changes).to include(:yalty_access)
+        expect { subject.save! }.to change { Account::User.count }.by(1)
+        expect(Account::User.where(account_id: subject.id, role: 'yalty')).to be_exist
+      end
+
+      it 'should not create user with yalty role if already exists' do
+        create(:account_user, :with_yalty_role, account: subject)
+        expect(subject.yalty_access).to be_truthy
+        subject.yalty_access = true
+        expect(subject.yalty_access).to be_truthy
+        expect(subject.changes).to_not include(:yalty_access)
+        expect { subject.save! }.to_not change { Account::User.count }
+        expect(Account::User.where(account_id: subject.id, role: 'yalty')).to be_exist
+      end
+
+      it 'should be able to authenticate user with configured password and email' do
+        ENV['YALTY_ACCESS_EMAIL'] = 'access@example.com'
+        ENV['YALTY_ACCESS_PASSWORD_DIGEST'] = BCrypt::Password.create('1234567890', cost: 10)
+
+        subject.update!(yalty_access: true)
+
+        user = Account::User.where(account: subject, email: ENV['YALTY_ACCESS_EMAIL']).first!
+        expect(user.authenticate('1234567890')).to_not be_falsey
+      end
+
+      it 'should send an email to yalty access email' do
+        expect(YaltyAccessMailer).to receive_message_chain(:access_enable, :deliver_later)
+        expect(subject.yalty_access).to be_falsey
+        subject.update!(yalty_access: true)
+      end
+    end
+
+    describe 'when set to false' do
+      let!(:yalty_user) { create(:account_user, :with_yalty_role, account: subject) }
+
+      it 'should destroy user with yalty role if exists' do
+        expect(subject.yalty_access).to be_truthy
+        subject.yalty_access = false
+        expect(subject.yalty_access).to be_falsey
+        expect(subject.changes).to include(:yalty_access)
+        expect { subject.save! }.to change { Account::User.count }.by(-1)
+        expect(Account::User.where(account_id: subject.id, role: 'yalty')).to_not be_exist
+      end
+
+      it 'should not destroy user with yalty role if not exists' do
+        yalty_user.destroy!
+        expect(subject.yalty_access).to be_falsey
+        subject.yalty_access = false
+        expect(subject.yalty_access).to be_falsey
+        expect(subject.changes).to_not include(:yalty_access)
+        expect { subject.save! }.to_not change { Account::User.count }
+        expect(Account::User.where(account_id: subject.id, role: 'yalty')).to_not be_exist
+      end
+
+      it 'should send an email to yalty access email' do
+        expect(YaltyAccessMailer).to receive_message_chain(:access_disable, :deliver_later)
+        expect(subject.yalty_access).to be_truthy
+        subject.update!(yalty_access: false)
+      end
+    end
+
+    describe 'using with_yalty_access scope' do
+      before do
+        create_list(:account_user, 2)
+        create_list(:account_user, 3, :with_yalty_role)
+      end
+
+      it 'should return all accounts with yalty access enable' do
+        expect(Account.with_yalty_access.count).to eql(3)
+        expect(Account.count).to be > 3
       end
     end
   end

@@ -1,0 +1,8 @@
+A company disable yalty's access ;(
+
+Company: <%= account.company_name %>
+ID: <%= account.id %>
+URL: <%= subdomain_url_for(account) %>
+Language: <%= t(account.default_locale, scope: 'locale') %>
+
+Owners' emails: <%= account.users.where(role: 'account_owner').pluck(:email).join(', ') %>

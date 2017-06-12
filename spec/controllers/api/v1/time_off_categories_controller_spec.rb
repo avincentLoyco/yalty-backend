@@ -52,12 +52,9 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
       end
 
       context ' when the  user has an employee and the employee does ' do
-        let!(:employee) do
-          create(:employee,  user: user, account: account)
-        end
+        let!(:employee) { user.employee }
 
         context ' have a policy assigned to the category' do
-
           let(:policy) { create(:time_off_policy, time_off_category: category) }
           let!(:etop) do
             create(:employee_time_off_policy, time_off_policy: policy, employee: employee,

@@ -14,20 +14,28 @@ module Api::V1
     def session
       {
         locale:        resource.locale,
-        role:          resource.role,
-        intercom_hash: OpenSSL::HMAC.hexdigest(
-          'sha256',
-          ENV['INTERCOM_SECRET_KEY'],
-          resource.id
-        )
+        role:          resource.role
       }
         .merge(basic)
+        .merge(intercom_hash)
         .merge(relationships)
     end
 
     def relationships
       {
         employee: employee_json
+      }
+    end
+
+    def intercom_hash
+      return {} if resource.role.eql?('yalty')
+
+      {
+        intercom_hash: OpenSSL::HMAC.hexdigest(
+          'sha256',
+          ENV['INTERCOM_SECRET_KEY'],
+          resource.id
+        )
       }
     end
 
