@@ -33,7 +33,10 @@ RSpec.describe GenericFile, type: :model do
   end
 
   it 'accepts archive bigger than 20 MB' do
-    archive = build(:generic_file, :with_zip, file_file_size: 66_666_666_666)
+    archive = build(:generic_file,
+      :with_zip,
+      file_file_size: 66_666_666_666,
+      fileable_type: 'Account')
     expect(archive.valid?).to eq true
   end
 

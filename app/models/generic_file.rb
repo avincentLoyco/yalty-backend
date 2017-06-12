@@ -81,6 +81,6 @@ class GenericFile < ActiveRecord::Base
   end
 
   def archive?
-    file_content_type.eql?('application/zip')
+    fileable_type.eql?('Account')
   end
 end
