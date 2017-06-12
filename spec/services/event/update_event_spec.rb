@@ -284,6 +284,40 @@ RSpec.describe do
             it { expect { subject }.to_not change { newest_balance.reload.balance_type } }
           end
 
+          context 'and there are removals which should be destroyed' do
+            before do
+              employee.employee_balances.where(time_off_category: second_category).destroy_all
+              etops.last.destroy!
+              EmployeeTimeOffPolicy.all.map do |etop|
+                ManageEmployeeBalanceAdditions.new(etop).call
+              end
+              Employee::Balance.order(:effective_at).map do |balance|
+                UpdateEmployeeBalance.new(balance).call
+              end
+            end
+
+            let!(:removals_to_destroy) do
+              Employee::Balance
+                .where('effective_at BETWEEN ? AND ?', event.effective_at, effective_at)
+                .order(:effective_at)
+                .map(&:balance_credit_removal).uniq.compact
+            end
+            let(:effective_at) { 2.months.since }
+
+            it do
+              subject
+              removals_to_destroy.map do |removal|
+                next unless removal.balance_credit_additions.blank?
+                expect(Employee::Balance.exists?(removal.id)).to eq false
+              end
+            end
+
+            it do
+              expect { subject }
+                .to change { Employee::Balance.where(balance_type: 'removal').count }.by(-2)
+            end
+          end
+
           context 'and hired date was one day after contract end and now not' do
             before do
               create(:employee_event,

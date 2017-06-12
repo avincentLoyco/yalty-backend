@@ -118,7 +118,8 @@ class HandleMapOfJoinTablesToNewHiredDate
 
   def remove_employee_balances_between_hired_dates(assignation, etop)
     return unless new_hired_date > old_hired_date
-    employee
+    balances_to_remove =
+      employee
       .employee_balances
       .in_category(assignation.time_off_category_id)
       .where.not(id: [assignation.id, balance_at_new_hired(etop)])
@@ -127,7 +128,15 @@ class HandleMapOfJoinTablesToNewHiredDate
         'effective_at BETWEEN ? AND ?',
         old_hired_date, new_hired_date + Employee::Balance::REMOVAL_OFFSET
       )
-      .destroy_all
+    removals = balances_to_remove.map(&:balance_credit_removal).compact
+    balances_to_remove.destroy_all
+    destroy_removals!(removals) if removals. present?
+  end
+
+  def destroy_removals!(removals)
+    removals.map do |removal|
+      removal.destroy! if removal.balance_credit_additions.blank?
+    end
   end
 
   def find_join_tables_in_range
