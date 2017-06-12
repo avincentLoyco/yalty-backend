@@ -215,7 +215,7 @@ RSpec.describe API::V1::CompanyEventsController, type: :controller do
 
     context 'module is inactive' do
       before do
-        account.available_modules.delete_all
+        account.available_modules.delete_paid
         account.save!
       end
 
@@ -325,7 +325,7 @@ RSpec.describe API::V1::CompanyEventsController, type: :controller do
 
     context 'module is inactive' do
       before do
-        account.available_modules.delete_all
+        account.available_modules.delete_paid
         account.save!
       end
 
@@ -413,7 +413,7 @@ RSpec.describe API::V1::CompanyEventsController, type: :controller do
 
     context 'module is inactive' do
       before do
-        account.available_modules.delete_all
+        account.available_modules.delete_paid
         account.save!
       end
 

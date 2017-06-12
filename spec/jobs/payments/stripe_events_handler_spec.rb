@@ -175,12 +175,26 @@ RSpec.describe Payments::StripeEventsHandler, type: :job do
       it { expect { job }.to_not change { account.invoices.count } }
     end
 
+    context 'should not create invoice if plan is free' do
+      before do
+        modules = [::Payments::PlanModule.new(id: payed_plan.id, canceled: false, free: true)]
+        account.update!(available_modules: ::Payments::AvailableModules.new(data: modules))
+      end
+
+      it { expect { job }.to_not change { account.invoices.count } }
+    end
+
     context 'remove canceled plans from available_modules' do
-      it { expect { job }.to change { account.reload.available_modules.size }.from(2).to(1) }
+      before do
+        account.available_modules.add(id: 'premium', canceled: true, free: true)
+        account.save!
+      end
+
+      it { expect { job }.to change { account.reload.available_modules.size }.from(3).to(2) }
 
       it 'removes only canceled jobs' do
         job
-        expect(account.reload.available_modules.all).to match_array(['filevault'])
+        expect(account.reload.available_modules.all).to match_array(%w(filevault premium))
       end
     end
 
@@ -277,11 +291,16 @@ RSpec.describe Payments::StripeEventsHandler, type: :job do
     context "when status is 'canceled'" do
       let(:status) { 'canceled' }
 
+      before do
+        account.available_modules.add(id: 'premium', canceled: true, free: true)
+        account.save!
+      end
+
       it 'clears modules' do
         expect { job }
           .to change { account.reload.available_modules.actives }
-          .from(['filevault'])
-          .to([])
+          .from(%w(filevault premium))
+          .to(['premium'])
       end
 
       it 'sends email' do

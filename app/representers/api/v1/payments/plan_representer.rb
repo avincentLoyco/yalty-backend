@@ -5,11 +5,12 @@ module Api
         def complete
           {
             id: resource.id,
+            name: resource.try(:name) || resource.id.titleize,
             amount: resource.amount,
             currency: resource.currency,
             interval: resource.interval,
-            name: resource.name,
-            active: resource.active
+            active: resource.active,
+            free: resource.free
           }
         end
       end

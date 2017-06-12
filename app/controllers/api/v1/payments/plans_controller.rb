@@ -5,6 +5,8 @@ module API
         include PlansSchemas
         include PaymentsHelper
 
+        before_action :validate_free_plan
+
         def create
           verified_dry_params(dry_validation_schema) do |attributes|
             plan = Account.current.with_lock { create_plan(attributes[:id]) }
@@ -23,12 +25,12 @@ module API
         private
 
         def create_plan(plan_id)
-          if Account.current.available_modules.include?(plan_id)
-            Account.current.available_modules.reactivate(plan_id)
+          if available_modules.include?(plan_id)
+            available_modules.reactivate(plan_id)
             Account.current.save!
             find_plan(plan_id, true)
           else
-            Account.current.available_modules.add(id: plan_id)
+            available_modules.add(id: plan_id)
             Account.current.save!
             subscribe_on_stripe(plan_id)
           end
@@ -40,11 +42,12 @@ module API
           subscription.save
           plan = Stripe::SubscriptionItem.create(plan_creation_params(plan_id)).plan
           plan.active = true
+          plan.free = false
           plan
         end
 
         def plan_creation_params(plan_id)
-          prorate = Account.current.available_modules.size > 1
+          prorate = available_modules.size > 1
           creation_params = {
             subscription: Account.current.subscription_id,
             plan: plan_id,
@@ -57,11 +60,11 @@ module API
 
         def cancel_plan_module(plan_id)
           if subscription.status.eql?('trialing')
-            Account.current.available_modules.delete(plan_id)
+            available_modules.delete(plan_id)
             Account.current.save!
             find_subscription_item(plan_id).delete
           else
-            Account.current.available_modules.cancel(plan_id)
+            available_modules.cancel(plan_id)
             Account.current.save!
           end
         end
@@ -94,6 +97,16 @@ module API
 
         def subscription
           @subscription ||= Stripe::Subscription.retrieve(Account.current.subscription_id)
+        end
+
+        def validate_free_plan
+          return unless available_modules.free.include?(params[:id])
+          message = 'This plan is free'
+          raise(StripeError.new(type: 'plan', field: 'id', message: message), message)
+        end
+
+        def available_modules
+          Account.current.available_modules
         end
 
         def stripe_error(exception)

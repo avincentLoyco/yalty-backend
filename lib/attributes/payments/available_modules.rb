@@ -2,8 +2,8 @@ module Payments
   class AvailableModules < ::SimpleAttribute
     attribute :data, Array[PlanModule]
 
-    def add(id:, canceled: false)
-      data.push(::Payments::PlanModule.new(id: id, canceled: canceled))
+    def add(id:, canceled: false, free: false)
+      data.push(::Payments::PlanModule.new(id: id, canceled: canceled, free: free))
     end
 
     def cancel(plan_id)
@@ -18,12 +18,12 @@ module Payments
       data.delete(find_plan_module(plan_id))
     end
 
-    def delete_all
-      self.data = []
+    def delete_paid
+      data.select!(&:free)
     end
 
     def clean
-      self.data = data.reject(&:canceled)
+      data.select! { |plan| plan.free || !plan.canceled }
     end
 
     def all
@@ -31,15 +31,27 @@ module Payments
     end
 
     def canceled
-      data.select(&:canceled).map(&:id)
+      data.select { |plan| plan.canceled && !plan.free }.map(&:id)
     end
 
     def actives
-      data.reject(&:canceled).map(&:id)
+      data.select { |plan| plan.free || !plan.canceled }.map(&:id)
+    end
+
+    def free
+      data.select(&:free).map(&:id)
+    end
+
+    def canceled_or_free
+      canceled + free
     end
 
     def include?(plan_id)
       data.map(&:id).include?(plan_id)
+    end
+
+    def find(plan_id)
+      data.find { |plan| plan.id.eql?(plan_id) }
     end
 
     delegate :size, to: :data

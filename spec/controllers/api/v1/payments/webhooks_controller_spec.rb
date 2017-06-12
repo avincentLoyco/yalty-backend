@@ -42,7 +42,8 @@ RSpec.describe API::V1::Payments::WebhooksController, type: :controller do
   let(:subscription_items) do
     stripe_subscription_items = Stripe::ListObject.new
     stripe_subscription_items.object = 'list'
-    stripe_subscription_items.data = [filevault_subscription_item, exports_subscription_item]
+    stripe_subscription_items.data =
+      [filevault_subscription_item, exports_subscription_item, premium_subscription_item]
     stripe_subscription_items
   end
 
@@ -55,6 +56,12 @@ RSpec.describe API::V1::Payments::WebhooksController, type: :controller do
   let(:exports_subscription_item) do
     subscription_item = Stripe::SubscriptionItem.new(id: 'si_456')
     subscription_item.plan = Stripe::Plan.new(id: 'exports')
+    subscription_item
+  end
+
+  let(:premium_subscription_item) do
+    subscription_item = Stripe::SubscriptionItem.new(id: 'si_789')
+    subscription_item.plan = Stripe::Plan.new(id: 'premium')
     subscription_item
   end
 
@@ -139,6 +146,32 @@ RSpec.describe API::V1::Payments::WebhooksController, type: :controller do
 
         it 'should not remove active subscription item' do
           expect(filevault_subscription_item).to_not receive(:delete)
+          send_webhook
+        end
+      end
+
+      context 'there are free modules' do
+        before do
+          modules = [
+            ::Payments::PlanModule.new(id: 'filevault', canceled: false, free: false),
+            ::Payments::PlanModule.new(id: 'exports', canceled: true, free: true),
+            ::Payments::PlanModule.new(id: 'premium', canceled: true, free: false),
+            ::Payments::PlanModule.new(id: 'automatedexport', canceled: false, free: true)
+          ]
+          account.update!(available_modules: ::Payments::AvailableModules.new(data: modules))
+        end
+
+        it_should_behave_like 'event retrieved and job scheduled'
+
+        it 'should fetch SubscriptionItem list' do
+          expect(Stripe::SubscriptionItem).to receive(:list)
+          send_webhook
+        end
+
+        it 'should remove only canceled and free modules' do
+          expect(filevault_subscription_item).to_not receive(:delete)
+          expect(exports_subscription_item).to receive(:delete)
+          expect(premium_subscription_item).to receive(:delete)
           send_webhook
         end
       end

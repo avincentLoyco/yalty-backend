@@ -44,15 +44,16 @@ RSpec.describe API::V1::Payments::InvoicesController, type: :controller do
               currency: invoice.lines.data.first.plan.currency,
               interval: invoice.lines.data.first.plan.interval,
               name: invoice.lines.data.first.plan.name,
-              active: invoice.lines.data.first.plan.active
+              active: invoice.lines.data.first.plan.active,
+              free: false
             }
           }]
         }]
       end
 
       before do
-        modules =[::Payments::PlanModule.new(id: invoice.lines.data.first.plan.id, canceled: false)]
-        account.update!(available_modules: Payments::AvailableModules.new(data: modules))
+        account.available_modules.add(id: invoice.lines.data.first.plan.id)
+        account.save!
         get_invoices
       end
 
