@@ -23,9 +23,8 @@ class GenericFile < ActiveRecord::Base
 
   before_post_process :process_only_images
   after_save :rename_file, :generate_sha, if: -> { file.present? }
-  validates :file,
-    attachment_content_type: { content_type: CONTENT_TYPES },
-    attachment_size: { less_than: 20.megabytes }
+  validates :file, attachment_content_type: { content_type: CONTENT_TYPES }
+  validates :file, attachment_size: { less_than: 20.megabytes }, unless: :archive?
 
   def find_file_path(version = 'original')
     Dir.glob(Rails.application.config.file_upload_root_path.join(id, version, '*'))
@@ -79,5 +78,9 @@ class GenericFile < ActiveRecord::Base
 
   def process_only_images
     IMAGES_TYPES.include?(file_content_type)
+  end
+
+  def archive?
+    fileable_type.eql?('Account')
   end
 end
