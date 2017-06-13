@@ -28,12 +28,27 @@ RSpec.describe Export::SendEmployeesJournal, type: :job do
   end
 
   it 'invokes spreadsheet creator' do
-    expect(::Export::GenerateEmployeesJournal).to receive_message_chain(:new, :call)
+    expect(::Export::GenerateEmployeesJournal).to receive_message_chain(:new, :call).with(
+      account,
+      account.last_employee_journal_export,
+      an_instance_of(Time),
+      an_instance_of(Pathname)
+    ).with(any_args)
     generate_and_send_journal
   end
 
-  it 'uploads journal to sftp server' do
+  it 'uploads journal to sftp server when exists' do
     expect(sftp).to receive(:upload!).with(path.to_s, "/#{filename.to_s}")
+    generate_and_send_journal
+  end
+
+  it 'sets last_employee_journal_export date for account' do
+    expect { generate_and_send_journal }.to change(account, :last_employee_journal_export)
+  end
+
+  it ' do not uploads journal to sftp server when not exists' do
+    allow(::Export::GenerateEmployeesJournal).to receive_message_chain(:new, :call).and_return(nil)
+    expect(sftp).to_not receive(:upload!)
     generate_and_send_journal
   end
 end

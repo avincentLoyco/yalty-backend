@@ -79,7 +79,9 @@ RSpec.describe Export::GenerateEmployeesJournal, type: :service do
       attribute_definition: address_definition, data: ::Attribute::Address.new(address_data))
   end
 
-  subject(:create_csv) { described_class.new(account, folder_path).call }
+  subject(:create_csv) do
+    described_class.new(account, account.last_employee_journal_export, journal_timestamp, folder_path).call
+  end
 
   before do
     Timecop.freeze(journal_timestamp)
@@ -91,13 +93,6 @@ RSpec.describe Export::GenerateEmployeesJournal, type: :service do
   end
 
   after { FileUtils.rm_rf(folder_path) }
-
-  it 'sets last_employee_journal_export date for account' do
-    expect { create_csv }
-      .to change(account, :last_employee_journal_export)
-      .from(nil)
-      .to(journal_timestamp)
-  end
 
   context 'first export' do
     let(:fixture_name) { 'employees_journal_first_test.csv' }
@@ -128,5 +123,16 @@ RSpec.describe Export::GenerateEmployeesJournal, type: :service do
     end
 
     it_behaves_like 'Valid CSV'
+  end
+
+  context 'empty export' do
+    let(:fixture_name) { 'employees_journal_first_test.csv' }
+
+    before do
+      account.update!(last_employee_journal_export: journal_timestamp)
+      create_csv
+    end
+
+    it { expect(File.exist?(file_path)).to be false }
   end
 end

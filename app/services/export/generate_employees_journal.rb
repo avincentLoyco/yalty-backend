@@ -1,23 +1,23 @@
 module Export
   class GenerateEmployeesJournal
-    attr_reader :account, :dir_path, :journal_timestamp, :journal_path
+    attr_reader :account, :journal_since, :journal_timestamp, :journal_path
 
     EMPLOYEES_JOURNAL_COLUMNS = %w(
       account_uuid employee_uuid event_uuid event_name event_effective_at event_updated_at
       attribute_name attribute_value
     ).freeze
 
-    def initialize(account, dir_path)
-      @account  = account
-      @dir_path = dir_path
-      @journal_timestamp = Time.zone.now
-      @journal_path = generate_journal_path
+    def initialize(account, journal_since, journal_timestamp, base_path)
+      @account = account
+      @journal_since = journal_since
+      @journal_timestamp = journal_timestamp
+      @journal_path = generate_journal_path(base_path)
     end
 
     def call
+      return unless events_since_last_export.exists?
       FileUtils.touch(journal_path)
       create_csv
-      account.update!(last_employee_journal_export: journal_timestamp)
       journal_path
     end
 
@@ -52,13 +52,14 @@ module Export
       ]
     end
 
-    def generate_journal_path
+    def generate_journal_path(base_path)
       filename = "#{account.id}-#{journal_timestamp.strftime('%Y-%m-%dT%T')}.csv"
-      Pathname.new(dir_path).join(filename)
+      Pathname.new(base_path).join(filename)
     end
 
     def events_since_last_export
-      account.employee_events.where(events_where_sql).order(:employee_id).order(:updated_at)
+      @events_since_last_export ||=
+        account.employee_events.where(events_where_sql).order(:employee_id, :updated_at)
     end
 
     def events_where_sql
@@ -73,7 +74,7 @@ module Export
     def scheduled_export_sql
       [
         'employee_events.updated_at >= ?::timestamp AND employee_events.updated_at < ?::timestamp',
-        account.last_employee_journal_export,
+        journal_since,
         journal_timestamp
       ]
     end
