@@ -183,7 +183,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     subject { post :create, json_payload }
 
     let(:effective_at) { 1.days.from_now.at_beginning_of_day }
-    let(:comment) { 'A test comment' }
 
     let(:first_name) { 'Walter' }
     let(:last_name) { 'Smith' }
@@ -193,7 +192,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         {
           type: "employee_event",
           effective_at: effective_at,
-          comment: comment,
           event_type: "hired",
           employee: {
             type: 'employee'
@@ -354,14 +352,13 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       it 'should contain event data' do
         expect(subject).to have_http_status(:success)
 
-        expect_json_keys([:id, :type, :effective_at, :comment, :event_type, :employee])
+        expect_json_keys([:id, :type, :effective_at, :event_type, :employee])
       end
 
       it 'should have given values' do
         expect(subject).to have_http_status(:success)
 
-        expect_json(comment: json_payload[:comment],
-                    event_type: json_payload[:event_type])
+        expect_json(event_type: json_payload[:event_type])
       end
 
       it 'should contain employee' do
@@ -471,7 +468,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         {
           type: "employee_event",
           effective_at: effective_at,
-          comment: comment,
           event_type: "change",
           employee: {
             id: employee_id,
@@ -657,7 +653,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         {
           type: 'employee_event',
           effective_at: effective_at,
-          comment: 'A comment',
           event_type: event_type,
           employee: { id: employee.id }
         }
@@ -833,7 +828,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         id: event_id,
         type: "employee_event",
         effective_at: effective_at,
-        comment: comment,
         event_type: "hired",
         employee: {
           id: employee_id,
@@ -863,7 +857,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     end
 
     let(:effective_at) { 1.days.from_now.at_beginning_of_day }
-    let(:comment) { 'change comment' }
 
     let(:first_name) { 'Walter' }
     let(:last_name) { 'Smith' }
@@ -874,7 +867,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       it { expect { subject }.to_not change { Employee.count } }
       it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
 
-      it { expect { subject }.to change { event.reload.comment }.to('change comment') }
       it { expect { subject }.to change { event.reload.effective_at }.to(effective_at) }
 
       it { expect { subject }.to change { first_name_attribute.reload.value }.to(first_name) }
@@ -1014,7 +1006,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           it { expect { subject }.to_not change { Employee.count } }
           it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
 
-          it { expect { subject }.to_not change { event.reload.comment } }
           it { expect { subject }.to_not change { event.reload.effective_at } }
 
           it { expect { subject }.to_not change { first_name_attribute.reload.value } }
@@ -1035,7 +1026,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           it { expect { subject }.to_not change { Employee.count } }
           it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
 
-          it { expect { subject }.to change { event.reload.comment }.to('change comment') }
           it { expect { subject }.to change { event.reload.effective_at }.to(effective_at) }
 
           it { expect { subject }.to change { first_name_attribute.reload.value }.to(first_name) }
@@ -1052,18 +1042,14 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       context 'when not send' do
         before { json_payload[:employee_attributes] = nil }
 
-        it { expect { subject }.to change { event.reload.comment }.to('change comment') }
         it { expect { subject }.to change { event.reload.effective_at }.to(effective_at) }
-
         it { is_expected.to have_http_status(204) }
       end
 
       context 'when empty array send' do
         before { json_payload.delete(:employee_attributes) }
 
-        it { expect { subject }.to change { event.reload.comment }.to('change comment') }
         it { expect { subject }.to change { event.reload.effective_at }.to(effective_at) }
-
         it { is_expected.to have_http_status(204) }
       end
     end
@@ -1075,18 +1061,14 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       end
 
       context 'when all params and values are given' do
-        it { expect { subject }.to change { event.reload.comment } }
         it { expect { subject }.to change { last_name_attribute.reload.value } }
-
         it { is_expected.to have_http_status(204) }
       end
 
       context 'when required param is missing' do
         before { json_payload.delete(:employee_attributes) }
 
-        it { expect { subject }.to_not change { event.reload.comment } }
         it { expect { subject }.to_not change { last_name_attribute.reload.value } }
-
         it { is_expected.to have_http_status(422) }
 
         context 'response body' do
@@ -1099,9 +1081,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       context 'when required param value is set to nil' do
         let(:last_name) { nil }
 
-        it { expect { subject }.to_not change { event.reload.comment } }
         it { expect { subject }.to_not change { last_name_attribute.reload.value } }
-
         it { is_expected.to have_http_status(422) }
 
         context 'response body' do
@@ -1364,7 +1344,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     it 'should have employee events attributes' do
       subject
 
-      expect_json_keys('*', [:effective_at, :event_type, :comment, :employee])
+      expect_json_keys('*', [:effective_at, :event_type, :employee])
     end
 
     it 'should have employee' do
@@ -1412,7 +1392,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     it 'should have employee events attributes' do
       subject
 
-      expect_json_keys([:effective_at, :event_type, :comment, :employee])
+      expect_json_keys([:effective_at, :event_type, :employee])
     end
 
     it 'should have employee' do

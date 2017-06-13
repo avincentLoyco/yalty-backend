@@ -3,7 +3,6 @@ module Api::V1
     def complete
       {
         effective_at: resource.effective_at,
-        comment: resource.comment,
         event_type: resource.event_type
       }
         .merge(basic)

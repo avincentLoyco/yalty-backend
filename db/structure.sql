@@ -134,7 +134,8 @@ CREATE TABLE accounts (
     invoice_company_info hstore,
     invoice_emails text[] DEFAULT '{}'::text[],
     available_modules json,
-    archive_processing boolean DEFAULT false
+    archive_processing boolean DEFAULT false,
+    last_employee_journal_export timestamp without time zone
 );
 
 
@@ -181,7 +182,6 @@ CREATE TABLE employee_attribute_versions (
 CREATE TABLE employee_events (
     employee_id uuid,
     effective_at date,
-    comment text,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
@@ -1748,3 +1748,5 @@ INSERT INTO schema_migrations (version) VALUES ('20170426111844');
 INSERT INTO schema_migrations (version) VALUES ('20170427084526');
 
 INSERT INTO schema_migrations (version) VALUES ('20170515081935');
+
+INSERT INTO schema_migrations (version) VALUES ('20170523121718');
