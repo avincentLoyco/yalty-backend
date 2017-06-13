@@ -192,10 +192,7 @@ class Employee < ActiveRecord::Base
   end
 
   def first_employee_event
-    events
-      .where(event_type: 'hired')
-      .reorder('employee_events.effective_at DESC')
-      .first
+    events.hired.reorder('employee_events.effective_at DESC').first
   end
 
   def active_policy_in_category_at_date(category_id, date = Time.zone.today)
@@ -245,11 +242,7 @@ class Employee < ActiveRecord::Base
   end
 
   def first_upcoming_contract_end(date = Time.zone.today)
-    events
-      .where(event_type: 'contract_end')
-      .where('effective_at > ?', date)
-      .order(:effective_at)
-      .first
+    events.contract_ends.where('effective_at > ?', date).order(:effective_at).first
   end
 
   def can_be_hired?
@@ -261,7 +254,7 @@ class Employee < ActiveRecord::Base
   end
 
   def hired_events?
-    events.where(event_type: 'hired').exists?
+    events.hired.exists?
   end
 
   private

@@ -51,6 +51,9 @@ class Employee::Event < ActiveRecord::Base
     on: :update
   validate :hired_and_contract_end_not_in_the_same_date, if: [:employee, :event_type]
 
+  scope :contract_ends, -> { where(event_type: 'contract_end') }
+  scope :hired, -> { where(event_type: 'hired') }
+
   before_destroy :check_if_event_deletable
 
   def self.event_types
@@ -107,7 +110,7 @@ class Employee::Event < ActiveRecord::Base
     hired_event =
       employee
       .events
-      .where(event_type: 'hired')
+      .hired
       .where('effective_at <= ?', effective_at)
       .where.not(id: id).order(:effective_at).last
 

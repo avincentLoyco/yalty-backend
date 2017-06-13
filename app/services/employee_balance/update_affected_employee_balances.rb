@@ -29,7 +29,7 @@ class UpdateAffectedEmployeeBalances
   end
 
   def update_balances_in_affected_category(category_id, employee)
-    start_balance = Employee::Balance.employee_balances(employee.id, category_id)
+    start_balance = Employee::Balance.for_employee_and_category(employee.id, category_id)
                                      .where('time_off_id IS NOT NULL')
                                      .order(:effective_at)
                                      .first

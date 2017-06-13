@@ -62,7 +62,7 @@ class CreateEmployeeBalance
   def find_active_assignation_balance_for_date
     return if options[:time_off_id] || options[:effective_at].blank?
     Employee::Balance
-      .employee_balances(employee.id, category.id)
+      .for_employee_and_category(employee.id, category.id)
       .find_by('effective_at = ? AND time_off_id is NULL', options[:effective_at])
   end
 

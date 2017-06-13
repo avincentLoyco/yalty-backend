@@ -125,10 +125,6 @@ class GenerateBalanceOverview
   end
 
   def contract_end(date = Time.zone.today)
-    @employee
-      .events
-      .where(event_type: 'contract_end')
-      .where('effective_at <= ?', date)
-      .order(:effective_at).last
+    @employee.events.contract_ends.where('effective_at <= ?', date).order(:effective_at).last
   end
 end

@@ -37,7 +37,7 @@ class Employee::Balance < ActiveRecord::Base
   before_validation :calculate_amount_from_time_off, if: :time_off_id
   before_validation :calculate_and_set_balance, if: :attributes_present?
 
-  scope :employee_balances, (lambda do |employee_id, time_off_category_id|
+  scope :for_employee_and_category, (lambda do |employee_id, time_off_category_id|
     where(employee_id: employee_id, time_off_category_id: time_off_category_id)
   end)
   scope :between, (lambda do |from_date, to_date|
@@ -51,7 +51,7 @@ class Employee::Balance < ActiveRecord::Base
     .where('b.balance_credit_removal_id IS NULL')
   end)
   scope :removal_at_date, (lambda do |employee_id, time_off_category_id, date|
-    employee_balances(employee_id, time_off_category_id)
+    for_employee_and_category(employee_id, time_off_category_id)
       .where(balance_type: %w(reset removal)).where(effective_at: date).uniq
   end)
   scope :reset, -> { where(reset_balance: true) }

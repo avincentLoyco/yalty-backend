@@ -379,7 +379,7 @@ RSpec.describe do
             context 'and hired date moved to etop start date' do
               it { expect { subject }.to change { EmployeeTimeOffPolicy.exists?(etops.first.id) } }
               it { expect { subject }.to change { Employee::Balance.exists?(first_balance.id) } }
-              it { expect { subject }.to change { Employee::Balance.count }.by(-15) }
+              it { expect { subject }.to change { Employee::Balance.count }.by(-17) }
               it do
                 expect { subject }.to change { Employee::Balance.pluck(:being_processed).uniq }
                   .to ([true])

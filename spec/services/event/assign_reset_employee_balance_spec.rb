@@ -55,6 +55,23 @@ RSpec.describe AssignResetEmployeeBalance do
         expect { subject }
           .to change { first_start_date.reload.validity_date }.to eq removal_date
       end
+
+      context 'when there is a time off which end at contract end' do
+        let!(:time_off) do
+          create(:time_off,
+            employee: employee, time_off_category: category,
+            end_time: (contract_end.effective_at + 1.day).beginning_of_day,
+            start_time: 20.days.since)
+        end
+
+
+        it do
+          expect { subject }.to change { time_off.employee_balance.reload.being_processed }.to true
+        end
+        it do
+          expect { subject }.to change { Employee::Balance.where(balance_type: 'reset').count }
+        end
+      end
     end
   end
 end

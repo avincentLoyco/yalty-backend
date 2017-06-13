@@ -151,7 +151,7 @@ class CalculatePeriodOverview
   end
 
   def balances
-    @balances ||= Employee::Balance.employee_balances(@employee_id, @time_off_category_id)
+    @balances ||= Employee::Balance.for_employee_and_category(@employee_id, @time_off_category_id)
   end
 
   def period_addition

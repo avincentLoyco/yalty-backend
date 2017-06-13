@@ -61,7 +61,7 @@ class AssignResetEmployeeBalance
       if moved_to_future? && @old_contract_end_balances.present?
         @old_contract_end_balances.first
       else
-        @reset_employee_balance
+        time_off_balance ? time_off_balance : @reset_employee_balance
       end
 
     PrepareEmployeeBalancesToUpdate.new(balance, update_all: true).call
@@ -79,5 +79,13 @@ class AssignResetEmployeeBalance
 
   def moved_to_future?
     @old_contract_end.present? && @new_contract_end > @old_contract_end
+  end
+
+  def time_off_balance
+    @employee
+      .employee_balances
+      .in_category(@time_off_category.id)
+      .where(balance_type: 'time_off', effective_at: @new_contract_end.beginning_of_day)
+      .first
   end
 end

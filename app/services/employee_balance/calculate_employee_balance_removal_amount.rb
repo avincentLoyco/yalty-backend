@@ -107,7 +107,7 @@ class CalculateEmployeeBalanceRemovalAmount
 
   def balances_in_removal_period
     Employee::Balance
-      .employee_balances(removal.employee_id, removal.time_off_category_id)
+      .for_employee_and_category(removal.employee_id, removal.time_off_category_id)
       .where('effective_at BETWEEN ? AND ? AND id != ?',
         first_addition.effective_at,
         removal.effective_at,

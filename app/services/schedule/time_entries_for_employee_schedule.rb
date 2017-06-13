@@ -62,7 +62,7 @@ class TimeEntriesForEmployeeSchedule
     pp_info_hash = {}
     fetch_usefull_info.each do |query_hash|
       presence_policy_id = query_hash['presence_policy_id']
-      pp_info_hash[presence_policy_id] ||= fill_pp_info_hash(query_hash)
+      pp_info_hash[presence_policy_id] = fill_pp_info_hash(query_hash)
       presence_policy_hash = pp_info_hash[presence_policy_id]
       order_count = calculate_ocurrences_of_time_entry(
         query_hash['order'].to_i,

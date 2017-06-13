@@ -32,7 +32,7 @@ class RelativeEmployeeBalancesFinder
   end
 
   def balances_related_by_category_and_employee
-    Employee::Balance.employee_balances(
+    Employee::Balance.for_employee_and_category(
       employee_balance.employee_id, employee_balance.time_off_category_id
     )
   end

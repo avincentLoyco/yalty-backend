@@ -66,10 +66,10 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
 
   def employee_balances
     if effective_till
-      Employee::Balance.employee_balances(employee.id, time_off_category.id)
+      Employee::Balance.for_employee_and_category(employee.id, time_off_category.id)
                        .where('effective_at BETWEEN ? and ?', effective_at, effective_till)
     else
-      Employee::Balance.employee_balances(employee.id, time_off_category.id)
+      Employee::Balance.for_employee_and_category(employee.id, time_off_category.id)
                        .where('effective_at >= ?', effective_at)
     end
   end

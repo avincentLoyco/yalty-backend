@@ -90,7 +90,7 @@ class HandleContractEnd
   def find_next_hire_date(employee)
     employee
       .events
-      .where(event_type: 'hired').where('effective_at > ?', @contract_end_date)
+      .hired.where('effective_at > ?', @contract_end_date)
       .order(:effective_at).first.try(:effective_at)
   end
 end

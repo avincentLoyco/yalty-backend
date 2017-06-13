@@ -43,15 +43,10 @@ module API
       end
 
       def destroy
-        next_balance = next_balance(resource.employee_balance)
-
         transactions do
-          resource.employee_balance.destroy!
+          DestroyEmployeeBalance.new(resource.employee_balance).call
           resource.destroy!
-          prepare_balances_to_update(resource.employee_balance, balance_attributes)
         end
-
-        update_balances_job(next_balance, update_all: true) if next_balance
         render_no_content
       end
 
