@@ -7,6 +7,12 @@ RSpec.describe Export::ScheduleEmployeesJournalExport, type: :job do
 
   subject(:schedule_exports) { described_class.new.perform }
 
+  before do
+    ENV['LOYCO_SSH_HOST'] = 'sftp.loyco.ch'
+    ENV['LOYCO_SSH_USER'] = 'user'
+    ENV['LOYCO_SSH_KEY_PATH'] = '/path/to/key'
+  end
+
   it { expect(account_with_yalty_access.yalty_access).to be(true) }
   it { expect(account_without_yalty_access.yalty_access).to be(false) }
 
@@ -17,6 +23,12 @@ RSpec.describe Export::ScheduleEmployeesJournalExport, type: :job do
 
   it 'schedules export only for accounts with yalty special access' do
     expect(export_job).to receive(:perform_later).with(account_with_yalty_access)
+    schedule_exports
+  end
+
+  it 'do not schedule job if SFTP is not configured' do
+    expect(export_job).to_not receive(:perform_later)
+    ENV['LOYCO_SSH_HOST'] = ''
     schedule_exports
   end
 end

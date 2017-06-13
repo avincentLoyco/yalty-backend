@@ -31,7 +31,8 @@ module Export
           event.employee_attribute_versions.each do |attribute_version|
             if attribute_version.value.is_a?(Enumerable)
               attribute_version.value.each do |attribute|
-                csv << basic_row(event) + [attribute.first.to_s, attribute.second]
+                attribute_name = "#{attribute_version.attribute_name}_#{attribute.first}"
+                csv << basic_row(event) + [attribute_name, attribute.second]
               end
             else
               csv << basic_row(event) + [attribute_version.attribute_name, attribute_version.value]
