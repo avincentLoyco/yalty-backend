@@ -12,6 +12,15 @@ RSpec.describe Auth::UsersController, type: :controller do
       it { expect { subject }.to change { user.reload.reset_password_token } }
       it { expect { subject }.to change { ActionMailer::Base.deliveries.count }.by(1) }
 
+      context 'when user doesn\'t have related employee' do
+        before do
+          user.employee = nil
+          user.save(validate: false)
+        end
+
+        it { expect { subject }.to change { user.reload.reset_password_token } }
+      end
+
       it { is_expected.to have_http_status(204) }
     end
 

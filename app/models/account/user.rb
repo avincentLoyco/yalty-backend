@@ -116,6 +116,7 @@ class Account::User < ActiveRecord::Base
 
   def empty_employee_allowed
     role.eql?('yalty') ||
+      changed.eql?(%w(reset_password_token)) ||
       role.eql?('account_owner') && (
         account.nil? || account.recently_created? || changed.eql?(%w(password_digest))
       )
