@@ -103,6 +103,23 @@ RSpec.describe Employee, type: :model do
         it { expect(described_class.inactive_at_date(2.years.from_now).count).to eq(0) }
         it { expect(described_class.inactive_at_date(2.years.from_now)).to_not include(employee) }
       end
+
+      context 'should be active on the day of contract_end' do
+        let!(:contract_end) do
+          create(:employee_event, employee: employee, event_type: 'contract_end',
+            effective_at: Time.zone.now)
+        end
+
+        it { expect(described_class.active_at_date.count).to eq(7) }
+        it { expect(described_class.inactive_at_date.count).to eq(0) }
+      end
+
+      context 'should be active on the day of hired event' do
+        let(:hired_date) { employee.events.find_by(event_type: 'hired').effective_at }
+
+        it { expect(described_class.active_at_date(hired_date).count).to eq(7) }
+        it { expect(described_class.inactive_at_date(hired_date).count).to eq(0) }
+      end
     end
 
     context 'active_employee_ratio_per_account' do

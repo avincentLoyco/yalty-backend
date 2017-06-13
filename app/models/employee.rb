@@ -38,15 +38,21 @@ class Employee < ActiveRecord::Base
   end)
 
   scope(:chargeable_at_date, lambda do |date = Time.zone.now|
-    where(previous_event_sql('hired', date))
+    joins(:events)
+      .where(
+        "employee_events.event_type = 'hired' AND
+        employee_events.effective_at = ?::date OR
+        #{previous_event_sql('hired', date)}", date
+      )
   end)
 
   scope(:active_at_date, lambda do |date = Time.zone.now|
     joins(:events)
-      .where("
-        employee_events.event_type = 'hired' AND
+      .where(
+        "employee_events.event_type = 'hired' AND
         employee_events.effective_at >= ?::date OR
-        #{previous_event_sql('hired', date)}", date)
+        #{previous_event_sql('hired', date)}", date
+      )
       .distinct
   end)
 
@@ -89,7 +95,7 @@ class Employee < ActiveRecord::Base
       "
         '#{type}' = (
           SELECT employee_events.event_type FROM employee_events
-          WHERE employee_events.effective_at <= '#{formatted_date}'
+          WHERE employee_events.effective_at < '#{formatted_date}'
           AND employee_events.employee_id = employees.id
           AND employee_events.event_type IN ('hired', 'contract_end')
           ORDER BY employee_events.effective_at DESC
