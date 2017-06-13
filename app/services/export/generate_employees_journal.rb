@@ -48,13 +48,13 @@ module Export
         event.employee_id,
         event.id,
         event.event_type,
-        event.effective_at.strftime('%d.%m.%Y'),
-        event.updated_at.strftime('%d.%m.%Y %H:%M')
+        event.effective_at.strftime('%d-%m-%Y'),
+        event.updated_at.strftime('%d-%m-%YT%H:%M:%S')
       ]
     end
 
     def generate_journal_path(base_path)
-      filename = "#{account.id}-#{journal_timestamp.strftime('%Y-%m-%dT%T')}.csv"
+      filename = "#{account.id}-#{journal_timestamp.strftime('%Y-%m-%dT%H:%M:%S')}.csv"
       Pathname.new(base_path).join(filename)
     end
 
