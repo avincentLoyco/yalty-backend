@@ -59,6 +59,19 @@ RSpec.describe API::V1::RegisteredWorkingTimesController, type: :controller do
         it_behaves_like 'Authorized employee'
       end
 
+      context 'when time entry is from 00:00 to 24:00' do
+        let(:time_entries_params) { [{ start_time: '00:00:00', end_time: '24:00:00' }] }
+
+        it { expect { subject }.to change { RegisteredWorkingTime.count }.by(1) }
+        it { expect { subject }.to change { employee.registered_working_times.count }.by(1) }
+        it do
+          subject
+
+          expect(RegisteredWorkingTime.first.time_entries)
+            .to eq([{"start_time"=>"00:00:00", "end_time"=>"24:00:00"}])
+        end
+      end
+
       context 'when registered working time for a given date exists' do
         let!(:registered_working_time) do
           create(:registered_working_time, employee: employee, date: date)
