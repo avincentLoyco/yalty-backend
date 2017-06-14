@@ -14,7 +14,7 @@ module SubscriptionsSchemas
           required(:region).maybe(:str?)
         end
       end
-      optional(:emails).each(:str?)
+      optional(:emails).maybe { array? { each { str? } } }
     end
   end
 end

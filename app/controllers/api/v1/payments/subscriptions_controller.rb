@@ -63,7 +63,7 @@ module API
 
         def update_invoice_emails!(attributes)
           return unless attributes.key?(:emails)
-          Account.current.update!(invoice_emails: attributes[:emails])
+          Account.current.update!(invoice_emails: attributes[:emails] || [])
         end
 
         def default_card

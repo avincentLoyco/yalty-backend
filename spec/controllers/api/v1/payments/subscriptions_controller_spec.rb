@@ -12,15 +12,15 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
   let!(:employees) { create_list(:employee, 5, account: account) }
   let(:user) { create(:account_user, role: 'account_administrator', account: account) }
 
-  let!(:timestamp)   { Time.zone.now.to_i }
-  let(:customer)     { StripeCustomer.new('cus_123', 'desc', 'test@email.com', 'ca_123') }
+  let!(:timestamp) { Time.zone.now.to_i }
+  let(:customer) { StripeCustomer.new('cus_123', 'desc', 'test@email.com', 'ca_123') }
   let(:subscription) do
     subscription = StripeSubscription.new('sub_123', timestamp)
     subscription.tax_percent = 8.0
     subscription
   end
   let(:invoice) { StripeInvoice.new('in_123', 666, timestamp) }
-  let(:card)         { StripeCard.new('ca_123', 4567, 'Visa', 12, 2018) }
+  let(:card) { StripeCard.new('ca_123', 4567, 'Visa', 12, 2018) }
   let(:plans) do
     ['master-plan', 'evil-plan', 'sweet-sweet-plan', 'free-plan'].map do |plan_id|
       StripePlan.new(plan_id, 400, 'chf', 'month', plan_id.titleize)
@@ -231,8 +231,40 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
     context 'update only emails' do
       let(:params) {{ emails: invoice_emails }}
 
+      before { account.update!(invoice_emails: ["fake"]) }
+
       it { expect { update_settings }.to_not change { account.invoice_company_info } }
       it { expect { update_settings }.to     change { account.invoice_emails } }
+
+      shared_examples 'wrong parameter' do |error_message|
+        before { update_settings }
+
+        it { expect_json(regex(error_message)) }
+      end
+
+      context 'emails is string' do
+        let(:params) {{ emails: 'string' }}
+
+        it_behaves_like 'wrong parameter', 'must be an array'
+      end
+
+      context 'emails is integer' do
+        let(:params) {{ emails: 123 }}
+
+        it_behaves_like 'wrong parameter', 'must be an array'
+      end
+
+      context 'emails is nil' do
+        let(:params) {{ emails: nil }}
+
+        it { expect { update_settings }.to change { account.invoice_emails }.to([]) }
+      end
+
+      context 'emails is empty array' do
+        let(:params) {{ emails: [] }}
+
+        it { expect { update_settings }.to change { account.invoice_emails }.to([]) }
+      end
     end
 
     context 'empty params clear settings' do
