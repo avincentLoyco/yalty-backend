@@ -45,7 +45,7 @@ namespace :release do
 
       info 'Cleanup tasks list'
       File.write(tasks_file, JSON.pretty_generate(tasks_json))
-      if test "git diff-index --quiet HEAD -- #{tasks_file}"
+      if test "git diff-index --ignore-space-change --quiet v#{version} -- #{tasks_file}"
         info 'nothing to do...'
       else
         execute :git, :add, tasks_file

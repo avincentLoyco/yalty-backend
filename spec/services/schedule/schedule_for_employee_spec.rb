@@ -343,6 +343,55 @@ RSpec.describe ScheduleForEmployee, type: :service do
         end
       end
 
+      context 'when there is registered working time from 00:00 to 24:00' do
+        let(:start_date) { Date.new(2015, 12, 28) }
+        let(:end_date) { Date.new(2015, 12, 30) }
+        let!(:registered_working_time) do
+          create(:registered_working_time,
+            employee: employee, time_entries: [{ start_time: '00:00:00', end_time: '24:00:00'}],
+            date: Date.new(2015, 12, 29)
+          )
+        end
+
+        it 'should have valid response' do
+          expect(subject).to match_hash(
+            [
+              {
+                date: '2015-12-28',
+                time_entries: [
+                  {
+                    type: 'working_time',
+                    start_time: '01:00:00',
+                    end_time: '06:00:00'
+                  }
+                ]
+              },
+              {
+                date: '2015-12-29',
+                time_entries: [
+                  {
+                    type: 'working_time',
+                    start_time: '00:00:00',
+                    end_time: '24:00:00'
+                  }
+                ],
+                comment: registered_working_time.comment
+              },
+              {
+                date: '2015-12-30',
+                time_entries: [
+                  {
+                    type: 'working_time',
+                    start_time: '01:00:00',
+                    end_time: '06:00:00'
+                  }
+                ]
+              }
+            ]
+          )
+        end
+      end
+
       context 'when there are no time entries, time off and holidays' do
         before { epp.destroy! }
         let(:start_date) { Date.new(2015, 12, 27) }

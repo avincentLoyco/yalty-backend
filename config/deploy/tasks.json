@@ -3,11 +3,6 @@
 
   ],
   "after_migration": [
-    {
-      "task_name": "remove_original_files",
-      "description": [
-        "Leave only one, proper file in original directory"
-      ]
-    },
+
   ]
 }

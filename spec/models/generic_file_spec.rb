@@ -36,7 +36,8 @@ RSpec.describe GenericFile, type: :model do
     archive = build(:generic_file,
       :with_zip,
       file_file_size: 66_666_666_666,
-      fileable_type: 'Account')
+      fileable_type: 'Account'
+    )
     expect(archive.valid?).to eq true
   end
 
