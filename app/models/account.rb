@@ -56,7 +56,7 @@ class Account < ActiveRecord::Base
   after_create :update_default_attribute_definitions!
   after_create :update_default_time_off_categories!
   after_create :create_reset_presence_policy_and_working_place!
-  after_create :create_stripe_customer_with_subscription, if: :stripe_enabled?
+  after_create :create_intercom_and_stripe_resources
   after_update :update_stripe_customer_description,
     if: -> { stripe_enabled? && (subdomain_changed? || company_name_changed?) }
   after_save :update_yalty_access
@@ -249,8 +249,9 @@ class Account < ActiveRecord::Base
     errors.add(:timezone, 'must be a valid time zone')
   end
 
-  def create_stripe_customer_with_subscription
-    Payments::CreateOrUpdateCustomerWithSubscription.perform_now(self)
+  def create_intercom_and_stripe_resources
+    SendDataToIntercom.perform_now(id, self.class.name)
+    Payments::CreateOrUpdateCustomerWithSubscription.perform_now(self) if stripe_enabled?
   end
 
   def update_stripe_customer_description
