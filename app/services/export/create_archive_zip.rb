@@ -44,7 +44,8 @@ module Export
       zip_file = File.open(archive_zip_path)
 
       @account.transaction do
-        @account.update!(archive_file: GenericFile.create!(file: zip_file))
+        @account.update!(archive_file: GenericFile.create!)
+        @account.archive_file.update!(file: zip_file)
       end
 
       zip_file.close
