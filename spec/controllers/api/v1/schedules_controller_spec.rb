@@ -11,13 +11,73 @@ RSpec.describe API::V1::SchedulesController , type: :controller do
     let(:employee_id) { employee.id }
     let(:from) { '25.12.2015' }
     let(:to) { '27.12.2015' }
-    let(:params) {{ employee_id: employee_id, from: from, to: to }}
+    let(:params) { { employee_id: employee_id, from: from, to: to } }
     let!(:ewp) do
       create(:employee_working_place,
         working_place: working_place, effective_at: '1/1/2015', employee: employee)
     end
 
     subject { get :schedule_for_employee, params }
+
+    context 'with valid params and contract end before rehired' do
+      let(:ewp) {}
+      let!(:employee) { create(:employee, account: account, hired_at: '02.02.2019') }
+      let!(:employee_presence_policy) do
+        create(:employee_presence_policy,
+          employee: employee, effective_at: '03.02.2019')
+      end
+      let(:presence_day) do
+        create(:presence_day, order: 1, presence_policy: employee_presence_policy.presence_policy)
+      end
+
+      before do
+        create(:time_entry, presence_day: presence_day, start_time: '1:00', end_time: '24:00')
+        create(:employee_event,
+          employee: employee, event_type: 'contract_end', effective_at: '03.02.2019')
+        create(:employee_event,
+          employee: employee, event_type: 'hired', effective_at: '04.02.2019')
+        create(:employee_presence_policy,
+          employee: employee,
+          effective_at: '05.02.2019',
+          presence_policy: employee_presence_policy.presence_policy)
+      end
+      let(:from) { '03.02.2019' }
+      let(:to)   { '05.02.2019' }
+
+      it 'has time entries in presence policy after rehiring' do
+        subject
+        expect(JSON.parse(response.body)).to eq(
+          [
+            {
+              'date' => '2019-02-03',
+              'time_entries' =>
+              [
+                {
+                  'type' => 'working_time',
+                  'start_time' => '01:00:00',
+                  'end_time' => '24:00:00'
+                }
+              ]
+            },
+            {
+              'date' => '2019-02-04',
+              'time_entries' => []
+            },
+            {
+              'date' => '2019-02-05',
+              'time_entries' =>
+              [
+                {
+                  'type' => 'working_time',
+                  'start_time' => '01:00:00',
+                  'end_time' => '24:00:00'
+                }
+              ]
+            }
+          ]
+        )
+      end
+    end
 
     context 'with valid params' do
       before do
