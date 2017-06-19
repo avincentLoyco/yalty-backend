@@ -28,9 +28,13 @@ module Export
         csv << EMPLOYEES_JOURNAL_COLUMNS
 
         events_since_last_export.each do |event|
-          event.employee_attribute_versions.each do |attribute_version|
+          ordered_versions = event.employee_attribute_versions
+                                  .joins(:attribute_definition)
+                                  .order('employee_attribute_definitions.name ASC')
+
+          ordered_versions.each do |attribute_version|
             if attribute_version.value.is_a?(Enumerable)
-              attribute_version.value.each do |attribute|
+              attribute_version.value.sort_by(&:first).each do |attribute|
                 attribute_name = "#{attribute_version.attribute_name}_#{attribute.first}"
                 csv << basic_row(event) + [attribute_name, attribute.second]
               end
@@ -59,8 +63,9 @@ module Export
     end
 
     def events_since_last_export
-      @events_since_last_export ||=
-        account.employee_events.where(events_where_sql).order(:employee_id, :updated_at)
+      @events_since_last_export ||= account.employee_events
+                                           .where(events_where_sql)
+                                           .order(:employee_id, :updated_at, :created_at, :id)
     end
 
     def events_where_sql
