@@ -7,7 +7,7 @@ module API
       def index
         authorize! :index, EmployeeWorkingPlace.new
         if params[:working_place_id]
-          render_resource(working_place_resources)
+          render_resource(resources_with_filters(EmployeeWorkingPlace, working_place.id))
         else
           response = employee_resources.map do |resource|
             resource_representer.new(resource).working_place_json
