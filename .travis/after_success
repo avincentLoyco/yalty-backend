@@ -24,7 +24,7 @@ end
 # Restart build for same branch on e2e-testing repository
 #
 
-if ENV['TRAVIS_PULL_REQUEST'] == 'false'
+if ENV['TRAVIS_PULL_REQUEST'] == 'false' && ENV['DISABLE_REBUILD'] != 'true'
   begin
     e2e = Travis::Pro::Repository.find('yalty/yalty-e2e-testing')
 
