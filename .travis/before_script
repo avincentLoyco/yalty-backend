@@ -36,7 +36,7 @@ end
 # Restart builds that have a pull request on current branch
 #
 
-if ENV['TRAVIS_PULL_REQUEST'] == 'false'
+if ENV['TRAVIS_PULL_REQUEST'] == 'false' && ENV['DISABLE_REBUILD'] != 'true'
   pull_requests = github.pull_requests(repository, state: 'open').select do |pull_request|
     pull_request.base.ref == branch
   end.map(&:number)
