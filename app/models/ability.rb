@@ -4,10 +4,19 @@ class Ability
   def initialize(user)
     if user.role.eql?('account_owner')
       can :manage, :all
+
+      unless user.account.available_modules.include?('companyevent')
+        cannot [:create, :update, :destroy], CompanyEvent
+      end
     elsif user.role.in?(%w(account_administrator yalty))
       can :manage, :all
       cannot :manage, :payments
+
+      unless user.account.available_modules.include?('companyevent')
+        cannot [:create, :update, :destroy], CompanyEvent
+      end
     elsif user.role.eql?('user')
+      cannot :read, CompanyEvent
       can [:index], TimeOffCategory do |_time_off_category, employee_id|
         employee_id.nil? || Account::User.current&.employee&.id == employee_id
       end

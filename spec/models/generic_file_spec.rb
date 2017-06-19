@@ -51,6 +51,7 @@ RSpec.describe GenericFile, type: :model do
     let(:generic_file) { create(:generic_file, :with_jpg) }
 
     it { expect(generic_file.file_file_name).to eq("file_#{generic_file.id}.jpeg") }
+    it { expect(generic_file.original_filename).to eq("test.jpg") }
     it { expect(generic_file.file.styles.keys).to include(:thumbnail) }
     it { expect(generic_file.sha_sums[:original_sha]).to_not be(nil) }
     it { expect(generic_file.sha_sums[:thumbnail_sha]).to_not be(nil) }

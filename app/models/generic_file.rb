@@ -55,9 +55,14 @@ class GenericFile < ActiveRecord::Base
       .name
   end
 
+  def company_event_friendly_name
+    original_filename.split('.').first
+  end
+
   def rename_file
     new_name = "file_#{id}.#{extension}"
     return if file_file_name.eql?(new_name)
+    update_column(:original_filename, file_file_name)
     file.instance_write(:file_name, new_name)
   end
 

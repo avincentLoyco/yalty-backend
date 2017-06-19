@@ -63,6 +63,12 @@ en:
       subject: '%{company_name}: Payment failure! Check your yalty Account'
     subscription_canceled:
       subject: '%{company_name}: Payment failure - your premium features are deactivated'
+  company_events_mailer:
+    event_changed:
+      subject: '%{company_name}: CompanyEvent was changed'
+    action_create: 'created'
+    action_update: 'updated'
+    action_destroy: 'destroyed'
   date:
     formats:
       default: "%d %B %Y"

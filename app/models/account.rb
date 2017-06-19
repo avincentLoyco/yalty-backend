@@ -43,6 +43,7 @@ class Account < ActiveRecord::Base
   has_many :employee_time_off_policies, through: :employees
   has_many :employee_presence_policies, through: :employees
   has_many :invoices, dependent: :destroy
+  has_many :company_events, dependent: :destroy
   belongs_to :referrer, primary_key: :token, foreign_key: :referred_by
   has_one :archive_file, as: :fileable, class_name: 'GenericFile'
 

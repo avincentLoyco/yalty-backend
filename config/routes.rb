@@ -34,6 +34,7 @@ Rails.application.routes.draw do
         get '/attributes', to: 'employee_attributes#show'
       end
       resources :employee_events, only: [:show, :create, :update]
+      resources :company_events
       resources :presence_policies, except: [:edit, :new] do
         get '/employees', to: 'employee_presence_policies#index'
         post '/employees', to: 'employee_presence_policies#create'
