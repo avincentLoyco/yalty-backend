@@ -5,6 +5,7 @@ module UserSchemas
     Dry::Validation.Form do
       required(:email).filled(:str?)
       required(:locale).maybe(:str?)
+      required(:balance_in_hours).maybe(:bool?)
       optional(:role).maybe(:str?)
       optional(:password_params).schema do
         optional(:old_password).filled(:str?)
@@ -24,6 +25,7 @@ module UserSchemas
       required(:id).filled(:str?)
       required(:email).filled(:str?)
       required(:locale).maybe(:str?)
+      required(:balance_in_hours).maybe(:bool?)
       optional(:role).filled(:str?)
       optional(:password_params).schema do
         optional(:old_password).filled(:str?)

@@ -67,6 +67,8 @@ RSpec.describe Account::User, type: :model do
     end
   end
 
+  it { is_expected.to have_db_column(:balance_in_hours).of_type(:boolean).with_options(default: false) }
+
   it 'should validate length of password only when is updated' do
     user = create(:account_user)
     user = Account::User.find(user.id)

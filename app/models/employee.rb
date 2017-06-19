@@ -180,6 +180,10 @@ class Employee < ActiveRecord::Base
     WorkingPlace.active_for_employee(id, date)
   end
 
+  def active_presence_policy_at(date = Time.zone.today)
+    PresencePolicy.active_for_employee(id, date)
+  end
+
   def last_balance_in_category(category_id)
     employee_balances.where(time_off_category_id: category_id).order('effective_at').last
   end

@@ -1,9 +1,12 @@
 require 'rails_helper'
 
 RSpec.describe PresencePolicy, type: :model do
-  let!(:employee) { create(:employee, :with_presence_policy) }
+  let(:employee) { create(:employee, :with_presence_policy) }
+
+  subject { create(:presence_policy, :with_presence_day) }
 
   it { is_expected.to have_db_column(:name).of_type(:string) }
+  it { is_expected.to have_db_column(:standard_day_duration).of_type(:integer) }
   it { is_expected.to have_db_column(:account_id).of_type(:uuid) }
   it { is_expected.to have_many(:employees) }
   it { is_expected.to have_many(:presence_days) }
@@ -57,6 +60,25 @@ RSpec.describe PresencePolicy, type: :model do
   end
 
   context 'callbacks' do
+    context '.set_standard_day_duration' do
+      let(:presence_days) { build_list(:presence_day, 3, minutes: 140) }
+      let!(:policy) { create(:presence_policy, presence_days: presence_days) }
+
+      it { expect(policy.reload.standard_day_duration).to eq(140) }
+
+      context 'there already is standard_day_duration' do
+        subject { policy.update!(name: 'test') }
+
+        it { expect { subject }.to_not change { policy.reload.standard_day_duration } }
+      end
+
+      context 'standard_day_duration is set manueally' do
+        subject { policy.update!(standard_day_duration: 80) }
+
+        it { expect { subject }.to change { policy.reload.standard_day_duration }.from(140).to(80) }
+      end
+    end
+
     context '.trigger_intercom_update' do
       let!(:account) { create(:account) }
       let(:policy) { build(:presence_policy, account: account) }

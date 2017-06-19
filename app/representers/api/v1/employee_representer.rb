@@ -23,7 +23,8 @@ module Api::V1
     def relationships
       {
         employee_attributes: employee_attributes_json,
-        working_place: working_place_json
+        working_place: working_place_json,
+        active_presence_policy: active_presence_policy_json
       }
     end
 
@@ -49,6 +50,17 @@ module Api::V1
         related_resources(EmployeeWorkingPlace, nil, resource.id).first
       return if @active_employee_working_place&.related_resource&.reset?
       @active_employee_working_place
+    end
+
+    def active_presence_policy_json
+      active_presence_policy = resource.active_presence_policy_at
+      return {} unless active_presence_policy.present?
+
+      {
+        id: active_presence_policy.id,
+        type: active_presence_policy.class.name.underscore,
+        standard_day_duration: active_presence_policy.standard_day_duration
+      }
     end
   end
 end
