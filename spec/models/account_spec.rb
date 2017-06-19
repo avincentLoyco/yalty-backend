@@ -11,6 +11,7 @@ RSpec.describe Account, type: :model do
   it { is_expected.to have_db_column(:invoice_company_info).of_type(:hstore) }
   it { is_expected.to have_db_column(:invoice_emails).of_type(:text) }
   it { is_expected.to have_db_column(:archive_processing).of_type(:boolean).with_options(default: false) }
+  it { is_expected.to have_db_column(:company_name) }
   it { is_expected.to have_db_index(:subdomain).unique(true) }
   it { is_expected.to validate_presence_of(:subdomain).on(:update) }
   it { is_expected.to validate_uniqueness_of(:subdomain).case_insensitive }
@@ -18,12 +19,17 @@ RSpec.describe Account, type: :model do
   it { is_expected.to allow_value('a', 'subdomain', 'sub-domain', '123subdomain', 'subdomain-123').for(:subdomain) }
   it { is_expected.to_not allow_value('-subdomain', 'subdomain-', 'sub domain', 'subdömaìn', 'SubDomain').for(:subdomain) }
   it { is_expected.to validate_exclusion_of(:subdomain).in_array(['www', 'staging']) }
+  it { is_expected.to validate_presence_of(:company_name) }
 
   it { is_expected.to have_many(:employee_events).through(:employees) }
   it { is_expected.to have_many(:employee_attribute_versions).through(:employees) }
   it { is_expected.to have_many(:presence_policies) }
   it { is_expected.to have_many(:time_off_categories) }
   it { is_expected.to have_many(:invoices) }
+  it { is_expected.to have_many(:working_places) }
+  it { is_expected.to have_many(:users).class_name('Account::User').inverse_of(:account) }
+  it { is_expected.to have_many(:employees).inverse_of(:account) }
+  it { is_expected.to have_many(:employee_attribute_definitions).class_name('Employee::AttributeDefinition').inverse_of(:account) }
   it { is_expected.to have_one(:registration_key) }
   it { is_expected.to have_one(:archive_file).class_name('GenericFile') }
 
@@ -129,23 +135,12 @@ RSpec.describe Account, type: :model do
     end
   end
 
-  it { is_expected.to have_db_column(:company_name) }
-  it { is_expected.to validate_presence_of(:company_name) }
-
-  it { is_expected.to have_many(:working_places) }
-
-  it { is_expected.to have_many(:users).class_name('Account::User').inverse_of(:account) }
-
   it '#users should not include user with yalty role' do
     account = create(:account)
     user = create(:account_user, :with_yalty_role, account: account)
 
     expect(account.reload.users).to_not include(user)
   end
-
-  it { is_expected.to have_many(:employees).inverse_of(:account) }
-
-  it { is_expected.to have_many(:employee_attribute_definitions).class_name('Employee::AttributeDefinition').inverse_of(:account) }
 
   it '#current= should accept an account' do
     account = create(:account)
@@ -195,25 +190,7 @@ RSpec.describe Account, type: :model do
     end
   end
 
-  describe 'intercom integration' do
-    include_context 'shared_context_intercom_attributes'
-    let(:account) { create(:account) }
-
-    it 'is of type :companies' do
-      expect(account.intercom_type).to eq(:companies)
-    end
-
-    it 'includes proper attributes' do
-      expect(account.intercom_attributes).to eq(proper_account_intercom_attributes)
-    end
-
-    it 'returns proper data' do
-      data_keys = account.intercom_data.keys + account.intercom_data[:custom_attributes].keys
-      expect(data_keys).to match_array(proper_account_data_keys)
-    end
-  end
-
-  describe 'referred_by' do
+  context 'referred_by' do
     let(:referrer) { create(:referrer, token: '1234') }
     let(:valid_account) { build(:account, referred_by: referrer.token) }
     let(:invalid_account) { build(:account, referred_by: '5678') }
@@ -247,7 +224,7 @@ RSpec.describe Account, type: :model do
     it { expect(account.number_of_files).to eq(3) }
   end
 
-  describe 'reset resources' do
+  context 'reset resources' do
     let(:default_categories_count) { TimeOffCategory::DEFAULT.size }
 
     it { expect { subject.save! }.to change(PresencePolicy, :count).by(1) }
@@ -264,7 +241,7 @@ RSpec.describe Account, type: :model do
     end
   end
 
-  describe 'stripe callbacks' do
+  context '#update_stripe_customer_description' do
     let(:customer) { StripeCustomer.new('cus123', 'Some description', 'test@email.com') }
     let(:subscription) { StripeSubscription.new('sub_123') }
 
@@ -275,60 +252,42 @@ RSpec.describe Account, type: :model do
       allow(Stripe::Subscription).to receive(:create).and_return(subscription)
     end
 
-    context 'create_stripe_customer_with_subscription' do
-      let(:account) { build(:account) }
-
-      subject { account.save! }
-
-      it 'triggers creation method' do
-        expect(account).to receive(:create_stripe_customer_with_subscription)
+    shared_examples 'update stripe description' do
+      it 'triggers update method' do
+        expect(account).to receive(:update_stripe_customer_description)
         subject
       end
 
-      it 'triggers cration job' do
-        expect(Payments::CreateOrUpdateCustomerWithSubscription).to receive(:perform_now).with(account)
+      it 'triggers update job' do
+        expect(Payments::UpdateStripeCustomerDescription)
+          .to receive(:perform_later)
+          .with(account)
         subject
       end
+
+      it { expect { subject }.to change(account, :stripe_description) }
     end
 
-    context 'update_stripe_customer_description' do
-      shared_examples 'update stripe description' do
-        it 'triggers update method' do
-          expect(account).to receive(:update_stripe_customer_description)
-          subject
-        end
+    let(:account) do
+      create(:account, customer_id: 'cus_123', company_name: 'Omnics', subdomain: 'omnics')
+    end
 
-        it 'triggers update job' do
-          expect(Payments::UpdateStripeCustomerDescription)
-            .to receive(:perform_later)
-            .with(account)
-          subject
-        end
+    context 'when subdomain changes' do
+      subject { account.update(subdomain: 'lumeri-co') }
 
-        it { expect { subject }.to change(account, :stripe_description) }
-      end
+      it_behaves_like 'update stripe description'
+    end
 
-      let(:account) do
-        create(:account, customer_id: 'cus_123', company_name: 'Omnics', subdomain: 'omnics')
-      end
+    context 'when company_name changes' do
+      subject { account.update(company_name: 'LumeriCo') }
 
-      context 'when subdomain changes' do
-        subject { account.update(subdomain: 'lumeri-co') }
+      it_behaves_like 'update stripe description'
+    end
 
-        it_behaves_like 'update stripe description'
-      end
+    context 'when subdomain and company_name changes' do
+      subject { account.update(subdomain: 'lumeri-co', company_name: 'LumeriCo') }
 
-      context 'when company_name changes' do
-        subject { account.update(company_name: 'LumeriCo') }
-
-        it_behaves_like 'update stripe description'
-      end
-
-      context 'when subdomain and company_name changes' do
-        subject { account.update(subdomain: 'lumeri-co', company_name: 'LumeriCo') }
-
-        it_behaves_like 'update stripe description'
-      end
+      it_behaves_like 'update stripe description'
     end
   end
 
@@ -425,6 +384,42 @@ RSpec.describe Account, type: :model do
         expect(Account.with_yalty_access.count).to eql(3)
         expect(Account.count).to be > 3
       end
+    end
+  end
+
+  context '#create_intercom_and_stripe_resources' do
+    let(:account) { build(:account) }
+    let(:payments_job) { Payments::CreateOrUpdateCustomerWithSubscription }
+    let(:intercom_job) { SendDataToIntercom }
+
+    before do
+      allow_any_instance_of(Account).to receive(:stripe_enabled?).and_return(true)
+      allow(payments_job).to receive(:perform_now)
+      allow(intercom_job).to receive(:perform_now)
+    end
+
+    it 'invokes both jobs synchoronously' do
+      account.save!
+      expect(payments_job).to have_received(:perform_now).with(account)
+      expect(intercom_job).to have_received(:perform_now).with(account.id, 'Account')
+    end
+  end
+
+  context 'intercom integration' do
+    include_context 'shared_context_intercom_attributes'
+    let(:account) { create(:account) }
+
+    it 'is of type :companies' do
+      expect(account.intercom_type).to eq(:companies)
+    end
+
+    it 'includes proper attributes' do
+      expect(account.intercom_attributes).to eq(proper_account_intercom_attributes)
+    end
+
+    it 'returns proper data' do
+      data_keys = account.intercom_data.keys + account.intercom_data[:custom_attributes].keys
+      expect(data_keys).to match_array(proper_account_data_keys)
     end
   end
 end
