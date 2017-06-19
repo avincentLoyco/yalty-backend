@@ -47,14 +47,14 @@ RSpec.describe Export::GenerateEmployeesJournal, type: :service do
   let!(:fname_attributes) do
     employees_ids.map.with_index do |id, index|
       build(:employee_attribute, employee: employees[index], event: events[index], account: account,
-        attribute_definition: fname_definition, value: 'Mirek')
+        attribute_definition: fname_definition, value: 'Mirek', updated_at: 15.days.ago)
     end
   end
 
   let!(:lname_attributes) do
     employees_ids.map.with_index do |id, index|
       build(:employee_attribute, employee: employees[index], event: events[index], account: account,
-        attribute_definition: lname_definition, value: 'Swirek')
+        attribute_definition: lname_definition, value: 'Swirek', updated_at: 10.days.ago)
     end
   end
 
@@ -76,7 +76,8 @@ RSpec.describe Export::GenerateEmployeesJournal, type: :service do
 
   let(:moving_attribute) do
     build(:employee_attribute, employee: employees.first, event: moving_event, account: account,
-      attribute_definition: address_definition, data: ::Attribute::Address.new(address_data))
+      attribute_definition: address_definition, data: ::Attribute::Address.new(address_data),
+      updated_at: 5.days.ago)
   end
 
   subject(:create_csv) do
