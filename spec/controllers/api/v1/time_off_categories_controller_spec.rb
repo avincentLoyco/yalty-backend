@@ -4,10 +4,12 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
   include_examples 'example_authorization',
     resource_name: 'time_off_category'
   include_context 'shared_context_headers'
-  let(:expected_keys) { [:id, :type, :system, :name, :active_since] }
+  let(:expected_keys) { [:id, :type, :system, :name] }
   describe 'GET #index' do
+    let(:employee) { create(:employee, account: account) }
     let!(:time_off_categories) { create_list(:time_off_category, 3, account: account) }
     subject { get :index }
+    let(:parsed_response) { JSON.parse(response.body) }
 
     it { is_expected.to have_http_status(200) }
 
@@ -24,7 +26,109 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
       subject
 
       account.time_off_categories.each do |category|
-        expect(response.body).to_not include category[:id]
+        expect(parsed_response).to_not include category[:id]
+      end
+    end
+
+    context 'when employee id param is not given' do
+      before { subject }
+
+      it { expect_json_sizes(3) }
+      it { expect(parsed_response.first.keys).to_not include 'active_since' }
+    end
+
+    context 'when employee id param is given' do
+      subject { get :index, employee_id: employee.id }
+
+      context 'and employee does not have any time off categories' do
+        before { subject }
+
+        it { expect(parsed_response).to eq [] }
+      end
+
+      context 'and employee has time off categories' do
+        let!(:policies) do
+          [1.month.ago, 3.weeks.ago].map do |effective_at|
+            create(:employee_time_off_policy, :with_employee_balance,
+              employee: employee, effective_at: effective_at)
+          end
+        end
+
+        context 'and employee was not rehired' do
+          before { subject }
+
+          it do
+            expect(parsed_response.map { |res| res["periods"] }).to match_array(
+              [
+                [
+                  {
+                    "effective_since" => policies.first.effective_at.to_s,
+                    "effective_till" => nil
+                  }
+                ],
+                [
+                  {
+                    "effective_since" => policies.last.effective_at.to_s,
+                    "effective_till" => nil
+                  }
+                ]
+              ]
+            )
+          end
+        end
+
+        context 'when employee wants to see other employee time off category' do
+          before do
+            user = create(:account_user, account: account, role: 'user')
+            Account::User.current = user
+          end
+
+          it { is_expected.to have_http_status(403) }
+        end
+
+        context 'and employee was rehired' do
+          before do
+            user = create(:account_user, account: account, role: 'user', employee: employee)
+            Account::User.current = user
+          end
+          let!(:contract_end) do
+            create(:employee_event,
+              event_type: 'contract_end', employee: employee, effective_at: Date.today)
+          end
+          let!(:rehired) do
+            create(:employee_event,
+              event_type: 'hired', employee: employee, effective_at: 1.week.since)
+          end
+          let!(:new_etop) do
+            create(:employee_time_off_policy,
+              employee: employee, time_off_policy: policies.first.time_off_policy,
+              effective_at: 1.week.since)
+          end
+          before { subject }
+
+          it do
+            expect(parsed_response.map { |res| res["periods"] }).to match_array(
+              [
+                [
+                  {
+                    "effective_since" => policies.first.effective_at.to_s,
+                    "effective_till" => contract_end.effective_at.to_s
+                  },
+                  {
+                    "effective_since" => new_etop.effective_at.to_s,
+                    "effective_till" => nil
+                  }
+                ],
+                [
+                  {
+                    "effective_since" => policies.last.effective_at.to_s,
+                    "effective_till" => contract_end.effective_at.to_s
+                  }
+                ]
+              ]
+            )
+          end
+        end
       end
     end
   end
@@ -46,8 +150,8 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
           id: category.id,
           type: 'time_off_category',
           system: category.system,
-          name: category.name,
-          active_since: nil)
+          name: category.name
+          )
         }
       end
 
@@ -68,8 +172,7 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
             id: category.id,
             type: 'time_off_category',
             system: category.system,
-            name: category.name,
-            active_since: Time.zone.today.to_s)
+            name: category.name)
           }
         end
 
@@ -80,8 +183,7 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
             id: category.id,
             type: 'time_off_category',
             system: category.system,
-            name: category.name,
-            active_since: nil)
+            name: category.name)
           }
         end
       end
