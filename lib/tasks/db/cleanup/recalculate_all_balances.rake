@@ -26,7 +26,7 @@ namespace :db do
   end
 
   def employees_with_balances
-    Employee.joins(:employee_balances).where('employee_balances.id is not null')
+    Employee.joins(:employee_balances).where('employee_balances.id is not null').uniq
   end
 
   def remove_reset_resources(balances)

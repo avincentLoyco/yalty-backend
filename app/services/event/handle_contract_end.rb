@@ -77,7 +77,7 @@ class HandleContractEnd
   def move_time_offs
     @employee.time_offs.where(''"
       start_time < '#{@contract_end_date}'::timestamp AND
-      end_time > '#{@contract_end_date}'::timestamp
+      end_time > '#{@contract_end_date + 1.day}'::timestamp
     "'').map do |time_off|
       time_off.update!(end_time: @contract_end_date + 1.day)
       validity_date = time_off.employee_balance.validity_date
