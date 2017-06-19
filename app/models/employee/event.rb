@@ -26,6 +26,7 @@ class Employee::Event < ActiveRecord::Base
     spouse_death: %w(spouse),
     child_birth: %w(child),
     child_death: %w(child),
+    child_adoption: %w(child),
     partner_death: %w(spouse),
     child_studies: %w(child),
     contract_end: %w()
