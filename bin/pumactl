@@ -48,7 +48,8 @@ class PumaCtl
     @command = argv.shift
 
     if @config_file
-      @config = Puma::Configuration.from_file(@config_file)
+      @config = Puma::Configuration.new({ config_file: [@config_file] }, {})
+      @config.load
       @pidfile ||= @config.options[:pidfile]
     end
 
@@ -113,14 +114,14 @@ class PumaCtl
     begin
       case @command
       when 'restart'
-        Process.kill('USR2', @pid)
+        Process.kill('SIGUSR2', @pid)
         wait_on_workers
 
       when 'halt'
         Process.kill('QUIT', @pid)
 
       when 'stop'
-        Process.kill('TERM', @pid)
+        Process.kill('SIGTERM', @pid)
         @config.options[:worker_shutdown_timeout].times do
           sleep 1 if Process.kill(0, @pid)
         end
@@ -130,7 +131,7 @@ class PumaCtl
         end
 
       when 'phased-restart'
-        Process.kill('USR1', @pid)
+        Process.kill('SIGUSR1', @pid)
         wait_on_workers
 
       else
