@@ -125,7 +125,7 @@ RSpec.describe HandleMapOfJoinTablesToNewHiredDate, type: :service do
 
   describe 'For EmployeeWorkingPlace' do
     let(:employee) { create(:employee_with_working_place) }
-    let!(:first_working_place) { employee.first_employee_working_place }
+    let!(:first_working_place) { employee.employee_working_places.order(:effective_at).first }
 
     context 'when there is one working place in the period' do
       context 'and hired_date moved to past' do

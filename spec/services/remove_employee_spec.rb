@@ -14,7 +14,7 @@ RSpec.describe RemoveEmployee, type: :service do
 
   context 'employee still have hired event' do
     it 'checks if employee have hired events' do
-      expect(employee).to receive(:hired_events?).and_return(true)
+      expect(Employee::Event).to receive(:hired).and_return(employee.events.first)
       call_service
     end
 
@@ -28,7 +28,7 @@ RSpec.describe RemoveEmployee, type: :service do
     before { employee.events.where(event_type: 'hired').last.destroy! }
 
     it 'checks if employee have hired events' do
-      expect(employee).to receive(:hired_events?).and_return(false)
+      expect(Employee::Event).to receive(:hired).and_return([])
       call_service
     end
 

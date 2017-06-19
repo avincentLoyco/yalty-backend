@@ -950,7 +950,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     context 'when effective_at changes' do
       context 'and event is first employee event' do
         let(:effective_at) { Time.now + 3.months }
-        let(:first_working_place) { employee.first_employee_working_place }
+        let(:first_working_place) { employee.employee_working_places.order(:effective_at).first }
 
         context 'and there are not new working places between old and new effective_at' do
           it { expect { subject }.to change { first_working_place.reload.effective_at } }

@@ -13,7 +13,7 @@ class DeleteEvent
       event.destroy!
       create_missing_balances
       ::Payments::UpdateSubscriptionQuantity.perform_now(employee.account)
-      RemoveEmployee.new(employee).call unless employee.hired_events?
+      RemoveEmployee.new(employee).call unless employee.events.hired.exists?
     end
   end
 

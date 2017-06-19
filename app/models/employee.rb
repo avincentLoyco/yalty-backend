@@ -120,18 +120,6 @@ class Employee < ActiveRecord::Base
     end
   end
 
-  def last_event_for(date = Time.zone.today)
-    events
-      .where(event_type: %w(hired contract_end))
-      .where('effective_at <= ?', date)
-      .order(:effective_at).last
-  end
-
-  def first_employee_working_place
-    return unless employee_working_places.present?
-    employee_working_places.find_by(effective_at: employee_working_places.pluck(:effective_at).min)
-  end
-
   def civil_status_for(date = Time.zone.today)
     civil_status_event = last_civil_status_event_for(date)
     return 'single' unless civil_status_event
@@ -211,10 +199,6 @@ class Employee < ActiveRecord::Base
     employee_balances.where(time_off_category_id: category_id).order('effective_at').last
   end
 
-  def unique_balances_categories
-    time_off_categories.distinct
-  end
-
   def assigned_time_off_policies_in_category(category_id, date = Time.zone.today)
     EmployeeTimeOffPolicy.assigned_at(date).by_employee_in_category(id, category_id).limit(3)
   end
@@ -247,14 +231,6 @@ class Employee < ActiveRecord::Base
 
   def can_be_hired?
     !contract_periods.last.last.is_a?(DateTime::Infinity)
-  end
-
-  def events_after(date = Time.zone.today)
-    events.where('effective_at > ?', date).order(:effective_at)
-  end
-
-  def hired_events?
-    events.hired.exists?
   end
 
   private

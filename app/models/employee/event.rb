@@ -85,8 +85,7 @@ class Employee::Event < ActiveRecord::Base
 
   def can_destroy_event?
     hired_without_events_and_join_tables_after? ||
-      contract_end_without_rehired_after? ||
-      !%w(hired contract_end).include?(event_type)
+      !%w(hired contract_end).include?(event_type) || contract_end_without_rehired_after?
   end
 
   private
@@ -170,6 +169,10 @@ class Employee::Event < ActiveRecord::Base
   end
 
   def contract_end_without_rehired_after?
-    event_type == 'contract_end' && employee.events_after(effective_at).first&.event_type != 'hired'
+    event_type.eql?('contract_end') &&
+      !employee
+        .events
+        .where('effective_at > ?', effective_at)
+        .order(:effective_at).first&.event_type.eql?('hired')
   end
 end

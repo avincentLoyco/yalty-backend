@@ -233,7 +233,8 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
           [2.years.ago, Time.now].map do |date|
             create(:employee_working_place,
               employee: employee, effective_at: date,
-              working_place: employee.first_employee_working_place.working_place)
+              working_place:
+                employee.employee_working_places.order(:effective_at).first.working_place)
           end
         end
         let!(:second_resource_tables) do

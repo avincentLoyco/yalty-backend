@@ -184,18 +184,6 @@ RSpec.describe Employee, type: :model do
       end
     end
 
-    context 'hired_events?' do
-      context 'with hired events' do
-        it { expect(employee.hired_events?).to be(true) }
-      end
-
-      context 'without hired events' do
-        before { employee.events.where(event_type: 'hired').map(&:destroy!) }
-
-        it { expect(employee.hired_events?).to be(false) }
-      end
-    end
-
     context 'for generic_files' do
       let(:generic_files) { create_list(:generic_file, 2, :with_jpg) }
       let!(:employee_attributes) do

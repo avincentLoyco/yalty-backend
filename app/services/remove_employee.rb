@@ -4,7 +4,7 @@ class RemoveEmployee
   end
 
   def call
-    return if @employee.hired_events?
+    return if @employee.events.hired.present?
 
     Employee.transaction do
       @employee.events.destroy_all
