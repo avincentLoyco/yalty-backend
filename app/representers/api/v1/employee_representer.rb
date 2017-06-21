@@ -40,9 +40,8 @@ module Api::V1
     end
 
     def employee_attributes
-      attributes = resource.employee_attributes
-      return attributes if attributes.present?
-      resource.events.first.try(:employee_attribute_versions).to_a
+      date = resource.hired_date <= Time.zone.today ? Time.zone.today : resource.hired_date
+      FullEmployeeAttributesList.new(resource.account.id, resource.id, date).call
     end
 
     def active_employee_working_place
