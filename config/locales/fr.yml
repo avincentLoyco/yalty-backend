@@ -8,9 +8,6 @@ fr:
       subject: Réinitialiser votre mot de passe
     accounts_list:
       subject: Votre équipe sur yalty
-  export_mailer:
-    archive_generation:
-      subject: "%{company_name}: Vos archives sont prêtes à télécharger!"
   payment:
     pdf:
       header:
@@ -47,6 +44,10 @@ fr:
         Numéro de TVA: %{tva}"
     plan:
       filevault: Coffre-fort de documents
+  locale:
+    en: Anglais
+    fr: Français
+    de: Allemand
   payments_mailer:
     payment_succeeded:
       subject: '%{company_name} : Votre abonnement a été renouvelé'
@@ -55,6 +56,14 @@ fr:
     subscription_canceled:
       subject: '%{company_name} : Échec du paiement - les fonctionnalités premium
         ont été désactivées'
+  yalty_access_mailer:
+    access_enable:
+      subject: "Une entreprise a activé l'accès yalty !"
+    access_disable:
+      subject: "Une entreprise a désactivé l'accès yalty !"
+  export_mailer:
+    archive_generation:
+      subject: "%{company_name} : Votre archive est prête à être téléchargée !"
   date:
     formats:
       default: "%d %B %Y"
@@ -113,3 +122,9 @@ fr:
       default: "%d. %B %Y %H h %M"
       long: "%A, %d %B %Y %H h %M min %S s %Z"
       short: "%d %b %H h %M"
+  company_events_mailer:
+    event_changed:
+      subject: '%{company_name} : Un événement d''entreprise a été modifié'
+    action_create: 'créé'
+    action_update: 'mis à jour'
+    action_destroy: 'détruit'
