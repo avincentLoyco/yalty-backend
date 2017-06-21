@@ -59,7 +59,7 @@ en:
     access_enable:
       subject: "A company enabled yalty's access!"
     access_disable:
-      subject: "A company disable yalty's access!"
+      subject: "A company disabled yalty's access!"
   export_mailer:
     archive_generation:
       subject: "%{company_name}: Your archive is ready to download!"
