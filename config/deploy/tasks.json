@@ -3,6 +3,11 @@
 
   ],
   "after_migration": [
-
+    {
+      "task_name": "add_standard_day_duration",
+      "description": [
+        "Migrate presence policies without standard day duration"
+      ]
+    }
   ]
 }
