@@ -5,8 +5,8 @@ module CompanyEventsSchemas
     Dry::Validation.Form do
       required(:title).filled(:str?)
       required(:effective_at).filled(:date?)
-      optional(:comment).filled(:str?)
-      optional(:files).each do
+      optional(:comment).maybe(:str?)
+      optional(:files).maybe.each do
         schema do
           required(:id).filled(:str?)
           required(:type).filled(:str?)
@@ -21,8 +21,8 @@ module CompanyEventsSchemas
       required(:id).filled(:str?)
       optional(:title).filled(:str?)
       optional(:effective_at).filled(:date?)
-      optional(:comment).filled(:str?)
-      optional(:files).each do
+      optional(:comment).maybe(:str?)
+      optional(:files).maybe.each do
         schema do
           required(:id).filled(:str?)
           required(:type).filled(:str?)
