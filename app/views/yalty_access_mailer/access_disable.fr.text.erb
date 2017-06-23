@@ -1,0 +1,8 @@
+Une entreprise a désactivé l’accès yalty ;(
+
+Entreprise : <%= account.company_name %>
+ID : <%= account.id %>
+URL : <%= subdomain_url_for(account) %>
+Langue : <%= t(account.default_locale, scope: 'locale') %>
+
+Emails des administrateurs : <%= account.users.where(role: 'account_owner').pluck(:email).join(', ') %>

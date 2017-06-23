@@ -49,7 +49,7 @@ RSpec.describe API::V1::CompanyEventsController, type: :controller do
 
     context 'user has yalty role' do
       let(:user) do
-        create(:account_user, account: account, role: 'yalty', employee: nil,
+        create(:account_user, :with_yalty_role, account: account, employee: nil,
           email: 'access@example.com')
       end
 
@@ -191,6 +191,14 @@ RSpec.describe API::V1::CompanyEventsController, type: :controller do
         it { expect(created_event.file_ids).to match_array([jpg_file.id, pdf_file.id]) }
       end
 
+      context 'when files and comment are nil' do
+        let(:params) {{ title: 'New title', effective_at: Date.today, files: nil }}
+
+        before { post_create }
+
+        it { expect(response.status).to eq(200) }
+      end
+
       context 'user has owner role' do
         let(:user) { create(:account_user, account: account, role: 'account_owner') }
 
@@ -299,6 +307,16 @@ RSpec.describe API::V1::CompanyEventsController, type: :controller do
         it { expect(response.status).to eq(200) }
         it { expect(company_event.files.count).to eq(2) }
         it { expect(company_event.file_ids).to match_array([jpg_file.id, pdf_file.id]) }
+      end
+
+      context 'files and comment are nil' do
+        let(:params) do
+          { id: company_event.id, title: 'Title', effective_at: Date.today, files: nil }
+        end
+
+        before { put_update }
+
+        it { expect(response.status).to eq(200) }
       end
 
       context 'user has owner role' do

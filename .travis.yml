@@ -1,3 +1,5 @@
+dist: trusty
+sudo: required
 language: ruby
 notifications:
   email: false
@@ -30,7 +32,7 @@ services:
 addons:
   apt:
     packages:
-      - docker-engine
+      - docker-ce
   postgresql: '9.4'
   code_climate:
     repo_token:

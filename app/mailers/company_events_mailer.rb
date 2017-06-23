@@ -4,9 +4,10 @@ class CompanyEventsMailer < ApplicationMailer
   def event_changed(account, company_event, user_id, controller_action)
     @account = account
     @company_event = company_event
-    @action_name = I18n.t("company_events_mailer.action_#{controller_action}")
 
     I18n.with_locale(@account.default_locale) do
+      @action_name = I18n.t("company_events_mailer.action_#{controller_action}")
+
       mail(
         to: recipients(@account, user_id),
         subject: default_i18n_subject(company_name: account.company_name)
@@ -18,7 +19,7 @@ class CompanyEventsMailer < ApplicationMailer
 
   def recipients(account, user_id)
     roles = %w(account_owner account_administrator yalty)
-    account.users.where.not(id: user_id).where(role: roles).pluck(:email)
+    Account::User.where(account: account, role: roles).where.not(id: user_id).pluck(:email)
   end
 
   def url_for_company_event(account, company_event)

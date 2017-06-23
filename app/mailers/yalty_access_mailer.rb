@@ -4,13 +4,17 @@ class YaltyAccessMailer < ApplicationMailer
   def access_enable(account)
     @account = account
 
-    mail to: ENV['YALTY_ACCESS_EMAIL']
+    I18n.with_locale(@account.default_locale) do
+      mail to: ENV['YALTY_ACCESS_EMAIL']
+    end
   end
 
   def access_disable(account)
     @account = account
 
-    mail to: ENV['YALTY_ACCESS_EMAIL']
+    I18n.with_locale(@account.default_locale) do
+      mail to: ENV['YALTY_ACCESS_EMAIL']
+    end
   end
 
   private

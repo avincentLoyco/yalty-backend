@@ -54,6 +54,24 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
         end
       end
 
+      context 'when employee is hired in future with previous event' do
+        let!(:employee) { create(:employee_with_working_place, :with_attributes, account: account, hired_at: 1.month.from_now) }
+
+        before do
+          event = create(:employee_event, employee: employee)
+          create(:employee_attribute, employee: employee, event: event)
+        end
+
+        it { is_expected.to have_http_status(200) }
+
+        context 'response body' do
+          before { subject }
+
+          it { expect_json_sizes(employee_attributes: 3) }
+          it { expect_json('employee_attributes.0', type: 'employee_attribute_version') }
+        end
+      end
+
       context 'when employee has contract end' do
         before do
           create(:employee_event,
@@ -111,7 +129,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
       end
 
       context 'when employee has multiple attributes' do
-        let!(:definition) { create(:employee_attribute_definition, multiple: true) }
+        let!(:definition) { create(:employee_attribute_definition, multiple: true, account: account) }
         let!(:new_employee) do
           build(:employee_with_working_place, account: account, events: [employee_event])
         end
@@ -167,7 +185,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
             before { subject }
 
             it { expect_json_sizes(employee_attributes: 2) }
-            it { expect_json('employee_attributes.0', type: 'employee_attribute') }
+            it { expect_json('employee_attributes.0', type: 'employee_attribute_version') }
           end
         end
       end
@@ -304,7 +322,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
               'attribute_name' => attribute.attribute_definition.name,
               'value' => attribute.data.value,
               'id' => attribute.id,
-              'type' => 'employee_attribute',
+              'type' => 'employee_attribute_version',
               'order' => attribute.order
             )
           }

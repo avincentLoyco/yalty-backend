@@ -11,6 +11,7 @@ RSpec.describe Export::ScheduleEmployeesJournalExport, type: :job do
     ENV['LOYCO_SSH_HOST'] = 'sftp.loyco.ch'
     ENV['LOYCO_SSH_USER'] = 'user'
     ENV['LOYCO_SSH_KEY_PATH'] = '/path/to/key'
+    ENV['LOYCO_SSH_EXPORT_JOURNAL_PATH'] = '/'
   end
 
   it { expect(account_with_yalty_access.yalty_access).to be(true) }

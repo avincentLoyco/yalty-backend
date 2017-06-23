@@ -1,1 +1,1 @@
-A Company Event has been <%= @action_name %> for <%= @account.company_name %> on <%= link_to(@company_event.updated_at, url_for_company_event(@account, @company_event)) %>
+A Company Event has been <%= @action_name %> for <%= @account.company_name %> on <%= link_to(l(@company_event.updated_at), url_for_company_event(@account, @company_event)) %>
