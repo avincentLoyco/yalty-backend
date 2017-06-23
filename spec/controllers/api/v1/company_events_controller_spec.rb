@@ -49,7 +49,7 @@ RSpec.describe API::V1::CompanyEventsController, type: :controller do
 
     context 'user has yalty role' do
       let(:user) do
-        create(:account_user, account: account, role: 'yalty', employee: nil,
+        create(:account_user, :with_yalty_role, account: account, employee: nil,
           email: 'access@example.com')
       end
 
