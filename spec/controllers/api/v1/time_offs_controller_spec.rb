@@ -150,6 +150,49 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
       it { expect { subject }.to_not change { Employee::Balance.count } }
     end
 
+    context 'when there is one day contract' do
+      before do
+        employee.events.hired.first.update!(effective_at: employee_time_off_policy.effective_at)
+        create(:employee_event,
+          employee: employee, event_type: 'contract_end', effective_at: employee.hired_date)
+      end
+
+      let(:start_time) { "#{employee.hired_date}, 8:00" }
+      let(:end_time) { "#{employee.hired_date}, 20:00" }
+
+      it { expect { subject }.to change { TimeOff.count }.by(1) }
+      it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+
+      context 'when end time is at midnight' do
+        let(:end_time)  { "#{employee.hired_date + 1.day}, 00:00"}
+
+        it { expect { subject }.to change { TimeOff.count }.by(1) }
+        it { expect { subject }.to change { Employee::Balance.count }.by(1) }
+      end
+
+      context 'when end time is after contract periods' do
+        let(:end_time) { "#{employee.hired_date + 1.day}, 20:00" }
+
+        it_behaves_like 'Invalid Data'
+
+
+        context 'and start_time' do
+          let(:start_time) { "#{employee.hired_date + 1.day}, 10:00" }
+
+          it_behaves_like 'Invalid Data'
+        end
+
+        context 'when there is rehired after' do
+          before do
+            create(:employee_event,
+              employee: employee, event_type: 'hired', effective_at: employee.hired_date + 1.day)
+          end
+
+          it_behaves_like 'Invalid Data'
+        end
+      end
+    end
+
     context 'with valid params' do
       it { expect { subject }.to change { TimeOff.count }.by(1) }
       it { expect { subject }.to change { Employee::Balance.count }.by(1) }

@@ -15,7 +15,7 @@ class AddRegisteredWorkingTimes < ActiveJob::Base
         last_event_for =
           employee
           .events
-          .where(event_type: %w(hired contract_end))
+          .contract_types
           .where('effective_at <= ?', Time.zone.today)
           .order(:effective_at).last
 

@@ -64,31 +64,68 @@ RSpec.describe Employee::Event, type: :model do
     end
   end
 
-  context '#hired_and_contract_end_not_in_the_same_date' do
+  context '#contract_end_and_hire_in_valid_order' do
     let(:employee) { create(:employee) }
-    let!(:existing_event) do
-      create(:employee_event, event_type: 'contract_end', employee: employee)
+    let(:effective_at) { 1.week.ago }
+    let(:contract_end) do
+      build(:employee_event,
+        employee: employee, event_type: 'contract_end', effective_at: effective_at)
     end
-    subject do
-      build(:employee_event, event_type: 'hired', employee: employee, effective_at: effective_at)
+    let(:rehire) do
+      create(:employee_event,
+        event_type: 'hired', effective_at: Time.zone.today, employee: employee)
     end
 
-    context 'with valid params' do
-      let(:effective_at) { existing_event.effective_at + 1.day }
+    context 'for contract end' do
+      context 'contract end at hired date' do
+        let(:effective_at) {  employee.events.order(:effective_at).first.effective_at }
 
-      it { expect(subject).to be_valid }
-      it do
-        expect { subject.valid? }.to_not change { subject.errors.messages.size }
+        it { expect(contract_end.valid?).to eq true }
+        it { expect { contract_end.valid? }.to_not change { contract_end.errors.messages.count } }
+      end
+
+      context 'contract end at rehired event' do
+        before do
+          contract_end.save
+          rehire.save!
+          contract_end.effective_at = Time.zone.today
+        end
+
+        it { expect(contract_end.valid?).to eq false }
+        it do
+          expect { contract_end.valid? }
+            .to change { contract_end.errors.messages[:event_type] }.to include (
+              "Employee can not have two contract_end in a row and contract end must have hired event"
+            )
+        end
       end
     end
 
-    context 'with invalid params' do
-      let(:effective_at) { existing_event.effective_at }
+    context 'for hired event' do
+      before { contract_end.save! }
 
-      it { expect(subject).to_not be_valid }
-      it do
-        expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
-          .to include 'Hired and contract end event can not be at the same date'
+      context 'rehired at its contract end date' do
+        before do
+          rehire.save!
+          rehire_end = create(:employee_event,
+            employee: employee, event_type: 'contract_end', effective_at: 1.week.since)
+          rehire.effective_at = rehire_end.effective_at
+        end
+
+        it { expect(rehire.valid?).to eq true }
+        it { expect { rehire.valid? }.to_not change { rehire.errors.messages } }
+      end
+
+      context 'rehired at previous contract end' do
+        before { rehire.effective_at = contract_end.effective_at }
+
+        it { expect(rehire.valid?).to eq false }
+        it do
+          expect { rehire.valid? }
+            .to change { rehire.errors.messages[:event_type] }.to include (
+              "Employee can not have two hired in a row and contract end must have hired event"
+            )
+        end
       end
     end
   end
@@ -115,7 +152,7 @@ RSpec.describe Employee::Event, type: :model do
       it do
         expect { subject.valid? }.to change { subject.errors.messages[:event_type] }
           .to include (
-            "Employee can not two #{event_type} in a row and contract end must have hired event"
+            "Employee can not have two #{event_type} in a row and contract end must have hired event"
           )
       end
     end
@@ -163,7 +200,7 @@ RSpec.describe Employee::Event, type: :model do
         it do
           expect { subject.valid? }.to change { subject.errors.messages[:event_type] }
             .to include(
-              "Employee can not two #{event_type} in a row and contract end must have hired event"
+              "Employee can not have two #{event_type} in a row and contract end must have hired event"
             )
         end
       end

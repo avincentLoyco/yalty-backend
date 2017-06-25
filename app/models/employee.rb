@@ -168,9 +168,7 @@ class Employee < ActiveRecord::Base
   def contract_periods
     dates =
       if persisted?
-        events.where(event_type: %w(hired contract_end))
-              .reorder('employee_events.effective_at ASC')
-              .pluck(:effective_at)
+        events.contract_types.reorder('employee_events.effective_at ASC').pluck(:effective_at)
       else
         events.select { |e| e.event_type == 'hired' }.map(&:effective_at)
       end

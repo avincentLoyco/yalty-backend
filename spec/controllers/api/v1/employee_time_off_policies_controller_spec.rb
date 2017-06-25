@@ -614,6 +614,33 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
       it { is_expected.to have_http_status(422) }
       it { expect(response.body).to include 'can\'t be set outside of employee contract period' }
     end
+
+    context 'when hired and contract end in the same date' do
+      before do
+        create(:employee_time_off_policy,
+          employee: employee, time_off_policy: time_off_policy, effective_at: employee.hired_date)
+        create(:employee_event,
+          employee: employee, event_type: 'contract_end', effective_at: employee.hired_date)
+      end
+      let(:effective_at) { employee.hired_date + 1.day }
+
+      context 'when employee had assignations' do
+        before { subject }
+
+        it { is_expected.to have_http_status(422) }
+        it { expect(response.body).to include 'Can not assign in reset resource effective at' }
+      end
+
+      context 'when employee does not have assignations' do
+        before do
+          EmployeeTimeOffPolicy.destroy_all
+          subject
+        end
+
+        it { is_expected.to have_http_status(422) }
+        it { expect(response.body).to include 'can\'t be set outside of employee contract period' }
+      end
+    end
   end
 
   context 'PUT #update' do
