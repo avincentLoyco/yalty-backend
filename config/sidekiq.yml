@@ -4,6 +4,7 @@
 :logfile: log/sidekiq.log
 :queues:
   - export
+  - import
   - billing
   - mailers
   - policies_and_balances
