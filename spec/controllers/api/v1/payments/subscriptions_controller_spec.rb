@@ -114,7 +114,8 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
             city: account.invoice_company_info.city,
             postalcode: account.invoice_company_info.postalcode,
             country: account.invoice_company_info.country,
-            region: account.invoice_company_info.region
+            region: account.invoice_company_info.region,
+            phone: account.invoice_company_info.phone
           },
           emails: account.invoice_emails
         }

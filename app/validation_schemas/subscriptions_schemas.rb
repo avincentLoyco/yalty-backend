@@ -12,6 +12,7 @@ module SubscriptionsSchemas
           required(:postalcode).maybe(:str?)
           required(:country).maybe(:str?)
           required(:region).maybe(:str?)
+          required(:phone).maybe(:str?)
         end
       end
       optional(:emails).maybe { array? { each { str? } } }

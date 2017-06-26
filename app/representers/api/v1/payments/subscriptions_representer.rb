@@ -50,7 +50,8 @@ module Api
               city: @account.invoice_company_info.city,
               country: @account.invoice_company_info.country,
               postalcode: @account.invoice_company_info.postalcode,
-              region: @account.invoice_company_info.region
+              region: @account.invoice_company_info.region,
+              phone: @account.invoice_company_info.phone
             },
             emails: @account.invoice_emails
           }

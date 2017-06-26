@@ -7,5 +7,6 @@ module Payments
     attribute :postalcode, String
     attribute :country, String
     attribute :region, String
+    attribute :phone, String
   end
 end
