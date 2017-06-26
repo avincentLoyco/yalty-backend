@@ -1349,55 +1349,100 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     end
   end
 
-  describe 'GET #index' do
-    before(:each) do
-      create_list(:employee_event, 3, account: account, employee: employee)
-    end
+  context 'GET #index' do
+    context "when employee_id specified" do
+      before(:each) do
+        create_list(:employee_event, 3, account: account, employee: employee)
+      end
 
-    let(:subject) { get :index, employee_id: employee.id }
-
-    it 'should respond with success' do
-      subject
-
-      expect(response).to have_http_status(:success)
-      expect_json_sizes(4)
-    end
-
-    it 'should have employee events attributes' do
-      subject
-
-      expect_json_keys('*', [:effective_at, :event_type, :employee])
-    end
-
-    it 'should have employee' do
-      subject
-
-      expect_json_keys('*.employee', [:id, :type])
-    end
-
-    it 'should not be visible in context of other account' do
-      user = create(:account_user)
-      Account.current = user.account
-
-      subject
-
-      expect(response).to have_http_status(404)
-    end
-
-    it 'should return 404 when invalid employee id' do
-      get :index, employee_id: '12345678-1234-1234-1234-123456789012'
-
-      expect(response).to have_http_status(404)
-    end
-
-    context 'with regular user role' do
-      let(:user) { create(:account_user, account: account, employee: employee, role: 'user') }
+      let(:subject) { get :index, employee_id: employee.id }
 
       it 'should respond with success' do
         subject
 
         expect(response).to have_http_status(:success)
         expect_json_sizes(4)
+      end
+
+      it 'should have employee events attributes' do
+        subject
+
+        expect_json_keys('*', [:effective_at, :event_type, :employee])
+      end
+
+      it 'should have employee' do
+        subject
+
+        expect_json_keys('*.employee', [:id, :type])
+      end
+
+      it 'should not be visible in context of other account' do
+        user = create(:account_user)
+        Account.current = user.account
+
+        subject
+
+        expect(response).to have_http_status(404)
+      end
+
+      it 'should return 404 when invalid employee id' do
+        get :index, employee_id: '12345678-1234-1234-1234-123456789012'
+
+        expect(response).to have_http_status(404)
+      end
+
+      context 'with regular user role' do
+        let(:user) { create(:account_user, account: account, employee: employee, role: 'user') }
+
+        it 'should respond with success' do
+          subject
+
+          expect(response).to have_http_status(:success)
+          expect_json_sizes(4)
+        end
+      end
+    end
+
+    context "when employee_id isn't specified" do
+      let!(:second_employee) do
+        create(:employee_with_working_place, :with_attributes, account: account)
+      end
+
+      before(:each) do
+        create_list(:employee_event, 3, account: account, employee: employee)
+        create_list(:employee_event, 2, account: account, employee: second_employee)
+      end
+
+      let(:subject) { get :index }
+
+      context 'when account owner' do
+        it 'should respond with success' do
+          subject
+
+          expect(response).to have_http_status(:success)
+          expect_json_sizes(7)
+        end
+
+        it 'should have employee events attributes' do
+          subject
+
+          expect_json_keys('*', [:effective_at, :event_type, :employee])
+        end
+
+        it 'should have employee' do
+          subject
+
+          expect_json_keys('*.employee', [:id, :type])
+        end
+      end
+
+      context 'with regular user role' do
+        let(:user) { create(:account_user, account: account, employee: employee, role: 'user') }
+        it 'shoud respond with authorization error' do
+          subject
+
+          expect(response.body).to include 'not authorized'
+        end
       end
     end
   end
@@ -1459,7 +1504,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
             .joins(:attribute_definition)
             .where
             .not(employee_attribute_definitions:
-                  { name: ActsAsAttribute::PUBLIC_ATTRIBUTES_FOR_OTHERS })
+              { name: ActsAsAttribute::PUBLIC_ATTRIBUTES_FOR_OTHERS })
 
           public_attributes.each do |attr|
             expect(response.body).to include(attr.attribute_name)
@@ -1483,7 +1528,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
             .joins(:attribute_definition)
             .where
             .not(employee_attribute_definitions:
-                  { name: ActsAsAttribute::PUBLIC_ATTRIBUTES_FOR_OTHERS })
+              { name: ActsAsAttribute::PUBLIC_ATTRIBUTES_FOR_OTHERS })
 
           public_attributes.each do |attr|
             expect(response.body).to include(attr.attribute_name)

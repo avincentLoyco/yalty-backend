@@ -35,6 +35,8 @@ Rails.application.routes.draw do
         get '/working_places', to: "employee_working_places#index"
         get '/attributes', to: 'employee_attributes#show'
       end
+      get '/employee_events', to: 'employee_events#index'
+      resources :employee_events, only: [:show, :create, :update]
       resources :company_events
       resources :employee_events, except: [:index]
       resources :presence_policies, except: [:edit, :new] do
