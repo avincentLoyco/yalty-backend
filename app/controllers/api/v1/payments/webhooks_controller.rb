@@ -17,11 +17,11 @@ module API
           return unless params[:type].eql?('invoice.created')
 
           account = Account.find_by!(customer_id: params[:data][:object][:customer])
-          return unless account.available_modules.canceled.any? &&
-              event.data.object.customer == account.customer_id
+          canceled_or_free = account.available_modules.canceled_or_free
+          return unless canceled_or_free.any? && event.data.object.customer == account.customer_id
 
           Stripe::SubscriptionItem.list(subscription: account.subscription_id).each do |item|
-            item.delete if account.available_modules.canceled.include?(item.plan.id)
+            item.delete if canceled_or_free.include?(item.plan.id)
           end
         end
 

@@ -28,7 +28,7 @@ module Payments
       when 'customer.subscription.updated' then
         if event.data.object.status.eql?('canceled')
           account.transaction do
-            clear_modules('all')
+            clear_modules('paid')
             recreate_subscription
           end
 
@@ -64,7 +64,7 @@ module Payments
 
       invoice_lines = []
       invoice.lines.auto_paging_each do |line|
-        next if line.plan.id.eql?('free-plan') || canceled_modules.include?(line.plan.id)
+        next if line.plan.id.eql?('free-plan') || canceled_or_free_modules.include?(line.plan.id)
         invoice_lines.push(line)
       end
 
@@ -132,15 +132,15 @@ module Payments
 
     def clear_modules(scope)
       case scope
-      when 'all' then account.available_modules.delete_all
+      when 'paid' then account.available_modules.delete_paid
       when 'canceled' then account.available_modules.clean
       end
 
       account.save!
     end
 
-    def canceled_modules
-      @canceled_modules ||= account.available_modules.canceled
+    def canceled_or_free_modules
+      @canceled_or_free_modules ||= account.available_modules.canceled_or_free
     end
   end
 end

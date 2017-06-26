@@ -235,6 +235,18 @@ RSpec.describe API::V1::Payments::PlansController, type: :controller do
         end
       end
 
+      context 'when plan is enabled as free' do
+        before do
+          account.available_modules.add(id: plan.id, canceled: false, free: true)
+          account.save!
+        end
+
+        before { create_plan }
+
+        it { expect(response.status).to eq(502) }
+        it { expect_json(regex('This plan is free')) }
+      end
+
       it_should_behave_like 'errors', :create
     end
   end
@@ -309,6 +321,18 @@ RSpec.describe API::V1::Payments::PlansController, type: :controller do
 
         it { expect { delete_plan }.to_not change { account.reload.available_modules.data } }
         it { expect(sub_item).to_not receive(:delete) }
+      end
+
+      context 'when plan is enabled as free' do
+        before do
+          account.available_modules.add(id: plan.id, canceled: false, free: true)
+          account.save!
+        end
+
+        before { delete_plan }
+
+        it { expect(response.status).to eq(502) }
+        it { expect_json(regex('This plan is free')) }
       end
     end
   end

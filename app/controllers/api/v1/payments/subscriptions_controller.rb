@@ -44,12 +44,17 @@ module API
           Stripe::Plan.list.select do |plan|
             next if plan.id.eql?('free-plan')
             plan.active = subscribed_plans.include?(plan.id)
+            plan.free = free_plans.include?(plan.id)
             plan
           end
         end
 
         def subscribed_plans
           @subscribed_plans ||= Account.current.available_modules.actives
+        end
+
+        def free_plans
+          @free_plans ||= Account.current.available_modules.free
         end
 
         def subscription

@@ -68,7 +68,8 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
             currency: plans.first.currency,
             interval: plans.first.interval,
             name: plans.first.name,
-            active: true
+            active: true,
+            free: false
           },
           {
             id: plans.second.id,
@@ -76,7 +77,8 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
             currency: plans.second.currency,
             interval: plans.second.interval,
             name: plans.second.name,
-            active: false
+            active: false,
+            free: false
           },
           {
             id: plans.third.id,
@@ -84,7 +86,8 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
             currency: plans.third.currency,
             interval: plans.third.interval,
             name: plans.third.name,
-            active: false
+            active: false,
+            free: false
           }
         ],
         invoice: {

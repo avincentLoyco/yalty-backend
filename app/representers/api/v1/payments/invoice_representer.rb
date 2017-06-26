@@ -52,17 +52,22 @@ module Api
                 line.plan.id.eql?('free-plan') ||
                 (omit_canceled && canceled_modules.include?(line.plan.id))
 
-            line.plan.active = active_plan_ids.include?(line.plan.id) if line.plan.present?
+            line.plan.active = active_modules.include?(line.plan.id) if line.plan.present?
+            line.plan.free = free_modules.include?(line.plan.id) if line.plan.present?
             line
           end.compact
         end
 
-        def active_plan_ids
-          @active_plan_ids ||= Account.current.available_modules.all
+        def active_modules
+          @active_modules ||= Account.current.available_modules.all
         end
 
         def canceled_modules
           @canceled_modules ||= Account.current.available_modules.canceled
+        end
+
+        def free_modules
+          @free_modules ||= Account.current.available_modules.free
         end
       end
     end

@@ -7,5 +7,6 @@ module Payments
     attribute :interval, String
     attribute :interval_count, Integer
     attribute :active, Boolean, default: true
+    attribute :free, Boolean, default: false
   end
 end
