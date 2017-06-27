@@ -8,7 +8,7 @@ module SettingsSchemas
       optional(:yalty_access).filled(:bool?)
       optional(:timezone).filled(:str?)
       optional(:default_locale).filled(:str?)
-      optional(:address).filled(:hash?) do
+      optional(:company_information).filled(:hash?) do
         schema do
           required(:company_name).maybe(:str?)
           required(:address_1).maybe(:str?)
@@ -30,7 +30,7 @@ module SettingsSchemas
       optional(:yalty_access).filled(:bool?)
       optional(:timezone).filled(:str?)
       optional(:default_locale).filled(:str?)
-      optional(:address).filled(:hash?) do
+      optional(:company_information).filled(:hash?) do
         schema do
           required(:company_name).maybe(:str?)
           required(:address_1).maybe(:str?)

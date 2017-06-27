@@ -63,7 +63,7 @@ module API
 
         def update_company_info!(attributes)
           return unless attributes.key?(:company_information)
-          Account.current.update!(invoice_company_info: attributes[:company_information])
+          Account.current.update!(company_information: attributes[:company_information])
         end
 
         def update_invoice_emails!(attributes)

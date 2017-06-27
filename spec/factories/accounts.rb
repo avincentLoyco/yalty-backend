@@ -20,7 +20,7 @@ FactoryGirl.define do
     end
 
     trait :with_billing_information do
-      invoice_company_info {
+      company_information {
         {
           company_name: Faker::Company.name,
           address_2: Faker::Name.name,

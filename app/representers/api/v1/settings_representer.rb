@@ -10,12 +10,30 @@ module Api::V1
         timezone:          resource.timezone
       }
         .merge(basic)
+        .merge(company_information_json)
     end
 
     def public_data
       {
         company_name:      resource.company_name,
         default_locale:    resource.default_locale
+      }
+    end
+
+    private
+
+    def company_information_json
+      {
+        company_information: {
+          company_name: resource.company_information.company_name,
+          address_1: resource.company_information.address_1,
+          address_2: resource.company_information.address_2,
+          city: resource.company_information.city,
+          country: resource.company_information.country,
+          postalcode: resource.company_information.postalcode,
+          region: resource.company_information.region,
+          phone: resource.company_information.phone
+        }
       }
     end
   end

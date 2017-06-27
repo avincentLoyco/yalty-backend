@@ -44,14 +44,14 @@ module Api
         def billing_information_json
           {
             company_information: {
-              company_name: @account.invoice_company_info.company_name,
-              address_1: @account.invoice_company_info.address_1,
-              address_2: @account.invoice_company_info.address_2,
-              city: @account.invoice_company_info.city,
-              country: @account.invoice_company_info.country,
-              postalcode: @account.invoice_company_info.postalcode,
-              region: @account.invoice_company_info.region,
-              phone: @account.invoice_company_info.phone
+              company_name: @account.company_information.company_name,
+              address_1: @account.company_information.address_1,
+              address_2: @account.company_information.address_2,
+              city: @account.company_information.city,
+              country: @account.company_information.country,
+              postalcode: @account.company_information.postalcode,
+              region: @account.company_information.region,
+              phone: @account.company_information.phone
             },
             emails: @account.invoice_emails
           }

@@ -82,7 +82,7 @@ module Payments
         tax: invoice.tax,
         tax_percent: invoice.tax_percent,
         total: invoice.total,
-        address: account.invoice_company_info,
+        address: account.company_information,
         period_start: Time.zone.at(invoice_lines.map { |l| l.period.start }.max),
         period_end: Time.zone.at(invoice_lines.map { |l| l.period.end }.max),
         lines: InvoiceLines.new(data: invoice_lines.map { |line| build_invoice_line(line) })
