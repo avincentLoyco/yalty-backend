@@ -1,8 +1,9 @@
 module Import
   class ImportPayslipsJob < ActiveJob::Base
-    queue_as :export
+    queue_as :import
 
     def perform(account)
+      # TODO: Add specs
       return unless ::Import::ImportAndAssignPayslips.enable?
 
       account.employees.each do |employee|
