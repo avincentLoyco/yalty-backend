@@ -42,7 +42,7 @@ class HandleContractEnd
   end
 
   def time_offs
-    time_offs = @employee.time_offs.where('start_time > ?', @contract_end_date)
+    time_offs = @employee.time_offs.where('start_time > ?', @contract_end_date.end_of_day)
     return time_offs unless @next_hire_date.present?
     time_offs.where('start_time < ?', @next_hire_date)
   end
@@ -76,7 +76,7 @@ class HandleContractEnd
 
   def move_time_offs
     @employee.time_offs.where(''"
-      start_time < '#{@contract_end_date}'::timestamp AND
+      start_time <= '#{@contract_end_date.end_of_day}'::timestamp AND
       end_time > '#{@contract_end_date + 1.day}'::timestamp
     "'').map do |time_off|
       time_off.update!(end_time: @contract_end_date + 1.day)
