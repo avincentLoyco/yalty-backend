@@ -15,6 +15,7 @@ class EmployeePresencePolicy < ActiveRecord::Base
 
   scope :with_reset, -> { joins(:presence_policy).where(presence_policies: { reset: true }) }
   scope :not_reset, -> { joins(:presence_policy).where(presence_policies: { reset: false }) }
+  scope :assigned_since, ->(date) { where('effective_at >= ?', date) }
 
   alias related_resource presence_policy
 

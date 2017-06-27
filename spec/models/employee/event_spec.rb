@@ -249,6 +249,39 @@ RSpec.describe Employee::Event, type: :model do
     end
   end
 
+  describe '#hired_without_events_and_join_tables_after?' do
+    context 'when rehired events and its assignations are in the future' do
+      let!(:employee) { create(:employee) }
+      let!(:hired_etop) do
+        create(:employee_time_off_policy, employee: employee, effective_at: 2.months.ago)
+      end
+      let!(:contract_end) do
+        create(:employee_event,
+          event_type: 'contract_end', effective_at: 1.week.ago, employee: employee)
+      end
+      let!(:rehired) do
+        create(:employee_event,
+          event_type: 'hired', employee: employee, effective_at: 1.year.since)
+      end
+      let!(:etop) do
+        create(:employee_time_off_policy, employee: employee, effective_at: 2.years.since)
+      end
+
+      before { employee.reload }
+
+      it { expect { rehired.destroy! }.to raise_error { ActiveRecord::RecordNotDestroyed } }
+
+      context 'when hired is one day after contract end' do
+        before do
+          etop.destroy!
+          rehired.update!(effective_at: contract_end.effective_at + 1.day)
+        end
+
+        it { expect { rehired.destroy! }.to_not raise_error }
+      end
+    end
+  end
+
   describe '#balances_before_hired_date' do
     let(:employee) { create(:employee) }
     let!(:etop) do

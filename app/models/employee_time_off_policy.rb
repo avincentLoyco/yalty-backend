@@ -20,7 +20,7 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
 
   scope :not_assigned_at, ->(date) { where(['effective_at > ?', date]) }
   scope :assigned_at, ->(date) { where(['effective_at <= ?', date]) }
-
+  scope :assigned_since, ->(date) { where('effective_at >= ?', date) }
   scope(:active_at, lambda do |date|
     where("
       employee_time_off_policies.effective_at BETWEEN (
