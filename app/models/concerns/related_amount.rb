@@ -33,12 +33,10 @@ module RelatedAmount
 
   def calculate_related_amount
     time_off = time_off_containing_this_balance
-    counter_adition_or_balancer_removal =
-      (time_off_policy.counter? && time_off.nil? || balance_credit_additions.any?)
     end_time =
-      if counter_adition_or_balancer_removal
+      if time_off_policy.counter? && time_off.nil?
         if time_off.end_time.to_date > effective_at.to_date
-          (effective_at + 1.day).beginning_of_day
+          effective_at.beginning_of_day
         else
           time_off.end_time
         end

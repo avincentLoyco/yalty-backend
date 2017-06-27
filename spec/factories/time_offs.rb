@@ -21,7 +21,7 @@ FactoryGirl.define do
           effective_at: time_off.end_time,
           time_off: time_off,
           resource_amount: time_off.balance,
-          policy_credit_addition: false
+          balance_type: 'time_off'
         )
       end
     end

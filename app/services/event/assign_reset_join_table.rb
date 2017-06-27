@@ -22,7 +22,8 @@ class AssignResetJoinTable
   private
 
   def assing_presence_policy
-    return if @employee.employee_presence_policies.with_reset.find_by(effective_at: @effective_at)
+    epp_at_date = @employee.employee_presence_policies.where(effective_at: @effective_at)
+    return if epp_at_date.with_reset.present? || (date_in_contract_periods? && epp_at_date.present?)
     EmployeePresencePolicy.create!(
       employee: @employee,
       presence_policy: @account.presence_policies.find_by(reset: true),
@@ -31,7 +32,8 @@ class AssignResetJoinTable
   end
 
   def assing_working_place
-    return if @employee.employee_working_places.with_reset.find_by(effective_at: @effective_at)
+    ewp_at_date = @employee.employee_working_places.where(effective_at: @effective_at)
+    return if ewp_at_date.with_reset.present? || (date_in_contract_periods? && ewp_at_date.present?)
     EmployeeWorkingPlace.create!(
       employee: @employee,
       working_place: @account.working_places.find_by(reset: true),
@@ -48,7 +50,7 @@ class AssignResetJoinTable
   end
 
   def assign_single_reset_time_off_policy
-    return if reset_policy_in_category?(@time_off_category)
+    return if rehired_or_reset_policy_exists?(@time_off_category)
     EmployeeTimeOffPolicy.create!(
       employee: @employee,
       time_off_policy:
@@ -59,7 +61,7 @@ class AssignResetJoinTable
 
   def assign_reset_time_off_policies_for_every_category
     @employee.time_off_categories.distinct.map do |category|
-      next if reset_policy_in_category?(category)
+      next if rehired_or_reset_policy_exists?(category)
       reset_policy = @account.time_off_policies.find_by(time_off_category: category, reset: true)
       EmployeeTimeOffPolicy.create!(
         employee: @employee,
@@ -69,15 +71,16 @@ class AssignResetJoinTable
     end
   end
 
-  def reset_policy_in_category?(category)
-    @employee.employee_time_off_policies
-             .joins(:time_off_policy)
-             .where(
-               time_off_category: category,
-               effective_at: @effective_at,
-               time_off_policies: { reset: true }
-             )
-             .present?
+  def rehired_or_reset_policy_exists?(category)
+    etop_at_date =
+      @employee
+      .employee_time_off_policies
+      .where(time_off_category: category, effective_at: @effective_at)
+    (date_in_contract_periods? && etop_at_date.present?) || etop_at_date.with_reset.present?
+  end
+
+  def date_in_contract_periods?
+    @date_in_contract_periods ||= @employee.contract_periods_include?(@effective_at)
   end
 
   def create_reset_join_table?

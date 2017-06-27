@@ -6,8 +6,12 @@ namespace :db do
       puts
       employees_with_balances.find_each do |employee|
         grouped_balances(employee).each do |_category, balances|
-          PrepareEmployeeBalancesToUpdate.new(balances.first, update_all: true).call
-          UpdateBalanceJob.perform_later(balances.first.id, update_all: true)
+          if balances.first.balance_type.eql?('reset')
+            remove_reset_resources(balances)
+          else
+            PrepareEmployeeBalancesToUpdate.new(balances.first, update_all: true).call
+            UpdateBalanceJob.perform_later(balances.first.id, update_all: true)
+          end
         end
       end
       puts 'Finished processing balances'
@@ -22,6 +26,11 @@ namespace :db do
   end
 
   def employees_with_balances
-    Employee.joins(:employee_balances).where('employee_balances.id is not null')
+    Employee.joins(:employee_balances).where('employee_balances.id is not null').uniq
+  end
+
+  def remove_reset_resources(balances)
+    balances.first.employee_time_off_policy&.destroy!
+    balances.first.destroy!
   end
 end

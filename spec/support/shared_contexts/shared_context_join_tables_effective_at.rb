@@ -86,7 +86,7 @@ RSpec.shared_context 'shared_context_join_tables_effective_at' do |settings|
 
       context 'with invalid params' do
         context 'effective at between old contract end date and new hired date' do
-          let(:effective_at) { Date.new(2014, 1, 1) }
+          let(:effective_at) { Date.new(2014, 1, 2) }
 
           it { expect(subject.valid?).to eq false }
           it do
@@ -96,7 +96,7 @@ RSpec.shared_context 'shared_context_join_tables_effective_at' do |settings|
         end
 
         context 'effective at after new contract end date' do
-          let(:effective_at) { Date.new(2016, 1, 1) }
+          let(:effective_at) { Date.new(2016, 1, 2) }
 
           it { expect(subject.valid?).to eq false }
           it do

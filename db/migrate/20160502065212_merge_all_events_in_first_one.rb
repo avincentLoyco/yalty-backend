@@ -1,7 +1,7 @@
 class MergeAllEventsInFirstOne < ActiveRecord::Migration
   def up
     Employee.all.each do |employee|
-      hired = employee.events.where(event_type: 'hired').order('effective_at ASC').first
+      hired = employee.events.hired.order('effective_at ASC').first
 
       employee.events.where.not(id: hired.id).order('effective_at ASC').all.each do |event|
         event.employee_attribute_versions.all.each do |attribute|

@@ -233,7 +233,8 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
           [2.years.ago, Time.now].map do |date|
             create(:employee_working_place,
               employee: employee, effective_at: date,
-              working_place: employee.first_employee_working_place.working_place)
+              working_place:
+                employee.employee_working_places.order(:effective_at).first.working_place)
           end
         end
         let!(:second_resource_tables) do
@@ -380,7 +381,7 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
           assignation_balance = existing_join_table.policy_assignation_balance
           existing_join_table.update!(effective_at: 4.years.ago)
           assignation_balance.update!(
-            effective_at: 4.years.ago + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET
+            effective_at: 4.years.ago + Employee::Balance::ASSIGNATION_OFFSET
           )
         end
         let(:join_table_resource) { first_resource_tables.last }
@@ -561,7 +562,7 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
       end
     end
 
-    xcontext 'with contract_end' do
+    context 'with contract_end' do
       let(:now) { Time.zone.now }
       let(:time_off_category) { create(:time_off_category, account: Account.current) }
       let(:time_off_policy)   { create(:time_off_policy, time_off_category: time_off_category) }
@@ -640,7 +641,7 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
           context 'when assigning the same EmployeeTimeOffPolicy' do
             let(:resource_params) { { time_off_policy_id: same_resource_before.time_off_policy_id } }
 
-            it_behaves_like 'Join Table create with the same resource before'
+            it_behaves_like 'Join Table create'
           end
 
           context 'when moving assigned policy from day after contract_end' do
@@ -683,7 +684,7 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
           context 'when assigning the same EmployeePresencePolicy' do
             let(:resource_params) { { presence_policy_id: same_resource_before.presence_policy_id } }
 
-            it_behaves_like 'Join Table create with the same resource before'
+            it_behaves_like 'Join Table create'
           end
 
           context 'when moving assigned policy from day after contract_end' do
@@ -727,7 +728,7 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
           context 'when assigning the same EmployeeWorkingPlace' do
             let(:resource_params) { { working_place_id: same_resource_before.working_place_id } }
 
-            it_behaves_like 'Join Table create with the same resource before'
+            it_behaves_like 'Join Table create'
           end
 
           context 'when moving assigned working place from day after contract_end' do

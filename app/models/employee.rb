@@ -6,6 +6,9 @@ class Employee < ActiveRecord::Base
                    'partnership_dissolution' => 'dissolved partnership',
                    'partner_death' => 'dissolved partnership due to death' }.freeze
 
+  RESOURCE_JOIN_TABLES =
+    %w(employee_time_off_policies employee_working_places employee_presence_policies).freeze
+
   belongs_to :account, inverse_of: :employees, required: true
   belongs_to :user,
     class_name: 'Account::User',
@@ -105,16 +108,16 @@ class Employee < ActiveRecord::Base
     end
   end
 
-  def last_event_for(date = Time.zone.today)
-    events
-      .where(event_type: %w(hired contract_end))
-      .where('effective_at <= ?', date)
-      .order(:effective_at).last
-  end
-
-  def first_employee_working_place
-    return unless employee_working_places.present?
-    employee_working_places.find_by(effective_at: employee_working_places.pluck(:effective_at).min)
+  def contract_periods_include?(*dates)
+    contract_periods.any? do |period|
+      if period.last.is_a?(Date::Infinity) || dates.all? { |d| d.is_a?(Date) }
+        dates.map { |date| date.to_date.in?(period) }
+      else
+        dates.map do |date|
+          period.first <= date && date <= period.last + 1.day + Employee::Balance::REMOVAL_OFFSET
+        end
+      end.uniq.eql?([true])
+    end
   end
 
   def civil_status_for(date = Time.zone.today)
@@ -144,19 +147,28 @@ class Employee < ActiveRecord::Base
   end
 
   def contract_end_for(date)
-    date_period = contract_periods.reverse.find do |period|
-      period.include?(date.to_date) || date.to_date > period.last
-    end
+    date_period = contract_periods.reverse.map.each_with_index do |period, index|
+      if day_difference?(index, date)
+        contract_periods.reverse[index + 1]
+      elsif period.include?(date.to_date) || date.to_date > period.last
+        period
+      end
+    end.compact.first
     date_period ||= contract_periods.first
-    date_period.last.is_a?(DateTime::Infinity) ? nil : date_period.last
+    date_period.blank? || date_period.last.is_a?(DateTime::Infinity) ? nil : date_period.last
+  end
+
+  def day_difference?(index, date)
+    periods = contract_periods.reverse
+    return false unless periods.size > 1 && periods[index + 1].present?
+    periods[index].first.eql?(date.to_date) &&
+      (periods[index].first.mjd - periods[index + 1].last.mjd).eql?(1)
   end
 
   def contract_periods
     dates =
       if persisted?
-        events.where(event_type: %w(hired contract_end))
-              .reorder('employee_events.effective_at ASC')
-              .pluck(:effective_at)
+        events.contract_types.reorder('employee_events.effective_at ASC').pluck(:effective_at)
       else
         events.select { |e| e.event_type == 'hired' }.map(&:effective_at)
       end
@@ -166,10 +178,7 @@ class Employee < ActiveRecord::Base
   end
 
   def first_employee_event
-    events
-      .where(event_type: 'hired')
-      .reorder('employee_events.effective_at DESC')
-      .first
+    events.hired.reorder('employee_events.effective_at DESC').first
   end
 
   def active_policy_in_category_at_date(category_id, date = Time.zone.today)
@@ -186,10 +195,6 @@ class Employee < ActiveRecord::Base
 
   def last_balance_in_category(category_id)
     employee_balances.where(time_off_category_id: category_id).order('effective_at').last
-  end
-
-  def unique_balances_categories
-    time_off_categories.distinct
   end
 
   def assigned_time_off_policies_in_category(category_id, date = Time.zone.today)
@@ -219,11 +224,7 @@ class Employee < ActiveRecord::Base
   end
 
   def first_upcoming_contract_end(date = Time.zone.today)
-    events
-      .where(event_type: 'contract_end')
-      .where('effective_at > ?', date)
-      .order(:effective_at)
-      .first
+    events.contract_ends.where('effective_at > ?', date).order(:effective_at).first
   end
 
   def can_be_hired?

@@ -79,7 +79,7 @@ RSpec.describe HandleContractEnd, type: :service do
       validity_date =
         RelatedPolicyPeriod
           .new(time_off.employee_balance.employee_time_off_policy)
-          .validity_date_for(time_off.end_time)
+          .validity_date_for_balance_at(time_off.end_time)
       next unless validity_date.present?
       time_off.employee_balance.update!(validity_date: validity_date)
     end
@@ -120,12 +120,12 @@ RSpec.describe HandleContractEnd, type: :service do
         .to be(true)
     end
     it do
-      expect(time_off_categories.first.employee_balances.order(:effective_at).last.reset_balance)
-        .to be true
+      expect(time_off_categories.first.employee_balances.order(:effective_at).last.balance_type)
+        .to eq 'reset'
     end
     it do
-      expect(time_off_categories.last.employee_balances.order(:effective_at).last.reset_balance)
-        .to be true
+      expect(time_off_categories.last.employee_balances.order(:effective_at).last.balance_type)
+        .to eq 'reset'
     end
     it { expect(removal_balance.amount).to eq (-time_offs.second.employee_balance.balance) }
     it do

@@ -32,7 +32,7 @@ class CreateEmployeeTimeOffPoliciesForOrphanBalances < ActiveRecord::Migration
         etop.employee_id,
         etop.employee.account.id,
         effective_at: etop.effective_at + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
-        validity_date: RelatedPolicyPeriod.new(etop).validity_date_for(etop.effective_at),
+        validity_date: RelatedPolicyPeriod.new(etop).validity_date_for_balance_at(etop.effective_at),
         manual_amount: 0,
         policy_credit_addition: false,
         skip_update: true

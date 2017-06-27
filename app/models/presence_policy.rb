@@ -19,17 +19,20 @@ class PresencePolicy < ActiveRecord::Base
 
   scope(:actives_for_employee, lambda do |employee_id, date|
     joins(:employee_presence_policies)
-      .where("employee_presence_policies.employee_id= ? AND
-              employee_presence_policies.effective_at <= ?", employee_id, date)
-      .order('employee_presence_policies.effective_at desc')
+      .where("
+        employee_presence_policies.employee_id = ? AND
+        employee_presence_policies.effective_at BETWEEN (
+          SELECT employee_events.effective_at FROM employee_events
+	      WHERE employee_events.employee_id = ?
+          AND employee_events.effective_at <= ?::date
+	      AND employee_events.event_type = 'hired'
+	      ORDER BY employee_events.effective_at DESC LIMIT 1
+        ) AND ?::date", employee_id, employee_id, date.to_date, date.to_date)
+      .order('employee_presence_policies.effective_at DESC')
   end)
 
   def self.active_for_employee(employee_id, date)
     actives_for_employee(employee_id, date).first
-  end
-
-  def last_day_order
-    presence_days.pluck(:order).max
   end
 
   def set_standard_day_duration

@@ -15,7 +15,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
 
   context 'GET #show' do
     let!(:employee) { create(:employee_with_working_place, :with_attributes, account: account) }
-    let!(:employee_working_place) { employee.first_employee_working_place }
+    let!(:employee_working_place) { employee.employee_working_places.order(:effective_at).first }
     let!(:first_working_place) { employee_working_place.working_place }
     let!(:future_working_place) { future_employee_working_place.working_place }
     let!(:future_employee_working_place) do

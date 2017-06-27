@@ -78,30 +78,24 @@ RSpec.describe RelatedPolicyPeriod do
         end
       end
 
-      context '.validity_date_for' do
-        subject { RelatedPolicyPeriod.new(related_policy).validity_date_for(date) }
-        let(:effective_at) { Date.today - 5.years }
+      context '.validity_date_for_period_start' do
+        subject { RelatedPolicyPeriod.new(related_policy).validity_date_for_period_start(date) }
+        let(:effective_at) { Date.today - 10.years }
         let(:date) { RelatedPolicyPeriod.new(related_policy).first_start_date  }
         let(:end_day) { 1 }
         let(:end_month) { 4 }
 
         context 'validity date in the same year' do
-          context 'when years to effect equal nil' do
-            let(:years_to_effect) { nil }
-
-            it { expect(subject).to eq nil }
-          end
-
-          context 'when years to effect eqal 0'  do
+          context 'when years to effect eqal 0' do
             let(:years_to_effect) { 0 }
 
-            it { expect(subject).to eq(Time.zone.parse('01/04/2011 00:00:03')) }
+            it { expect(subject).to eq(Time.zone.parse('02/04/2006 00:00:02')) }
           end
 
           context 'when years to effect equal 1 or more' do
             let(:years_to_effect) { 1 }
 
-            it { expect(subject).to eq(Time.zone.parse('01/04/2012 00:00:03')) }
+            it { expect(subject).to eq(Time.zone.parse('02/04/2007 00:00:02')) }
           end
 
           context 'when end date is the same day as start day' do
@@ -111,13 +105,13 @@ RSpec.describe RelatedPolicyPeriod do
             context 'when years to effect eqal 0' do
               let(:years_to_effect) { 0 }
 
-              it { expect(subject).to eq(Time.zone.parse('01/01/2011 00:00:03')) }
+              it { expect(subject).to eq(Time.zone.parse('02/01/2006 00:00:02')) }
             end
 
             context 'when years to effect eqal 1' do
               let(:years_to_effect) { 1 }
 
-              it { expect(subject).to eq(Time.zone.parse('01/01/2012 00:00:03')) }
+              it { expect(subject).to eq(Time.zone.parse('02/01/2007 00:00:02')) }
             end
           end
         end
@@ -125,28 +119,22 @@ RSpec.describe RelatedPolicyPeriod do
         context 'validity date in the next year' do
           let(:start_month) { 5 }
 
-          context 'when years to effect equal nil' do
-            let(:years_to_effect) { nil }
-
-            it { expect(subject).to eq nil }
-          end
-
           context 'when years to effect eqal 0' do
             let(:years_to_effect) { 0 }
 
-            it { expect(subject).to eq(Time.zone.parse('1/4/2012 00:00:03')) }
+            it { expect(subject).to eq(Time.zone.parse('2/4/2007 00:00:02')) }
           end
 
           context 'when years to effect equal 1' do
             let(:years_to_effect) { 1 }
 
-            it { expect(subject).to eq(Time.zone.parse('1/4/2013 00:00:03')) }
+            it { expect(subject).to eq(Time.zone.parse('2/4/2008 00:00:02')) }
           end
 
           context 'when years to effect equal 2 or more' do
             let(:years_to_effect) { 2 }
 
-            it { expect(subject).to eq(Time.zone.parse('1/4/2014 00:00:03')) }
+            it { expect(subject).to eq(Time.zone.parse('2/4/2009 00:00:02')) }
           end
 
           context 'for day before start date' do
@@ -156,19 +144,19 @@ RSpec.describe RelatedPolicyPeriod do
             context 'when years to effect eq 0' do
               let(:years_to_effect) { 0 }
 
-              it { expect(subject).to eq(Time.zone.parse('1/4/2016 00:00:03')) }
+              it { expect(subject).to eq(Time.zone.parse('2/4/2016 00:00:02')) }
             end
 
             context 'when years to effect eq 1' do
               let(:years_to_effect) { 1 }
 
-              it { expect(subject).to eq(Time.zone.parse('1/4/2017 00:00:03')) }
+              it { expect(subject).to eq(Time.zone.parse('2/4/2017 00:00:02')) }
             end
 
             context 'when years to effect eq 2' do
               let(:years_to_effect) { 2 }
 
-              it { expect(subject).to eq(Time.zone.parse('1/4/2018 00:00:03')) }
+              it { expect(subject).to eq(Time.zone.parse('2/4/2018 00:00:02')) }
             end
           end
         end
@@ -177,43 +165,81 @@ RSpec.describe RelatedPolicyPeriod do
       context '.validity_date_for_balance_at' do
         before { time_off_policy.update!(end_day: 1, end_month: 4) }
 
-        subject { RelatedPolicyPeriod.new(related_policy).validity_date_for_balance_at(date) }
+        subject do
+          RelatedPolicyPeriod.new(related_policy).validity_date_for_balance_at(date, balance_type)
+        end
+
+        let(:balance_type) { 'addition' }
         let!(:related_policy) do
           create(:employee_time_off_policy, :with_employee_balance,
             time_off_policy: time_off_policy,
-            effective_at: 2.years.ago
+            effective_at: Time.zone.now
           )
         end
-        let!(:policy_addition) do
-          create(:employee_balance_manual, time_off_category: time_off_policy.time_off_category,
-            effective_at: '1/1/2015', validity_date: Time.zone.parse('1/4/2016 00:00:03'),
-            employee: related_policy.employee)
+
+        shared_examples 'Contract end event in the future' do
+          before do
+            create(:employee_event,
+              employee: related_policy.employee, event_type: 'contract_end',
+              effective_at: contract_end_date)
+          end
+
+          context 'and it is before validity date' do
+            let(:contract_end_date) { 4.months.since }
+
+            it { expect(subject).to eq (Date.new(2016, 5, 2) + Employee::Balance::RESET_OFFSET) }
+          end
+
+          context 'and it is after validity date' do
+            let(:contract_end_date) { Date.new(2018, 4, 2) }
+
+            it { expect(subject).to eq (Date.new(2018, 4, 2) + Employee::Balance::REMOVAL_OFFSET) }
+          end
         end
 
-        context 'when there is only assignation balance before the given date' do
-          let(:date) { related_policy.effective_at + 5.months }
+        context 'when balance is an addition' do
+          let(:date) { Date.new(2016, 1, 1) }
 
-          it { expect(subject).to eq related_policy.policy_assignation_balance.validity_date }
+          it { expect(subject).to eq (Date.new(2018, 4, 2) + Employee::Balance::REMOVAL_OFFSET) }
+
+          it_behaves_like 'Contract end event in the future'
         end
 
-        context 'when there are policy additions before date' do
-          let(:date) { '1/6/2015' }
+        context 'when balance is an assignation' do
+          let(:balance_type) { 'assignation' }
+          let(:date) { related_policy.effective_at }
 
-          it { expect(subject).to eq policy_addition.validity_date }
+          context 'and it is assigned in policy start date' do
+            it { expect(subject).to eq (Date.new(2018, 4, 2) + Employee::Balance::REMOVAL_OFFSET) }
+          end
+
+          context 'and it is not assigned in policy start date' do
+            before { related_policy.update!(effective_at: 2.months.ago) }
+
+            it { expect(subject).to eq (Date.new(2017, 4, 2) + Employee::Balance::REMOVAL_OFFSET) }
+          end
         end
-      end
 
-      context 'effective_at later than start date' do
-        let(:effective_at) { Date.today - 9.years - 8.months }
-        let(:start_month) { 3 }
+        context 'when balance type is time off or contract end' do
+          let(:balance_type) { 'end_of_period' }
+          let(:date) { related_policy.effective_at }
 
-        it { expect(subject).to eq '01/03/2007'.to_date }
-      end
+          context 'and there is previous addition' do
+            before do
+              related_policy.update!(effective_at: 2.months.ago)
+              Employee::Balance.first.update!(
+                effective_at: 2.months.ago,
+                validity_date: Date.new(2017, 4, 2) + Employee::Balance::REMOVAL_OFFSET
+              )
+            end
 
-      context 'effective_at in the future' do
-        let(:effective_at) { Date.today + 6.months }
+            it { expect(subject).to eq (Date.new(2017, 4, 2) + Employee::Balance::REMOVAL_OFFSET) }
+          end
 
-        it { expect(subject).to eq '01/01/2017'.to_date }
+          context 'and there is no previous addition' do
+            it { expect(subject).to eq (Date.new(2017, 4, 2) + Employee::Balance::REMOVAL_OFFSET) }
+          end
+        end
       end
     end
 
@@ -263,21 +289,6 @@ RSpec.describe RelatedPolicyPeriod do
 
       context 'when years to effect eq 2 or more' do
         it { expect(subject).to eq '1/1/2018'.to_date }
-      end
-    end
-
-    context '.last_validity_date' do
-      subject { RelatedPolicyPeriod.new(related_policy).last_validity_date }
-
-      context 'when time off policy has end dates' do
-        let(:end_day) { 1 }
-        let(:end_month) { 2 }
-
-        it { expect(subject).to eq '1/2/2018'.to_date }
-      end
-
-      context 'when time off policy does not have end date' do
-        it { expect(subject).to eq nil }
       end
     end
   end

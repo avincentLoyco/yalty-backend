@@ -9,7 +9,7 @@ module Api::V1
         effective_at: resource.effective_at,
         being_processed: resource.being_processed,
         validity_date: resource.validity_date,
-        policy_credit_addition: resource.policy_credit_addition
+        balance_type: resource.balance_type
       }
         .merge(basic)
         .merge(relationship)
@@ -38,7 +38,7 @@ module Api::V1
 
     def balances_sum
       return [] if resource.blank?
-      resource.first.employee.unique_balances_categories.map do |category|
+      resource.first.employee.time_off_categories.distinct.map do |category|
         EmployeeBalanceRepresenter.new(
           resource.first.employee.last_balance_in_category(category.id)
         ).complete.merge(time_off_category: time_off_category_json(category))

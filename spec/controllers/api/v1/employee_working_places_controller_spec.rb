@@ -10,8 +10,18 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
     create(:employee, account: Account.current, employee_working_places: [employee_working_place])
   end
   let!(:employee_working_place) do
-    create(:employee_working_place, effective_at: 5.years.ago, working_place: working_place)
+    create(:employee_working_place,
+      effective_at: 5.years.ago, working_place: working_place)
   end
+  let(:contract_end) do
+    create(:employee_event,
+      event_type: 'contract_end', employee: employee, effective_at: contract_end_date)
+  end
+  let(:rehired) do
+    create(:employee_event,
+      event_type: 'hired', employee: employee, effective_at: contract_end_date + 1.day)
+  end
+
 
   describe 'reset join tables behaviour' do
     include_context 'shared_context_join_tables_controller',
@@ -171,6 +181,34 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
           end
         end
         let!(:balances) { TimeOff.all.map(&:employee_balance).sort_by { |b| b[:effective_at] } }
+
+        context 'when there is contract end date' do
+          before do
+            contract_end
+            rehired
+          end
+
+          let(:contract_end_date) { Time.now }
+          let(:working_place_id) { working_place.id }
+          let(:effective_at) { 1.day.since }
+
+          it { expect { subject }.to change { EmployeeWorkingPlace.not_reset.count }.by(1) }
+          it { expect { subject }.to change { EmployeeWorkingPlace.with_reset.count }.by(-1) }
+          it { is_expected.to have_http_status(201) }
+
+          context 'when there is ewp with the same working place after' do
+            let!(:new_working_place) do
+              create(:employee_working_place,
+                employee: employee, working_place: working_place, effective_at: 1.month.since)
+            end
+
+            it { expect { subject }.to change { EmployeeWorkingPlace.with_reset.count }.by(-1) }
+            it do
+              expect { subject }.to change { EmployeeWorkingPlace.exists?(new_working_place.id) }
+            end
+            it { is_expected.to have_http_status(201) }
+          end
+        end
 
         context 'when new EmployeeWorkingPlace is created' do
           context 'and previous policy has the same holiday policy assigned' do
@@ -393,6 +431,59 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
         let!(:balances) { TimeOff.all.map(&:employee_balance).sort_by { |b| b[:effective_at] } }
         before do
           new_employee_working_place.working_place.update!(holiday_policy: holiday_policy)
+        end
+
+        context 'when there is contract end' do
+          let!(:ewp_a) do
+            create(:employee_working_place,
+              employee: employee, effective_at: 14.months.since,
+              working_place: newest_employee_working_place.working_place)
+          end
+          let!(:ewps_b) do
+            [8.months.since, 2.years.since].map do |date|
+              create(:employee_working_place,
+                employee: employee, effective_at: date,
+                working_place: new_employee_working_place.working_place)
+            end
+          end
+
+          context 'and previous effective at was one day after' do
+            let(:contract_end_date) { '29/12/2015'.to_date }
+            let(:effective_at) { 14.months.since }
+            before do
+              contract_end
+              rehired
+            end
+
+            it { expect { subject }.to change { EmployeeWorkingPlace.not_reset.count }.by(-3) }
+            it { expect { subject }.to change { EmployeeWorkingPlace.with_reset.count }.by(1) }
+            it { expect { subject }.to change { EmployeeWorkingPlace.exists?(ewps_b.last.id) } }
+            it { expect { subject }.to change { EmployeeWorkingPlace.exists?(ewp_a.id) } }
+            it do
+              expect { subject }
+                .to change { EmployeeWorkingPlace.exists?(new_employee_working_place.id) }
+            end
+
+            it { is_expected.to have_http_status(205) }
+          end
+
+          context 'and new effective_at is one day after' do
+            let(:contract_end_date) { '28/12/2015'.to_date }
+            let(:id) { ewp_a.id }
+            let(:effective_at) { '29/12/2015'}
+
+            before do
+              contract_end
+              rehired
+            end
+
+            it { expect { subject }.to change { EmployeeWorkingPlace.with_reset.count }.by(-1) }
+            it { expect { subject }.to change { EmployeeWorkingPlace.not_reset.count }.by(-1) }
+            it { expect { subject }.to change { EmployeeWorkingPlace.exists?(ewps_b.last.id) } }
+            it { expect { subject }.to change { ewp_a.reload.effective_at } }
+
+            it { is_expected.to have_http_status(200) }
+          end
         end
 
         context 'when join table was updated' do
@@ -640,6 +731,29 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
           end
         end
         let!(:balances) { TimeOff.all.map(&:employee_balance) }
+
+        context 'when employee working place effective at is one day after contract end' do
+          let(:contract_end_date) { Time.now }
+          let!(:new_working_place) do
+            create(:employee_working_place,
+              employee: employee, effective_at: 1.week.since, working_place: working_place)
+          end
+
+          before do
+            join_table.update!(effective_at: Time.now + 1.day)
+            contract_end
+            rehired
+          end
+
+          it { expect { subject }.to change { EmployeeWorkingPlace.exists?(join_table.id) } }
+          it { expect { subject }.to change { EmployeeWorkingPlace.not_reset.count }.by(-1) }
+          it { expect { subject }.to change { EmployeeWorkingPlace.with_reset.count }.by(1) }
+          it do
+            expect { subject }.to_not change { EmployeeWorkingPlace.exists?(new_working_place.id) }
+          end
+
+          it { is_expected.to have_http_status(204) }
+        end
 
         context 'when previous employee working places has the same holiday policy' do
           before { WorkingPlace.not_reset.update_all(holiday_policy_id: holiday_policy.id) }

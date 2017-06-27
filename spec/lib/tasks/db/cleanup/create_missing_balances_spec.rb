@@ -33,21 +33,23 @@ RSpec.describe 'db:cleanup:create_missing_balances', type: :rake do
           addition_2016 = create(:employee_balance_manual, :addition,
             time_off_category: vacation_category,
             resource_amount: vacation_balancer_policy_amount,
-            effective_at: DateTime.new(2016, 1, 1, 0, 0, 0) + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
-            validity_date: DateTime.new(2017, 4, 1, 0, 0, 0) + Employee::Balance::REMOVAL_OFFSET,
+            effective_at: DateTime.new(2016, 1, 1, 0, 0, 0) + Employee::Balance::ASSIGNATION_OFFSET,
+            balance_type: 'assignation',
+            validity_date: DateTime.new(2017, 4, 2, 0, 0, 0) + Employee::Balance::REMOVAL_OFFSET,
             employee_id: employee_id
           )
 
           create(:employee_balance_manual,
             time_off_category: vacation_category,
             resource_amount: -vacation_balancer_policy_amount,
-            effective_at: DateTime.new(2017, 4, 1, 0, 0, 0) + Employee::Balance::REMOVAL_OFFSET,
+            effective_at: DateTime.new(2017, 4, 2, 0, 0, 0) + Employee::Balance::REMOVAL_OFFSET,
             balance_credit_additions: [addition_2016],
+            balance_type: 'removal',
             employee_id: employee_id
           )
         end
 
-        it { expect { subject }.to change { Employee::Balance.count }.by(6) }
+        it { expect { subject }.to change { Employee::Balance.count }.by(7) }
       end
       context 'when there is two policies in the category' do
         let(:extreme_vacations_balancer_policy) do
@@ -72,35 +74,40 @@ RSpec.describe 'db:cleanup:create_missing_balances', type: :rake do
           addition_vacation_2015 = create(:employee_balance_manual, :addition,
             time_off_category: vacation_category,
             resource_amount: vacation_balancer_policy_amount,
-            effective_at: DateTime.new(2015, 1, 1, 0, 0, 0) + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
-            validity_date: DateTime.new(2016, 4, 1, 0, 0, 0) + Employee::Balance::REMOVAL_OFFSET,
-            employee_id: employee_id
+            effective_at: DateTime.new(2015, 1, 1, 0, 0, 0) + Employee::Balance::ASSIGNATION_OFFSET,
+            validity_date: DateTime.new(2016, 4, 2, 0, 0, 0) + Employee::Balance::REMOVAL_OFFSET,
+            employee_id: employee_id,
+            balance_type: 'assignation'
           )
 
           create(:employee_balance_manual,
             time_off_category: vacation_category,
             resource_amount: -vacation_balancer_policy_amount,
-            effective_at: DateTime.new(2016, 4, 1, 0, 0, 0) + Employee::Balance::REMOVAL_OFFSET,
+            effective_at: DateTime.new(2016, 4, 2, 0, 0, 0) + Employee::Balance::REMOVAL_OFFSET,
             balance_credit_additions: [addition_vacation_2015],
-            employee_id: employee_id
+            employee_id: employee_id,
+            balance_type: 'removal'
           )
           addition_vacation_extreme_2016 = create(:employee_balance_manual, :addition,
             time_off_category: vacation_category,
             resource_amount: vacation_balancer_policy_amount,
-            effective_at: DateTime.new(2016, 1, 1, 0, 0, 0) + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
-            validity_date: DateTime.new(2017, 4, 1, 0, 0, 0) + Employee::Balance::REMOVAL_OFFSET,
-            employee_id: employee_id
+            effective_at: DateTime.new(2016, 1, 1, 0, 0, 0) + Employee::Balance::ADDITION_OFFSET,
+            validity_date: DateTime.new(2017, 4, 2, 0, 0, 0) + Employee::Balance::REMOVAL_OFFSET,
+            employee_id: employee_id,
+            balance_type: 'addition'
           )
 
           create(:employee_balance_manual,
             time_off_category: vacation_category,
             resource_amount: -vacation_balancer_policy_amount,
-            effective_at: DateTime.new(2017, 4, 1, 0, 0, 0) + Employee::Balance::REMOVAL_OFFSET,
+            effective_at: DateTime.new(2017, 4, 2, 0, 0, 0) + Employee::Balance::REMOVAL_OFFSET,
             balance_credit_additions: [addition_vacation_extreme_2016],
-            employee_id: employee_id
+            employee_id: employee_id,
+            balance_type: 'removal'
           )
         end
-        it { expect { subject }.to change { Employee::Balance.count }.by(6) }
+
+        it { expect { subject }.to change { Employee::Balance.count }.by(9) }
       end
     end
 
@@ -114,10 +121,10 @@ RSpec.describe 'db:cleanup:create_missing_balances', type: :rake do
               time_off_policy: vacation_balancer_policy
             )
           end
-          it { expect { subject }.to change { Employee::Balance.count }.by(10) }
+          it { expect { subject }.to change { Employee::Balance.count }.by(11) }
         end
         context 'is different than the start day of the policy' do
-          it { expect { subject }.to change { Employee::Balance.count }.by(8) }
+          it { expect { subject }.to change { Employee::Balance.count }.by(9) }
         end
       end
     end
@@ -125,70 +132,88 @@ RSpec.describe 'db:cleanup:create_missing_balances', type: :rake do
 
     context 'when there are no balances to be created' do
       before do
+        assignation = create(:employee_balance_manual,
+          time_off_category: vacation_category,
+          resource_amount: vacation_balancer_policy_amount,
+          effective_at: DateTime.new(2016, 1, 1, 0, 0, 0) + Employee::Balance::ASSIGNATION_OFFSET,
+          validity_date: DateTime.new(2017, 4, 2, 0, 0, 0) + Employee::Balance::REMOVAL_OFFSET,
+          employee_id: employee_id,
+          balance_type: 'assignation'
+        )
+
         addition_2016 = create(:employee_balance_manual, :addition,
           time_off_category: vacation_category,
           resource_amount: vacation_balancer_policy_amount,
-          effective_at: DateTime.new(2016, 1, 1, 0, 0, 0) + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
-          validity_date: DateTime.new(2017, 4, 1, 0, 0, 0) + Employee::Balance::REMOVAL_OFFSET,
-          employee_id: employee_id
+          effective_at: DateTime.new(2016, 1, 1, 0, 0, 0) + Employee::Balance::ADDITION_OFFSET,
+          validity_date: DateTime.new(2017, 4, 2, 0, 0, 0) + Employee::Balance::REMOVAL_OFFSET,
+          employee_id: employee_id,
+          balance_type: 'addition'
         )
         create(:employee_balance_manual, :addition,
           time_off_category: vacation_category,
           resource_amount: vacation_balancer_policy_amount,
-          effective_at: DateTime.new(2016, 12, 31, 0, 0, 0) + Employee::Balance::DAY_BEFORE_START_DAY_OFFSET,
-          validity_date: DateTime.new(2017, 4, 1, 0, 0, 0) + Employee::Balance::REMOVAL_OFFSET,
-          employee_id: employee_id
+          effective_at: DateTime.new(2017, 1, 1, 0, 0, 0) + Employee::Balance::END_OF_PERIOD_OFFSET,
+          validity_date: DateTime.new(2017, 4, 2, 0, 0, 0) + Employee::Balance::REMOVAL_OFFSET,
+          employee_id: employee_id,
+          balance_type: 'end_of_period'
         )
 
         create(:employee_balance_manual,
           time_off_category: vacation_category,
           resource_amount: -vacation_balancer_policy_amount,
-          effective_at: DateTime.new(2017, 4, 1, 0, 0, 0) + Employee::Balance::REMOVAL_OFFSET,
-          balance_credit_additions: [addition_2016],
-          employee_id: employee_id
+          effective_at: DateTime.new(2017, 4, 2, 0, 0, 0) + Employee::Balance::REMOVAL_OFFSET,
+          balance_credit_additions: [assignation, addition_2016],
+          employee_id: employee_id,
+          balance_type: 'removal',
         )
         addition_2017 = create(:employee_balance_manual, :addition,
           time_off_category: vacation_category,
           resource_amount: vacation_balancer_policy_amount,
-          effective_at: DateTime.new(2017, 1, 1, 0, 0, 0) + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
-          validity_date: DateTime.new(2018, 4, 1, 0, 0, 0) + Employee::Balance::REMOVAL_OFFSET,
-          employee_id: employee_id
+          effective_at: DateTime.new(2017, 1, 1, 0, 0, 0) + Employee::Balance::ADDITION_OFFSET,
+          validity_date: DateTime.new(2018, 4, 2, 0, 0, 0) + Employee::Balance::REMOVAL_OFFSET,
+          employee_id: employee_id,
+          balance_type: 'addition'
         )
         create(:employee_balance_manual, :addition,
           time_off_category: vacation_category,
           resource_amount: vacation_balancer_policy_amount,
-          effective_at: DateTime.new(2017, 12, 31, 0, 0, 0) + Employee::Balance::DAY_BEFORE_START_DAY_OFFSET,
+          effective_at: DateTime.new(2018, 01, 01, 0, 0, 0) + Employee::Balance::END_OF_PERIOD_OFFSET,
           validity_date: DateTime.new(2018, 4, 1, 0, 0, 0) + Employee::Balance::REMOVAL_OFFSET,
-          employee_id: employee_id
+          employee_id: employee_id,
+          balance_type: 'end_of_period'
         )
 
         create(:employee_balance_manual,
           time_off_category: vacation_category,
           resource_amount: -vacation_balancer_policy_amount,
-          effective_at: DateTime.new(2018, 4, 1, 0, 0, 0) + Employee::Balance::REMOVAL_OFFSET,
+          effective_at: DateTime.new(2018, 4, 2, 0, 0, 0) + Employee::Balance::REMOVAL_OFFSET,
           balance_credit_additions: [addition_2017],
-          employee_id: employee_id
+          employee_id: employee_id,
+          balance_type: 'removal'
         )
         addition_2018 = create(:employee_balance_manual, :addition,
           time_off_category: vacation_category,
           resource_amount: vacation_balancer_policy_amount,
-          effective_at: DateTime.new(2018, 1, 1, 0, 0, 0) + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
-          validity_date: DateTime.new(2019, 4, 1, 0, 0, 0) + Employee::Balance::REMOVAL_OFFSET,
-          employee_id: employee_id
+          effective_at: DateTime.new(2018, 1, 1, 0, 0, 0) + Employee::Balance::ADDITION_OFFSET,
+          validity_date: DateTime.new(2019, 4, 2, 0, 0, 0) + Employee::Balance::REMOVAL_OFFSET,
+          employee_id: employee_id,
+          balance_type: 'addition'
         )
         create(:employee_balance_manual, :addition,
           time_off_category: vacation_category,
           resource_amount: vacation_balancer_policy_amount,
-          effective_at: DateTime.new(2018, 12, 31, 0, 0, 0) + Employee::Balance::DAY_BEFORE_START_DAY_OFFSET,
-          validity_date: DateTime.new(2019, 4, 1, 0, 0, 0) + Employee::Balance::REMOVAL_OFFSET,
-          employee_id: employee_id
+          effective_at: DateTime.new(2019, 1, 1, 0, 0, 0) + Employee::Balance::END_OF_PERIOD_OFFSET,
+          validity_date: DateTime.new(2019, 4, 2, 0, 0, 0) + Employee::Balance::REMOVAL_OFFSET,
+          employee_id: employee_id,
+          balance_type: 'end_of_period'
         )
         create(:employee_balance_manual,
           time_off_category: vacation_category,
           resource_amount: -vacation_balancer_policy_amount,
-          effective_at: DateTime.new(2019, 4, 1, 0, 0, 0) + Employee::Balance::REMOVAL_OFFSET,
+          effective_at: DateTime.new(2019, 4, 2, 0, 0, 0) + Employee::Balance::REMOVAL_OFFSET,
           balance_credit_additions: [addition_2018],
-          employee_id: employee_id
+          employee_id: employee_id,
+          balance_type: 'removal'
         )
       end
       it { expect { subject }.to_not change { Employee::Balance.count } }
@@ -211,12 +236,13 @@ RSpec.describe 'db:cleanup:create_missing_balances', type: :rake do
         before do
           create(:employee_balance_manual, :addition,
             time_off_category: vacation_category,
-            effective_at: DateTime.new(2016, 1, 1, 0, 0, 0) + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
-            employee_id: employee_id
+            effective_at: DateTime.new(2016, 1, 1, 0, 0, 0) + Employee::Balance::ASSIGNATION_OFFSET,
+            employee_id: employee_id,
+            balance_type: 'assignation'
           )
         end
 
-        it { expect { subject }.to change { Employee::Balance.count }.by(4) }
+        it { expect { subject }.to change { Employee::Balance.count }.by(5) }
       end
       context 'when there is two policies in the category' do
         let(:extreme_vacations_balancer_policy) do
@@ -240,16 +266,16 @@ RSpec.describe 'db:cleanup:create_missing_balances', type: :rake do
         before do
           create(:employee_balance_manual, :addition,
             time_off_category: vacation_category,
-            effective_at: DateTime.new(2015, 1, 1, 0, 0, 0) + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
+            effective_at: DateTime.new(2015, 1, 1, 0, 0, 0) + Employee::Balance::ASSIGNATION_OFFSET,
             employee_id: employee_id
           )
           create(:employee_balance_manual, :addition,
             time_off_category: vacation_category,
-            effective_at: DateTime.new(2016, 1, 1, 0, 0, 0) + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
+            effective_at: DateTime.new(2016, 1, 1, 0, 0, 0) + Employee::Balance::ADDITION_OFFSET,
             employee_id: employee_id
           )
         end
-        it { expect { subject }.to change { Employee::Balance.count }.by(4) }
+        it { expect { subject }.to change { Employee::Balance.count }.by(7) }
       end
     end
 
@@ -266,41 +292,47 @@ RSpec.describe 'db:cleanup:create_missing_balances', type: :rake do
           it { expect { subject }.to change { Employee::Balance.count }.by(7) }
         end
         context 'is different than the start day of the policy' do
-          it { expect { subject }.to change { Employee::Balance.count }.by(5) }
+          it { expect { subject }.to change { Employee::Balance.count }.by(6) }
         end
       end
     end
 
     context 'when there are no balances to be created' do
       before do
+        create(:employee_balance_manual,
+          time_off_category: vacation_category,
+          effective_at: DateTime.new(2016, 1, 1, 0, 0, 0) + Employee::Balance::ASSIGNATION_OFFSET,
+          employee_id: employee_id,
+          balance_type: 'assignation'
+        )
         create(:employee_balance_manual, :addition,
           time_off_category: vacation_category,
-          effective_at: DateTime.new(2016, 1, 1, 0, 0, 0) + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
+          effective_at: DateTime.new(2016, 1, 1, 0, 0, 0) + Employee::Balance::ADDITION_OFFSET,
           employee_id: employee_id
         )
         create(:employee_balance_manual, :addition,
           time_off_category: vacation_category,
-          effective_at: DateTime.new(2016, 12, 31, 0, 0, 0) + Employee::Balance::DAY_BEFORE_START_DAY_OFFSET,
+          effective_at: DateTime.new(2017, 1, 1, 0, 0, 0) + Employee::Balance::END_OF_PERIOD_OFFSET,
           employee_id: employee_id
         )
         create(:employee_balance_manual, :addition,
           time_off_category: vacation_category,
-          effective_at: DateTime.new(2017, 1, 1, 0, 0, 0) + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
+          effective_at: DateTime.new(2017, 1, 1, 0, 0, 0) + Employee::Balance::ADDITION_OFFSET,
           employee_id: employee_id
         )
         create(:employee_balance_manual, :addition,
           time_off_category: vacation_category,
-          effective_at: DateTime.new(2017, 12, 31, 0, 0, 0) + Employee::Balance::DAY_BEFORE_START_DAY_OFFSET,
+          effective_at: DateTime.new(2018, 1, 1, 0, 0, 0) + Employee::Balance::END_OF_PERIOD_OFFSET,
           employee_id: employee_id
         )
         create(:employee_balance_manual, :addition,
           time_off_category: vacation_category,
-          effective_at: DateTime.new(2018, 1, 1, 0, 0, 0) + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
+          effective_at: DateTime.new(2018, 1, 1, 0, 0, 0) + Employee::Balance::ADDITION_OFFSET,
           employee_id: employee_id
         )
         create(:employee_balance_manual, :addition,
           time_off_category: vacation_category,
-          effective_at: DateTime.new(2018, 12, 31, 0, 0, 0) + Employee::Balance::DAY_BEFORE_START_DAY_OFFSET,
+          effective_at: DateTime.new(2019, 1, 1, 0, 0, 0) + Employee::Balance::END_OF_PERIOD_OFFSET,
           employee_id: employee_id
         )
       end

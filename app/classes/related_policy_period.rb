@@ -49,52 +49,53 @@ class RelatedPolicyPeriod
     last_start_date
   end
 
-  def last_validity_date
-    return unless end_month && end_day && years_to_effect
-    Date.new(last_start_date.year + years_to_effect, end_month, end_day)
-  end
-
-  def first_validity_date
-    return unless end_month && end_day && years_to_effect
-    Date.new(first_start_date.year + years_to_effect, end_month, end_day)
-  end
-
-  def validity_date_for(date)
+  def validity_date_for_balance_at(date, balance_type = 'addition')
     return unless end_date?
     validity_date =
-      Date.new(date.year + years_to_effect, end_month, end_day) + Employee::Balance::REMOVAL_OFFSET
+      if %w(addition assignation).include?(balance_type) && in_start_date?(date)
+        validity_date_for_period_start(date)
+      else
+        validity_date_for_period_time(date, balance_type)
+      end
+    verify_with_contract_periods(date, validity_date, balance_type)
+  end
+
+  def verify_with_contract_periods(date, validity_date, balance_type)
+    no_period_with_dates =
+      related_policy.employee.contract_periods.none? do |period|
+        period.include?(validity_date.to_date) && period.include?(date.to_date) &&
+          !(balance_type.eql?('end_of_period') && period.first.eql?(date.to_date))
+      end
+    return validity_date unless no_period_with_dates
+    contract_end_for(date, validity_date, balance_type)
+  end
+
+  def validity_date_for_period_start(date)
+    validity_date =
+      Date.new(
+        date.year + years_to_effect, end_month, end_day
+      ) + 1.day + Employee::Balance::REMOVAL_OFFSET
     years_end_date = Date.new(date.year, end_month, end_day)
     validity_date += 1.year if date.to_date > years_end_date
     validity_date += 1.year if (validity_date.to_date - date.to_date).to_i / 365 < years_to_effect
-    verify_with_contract_periods(validity_date)
+    validity_date
   end
 
-  def validity_date_for_balance_at(date)
-    return unless end_date?
-    validity_date =
-      if previous_addition(date)
-        previous_addition(date).validity_date
-      else
-        related_policy.policy_assignation_balance.validity_date
-      end
-    validity_date = validity_date >= date ? validity_date : validity_date_for(date)
-    verify_with_contract_periods(validity_date)
-  end
-
-  def verify_with_contract_periods(validity_date)
-    # TODO: Must test if it's the day after end of period for balances that
-    # can be the day after contract end at 00:00:0X
-    if related_policy.employee
-                     .contract_periods.none? { |period| period.include?(validity_date.to_date) }
-      contract_end_for(validity_date)
-    else
-      validity_date
+  def validity_date_for_period_time(date, balance_type)
+    start_date = Date.new(date.year, start_month, start_day)
+    if date.to_date <= start_date && years_to_effect.positive? && !balance_type.eql?('time_off')
+      start_date -= 1.year
     end
+    validity_date = validity_date_for_period_start(start_date)
+    validity_date += 1.year if validity_date < date
+    validity_date
   end
 
   def previous_addition(date)
     related_policy
-      .employee_balances.additions.where('effective_at < ?', date)
+      .employee_balances
+      .where(balance_type: %w(addition assignation))
+      .where('effective_at < ?', date)
       .order(:effective_at)
       .last
   end
@@ -104,13 +105,21 @@ class RelatedPolicyPeriod
       time_off_policy.years_to_effect.present?
   end
 
-  def contract_end_for(validity_date)
-    contract_end = related_policy.employee
-                                 .events.where(event_type: 'contract_end')
-                                 .where('effective_at <= ?::date', validity_date)
-                                 .reorder('employee_events.effective_at DESC')
-                                 .limit(1).pluck(:effective_at).first&.in_time_zone
-    return unless contract_end
-    contract_end + 1.day + Employee::Balance::REMOVAL_OFFSET
+  def contract_end_for(date, validity_date, balance_type)
+    periods = related_policy.employee.contract_periods
+    previous_periods =
+      periods.select { |period| period.last.is_a?(Date) && period.last < validity_date.to_date }
+    return validity_date unless previous_periods.present?
+    contract_end = previous_periods.last.last + 1.day + Employee::Balance::RESET_OFFSET
+    if contract_end > validity_date || (balance_type.eql?('assignation') &&
+        (date.eql?(contract_end.to_date) || related_policy.effective_at > contract_end.to_date))
+      validity_date
+    else
+      contract_end
+    end
+  end
+
+  def in_start_date?(date)
+    time_off_policy.start_day.eql?(date.day) && time_off_policy.start_month.eql?(date.month)
   end
 end

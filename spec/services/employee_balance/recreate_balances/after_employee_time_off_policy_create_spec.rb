@@ -47,12 +47,11 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyCreate, type: :servic
       create(:time_off_policy, :with_end_date, time_off_category: category, amount: 1000)
     end
     let(:expeted_balances_dates) do
-      ['2013-01-01', '2013-12-31', '2014-01-01', '2014-04-01', '2014-12-31', '2015-01-01',
-       '2015-04-01', '2015-12-31', '2016-01-01', '2016-04-01', '2016-12-31', '2017-01-01',
-       '2017-04-01', '2017-12-31', '2018-01-01', '2018-04-01', '2019-04-01'].map(&:to_date)
-    end
-    let(:assignation_balance) do
-      Employee::Balance.where(time_off_category: category).order(:effective_at).first
+      [
+        '2013-01-01', '2013-01-01', '2014-01-01', '2014-01-01', '2014-04-02', '2015-01-01',
+        '2015-01-01', '2015-04-02', '2016-01-01', '2016-01-01', '2016-04-02', '2017-01-01',
+        '2017-01-01', '2017-04-02', '2018-01-01', '2018-01-01', '2018-04-02', '2019-04-02'
+      ].map(&:to_date)
     end
 
     before do
@@ -60,7 +59,6 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyCreate, type: :servic
       call_service
     end
 
-    it { expect(assignation_balance.policy_credit_addition).to be(true) }
     it { expect(existing_balances_effective_ats).to match_array(expeted_balances_dates) }
   end
 
@@ -71,9 +69,11 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyCreate, type: :servic
         end_day: 1, end_month: 5, years_to_effect: 1)
     end
     let(:expeted_balances_dates) do
-      ['2013-02-01', '2013-12-31', '2014-01-01', '2014-04-01', '2014-04-15', '2015-01-31',
-       '2015-02-01', '2015-04-01', '2015-05-01', '2016-01-31', '2016-02-01', '2016-05-01',
-       '2017-01-31', '2017-02-01', '2017-05-01', '2018-05-01'].map(&:to_date)
+      [
+        '2013-02-01', '2014-01-01', '2014-01-01', '2014-04-02', '2014-04-15', '2015-02-01',
+        '2015-02-01', '2015-04-02', '2015-05-02', '2016-02-01', '2016-02-01', '2016-05-02',
+        '2017-02-01', '2017-02-01', '2017-05-02', '2018-05-02'
+      ].map(&:to_date)
     end
     let(:top_a) do
       create(:time_off_policy, :with_end_date, time_off_category: category, amount: 1000)
@@ -120,10 +120,12 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyCreate, type: :servic
         end_day: 1, end_month: 5, years_to_effect: 1)
     end
     let(:expeted_balances_dates) do
-      ['2013-02-01', '2013-12-31', '2014-01-01', '2014-01-02', '2014-01-31', '2014-02-01',
-       '2014-04-01', '2015-01-31', '2015-02-01', '2015-04-01', '2015-05-01', '2015-06-01',
-       '2015-12-31', '2016-01-01', '2016-05-01', '2016-12-31', '2017-01-01', '2017-04-01',
-       '2017-12-31', '2018-01-01', '2018-04-01', '2019-04-01'].map(&:to_date)
+      [
+        '2013-02-01', '2014-01-01', '2014-01-01', '2014-01-02', '2014-02-01', '2014-02-01',
+        '2014-04-02', '2014-05-02', '2015-02-01', '2015-02-01', '2015-04-02', '2015-05-02',
+        '2015-06-01', '2016-01-01', '2016-01-01', '2016-04-02', '2016-05-02', '2017-01-01',
+        '2017-01-01', '2017-04-02', '2018-01-01', '2018-01-01', '2018-04-02', '2019-04-02'
+      ].map(&:to_date)
     end
     let(:tops) do
       create_list(:time_off_policy, 2, :with_end_date, time_off_category: category, amount: 1000)
@@ -153,10 +155,12 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyCreate, type: :servic
         years_to_effect: 1)
     end
     let(:expeted_balances_dates) do
-      ['2013-01-01', '2013-01-31', '2013-02-01', '2013-10-01', '2013-12-31', '2014-01-01',
-       '2014-04-01', '2014-12-31', '2015-01-01', '2015-01-15', '2015-04-01', '2015-05-01',
-       '2015-12-31', '2016-01-01', '2016-05-01', '2016-12-31', '2017-01-01', '2017-05-01',
-       '2017-12-31', '2018-01-01', '2018-05-01', '2019-05-01'].map(&:to_date)
+      [
+        '2013-01-01', '2013-02-01', '2013-02-01', '2013-04-02', '2013-10-01', '2014-01-01',
+        '2014-01-01', '2014-04-02', '2014-05-02', '2015-01-01', '2015-01-01', '2015-01-15',
+        '2015-05-02', '2016-01-01', '2016-01-01', '2016-05-02', '2017-01-01', '2017-01-01',
+        '2017-05-02', '2018-01-01', '2018-01-01', '2018-05-02', '2019-05-02'
+      ].map(&:to_date)
     end
     let(:top_a) do
       create(:time_off_policy, :with_end_date, time_off_category: category, amount: 1000,

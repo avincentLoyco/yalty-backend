@@ -45,11 +45,14 @@ class Employee::Event < ActiveRecord::Base
     inclusion: { in: proc { Employee::Event.event_types }, allow_nil: true }
   validate :attributes_presence, if: [:event_attributes, :employee]
   validate :balances_before_hired_date, if: :employee, on: :update
-  validate :no_two_contract_end_dates_or_hired_events_in_row, if: [:employee, :event_type]
-  validate :not_moved_after_or_before_hired_date,
-    if: [:employee, :event_type, :effective_at],
-    on: :update
-  validate :hired_and_contract_end_not_in_the_same_date, if: [:employee, :event_type]
+  validate :contract_end_and_hire_in_valid_order, if: [:employee, :event_type, :effective_at]
+
+  scope :contract_ends, -> { where(event_type: 'contract_end') }
+  scope :hired, -> { where(event_type: 'hired') }
+  scope :contract_types, -> { where(event_type: %w(contract_end hired)) }
+  scope :all_except, ->(id) { where.not(id: id) }
+
+  before_destroy :check_if_event_deletable
 
   def self.event_types
     Employee::Event::EVENT_ATTRIBUTES.keys.map(&:to_s)
@@ -78,38 +81,21 @@ class Employee::Event < ActiveRecord::Base
     end
   end
 
-  def previous_event
-    previous_events.last
-  end
-
-  def next_event
-    next_events.first
+  def can_destroy_event?
+    hired_without_events_and_join_tables_after? ||
+      !%w(hired contract_end).include?(event_type) || contract_end_without_rehired_after?
   end
 
   private
-
-  def not_moved_after_or_before_hired_date
-    return unless event_type.in?(%w(contract_end hired)) && effective_at_changed?
-    events_types_between =
-      employee
-      .events
-      .where.not(id: id)
-      .where(
-        'effective_at BETWEEN ? AND ?',
-        [effective_at, effective_at_was].min, [effective_at, effective_at_was].max
-      ).pluck(:event_type)
-    return unless (events_types_between & %w(contract_end hired)).present?
-    errors.add(:effective_at, 'Can not update if before or after is contract end or hired event')
-  end
 
   def balances_before_hired_date
     return unless event_type.eql?('hired')
     hired_event =
       employee
       .events
-      .where(event_type: 'hired')
+      .hired
       .where('effective_at <= ?', effective_at)
-      .where.not(id: id).order(:effective_at).last
+      .all_except(id).order(:effective_at).last
 
     return unless hired_event.blank? && balances_before_effective_at?
     errors.add(:base, 'There can\'t be balances before hired date')
@@ -119,37 +105,52 @@ class Employee::Event < ActiveRecord::Base
     employee.employee_balances.where('effective_at < ?', effective_at).present?
   end
 
-  def previous_events
-    employee.events.where.not(id: id).where('effective_at <= ?', effective_at).order(:effective_at)
-  end
-
   def next_events
-    employee.events.where.not(id: id).where('effective_at > ?', effective_at).order(:effective_at)
+    employee.events.all_except(id).where('effective_at > ?', effective_at).order(:effective_at)
   end
 
-  def no_two_contract_end_dates_or_hired_events_in_row
-    return unless contract_end_and_hire_not_alternately?
+  def contract_end_and_hire_in_valid_order
+    return unless event_type.in?(%w(contract_end hired))
+    work_events =
+      employee.events.contract_types.all_except(id).where('effective_at <= ?', effective_at)
+    current_type = work_events.select { |event| event[:event_type].eql?(event_type) }
+    other_type = work_events - current_type
+    at_date = other_type.any? { |event| event[:effective_at].eql?(effective_at) }
+
+    return if ((event_type.eql?('contract_end') && (current_type.size + 1).eql?(other_type.size)) ||
+        hired_events_in_valid_order?(current_type.size, other_type.size, at_date)) &&
+        (!next_events.contract_types.first&.event_type.eql?(event_type) || at_date)
+
     errors.add(
       :event_type,
-      "Employee can not two #{event_type} in a row and contract end must have hired event"
+      "Employee can not have two #{event_type} in a row and contract end must have hired event"
     )
   end
 
-  def contract_end_and_hire_not_alternately?
-    return unless event_type.eql?('hired') || event_type.eql?('contract_end')
-
-    previous = previous_events.where(event_type: %w(hired contract_end)).last
-    future = next_events.where(event_type: %w(hired contract_end)).first
-
-    (previous&.event_type.eql?(event_type) || future&.event_type.eql?(event_type)) ||
-      (event_type.eql?('contract_end') && previous.nil?)
+  def hired_events_in_valid_order?(current_type, other_type, at_date)
+    event_type.eql?('hired') && ((!at_date && current_type.eql?(other_type)) ||
+      (at_date && (current_type + 1).eql?(other_type)))
   end
 
-  def hired_and_contract_end_not_in_the_same_date
-    work_types = %w(contract_end hired)
-    return unless work_types.delete(event_type)
-    existing_event = employee.events.where.not(id: id).where(effective_at: effective_at).first
-    return unless existing_event.present? && existing_event.event_type.in?(work_types)
-    errors.add(:effective_at, 'Hired and contract end event can not be at the same date')
+  def check_if_event_deletable
+    can_destroy_event? || errors.add(:base, 'Event cannot be destroyed')
+    errors.empty?
+  end
+
+  def hired_without_events_and_join_tables_after?
+    return unless event_type.eql?('hired')
+
+    employee.events.where('effective_at >= ?', effective_at).all_except(id).empty? &&
+      Employee::RESOURCE_JOIN_TABLES.map do |join_table|
+        employee.send(join_table).not_reset.assigned_since(effective_at).empty?
+      end.uniq.eql?([true])
+  end
+
+  def contract_end_without_rehired_after?
+    event_type.eql?('contract_end') &&
+      !employee
+        .events
+        .where('effective_at > ?', effective_at)
+        .order(:effective_at).first&.event_type.eql?('hired')
   end
 end

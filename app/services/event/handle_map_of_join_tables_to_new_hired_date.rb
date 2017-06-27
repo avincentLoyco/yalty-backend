@@ -25,8 +25,7 @@ class HandleMapOfJoinTablesToNewHiredDate
     employee
       .events
       .where('effective_at > ? AND effective_at <= ?', old_hired_date, new_hired_date)
-      .pluck(:event_type)
-      .include?('contract_end')
+      .pluck(:event_type).include?('contract_end')
   end
 
   def updated_join_tables
@@ -38,7 +37,7 @@ class HandleMapOfJoinTablesToNewHiredDate
       else
         update_or_remove_join_table
       end
-    end.compact.flatten.uniq
+    end.flatten.compact.uniq
   end
 
   def single_etop_by_category_in_range?
@@ -55,10 +54,10 @@ class HandleMapOfJoinTablesToNewHiredDate
       else
         [join_tables_in_range.last]
       end
-
     return unless join_tables_at_hired_date.present?
     join_tables_at_hired_date.compact.map do |join_table|
       next if join_table.related_resource.reset?
+      remove_reset_join_table(join_table) if contract_end_before?
       update_time_off_policy_assignation_balance(join_table) if employee_time_off_policy?
       join_table.tap { |table| table.assign_attributes(effective_at: new_hired_date) }
     end
@@ -73,10 +72,22 @@ class HandleMapOfJoinTablesToNewHiredDate
     end
   end
 
+  def remove_reset_join_table(join_table)
+    reset_join_table_at_date =
+      join_table.class.with_reset.where(effective_at: new_hired_date, employee: employee)
+
+    if join_table.class.eql?(EmployeeTimeOffPolicy)
+      reset_join_table_at_date.where(time_off_category_id: join_table.time_off_category_id).first
+    else
+      reset_join_table_at_date.first
+    end.try(:destroy!)
+  end
+
   def remove_and_update_etops_by_category
     grouped_etops_in_range.map do |_category, etop_collection|
       join_tables_to_destroy = etop_collection.first(etop_collection.size - 1)
-      join_tables_to_destroy.map(&:policy_assignation_balance).compact.map(&:destroy!)
+      assignations = join_tables_to_destroy.map(&:policy_assignation_balance).compact
+      DestroyEmployeeBalance.new(assignations, false).call
       join_tables_to_destroy.map(&:destroy!)
       update_time_off_policy_assignation_balance(etop_collection.last)
       etop_collection.last.tap { |etop| etop.assign_attributes(effective_at: new_hired_date) }
@@ -107,21 +118,18 @@ class HandleMapOfJoinTablesToNewHiredDate
 
   def remove_employee_balances_between_hired_dates(assignation, etop)
     return unless new_hired_date > old_hired_date
-    employee
-      .employee_balances
-      .in_category(assignation.time_off_category_id)
+    balances_to_remove =
+      Employee::Balance
+      .for_employee_and_category(employee.id, assignation.time_off_category_id)
+      .not_time_off
       .where.not(id: [assignation.id, balance_at_new_hired(etop)])
-      .where(time_off_id: nil)
-      .where('effective_at <= ?', new_hired_date + Employee::Balance::REMOVAL_OFFSET)
-      .destroy_all
+      .between(old_hired_date, new_hired_date + Employee::Balance::REMOVAL_OFFSET)
+    DestroyEmployeeBalance.new(balances_to_remove, false).call
   end
 
   def find_join_tables_in_range
     dates = [old_hired_date, new_hired_date]
-    employee
-      .send(join_table_class)
-      .where(effective_at: dates.min..dates.max)
-      .order(:effective_at)
+    employee.send(join_table_class).where(effective_at: dates.min..dates.max).order(:effective_at)
   end
 
   def grouped_etops_in_range
@@ -132,36 +140,34 @@ class HandleMapOfJoinTablesToNewHiredDate
     join_table_class.eql?('employee_time_off_policies')
   end
 
-  def time_off_policy_start_date?(etop)
-    policy = etop.time_off_policy
-    new_hired_date.to_date == Date.new(new_hired_date.year, policy.start_month, policy.start_day)
-  end
-
   def balance_at_new_hired(etop)
-    employee
-      .employee_balances
-      .where(
-        time_off_category_id: etop.time_off_category_id,
-        effective_at: new_hired_date + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET
-      )
-      .first
+    Employee::Balance
+      .for_employee_and_category(employee.id, etop.time_off_category_id)
+      .where(effective_at: new_hired_date + Employee::Balance::ASSIGNATION_OFFSET).first
   end
 
   def update_existing_balance(etop, existing_balance, assignation_balance)
     existing_balance.manual_amount = assignation_balance.manual_amount
     existing_balance.validity_date = RelatedPolicyPeriod.new(etop).validity_date_for(new_hired_date)
-    assignation_balance.destroy!
+    DestroyEmployeeBalance.new(assignation_balance, false).call
     existing_balance
   end
 
   def assign_attributes_to_assignation(etop, assignation_balance)
     assignation_balance.tap do |balance|
+      validity_date =
+        RelatedPolicyPeriod.new(etop).validity_date_for_balance_at(new_hired_date, 'assignation')
       balance.assign_attributes(
-        effective_at: new_hired_date + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET,
-        policy_credit_addition: time_off_policy_start_date?(etop),
-        validity_date: RelatedPolicyPeriod.new(etop).validity_date_for(new_hired_date),
+        effective_at: new_hired_date + Employee::Balance::ASSIGNATION_OFFSET,
+        balance_type: 'assignation',
+        validity_date: validity_date,
         resource_amount: 0
       )
     end
+  end
+
+  def contract_end_before?
+    @contract_end_before ||=
+      employee.events.contract_ends.where(effective_at: new_hired_date - 1.day).present?
   end
 end

@@ -191,7 +191,7 @@ RSpec.describe CreateRegisteredWorkingTime do
         create(:employee_working_place, employee: employee, effective_at: date)
       end
 
-      let(:working_place) { employee.active_working_place_at(date) }
+      let(:working_place) { employee_working_place.working_place }
 
       let!(:holiday_policy) do
         create(:holiday_policy, account: account, country: 'ch', region: 'vd')
@@ -217,6 +217,7 @@ RSpec.describe CreateRegisteredWorkingTime do
       context 'on a working day' do
         context 'only in the region' do
           let(:date) { Date.new(2016, 1, 1) }
+
 
           it 'should create registred working time without time entries' do
             expect { subject }.to change { employee_rwt.count }.by(1)

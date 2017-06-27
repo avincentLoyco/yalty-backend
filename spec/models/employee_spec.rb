@@ -235,6 +235,38 @@ RSpec.describe Employee, type: :model do
       end
     end
 
+    context '#contract periods' do
+      let(:employee) { create(:employee) }
+
+      subject { employee.contract_periods }
+
+      it { expect(subject).to eq([employee.hired_date..Date::Infinity.new]) }
+
+      context 'when employee has hired and contract end in the same day' do
+        before do
+          create(:employee_event,
+            event_type: 'contract_end', employee: employee, effective_at: employee.hired_date)
+        end
+
+        it { expect(subject).to eq([employee.hired_date..employee.hired_date]) }
+
+        context 'and there is rehired event one day after contract end and first hire' do
+          before do
+            create(:employee_event,
+              event_type: 'hired', employee: employee, effective_at: employee.hired_date + 1.day)
+          end
+
+          let(:hired_date) { employee.events.order(:effective_at).first.effective_at }
+
+          it do
+            expect(subject).to eq(
+              [hired_date..hired_date, (hired_date + 1.day)..Date::Infinity.new]
+            )
+          end
+        end
+      end
+    end
+
     context '#hired_date' do
       include_context 'shared_context_timecop_helper'
       let(:employee) { create(:employee, hired_at: hired_at, contract_end_at: contract_end_at) }

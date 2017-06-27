@@ -3,33 +3,35 @@ class UpdateEmployeeBalance
   attr_reader :employee_balance, :time_off, :options, :current_date
 
   def initialize(employee_balance, options = {})
-    @employee_balance = employee_balance
+    @employee_balance = employee_balance.reload
     @time_off = employee_balance.time_off
     @options = options
     @current_date = employee_balance.validity_date
   end
 
   def call
-    employee_balance.reload
-    update_attributes unless options.blank?
+    update_attributes
     recalculate_amount
     update_status
-    manage_removal if options.key?(:validity_date)
+    manage_removal
     save!
   end
 
   private
 
   def manage_removal
-    ManageEmployeeBalanceRemoval.new(options[:validity_date], employee_balance, current_date).call
+    ManageEmployeeBalanceRemoval.new(
+      options[:validity_date] || employee_balance.validity_date, employee_balance, current_date
+    ).call
   end
 
   def update_attributes
     employee_balance.assign_attributes(options)
+    employee_balance.validity_date = options[:validity_date] || find_validity_date
   end
 
   def recalculate_amount
-    return unless employee_balance.reset_balance ||
+    return unless employee_balance.balance_type.eql?('reset') ||
         employee_balance.balance_credit_additions.present? || counter_and_addition?
     employee_balance.calculate_removal_amount
   end
@@ -54,6 +56,15 @@ class UpdateEmployeeBalance
   end
 
   def counter_and_addition?
-    employee_balance.time_off_policy&.counter? && employee_balance.policy_credit_addition
+    employee_balance.time_off_policy&.counter? && employee_balance.balance_type.eql?('addition')
+  end
+
+  def find_validity_date
+    return if employee_balance.balance_type.in?(%w(reset removal)) || !employee_balance.valid?
+    etop = employee_balance.employee_time_off_policy
+    return unless etop.time_off_policy.end_month.present? && etop.time_off_policy.end_day.present?
+    RelatedPolicyPeriod
+      .new(etop)
+      .validity_date_for_balance_at(employee_balance.effective_at, employee_balance.balance_type)
   end
 end

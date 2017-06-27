@@ -1,7 +1,4 @@
 class HandleContractEnd
-  JOIN_TABLES =
-    %w(employee_time_off_policies employee_presence_policies employee_working_places).freeze
-
   def initialize(employee, contract_end_date, old_contract_end = nil)
     @employee = employee
     @contract_end_date = contract_end_date
@@ -24,11 +21,17 @@ class HandleContractEnd
   private
 
   def remove_join_tables
-    join_tables = JOIN_TABLES.map do |table_name|
+    join_tables = Employee::RESOURCE_JOIN_TABLES.map do |table_name|
       @employee.send(table_name).where('effective_at > ?', @contract_end_date)
     end
-    return join_tables.map(&:delete_all) unless @next_hire_date.present?
-    join_tables.map { |table| table.where('effective_at < ?', @next_hire_date).delete_all }
+    return join_tables.map(&:delete_all) if @next_hire_date.nil?
+    join_tables.map do |table|
+      if @contract_end_date.eql?(@old_contract_end)
+        table.where('effective_at < ?', @next_hire_date).not_reset.delete_all
+      else
+        table.where('effective_at < ?', @next_hire_date).delete_all
+      end
+    end
   end
 
   def remove_time_offs
@@ -45,35 +48,36 @@ class HandleContractEnd
   end
 
   def remove_balances
-    @employee
+    balances_after =
+      @employee
       .employee_balances
-      .where('effective_at > ?', @contract_end_date + 1.day)
-      .not_time_off.delete_all
+      .not_time_off.where('effective_at > ?', @contract_end_date + 1.day + 2.seconds)
+    return balances_after.delete_all unless @next_hire_date.present?
+    balances_after.where('effective_at < ?', @next_hire_date).delete_all
   end
 
   def assign_reset_resources
-    @reset_join_tables =
+    @join_tables =
       %w(presence_policies working_places time_off_policies).map do |resources_name|
         AssignResetJoinTable.new(resources_name, @employee, nil, @contract_end_date).call
       end
   end
 
   def assign_reset_balances_and_create_additions
-    employee_time_off_policies =
-      @reset_join_tables.flatten.select { |table| table.class.eql?(EmployeeTimeOffPolicy) }
-    return unless employee_time_off_policies.present?
-
-    employee_time_off_policies.map do |etop|
-      AssignResetEmployeeBalance.new(etop, @old_contract_end).call
-      next unless @old_contract_end && etop.effective_at > @old_contract_end
-      ManageEmployeeBalanceAdditions.new(etop.previous_policy_for.first).call
+    @employee.employee_time_off_policies.pluck(:time_off_category_id).uniq.map do |category_id|
+      AssignResetEmployeeBalance.new(
+        @employee, category_id, @contract_end_date, @old_contract_end
+      ).call
+      next unless @old_contract_end && @contract_end_date > @old_contract_end
+      etop = @employee.active_policy_in_category_at_date(category_id, @old_contract_end)
+      ManageEmployeeBalanceAdditions.new(etop).call
     end
   end
 
   def move_time_offs
     @employee.time_offs.where(''"
       start_time < '#{@contract_end_date}'::timestamp AND
-      end_time > '#{@contract_end_date}'::timestamp
+      end_time > '#{@contract_end_date + 1.day}'::timestamp
     "'').map do |time_off|
       time_off.update!(end_time: @contract_end_date + 1.day)
       validity_date = time_off.employee_balance.validity_date
@@ -86,7 +90,7 @@ class HandleContractEnd
   def find_next_hire_date(employee)
     employee
       .events
-      .where(event_type: 'hired').where('effective_at > ?', @contract_end_date)
+      .hired.where('effective_at > ?', @contract_end_date)
       .order(:effective_at).first.try(:effective_at)
   end
 end

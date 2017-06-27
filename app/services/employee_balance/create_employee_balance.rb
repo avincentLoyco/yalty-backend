@@ -45,9 +45,9 @@ class CreateEmployeeBalance
       Employee::Balance.new(
         employee_id: employee.id,
         time_off_category_id: category.id,
+        balance_type: employee_balance.validity_date.sec.eql?(3) ? 'reset' : 'removal',
         effective_at: employee_balance.validity_date
       )
-
     balance_removal.balance_credit_additions << [employee_balance]
   end
 
@@ -62,7 +62,7 @@ class CreateEmployeeBalance
   def find_active_assignation_balance_for_date
     return if options[:time_off_id] || options[:effective_at].blank?
     Employee::Balance
-      .employee_balances(employee.id, category.id)
+      .for_employee_and_category(employee.id, category.id)
       .find_by('effective_at = ? AND time_off_id is NULL', options[:effective_at])
   end
 
@@ -80,8 +80,7 @@ class CreateEmployeeBalance
       resource_amount: options.key?(:resource_amount) ? options[:resource_amount] : 0,
       validity_date: validity_date,
       effective_at: options[:effective_at],
-      policy_credit_addition: options[:policy_credit_addition] || false,
-      reset_balance: options[:reset_balance] || false
+      balance_type: options[:balance_type]
     }
   end
 
@@ -97,7 +96,7 @@ class CreateEmployeeBalance
   end
 
   def calculate_amount
-    return unless employee_balance.reset_balance ||
+    return unless employee_balance.balance_type.eql?('reset') ||
         employee_balance.balance_credit_additions.present? || counter_addition? ||
         balance_removal.present?
     if balance_removal
@@ -110,7 +109,9 @@ class CreateEmployeeBalance
   def update_next_employee_balances
     return if only_in_balance_period? || options[:skip_update]
     PrepareEmployeeBalancesToUpdate.new(employee_balance).call
-    UpdateBalanceJob.perform_later(employee_balance.id)
+    ActiveRecord::Base.after_transaction do
+      UpdateBalanceJob.perform_later(employee_balance.id)
+    end
   end
 
   def only_in_balance_period?
@@ -127,6 +128,6 @@ class CreateEmployeeBalance
   end
 
   def counter_addition?
-    employee_balance.policy_credit_addition && employee_balance.time_off_policy.counter?
+    employee_balance.balance_type.eql?('addition') && employee_balance.time_off_policy.counter?
   end
 end

@@ -28,13 +28,23 @@ class WorkingPlace < ActiveRecord::Base
   before_validation :assign_coordinate_related_attributes, if: :coordinate_changed?
 
   scope :not_reset, -> { where(reset: false) }
-  scope :active_for_employee, lambda { |employee_id, date|
+  scope(:actives_for_employee, lambda do |employee_id, date|
     joins(:employee_working_places)
-      .where("employee_working_places.employee_id= ? AND
-              employee_working_places.effective_at <= ?", employee_id, date)
-      .order('employee_working_places.effective_at desc')
-      .first
-  }
+      .where("
+        employee_working_places.employee_id = ? AND
+        employee_working_places.effective_at BETWEEN (
+          SELECT employee_events.effective_at FROM employee_events
+	      WHERE employee_events.employee_id = ?
+          AND employee_events.effective_at <= ?::date
+	      AND employee_events.event_type = 'hired'
+	      ORDER BY employee_events.effective_at DESC LIMIT 1
+        ) AND ?::date", employee_id, employee_id, date.to_date, date.to_date)
+      .order('employee_working_places.effective_at DESC')
+  end)
+
+  def self.active_for_employee(employee_id, date)
+    actives_for_employee(employee_id, date).first
+  end
 
   def coordinate?
     %w(city state_code country_code).any? { |attr| send(:"#{attr}?") }

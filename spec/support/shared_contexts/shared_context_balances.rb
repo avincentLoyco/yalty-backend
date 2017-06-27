@@ -30,7 +30,8 @@ RSpec.shared_context 'shared_context_balances' do |settings|
       let!(:previous_add) do
         create(:employee_balance_manual,
           resource_amount: 1000, effective_at: previous.first, employee: employee,
-          time_off_category: category, validity_date: previous.last - 1.day
+          time_off_category: category,
+          validity_date: previous.last + Employee::Balance::REMOVAL_OFFSET
         )
       end
 
@@ -44,14 +45,15 @@ RSpec.shared_context 'shared_context_balances' do |settings|
       let!(:previous_removal) do
         create(:employee_balance_manual,
           resource_amount: -900, employee: employee, time_off_category: category,
-          balance_credit_additions: [previous_add], effective_at: previous.last - 1.day
+          balance_credit_additions: [previous_add], balance_type: 'removal',
+          effective_at: previous.last + Employee::Balance::REMOVAL_OFFSET
         )
       end
 
     else
       let!(:previous_add) do
         create(:employee_balance_manual,
-          resource_amount: 1000, effective_at: previous.first,
+          resource_amount: 1000, effective_at: previous.first + Employee::Balance::ADDITION_OFFSET,
           employee: employee, time_off_category: category
         )
       end
@@ -59,7 +61,8 @@ RSpec.shared_context 'shared_context_balances' do |settings|
       let!(:previous_balance) do
         create(:employee_balance_manual,
           resource_amount: -900, employee: employee, time_off_category: category,
-          effective_at: previous.last - 1.day
+          effective_at: previous.last + Employee::Balance::END_OF_PERIOD_OFFSET,
+          balance_type: 'end_of_period'
         )
       end
     end
@@ -67,15 +70,16 @@ RSpec.shared_context 'shared_context_balances' do |settings|
   else
     let!(:previous_balance) do
       create(:employee_balance_manual,
-        effective_at: previous.first, resource_amount: -1000,
-        employee: employee, time_off_category: category
+        effective_at: previous.first + Employee::Balance::END_OF_PERIOD_OFFSET, resource_amount: -1000,
+        employee: employee, time_off_category: category, balance_type: 'end_of_period'
       )
     end
 
     let!(:previous_removal) do
       create(:employee_balance_manual,
-        effective_at: previous.last - 1.day, resource_amount: -500, employee: employee,
-        time_off_category: category
+        effective_at: previous.last + Employee::Balance::END_OF_PERIOD_OFFSET,
+        resource_amount: -500, employee: employee,
+        time_off_category: category, balance_type: 'end_of_period'
       )
     end
   end
@@ -85,7 +89,8 @@ RSpec.shared_context 'shared_context_balances' do |settings|
     let!(:balance_add) do
       create(:employee_balance_manual,
         resource_amount: 1000, employee: employee, time_off_category: category,
-        effective_at: current.first, validity_date: current.last, policy_credit_addition: true
+        effective_at: current.first + Employee::Balance::ADDITION_OFFSET,
+        validity_date: current.last + Employee::Balance::REMOVAL_OFFSET, balance_type: 'addition'
       )
     end
   else
@@ -93,14 +98,16 @@ RSpec.shared_context 'shared_context_balances' do |settings|
       let!(:balance_add) do
         create(:employee_balance_manual,
           resource_amount: 1500, employee: employee, time_off_category: category,
-          effective_at: current.first, policy_credit_addition: true
+          effective_at: current.first + Employee::Balance::ADDITION_OFFSET,
+          balance_type: 'addition'
         )
       end
     else
       let!(:balance_add) do
         create(:employee_balance_manual,
           resource_amount: 1000, employee: employee, time_off_category: category,
-          effective_at: current.first, policy_credit_addition: true
+          effective_at: current.first + Employee::Balance::ADDITION_OFFSET,
+          balance_type: 'addition'
         )
       end
     end
@@ -109,7 +116,7 @@ RSpec.shared_context 'shared_context_balances' do |settings|
   let!(:balance) do
     create(:employee_balance_manual, :with_time_off,
       resource_amount: -500, employee: employee, time_off_category: category,
-      effective_at: current.last - 1.day
+      effective_at: current.last
     )
   end
 end

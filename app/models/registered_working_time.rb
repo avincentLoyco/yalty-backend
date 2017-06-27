@@ -129,8 +129,4 @@ class RegisteredWorkingTime < ActiveRecord::Base
   def ends_at_date?(time_off)
     time_off.end_time.to_date == date
   end
-
-  def date_in_time_off_range?(time_off)
-    ((time_off.start_time.to_date + 1.day)...time_off.end_time.to_date).cover?(date)
-  end
 end

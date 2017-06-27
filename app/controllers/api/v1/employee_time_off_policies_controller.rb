@@ -50,8 +50,8 @@ module API
       def destroy
         authorize! :destroy, resource
         transactions do
-          destroy_join_tables_with_duplicated_resources
           resource.destroy!
+          destroy_join_tables_with_duplicated_resources
           clear_respective_reset_join_tables(
             resource.employee, resource.effective_at, resource.time_off_category
           )

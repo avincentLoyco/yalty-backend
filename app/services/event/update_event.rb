@@ -28,13 +28,12 @@ class UpdateEvent
 
   def handle_contract_end
     return unless event.event_type.eql?('contract_end') && old_effective_at != event.effective_at
-    tables = %w(employee_time_off_policies employee_presence_policies employee_working_places)
     reset_effective_at = old_effective_at + 1.day
-    tables.each do |table_name|
+    Employee::RESOURCE_JOIN_TABLES.each do |table_name|
       event.employee.send(table_name).with_reset.where(effective_at: reset_effective_at).delete_all
       next unless table_name.eql?('employee_time_off_policies')
       event.employee.employee_balances.where(
-        'effective_at::date = ? AND reset_balance = true', reset_effective_at
+        'effective_at::date = ? AND balance_type = ?', reset_effective_at, 'reset'
       ).delete_all
     end
     HandleContractEnd.new(employee, event.effective_at, reset_effective_at).call
@@ -135,15 +134,7 @@ class UpdateEvent
   def save!
     if unique_attribute_versions? && attribute_version_valid?
       employee.save!
-      if event.event_type.eql?('hired') && event.effective_at.to_date < event.effective_at_was
-        event.save!
-        update_assignations_and_balances
-        create_policy_additions_and_removals
-      else
-        update_assignations_and_balances
-        event.save!
-        update_balances
-      end
+      update_event_and_assignations
       event.employee_attribute_versions.each(&:save!)
       event
     else
@@ -155,10 +146,33 @@ class UpdateEvent
     end
   end
 
+  def update_event_and_assignations
+    return event.save! unless event.event_type.eql?('hired')
+    if event.effective_at.to_date < old_effective_at
+      event.save!
+      update_assignations_and_balances
+      create_policy_additions_and_removals
+    else
+      update_assignations_and_balances
+      event.save!
+      update_contract_end
+    end
+    update_balances
+  end
+
+  def update_contract_end
+    contract_end_for = employee.contract_end_for(old_effective_at)
+    return unless contract_end_for.present? && contract_end_for + 1.day == old_effective_at
+    HandleContractEnd.new(employee, old_effective_at - 1.day, old_effective_at - 1.day).call
+  end
+
   def update_assignations_and_balances
     return unless updated_assignations.present?
     updated_assignations[:join_tables].to_a.map(&:save!)
     updated_assignations[:employee_balances].to_a.map(&:save!)
+    updated_assignations[:employee_balances].map do |balance|
+      UpdateEmployeeBalance.new(balance).call
+    end
   end
 
   def create_policy_additions_and_removals
@@ -167,9 +181,8 @@ class UpdateEvent
       updated_assignations[:join_tables].select do |join_table|
         join_table.class.eql?(EmployeeTimeOffPolicy)
       end
-
     employee_time_off_policies.map do |policy|
-      ManageEmployeeBalanceAdditions.new(policy).call
+      ManageEmployeeBalanceAdditions.new(policy, false).call
     end
   end
 
@@ -190,7 +203,9 @@ class UpdateEvent
     return unless updated_assignations[:employee_balances].present?
     updated_assignations[:employee_balances].map do |balance|
       PrepareEmployeeBalancesToUpdate.new(balance, update_all: true).call
-      UpdateBalanceJob.perform_later(balance, update_all: true)
+      ActiveRecord::Base.after_transaction do
+        UpdateBalanceJob.perform_later(balance.id, update_all: true)
+      end
     end
   end
 end

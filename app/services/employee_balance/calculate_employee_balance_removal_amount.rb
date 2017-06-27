@@ -7,9 +7,9 @@ class CalculateEmployeeBalanceRemovalAmount
   end
 
   def call
-    return 0 unless removal.reset_balance || (removal.present? && additions.present?) ||
-        (removal.policy_credit_addition && removal.time_off_policy.counter?)
-    if active_time_off_policy.counter? || removal.reset_balance
+    return 0 unless removal.balance_type.eql?('reset') || additions.present? ||
+        (removal.balance_type.eql?('addition') && removal.time_off_policy.counter?)
+    if active_time_off_policy.counter? || removal.balance_type.eql?('reset')
       calculate_amount_for_counter
     else
       calculate_amount_for_balancer
@@ -28,10 +28,7 @@ class CalculateEmployeeBalanceRemovalAmount
 
   def calculate_amount_for_balancer
     amount = amount_from_previous_balances
-    if removal.manual_amount != 0 && removal.effective_at == removal.validity_date
-      amount -= removal.manual_amount
-    end
-
+    amount -= removal.manual_amount if removal.manual_amount != 0
     amount
   end
 
@@ -47,8 +44,7 @@ class CalculateEmployeeBalanceRemovalAmount
   end
 
   def sum
-    amount_to_expire -
-      (previous_balance - positive_amounts - amount_difference + time_off_in_period_end_amount)
+    amount_to_expire - (previous_balance - positive_amounts + time_off_in_period_end_amount)
   end
 
   def positive_amounts
@@ -64,7 +60,7 @@ class CalculateEmployeeBalanceRemovalAmount
 
   def time_off_in_period_end_amount
     return 0 unless time_off_in_period_end.present?
-    end_of_removal_day = (removal.effective_at + 1.day).beginning_of_day
+    end_of_removal_day = removal.effective_at.beginning_of_day
     end_time =
       if time_off_in_period_end.end_time < end_of_removal_day
         time_off_in_period_end.end_time
@@ -111,7 +107,7 @@ class CalculateEmployeeBalanceRemovalAmount
 
   def balances_in_removal_period
     Employee::Balance
-      .employee_balances(removal.employee_id, removal.time_off_category_id)
+      .for_employee_and_category(removal.employee_id, removal.time_off_category_id)
       .where('effective_at BETWEEN ? AND ? AND id != ?',
         first_addition.effective_at,
         removal.effective_at,

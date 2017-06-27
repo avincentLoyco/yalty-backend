@@ -50,6 +50,30 @@ RSpec.describe CreateEvent do
       it { expect(subject.effective_at).to eq effective_at }
       it { expect(subject.employee_attribute_versions.first.data.line).to eq value }
 
+      context 'and this is contract end event' do
+        let(:event_type) { 'contract_end' }
+        let(:category) { create(:time_off_category, account: employee.account) }
+        let!(:etop) do
+          create(:employee_time_off_policy,
+            employee: employee, effective_at: 2.weeks.ago,
+            time_off_policy: create(:time_off_policy, time_off_category: category))
+        end
+        let!(:time_off) do
+          create(:time_off,
+            start_time: effective_at - 1.week, end_time: effective_at + 8.hours,
+            employee: employee, time_off_category: etop.time_off_category)
+        end
+
+        it { expect { subject }.to change { Employee::Event.count } }
+        it { expect { subject }.to change { EmployeeTimeOffPolicy.with_reset.count }.by(1) }
+        it do
+          expect { subject }
+            .to change { Employee::Balance.where(balance_type: 'reset').count }.by(1)
+        end
+        it { expect { subject }.to_not change { time_off.reload.end_time } }
+        it { expect { subject }.to_not change { time_off.reload.employee_balance.effective_at } }
+      end
+
       context 'and nested attribute send' do
         let!(:child_definition) do
           create(:employee_attribute_definition,

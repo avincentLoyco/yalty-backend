@@ -58,14 +58,23 @@ class API::ApplicationController < ApplicationController
   def destroy_join_tables_with_duplicated_resources
     employee_collection = resource.employee.send(resource.class.model_name.plural)
     related_resource = resource.send(resource.class.model_name.element.gsub('employee_', ''))
-
-    FindSequenceJoinTableInTime.new(
-      employee_collection, nil, related_resource, resource
-    ).call.map(&:destroy!)
+    contract_end = resource.employee.contract_end_for(resource.effective_at)
+    if contract_end.eql?(resource.effective_at - 1.day)
+      HandleContractEnd.new(resource.employee, contract_end).call
+    else
+      duplicated = FindSequenceJoinTableInTime.new(
+        employee_collection, nil, related_resource, resource
+      ).call
+      return duplicated.map(&:destroy!) unless related_resource.class.eql?(TimeOffPolicy)
+      duplicated.map(&:policy_assignation_balance).compact.map(&:destroy!)
+      duplicated.map(&:destroy!)
+    end
   end
 
-  def clear_respective_reset_join_tables(employee, effective_at, time_off_category = nil)
-    ClearResetJoinTables.new(employee, effective_at, time_off_category).call
+  def clear_respective_reset_join_tables(employee, effective_at, time_off_category = nil,
+    contract_end_destroy = nil)
+
+    ClearResetJoinTables.new(employee, effective_at, time_off_category, contract_end_destroy).call
   end
 
   def resources_with_effective_till(join_table, join_table_id, related_id = nil, employee_id = nil)

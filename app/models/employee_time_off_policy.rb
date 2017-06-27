@@ -20,6 +20,18 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
 
   scope :not_assigned_at, ->(date) { where(['effective_at > ?', date]) }
   scope :assigned_at, ->(date) { where(['effective_at <= ?', date]) }
+  scope :assigned_since, ->(date) { where('effective_at >= ?', date) }
+  scope(:active_at, lambda do |date|
+    where("
+      employee_time_off_policies.effective_at BETWEEN (
+        SELECT employee_events.effective_at FROM employee_events
+	      WHERE employee_events.employee_id = employee_time_off_policies.employee_id
+        AND employee_events.effective_at <= ?::date
+	      AND employee_events.event_type = 'hired'
+	      ORDER BY employee_events.effective_at DESC LIMIT 1
+      ) AND ?::date", date.to_date, date.to_date)
+  end)
+
   scope :by_employee_in_category, lambda { |employee_id, category_id|
     joins(:time_off_policy)
       .where(time_off_policies: { time_off_category_id: category_id }, employee_id: employee_id)
@@ -37,9 +49,9 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
   def policy_assignation_balance(effective_at = self.effective_at)
     balance_effective_at =
       if related_resource.reset?
-        effective_at + Employee::Balance::REMOVAL_OFFSET
+        effective_at + Employee::Balance::RESET_OFFSET
       else
-        effective_at + Employee::Balance::START_DATE_OR_ASSIGNATION_OFFSET
+        effective_at + Employee::Balance::ASSIGNATION_OFFSET
       end
 
     employee
@@ -54,10 +66,10 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
 
   def employee_balances
     if effective_till
-      Employee::Balance.employee_balances(employee.id, time_off_category.id)
+      Employee::Balance.for_employee_and_category(employee.id, time_off_category.id)
                        .where('effective_at BETWEEN ? and ?', effective_at, effective_till)
     else
-      Employee::Balance.employee_balances(employee.id, time_off_category.id)
+      Employee::Balance.for_employee_and_category(employee.id, time_off_category.id)
                        .where('effective_at >= ?', effective_at)
     end
   end
