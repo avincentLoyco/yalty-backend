@@ -5,7 +5,7 @@ RSpec.describe CompanyEventsMailer, type: :mailer do
     ENV['YALTY_ACCESS_EMAIL'] = 'yalty@access.com'
   end
 
-  let(:account)        { create(:account, yalty_access: true) }
+  let(:account)        { create(:account, company_name: 'Wayne', yalty_access: true) }
 
   let(:title)          { 'Batman is Bruce Wayne' }
   let!(:event)         { create(:company_event, account: account, title: title) }
