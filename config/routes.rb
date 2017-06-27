@@ -17,6 +17,7 @@ Rails.application.routes.draw do
         get '/employees', to: "employee_working_places#index"
       end
       resource :export, only: [:create, :show]
+      resource :service_offer, only: [:create]
       resources :available_modules, only: [:index, :update]
       resources :employee_working_places, only: [:update, :destroy]
       resources :employee_time_off_policies, only: [:update, :destroy]
