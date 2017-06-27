@@ -1,4 +1,55 @@
 en:
+  services:
+    header:
+      name: Service name
+      options: Options
+      onetime_cost: One time cost
+      recuring_cost: Recuring cost
+    sections:
+      employee-administration: Employee administration
+      enterprise-administration: Enterprise administration
+      marketing-communication: Marketing communication
+      it: IT
+      logistics: Logistics
+    names:
+      payroll-outsourcing: Payroll outsourcing
+      hr-administration: HR administration
+      sickness-accident-mgmt: Sickess and accident managment
+      accounting: Accounting
+      taxation: Taxation
+      enterprise-creation: Enterprise creation
+      hr-consulting: HR consulting
+      website-creation: Website creation
+      social-networks: Social networks
+      creative-content-creation: Creative content creation
+      marketing-campaign: Marketing campaign
+      promotional-movie: Promotional movie
+      it-consulting: IT consulting
+      logistics-support: Logisitcs support
+    options:
+      num-of-employees: "Number of employees: %{value}"
+      from-when: "From: %{value}"
+      num-of-accounting-pieces: "Number of accounting pieces: %{value}"
+      num-of-intermediate-closing: "Number of intermediate closing: %{value}"
+      handle-tax-declaration: "handle tax declaration: %{value}"
+      hours-of-consulting: "Hours of consulting: %{value}"
+      juridic-form: "Juridic form: %{value}"
+      num-of-hours: "Number of hours: %{value}"
+      num-of-pages: "Number of pages: %{value}"
+      photo-shooting: "Photo shooting: %{value}"
+      network-list: "Network list: %{value}"
+      animate: "Animate: %{value}"
+      num-of-logos: "Number of logos: %{value}"
+      num-of-material-packages: "Number of material pacakges: %{value}"
+      num-of-photo-shooting: "Number of photo shooting: %{value}"
+      num-of-email-campaigns: "Number of email campaigns: %{value}"
+      num-of-social-network-campaigns: "Number of social network campaigns: %{value}"
+      minutes-of-promotional-video: "Minutes of promotional video: %{value}"
+      minutes-of-video-reportage: "Minutes of video reportage: %{value}"
+      num-of-voiceover-packages: "Number of of voiceover packages: %{value}"
+  service_request_mailer:
+    quote_request:
+      subject: A service request from yalty
   user_mailer:
     account_creation_confirmation:
       subject: Welcome to yalty

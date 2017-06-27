@@ -267,6 +267,37 @@ RSpec.describe Employee, type: :model do
       end
     end
 
+    context '#fullname' do
+      let(:hired_event) { employee.events.find_by(event_type: 'hired') }
+      let(:firstname) { 'John' }
+      let(:lastname) { 'Doe' }
+
+      before do
+        Account::DEFAULT_ATTRIBUTE_DEFINITIONS.each do |attr|
+          next unless %w(firstname lastname).include?(attr[:name])
+
+          create(:employee_attribute_definition,
+            account: employee.account,
+            name: attr[:name],
+            attribute_type: attr[:type],
+            system: true,
+            multiple: false,
+            validation: attr[:validation]
+          )
+
+          value = build(:employee_attribute_version,
+            event: hired_event,
+            employee: employee,
+            attribute_name: attr[:name]
+          )
+          value.value = send(attr[:name].to_sym)
+          value.save!
+        end
+      end
+
+      it { expect(employee.fullname).to eq 'John Doe' }
+    end
+
     context '#hired_date' do
       include_context 'shared_context_timecop_helper'
       let(:employee) { create(:employee, hired_at: hired_at, contract_end_at: contract_end_at) }

@@ -1,0 +1,33 @@
+<html>
+  <body>
+    <ul>
+      <li>Company: <%= account.company_name %></ul>
+    <li>ID: <%= account.id %></ul>
+    <li>URL: <%= subdomain_url_for(account) %></ul>
+    <li>Language: <%= t(account.default_locale, scope: 'locale') %></ul>
+    <li>Request by: <%= user.employee.fullname %> (<%= user.email %>)</ul>
+    </ul>
+
+    <table>
+      <tr>
+        <th><%= t('services.header.name') %></th>
+        <th><%= t('services.header.options') %></th>
+        <th><%= t('services.header.onetime_cost') %></th>
+        <th><%= t('services.header.recuring_cost') %></th>
+      </tr>
+      <% services[:data].each_key do |section| %>
+        <tr>
+          <td colspan="4"><%= t(section, scope: 'services.sections') %></td>
+        </tr>
+        <% services[:data][section].select { |k, data| data[:toggle] }.each do |service, data| %>
+          <tr>
+            <td><%= t(service, scope: '.services.names') %></td>
+            <td><%= options_for_service(data).map { |k, v| t(k, scope: 'services.options', value: v.is_a?(Array) ? v.join(', '): v) }.join('; ') %></td>
+            <td><%= data[:meta][:onetime] %></td>
+            <td><%= data[:meta][:recurring] %></td>
+          </tr>
+        <% end %>
+      <% end %>
+    </table>
+  </body>
+</html>
