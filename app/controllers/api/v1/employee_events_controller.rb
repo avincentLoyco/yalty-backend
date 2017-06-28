@@ -74,26 +74,6 @@ module API
 
         raise InvalidResourcesError.new(nil, result_errors) unless result_errors.blank?
       end
-
-      def verify_rehired_event(event_attributes)
-        hired_or_contract_end = %w(hired contract_end).include?(event_attributes[:event_type])
-        return unless event_attributes[:employee][:id].present? && hired_or_contract_end
-
-        cannot_create_event =
-          InvalidResourcesError.new(nil, error: ["Event can't be at this date"])
-
-        raise cannot_create_event if events_too_close(event_attributes)
-      end
-
-      def events_too_close(event_attributes)
-        em = Account.current.employees.find(event_attributes[:employee][:id])
-        event_type = event_attributes[:event_type]
-        effective_at = event_attributes[:effective_at]
-        date = event_type.eql?('hired') ? effective_at - 1.day : effective_at + 1.day
-        type_to_find = event_type.eql?('hired') ? 'contract_end' : 'hired'
-
-        em.events.where(event_type: type_to_find).where('effective_at = ?', date).exists?
-      end
     end
   end
 end
