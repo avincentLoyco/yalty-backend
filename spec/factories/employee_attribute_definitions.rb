@@ -26,5 +26,13 @@ FactoryGirl.define do
     trait :required_with_nil_allowed do
       validation { { presence: { allow_nil: true } } }
     end
+
+    trait :valid_country_code do
+      validation { { country_code: true } }
+    end
+
+    trait :valid_state_code do
+      validation { { state_code: true } }
+    end
   end
 end
