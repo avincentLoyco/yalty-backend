@@ -3,7 +3,7 @@ class AddBalanceTypeFlagToEmployeeBalance < ActiveRecord::Migration
     add_column :employee_balances, :balance_type, :string
     Rake::Task['assign_types_to_existing_balances:update'].invoke
 
-    change_column :employee_balances, :balance_type, :string, null: false
+    change_column_null :employee_balances, :balance_type, false
 
     remove_column :employee_balances, :reset_balance
     remove_column :employee_balances, :policy_credit_addition
