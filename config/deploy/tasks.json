@@ -1,18 +1,8 @@
 {
   "before_migration": [
+
   ],
   "after_migration": [
-    {
-      "task_name": "employee_events:fix_invalid_contract_end_and_hire_pairs",
-      "description": [
-        "Fix invalid pairs of contract end - hire event"
-      ]
-    },
-    {
-      "task_name": "employee_balance:update_offsets",
-      "description": [
-        "Update balances offsets according to new rules"
-      ]
-    }
+
   ]
 }
