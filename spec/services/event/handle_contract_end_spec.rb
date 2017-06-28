@@ -61,15 +61,13 @@ RSpec.describe HandleContractEnd, type: :service do
     create(:employee_working_place, employee: employee, working_place: working_places.last,
       effective_at: 6.months.from_now)
   end
-
+  let(:start_time) { '2016/2/20' }
+  let(:end_time) { '2016/3/10' }
+  let(:last_time_off) { employee.time_offs.order(:start_time).last }
   let!(:time_offs) do
-    [
-      ['2011/1/1', '2011/1/10'],
-      ['2016/2/20', '2016/3/10'],
-      ['2016/3/15', '2016/3/20']
-    ].map do |dates|
+    [['2011/1/1', '2011/1/10'], [start_time, end_time], ['2016/3/15', '2016/3/20']].map do |dates|
       create(:time_off, employee: employee, time_off_category: time_off_categories.first,
-        start_time: dates[0].to_date, end_time: dates[1].to_date)
+        start_time: dates[0], end_time: dates[1])
     end
   end
 
@@ -91,9 +89,21 @@ RSpec.describe HandleContractEnd, type: :service do
     it { expect(employee.employee_presence_policies).to_not include(epp_after) }
     it { expect(employee.employee_working_places).to_not include(ewp_after) }
     it { expect(employee.time_offs).to_not include(time_offs.last) }
-    it 'moves end_time to contract_end date' do
-      expect(employee.time_offs.order(:start_time).last.end_time)
-        .to eq(Time.zone.parse('2016/03/02'))
+    it { expect(last_time_off.end_time).to eq(Time.zone.parse('2016/03/02')) }
+
+    context 'when time off start at contract end date' do
+      let(:start_time) { Time.zone.parse('2016/03/01') }
+
+      it { expect(last_time_off.start_time).to eq(Time.zone.parse('2016/03/01')) }
+      it { expect(last_time_off.end_time).to eq(Time.zone.parse('2016/03/02')) }
+    end
+
+    context 'when time offs starts and end at contract end' do
+      let(:start_time) { '2016-03-01T08:00:00' }
+      let(:end_time) { '2016-03-01T16:00:00' }
+
+      it { expect(last_time_off.start_time).to eq(Time.zone.parse('2016/03/01, 8:00')) }
+      it { expect(last_time_off.end_time).to eq(Time.zone.parse('2016/03/01, 16:00')) }
     end
   end
 

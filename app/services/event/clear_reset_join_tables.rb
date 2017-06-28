@@ -11,11 +11,18 @@ class ClearResetJoinTables
     return unless @contract_end_date.present?
     reset_presence_policy.destroy! if remove_reset_presence_policy?
     reset_working_place.destroy! if remove_reset_working_place?
-    reset_time_off_policies.map(&:destroy!) if remove_reset_time_off_policy_in_category?
+    destroy_reset_policies if remove_reset_time_off_policy_in_category?
     reset_balances.map(&:destroy!) if @contract_end_destroy
   end
 
   private
+
+  def destroy_reset_policies
+    reset_time_off_policies.map do |policy|
+      reset_time_off_policies.first.policy_assignation_balance.try(:destroy!)
+      policy.destroy!
+    end
+  end
 
   def reset_presence_policy
     @employee.employee_presence_policies.with_reset.find_by(effective_at: @reset_effective_at)
@@ -60,11 +67,14 @@ class ClearResetJoinTables
   end
 
   def remove_reset_time_off_policy_in_category?
-    policies_present =
-      @employee
-      .employee_time_off_policies
-      .not_reset
-      .where('effective_at <= ?', @contract_end_date).empty?
-    reset_time_off_policies.present? && (policies_present || @contract_end_destroy)
+    reset_time_off_policies.present? && (time_off_policies.empty? || @contract_end_destroy)
+  end
+
+  def time_off_policies
+    time_off_policies =
+      @employee.employee_time_off_policies.not_reset.where('effective_at <= ?', @contract_end_date)
+
+    return time_off_policies if @time_off_category.nil?
+    time_off_policies.where(time_off_category: @time_off_category)
   end
 end
