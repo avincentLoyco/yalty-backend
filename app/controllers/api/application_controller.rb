@@ -24,13 +24,13 @@ class API::ApplicationController < ApplicationController
   def authenticate!
     return unless Account.current.nil? || Account::User.current.nil?
     render json:
-      ::Api::V1::ErrorsRepresenter.new(nil, message: 'User unauthorized').complete, status: 401
+      ::Api::V1::ErrorsRepresenter.new(nil, error: ['User unauthorized']).complete, status: 401
   end
 
   def subdomain_access!
     return unless Account.current.nil?
     render json:
-      ::Api::V1::ErrorsRepresenter.new(nil, message: 'User unauthorized').complete, status: 401
+      ::Api::V1::ErrorsRepresenter.new(nil, error: ['User unauthorized']).complete, status: 401
   end
 
   def update_affected_balances(presence_policy, employees = [])
@@ -153,5 +153,10 @@ class API::ApplicationController < ApplicationController
   def render_join_table(resource, status)
     return render_resource(resource, status: status) unless status.eql?(205)
     head :reset_content
+  end
+
+  def verify_if_resource_not_locked!(resource_type, resource_field = 'employees')
+    return unless resource_type.send(resource_field).present?
+    raise generate_locked_error(resource_type.class.name.underscore, resource_field)
   end
 end

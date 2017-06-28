@@ -78,7 +78,7 @@ module API
 
       def check_old_password(attributes)
         return if resource.authenticate(attributes.delete(:old_password))
-        raise InvalidPasswordError.new(resource, message: 'Given Password Invalid')
+        raise InvalidPasswordError.new(resource, messages: ['Given Password Invalid'])
       end
 
       def send_user_invitation

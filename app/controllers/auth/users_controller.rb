@@ -40,6 +40,6 @@ class Auth::UsersController < ApplicationController
   def authenticate_account!
     return unless Account.current.blank?
     render json:
-      ::Api::V1::ErrorsRepresenter.new(nil, message: 'Account unauthorized').complete, status: 401
+      ::Api::V1::ErrorsRepresenter.new(nil, error: ['Account unauthorized']).complete, status: 401
   end
 end

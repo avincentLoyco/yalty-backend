@@ -39,16 +39,12 @@ module API
       end
 
       def destroy
-        return locked_error if resource_locked?
+        verify_if_resource_not_locked!(resource)
         resource.destroy!
         render_no_content
       end
 
       private
-
-      def resource_locked?
-        resource.employees.present?
-      end
 
       def related_params(attributes)
         related = {}

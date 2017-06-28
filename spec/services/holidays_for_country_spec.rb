@@ -80,19 +80,19 @@ RSpec.describe HolidaysForCountry, type: :service do
       context 'with region param given for a country without regions' do
         let(:country) { 'pl' }
 
-        it { expect { subject }.to raise_error('Invalid param value') }
+        it { expect { subject }.to raise_error(API::V1::Exceptions::CustomError) }
       end
 
       context 'with invalid region' do
         let(:region) { 'vp' }
 
-        it { expect { subject }.to raise_error('Invalid param value') }
+        it { expect { subject }.to raise_error(API::V1::Exceptions::CustomError) }
       end
 
       context 'with invalid filter' do
         let(:filter) { 'incoming' }
 
-        it { expect { subject }.to raise_error('Invalid param value') }
+        it { expect { subject }.to raise_error(API::V1::Exceptions::CustomError) }
       end
     end
   end

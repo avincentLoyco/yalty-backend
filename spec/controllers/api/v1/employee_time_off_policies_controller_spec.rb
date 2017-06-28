@@ -1044,7 +1044,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
             subject
 
             expect(response.body).to include(
-              "Can 't change if there are time offs after and there is no previous policy"
+              "Can't change if there are time offs after and there is no previous policy"
             )
           end
         end
@@ -1203,7 +1203,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
             subject
 
             expect(response.body).to include(
-              'Can \'t remove if there are time offs after and there is no previous policy'
+              'Can\'t remove if there are time offs after and there is no previous policy'
             )
           end
         end

@@ -34,7 +34,7 @@ module API
           resource.destroy!
           render_no_content
         else
-          locked_error
+          render_locked_error(controller_name, 'employee_attributes')
         end
       end
 

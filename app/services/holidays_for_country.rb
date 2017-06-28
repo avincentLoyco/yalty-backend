@@ -60,6 +60,12 @@ class HolidaysForCountry
 
   def check_params
     return if valid_params?
-    raise InvalidParamTypeError.new(country, 'Invalid param value')
+    raise(
+      CustomError,
+      type: 'holiday',
+      field: 'country',
+      messages: ['Invalid param value'],
+      codes: ['country.invalid_param_value']
+    )
   end
 end

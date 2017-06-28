@@ -23,14 +23,24 @@ module API
 
       def version_doesnt_exist!(version, file_id)
         return unless version.present? && !GenericFile.find(file_id).file.exists?(version)
-        message = { version: 'Requested version of the file does not exist' }
-        raise InvalidParamTypeError.new(version, message)
+        raise(
+          CustomError,
+          type: controller_name,
+          field: 'version',
+          messages: ['Requested version of the file does not exist'],
+          codes: ['version.requested_version_of_the_file_does_not_exist']
+        )
       end
 
       def wrong_duration!(attr_version, duration)
         return unless attr_version.present? && incorrect_duration?(attr_version, duration)
-        message = { duration: 'Requested longterm token when not allowed' }
-        raise InvalidParamTypeError.new(attr_version, message)
+        raise(
+          CustomError,
+          type: controller_name,
+          field: 'duration',
+          messages: ['Requested longterm token when not allowed'],
+          codes: ['duration.requested_longterm_token_when_not_allowed']
+        )
       end
 
       def incorrect_duration?(attr_version, duration)

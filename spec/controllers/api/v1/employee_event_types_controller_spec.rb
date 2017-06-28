@@ -54,7 +54,6 @@ RSpec.describe API::V1::EmployeeEventTypesController, type: :controller  do
 
       context 'response body' do
         before { subject }
-
         it { expect(response.body).to include('Event Type Not Found') }
       end
     end
