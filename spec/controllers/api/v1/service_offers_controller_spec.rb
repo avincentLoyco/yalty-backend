@@ -1,11 +1,13 @@
-require "rails_helper"
+require 'rails_helper'
 
-RSpec.describe ServiceRequestMailer, type: :mailer do
+RSpec.describe API::V1::ServiceOffersController, type: :controller do
+  include_context 'shared_context_headers'
+
   before do
     ENV['YALTY_SERVICE_EMAIL'] = 'yalty@service.com'
   end
 
-  let(:services_payload) do
+  let(:params) do
     {
       "data": {
         "employee-administration": {
@@ -143,7 +145,7 @@ RSpec.describe ServiceRequestMailer, type: :mailer do
         }
       },
       "meta": {
-        "action": "book-now",
+        "action": service_action,
         "costs": {
           "recurring": 1720.5,
           "onetime": 28867.5
@@ -152,43 +154,23 @@ RSpec.describe ServiceRequestMailer, type: :mailer do
     }.with_indifferent_access
   end
 
-  context '#quote_request' do
-    let(:account) { create(:account, yalty_access: true, default_locale: 'en') }
-    let(:requester) do
-      user = create(:account_user, account: account)
-      allow(user.employee).to receive(:fullname).and_return('John Doe')
-      user
+  describe 'POST #create' do
+    subject { post :create, params }
+
+    context 'with book-now action' do
+      let(:service_action) { 'book-now' }
+
+      it { is_expected.to have_http_status(204) }
+      it { expect(ServiceRequestMailer).to receive(:book_request); subject }
+      it { expect { subject }.to change(ActionMailer::Base.deliveries, :count) }
     end
 
-    subject { ServiceRequestMailer.quote_request(account, requester, services_payload).deliver_now }
+    context 'with send-quote action' do
+      let(:service_action) { 'send-quote' }
 
-    it { expect { subject }.to change { ActionMailer::Base.deliveries.count } }
-    it { expect(subject.to).to include('yalty@service.com') }
-    it { expect(subject.body.to_s).to include(account.company_name) }
-    it { expect(subject.body.to_s).to include(account.id) }
-    it { expect(subject.body.to_s).to include("#{account.subdomain}.#{ENV['YALTY_APP_DOMAIN']}") }
-    it { expect(subject.body.to_s).to include(requester.email) }
-    it { expect(subject.body.to_s).to include('John Doe') }
-    it { expect(subject.body.to_s).to include('Employee administration') }
-  end
-
-  context '#book_request' do
-    let(:account) { create(:account, yalty_access: true, default_locale: 'en') }
-    let(:requester) do
-      user = create(:account_user, account: account)
-      allow(user.employee).to receive(:fullname).and_return('John Doe')
-      user
+      it { is_expected.to have_http_status(204) }
+      it { expect(ServiceRequestMailer).to receive(:quote_request); subject }
+      it { expect { subject }.to change(ActionMailer::Base.deliveries, :count) }
     end
-
-    subject { ServiceRequestMailer.book_request(account, requester, services_payload).deliver_now }
-
-    it { expect { subject }.to change { ActionMailer::Base.deliveries.count } }
-    it { expect(subject.to).to include('yalty@service.com') }
-    it { expect(subject.body.to_s).to include(account.company_name) }
-    it { expect(subject.body.to_s).to include(account.id) }
-    it { expect(subject.body.to_s).to include("#{account.subdomain}.#{ENV['YALTY_APP_DOMAIN']}") }
-    it { expect(subject.body.to_s).to include(requester.email) }
-    it { expect(subject.body.to_s).to include('John Doe') }
-    it { expect(subject.body.to_s).to include('Employee administration') }
   end
 end

@@ -1,6 +1,27 @@
 en:
   services:
+    book-now:
+      title: The company book theses services
+    send-quote:
+      title: The company request a quote for theses services
+    resume:
+      title: Total
+      onetime_cost: "One time cost: %{value}"
+      recuring_cost: "Recuring cost: %{value}"
+    company_info:
+      request_by: "Request by %{fullname} (%{email})"
+      phone: "Phone: %{phone}"
+      company_name: "Company: %{company_name} (%{id})"
+      url: "URL: %{url}"
+      address: "Address:<br/>
+      %{company_name}<br/>
+      %{address_1}<br/>
+      %{address_2}<br/>
+      %{postalcode} %{city}<br/>
+      %{country}
+      "
     header:
+      title: Services
       name: Service name
       options: Options
       onetime_cost: One time cost

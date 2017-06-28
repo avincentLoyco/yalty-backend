@@ -1,0 +1,28 @@
+<h2><%= t('services.header.title') %></h2>
+<table>
+  <tr>
+    <th><%= t('services.header.name') %></th>
+    <th><%= t('services.header.options') %></th>
+    <th><%= t('services.header.onetime_cost') %></th>
+    <th><%= t('services.header.recuring_cost') %></th>
+  </tr>
+  <% services[:data].each_key do |section| %>
+    <tr>
+      <td colspan="4"><%= t(section, scope: 'services.sections') %></td>
+    </tr>
+    <% services[:data][section].select { |k, data| data[:toggle] }.each do |service, data| %>
+      <tr>
+        <td><%= t(service, scope: '.services.names') %></td>
+        <td><%= options_for_service(data).map { |k, v| t(k, scope: 'services.options', value: v.is_a?(Array) ? v.join(', '): v) }.join('; ') %></td>
+        <td><%= data[:meta][:onetime] %></td>
+        <td><%= data[:meta][:recurring] %></td>
+      </tr>
+    <% end %>
+  <% end %>
+</table>
+
+<h3><%= t('services.resume.title') %></h3>
+<ul>
+  <li><%= t('services.resume.onetime_cost', value: services[:meta][:costs][:onetime]) %></li>
+  <li><%= t('services.resume.onetime_cost', value: services[:meta][:costs][:recurring]) %></li>
+</ul>

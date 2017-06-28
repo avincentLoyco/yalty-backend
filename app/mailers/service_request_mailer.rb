@@ -6,7 +6,17 @@ class ServiceRequestMailer < ApplicationMailer
     @user = user
     @services = services
 
-    I18n.with_locale(@account.default_locale) do
+    I18n.with_locale(@user.locale || @account.default_locale) do
+      mail to: ENV['YALTY_SERVICE_EMAIL']
+    end
+  end
+
+  def book_request(account, user, services)
+    @account = account
+    @user = user
+    @services = services
+
+    I18n.with_locale(@user.locale || @account.default_locale) do
       mail to: ENV['YALTY_SERVICE_EMAIL']
     end
   end
