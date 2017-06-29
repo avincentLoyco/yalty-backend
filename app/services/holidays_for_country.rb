@@ -16,6 +16,7 @@ class HolidaysForCountry
   private
 
   def calculate_holiday
+    return { holidays: [], region: [] } if HolidayPolicy::COUNTRIES.exclude?(country_code)
     regions_holidays = {}
     holidays = []
     filtered_holidays.each do |holiday|
