@@ -3,7 +3,7 @@ class Account < ActiveRecord::Base
   include AccountIntercomData
   include StripeHelpers
 
-  serialize :invoice_company_info, Payments::CompanyInformation
+  serialize :company_information, Payments::CompanyInformation
   serialize :available_modules, Payments::AvailableModules
 
   validates :subdomain,

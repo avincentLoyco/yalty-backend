@@ -20,7 +20,7 @@ FactoryGirl.define do
     end
 
     trait :with_billing_information do
-      invoice_company_info {
+      company_information {
         {
           company_name: Faker::Company.name,
           address_2: Faker::Name.name,
@@ -28,7 +28,8 @@ FactoryGirl.define do
           country: Faker::Address.country,
           postalcode: Faker::Address.postcode,
           region: Faker::Address.country_code,
-          address_1: "#{Faker::Address.building_number} #{Faker::Address.street_name}"
+          address_1: "#{Faker::Address.building_number} #{Faker::Address.street_name}",
+          phone: Faker::PhoneNumber.phone_number
         }
       }
       invoice_emails [ Faker::Internet.email, Faker::Internet.email ]

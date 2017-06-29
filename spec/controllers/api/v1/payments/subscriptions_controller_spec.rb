@@ -108,13 +108,14 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
         },
         billing_information: {
           company_information: {
-            company_name: account.invoice_company_info.company_name,
-            address_1: account.invoice_company_info.address_1,
-            address_2: account.invoice_company_info.address_2,
-            city: account.invoice_company_info.city,
-            postalcode: account.invoice_company_info.postalcode,
-            country: account.invoice_company_info.country,
-            region: account.invoice_company_info.region
+            company_name: account.company_information.company_name,
+            address_1: account.company_information.address_1,
+            address_2: account.company_information.address_2,
+            city: account.company_information.city,
+            postalcode: account.company_information.postalcode,
+            country: account.company_information.country,
+            region: account.company_information.region,
+            phone: account.company_information.phone
           },
           emails: account.invoice_emails
         }
@@ -195,13 +196,13 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
   end
 
   describe '#PUT /v1/payments/subscription/settings' do
-    let(:params) {{ company_information: invoice_company_info, emails: invoice_emails }}
+    let(:params) {{ company_information: company_information, emails: invoice_emails }}
     let(:invoice_emails) { ['bruce@wayne.com'] }
-    let(:invoice_company_info) do
-      attributes_for(:account, :with_billing_information)[:invoice_company_info]
+    let(:company_information) do
+      attributes_for(:account, :with_billing_information)[:company_information]
     end
     let(:invoice_empty_company_info) do
-      info = attributes_for(:account, :with_billing_information)[:invoice_company_info]
+      info = attributes_for(:account, :with_billing_information)[:company_information]
       info.each { |k, _| info[k] = nil }
       info
     end
@@ -209,15 +210,15 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
     subject(:update_settings) { put :settings, params }
 
     context 'update all settings' do\
-      it { expect { update_settings }.to change { account.invoice_company_info } }
+      it { expect { update_settings }.to change { account.company_information } }
       it { expect { update_settings }.to change { account.invoice_emails } }
 
       context 'settings are valid' do
         before { update_settings }
 
-        it 'invoice_company_info is valid' do
-          invoice_company_info.keys.each do |key|
-            expect(account.invoice_company_info[key]).to eq(invoice_company_info[key])
+        it 'company_information is valid' do
+          company_information.keys.each do |key|
+            expect(account.company_information[key]).to eq(company_information[key])
           end
         end
         it { expect(account.invoice_emails).to eq(invoice_emails) }
@@ -225,9 +226,9 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
     end
 
     context 'update only company_information' do
-      let(:params) {{ company_information: invoice_company_info }}
+      let(:params) {{ company_information: company_information }}
 
-      it { expect { update_settings }.to     change { account.invoice_company_info } }
+      it { expect { update_settings }.to     change { account.company_information } }
       it { expect { update_settings }.to_not change { account.invoice_emails } }
     end
 
@@ -236,7 +237,7 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
 
       before { account.update!(invoice_emails: ["fake"]) }
 
-      it { expect { update_settings }.to_not change { account.invoice_company_info } }
+      it { expect { update_settings }.to_not change { account.company_information } }
       it { expect { update_settings }.to     change { account.invoice_emails } }
 
       shared_examples 'wrong parameter' do |error_message|
@@ -272,22 +273,22 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
 
     context 'empty params clear settings' do
       before do
-        account.update(invoice_company_info: invoice_company_info, invoice_emails: invoice_emails)
+        account.update(company_information: company_information, invoice_emails: invoice_emails)
       end
 
       let(:params) {{ company_information: invoice_empty_company_info, emails: [] }}
 
-      it { expect { update_settings }.to change { account.invoice_company_info } }
+      it { expect { update_settings }.to change { account.company_information } }
       it { expect { update_settings }.to change { account.invoice_emails } }
 
       context 'settings are empty' do
         before { update_settings }
 
-        it 'invoice_company_info is valid' do
-          expect(account.invoice_company_info).to be_a(Payments::CompanyInformation)
+        it 'company_information is valid' do
+          expect(account.company_information).to be_a(Payments::CompanyInformation)
 
-          invoice_company_info.keys.each do |key|
-            expect(account.invoice_company_info[key]).to eq(nil)
+          company_information.keys.each do |key|
+            expect(account.company_information[key]).to eq(nil)
           end
         end
         it { expect(account.invoice_emails).to be_an(Array) }
@@ -304,7 +305,7 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
       it { expect(response.status).to eq(422) }
       it { expect(params_error['field']).to eq('company_information') }
       it 'returns missing params' do
-        invoice_company_info.except(:address_2).each_key do |key|
+        company_information.except(:address_2).each_key do |key|
           expect(params_error['messages'][key.to_s]).to eq(['is missing'])
         end
       end

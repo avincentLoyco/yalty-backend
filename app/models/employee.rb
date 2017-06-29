@@ -120,6 +120,17 @@ class Employee < ActiveRecord::Base
     end
   end
 
+  def fullname
+    attributes =
+      employee_attributes
+      .joins(:attribute_definition)
+      .where('employee_attribute_definitions.name IN (?)', %w(firstname lastname))
+      .map { |attr| [attr.attribute_name.to_sym, attr.value] }
+      .to_h
+
+    "#{attributes[:firstname]} #{attributes[:lastname]}"
+  end
+
   def civil_status_for(date = Time.zone.today)
     civil_status_event = last_civil_status_event_for(date)
     return 'single' unless civil_status_event
