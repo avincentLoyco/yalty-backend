@@ -4,19 +4,16 @@ module Import
 
     def perform
       return unless ::Import::ImportAndAssignPayslips.enable?
-      Account.where(id: accounts_ids).find_each do |account|
-        ::Import::ImportPayslipsJob.perform_later(account)
+
+      Net::SFTP.start(
+        ENV['LOYCO_SSH_HOST'],
+        ENV['LOYCO_SSH_USER'],
+        keys: [ENV['LOYCO_SSH_KEY_PATH']]
+      ) do |sftp|
+        sftp.dir.glob("#{ENV['LOYCO_SSH_IMPORT_PAYSLIPS_PATH']}/**/*.pdf") do |payslip_path|
+          ::Import::ImportPayslipsJob.perform_later(payslip_path)
+        end
       end
-    end
-
-    private
-
-    def accounts_ids
-      ActiveRecord::Base.connection.execute("
-        SELECT accounts.id
-        FROM accounts, json_array_elements(accounts.available_modules->'data') data_set
-        WHERE data_set ->> 'id' = 'automatedexport';
-      ").values.flatten
     end
   end
 end

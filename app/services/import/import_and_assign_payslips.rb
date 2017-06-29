@@ -11,7 +11,7 @@ module Import
     end
 
     def call
-      return unless self.enable?
+      return unless enable?
 
       Net::SFTP.start(
         ENV['LOYCO_SSH_HOST'],
@@ -20,16 +20,17 @@ module Import
       ) do |sftp|
         sftp.dir.glob("**/#{payslip_filename}") do |payslip_path|
           sftp.download!(payslip_path, import_path)
+
+          value = attribute_version_values_from(
+            GenericFile.create!(file: File.open(import_path), fileable_type: 'EmployeeFile')
+          )
+
+          return event.employee_attribute_versions.last.update!(value: value) if event.present?
+          create_salary_paid_event(value)
+
           sftp.remove!(payslip_path)
         end
       end
-
-      value = attribute_version_values_from(
-        GenericFile.create!(file: File.open(import_path), fileable_type: 'EmployeeFile')
-      )
-
-      return event.employee_attribute_versions.last.update!(value: value) if event.present?
-      create_salary_paid_event(value)
     end
 
     def self.enable?
@@ -48,10 +49,9 @@ module Import
     private
 
     def create_salary_paid_event(value)
-      definition = employee.account.employee_attribute_definitions.find_by(name: 'salary_slip')
       new_event = employee.events.new(event_type: 'salary_paid', effective_at: import_date)
       version = Employee::AttributeVersion.new(
-        employee: employee, value: value, attribute_definition: definition
+        employee: employee, account: employee.account, value: value, attribute_name: 'salary_slip'
       )
       new_event.employee_attribute_versions = [version]
       new_event.save!
