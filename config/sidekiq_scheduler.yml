@@ -14,9 +14,9 @@ every_midnight_add_working_time:
 
 every_midnight_remove_orphan_files:
   cron: "0 0 * * *"
-  class: "RemoveOrphanEmployeeFiles"
+  class: "RemoveOrphanGenericFiles"
   args:
-  queue: employee_files
+  queue: generic_files
   description: "Remove files not assigned to employees"
 
 every_day_check_if_update_quantity:
@@ -32,3 +32,10 @@ every_hour_employees_journal_export:
   args:
   queue: export
   description: "Schedule export of employees journal for accounts with yalty special access"
+
+every_hour_employees_payslips_import:
+  cron: "0 * * * *"
+  class: "::Import::SchedulePayslipsImport"
+  args:
+  queue: import
+  description: "Schedule import of employees payslips"
