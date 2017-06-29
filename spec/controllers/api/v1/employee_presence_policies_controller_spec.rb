@@ -164,6 +164,41 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
         end
       end
 
+      context 'when there is contract end in the future' do
+        context 'and this is first employee contract end' do
+          before do
+            create(:employee_event,
+              employee: employee, event_type: 'contract_end', effective_at: 1.week.since)
+          end
+
+          it { expect { subject }.to change { EmployeePresencePolicy.count }.by(2) }
+          it { expect { subject }.to change { EmployeePresencePolicy.with_reset.count }.by(1) }
+          it { expect { subject }.to change { EmployeePresencePolicy.not_reset.count }.by(1) }
+          it { is_expected.to have_http_status(201) }
+        end
+
+        context 'and employee is rehired' do
+          before do
+            create(:employee_presence_policy,
+              employee: employee, presence_policy: presence_policy, effective_at: 1.week.ago)
+            create(:employee_event,
+              event_type: 'contract_end', effective_at: 1.week.since, employee: employee)
+            create(:employee_event,
+              event_type: 'hired', employee: employee, effective_at: 1.month.since)
+            create(:employee_event,
+              event_type: 'contract_end', effective_at: 2.months.since, employee: employee)
+          end
+
+          let(:effective_at) { 1.month.since }
+
+          it { expect { subject }.to change { EmployeePresencePolicy.count }.by(2) }
+          it { expect { subject }.to change { EmployeePresencePolicy.with_reset.count }.by(1) }
+          it { expect { subject }.to change { EmployeePresencePolicy.not_reset.count }.by(1) }
+
+          it { is_expected.to have_http_status(201) }
+        end
+      end
+
       context 'when there are emloyee balances with time offs assigned' do
         let(:policy) { create(:time_off_policy) }
         let(:employee_policy) do
@@ -761,6 +796,42 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
         it { expect { subject }.to change { EmployeePresencePolicy.count }.by(-1) }
 
         it { is_expected.to have_http_status(204) }
+      end
+
+      context 'when there is contract end in the future' do
+        before do
+          create(:employee_event,
+            event_type: 'contract_end', effective_at: 1.month.since, employee: employee)
+        end
+
+        it { expect { subject }.to change { EmployeePresencePolicy.count }.by(-2) }
+        it { expect { subject }.to change { EmployeePresencePolicy.with_reset.count }.by(-1) }
+        it { expect { subject }.to change { EmployeePresencePolicy.not_reset.count }.by(-1) }
+
+        it { is_expected.to have_http_status(204) }
+
+        context 'when there is rehired' do
+          let!(:hired_event) do
+            create(:employee_event,
+              event_type: 'hired', effective_at: 2.months.since, employee: employee)
+          end
+          let!(:new_epp) do
+            create(:employee_presence_policy,
+              employee: employee, presence_policy: presence_policy, effective_at: 2.months.since)
+          end
+          let!(:employee_event) do
+            create(:employee_event,
+              event_type: 'contract_end', effective_at: 3.months.since, employee: employee)
+          end
+
+          let(:id) { new_epp.id }
+
+          it { expect { subject }.to change { EmployeePresencePolicy.count }.by(-2) }
+          it { expect { subject }.to change { EmployeePresencePolicy.with_reset.count }.by(-1) }
+          it { expect { subject }.to change { EmployeePresencePolicy.not_reset.count }.by(-1) }
+
+          it { is_expected.to have_http_status(204) }
+        end
       end
 
       context 'when there is contract end day before join table' do

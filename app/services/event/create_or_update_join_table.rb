@@ -112,10 +112,11 @@ class CreateOrUpdateJoinTable
   def create_join_table
     @status = 201
     employee_join_tables.create!(params.except(:employee_id)).tap do |join_table|
-      upcoming_contract_end = join_table.employee.first_upcoming_contract_end
+      upcoming_contract_end =
+        join_table.employee.first_upcoming_contract_end(join_table.effective_at)
       next unless upcoming_contract_end.present? &&
           join_table.effective_at <= upcoming_contract_end.effective_at
-      create_reset_join_table(join_table)
+      create_reset_join_table(join_table, upcoming_contract_end.effective_at)
     end
   end
 
