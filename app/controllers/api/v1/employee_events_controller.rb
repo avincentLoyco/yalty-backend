@@ -11,7 +11,7 @@ module API
       end
 
       def index
-        authorize! :index, resources.first, params['employee_id']
+        authorize! :index, resources.first, params[:employee_id]
         render_resource(resources)
       end
 
@@ -54,12 +54,11 @@ module API
       end
 
       def resources
-        @resources ||=
-          if params['employee_id'].present?
-            employee.events
-          else
-            Account.current.employee_events.limit(100)
-          end
+        @resources ||= if params[:employee_id].present?
+                         employee.events
+                       else
+                         Account.current.employee_events.limit(100)
+                       end
       end
 
       def employee
