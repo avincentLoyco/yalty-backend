@@ -10,9 +10,8 @@ module Attribute
     attribute :permit_expiry, DateTime
 
     def allowed_values
-      country_codes = ISO3166::Country.codes
       {
-        'nationality' => country_codes
+        'nationality' => ISO3166::Country.codes
       }
     end
   end

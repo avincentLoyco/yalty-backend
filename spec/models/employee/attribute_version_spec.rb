@@ -102,7 +102,7 @@ RSpec.describe Employee::AttributeVersion, type: :model do
     let(:country_code) { 'CH' }
     let!(:attribute_definition) do
       create(:employee_attribute_definition,
-        :valid_country_code,
+        validation: { country_code: true },
         name: 'nationality',
         attribute_type: 'String')
     end
@@ -130,7 +130,7 @@ RSpec.describe Employee::AttributeVersion, type: :model do
     let(:state_code) { 'ZH' }
     let!(:attribute_definition) do
       create(:employee_attribute_definition,
-        :valid_state_code,
+        validation: { state_code: true },
         name: 'tax_canton',
         attribute_type: 'String')
     end

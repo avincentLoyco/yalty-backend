@@ -5,13 +5,12 @@ module Attribute
     attribute :other_parent_working, Boolean
 
     def allowed_values
-      country_codes = ISO3166::Country.codes
       {
         'other_parent_work_status' => [
           'salaried employee', 'unemployed', 'no activity', 'sick', 'injured', 'self-employed',
           'pensioner'
         ],
-        'nationality' => country_codes
+        'nationality' => ISO3166::Country.codes
       }
     end
   end
