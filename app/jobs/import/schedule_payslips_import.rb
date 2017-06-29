@@ -3,9 +3,7 @@ module Import
     queue_as :import
 
     def perform
-      # TODO: Add specs
       return unless ::Import::ImportAndAssignPayslips.enable?
-
       Account.where(id: accounts_ids).find_each do |account|
         ::Import::ImportPayslipsJob.perform_later(account)
       end

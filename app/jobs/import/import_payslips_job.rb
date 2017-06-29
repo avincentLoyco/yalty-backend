@@ -3,11 +3,9 @@ module Import
     queue_as :import
 
     def perform(account)
-      # TODO: Add specs
       return unless ::Import::ImportAndAssignPayslips.enable?
-
       account.employees.each do |employee|
-        Dir.mktmpdir(employee.email) do |tmp_dir_path|
+        Dir.mktmpdir(employee.id) do |tmp_dir_path|
           ::Import::ImportAndAssignPayslips.new(employee, tmp_dir_path).call
         end
       end

@@ -3,12 +3,12 @@
 :pidfile: tmp/pids/sidekiq.%i.pid
 :logfile: log/sidekiq.log
 :queues:
-  - export
-  - import
   - billing
   - mailers
   - policies_and_balances
   - update_balance
+  - export
+  - import
   - intercom
   - registered_working_times
   - generic_files
