@@ -36,8 +36,11 @@ class Ability
         event.employee_id == user.employee.id ||
           event_attributes[:employee][:id] == user.employee.id
       end
-      can [:read, :show], Employee::Event do |event|
+      can [:show], Employee::Event do |event|
         event.account.id == user.account.id
+      end
+      can :index, Employee::Event do |event, employee_id|
+        employee_id.present? && event.account.id == user.account.id
       end
       can :schedule_for_employee, Employee, id: user.employee.try(:id)
       can [:create], RegisteredWorkingTime do |registered_working_time|
