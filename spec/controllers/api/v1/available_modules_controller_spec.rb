@@ -88,10 +88,23 @@ RSpec.describe API::V1::AvailableModulesController, type: :controller do
         context 'plan is free' do
           let(:free) { false }
 
-          before { account.available_modules.add(id: plan_id, free: true) }
+          context 'when plan is automatedexport' do
+            before { account.available_modules.add(id: plan_id, free: true) }
 
-          it { expect { put_update }.to_not change { account.available_modules.size } }
-          it { expect { put_update }.to change { plan_module.free }.from(true).to(false) }
+            it { expect { put_update }.to change { account.available_modules.size }.by(-1) }
+            it do
+              expect { put_update }
+                .to change { account.available_modules.include?(plan_id) }.from(true).to(false)
+            end
+          end
+
+          context 'when plan is not automatedexport' do
+            let(:plan_id) { 'master-plan' }
+            before { account.available_modules.add(id: plan_id, free: true) }
+
+            it { expect { put_update }.to_not change { account.available_modules.size } }
+            it { expect { put_update }.to change { plan_module.free }.from(true).to(false) }
+          end
         end
 
         context 'plan is not free' do

@@ -12,19 +12,25 @@ module API
       def update
         verified_dry_params(dry_validation_schema) do |attributes|
           if available_modules.include?(params[:id])
-            plan = available_modules.find(params[:id])
-            plan.free = attributes[:free]
+            update_available_modules(attributes[:id], attributes[:free])
           else
             available_modules.add(id: params[:id], free: true)
           end
+          Account.current.save!
+          render_no_content
         end
-
-        Account.current.save!
-
-        render_no_content
       end
 
       private
+
+      def update_available_modules(plan_id, free)
+        if internal_plans.map(&:id).include?(plan_id) && !free
+          available_modules.delete(plan_id)
+        else
+          plan = available_modules.find(plan_id)
+          plan.free = free
+        end
+      end
 
       def internal_plans
         YAML.load(File.read('config/internal_available_modules.yml')).map do |internal_module|

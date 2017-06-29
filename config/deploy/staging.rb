@@ -55,6 +55,7 @@ task :sync do
           dump_path
         execute :rake, :setup
         execute :rake, :'staging:reset:stripe'
+        execute :rake, :'update_yalty_access_credentials'
 
         execute :rm, '-f', dump_path
       end
