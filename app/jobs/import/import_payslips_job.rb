@@ -2,6 +2,10 @@ module Import
   class ImportPayslipsJob < ActiveJob::Base
     queue_as :import
 
+    class JobWrapper < CustomJobAdapter::JobWrapper
+      sidekiq_options unique: :until_executed, unique_args: ->(args) { args.first['arguments'] }
+    end
+
     def perform(payslip_path)
       return unless ::Import::ImportAndAssignPayslips.enable?
 
