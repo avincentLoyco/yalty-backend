@@ -71,6 +71,8 @@ en:
   service_request_mailer:
     quote_request:
       subject: A service request from yalty
+    book_request:
+      subject: A service booking from yalty
   user_mailer:
     account_creation_confirmation:
       subject: Welcome to yalty
