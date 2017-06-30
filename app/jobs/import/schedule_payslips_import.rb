@@ -10,8 +10,8 @@ module Import
         ENV['LOYCO_SSH_USER'],
         keys: [ENV['LOYCO_SSH_KEY_PATH']]
       ) do |sftp|
-        sftp.dir.glob("#{ENV['LOYCO_SSH_IMPORT_PAYSLIPS_PATH']}/**/*.pdf") do |payslip_path|
-          ::Import::ImportPayslipsJob.perform_later(payslip_path)
+        sftp.dir.glob(ENV['LOYCO_SSH_IMPORT_PAYSLIPS_PATH'], '**/*.pdf') do |entry|
+          ::Import::ImportPayslipsJob.perform_later(entry.name)
         end
       end
     end

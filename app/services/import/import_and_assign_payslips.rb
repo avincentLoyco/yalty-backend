@@ -18,17 +18,24 @@ module Import
         ENV['LOYCO_SSH_USER'],
         keys: [ENV['LOYCO_SSH_KEY_PATH']]
       ) do |sftp|
-        sftp.dir.glob("**/#{payslip_filename}") do |payslip_path|
-          sftp.download!(payslip_path, import_path)
+        sftp.dir.glob(ENV['LOYCO_SSH_IMPORT_PAYSLIPS_PATH'], "**/#{payslip_filename}") do |entry|
+          payslip_path = Pathname.new(ENV['LOYCO_SSH_IMPORT_PAYSLIPS_PATH']).join(entry.name)
+          File.open(import_path, mode: 'wb') do |file|
+            sftp.download!(payslip_path, file)
+          end
 
           value = attribute_version_values_from(
             GenericFile.create!(file: File.open(import_path), fileable_type: 'EmployeeFile')
           )
 
-          return event.employee_attribute_versions.last.update!(value: value) if event.present?
-          create_salary_paid_event(value)
+          if event.present?
+            event.employee_attribute_versions.last.update!(value: value)
+          else
+            create_salary_paid_event(value)
+          end
 
           sftp.remove!(payslip_path)
+          break
         end
       end
     end

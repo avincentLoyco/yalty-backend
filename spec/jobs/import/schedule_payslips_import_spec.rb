@@ -18,7 +18,9 @@ RSpec.describe Import::SchedulePayslipsImport, type: :job do
   let(:ssh_path) { 'fakepath' }
   let(:sftp) do
     sftp = double('sftp')
-    allow(sftp).to receive_message_chain(:dir, :glob).and_yield(ssh_payslip_path)
+    entry = double('entry')
+    allow(entry).to receive(:longname).and_return(ssh_payslip_path)
+    allow(sftp).to receive_message_chain(:dir, :glob).and_yield(entry)
     sftp
   end
 

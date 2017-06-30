@@ -11,18 +11,25 @@ RSpec.describe Import::ImportAndAssignPayslips do
 
   let(:ssh_host) { 'fakehost' }
   let(:ssh_user) { 'fakeuser' }
-  let(:ssh_path) { 'fakepath' }
+  let(:ssh_path) { tmp_path.join('fakepath') }
 
   let(:payslip_filename) { "#{employee.id}-01-01-2016.pdf" }
   let(:tmp_path) { Pathname.new('tmp').join('files') }
-  let(:ssh_payslip_path) { tmp_path.join(ssh_path, payslip_filename) }
+  let(:ssh_payslip_path) { ssh_path.join(payslip_filename) }
   let(:import_path) { tmp_path.join(payslip_filename) }
   let(:fixture_path) { Pathname.new('spec').join('fixtures', 'files', 'example.pdf') }
+  let(:payslip_entry) do
+    entry = double('entry')
+    allow(entry).to receive(:name).and_return(payslip_filename)
+    entry
+  end
 
   let(:sftp) do
     sftp = double('sftp')
-    allow(sftp).to receive_message_chain(:dir, :glob).and_yield(ssh_payslip_path)
-    allow(sftp).to receive(:download!)
+    allow(sftp).to receive_message_chain(:dir, :glob).and_yield(payslip_entry).and_yield(payslip_entry)
+    allow(sftp).to receive(:download!) do |from, to|
+      FileUtils.copy_file(from, to)
+    end
     allow(sftp).to receive(:remove!)
     sftp
   end
@@ -32,14 +39,13 @@ RSpec.describe Import::ImportAndAssignPayslips do
   before do
     ENV['LOYCO_SSH_HOST'] = ssh_host
     ENV['LOYCO_SSH_USER'] = ssh_user
-    ENV['LOYCO_SSH_KEY_PATH'] = ssh_path
-    ENV['LOYCO_SSH_IMPORT_PAYSLIPS_PATH'] = ssh_path
+    ENV['LOYCO_SSH_KEY_PATH'] = ssh_path.to_s
+    ENV['LOYCO_SSH_IMPORT_PAYSLIPS_PATH'] = ssh_path.to_s
 
-    FileUtils.mkdir_p(tmp_path.join(ssh_path))
+    FileUtils.mkdir_p(ssh_path)
     FileUtils.copy_file(fixture_path, ssh_payslip_path)
-    FileUtils.copy_file(fixture_path, import_path)
 
-    allow(Net::SFTP).to receive(:start).with(ssh_host, ssh_user, keys: [ssh_path]).and_yield(sftp)
+    allow(Net::SFTP).to receive(:start).with(ssh_host, ssh_user, keys: [ssh_path.to_s]).and_yield(sftp)
   end
 
   context 'salary_paid event does not exist' do
@@ -51,9 +57,9 @@ RSpec.describe Import::ImportAndAssignPayslips do
     end
 
     it 'properly downloads and removes payslip from sftp' do
-      expect(sftp).to receive_message_chain(:dir, :glob).with("**/#{payslip_filename}")
-      expect(sftp).to receive(:download!).with(ssh_payslip_path, import_path)
-      expect(sftp).to receive(:remove!).with(ssh_payslip_path)
+      expect(sftp).to receive_message_chain(:dir, :glob).with(ssh_path.to_s, "**/#{payslip_filename}")
+      expect(sftp).to receive(:download!).with(ssh_payslip_path, kind_of(File)).once
+      expect(sftp).to receive(:remove!).with(ssh_payslip_path).once
       assign_payslip
     end
   end
