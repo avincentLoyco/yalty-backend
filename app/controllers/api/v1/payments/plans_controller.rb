@@ -38,7 +38,7 @@ module API
 
         def subscribe_on_stripe(plan_id)
           # TODO: Temporary trial
-          subscription.trial_end = 10.days.from_now.to_i
+          subscription.trial_end = 10.days.from_now.to_i if subscription.trial_end.blank?
           subscription.save
           plan = Stripe::SubscriptionItem.create(plan_creation_params(plan_id)).plan
           plan.active = true

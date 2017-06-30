@@ -3,6 +3,11 @@
 
   ],
   "after_migration": [
-
+    {
+      "task_name": "fix_employees_quantity:update_stripe",
+       "description": [
+         "Fix invalid quantity for stripe subscriptions"
+      ]
+    }
   ]
 }
