@@ -153,7 +153,7 @@ RSpec.describe ServiceRequestMailer, type: :mailer do
   end
 
   context '#quote_request' do
-    let(:account) { create(:account, yalty_access: true, default_locale: 'en') }
+    let(:account) { create(:account, company_name: 'Wayne', yalty_access: true, default_locale: 'en') }
     let(:requester) do
       user = create(:account_user, account: account)
       allow(user.employee).to receive(:fullname).and_return('John Doe')
@@ -173,7 +173,7 @@ RSpec.describe ServiceRequestMailer, type: :mailer do
   end
 
   context '#book_request' do
-    let(:account) { create(:account, yalty_access: true, default_locale: 'en') }
+    let(:account) { create(:account, company_name: 'Wayne', yalty_access: true, default_locale: 'en') }
     let(:requester) do
       user = create(:account_user, account: account)
       allow(user.employee).to receive(:fullname).and_return('John Doe')
