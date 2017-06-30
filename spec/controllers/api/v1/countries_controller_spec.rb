@@ -43,7 +43,12 @@ RSpec.describe API::V1::CountriesController, type: :controller do
         context 'with invalid country code or not translated codes for the country' do
           let(:country_code) { 'rztd' }
 
-          it { is_expected.to have_http_status(404) }
+          it { is_expected.to have_http_status(200) }
+          context 'response body' do
+            before { subject }
+            it { expect_json_keys(:holidays) }
+            it { expect_json(holidays: ->(holidays) { expect(holidays.size).to eq(0) }) }
+          end
         end
       end
     end
