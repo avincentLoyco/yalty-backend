@@ -97,4 +97,60 @@ RSpec.describe Employee::AttributeVersion, type: :model do
       it { expect { subject.valid? }.to_not change { subject.data.errors.messages[:string] } }
     end
   end
+
+  context '#country_code validation' do
+    let(:country_code) { 'CH' }
+    let!(:attribute_definition) do
+      create(:employee_attribute_definition,
+        validation: { country_code: true },
+        name: 'nationality',
+        attribute_type: 'String')
+    end
+    subject do
+      build(:employee_attribute_version,
+        attribute_definition: attribute_definition, data: { string: country_code })
+    end
+
+    context 'with valid country code' do
+      it { expect(subject.valid?).to eq true }
+    end
+
+    context 'without country code' do
+      let(:country_code) { nil }
+      it { expect(subject.valid?).to eq true }
+    end
+
+    context 'without state code' do
+      let(:country_code) { 'invalid' }
+      it { expect(subject.valid?).to eq false }
+    end
+  end
+
+  context '#state_code validation' do
+    let(:state_code) { 'ZH' }
+    let!(:attribute_definition) do
+      create(:employee_attribute_definition,
+        validation: { state_code: true },
+        name: 'tax_canton',
+        attribute_type: 'String')
+    end
+    subject do
+      build(:employee_attribute_version,
+        attribute_definition: attribute_definition, data: { string: state_code })
+    end
+
+    context 'with valid country code' do
+      it { expect(subject.valid?).to eq true }
+    end
+
+    context 'without country code' do
+      let(:state_code) { nil }
+      it { expect(subject.valid?).to eq true }
+    end
+
+    context 'without state code' do
+      let(:state_code) { 'invalid' }
+      it { expect(subject.valid?).to eq false }
+    end
+  end
 end

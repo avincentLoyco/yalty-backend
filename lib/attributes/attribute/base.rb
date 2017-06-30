@@ -2,7 +2,6 @@ module Attribute
   class Base
     include Virtus.model(coerce: false)
     include ActiveModel::Validations
-
     attribute :attribute_type
 
     def self.attribute_types
@@ -38,6 +37,20 @@ module Attribute
         next if self[field].blank? || allowed.include?(self[field])
         errors.add(field, 'value not allowed')
       end
+    end
+
+    def validate_country_code(_additional_validation)
+      except_type = attributes.except(:attribute_type)
+      return if except_type.values.first.blank? ||
+          ISO3166::Country.codes.include?(except_type.values.first)
+      errors.add('nationality', 'country code invalid')
+    end
+
+    def validate_state_code(_additional_validation)
+      except_type = attributes.except(:attribute_type)
+      return if except_type.values.first.blank? ||
+          ISO3166::Country.new(:ch).states.keys.include?(except_type.values.first)
+      errors.add('state', 'state code invalid')
     end
 
     def optional_attributes

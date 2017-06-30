@@ -47,6 +47,7 @@ class Employee < ActiveRecord::Base
         employee_events.effective_at = ?::date OR
         #{previous_event_sql('hired', date)}", date
       )
+      .distinct
   end)
 
   scope(:active_at_date, lambda do |date = Time.zone.now|

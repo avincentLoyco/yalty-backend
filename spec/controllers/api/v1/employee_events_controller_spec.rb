@@ -313,6 +313,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
               value: {
                 firstname: 'Jon',
                 lastname: 'Snow',
+                nationality: 'CH',
                 other_parent_work_status: other_parent_work_status
               }
             }

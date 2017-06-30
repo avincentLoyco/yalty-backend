@@ -161,6 +161,44 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
         end
       end
 
+      context 'when there is contract end in the future' do
+        context 'and this is first employee contract end' do
+          before do
+            EmployeeWorkingPlace.delete_all
+            create(:employee_event,
+              employee: employee, event_type: 'contract_end', effective_at: 1.week.since)
+          end
+          let(:effective_at) { Time.zone.today }
+
+          it { expect { subject }.to change { EmployeeWorkingPlace.count }.by(2) }
+          it { expect { subject }.to change { EmployeeWorkingPlace.with_reset.count }.by(1) }
+          it { expect { subject }.to change { EmployeeWorkingPlace.not_reset.count }.by(1) }
+
+          it { is_expected.to have_http_status(201) }
+        end
+
+        context 'and employee is rehired' do
+          before do
+            create(:employee_working_place,
+              employee: employee, working_place: working_place, effective_at: 1.week.ago)
+            create(:employee_event,
+              event_type: 'contract_end', effective_at: 1.week.since, employee: employee)
+            create(:employee_event,
+              event_type: 'hired', employee: employee, effective_at: 1.month.since)
+            create(:employee_event,
+              event_type: 'contract_end', effective_at: 2.months.since, employee: employee)
+          end
+
+          let(:effective_at) { 1.month.since }
+
+          it { expect { subject }.to change { EmployeeWorkingPlace.count }.by(2) }
+          it { expect { subject }.to change { EmployeeWorkingPlace.with_reset.count }.by(1) }
+          it { expect { subject }.to change { EmployeeWorkingPlace.not_reset.count }.by(1) }
+
+          it { is_expected.to have_http_status(201) }
+        end
+      end
+
       context 'when there are employee balances after employee working place effective_at' do
         let(:holiday_policy) { create(:holiday_policy, account: account) }
         let(:categories) { create_list(:time_off_category, 2, account: account) }
@@ -710,6 +748,44 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
 
         it { is_expected.to have_http_status(204) }
       end
+
+      context 'when there is contract end in the future' do
+        before do
+          EmployeeWorkingPlace.where.not(id: join_table.id).delete_all
+          create(:employee_event,
+            event_type: 'contract_end', effective_at: 1.month.since, employee: employee)
+        end
+
+        it { expect { subject }.to change { EmployeeWorkingPlace.count }.by(-2) }
+        it { expect { subject }.to change { EmployeeWorkingPlace.with_reset.count }.by(-1) }
+        it { expect { subject }.to change { EmployeeWorkingPlace.not_reset.count }.by(-1) }
+
+        it { is_expected.to have_http_status(204) }
+
+        context 'when there is rehired' do
+          let!(:hired_event) do
+            create(:employee_event,
+              event_type: 'hired', effective_at: 2.months.since, employee: employee)
+          end
+          let!(:new_epp) do
+            create(:employee_working_place,
+              employee: employee, working_place: working_place, effective_at: 2.months.since)
+          end
+          let!(:employee_event) do
+            create(:employee_event,
+              event_type: 'contract_end', effective_at: 3.months.since, employee: employee)
+          end
+
+          let(:id) { new_epp.id }
+
+          it { expect { subject }.to change { EmployeeWorkingPlace.count }.by(-2) }
+          it { expect { subject }.to change { EmployeeWorkingPlace.with_reset.count }.by(-1) }
+          it { expect { subject }.to change { EmployeeWorkingPlace.not_reset.count }.by(-1) }
+
+          it { is_expected.to have_http_status(204) }
+        end
+      end
+
 
       context 'when they are employee balances after resource effective at' do
         let(:holiday_policy) { create(:holiday_policy, account: account) }

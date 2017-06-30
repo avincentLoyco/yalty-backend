@@ -75,6 +75,7 @@ class Account < ActiveRecord::Base
     firstname: { presence: true },
     start_date: { presence: true },
     child: { inclusion: true },
+    spouse: { inclusion: true },
     profile_picture: { presence: { allow_nil: true } },
     salary_slip: { presence: { allow_nil: true } },
     contract: { presence: { allow_nil: true } },
@@ -82,7 +83,10 @@ class Account < ActiveRecord::Base
     id_card: { presence: { allow_nil: true } },
     work_permit: { presence: { allow_nil: true } },
     avs_card: { presence: { allow_nil: true } },
-    performance_review: { presence: { allow_nil: true } }
+    performance_review: { presence: { allow_nil: true } },
+    nationality: { country_code: true },
+    tax_canton: { state_code: true },
+    spouse_working_region: { state_code: true }
   }.with_indifferent_access
 
   MULTIPLE_ATTRIBUTES = %w(child).freeze

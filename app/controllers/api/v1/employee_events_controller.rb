@@ -55,7 +55,7 @@ module API
 
       def resources
         @resources ||= if params[:employee_id].present?
-                         employee.events
+                         employee.events.order(effective_at: :asc, event_type: :desc)
                        else
                          Account.current.employee_events.limit(100)
                        end
