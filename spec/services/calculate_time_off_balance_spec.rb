@@ -149,6 +149,14 @@ RSpec.describe CalculateTimeOffBalance, type: :service do
       it { expect(subject).to eq 1200 }
     end
 
+    context 'when presence policy starts in the middle of time off' do
+      before { employee.employee_presence_policies.first.update!(effective_at: Date.today + 7.days) }
+      let(:start_time) { Date.today }
+      let(:end_time) { Date.today + 14.days }
+
+      it { expect(subject).to eq 600 }
+    end
+
     context 'and there is more than one presence policy involved' do
       before { second_policy.presence_days.map(&:destroy!) }
       let(:start_time) { Date.today }

@@ -27,7 +27,11 @@ class CalculateTimeOffBalance
 
   def calculate_start_date_for_epp(epp, active_epps)
     @epp_start_datetime =
-      epp == active_epps.first ? time_off_start_date : epp.effective_at.to_datetime
+      if epp == active_epps.first && epp.effective_at.to_datetime <= time_off_start_date
+        time_off_start_date
+      else
+        epp.effective_at.to_datetime
+      end
     @epp_start_date = @epp_start_datetime.to_date
   end
 
