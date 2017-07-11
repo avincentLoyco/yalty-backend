@@ -33,9 +33,10 @@ every_hour_employees_journal_export:
   queue: export
   description: "Schedule export of employees journal for accounts with yalty special access"
 
-every_hour_employees_payslips_import:
-  cron: "0 * * * *"
-  class: "::Import::SchedulePayslipsImport"
-  args:
-  queue: import
-  description: "Schedule import of employees payslips"
+# TODO: Uncomment when payslip job is fixed
+# every_hour_employees_payslips_import:
+#   cron: "0 * * * *"
+#   class: "::Import::SchedulePayslipsImport"
+#   args:
+#   queue: import
+#   description: "Schedule import of employees payslips"
