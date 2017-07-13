@@ -6,10 +6,10 @@ RSpec.describe CalculateTimeOffBalance, type: :service do
 
   subject { CalculateTimeOffBalance.new(time_off).call }
 
-  let(:policy) { create(:presence_policy, :with_presence_day) }
-  let(:category) { employee.employee_time_off_policies.first.time_off_policy.time_off_category }
-  let(:start_time) { Date.today + 2.days }
-  let(:end_time) { Date.today + 8.days }
+  let(:policy)     { create(:presence_policy, :with_presence_day) }
+  let(:category)   { employee.employee_time_off_policies.first.time_off_policy.time_off_category }
+  let(:start_time) { 2.days.since }
+  let(:end_time)   { 8.days.since }
   let!(:employee) do
     create(:employee, :with_time_off_policy, :with_presence_policy,
       presence_policy: policy
@@ -29,7 +29,7 @@ RSpec.describe CalculateTimeOffBalance, type: :service do
 
     context 'when the time off is long' do
       let!(:presence_days) do
-        [1,2,3,4,7].map do |i|
+        [1, 2, 3, 4, 7].map do |i|
           create(:presence_day, order: i, presence_policy: policy)
         end
       end
@@ -41,22 +41,22 @@ RSpec.describe CalculateTimeOffBalance, type: :service do
       end
 
       context "and starts on a monday" do
-        let(:start_time) { Date.new(2016,6,5) }
-        let(:end_time) { Date.new(2016,6,14) + 20.hours }
+        let(:start_time) { Date.new(2016, 6, 5) }
+        let(:end_time)   { Date.new(2016, 6, 14) + 20.hours }
 
         it { expect(subject).to eq 960 }
       end
 
       context "and starts on a sunday" do
-        let(:start_time) { Date.new(2016,6,8) }
-        let(:end_time) { Date.new(2016,6,15) + 20.hours }
+        let(:start_time) { Date.new(2016, 6, 8) }
+        let(:end_time)   { Date.new(2016, 6, 15) + 20.hours }
 
         it { expect(subject).to eq 720 }
       end
 
       context "when it begins and ends on the same weekday" do
-        let(:start_time) { Date.new(2016,6,6) }
-        let(:end_time) { Date.new(2016,6,15) + 20.hours }
+        let(:start_time) { Date.new(2016, 6, 6) }
+        let(:end_time)   { Date.new(2016, 6, 15) + 20.hours }
 
         it { expect(subject).to eq 960 }
       end
@@ -83,15 +83,15 @@ RSpec.describe CalculateTimeOffBalance, type: :service do
     end
 
     context 'and time off starts in saturday' do
-      let(:start_time) { Date.new(2016,1,2) }
-      let(:end_time) { Date.new(2016,1,8) + 20.hours }
+      let(:start_time) { Date.new(2016, 1, 2) }
+      let(:end_time)   { Date.new(2016, 1, 8) + 20.hours }
 
       it { expect(subject).to eq 1140 }
     end
 
     context 'and time off is longer than two weeks' do
-      let(:start_time) { Date.new(2016,1,2) }
-      let(:end_time) { Date.new(2016,1,20) + 20.hours }
+      let(:start_time) { Date.new(2016, 1, 2) }
+      let(:end_time)   { Date.new(2016, 1, 20) + 20.hours }
 
       it { expect(subject).to eq 3300 }
     end
@@ -109,17 +109,17 @@ RSpec.describe CalculateTimeOffBalance, type: :service do
   end
 
   context 'when employee have time_entries in policy' do
-    let(:first_day) { create(:presence_day, order: 2, presence_policy: policy) }
-    let(:second_day) { create(:presence_day, order: 7, presence_policy: policy) }
-    let!(:first_entry) { create(:time_entry, presence_day: first_day) }
+    let(:first_day)     { create(:presence_day, order: 2, presence_policy: policy) }
+    let(:second_day)    { create(:presence_day, order: 7, presence_policy: policy) }
+    let!(:first_entry)  { create(:time_entry, presence_day: first_day) }
     let!(:second_entry) { create(:time_entry, presence_day: second_day) }
     let!(:third_entry) do
       create(:time_entry, presence_day: second_day, start_time: '6:00', end_time: '14:00')
     end
 
     context 'when time off for few hours' do
-      let(:start_time) { Date.today + 6.days }
-      let(:end_time) { Date.today + 6.days + 8.hours }
+      let(:start_time) { 6.days.since }
+      let(:end_time)   { 6.days.since + 8.hours }
 
       it { expect(subject).to eq 120 }
     end
@@ -129,35 +129,44 @@ RSpec.describe CalculateTimeOffBalance, type: :service do
         employee.first_employee_event.update!(effective_at: Time.now - 2.years)
       end
 
-      let(:start_time) { Date.today + 5.days + 23.hours }
-      let(:end_time) { Date.today + 6.days + 11.hour }
+      let(:start_time) { 5.days.since + 23.hours }
+      let(:end_time)   { 6.days.since + 11.hours }
 
       it { expect(subject).to eq 300 }
     end
 
     context 'when time off shorter or equal one week' do
       let(:start_time) { Date.today }
-      let(:end_time) { Date.today + 7.days }
+      let(:end_time)   { 7.days.since }
 
       it { expect(subject).to eq 600 }
     end
 
     context 'when time off longer than one week' do
       let(:start_time) { Date.today }
-      let(:end_time) { Date.today + 14.days }
+      let(:end_time)   { 14.days.since }
 
       it { expect(subject).to eq 1200 }
+    end
+
+    context 'when presence policy starts in the middle of time off' do
+      before { employee.employee_presence_policies.first.update!(effective_at: 7.days.since) }
+      let(:start_time) { Date.today }
+      let(:end_time)   { 14.days.since }
+
+      it { expect(subject).to eq 600 }
     end
 
     context 'and there is more than one presence policy involved' do
       before { second_policy.presence_days.map(&:destroy!) }
       let(:start_time) { Date.today }
-      let(:end_time) { Date.today + 8.days }
+      let(:end_time)   { 8.days.since }
       let!(:second_epp) do
-        create(:employee_presence_policy, employee: employee, effective_at: Date.today + 5.days)
+        create(:employee_presence_policy, employee: employee, effective_at: 5.days.since)
       end
       let!(:second_policy) { second_epp.presence_policy }
-      let(:third_day) { create(:presence_day, order: 3, presence_policy: second_policy) }
+
+      let(:third_day)  { create(:presence_day, order: 3, presence_policy: second_policy) }
       let(:fourth_day) { create(:presence_day, order: 4, presence_policy: second_policy) }
       let!(:fourth_entry) do
         create(:time_entry, presence_day: third_day, start_time: '16:00', end_time: '17:15')
@@ -170,30 +179,30 @@ RSpec.describe CalculateTimeOffBalance, type: :service do
 
       context "and the time off is 2 days long" do
         before do
-          second_epp.update(effective_at: Date.today + 1)
+          second_epp.update(effective_at: 1.day.since)
           third_day.update!(order: 1)
           second_day.update!(order: 1)
         end
 
         let(:start_time) { Date.today }
-        let(:end_time) { Date.today + 2.day }
+        let(:end_time)   { 2.days.since }
 
         it { expect(subject).to eq 615 }
       end
 
       context "and the time off is 3 days long with 3 policies involved" do
-        let(:start_time) { Date.today }
-        let(:end_time) { Date.today + 3.day }
+        let(:start_time)   { Date.today }
+        let(:end_time)     { 3.days.since }
         let(:third_policy) { third_epp.presence_policy }
-        let(:fifth_day) { create(:presence_day, order: 1, presence_policy: third_policy) }
+        let(:fifth_day)    { create(:presence_day, order: 1, presence_policy: third_policy) }
         let(:third_epp) do
-          create(:employee_presence_policy, employee: employee, effective_at: Date.today + 2.days)
+          create(:employee_presence_policy, employee: employee, effective_at: 2.days.since)
         end
         let!(:sixth_entry) do
           create(:time_entry, presence_day: fifth_day, start_time: '15:00', end_time: '15:07')
         end
         before do
-          second_epp.update(effective_at: Date.today + 1)
+          second_epp.update(effective_at: 1.day.since)
           third_day.update!(order: 1)
           second_day.update!(order: 1)
         end
@@ -204,8 +213,8 @@ RSpec.describe CalculateTimeOffBalance, type: :service do
 
     context 'time off start and ends in the middle of entries' do
       before { EmployeePresencePolicy.first.update!(order_of_start_day: 5) }
-      let(:start_time) { Date.today + 2.days + 7.hours }
-      let(:end_time) { Date.today + 11.days + 16.hours + 30.minutes }
+      let(:start_time) { 2.days.since + 7.hours }
+      let(:end_time)   { 11.days.since + 16.hours + 30.minutes }
 
       it { expect(subject).to eq 1110 }
     end
@@ -221,8 +230,8 @@ RSpec.describe CalculateTimeOffBalance, type: :service do
       end
 
       context 'and the period is 1 day long' do
-        let(:start_time) { Date.new(2016,3,25) }
-        let(:end_time) { Date.new(2016,3,25) + 8.hours }
+        let(:start_time) { Date.new(2016, 3, 25) }
+        let(:end_time)   { Date.new(2016, 3, 25) + 8.hours }
 
         it { expect(subject).to eq 0 }
       end
@@ -230,25 +239,25 @@ RSpec.describe CalculateTimeOffBalance, type: :service do
       context 'and there are multiple working places with different holiday policies' do
         before { second_ewp.working_place.update!(holiday_policy: holiday_policy_ow) }
 
-        let(:second_day) { create(:presence_day, order: 4, presence_policy: policy) }
-        let(:first_day) { create(:presence_day, order: 7, presence_policy: policy) }
-        let(:holiday_policy) { create(:holiday_policy, country: 'ch', region: 'ai') }
+        let(:second_day)        { create(:presence_day, order: 4, presence_policy: policy) }
+        let(:first_day)         { create(:presence_day, order: 7, presence_policy: policy) }
+        let(:holiday_policy)    { create(:holiday_policy, country: 'ch', region: 'ai') }
         let(:holiday_policy_ow) { create(:holiday_policy, country: 'ch', region: 'ow') }
         let!(:second_ewp) do
           create(:employee_working_place,
             employee: employee,
-            effective_at: Date.new(2016,9,23)
+            effective_at: Date.new(2016, 9, 23)
             )
         end
         let!(:third_ewp) do
           create(:employee_working_place,
             employee: employee,
-            effective_at: Date.new(2016,9,26)
+            effective_at: Date.new(2016, 9, 26)
             )
         end
         let(:second_working_place) { second_ewp.working_place }
-        let(:start_time) { Date.new(2016,9,21) }
-        let(:end_time) { Date.new(2016,9,28) }
+        let(:start_time) { Date.new(2016, 9, 21) }
+        let(:end_time)   { Date.new(2016, 9, 28) }
 
         it { expect(subject).to eq 540 }
       end
@@ -257,20 +266,20 @@ RSpec.describe CalculateTimeOffBalance, type: :service do
         before { EmployeePresencePolicy.first.update!(order_of_start_day: 5) }
 
         context 'and the holiday is in the first day of the time off' do
-          let(:start_time) { Date.new(2016,3,25) }
-          let(:end_time) { Date.new(2016,3,30) }
+          let(:start_time) { Date.new(2016, 3, 25) }
+          let(:end_time)   { Date.new(2016, 3, 30) }
 
           it { expect(subject).to eq 600 }
         end
         context 'and the holiday is in the last day of the time off' do
-          let(:start_time) { Date.new(2016,3,21) }
-          let(:end_time) { Date.new(2016,3,25) }
+          let(:start_time) { Date.new(2016, 3, 21) }
+          let(:end_time)   { Date.new(2016, 3, 25) }
 
           it { expect(subject).to eq 60 }
         end
         context 'and the holiday is in the middle of the time off ' do
-          let(:start_time) { Date.new(2016,3,24) }
-          let(:end_time) { Date.new(2016,3,26) }
+          let(:start_time) { Date.new(2016, 3, 24) }
+          let(:end_time)   { Date.new(2016, 3, 26) }
 
           it { expect(subject).to eq 0 }
         end
