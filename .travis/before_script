@@ -13,11 +13,13 @@ end
 
 begin
   repository = ENV['TRAVIS_REPO_SLUG']
-  branch = if ENV['TRAVIS_PULL_REQUEST'] == 'false'
-             ENV['TRAVIS_BRANCH']
-           else
-             ENV['TRAVIS_PULL_REQUEST_BRANCH']
-           end
+  if ENV['TRAVIS_PULL_REQUEST'] == 'false'
+    branch = ENV['TRAVIS_BRANCH']
+    sha1 = ENV['TRAVIS_COMMIT']
+  else
+    branch = ENV['TRAVIS_PULL_REQUEST_BRANCH']
+    sha1 = ENV['TRAVIS_PULL_REQUEST_SHA']
+  end
 
   Travis::Pro.github_auth(ENV['GITHUB_ACCESS_TOKEN'])
   travis = Travis::Pro::Repository.find(repository)
@@ -30,6 +32,49 @@ begin
 rescue Travis::Client::NotFound, Octokit::NotFound
   puts "Repository (#{repository}) or branch (#{branch}) not found"
   exit 0
+end
+
+#
+# Build docker image
+#
+
+if ENV['TRAVIS_PULL_REQUEST'] == 'false' && ENV['DISABLE_DOCKER_IMAGE'] != 'true' &&
+    (
+      branch == 'mater' ||
+      branch =~ %r{^(?:tasks?|features?|bugs?|fix(?:es)?)/.*?ywa-\d+}i ||
+      branch =~ %r{^releases?/\d+\.\d+\.\d+(?:\.\d+)?$}i
+    )
+
+  github.create_status(
+    repository, sha1, 'pending',
+    context: 'yalty/build', description: 'Docker image build queued'
+  )
+
+  travis.session.headers.merge!(
+    'Content-Type' => 'application/json',
+    'Travis-API-Version' => '3'
+  )
+  travis.session.raw(
+    :post,
+    "/repo/#{travis.id}/requests",
+    %(
+      {
+        "request": {
+          "branch": "travis-docker-build",
+          "message": "#{branch}",
+          "config": {
+            "env": {
+              "YALTY_DOCKER_BUILD": "#{branch == 'master' ? 'master' : 'PR'}",
+              "YALTY_DOCKER_BUILD_BRANCH": "#{branch}",
+              "YALTY_DOCKER_BUILD_SHA1": "#{sha1}"
+            }
+          }
+        }
+      }
+    )
+  )
+  Travis::Pro.session.headers.delete('Content-Type')
+  Travis::Pro.session.headers.delete('Travis-API-Version')
 end
 
 #

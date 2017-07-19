@@ -163,7 +163,8 @@ RSpec.describe ServiceRequestMailer, type: :mailer do
     subject { ServiceRequestMailer.quote_request(account, requester, services_payload).deliver_now }
 
     it { expect { subject }.to change { ActionMailer::Base.deliveries.count } }
-    it { expect(subject.to).to include('yalty@service.com') }
+    it { expect(subject.to).to include(requester.email) }
+    it { expect(subject.bcc).to include('yalty@service.com') }
     it { expect(subject.body.to_s).to include(account.company_name) }
     it { expect(subject.body.to_s).to include(account.id) }
     it { expect(subject.body.to_s).to include("#{account.subdomain}.#{ENV['YALTY_APP_DOMAIN']}") }
@@ -183,7 +184,8 @@ RSpec.describe ServiceRequestMailer, type: :mailer do
     subject { ServiceRequestMailer.book_request(account, requester, services_payload).deliver_now }
 
     it { expect { subject }.to change { ActionMailer::Base.deliveries.count } }
-    it { expect(subject.to).to include('yalty@service.com') }
+    it { expect(subject.to).to include(requester.email) }
+    it { expect(subject.bcc).to include('yalty@service.com') }
     it { expect(subject.body.to_s).to include(account.company_name) }
     it { expect(subject.body.to_s).to include(account.id) }
     it { expect(subject.body.to_s).to include("#{account.subdomain}.#{ENV['YALTY_APP_DOMAIN']}") }
