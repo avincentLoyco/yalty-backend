@@ -38,17 +38,17 @@ end
 # Build docker image
 #
 
-if ENV['TRAVIS_PULL_REQUEST'] == 'false' && ENV['DISABLE_DOCKER_IMAGE'] != 'true' && (
-    branch == 'mater' ||
-    branch =~ %r{^(?:tasks?|features?|bugs?|fix(?:es)?)/.*?ywa-\d+}i ||
-    branch =~ %r{^releases?/\d+\.\d+\.\d+(?:\.\d+)?$}i
-  )
+if ENV['TRAVIS_PULL_REQUEST'] == 'false' && ENV['DISABLE_DOCKER_IMAGE'] != 'true' &&
+    (
+      branch == 'mater' ||
+      branch =~ %r{^(?:tasks?|features?|bugs?|fix(?:es)?)/.*?ywa-\d+}i ||
+      branch =~ %r{^releases?/\d+\.\d+\.\d+(?:\.\d+)?$}i
+    )
 
   github.create_status(
     repository, sha1, 'pending',
     context: 'yalty/build', description: 'Docker image build queued'
   )
-
 
   travis.session.headers.merge!(
     'Content-Type' => 'application/json',
