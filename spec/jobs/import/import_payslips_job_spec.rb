@@ -9,7 +9,7 @@ RSpec.describe Import::ImportPayslipsJob, type: :job do
   end
   let!(:employee) { create(:employee, account: account) }
 
-  let(:payslip_filename) { "#{employee.id}-01-01-2016.pdf" }
+  let(:payslip_filename) { "20160101_#{employee.id}.pdf" }
   let(:payslip_date) { Date.parse('01-01-2016') }
   let(:ssh_payslip_path) { File.join('/fake/path', payslip_filename) }
 

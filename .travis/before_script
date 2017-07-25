@@ -38,12 +38,22 @@ end
 # Build docker image
 #
 
-if ENV['TRAVIS_PULL_REQUEST'] == 'false' && ENV['DISABLE_DOCKER_IMAGE'] != 'true' &&
+if ENV['DISABLE_DOCKER_IMAGE'] != 'true' &&
     (
-      branch == 'mater' ||
-      branch =~ %r{^(?:tasks?|features?|bugs?|fix(?:es)?)/.*?ywa-\d+}i ||
-      branch =~ %r{^releases?/\d+\.\d+\.\d+(?:\.\d+)?$}i
+      (
+        ENV['TRAVIS_PULL_REQUEST'] == 'false' &&
+        (branch == 'mater' || branch =~ %r{^releases?/\d+\.\d+\.\d+(?:\.\d+)?$}i)
+      ) || (
+        ENV['TRAVIS_PULL_REQUEST'] != 'false' &&
+        branch =~ %r{^(?:tasks?|features?|bugs?|fix(?:es)?)/.*?ywa-\d+}i
+      )
     )
+
+  target = if ENV['TRAVIS_PULL_REQUEST'] == 'false'
+             branch
+           else
+             ENV['TRAVIS_PULL_REQUEST']
+           end
 
   github.create_status(
     repository, sha1, 'pending',
@@ -64,7 +74,7 @@ if ENV['TRAVIS_PULL_REQUEST'] == 'false' && ENV['DISABLE_DOCKER_IMAGE'] != 'true
           "message": "#{branch}",
           "config": {
             "env": {
-              "YALTY_DOCKER_BUILD": "#{branch == 'master' ? 'master' : 'PR'}",
+              "YALTY_DOCKER_BUILD": "#{target}",
               "YALTY_DOCKER_BUILD_BRANCH": "#{branch}",
               "YALTY_DOCKER_BUILD_SHA1": "#{sha1}"
             }
