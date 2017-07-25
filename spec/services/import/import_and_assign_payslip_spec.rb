@@ -13,7 +13,7 @@ RSpec.describe Import::ImportAndAssignPayslips do
   let(:ssh_user) { 'fakeuser' }
   let(:ssh_path) { tmp_path.join('fakepath') }
 
-  let(:payslip_filename) { "#{employee.id}-01-01-2016.pdf" }
+  let(:payslip_filename) { "20160101_#{employee.id}.pdf" }
   let(:tmp_path) { Pathname.new('tmp').join('files') }
   let(:ssh_payslip_path) { ssh_path.join(payslip_filename) }
   let(:import_path) { tmp_path.join(payslip_filename) }

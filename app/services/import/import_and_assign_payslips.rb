@@ -5,7 +5,7 @@ module Import
     def initialize(employee, tmp_path, import_date = Time.zone.now)
       @employee = employee
       @import_date = import_date
-      @payslip_filename = "#{employee.id}-#{import_date.strftime('%d-%m-%Y')}.pdf"
+      @payslip_filename = "#{import_date.strftime('%Y%m%d')}_#{employee.id}.pdf"
       @import_path = Pathname.new(tmp_path).join(payslip_filename)
       @event = employee.events.find_by(event_type: 'salary_paid', effective_at: import_date.to_date)
     end

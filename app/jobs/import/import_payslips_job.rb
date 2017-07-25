@@ -9,12 +9,12 @@ module Import
     def perform(payslip_path)
       return unless ::Import::ImportAndAssignPayslips.enable?
 
-      employee, import_date =
+      import_date, employee =
         payslip_path
-        .scan(%r{([^/]+?)-(\d+-\d+-\d+)\.pdf$}).flatten
+        .scan(%r{(\d{8})_([^/]+?)\.pdf$}).flatten
         .tap do |values|
-          values[0] = Employee.find(values[0])
-          values[1] = Date.parse(values[1])
+          values[0] = Date.parse(values[0])
+          values[1] = Employee.find(values[1])
         end
 
       Dir.mktmpdir(employee.id) do |tmp_dir_path|
