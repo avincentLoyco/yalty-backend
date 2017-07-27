@@ -28,6 +28,19 @@ RSpec.describe CompanyEventsMailer, type: :mailer do
     it { expect(mail.to).to match_array(owners.map(&:email) + ['yalty@access.com']) }
     it { expect(mail.from).to eq([ENV['YALTY_APP_EMAIL']]) }
     it { expect(mail.body).to match_regex(mail_body) }
+
+    context 'when there are no user recipients' do
+      subject(:mail) do
+        described_class.event_changed(account, event, owners.first.id, action).deliver_now
+      end
+
+      before do
+        Account::User.where.not(id: owners.first.id).delete_all
+        account.update!(yalty_access: false)
+      end
+
+      it { expect(mail).to eq nil }
+    end
   end
 
   context 'update action' do

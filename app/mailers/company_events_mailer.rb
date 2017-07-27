@@ -4,12 +4,12 @@ class CompanyEventsMailer < ApplicationMailer
   def event_changed(account, company_event, user_id, controller_action)
     @account = account
     @company_event = company_event
-
+    mailer_recipients = recipients(@account, user_id)
+    return if mailer_recipients.blank?
     I18n.with_locale(@account.default_locale) do
       @action_name = I18n.t("company_events_mailer.action_#{controller_action}")
-
       mail(
-        to: recipients(@account, user_id),
+        to: mailer_recipients,
         subject: default_i18n_subject(company_name: account.company_name)
       )
     end
