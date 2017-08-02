@@ -55,8 +55,8 @@ fr:
       title: "L'entreprise demande un devis pour ces services"
     resume:
       title: Total
-      onetime_cost: "Coût unique : %{value}"
-      recuring_cost: "Coût récurant : %{value}"
+      onetime_cost: "Coût unique : "
+      recuring_cost: "Coûts récurrents : "
     company_info:
       request_by: "Demandé par %{fullname} (%{email})"
       phone: "Téléphone : "
