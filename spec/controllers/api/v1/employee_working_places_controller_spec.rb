@@ -22,6 +22,15 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
       event_type: 'hired', employee: employee, effective_at: contract_end_date + 1.day)
   end
 
+  shared_examples 'Proper error response' do
+    before { subject }
+    it { expect_json_keys('errors.*', %i(field messages status type codes employee_id)) }
+    it 'includes employee_id and error code' do
+      expect_json('errors.0',
+        employee_id: employee.id,
+        codes: error_code)
+    end
+  end
 
   describe 'reset join tables behaviour' do
     include_context 'shared_context_join_tables_controller',
@@ -327,11 +336,16 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
 
           context 'and the working place is the same as latest EWP policy' do
             let(:working_place_id) { latest_ewp.working_place }
+	    let(:error_code) do
+	      ["effective_at_join_table_with_given_date_and_resource_already_exists"]
+	    end
 
             it { expect { subject }.to_not change { EmployeeWorkingPlace.exists?(latest_ewp.id) } }
             it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
 
             it { is_expected.to have_http_status(422) }
+            it_behaves_like 'Proper error response'
+
             it do
               expect(subject.body)
                 .to include 'Join Table with given date and resource already exists'
@@ -408,15 +422,19 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
       context 'when effective already taken and the same resource send' do
         let(:effective_at) { employee_working_place.effective_at }
         let(:working_place_id) { employee_working_place.working_place_id }
+        let(:error_code) { ["effective_at_join_table_with_given_date_and_resource_already_exists"] }
 
         it { is_expected.to have_http_status(422) }
+        it_behaves_like 'Proper error response'
       end
 
       context 'when effective at before first working place effective at' do
         let(:effective_at) { employee_working_place.effective_at - 1.month }
+        let(:error_code) { ["effective_at_cant_be_set_outside_of_employee_contract_period"] }
 
         it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
         it { is_expected.to have_http_status(422) }
+        it_behaves_like 'Proper error response'
       end
     end
   end
@@ -651,6 +669,7 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
         end
         let(:id) { new_ewp }
         let(:effective_at) { employee_working_place.effective_at }
+        let(:error_code) { ["effective_at_join_table_with_given_date_and_resource_already_exists"] }
 
         it { expect { subject }.to_not change { employee_working_place.reload.effective_at } }
         it do
@@ -658,6 +677,7 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
         end
 
         it { is_expected.to have_http_status(422) }
+        it_behaves_like 'Proper error response'
       end
 
       context 'when there is employee balance' do
@@ -700,9 +720,13 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
                 working_place: new_employee_working_place.working_place)
             end
             let(:effective_at) { 5.years.ago }
+            let(:error_code) do
+              ["effective_at_join_table_with_given_date_and_resource_already_exists"]
+            end
 
             it { expect { subject }.to_not change { new_employee_working_place.reload.effective_at } }
             it { is_expected.to have_http_status(422) }
+            it_behaves_like 'Proper error response'
           end
         end
       end

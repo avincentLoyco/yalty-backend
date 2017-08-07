@@ -4,6 +4,16 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
   include_context 'shared_context_headers'
   include_context 'shared_context_timecop_helper'
 
+  shared_examples 'Proper error response' do
+    before { subject }
+    it { expect_json_keys('errors.*', %i(field messages status type codes employee_id)) }
+    it 'includes employee_id and error code' do
+      expect_json('errors.0',
+        employee_id: employee.id,
+        codes: error_code)
+    end
+  end
+
   let(:presence_policy) { create(:presence_policy, :with_presence_day, account: account) }
   let(:employee) { create(:employee, account: Account.current) }
   let(:presence_policy_id) { presence_policy.id }
@@ -326,6 +336,9 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
 
           context 'and the presence policy is the same as latest EPP policy' do
             let(:presence_policy_id) { latest_epp.presence_policy }
+            let(:error_code) do
+              ['effective_at_join_table_with_given_date_and_resource_already_exists']
+            end
 
             it { expect { subject }.to_not change { EmployeePresencePolicy.count } }
             it { expect { subject }.to_not change { EmployeePresencePolicy.exists?(latest_epp.id) } }
@@ -335,6 +348,8 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
               expect(subject.body)
                 .to include 'Join Table with given date and resource already exists'
             end
+
+            it_behaves_like 'Proper error response'
           end
         end
 
@@ -383,9 +398,12 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
             time_off: time_off
           )
         end
+        let(:error_code) { ["presence_policy_must_have_presencedays_assigned"] }
 
         it { expect { subject }.to_not change { employee.employee_presence_policies.count } }
         it { is_expected.to have_http_status(422) }
+
+        it_behaves_like 'Proper error response'
       end
 
       context 'when employee does not belong to current account' do
@@ -738,9 +756,12 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
         let!(:existing_resource) do
           join_table_resource.dup.tap { |resource| resource.update!(effective_at: '1/1/2016') }
         end
+        let(:error_code) { ['effective_at_join_table_with_given_date_and_resource_already_exists'] }
 
         it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
         it { is_expected.to have_http_status(422) }
+
+        it_behaves_like 'Proper error response'
       end
 
       context 'when user is not account manager' do

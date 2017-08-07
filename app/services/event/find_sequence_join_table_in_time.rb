@@ -63,7 +63,7 @@ class FindSequenceJoinTableInTime
   def verify_if_resource_not_duplicated
     return unless current_join_table.try(:send, resource_class) == resource.id
     raise InvalidResourcesError.new(
-      join_tables.first.class,
+      join_tables.first,
       effective_at: ['Join Table with given date and resource already exists']
     )
   end
@@ -73,7 +73,7 @@ class FindSequenceJoinTableInTime
     return unless current_join_table && current_join_table.related_resource.reset? &&
         !employee.contract_periods_include?(new_effective_at)
     raise InvalidResourcesError.new(
-      join_tables.first.class,
+      join_tables.first,
       effective_at: ['Can not assign in reset resource effective at']
     )
   end
