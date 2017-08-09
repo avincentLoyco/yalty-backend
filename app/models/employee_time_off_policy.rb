@@ -12,6 +12,8 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
 
   validates :employee_id, :time_off_policy_id, :effective_at, presence: true
   validates :effective_at, uniqueness: { scope: [:employee_id, :time_off_category_id] }
+  validates :occupation_rate,
+    numericality: { less_than_or_equal_to: 1, greater_than_or_equal_to: 0 }
   validate :verify_not_change_of_policy_type_in_category, if: [:employee, :time_off_policy]
   validate :no_balances_without_valid_policy, on: :update
 

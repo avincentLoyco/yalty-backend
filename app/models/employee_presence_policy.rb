@@ -10,6 +10,8 @@ class EmployeePresencePolicy < ActiveRecord::Base
   validates :employee_id, :presence_policy_id, :effective_at, presence: true
   validates :effective_at, uniqueness: { scope: [:employee_id, :presence_policy_id] }
   validates :order_of_start_day, numericality: { greater_than: 0 }
+  validates :occupation_rate,
+    numericality: { less_than_or_equal_to: 1, greater_than_or_equal_to: 0 }
   validate :presence_days_presence, if: -> { presence_policy.present? && !presence_policy.reset }
   validate :order_smaller_than_last_presence_day_order, if: [:presence_policy, :order_of_start_day]
 

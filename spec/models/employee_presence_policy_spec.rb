@@ -9,9 +9,16 @@ RSpec.describe EmployeePresencePolicy, type: :model do
   it { is_expected.to have_db_column(:presence_policy_id).of_type(:uuid) }
   it { is_expected.to have_db_column(:effective_at).of_type(:date) }
   it { is_expected.to have_db_column(:order_of_start_day).of_type(:integer) }
+  it { is_expected.to have_db_column(:occupation_rate).of_type(:float) }
   it { is_expected.to validate_presence_of(:employee_id) }
   it { is_expected.to validate_presence_of(:presence_policy_id) }
   it { is_expected.to validate_presence_of(:effective_at) }
+  it do
+    is_expected.to validate_numericality_of(:occupation_rate)
+      .is_less_than_or_equal_to(1)
+      .is_greater_than_or_equal_to(0)
+  end
+
   it { is_expected.to have_db_index([:presence_policy_id, :employee_id]) }
   it { is_expected.to have_db_index([:employee_id, :presence_policy_id, :effective_at]).unique }
 

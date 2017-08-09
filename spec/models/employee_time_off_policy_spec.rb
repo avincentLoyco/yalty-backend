@@ -7,16 +7,23 @@ RSpec.describe EmployeeTimeOffPolicy, type: :model do
   it { is_expected.to have_db_column(:time_off_policy_id).of_type(:uuid) }
   it { is_expected.to have_db_column(:time_off_category_id).of_type(:uuid) }
   it { is_expected.to have_db_column(:effective_at).of_type(:date) }
+  it { is_expected.to have_db_column(:occupation_rate).of_type(:float) }
 
   it { is_expected.to validate_presence_of(:employee_id) }
   it { is_expected.to validate_presence_of(:time_off_policy_id) }
-    it { is_expected.to validate_presence_of(:effective_at) }
+  it { is_expected.to validate_presence_of(:effective_at) }
+
+  it do
+    is_expected.to validate_numericality_of(:occupation_rate)
+      .is_less_than_or_equal_to(1)
+      .is_greater_than_or_equal_to(0)
+  end
   it { is_expected.to have_db_index([:employee_id, :time_off_category_id, :effective_at]) }
   it '' do
     is_expected.to have_db_index([:employee_id, :time_off_category_id, :effective_at]).unique
   end
 
-  it 'the category_id must be the one to whihc the policy belongs' do
+  it 'the category_id must be the one to which the policy belongs' do
     expect(etop.time_off_category_id).to eq(etop.time_off_policy.time_off_category_id)
   end
 
