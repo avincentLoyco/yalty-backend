@@ -26,5 +26,11 @@ RSpec.describe Payments::CreateInvoicePdf do
 
   context 'success' do
     it { expect { call_service }.to change { invoice.generic_file }.from(nil) }
+
+    context 'when cards are deleted before' do
+      let(:card_id) { nil }
+      let(:customer_sources) { [] }
+      it { expect { call_service }.to change { invoice.generic_file }.from(nil) }
+    end
   end
 end
