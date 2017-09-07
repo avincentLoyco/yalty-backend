@@ -111,8 +111,8 @@ module Payments
     def pdf_charge_details
       @pdf.text t(
         'payment.pdf.items.card_charged',
-        brand: @card.brand,
-        last4: @card.last4,
+        brand: @card&.brand,
+        last4: @card&.last4,
         amount_due: in_chf(@invoice.amount_due),
         email: ENV['YALTY_BILLING_EMAIL']
       ), inline_format: true
