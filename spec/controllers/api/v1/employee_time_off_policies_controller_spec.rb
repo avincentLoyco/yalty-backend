@@ -15,6 +15,16 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
       resource: :time_off_policy
   end
 
+  shared_examples 'Proper error response' do
+    before { subject }
+    it { expect_json_keys('errors.*', %i(field messages status type codes employee_id)) }
+    it 'includes employee_id and error code' do
+      expect_json('errors.0',
+        employee_id: employee.id,
+        codes: error_code)
+    end
+  end
+
   shared_examples 'TimeOff validity date change' do
     let!(:time_off_balance) do
       create(:employee_balance_manual, :with_time_off,
@@ -321,6 +331,9 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
           context 'when the same resource assigned' do
             let(:time_off_policy_id) { top_a.id }
+            let(:error_code) do
+              ['effective_at_join_table_with_given_date_and_resource_already_exists']
+            end
 
             it { expect { subject }.to_not change { TimeOff.count } }
             it { expect { subject }.to_not change { EmployeeTimeOffPolicy } }
@@ -333,6 +346,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
                 employee.reload.employee_time_off_policies.pluck(:time_off_policy_id) }
             end
             it { is_expected.to have_http_status(422) }
+            it_behaves_like 'Proper error response'
           end
         end
 
@@ -477,10 +491,16 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
         end
 
         context "and it's policy is the same as the policy as the ETOP being created" do
+          let(:employee_id) { employee.id}
+          let(:error_code) do
+            ['effective_at_join_table_with_given_date_and_resource_already_exists']
+          end
+
           it { expect { subject }.to_not change { EmployeeTimeOffPolicy.count } }
           it { expect { subject }.to_not change { Employee::Balance.count } }
 
           it { is_expected.to have_http_status(422) }
+          it_behaves_like 'Proper error response'
         end
 
         context "and it's policy is a different one than the policy as the ETOP being created " do
@@ -610,9 +630,12 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
     context 'when effective at is before employee start date' do
       before { subject }
       let(:effective_at) { 20.years.ago }
+      let(:error_code) { ['effective_at_cant_be_set_outside_of_employee_contract_period'] }
+
+      it { expect(response.body).to include 'can\'t be set outside of employee contract period' }
 
       it { is_expected.to have_http_status(422) }
-      it { expect(response.body).to include 'can\'t be set outside of employee contract period' }
+      it_behaves_like 'Proper error response'
     end
 
     context 'when hired and contract end in the same date' do
@@ -625,20 +648,26 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
       let(:effective_at) { employee.hired_date + 1.day }
 
       context 'when employee had assignations' do
+        let(:error_code) { ["effective_at_can_not_assign_in_reset_resource_effective_at"] }
         before { subject }
 
-        it { is_expected.to have_http_status(422) }
         it { expect(response.body).to include 'Can not assign in reset resource effective at' }
+
+        it { is_expected.to have_http_status(422) }
+        it_behaves_like 'Proper error response'
       end
 
       context 'when employee does not have assignations' do
+        let(:error_code) { ['effective_at_cant_be_set_outside_of_employee_contract_period'] }
         before do
           EmployeeTimeOffPolicy.destroy_all
           subject
         end
 
-        it { is_expected.to have_http_status(422) }
         it { expect(response.body).to include 'can\'t be set outside of employee contract period' }
+
+        it { is_expected.to have_http_status(422) }
+        it_behaves_like 'Proper error response'
       end
     end
   end
@@ -911,10 +940,14 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
         context "and it's policy is the same as the policy as the ETOP being created" do
           let(:time_off_policy) { past_etop.time_off_policy }
+          let(:error_code) do
+            ['effective_at_join_table_with_given_date_and_resource_already_exists']
+          end
 
           it { expect { subject }.to_not change { EmployeeTimeOffPolicy.count } }
 
           it { is_expected.to have_http_status(422) }
+          it_behaves_like 'Proper error response'
         end
 
         context "and it's policy is a different one than the policy as the ETOP being created " do
@@ -1037,9 +1070,12 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
         context 'after old effective_at' do
           let(:effective_at) { 5.years.since }
           let(:time_off_effective_at) { 2.days.since }
+          let(:error_code) do
+            ['effective_at_cant_change_if_there_are_time_offs_after_and_there_is_no_previous_policy']
+          end
 
           it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
-          it { is_expected.to have_http_status(422) }
+
           it 'returns valid response' do
             subject
 
@@ -1047,6 +1083,9 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
               "Can't change if there are time offs after and there is no previous policy"
             )
           end
+
+          it { is_expected.to have_http_status(422) }
+          it_behaves_like 'Proper error response'
         end
 
         context 'after new effective_at' do
@@ -1075,9 +1114,12 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
         let!(:existing_resource) do
           join_table_resource.dup.tap { |resource| resource.update!(effective_at: effective_at) }
         end
+        let(:error_code) { ['effective_at_join_table_with_given_date_and_resource_already_exists'] }
 
         it { expect { subject }.to_not change { join_table_resource.reload.effective_at } }
+
         it { is_expected.to have_http_status(422) }
+        it_behaves_like 'Proper error response'
       end
 
       context 'when user is not account manager' do
@@ -1194,11 +1236,13 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
               effective_at: employee_time_off_policy.effective_at + 5.days,
               time_off_category: category)
           end
+          let(:error_code) do
+            ['effective_at_cant_remove_if_there_are_time_offs_after_and_there_is_no_previous_policy']
+          end
 
           before { ManageEmployeeBalanceAdditions.new(employee_time_off_policy).call }
 
           it { expect { subject }.to_not change { EmployeeTimeOffPolicy.count } }
-          it { is_expected.to have_http_status(403) }
           it do
             subject
 
@@ -1206,6 +1250,9 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
               'Can\'t remove if there are time offs after and there is no previous policy'
             )
           end
+
+          it { is_expected.to have_http_status(403) }
+          it_behaves_like 'Proper error response'
         end
 
         context 'and these are additions balances' do

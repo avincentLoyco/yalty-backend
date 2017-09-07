@@ -45,17 +45,26 @@ module Api::V1
           messages: messages,
           status: 'invalid',
           type: resource_type,
-          codes: generate_codes(field, messages)
+          codes: generate_codes(field, messages),
+          employee_id: join_table_employee_id
         }
       end
       errors
+    end
+
+    def join_table_employee_id
+      return if !resource.is_a?(ActiveRecord::Base) ||
+          Employee::RESOURCE_JOIN_TABLES.exclude?(resource.model_name.route_key)
+      resource&.employee&.id
     end
 
     def generate_codes(field, messages)
       return [] if messages.blank?
       messages.each_with_object([]) do |message, codes|
         next unless message && !message.is_a?(Array)
-        codes << field.to_s + '_' + message.gsub(/[^a-z0-9\s]/i, '').tr(' ', '_').downcase
+        codes << field.to_s + '_' + message
+                                    .gsub(/([^a-z0-9\s]|( \da\+.$| on \d+\.$|\.$))/i, '')
+                                    .tr(' ', '_').downcase
         codes
       end
     end
