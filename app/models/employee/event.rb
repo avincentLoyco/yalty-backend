@@ -63,6 +63,16 @@ class Employee::Event < ActiveRecord::Base
     Employee::Event::EVENT_ATTRIBUTES.keys.map(&:to_s)
   end
 
+  def attribute_values
+    attrs_keys = {}
+    employee_attribute_versions.each do |attribute_version|
+      attrs_keys[attribute_version.attribute_definition.name] =
+        Employee::AttributeVersion.where(attribute_definition_id:
+          attribute_version.attribute_definition_id).first.value
+    end
+    attrs_keys
+  end
+
   def event_attributes
     Employee::Event::EVENT_ATTRIBUTES[event_type]
   end
