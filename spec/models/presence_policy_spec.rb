@@ -8,6 +8,7 @@ RSpec.describe PresencePolicy, type: :model do
   it { is_expected.to have_db_column(:name).of_type(:string) }
   it { is_expected.to have_db_column(:standard_day_duration).of_type(:integer) }
   it { is_expected.to have_db_column(:account_id).of_type(:uuid) }
+  it { is_expected.to have_db_column(:occupation_rate).of_type(:float) }
   it { is_expected.to have_many(:employees) }
   it { is_expected.to have_many(:presence_days) }
   it { is_expected.to have_many(:time_entries) }
@@ -15,6 +16,11 @@ RSpec.describe PresencePolicy, type: :model do
   it { is_expected.to belong_to(:account) }
   it { is_expected.to validate_presence_of(:account_id) }
   it { is_expected.to validate_presence_of(:name) }
+  it do
+    is_expected.to validate_numericality_of(:occupation_rate)
+      .is_less_than_or_equal_to(1)
+      .is_greater_than_or_equal_to(0)
+  end
 
   context 'scopes' do
     context '.active_for_employee' do

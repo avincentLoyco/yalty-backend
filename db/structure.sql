@@ -2,17 +2,12 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 9.6.1
--- Dumped by pg_dump version 9.6.1
-
 SET statement_timeout = 0;
 SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
-SET row_security = off;
 
 --
 -- Name: tiger; Type: SCHEMA; Schema: -; Owner: -
@@ -174,7 +169,7 @@ CREATE TABLE accounts (
 
 
 --
--- Name: company_events; Type: TABLE; Schema: public; Owner: -
+-- Name: company_events; Type: TABLE; Schema: public; Owner: -; Tablespace:
 --
 
 CREATE TABLE company_events (
@@ -296,7 +291,6 @@ CREATE TABLE employee_presence_policies (
     order_of_start_day integer DEFAULT 1 NOT NULL,
     created_at timestamp without time zone,
     updated_at timestamp without time zone,
-    occupation_rate double precision DEFAULT 1.0 NOT NULL,
     employee_event_id uuid
 );
 
@@ -550,7 +544,8 @@ CREATE TABLE presence_policies (
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
     reset boolean DEFAULT false NOT NULL,
-    standard_day_duration integer
+    standard_day_duration integer,
+    occupation_rate double precision DEFAULT 1.0 NOT NULL
 );
 
 
@@ -696,28 +691,28 @@ CREATE TABLE working_places (
 
 
 --
--- Name: oauth_access_grants id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY oauth_access_grants ALTER COLUMN id SET DEFAULT nextval('oauth_access_grants_id_seq'::regclass);
 
 
 --
--- Name: oauth_access_tokens id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY oauth_access_tokens ALTER COLUMN id SET DEFAULT nextval('oauth_access_tokens_id_seq'::regclass);
 
 
 --
--- Name: oauth_applications id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY oauth_applications ALTER COLUMN id SET DEFAULT nextval('oauth_applications_id_seq'::regclass);
 
 
 --
--- Name: account_registration_keys account_registration_keys_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: account_registration_keys_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY account_registration_keys
@@ -725,7 +720,7 @@ ALTER TABLE ONLY account_registration_keys
 
 
 --
--- Name: account_users account_users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: account_users_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY account_users
@@ -733,7 +728,7 @@ ALTER TABLE ONLY account_users
 
 
 --
--- Name: accounts accounts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: accounts_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY accounts
@@ -741,7 +736,7 @@ ALTER TABLE ONLY accounts
 
 
 --
--- Name: company_events company_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: company_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY company_events
@@ -749,7 +744,7 @@ ALTER TABLE ONLY company_events
 
 
 --
--- Name: employee_attribute_definitions employee_attribute_definitions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: employee_attribute_definitions_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY employee_attribute_definitions
@@ -757,7 +752,7 @@ ALTER TABLE ONLY employee_attribute_definitions
 
 
 --
--- Name: employee_attribute_versions employee_attribute_versions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: employee_attribute_versions_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY employee_attribute_versions
@@ -765,7 +760,7 @@ ALTER TABLE ONLY employee_attribute_versions
 
 
 --
--- Name: employee_balances employee_balances_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: employee_balances_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY employee_balances
@@ -773,7 +768,7 @@ ALTER TABLE ONLY employee_balances
 
 
 --
--- Name: employee_events employee_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: employee_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY employee_events
@@ -781,7 +776,7 @@ ALTER TABLE ONLY employee_events
 
 
 --
--- Name: generic_files employee_files_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: employee_files_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY generic_files
@@ -789,7 +784,7 @@ ALTER TABLE ONLY generic_files
 
 
 --
--- Name: employee_presence_policies employee_presence_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: employee_presence_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY employee_presence_policies
@@ -797,7 +792,7 @@ ALTER TABLE ONLY employee_presence_policies
 
 
 --
--- Name: employee_time_off_policies employee_time_off_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: employee_time_off_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY employee_time_off_policies
@@ -805,7 +800,7 @@ ALTER TABLE ONLY employee_time_off_policies
 
 
 --
--- Name: employee_working_places employee_working_places_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: employee_working_places_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY employee_working_places
@@ -813,7 +808,7 @@ ALTER TABLE ONLY employee_working_places
 
 
 --
--- Name: employees employees_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: employees_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY employees
@@ -821,7 +816,7 @@ ALTER TABLE ONLY employees
 
 
 --
--- Name: holiday_policies holiday_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: holiday_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY holiday_policies
@@ -829,7 +824,7 @@ ALTER TABLE ONLY holiday_policies
 
 
 --
--- Name: holidays holidays_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: holidays_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY holidays
@@ -837,7 +832,7 @@ ALTER TABLE ONLY holidays
 
 
 --
--- Name: invoices invoices_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: invoices_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY invoices
@@ -845,7 +840,7 @@ ALTER TABLE ONLY invoices
 
 
 --
--- Name: oauth_access_grants oauth_access_grants_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: oauth_access_grants_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY oauth_access_grants
@@ -853,7 +848,7 @@ ALTER TABLE ONLY oauth_access_grants
 
 
 --
--- Name: oauth_access_tokens oauth_access_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: oauth_access_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY oauth_access_tokens
@@ -861,7 +856,7 @@ ALTER TABLE ONLY oauth_access_tokens
 
 
 --
--- Name: oauth_applications oauth_applications_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: oauth_applications_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY oauth_applications
@@ -869,7 +864,7 @@ ALTER TABLE ONLY oauth_applications
 
 
 --
--- Name: presence_days presence_days_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: presence_days_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY presence_days
@@ -877,7 +872,7 @@ ALTER TABLE ONLY presence_days
 
 
 --
--- Name: presence_policies presence_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: presence_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY presence_policies
@@ -885,7 +880,7 @@ ALTER TABLE ONLY presence_policies
 
 
 --
--- Name: referrers referrers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: referrers_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY referrers
@@ -893,7 +888,7 @@ ALTER TABLE ONLY referrers
 
 
 --
--- Name: registered_working_times registered_working_times_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: registered_working_times_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY registered_working_times
@@ -901,7 +896,7 @@ ALTER TABLE ONLY registered_working_times
 
 
 --
--- Name: time_entries time_entries_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: time_entries_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY time_entries
@@ -909,7 +904,7 @@ ALTER TABLE ONLY time_entries
 
 
 --
--- Name: time_off_categories time_off_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: time_off_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY time_off_categories
@@ -917,7 +912,7 @@ ALTER TABLE ONLY time_off_categories
 
 
 --
--- Name: time_off_policies time_off_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: time_off_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY time_off_policies
@@ -925,7 +920,7 @@ ALTER TABLE ONLY time_off_policies
 
 
 --
--- Name: time_offs time_offs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: time_offs_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY time_offs
@@ -933,7 +928,7 @@ ALTER TABLE ONLY time_offs
 
 
 --
--- Name: working_places working_places_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: working_places_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace:
 --
 
 ALTER TABLE ONLY working_places
@@ -941,14 +936,14 @@ ALTER TABLE ONLY working_places
 
 
 --
--- Name: employee_attribute_versions_uniqueness_partial; Type: INDEX; Schema: public; Owner: -
+-- Name: employee_attribute_versions_uniqueness_partial; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
 CREATE UNIQUE INDEX employee_attribute_versions_uniqueness_partial ON employee_attribute_versions USING btree (attribute_definition_id, employee_id, employee_event_id) WHERE (multiple = false);
 
 
 --
--- Name: index_account_registration_keys_on_account_id; Type: INDEX; Schema: public; Owner: -
+-- Name: index_account_registration_keys_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
 CREATE INDEX index_account_registration_keys_on_account_id ON account_registration_keys USING btree (account_id);
@@ -976,14 +971,14 @@ CREATE UNIQUE INDEX index_accounts_on_subdomain ON accounts USING btree (subdoma
 
 
 --
--- Name: index_company_events_on_account_id; Type: INDEX; Schema: public; Owner: -
+-- Name: index_company_events_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
 CREATE INDEX index_company_events_on_account_id ON company_events USING btree (account_id);
 
 
 --
--- Name: index_employee_attribute_definitions_on_account_id; Type: INDEX; Schema: public; Owner: -
+-- Name: index_employee_attribute_definitions_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
 CREATE INDEX index_employee_attribute_definitions_on_account_id ON employee_attribute_definitions USING btree (account_id);
@@ -1081,14 +1076,14 @@ CREATE UNIQUE INDEX index_employee_id_working_place_id_order ON employee_attribu
 
 
 --
--- Name: index_employee_presence_policies_on_employee_event_id; Type: INDEX; Schema: public; Owner: -
+-- Name: index_employee_presence_policies_on_employee_event_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
 CREATE INDEX index_employee_presence_policies_on_employee_event_id ON employee_presence_policies USING btree (employee_event_id);
 
 
 --
--- Name: index_employee_presence_policies_on_employee_id; Type: INDEX; Schema: public; Owner: -
+-- Name: index_employee_presence_policies_on_employee_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
 CREATE INDEX index_employee_presence_policies_on_employee_id ON employee_presence_policies USING btree (employee_id);
@@ -1116,14 +1111,14 @@ CREATE UNIQUE INDEX index_employee_time_off_category_effective_at ON employee_ti
 
 
 --
--- Name: index_employee_time_off_policies_on_employee_event_id; Type: INDEX; Schema: public; Owner: -
+-- Name: index_employee_time_off_policies_on_employee_event_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
 CREATE INDEX index_employee_time_off_policies_on_employee_event_id ON employee_time_off_policies USING btree (employee_event_id);
 
 
 --
--- Name: index_employee_time_off_policies_on_employee_id; Type: INDEX; Schema: public; Owner: -
+-- Name: index_employee_time_off_policies_on_employee_id; Type: INDEX; Schema: public; Owner: -; Tablespace:
 --
 
 CREATE INDEX index_employee_time_off_policies_on_employee_id ON employee_time_off_policies USING btree (employee_id);
@@ -1298,14 +1293,14 @@ CREATE UNIQUE INDEX unique_schema_migrations ON schema_migrations USING btree (v
 
 
 --
--- Name: invoices receipt_number_generator; Type: TRIGGER; Schema: public; Owner: -
+-- Name: receipt_number_generator; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER receipt_number_generator BEFORE UPDATE ON invoices FOR EACH ROW WHEN ((((old.status)::text IS DISTINCT FROM (new.status)::text) AND ((new.status)::text = 'success'::text))) EXECUTE PROCEDURE assign_receipt_number();
 
 
 --
--- Name: employee_presence_policies fk_rails_03a3e21eaf; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: fk_rails_03a3e21eaf; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY employee_presence_policies
@@ -1313,7 +1308,7 @@ ALTER TABLE ONLY employee_presence_policies
 
 
 --
--- Name: employee_working_places fk_rails_04a25b070a; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: fk_rails_04a25b070a; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY employee_working_places
@@ -1321,7 +1316,7 @@ ALTER TABLE ONLY employee_working_places
 
 
 --
--- Name: employee_time_off_policies fk_rails_06c847ea6d; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: fk_rails_06c847ea6d; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY employee_time_off_policies
@@ -1329,7 +1324,7 @@ ALTER TABLE ONLY employee_time_off_policies
 
 
 --
--- Name: time_entries fk_rails_0c64f4ddd5; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: fk_rails_0c64f4ddd5; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY time_entries
@@ -1337,7 +1332,7 @@ ALTER TABLE ONLY time_entries
 
 
 --
--- Name: employee_presence_policies fk_rails_1776c10fbd; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: fk_rails_1776c10fbd; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY employee_presence_policies
@@ -1345,7 +1340,7 @@ ALTER TABLE ONLY employee_presence_policies
 
 
 --
--- Name: working_places fk_rails_1c5b30ec32; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: fk_rails_1c5b30ec32; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY working_places
@@ -1353,7 +1348,7 @@ ALTER TABLE ONLY working_places
 
 
 --
--- Name: employee_attribute_versions fk_rails_1d20586b4f; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: fk_rails_1d20586b4f; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY employee_attribute_versions
@@ -1361,7 +1356,7 @@ ALTER TABLE ONLY employee_attribute_versions
 
 
 --
--- Name: employee_working_places fk_rails_2b93aa4b89; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: fk_rails_2b93aa4b89; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY employee_working_places
@@ -1369,7 +1364,7 @@ ALTER TABLE ONLY employee_working_places
 
 
 --
--- Name: oauth_access_grants fk_rails_330c32d8d9; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: fk_rails_330c32d8d9; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY oauth_access_grants
@@ -1377,7 +1372,7 @@ ALTER TABLE ONLY oauth_access_grants
 
 
 --
--- Name: employee_presence_policies fk_rails_4421c7d101; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: fk_rails_4421c7d101; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY employee_presence_policies
@@ -1385,7 +1380,7 @@ ALTER TABLE ONLY employee_presence_policies
 
 
 --
--- Name: employee_balances fk_rails_489b112f2d; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: fk_rails_489b112f2d; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY employee_balances
@@ -1393,7 +1388,7 @@ ALTER TABLE ONLY employee_balances
 
 
 --
--- Name: time_off_categories fk_rails_4ce8347ccb; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: fk_rails_4ce8347ccb; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY time_off_categories
@@ -1401,7 +1396,7 @@ ALTER TABLE ONLY time_off_categories
 
 
 --
--- Name: time_offs fk_rails_5092c7896c; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: fk_rails_5092c7896c; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY time_offs
@@ -1409,7 +1404,7 @@ ALTER TABLE ONLY time_offs
 
 
 --
--- Name: employee_events fk_rails_5a8fc35128; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: fk_rails_5a8fc35128; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY employee_events
@@ -1417,7 +1412,7 @@ ALTER TABLE ONLY employee_events
 
 
 --
--- Name: employee_attribute_versions fk_rails_6e495897f4; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: fk_rails_6e495897f4; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY employee_attribute_versions
@@ -1425,7 +1420,7 @@ ALTER TABLE ONLY employee_attribute_versions
 
 
 --
--- Name: employee_time_off_policies fk_rails_76b69bfe10; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: fk_rails_76b69bfe10; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY employee_time_off_policies
@@ -1433,7 +1428,7 @@ ALTER TABLE ONLY employee_time_off_policies
 
 
 --
--- Name: employee_attribute_definitions fk_rails_836004d785; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: fk_rails_836004d785; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY employee_attribute_definitions
@@ -1441,7 +1436,7 @@ ALTER TABLE ONLY employee_attribute_definitions
 
 
 --
--- Name: employee_balances fk_rails_878bdb42b2; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: fk_rails_878bdb42b2; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY employee_balances
@@ -1449,7 +1444,7 @@ ALTER TABLE ONLY employee_balances
 
 
 --
--- Name: holidays fk_rails_8df7ccdc3f; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: fk_rails_8df7ccdc3f; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY holidays
@@ -1457,7 +1452,7 @@ ALTER TABLE ONLY holidays
 
 
 --
--- Name: presence_policies fk_rails_95b0b0db67; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: fk_rails_95b0b0db67; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY presence_policies
@@ -1465,7 +1460,7 @@ ALTER TABLE ONLY presence_policies
 
 
 --
--- Name: registered_working_times fk_rails_a2016e0f0d; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: fk_rails_a2016e0f0d; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY registered_working_times
@@ -1473,7 +1468,7 @@ ALTER TABLE ONLY registered_working_times
 
 
 --
--- Name: holiday_policies fk_rails_ae92552259; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: fk_rails_ae92552259; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY holiday_policies
@@ -1481,7 +1476,7 @@ ALTER TABLE ONLY holiday_policies
 
 
 --
--- Name: employee_balances fk_rails_b0c50133fb; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: fk_rails_b0c50133fb; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY employee_balances
@@ -1489,7 +1484,7 @@ ALTER TABLE ONLY employee_balances
 
 
 --
--- Name: employee_time_off_policies fk_rails_be9ada4c17; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: fk_rails_be9ada4c17; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY employee_time_off_policies
@@ -1497,7 +1492,7 @@ ALTER TABLE ONLY employee_time_off_policies
 
 
 --
--- Name: account_users fk_rails_c96445f213; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: fk_rails_c96445f213; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY account_users
@@ -1505,7 +1500,7 @@ ALTER TABLE ONLY account_users
 
 
 --
--- Name: employees fk_rails_d55a0137c3; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: fk_rails_d55a0137c3; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY employees
@@ -1513,7 +1508,7 @@ ALTER TABLE ONLY employees
 
 
 --
--- Name: time_off_policies fk_rails_d8df29117a; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: fk_rails_d8df29117a; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY time_off_policies
@@ -1521,7 +1516,7 @@ ALTER TABLE ONLY time_off_policies
 
 
 --
--- Name: presence_days fk_rails_e31d8e8b9d; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: fk_rails_e31d8e8b9d; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY presence_days
@@ -1529,7 +1524,7 @@ ALTER TABLE ONLY presence_days
 
 
 --
--- Name: oauth_access_tokens fk_rails_ee63f25419; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: fk_rails_ee63f25419; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY oauth_access_tokens
@@ -1537,7 +1532,7 @@ ALTER TABLE ONLY oauth_access_tokens
 
 
 --
--- Name: time_offs fk_rails_f5cbfdb8ce; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: fk_rails_f5cbfdb8ce; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY time_offs
@@ -1867,4 +1862,6 @@ INSERT INTO schema_migrations (version) VALUES ('20170627145056');
 INSERT INTO schema_migrations (version) VALUES ('20170807093842');
 
 INSERT INTO schema_migrations (version) VALUES ('20170825104201');
+
+INSERT INTO schema_migrations (version) VALUES ('20170915101524');
 

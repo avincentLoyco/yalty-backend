@@ -25,7 +25,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
     end
   end
 
-  shared_examples "TimeOff validity date change when both policies have validity date" do
+  shared_examples 'TimeOff validity date change when both policies have validity date' do
     let!(:time_off_balance) do
       create(:employee_balance_manual, :with_time_off,
         employee: employee, time_off_category: category, effective_at: time_off_end,
