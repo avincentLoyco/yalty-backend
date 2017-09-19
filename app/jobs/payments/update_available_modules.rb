@@ -29,8 +29,8 @@ module Payments
     private
 
     def proration_date(date)
-      DateTime.new(date.year, date.month, date.day, current_period_end.hour,
-        current_period_end.min, current_period_end.sec, current_period_end.zone).to_i
+      (DateTime.new(date.year, date.month, date.day, current_period_end.hour,
+        current_period_end.min, current_period_end.sec, current_period_end.zone) + 1.minute).to_i
     end
 
     def current_period_end
