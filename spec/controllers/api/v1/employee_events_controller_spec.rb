@@ -68,6 +68,19 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     end
   end
   let(:last_name_attribute_id) { last_name_attribute.id }
+  let!(:occupation_rate_definition) do
+    create(:employee_attribute_definition,
+      account: Account.current,
+      name: 'occupation_rate',
+      attribute_type: 'Number',
+      validation: { range: [0, 1] })
+  end
+  let(:occupation_rate_attribute_definition) { 'occupation_rate' }
+  let(:occupation_rate_attribute) do
+    event.employee_attribute_versions.find do |attr|
+      attr.attribute_name == 'occupation_rate'
+    end
+  end
   let(:first_pet_name) { 'Pluto' }
   let(:second_pet_name) { 'Scooby Doo' }
   let!(:multiple_attribute_definition) do
@@ -88,6 +101,9 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         order: 2
       }
     ]
+  end
+  let!(:presence_policy) do
+    create(:presence_policy, :with_time_entries, account: employee.account, occupation_rate: 0.5)
   end
 
   shared_examples 'Unprocessable Entity on create' do
@@ -182,17 +198,19 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
   describe 'POST #create' do
     subject { post :create, json_payload }
 
-    let(:effective_at) { 1.days.from_now.at_beginning_of_day }
+    let(:effective_at) { Date.new(2015, 4, 21) }
 
     let(:first_name) { 'Walter' }
     let(:last_name) { 'Smith' }
+    let(:event_type) { 'hired' }
 
     context 'a new employee' do
       let(:json_payload) do
         {
           type: "employee_event",
           effective_at: effective_at,
-          event_type: "hired",
+          event_type: event_type,
+          presence_policy_id: presence_policy.id,
           employee: {
             type: 'employee'
           },
@@ -206,6 +224,10 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
               type: "employee_attribute",
               attribute_name: last_name_attribute_definition,
               value: last_name
+            },
+            {
+              attribute_name: occupation_rate_attribute_definition,
+              value: 0.5
             }
           ]
         }
@@ -213,7 +235,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
       it { expect { subject }.to change { Employee::Event.count }.by(1) }
       it { expect { subject }.to change { Employee.count }.by(1) }
-      it { expect { subject }.to change { Employee::AttributeVersion.count }.by(2) }
+      it { expect { subject }.to change { Employee::AttributeVersion.count }.by(3) }
 
       context 'when file type attribute send' do
         let(:generic_file) { create(:generic_file) }
@@ -324,7 +346,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           let(:other_parent_work_status) { 'salaried employee' }
 
           it { expect { subject }.to change { Employee::Event.count }.by(1) }
-          it { expect { subject }.to change { Employee::AttributeVersion.count }.by(3) }
+          it { expect { subject }.to change { Employee::AttributeVersion.count }.by(4) }
           it { expect { subject }.to change { Employee.count }.by(1) }
 
           it { is_expected.to have_http_status(201) }
@@ -380,32 +402,43 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           pet_multiple_attribute
 
         expect(subject).to have_http_status(201)
-        expect(Employee::AttributeVersion.count).to eq(7)
+        expect(Employee::AttributeVersion.count).to eq(8)
       end
 
-      it 'should create event when empty array send' do
-        json_payload[:employee_attributes] = nil
+      it 'should create hired event when only occupation rate is send' do
+        json_payload[:employee_attributes] = [{ attribute_name: 'occupation_rate', value: '0.5' }]
 
         expect { subject }.to change { Employee::Event.count }
         expect(subject).to have_http_status(201)
       end
 
-      it 'should create event when employee attributes not send' do
-        json_payload.delete(:employee_attributes)
+      context 'when not hired or work contract' do
+        before do
+          json_payload.delete(:presence_policy_id)
+          json_payload[:employee].merge!(id: employee.id)
+        end
+        let(:event_type) { 'default' }
 
-        expect { subject }.to change { Employee.count }.by(1)
-        expect(subject).to have_http_status(201)
+        it 'should create event when employee attributes not send' do
+          json_payload.delete(:employee_attributes)
+
+          expect { subject }.to change { Employee::Event.count }.by(1)
+          expect(subject).to have_http_status(201)
+        end
       end
 
       context 'json payload for nested value' do
-        let(:employee_attributes) { { attribute_name: attribute_definition, value: value } }
+        let(:employee_attributes) do
+          [{ attribute_name: attribute_definition, value: value },
+           { attribute_name: 'occupation_rate', value: '0.5' }]
+        end
         let(:attribute_definition) { 'address' }
         let(:value) { { city: 'Wroclaw', country: 'Poland' } }
-        before { json_payload[:employee_attributes] = [employee_attributes] }
+        before { json_payload[:employee_attributes] = employee_attributes }
 
         it { expect { subject }.to change { Employee::Event.count }.by(1) }
         it { expect { subject }.to change { Employee.count }.by(1) }
-        it { expect { subject }.to change { Employee::AttributeVersion.count }.by(1) }
+        it { expect { subject }.to change { Employee::AttributeVersion.count }.by(2) }
 
         it { is_expected.to have_http_status(201) }
       end
@@ -655,7 +688,14 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           type: 'employee_event',
           effective_at: effective_at,
           event_type: event_type,
-          employee: { id: employee.id }
+          employee: { id: employee.id },
+          presence_policy_id: presence_policy.id,
+          employee_attributes: [
+            {
+              attribute_name: occupation_rate_attribute_definition,
+              value: 0.5
+            }
+          ]
         }
       end
 
@@ -672,7 +712,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         end
 
         context 'when rehired is not right after contract_end' do
-          let(:effective_at) { contract_end.effective_at + 2.days }
+          let(:effective_at) { contract_end.effective_at + 7.days }
 
           it { expect { subject }.to change { Employee::Event.count }.by(1) }
           it { expect { subject }.to_not change { Employee.count } }
@@ -830,29 +870,34 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     let(:json_payload) do
       {
         id: event_id,
-        type: "employee_event",
+        type: 'employee_event',
         effective_at: effective_at,
-        event_type: "hired",
+        event_type: 'hired',
         employee: {
           id: employee_id,
           type: 'employee',
         },
+        presence_policy_id: presence_policy.id,
         employee_attributes: [
           {
+            attribute_name: occupation_rate_attribute_definition,
+            value: 0.5
+          },
+          {
             id: first_name_attribute_id,
-            type: "employee_attribute",
+            type: 'employee_attribute',
             attribute_name: first_name_attribute_definition,
             value: first_name
           },
           {
             id: last_name_attribute_id,
-            type: "employee_attribute",
+            type: 'employee_attribute',
             attribute_name: last_name_attribute_definition,
             value: last_name
           },
           {
             id: annual_salary_attribute_id,
-            type: "employee_attribute",
+            type: 'employee_attribute',
             attribute_name: annual_salary_attribute_definition,
             value: annual_salary
           }
@@ -860,16 +905,16 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       }
     end
 
-    let(:effective_at) { 1.days.from_now.at_beginning_of_day }
+    let(:effective_at) { Date.new(2015, 4, 21) }
 
     let(:first_name) { 'Walter' }
     let(:last_name) { 'Smith' }
     let(:annual_salary) { '300' }
 
-    context 'with change in all fields' do
+    context 'with change in all fields and added occupation rate' do
       it { expect { subject }.to_not change { Employee::Event.count } }
       it { expect { subject }.to_not change { Employee.count } }
-      it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
+      it { expect { subject }.to change { Employee::AttributeVersion.count }.by(1) }
 
       it { expect { subject }.to change { event.reload.effective_at }.to(effective_at) }
 
@@ -1028,7 +1073,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         context 'with change in all fields' do
           it { expect { subject }.to_not change { Employee::Event.count } }
           it { expect { subject }.to_not change { Employee.count } }
-          it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
+          it { expect { subject }.to change { Employee::AttributeVersion.count }.by(1) }
 
           it { expect { subject }.to change { event.reload.effective_at }.to(effective_at) }
 
@@ -1042,20 +1087,13 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       end
     end
 
-    context 'without employee attributes' do
-      context 'when not send' do
-        before { json_payload[:employee_attributes] = nil }
-
-        it { expect { subject }.to change { event.reload.effective_at }.to(effective_at) }
-        it { is_expected.to have_http_status(204) }
+    context 'when only occupation rate is sent' do
+      before do
+        json_payload[:employee_attributes] = [{ attribute_name: 'occupation_rate', value: '0.5' }]
       end
 
-      context 'when empty array send' do
-        before { json_payload.delete(:employee_attributes) }
-
-        it { expect { subject }.to change { event.reload.effective_at }.to(effective_at) }
-        it { is_expected.to have_http_status(204) }
-      end
+      it { expect { subject }.to change { event.reload.effective_at }.to(effective_at) }
+      it { is_expected.to have_http_status(204) }
     end
 
     context 'attributes validations' do
@@ -1105,7 +1143,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
       it { expect { subject }.to_not change { Employee::Event.count } }
       it { expect { subject }.to_not change { Employee.count } }
-      it { expect { subject }.to change { Employee::AttributeVersion.count }.by(-1) }
+      it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
 
       it { expect { subject }.to change { first_name_attribute.reload.value }.to(first_name) }
 
@@ -1130,7 +1168,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
       it { expect { subject }.to_not change { Employee::Event.count } }
       it { expect { subject }.to_not change { Employee.count } }
-      it { expect { subject }.to change { Employee::AttributeVersion.count }.by(1) }
+      it { expect { subject }.to change { Employee::AttributeVersion.count } }
 
       it 'should have new attribute version with given value' do
         expect(subject).to have_http_status(:success)
@@ -1152,7 +1190,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
       it { expect { subject }.to_not change { Employee::Event.count } }
       it { expect { subject }.to_not change { Employee.count } }
-      it { expect { subject }.to_not change { Employee::AttributeVersion.count } }
+      it { expect { subject }.to change { Employee::AttributeVersion.count } }
 
       it 'should set value to nil' do
         expect { subject }.to change { first_name_attribute.reload.value }.to(nil)
@@ -1229,7 +1267,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           pet_multiple_attribute
 
         expect(subject).to have_http_status(204)
-        expect(Employee::AttributeVersion.count).to eq(5)
+        expect(Employee::AttributeVersion.count).to eq(6)
         expect(
           employee.reload.employee_attribute_versions.map(&:value)
         ).to include(
@@ -1299,10 +1337,17 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           effective_at: effective_at,
           employee: { id: employee.id },
           type: 'employee_event',
+          presence_policy_id: presence_policy.id
         }
       end
 
       context 'when moving rehired right after contract_end' do
+        before do
+          json_payload.merge!(employee_attributes:
+            [
+              { attribute_name: 'occupation_rate', value: '0.5' }
+            ])
+        end
         let(:update_event_id) { rehired.id }
         let(:event_type) { rehired.event_type }
         let(:effective_at) { contract_end.effective_at + 1.day }

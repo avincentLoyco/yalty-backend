@@ -9,9 +9,19 @@ RSpec.describe CreateEvent do
     create(:employee_attribute_definition,
       account: employee.account, name: attribute_name, multiple: true, validation: { presence: true })
   end
+  let!(:occupation_rate_definition) do
+    create(:employee_attribute_definition,
+      name: 'occupation_rate',
+      account: employee.account,
+      attribute_type: Attribute::Number.attribute_type,
+      validation: { range: [0, 1] })
+  end
+  let!(:presence_policy) do
+    create(:presence_policy, :with_time_entries, account: employee.account, occupation_rate: 0.5)
+  end
   let(:employee) { create(:employee) }
   let(:employee_id) { employee.id }
-  let(:effective_at) { Date.today }
+  let(:effective_at) { Date.new(2015, 4, 21) }
   let(:event_type) { 'work_contract' }
   let(:value) { 'abc' }
   let(:attribute_name) { 'job_title' }
@@ -22,7 +32,8 @@ RSpec.describe CreateEvent do
       event_type: event_type,
       employee: {
         id: employee_id
-      }
+      },
+      presence_policy_id: presence_policy.id
     }
   end
   let(:employee_attributes_params) do
@@ -36,7 +47,8 @@ RSpec.describe CreateEvent do
         value: 'xyz',
         attribute_name: attribute_name_second,
         order: 2
-      }
+      },
+      { attribute_name: 'occupation_rate', value: '0.5' }
     ]
   end
 
@@ -44,7 +56,7 @@ RSpec.describe CreateEvent do
 
   context 'with valid params' do
     context 'when employee_id is present' do
-      it { expect { subject }.to change { Employee::AttributeVersion.count }.by(2) }
+      it { expect { subject }.to change { Employee::AttributeVersion.count }.by(3) }
       it { expect { subject }.to change { employee.events.count }.by(1) }
 
       it { expect(subject.effective_at).to eq effective_at }
@@ -94,7 +106,7 @@ RSpec.describe CreateEvent do
           )
         end
 
-        it { expect { subject }.to change { Employee::AttributeVersion.count }.by(3) }
+        it { expect { subject }.to change { Employee::AttributeVersion.count }.by(4) }
 
         it 'has valid data' do
           subject
@@ -109,9 +121,9 @@ RSpec.describe CreateEvent do
           end
 
           context 'when other parent work status is valid' do
-            let(:work_status) { 'salaried employee'}
+            let(:work_status) { 'salaried employee' }
 
-            it { expect { subject }.to change { Employee::AttributeVersion.count }.by(3) }
+            it { expect { subject }.to change { Employee::AttributeVersion.count }.by(4) }
             it { expect { subject }.to change { Employee::Event.count }.by(1) }
           end
 
@@ -134,7 +146,7 @@ RSpec.describe CreateEvent do
 
         let(:value) { nil }
 
-        it { expect { subject }.to change { Employee::AttributeVersion.count }.by(2) }
+        it { expect { subject }.to change { Employee::AttributeVersion.count }.by(3) }
         it { expect { subject }.to_not raise_error }
       end
     end
@@ -156,7 +168,7 @@ RSpec.describe CreateEvent do
       end
 
       it { expect { subject }.to change { Employee.count }.by(1) }
-      it { expect { subject }.to change { Employee::AttributeVersion.count }.by(2) }
+      it { expect { subject }.to change { Employee::AttributeVersion.count }.by(3) }
 
       it { expect(subject.effective_at).to eq effective_at }
       it { expect(subject.employee_attribute_versions.first.data.line).to eq value }
@@ -180,7 +192,7 @@ RSpec.describe CreateEvent do
 
         let(:value) { nil }
 
-        it { expect { subject }.to change { Employee::AttributeVersion.count }.by(2) }
+        it { expect { subject }.to change { Employee::AttributeVersion.count }.by(3) }
         it { expect { subject }.to_not raise_error }
       end
     end

@@ -3,6 +3,7 @@ module Api::V1
     def complete
       {
         name: resource.name,
+        occupation_rate: resource.occupation_rate,
         standard_day_duration: resource.standard_day_duration,
         deletable: assigned_employees_json.empty?
       }

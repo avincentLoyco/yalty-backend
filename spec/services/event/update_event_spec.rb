@@ -17,10 +17,20 @@ RSpec.describe do
   let(:event_id) { event.id }
   let(:first_attribute) { event.employee_attribute_versions.first }
   let(:second_attribute) { event.employee_attribute_versions.last }
-  let(:effective_at) { Time.now - 2.years }
+  let(:effective_at) { Date.new(2015, 4, 21) }
   let(:first_name_value) { 'John' }
   let(:event_type) { 'hired' }
   let(:employee_id) { employee.id }
+  let!(:presence_policy) do
+    create(:presence_policy, :with_time_entries, account: employee.account, occupation_rate: 0.5)
+  end
+  let!(:occupation_rate_definition) do
+    create(:employee_attribute_definition,
+      name: 'occupation_rate',
+      account: employee.account,
+      attribute_type: Attribute::Number.attribute_type,
+      validation: { range: [0, 1] })
+  end
   let(:params) do
     {
       id: event_id,
@@ -28,9 +38,11 @@ RSpec.describe do
       event_type: event_type,
       employee: {
         id: employee_id
-      }
+      },
+      presence_policy_id: presence_policy.id
     }
   end
+
   let(:employee_attributes_params) do
     [
       {
@@ -47,6 +59,10 @@ RSpec.describe do
         value: first_name_value,
         attribute_name: 'firstname',
         order: first_name_order
+      },
+      {
+        value: '0.5',
+        attribute_name: 'occupation_rate'
       }
     ]
   end
@@ -58,7 +74,7 @@ RSpec.describe do
     end
 
     context 'when attributes id send' do
-      it { expect { subject }.to change { event.employee_attribute_versions.count }.by(1) }
+      it { expect { subject }.to change { event.employee_attribute_versions.count }.by(2) }
       it { expect { subject }.to change { first_attribute.reload.data.value }.to eq 'Snow' }
       it { expect { subject }.to change { second_attribute.reload.data.value }.to eq 'Stark' }
     end
@@ -132,12 +148,12 @@ RSpec.describe do
     context 'when not all event attributes send' do
       before { employee_attributes_params.shift(2) }
 
-      it { expect { subject }.to change { event.employee_attribute_versions.count }.by(-1) }
+      it { expect { subject }.to change { event.employee_attribute_versions.count }.by(0) }
     end
 
     context 'forbbiden attributes' do
       before do
-        employee_attributes_params.pop
+        employee_attributes_params.reject! { |attr| attr[:attribute_name] == 'firstname' }
         event.reload.employee_attribute_versions
         definition.update!(validation: nil)
       end
@@ -145,6 +161,11 @@ RSpec.describe do
         create(:employee_attribute_version,
           employee: employee, attribute_definition: salary_definition, data: { line: '2000' },
           event: event)
+      end
+      let!(:occupation_rate_attribute) do
+        create(:employee_attribute_version,
+          employee: employee, attribute_definition: occupation_rate_definition,
+          data: { number: '0.5' }, event: event)
       end
       let!(:salary_definition) do
         create(:employee_attribute_definition,
@@ -221,7 +242,10 @@ RSpec.describe do
         versions = employee.reload.employee_attribute_versions
         versions.first.update!(attribute_definition: definition, data: { string: 'a' })
         employee.events.first.update!(effective_at: 2.years.ago + 1.day)
-        employee_attributes_params.shift
+        if !employee_attributes_params.nil? &&
+            employee_attributes_params.first[:attribute_name].eql?('firstname')
+          employee_attributes_params.shift
+        end
         [[20, etops.first], [30, etops.last], [40, new_etop]].map do |manual_amount, etop|
           etop.policy_assignation_balance.update!(
             manual_amount: manual_amount, balance_type: 'assignation'
@@ -256,7 +280,7 @@ RSpec.describe do
       let!(:first_balance) { etops.first.policy_assignation_balance }
       let!(:second_balance) { etops.last.policy_assignation_balance }
       let!(:newest_balance) { new_etop.policy_assignation_balance }
-      let(:effective_at) { 1.year.since }
+      let(:effective_at) { 1.year.since + 2.days }
 
       context 'and this is event hired' do
         context 'and date move to the future' do
@@ -279,7 +303,7 @@ RSpec.describe do
           it { expect { subject }.to_not change { epp.reload.effective_at } }
 
           context 'it does not change policy credit addition to true while not policy start date' do
-            let(:effective_at) { 1.year.since + 1.day }
+            let(:effective_at) { 1.year.since + 2.day }
 
             it { expect { subject }.to_not change { newest_balance.reload.balance_type } }
           end
@@ -328,14 +352,16 @@ RSpec.describe do
             end
             let!(:rehired) do
               create(:employee_event,
-                event_type: 'hired', employee: employee, effective_at: 1.year.ago + 1.day)
+                event_type: 'hired', employee: employee, effective_at: 1.year.ago + 2.days)
             end
             let(:event_id) { rehired.id }
-            let(:employee_attributes_params) { [] }
+            let(:employee_attributes_params) do
+              [{ attribute_name: 'occupation_rate', value: '0.5' }]
+            end
 
             context 'and rehired event does not have etops and ewp assigned' do
               it { expect { subject }.to_not change { EmployeeTimeOffPolicy.count } }
-              it { expect { subject }.to_not change { EmployeePresencePolicy.count } }
+              it { expect { subject }.to change { EmployeePresencePolicy.count } }
               it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
               it do
                 expect { subject }
@@ -356,8 +382,8 @@ RSpec.describe do
                 )
               end
 
-              it { expect { subject }.to change { EmployeeTimeOffPolicy.with_reset.count }.by(1) }
-              it { expect { subject }.to change { EmployeeWorkingPlace.with_reset.count }.by(1) }
+              it { expect { subject }.to_not change { EmployeeTimeOffPolicy.with_reset.count } }
+              it { expect { subject }.to_not change { EmployeeWorkingPlace.with_reset.count } }
               it { expect { subject }.to change { rehired.reload.effective_at } }
 
               it { expect { subject }.to_not change { EmployeePresencePolicy.with_reset.count } }
@@ -379,7 +405,6 @@ RSpec.describe do
             context 'and hired date moved to etop start date' do
               it { expect { subject }.to change { EmployeeTimeOffPolicy.exists?(etops.first.id) } }
               it { expect { subject }.to change { Employee::Balance.exists?(first_balance.id) } }
-              it { expect { subject }.to change { Employee::Balance.count }.by(-17) }
               it do
                 expect { subject }.to change { Employee::Balance.pluck(:being_processed).uniq }
                   .to ([true])
@@ -395,11 +420,11 @@ RSpec.describe do
             end
 
             context 'and hired date moved to not etop start date' do
-              let(:effective_at) { 1.year.since - 1.day }
+              let(:effective_at) { 1.year.since + 1.day }
 
               it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(-1) }
               it { expect { subject }.to change { Employee::Balance.exists?(first_balance.id) } }
-              it { expect { subject }.to change { Employee::Balance.count }.by(-13) }
+              it { expect { subject }.to change { Employee::Balance.count }.by(-19) }
               it do
                 expect { subject }.to change { Employee::Balance.pluck(:being_processed).uniq }
                   .to ([true])
@@ -445,7 +470,7 @@ RSpec.describe do
         end
 
         context 'when there is contract end at day before new effective' do
-          let(:employee_attributes_params) { [] }
+          let(:employee_attributes_params) { [{ attribute_name: 'occupation_rate', value: '0.5' }] }
           let!(:epp) do
             create(:employee_presence_policy, employee: employee, effective_at: event.effective_at)
           end
@@ -472,7 +497,7 @@ RSpec.describe do
 
           context 'and there are no join tables assigned at rehired event effective_at' do
             it { expect { subject }.to_not change { EmployeeTimeOffPolicy.with_reset.count } }
-            it { expect { subject }.to_not change { EmployeePresencePolicy.with_reset.count } }
+            it { expect { subject }.to change { EmployeePresencePolicy.with_reset.count }.by(-1) }
             it { expect { subject }.to_not change { EmployeeWorkingPlace.with_reset.count } }
             it do
               expect { subject }
@@ -611,7 +636,7 @@ RSpec.describe do
         )
       end
 
-      it { expect { subject }.to change { event.employee_attribute_versions.count }.by(2) }
+      it { expect { subject }.to change { event.employee_attribute_versions.count }.by(3) }
     end
 
     context 'when nested attribute send' do
@@ -633,7 +658,7 @@ RSpec.describe do
         )
       end
 
-      it { expect { subject }.to change { event.employee_attribute_versions.count }.by(2) }
+      it { expect { subject }.to change { event.employee_attribute_versions.count }.by(3) }
       it 'has valid data' do
         subject
         expect(event.employee_attribute_versions.where(attribute_definition: child_definition)
@@ -948,7 +973,9 @@ RSpec.describe do
       end
 
       context 'when required attribute does not send' do
-        before { employee_attributes_params.pop }
+        before do
+          employee_attributes_params.reject! { |attr| attr[:attribute_name].eql?('firstname') }
+        end
 
         it { expect { subject }.to raise_error(ActiveRecord::RecordInvalid) }
       end

@@ -8,14 +8,14 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
     resource_name: 'presence_policy'
   include_context 'shared_context_headers'
 
-  let(:first_employee) { create(:employee, account: account) }
+  let(:first_employee)  { create(:employee, account: account) }
   let(:second_employee) { create(:employee, account: account) }
-  let(:working_place) { create(:working_place, account: account) }
+  let(:working_place)   { create(:working_place, account: account) }
 
   describe 'GET #show' do
     let(:presence_policy) do
       create(:presence_policy, :with_presence_day,
-        account: account,
+        account: account, occupation_rate: 0.8
       )
     end
     subject { get :show, id: presence_policy.id }
@@ -33,8 +33,11 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
 
         it { expect_json(id: presence_policy.id, name: presence_policy.name) }
         it { expect(response.body).to include(first_employee.id) }
-        it { expect_json_keys([:id, :type, :name, :deletable, :presence_days, :assigned_employees]) }
+        it do
+          expect_json_keys([:id, :type, :name, :deletable, :occupation_rate, :presence_days, :assigned_employees])
+        end
         it { expect_json('deletable', false) }
+        it { expect_json('occupation_rate', 0.8) }
       end
 
       context 'without employees' do
@@ -85,7 +88,7 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
       it { expect_json_sizes(3) }
       it { is_expected.to have_http_status(200) }
       it do
-        expect_json_keys('*', [:id, :type, :name, :deletable, :presence_days, :assigned_employees])
+        expect_json_keys('*', [:id, :type, :name, :deletable, :occupation_rate, :presence_days, :assigned_employees])
       end
       it { expect(response.body).to include(first_employee.id, second_employee.id) }
 
@@ -110,15 +113,16 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
   end
 
   describe 'POST #create' do
-    let(:name) { 'test' }
-    let(:first_employee_id) { first_employee.id }
-    let(:second_employee_id) { second_employee.id }
-    let(:working_place_id) { working_place.id }
+    let(:name)                  { 'test' }
+    let(:first_employee_id)     { first_employee.id }
+    let(:second_employee_id)    { second_employee.id }
+    let(:working_place_id)      { working_place.id }
     let(:standard_day_duration) { 123 }
     let(:valid_data_json) do
       {
         name: name,
         type: 'presence_policy',
+        occupation_rate: 0.8,
         standard_day_duration: standard_day_duration
       }
     end
@@ -143,7 +147,7 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
 
       context 'response' do
         let(:json_keys) do
-          [:id, :type, :name, :presence_days, :assigned_employees, :standard_day_duration]
+          [:id, :type, :name, :presence_days, :occupation_rate, :assigned_employees, :standard_day_duration]
         end
 
         before { subject }
@@ -193,6 +197,19 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
       context 'without all required attributes' do
         let(:missing_data_json) { valid_data_json.tap { |json| json.delete(:name) } }
         subject { post :create, missing_data_json }
+
+        it { expect { subject }.to_not change { PresencePolicy.count } }
+
+        context 'response' do
+          before { subject }
+
+          it { is_expected.to have_http_status(422) }
+        end
+      end
+
+      context 'without occupation rate' do
+        let(:missing_or_data_json) { valid_data_json.tap { |json| json.delete(:occupation_rate) } }
+        subject { post :create, missing_or_data_json }
 
         it { expect { subject }.to_not change { PresencePolicy.count } }
 
@@ -328,6 +345,12 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
 
           it { is_expected.to have_http_status(204) }
         end
+      end
+
+      context 'when new occupation rate is passed' do
+        before { valid_data_json[:occupation_rate] = 0.5 }
+
+        it { expect { subject }.to change { presence_policy.reload.occupation_rate }.to(0.5) }
       end
     end
 

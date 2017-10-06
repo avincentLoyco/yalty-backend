@@ -1,7 +1,7 @@
 class CreateEvent
   include API::V1::Exceptions
   attr_reader :employee_params, :attributes_params, :event_params, :employee,
-    :event, :versions
+    :event, :versions, :presence_policy_id
 
   def initialize(params, employee_attributes_params)
     @employee               = nil
@@ -9,6 +9,7 @@ class CreateEvent
     @versions               = []
     @employee_params        = params[:employee]
     @attributes_params      = employee_attributes_params
+    @presence_policy_id     = params[:presence_policy_id]
     @event_params           = build_event_params(params)
   end
 
@@ -18,6 +19,7 @@ class CreateEvent
       find_or_build_employee
       build_versions
       save!
+      event.tap { handle_hired_or_work_contract_event }
       event.tap { handle_contract_end }
     end
   end
@@ -25,6 +27,7 @@ class CreateEvent
   private
 
   def build_event_params(params)
+    params.delete(:presence_policy_id)
     params.tap { |attr| attr.delete(:employee) && attr.delete(:employee_attributes) }
   end
 
@@ -109,5 +112,10 @@ class CreateEvent
   def handle_contract_end
     return unless event.event_type.eql?('contract_end')
     HandleContractEnd.new(employee, event.effective_at).call
+  end
+
+  def handle_hired_or_work_contract_event
+    return unless event.event_type.eql?('hired') || event.event_type.eql?('work_contract')
+    HandleEppForEvent.new(event.id, presence_policy_id).call
   end
 end

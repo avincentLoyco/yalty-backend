@@ -8,6 +8,7 @@ module EmployeeEventSchemas
       required(:employee).schema do
         optional(:id).filled(:str?)
       end
+      optional(:presence_policy_id).filled(:str?)
       optional(:employee_attributes).maybe do
         each do
           required(:attribute_name).filled
@@ -26,6 +27,7 @@ module EmployeeEventSchemas
       required(:employee).schema do
         required(:id).filled(:str?)
       end
+      optional(:presence_policy_id).filled(:str?)
       optional(:employee_attributes).maybe do
         each do
           optional(:id).filled(:str?)

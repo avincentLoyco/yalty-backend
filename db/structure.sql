@@ -684,8 +684,8 @@ CREATE TABLE working_places (
     street character varying(60),
     street_number character varying(10),
     timezone character varying,
-    reset boolean DEFAULT false NOT NULL,
     state_code character varying(60),
+    reset boolean DEFAULT false NOT NULL,
     country_code character varying
 );
 
