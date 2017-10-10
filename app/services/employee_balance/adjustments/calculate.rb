@@ -105,7 +105,7 @@ class Adjustments::Calculate
   def all_vacation_etops
     all_etops = Employee.find(employee_id).employee_time_off_policies
     vacation_etops = all_etops.select do |etop|
-      etop.time_off_category.name == 'vacation'
+      etop.time_off_category.name == "vacation" && !etop.time_off_policy.reset
     end
     vacation_etops
   end

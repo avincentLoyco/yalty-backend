@@ -3,6 +3,7 @@ FactoryGirl.define do
     employee
     time_off_policy
     effective_at { Time.zone.today - 1.year }
+    occupation_rate { '1.0' }
 
     after(:build) do |etop|
       reset_policy =

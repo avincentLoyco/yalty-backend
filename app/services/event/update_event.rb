@@ -1,17 +1,18 @@
 class UpdateEvent
   include API::V1::Exceptions
-  attr_reader :employee_params, :attributes_params, :event_params, :versions,
-    :event, :employee, :updated_assignations, :old_effective_at, :presence_policy_id
+  attr_reader :employee_params, :attributes_params, :event_params, :versions, :event, :employee,
+     :updated_assignations, :old_effective_at, :presence_policy_id, :time_off_policy_amount
 
   def initialize(params, employee_attributes_params)
-    @versions             = []
-    @employee_params      = params[:employee].tap { |attr| attr.delete(:employee_attributes) }
-    @attributes_params    = employee_attributes_params
-    @presence_policy_id   = params[:presence_policy_id]
-    @event_params         = build_event_params(params)
-    @updated_assignations = {}
-    @event                = Account.current.employee_events.find(event_params[:id])
-    @old_effective_at     = event.effective_at
+    @versions               = []
+    @employee_params        = params[:employee].tap { |attr| attr.delete(:employee_attributes) }
+    @attributes_params      = employee_attributes_params
+    @presence_policy_id     = params[:presence_policy_id]
+    @time_off_policy_amount = params[:time_off_policy_amount]
+    @event_params           = build_event_params(params.except(:time_off_policy_amount))
+    @updated_assignations   = {}
+    @event                  = Account.current.employee_events.find(event_params[:id])
+    @old_effective_at       = event.effective_at
   end
 
   def call
@@ -31,6 +32,7 @@ class UpdateEvent
   def handle_hired_or_work_contract_event
     return unless event.event_type.eql?('hired') || event.event_type.eql?('work_contract')
     HandleEppForEvent.new(event.id, presence_policy_id).call
+    UpdateEtopForEvent.new(event.id, time_off_policy_amount, old_effective_at).call
   end
 
   def handle_contract_end

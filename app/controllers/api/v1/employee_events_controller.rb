@@ -2,7 +2,6 @@ module API
   module V1
     class EmployeeEventsController < ApplicationController
       include EmployeeEventSchemas
-
       DryValidationResult = Struct.new(:attributes, :errors)
 
       def show

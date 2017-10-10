@@ -26,13 +26,6 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       attribute_type: 'File'
     )
   end
-  let!(:occupation_rate_definition) do
-    create(:employee_attribute_definition,
-      account: Account.current,
-      name: 'occupation_rate',
-      attribute_type: 'Number'
-    )
-  end
 
   let!(:vacation_category) { create(:time_off_category, account: Account.current, name: 'vacation') }
 
@@ -51,6 +44,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
   let(:employee_last_name) { 'Doe' }
   let(:employee_annual_salary) { '2000' }
   let(:time_off_policy_amount) { 9600 }
+  let(:employee_occupation_rate) { '0.8' }
 
   let(:event) { employee.events.where(event_type: 'hired').first! }
   let(:event_id) { event.id }
@@ -83,6 +77,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       attr.attribute_name == 'lastname'
     end
   end
+
   let(:last_name_attribute_id) { last_name_attribute.id }
   let!(:occupation_rate_definition) do
     create(:employee_attribute_definition,
@@ -882,13 +877,13 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
   describe 'PUT #update' do
     subject { put :update, json_payload }
-
     let(:json_payload) do
       {
         id: event_id,
         type: 'employee_event',
         effective_at: effective_at,
-        event_type: 'hired',
+        time_off_policy_amount: 9600,
+        event_type: "hired",
         employee: {
           id: employee_id,
           type: 'employee',
@@ -971,11 +966,15 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       context 'and he is not an account manager' do
         before do
           Account::User.current = create(:account_user, account: account, employee: employee)
+
+          json_payload[:employee_attributes].delete_if do |attr|
+            attr[:attribute_name] == annual_salary_attribute_definition
+          end
+          annual_salary_attribute.destroy
         end
 
         it { expect { subject }.to change { generic_file.reload.file_content_type  } }
         it { expect { subject }.to change { generic_file.reload.file_file_size } }
-        it { expect { subject }.to change { Employee::AttributeVersion.count } }
 
         it { is_expected.to have_http_status(204) }
 
@@ -1327,8 +1326,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     end
 
     context 'restrictions for rehired event' do
-      let(:category) { create(:time_off_category, account: employee.account) }
-      let(:time_off_policy) { create(:time_off_policy, time_off_category: category) }
+      let!(:time_off_policy) { create(:time_off_policy, time_off_category: vacation_category) }
       let!(:etop) do
         create(:employee_time_off_policy, :with_employee_balance,
           employee: employee, time_off_policy: time_off_policy,
@@ -1351,6 +1349,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           id: update_event_id,
           event_type: event_type,
           effective_at: effective_at,
+          time_off_policy_amount: 9600,
           employee: { id: employee.id },
           type: 'employee_event',
           presence_policy_id: presence_policy.id
