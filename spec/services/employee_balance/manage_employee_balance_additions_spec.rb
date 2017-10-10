@@ -63,8 +63,7 @@ RSpec.describe ManageEmployeeBalanceAdditions, type: :service do
 
         context 'and resource policy does not have validity date' do
           let(:effective_at) { 3.years.ago }
-
-          it { expect { subject }.to change { Employee::Balance.additions.count }.by(6) }
+          it { expect { subject }.to change { Employee::Balance.additions.count }.by(5) }
           it { expect { subject }.to_not change { Employee::Balance.removals.count } }
         end
 
@@ -82,7 +81,7 @@ RSpec.describe ManageEmployeeBalanceAdditions, type: :service do
               ].map(&:to_date)
             end
 
-            it { expect { subject }.to change { Employee::Balance.additions.count }.by(6) }
+            it { expect { subject }.to change { Employee::Balance.additions.count }.by(5) }
             it { expect { subject }.to change { Employee::Balance.removals.count }.by(6) }
 
             it 'has valid validity dates' do
@@ -102,7 +101,7 @@ RSpec.describe ManageEmployeeBalanceAdditions, type: :service do
               ].map(&:to_date)
             end
 
-            it { expect { subject }.to change { Employee::Balance.additions.count }.by(7) }
+            it { expect { subject }.to change { Employee::Balance.additions.count }.by(6) }
             it { expect { subject }.to change { Employee::Balance.removals.count }.by(7) }
 
             it 'has valid validity dates' do
@@ -117,7 +116,7 @@ RSpec.describe ManageEmployeeBalanceAdditions, type: :service do
             let(:effective_at) { 3.years.ago }
 
             shared_examples 'One year policy with validity date' do
-              it { expect { subject }.to change { Employee::Balance.additions.count }.by(6) }
+              it { expect { subject }.to change { Employee::Balance.additions.count }.by(5) }
               it { expect { subject }.to change { Employee::Balance.removals.count }.by(6) }
 
               it 'has valid additions effective at' do
@@ -128,7 +127,7 @@ RSpec.describe ManageEmployeeBalanceAdditions, type: :service do
 
                 expect(additions_dates.map(&:to_date))
                   .to contain_exactly(
-                    '1/1/2013'.to_date, '1/1/2014'.to_date, '1/1/2015'.to_date, '1/1/2016'.to_date,
+                    '1/1/2014'.to_date, '1/1/2015'.to_date, '1/1/2016'.to_date,
                     '1/1/2017'.to_date, '1/1/2018'.to_date
                   )
                 expect(additions_dates.map { |a| a.strftime('%H:%M:%S') }.uniq)
@@ -232,7 +231,7 @@ RSpec.describe ManageEmployeeBalanceAdditions, type: :service do
                 end
 
                 context 'in the past' do
-                  it { expect { subject }.to change { Employee::Balance.additions.count }.by(6) }
+                  it { expect { subject }.to change { Employee::Balance.additions.count }.by(5) }
                   it { expect { subject }.to change { Employee::Balance.removals.count }.by(6) }
 
                   it 'has valid additions effective at' do
@@ -240,7 +239,7 @@ RSpec.describe ManageEmployeeBalanceAdditions, type: :service do
 
                     expect(Employee::Balance.additions.pluck(:effective_at).map(&:to_date))
                       .to contain_exactly(
-                        '1/1/2013'.to_date, '1/1/2014'.to_date, '1/1/2015'.to_date,
+                        '1/1/2014'.to_date, '1/1/2015'.to_date,
                         '1/1/2016'.to_date, '1/1/2017'.to_date, '1/1/2018'.to_date
                       )
                   end
@@ -262,7 +261,7 @@ RSpec.describe ManageEmployeeBalanceAdditions, type: :service do
                     next_employee_time_off_policy.update!(effective_at: 1.year.since + 1.day)
                   end
 
-                  it { expect { subject }.to change { Employee::Balance.additions.count }.by(6) }
+                  it { expect { subject }.to change { Employee::Balance.additions.count }.by(5) }
                   it { expect { subject }.to change { Employee::Balance.removals.count }.by(6) }
 
                   it 'has valid additions effective at' do
@@ -270,7 +269,7 @@ RSpec.describe ManageEmployeeBalanceAdditions, type: :service do
 
                     expect(Employee::Balance.additions.pluck(:effective_at).map(&:to_date))
                       .to contain_exactly(
-                        '1/1/2013'.to_date, '1/1/2014'.to_date, '1/1/2015'.to_date,
+                        '1/1/2014'.to_date, '1/1/2015'.to_date,
                         '1/1/2016'.to_date, '1/1/2017'.to_date, '1/1/2018'.to_date
                       )
                   end
@@ -306,7 +305,7 @@ RSpec.describe ManageEmployeeBalanceAdditions, type: :service do
                     expect(Employee::Balance.order(:effective_at).pluck(:effective_at).map(&:to_date))
                       .to match_array(
                         %w(
-                            1/1/2013 1/1/2013 1/1/2014 1/1/2014 2/4/2014 1/1/2015 1/1/2015 2/4/2015
+                            1/1/2013 1/1/2014 1/1/2014 2/4/2014 1/1/2015 1/1/2015 2/4/2015
                             26/12/2015
                           ).map(&:to_date)
                       )
@@ -328,7 +327,7 @@ RSpec.describe ManageEmployeeBalanceAdditions, type: :service do
                     expect(Employee::Balance.order(:effective_at).pluck(:effective_at).map(&:to_date))
                       .to match_array(
                         %w(
-                            1/1/2013 1/1/2013 1/1/2014 1/1/2014 2/4/2014 1/1/2015 1/1/2015 2/4/2015
+                            1/1/2013 1/1/2014 1/1/2014 2/4/2014 1/1/2015 1/1/2015 2/4/2015
                             26/12/2015 8/1/2017 1/1/2018 1/1/2018 2/4/2018 2/4/2019
                           ).map(&:to_date)
                       )
@@ -349,7 +348,7 @@ RSpec.describe ManageEmployeeBalanceAdditions, type: :service do
           it 'has valid effective_at' do
             expect(Employee::Balance.additions.pluck(:effective_at).map(&:to_date))
               .to contain_exactly(
-                '1/1/2013'.to_date, '1/1/2014'.to_date, '1/1/2015'.to_date, '1/1/2016'.to_date,
+                '1/1/2014'.to_date, '1/1/2015'.to_date, '1/1/2016'.to_date,
                 '1/1/2017'.to_date, '1/1/2018'.to_date
               )
           end

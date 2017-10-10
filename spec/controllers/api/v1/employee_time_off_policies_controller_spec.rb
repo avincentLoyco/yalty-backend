@@ -293,7 +293,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
         let(:effective_at) { 2.years.since }
 
         it { expect { subject }.to change { EmployeeTimeOffPolicy.count }.by(1) }
-        it { expect { subject }.to change { Employee::Balance.count }.by(3) }
+        it { expect { subject }.to change { Employee::Balance.count }.by(2) }
         it { is_expected.to have_http_status(201) }
 
         context 'when new effective at one day after contract end' do
@@ -382,7 +382,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
         context 'it removes duplicated etops and recreate balances' do
           let(:expected_balances_dates) do
-            %w(2015-01-01 2015-01-01 2016-01-01 2016-01-01 2016-01-01 2016-04-02 2017-01-01
+            %w(2015-01-01 2016-01-01 2016-01-01 2016-04-02 2017-01-01
                2017-01-01 2017-04-02 2018-01-01 2018-01-01 2018-04-02 2019-04-02).map(&:to_date)
           end
 
@@ -412,7 +412,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
           let(:effective_at) { 1.years.ago }
 
           it { expect { subject }.to change { employee.employee_time_off_policies.count }.by(1) }
-          it { expect { subject }.to change { employee.employee_balances.count }.by(15) }
+          it { expect { subject }.to change { employee.employee_balances.count }.by(14) }
 
           it { is_expected.to have_http_status(201) }
         end
@@ -429,7 +429,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
         context 'and assignation and date is at policy start date' do
           let(:effective_at) { Time.now }
 
-          it { expect { subject }.to change { Employee::Balance.count }.by(9) }
+          it { expect { subject }.to change { Employee::Balance.count }.by(8) }
           it { expect { subject }.to change { employee.employee_time_off_policies.count }.by(1) }
           it { is_expected.to have_http_status(201) }
         end
@@ -742,7 +742,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
           context 'it creates proper balances' do
             let(:expected_balances_dates) do
-              %w(2013-01-01 2013-01-01 2014-01-01 2014-01-01 2014-01-01 2014-04-02 2015-01-01
+              %w(2013-01-01 2014-01-01 2014-01-01 2014-04-02 2015-01-01
                  2015-01-01 2015-04-02 2016-01-01 2016-01-01 2016-04-02 2017-01-01 2017-01-01
                  2017-04-02 2018-01-01 2018-01-01 2018-04-02 2019-04-02).map(&:to_date)
             end
@@ -834,9 +834,9 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
           context 'it creates proper balances' do
             let(:expected_balances_dates) do
-              %w(2013-01-01 2013-01-01 2014-01-01 2014-01-01 2014-04-02 2015-01-01 2015-01-01
+              %w(2013-01-01 2014-01-01 2014-01-01 2014-04-02 2015-01-01
                  2015-01-01 2015-04-02 2016-01-01 2016-02-01 2016-02-01 2016-04-02 2016-05-02
-                 2017-01-01 2017-02-01 2017-02-01 2017-05-02 2018-05-02).map(&:to_date)
+                 2017-01-01 2017-01-01 2017-02-01 2017-02-01 2017-05-02 2018-05-02).map(&:to_date)
             end
 
             before do
@@ -894,7 +894,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
         end
 
         it { expect { subject }.to change { join_table_resource.reload.effective_at } }
-        it { expect { subject }.to change { Employee::Balance.count }.by(14) }
+        it { expect { subject }.to change { Employee::Balance.count }.by(13) }
         it { is_expected.to have_http_status(200) }
 
         it 'affects assignation balance' do
@@ -916,7 +916,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
         end
 
         it { expect { subject }.to_not change { EmployeeTimeOffPolicy.count } }
-        it { expect { subject }.to change { Employee::Balance.count }.by(9) }
+        it { expect { subject }.to change { Employee::Balance.count }.by(8) }
 
         it { expect { subject }.to change { join_table_resource.reload.effective_at } }
 
@@ -931,14 +931,14 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
       context 'when employee_time_off_policy start date passed' do
         let(:effective_at) { 2.years.ago }
         let(:expected_balances_dates) do
-          %w(2014-01-01 2014-01-01 2015-01-01 2015-01-01 2015-04-02 2016-01-01 2016-01-01 2016-04-02
+          %w(2014-01-01 2015-01-01 2015-01-01 2015-04-02 2016-01-01 2016-01-01 2016-04-02
              2017-01-01 2017-01-01 2017-04-02 2018-01-01 2018-01-01 2018-04-02 2019-04-02
              ).map(&:to_date)
         end
 
         it { expect { subject }.to_not change { EmployeeTimeOffPolicy.count } }
-        it { expect { subject }.to change { Employee::Balance.count }.by(15) }
-        it { expect { subject }.to change { Employee::Balance.additions.count }.by(5) }
+        it { expect { subject }.to change { Employee::Balance.count }.by(14) }
+        it { expect { subject }.to change { Employee::Balance.additions.count }.by(4) }
 
         it { expect { subject }.to change { join_table_resource.reload.effective_at } }
 
@@ -1211,7 +1211,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
 
         context 'it removes duplicated etops and recreate balances' do
           let(:expected_balances_dates) do
-            %w(2013-01-01 2013-01-01 2014-01-01 2014-01-01 2014-04-02 2015-01-01 2015-01-01
+            %w(2013-01-01 2014-01-01 2014-01-01 2014-04-02 2015-01-01
                2015-01-01 2015-04-02 2016-01-01 2016-01-01 2016-04-02 2017-01-01 2017-01-01
                2017-04-02 2018-01-01 2018-01-01 2018-04-02 2019-04-02).map(&:to_date)
           end

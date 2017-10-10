@@ -455,9 +455,9 @@ RSpec.describe do
           it { expect { subject }.to change { etops.first.reload.effective_at } }
           it { expect { subject }.to change { first_balance.reload.effective_at } }
           it { expect { subject }.to change { second_balance.reload.effective_at } }
-          it { expect { subject }.to change { Employee::Balance.additions.count }.by(4) }
+          it { expect { subject }.to change { Employee::Balance.additions.count }.by(2) }
           it { expect { subject }.to change { Employee::Balance.removals.count }.by(2) }
-          it { expect { subject }.to change { Employee::Balance.count}.by(8) }
+          it { expect { subject }.to change { Employee::Balance.count}.by(6) }
 
           it { expect { subject }.to_not change { first_balance.reload.manual_amount } }
           it { expect { subject }.to_not change { second_balance.reload.manual_amount } }
@@ -822,8 +822,8 @@ RSpec.describe do
           subject
           expect(balances_in_first.pluck(:effective_at).map(&:to_date)).to match_array(
             %w(
-              30/12/2014 1/1/2015 1/1/2015 1/1/2015 6/1/2015 2/4/2015 4/9/2015 1/1/2016 1/1/2016
-              2/4/2016 1/1/2017 1/1/2017 1/1/2017 1/1/2017 2/4/2018
+              30/12/2014 1/1/2015 1/1/2015 6/1/2015 2/4/2015 4/9/2015 1/1/2016 1/1/2016
+              2/4/2016 1/1/2017 1/1/2017 1/1/2017
             ).map(&:to_date)
           )
         end
@@ -832,8 +832,8 @@ RSpec.describe do
           subject
           expect(balances_in_first.pluck(:balance_type)).to match_array(
             %w(
-              assignation end_of_period assignation addition time_off removal time_off end_of_period
-              addition removal end_of_period reset assignation addition removal
+              addition assignation assignation assignation end_of_period end_of_period
+              end_of_period removal removal reset time_off time_off
             )
           )
         end
@@ -871,7 +871,7 @@ RSpec.describe do
       context 'and contract end before policy start date' do
         let(:effective_at) { 1.year.since - 1.days }
 
-        it { expect(employee.employee_balances.count).to eq (17) }
+        it { expect(employee.employee_balances.count).to eq (15) }
         it { expect(Employee::Balance.where(balance_type: 'assignation').count).to eq (3) }
 
         it_behaves_like 'Contract end in the future'
@@ -879,9 +879,9 @@ RSpec.describe do
 
       context 'when contract end in or after policy start date' do
         shared_examples 'Contract end in or after policy start date' do
-          it { expect(Employee::Balance.additions.count).to eq (6) }
+          it { expect(Employee::Balance.additions.count).to eq (4) }
           it { expect(Employee::Balance.where(balance_type: 'assignation').count).to eq (3) }
-          it { expect(employee.employee_balances.count).to eq (21) }
+          it { expect(employee.employee_balances.count).to eq (19) }
         end
 
         context 'and contract end in policy start date' do
@@ -925,8 +925,7 @@ RSpec.describe do
           it { expect(employee.employee_working_places.count).to eq(2) }
           it { expect(employee.employee_presence_policies.count).to eq(2) }
           it { expect(employee.time_offs.count).to eq (1) }
-
-          it { expect(employee.employee_balances.count).to eq (9) }
+          it { expect(employee.employee_balances.count).to eq (7) }
           it { expect(employee.employee_balances.where(balance_type: 'reset').count).to eq (2) }
           it do
             expect(employee.employee_balances.where(balance_type: 'reset')

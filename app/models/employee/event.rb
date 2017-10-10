@@ -66,9 +66,10 @@ class Employee::Event < ActiveRecord::Base
   def attribute_values
     attrs_keys = {}
     employee_attribute_versions.each do |attribute_version|
-      attrs_keys[attribute_version.attribute_definition.name] =
-        Employee::AttributeVersion.where(attribute_definition_id:
-          attribute_version.attribute_definition_id).first.value
+      all_versions = Employee::AttributeVersion.where(attribute_definition_id:
+        attribute_version.attribute_definition_id)
+      event_version = all_versions.find { |version| version.employee_event_id == id}
+      attrs_keys[attribute_version.attribute_definition.name] = event_version.value
     end
     attrs_keys
   end

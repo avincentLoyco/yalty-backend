@@ -97,14 +97,6 @@ class RecreateBalancesHelper
     ).call
   end
 
-  def assignation_in_start_date?
-    start_day = etop.time_off_policy.start_day
-    start_month = etop.time_off_policy.start_month
-    assignation_day = etop.effective_at.day
-    assignation_month = etop.effective_at.month
-    start_day == assignation_day && start_month == assignation_month
-  end
-
   def manage_additions!
     etop_for_manage = etop || first_etop_before
     if old_effective_at.present?

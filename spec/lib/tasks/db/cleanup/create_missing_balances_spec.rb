@@ -49,7 +49,7 @@ RSpec.describe 'db:cleanup:create_missing_balances', type: :rake do
           )
         end
 
-        it { expect { subject }.to change { Employee::Balance.count }.by(7) }
+        it { expect { subject }.to change { Employee::Balance.count }.by(6) }
       end
       context 'when there is two policies in the category' do
         let(:extreme_vacations_balancer_policy) do
@@ -107,7 +107,7 @@ RSpec.describe 'db:cleanup:create_missing_balances', type: :rake do
           )
         end
 
-        it { expect { subject }.to change { Employee::Balance.count }.by(9) }
+        it { expect { subject }.to change { Employee::Balance.count }.by(8) }
       end
     end
 
@@ -124,7 +124,7 @@ RSpec.describe 'db:cleanup:create_missing_balances', type: :rake do
           it { expect { subject }.to change { Employee::Balance.count }.by(11) }
         end
         context 'is different than the start day of the policy' do
-          it { expect { subject }.to change { Employee::Balance.count }.by(9) }
+          it { expect { subject }.to change { Employee::Balance.count }.by(8) }
         end
       end
     end
