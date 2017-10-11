@@ -2,7 +2,8 @@ class Employee::Event < ActiveRecord::Base
   EVENT_ATTRIBUTES = {
     default: %w(),
     change: %w(),
-    hired: %w(firstname lastname birthdate gender personal_email professional_email),
+    hired: %w(firstname lastname birthdate gender personal_email professional_email
+              occupation_rate),
     moving: %w(address),
     contact_details_personal: %w(firstname lastname personal_email personal_phone personal_mobile
                                  address id_card),
