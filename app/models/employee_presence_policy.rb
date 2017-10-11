@@ -6,6 +6,7 @@ class EmployeePresencePolicy < ActiveRecord::Base
 
   belongs_to :employee
   belongs_to :presence_policy
+  belongs_to :employee_event, class_name: 'Employee::Event', inverse_of: :employee_presence_policy
 
   validates :employee_id, :presence_policy_id, :effective_at, presence: true
   validates :effective_at, uniqueness: { scope: [:employee_id, :presence_policy_id] }

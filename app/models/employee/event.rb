@@ -35,6 +35,10 @@ class Employee::Event < ActiveRecord::Base
 
   belongs_to :employee, inverse_of: :events, required: true
   has_one :account, through: :employee
+
+  has_one :employee_presence_policy, inverse_of: :employee_event, foreign_key: :employee_event_id
+  has_many :employee_time_off_policies, inverse_of: :employee_event, foreign_key: :employee_event_id
+
   has_many :employee_attribute_versions,
     inverse_of: :event,
     foreign_key: 'employee_event_id',
