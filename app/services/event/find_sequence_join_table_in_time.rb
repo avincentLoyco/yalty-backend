@@ -36,6 +36,7 @@ class FindSequenceJoinTableInTime
   end
 
   def next_join_table(effective_at = new_effective_at, current_resource = resource.id)
+    return if resource.is_a?(TimeOffPolicy) || resource.is_a?(PresencePolicy)
     next_table =
       join_tables
       .where('effective_at > ?', effective_at.to_date)
