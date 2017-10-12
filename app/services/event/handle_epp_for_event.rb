@@ -18,7 +18,7 @@ class HandleEppForEvent
     return if event.attribute_values['occupation_rate'].to_f.eql?(presence_policy.occupation_rate)
     raise InvalidResourcesError.new(
       presence_policy,
-      effective_at: ["Occupation rate does not match event's occupation rate"]
+      occupation_rate: ["Presence Policy occupation rate does not match event's occupation rate"]
     )
   end
 
@@ -38,7 +38,7 @@ class HandleEppForEvent
     return unless presence_policy.nil?
     raise InvalidResourcesError.new(
       presence_policy,
-      id: ["PresencePolicy does not exist"]
+      id: ['PresencePolicy does not exist']
     )
   end
 end

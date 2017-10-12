@@ -1,7 +1,7 @@
 class UpdateEvent
   include API::V1::Exceptions
   attr_reader :employee_params, :attributes_params, :event_params, :versions, :event, :employee,
-     :updated_assignations, :old_effective_at, :presence_policy_id, :time_off_policy_amount
+    :updated_assignations, :old_effective_at, :presence_policy_id, :time_off_policy_amount
 
   def initialize(params, employee_attributes_params)
     @versions               = []
