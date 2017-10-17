@@ -23,7 +23,7 @@ RSpec.describe UpdateEtopForEvent do
     create(:time_off_category, account: employee.account, name: 'vacation')
   end
   let(:employee_id) { employee.id }
-  let(:time_off_policy_amount) { 9600 }
+  let(:time_off_policy_amount) { 20 }
   let(:occupation_rate_value) { 0.8 }
   let(:occupation_rate_definition) do
     create(:employee_attribute_definition,
@@ -36,7 +36,7 @@ RSpec.describe UpdateEtopForEvent do
     create(:employee_attribute,
       event: event,
       employee: employee,
-      attribute_definition: occupation_rate_definition, 
+      attribute_definition: occupation_rate_definition,
       value: occupation_rate_value)
   end
   let!(:time_off_policy) do
@@ -46,7 +46,7 @@ RSpec.describe UpdateEtopForEvent do
       start_day: 1,
       end_day: nil,
       end_month: nil,
-      amount: 9600)
+      amount: 20 * 1440)
   end
   let!(:employee_time_off_policy) do
     create(:employee_time_off_policy, :with_employee_balance,
@@ -62,7 +62,7 @@ RSpec.describe UpdateEtopForEvent do
   # SHARED CASES
   shared_examples 'etops count did not change' do
     it do
-      expect { subject }.not_to change(EmployeeTimeOffPolicy.where(employee_id: employee_id), 
+      expect { subject }.not_to change(EmployeeTimeOffPolicy.where(employee_id: employee_id),
         :count)
     end
     it { expect { subject }.not_to change(event.employee_time_off_policies, :count) }
@@ -78,7 +78,7 @@ RSpec.describe UpdateEtopForEvent do
   shared_examples 'time off policy amount has changed' do
     it do
       expect { subject }.to change{EmployeeTimeOffPolicy.where(employee_id: employee_id).last
-        .time_off_policy.amount}.from(9600).to(2400)
+        .time_off_policy.amount}.from(28800).to(14400)
     end
   end
 
@@ -94,8 +94,8 @@ RSpec.describe UpdateEtopForEvent do
       it_behaves_like 'etop occupation rate has changed'
     end
 
-    context 'and time off policy amount changed' do 
-      let(:time_off_policy_amount) { 2400 }
+    context 'and time off policy amount changed' do
+      let(:time_off_policy_amount) { 10 }
       it_behaves_like 'etops count did not change'
       it_behaves_like 'time off policy amount has changed'
     end
@@ -114,8 +114,8 @@ RSpec.describe UpdateEtopForEvent do
       it_behaves_like 'etop occupation rate has changed'
     end
 
-    context 'and time off policy amount changed' do 
-      let(:time_off_policy_amount) { 2400 }
+    context 'and time off policy amount changed' do
+      let(:time_off_policy_amount) { 10 }
       it_behaves_like 'etops count did not change'
       it_behaves_like 'time off policy amount has changed'
     end

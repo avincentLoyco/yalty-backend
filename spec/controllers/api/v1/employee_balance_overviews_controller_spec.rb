@@ -29,16 +29,16 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
 
   let!(:firstname_definition) do
     create(:employee_attribute_definition,
-      account: Account.current, 
-      name: 'firstname', 
+      account: Account.current,
+      name: 'firstname',
       attribute_type: Attribute::String.attribute_type,
       validation: { presence: true })
   end
 
   let!(:lastname_definition) do
     create(:employee_attribute_definition,
-      account: Account.current, 
-      name: 'lastname', 
+      account: Account.current,
+      name: 'lastname',
       attribute_type: Attribute::String.attribute_type,
       validation: { presence: true })
   end
@@ -49,7 +49,7 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
     {
       effective_at: effective_at,
       event_type: 'hired',
-      time_off_policy_amount: 9600,
+      time_off_policy_amount: 10,
       employee: {},
       presence_policy_id: presence_policy.id
     }
@@ -176,16 +176,16 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
                         'start_date' => '2016-01-01',
                         'validity_date' => nil,
                         'amount_taken' => 0,
-                        'period_result' => 9600,
-                        'balance' => 9600
+                        'period_result' => 14400,
+                        'balance' => 14400
                       },
                       {
                         'type' => "balancer",
                         'start_date' => '2017-01-01',
                         'validity_date' => nil,
                         'amount_taken' => 0,
-                        'period_result' => 9600,
-                        'balance' => 19200
+                        'period_result' => 14400,
+                        'balance' => 28800
                       }
                   ]
               }
@@ -245,16 +245,16 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
                           'start_date' => '2016-01-01',
                           'validity_date' => nil,
                           'amount_taken' => 150,
-                          'period_result' => 9450,
-                          'balance' => 9450
+                          'period_result' => 14250,
+                          'balance' => 14250
                         },
                         {
                           'type' => "balancer",
                           'start_date' => '2017-01-01',
                           'validity_date' => nil,
                           'amount_taken' => 0,
-                          'period_result' => 9600,
-                          'balance' => 19050
+                          'period_result' => 14400,
+                          'balance' => 28650
                         },
                     ]
                 }
@@ -283,8 +283,8 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
                       'start_date' => '2018-01-01',
                       'validity_date' => nil,
                       'amount_taken' => 0,
-                      'period_result' => 9600,
-                      'balance' => 9600
+                      'period_result' => 14400,
+                      'balance' => 14400
                     }
                 ]
               }
@@ -328,8 +328,8 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
                                 'start_date' => '2016-01-01',
                                 'validity_date' => nil,
                                 'amount_taken' => 240,
-                                'period_result' => 9360,
-                                'balance' => 9360
+                                'period_result' => 14160,
+                                'balance' => 14160
                               }
                           ]
                         }
@@ -354,8 +354,8 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
                               'start_date' => '2016-01-01',
                               'validity_date' => nil,
                               'amount_taken' => 60,
-                              'period_result' => 9540,
-                              'balance' => 9540
+                              'period_result' => 14340,
+                              'balance' => 14340
                             }
                           ]
                         }
@@ -381,8 +381,8 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
                               'start_date' => '2016-01-01',
                               'validity_date' => nil,
                               'amount_taken' => 180,
-                              'period_result' => 9420,
-                              'balance' => 9420
+                              'period_result' => 14220,
+                              'balance' => 14220
                             }
                         ]
                       }
@@ -410,8 +410,8 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
                           'start_date' => '2016-01-01',
                           'validity_date' => nil,
                           'amount_taken' => 0,
-                          'period_result' => 9600,
-                          'balance' => 9600
+                          'period_result' => 14400,
+                          'balance' => 14400
                         }
                       ]
                     }
@@ -438,8 +438,8 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
                             'start_date' => '2014-01-01',
                             'validity_date' => nil,
                             'amount_taken' => 0,
-                            'period_result' => 9600,
-                            'balance' => 9600
+                            'period_result' => 14400,
+                            'balance' => 14400
                           }
                       ]
                     }
@@ -474,8 +474,8 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
                               'start_date' => '2016-01-01',
                               'validity_date' => nil,
                               'amount_taken' => 60,
-                              'period_result' => 9540,
-                              'balance' => 9540
+                              'period_result' => 14340,
+                              'balance' => 14340
                             }
                         ]
                       }
@@ -485,7 +485,7 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
               end
 
               context 'and whole period amount used' do
-                let(:end_time) { effective_at + 7.days }
+                let(:end_time) { effective_at + 12.days }
 
                 before do
                   update_balances
@@ -503,9 +503,9 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
                               'type' => "balancer",
                               'start_date' => '2016-01-01',
                               'validity_date' => nil,
-                              'amount_taken' => 9600,
+                              'amount_taken' => 14400,
                               'period_result' => 0,
-                              'balance' => -30
+                              'balance' => -2430
                             }
                         ]
                       }
