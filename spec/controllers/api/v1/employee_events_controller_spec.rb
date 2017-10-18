@@ -114,7 +114,8 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     ]
   end
   let!(:presence_policy) do
-    create(:presence_policy, :with_time_entries, account: employee.account, occupation_rate: 0.8)
+    create(:presence_policy, :with_time_entries, account: employee.account, occupation_rate: 0.8,
+      standard_day_duration: 9600)
   end
 
   shared_examples 'Unprocessable Entity on create' do

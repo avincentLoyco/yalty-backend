@@ -1,17 +1,17 @@
 class CreateEvent
   include API::V1::Exceptions
   attr_reader :employee_params, :attributes_params, :event_params, :employee,
-    :event, :versions, :presence_policy_id, :time_off_policy_amount
+    :event, :versions, :presence_policy_id, :time_off_policy_days
 
   def initialize(params, employee_attributes_params)
-    @employee               = nil
-    @event                  = nil
-    @versions               = []
-    @employee_params        = params[:employee]
-    @attributes_params      = employee_attributes_params
-    @presence_policy_id     = params[:presence_policy_id]
-    @time_off_policy_amount = params[:time_off_policy_amount]
-    @event_params           = build_event_params(params)
+    @employee             = nil
+    @event                = nil
+    @versions             = []
+    @employee_params      = params[:employee]
+    @attributes_params    = employee_attributes_params
+    @presence_policy_id   = params[:presence_policy_id]
+    @time_off_policy_days = params[:time_off_policy_amount]
+    @event_params         = build_event_params(params)
   end
 
   def call
@@ -28,9 +28,12 @@ class CreateEvent
   private
 
   def build_event_params(params)
-    params.delete(:presence_policy_id)
-    params.delete(:time_off_policy_amount)
-    params.tap { |attr| attr.delete(:employee) && attr.delete(:employee_attributes) }
+    params.tap do |attr|
+      attr.delete(:employee)
+      attr.delete(:employee_attributes)
+      attr.delete(:presence_policy_id)
+      attr.delete(:time_off_policy_amount)
+    end
   end
 
   def find_or_build_employee
@@ -117,7 +120,10 @@ class CreateEvent
   end
 
   def handle_hired_or_work_contract_event
-    return unless event.event_type.eql?('hired') || event.event_type.eql?('work_contract')
+    return unless event.event_type.in?(%w(hired work_contract)) &&
+        time_off_policy_days.present? && presence_policy_id.present?
+    presence_policy = PresencePolicy.find(presence_policy_id)
+    time_off_policy_amount = time_off_policy_days * presence_policy.standard_day_duration
     HandleEppForEvent.new(event.id, presence_policy_id).call
     CreateEtopForEvent.new(event.id, time_off_policy_amount).call
   end

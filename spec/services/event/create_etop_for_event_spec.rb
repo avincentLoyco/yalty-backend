@@ -13,7 +13,7 @@ RSpec.describe CreateEtopForEvent do
   let(:employee) { event.employee }
   let!(:vacation_category) { create(:time_off_category, account: employee.account, name: 'vacation') }
   let(:employee_id) { employee.id }
-  let(:time_off_policy_amount) { 20 }
+  let(:time_off_policy_amount) { 9600 }
   let!(:occupation_rate_definition) do
     create(:employee_attribute_definition,
            name: 'occupation_rate',
@@ -45,7 +45,7 @@ RSpec.describe CreateEtopForEvent do
         start_day: 1,
         end_day: nil,
         end_month: nil,
-        amount: time_off_policy_amount * 1440)
+        amount: time_off_policy_amount)
     end
     it { expect { subject }.to change(TimeOffPolicy.where(time_off_category_id:
       vacation_category.id), :count).by(0) }

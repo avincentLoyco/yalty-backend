@@ -24,7 +24,8 @@ RSpec.describe CreateEvent do
       validation: { range: [0, 1] })
   end
   let!(:presence_policy) do
-    create(:presence_policy, :with_time_entries, account: employee.account, occupation_rate: 0.8)
+    create(:presence_policy, :with_time_entries, account: employee.account, occupation_rate: 0.8,
+      standard_day_duration: 9600 )
   end
   let(:employee) { create(:employee) }
   let(:employee_id) { employee.id }
@@ -198,8 +199,8 @@ RSpec.describe CreateEvent do
 
       it { expect(subject.effective_at).to eq effective_at }
       it { expect(subject.employee_attribute_versions.first.data.line).to eq value }
-      it do 
-        expect { subject }.to change { Employee::Balance.where(balance_type: 
+      it do
+        expect { subject }.to change { Employee::Balance.where(balance_type:
           'assignation').count }.by(1)
       end
 
@@ -215,7 +216,7 @@ RSpec.describe CreateEvent do
           it { expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
         end
       end
-      
+
       context 'and definition does not have validation' do
         before { definition.update(validation: nil) }
 

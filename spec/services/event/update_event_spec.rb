@@ -361,7 +361,7 @@ RSpec.describe do
 
             context 'and rehired event does not have etops and ewp assigned' do
               it { expect { subject }.to_not change { EmployeeTimeOffPolicy.count } }
-              it { expect { subject }.to change { EmployeePresencePolicy.count } }
+              it { expect { subject }.to_not change { EmployeePresencePolicy.count } }
               it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
               it do
                 expect { subject }
@@ -497,7 +497,7 @@ RSpec.describe do
 
           context 'and there are no join tables assigned at rehired event effective_at' do
             it { expect { subject }.to_not change { EmployeeTimeOffPolicy.with_reset.count } }
-            it { expect { subject }.to change { EmployeePresencePolicy.with_reset.count }.by(-1) }
+            it { expect { subject }.to_not change { EmployeePresencePolicy.with_reset.count } }
             it { expect { subject }.to_not change { EmployeeWorkingPlace.with_reset.count } }
             it do
               expect { subject }

@@ -12,7 +12,8 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
     )
   end
 
-  let(:presence_policy) { create(:presence_policy, account: account, occupation_rate: 1.0) }
+  let(:presence_policy) { create(:presence_policy, account: account, occupation_rate: 1.0,
+    standard_day_duration: 1440) }
   let(:presence_days)  do
     [1,2,3,4,5,6,7].map do |i|
       create(:presence_day, order: i, presence_policy: presence_policy)
