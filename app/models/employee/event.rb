@@ -1,5 +1,5 @@
 class Employee::Event < ActiveRecord::Base
-  CONTRACT_PERIOD_ONLY_EVENTS = %w[work_contract]
+  CONTRACT_PERIOD_ONLY_EVENTS = %w(work_contract)
 
   EVENT_ATTRIBUTES = {
     default: %w(),
@@ -50,15 +50,15 @@ class Employee::Event < ActiveRecord::Base
   validates :event_type,
     presence: true,
     inclusion: { in: proc { Employee::Event.event_types }, allow_nil: true }
-  validate :attributes_presence, if: %i[event_attributes employee]
+  validate :attributes_presence, if: %i(event_attributes employee)
   validate :balances_before_hired_date, if: :employee, on: :update
-  validate :contract_period_only_events, if: %i[employee event_type effective_at], on: :update
-  validate :contract_end_and_hire_in_valid_order, if: %i[employee event_type effective_at]
-  validate :work_contract_in_work_period, if: %i[employee event_type effective_at]
+  validate :contract_period_only_events, if: %i(employee event_type effective_at), on: :update
+  validate :contract_end_and_hire_in_valid_order, if: %i(employee event_type effective_at)
+  validate :work_contract_in_work_period, if: %i(employee event_type effective_at)
 
   scope :contract_ends, -> { where(event_type: 'contract_end') }
   scope :hired, -> { where(event_type: 'hired') }
-  scope :contract_types, -> { where(event_type: %w[contract_end hired]) }
+  scope :contract_types, -> { where(event_type: %w(contract_end hired)) }
   scope :contract_period_only, -> { where(event_type: CONTRACT_PERIOD_ONLY_EVENTS) }
   scope :all_except, ->(id) { where.not(id: id) }
 
