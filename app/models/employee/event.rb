@@ -1,5 +1,6 @@
 class Employee::Event < ActiveRecord::Base
   CONTRACT_PERIOD_ONLY_EVENTS = %w(work_contract).freeze
+  OCCUPATION_RATE_EVENTS = %w(hired work_contract).freeze
 
   EVENT_ATTRIBUTES = {
     default: %w(),

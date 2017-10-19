@@ -3,12 +3,12 @@ class UpdateEtopForEvent
   attr_accessor :event, :time_off_policy
   attr_reader :time_off_policy_amount, :old_effective_at, :etop
 
-  def initialize(event_id, time_off_policy_days, old_effective_at)
-    @event = Employee::Event.find(event_id)
-    @time_off_policy_amount = time_off_policy_days * 1440
-    @time_off_policy = find_time_off_policy(time_off_policy_amount)
-    @old_effective_at = old_effective_at
-    @etop = find_etop
+  def initialize(event_id, time_off_policy_amount, old_effective_at)
+    @event                  = Employee::Event.find(event_id)
+    @time_off_policy_amount = time_off_policy_amount
+    @time_off_policy        = find_time_off_policy(time_off_policy_amount)
+    @old_effective_at       = old_effective_at
+    @etop                   = find_etop
   end
 
   def call

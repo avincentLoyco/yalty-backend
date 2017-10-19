@@ -7,13 +7,34 @@ class DeleteEvent
   end
 
   def call
-    return event.destroy! unless event.event_type.in?(%w(hired contract_end))
+    return event.destroy! unless event.event_type.in?(%w(hired contract_end work_contract))
     ActiveRecord::Base.transaction do
       remove_reset_resources
       event.destroy!
+      remove_join_tables
       create_missing_balances
       ::Payments::UpdateSubscriptionQuantity.perform_now(employee.account)
       RemoveEmployee.new(employee).call unless employee.events.hired.exists?
+    end
+  end
+
+  def remove_join_tables
+    return unless event.event_type.in?(Employee::Event::OCCUPATION_RATE_EVENTS) &&
+        event.employee_presence_policy.present? && event.employee_time_off_policies.any?
+
+    event.employee_presence_policy.delete
+    ClearResetJoinTables.new(event.employee, event.effective_at, nil, nil).call
+    update_balances_params = [event.employee_presence_policy, event.effective_at.to_date, nil, nil]
+    FindAndUpdateEmployeeBalancesForJoinTables.new(*update_balances_params).call
+
+    event.employee_time_off_policies.delete_all
+    event.employee_time_off_policies.each do |etop|
+      ClearResetJoinTables.new(event.employee, event.effective_at, etop.time_off_category, nil).call
+      RecreateBalances::AfterEmployeeTimeOffPolicyDestroy.new(
+        destroyed_effective_at: effective_at,
+        time_off_category_id: etop.time_off_category_id,
+        employee_id: etop.employee_id
+      ).call
     end
   end
 
