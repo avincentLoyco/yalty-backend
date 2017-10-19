@@ -24,7 +24,8 @@ module Api::V1
       {
         employee_attributes: employee_attributes_json,
         working_place: working_place_json,
-        active_presence_policy: active_presence_policy_json
+        active_presence_policy: active_presence_policy_json,
+        active_vacation_policy: active_vacation_policy_json
       }
     end
 
@@ -60,6 +61,24 @@ module Api::V1
         type: active_presence_policy.class.name.underscore,
         standard_day_duration: active_presence_policy.standard_day_duration
       }
+    end
+
+    def active_vacation_policy_json
+      vacation_category = resource.time_off_categories.find_by(name: 'vacation')
+      active_vacation_policy = resource.active_policy_in_category_at_date(vacation_category&.id)
+      return {} unless active_vacation_policy.present?
+
+      {
+        assignation_id: active_vacation_policy.id,
+        effective_at: active_vacation_policy.effective_at,
+        effective_till: active_vacation_policy.effective_till,
+        employee_balance: employee_balance_json(active_vacation_policy)
+      }
+    end
+
+    def employee_balance_json(active_vacation_policy)
+      return unless active_vacation_policy.policy_assignation_balance.present?
+      EmployeeBalanceRepresenter.new(active_vacation_policy.policy_assignation_balance).complete
     end
   end
 end

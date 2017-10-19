@@ -84,17 +84,26 @@ class ManageEmployeeBalanceAdditions
 
   def create_employee_balance!(etop, date, balance_type)
     return unless balance_at_date(etop, date, balance_type).nil?
+    return if addition_balance_at_assignation_date?(balance_type, date, etop)
+    resource_amount = unless etop.time_off_policy.policy_type == 'counter'
+                        etop.time_off_policy.amount * etop.occupation_rate
+                      end
     CreateEmployeeBalance.new(
       etop.time_off_category_id,
       etop.employee_id,
       employee.account_id,
       {
         skip_update: true,
-        resource_amount: balance_type.eql?('addition') ? etop.time_off_policy.amount : 0,
+        resource_amount: balance_type.eql?('addition') ? resource_amount : 0,
         effective_at: date + Employee::Balance.const_get("#{balance_type}_offset".upcase),
         balance_type: balance_type
       }.merge(validity_date(etop, date, balance_type))
     ).call
+  end
+
+  def addition_balance_at_assignation_date?(balance_type, addition_balance_date, etop)
+    balance_type.eql?('addition') && etop.effective_at.eql?(addition_balance_date) &&
+      etop.time_off_policy.policy_type.eql?('balancer')
   end
 
   def validity_date(etop, date, balance_type)

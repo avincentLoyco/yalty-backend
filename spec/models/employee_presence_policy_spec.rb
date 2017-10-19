@@ -12,6 +12,7 @@ RSpec.describe EmployeePresencePolicy, type: :model do
   it { is_expected.to validate_presence_of(:employee_id) }
   it { is_expected.to validate_presence_of(:presence_policy_id) }
   it { is_expected.to validate_presence_of(:effective_at) }
+
   it { is_expected.to have_db_index([:presence_policy_id, :employee_id]) }
   it { is_expected.to have_db_index([:employee_id, :presence_policy_id, :effective_at]).unique }
 

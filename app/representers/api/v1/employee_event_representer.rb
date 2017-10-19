@@ -4,7 +4,9 @@ module Api::V1
       {
         effective_at: resource.effective_at,
         event_type: resource.event_type,
-        deletable: resource.can_destroy_event?
+        deletable: resource.can_destroy_event?,
+        presence_policy_id: presence_policy_id,
+        time_off_policy_amount: time_off_policy_amount
       }
         .merge(basic)
         .merge(relationship)
@@ -19,6 +21,18 @@ module Api::V1
 
     def employee_json
       EmployeeRepresenter.new(resource.employee).basic
+    end
+
+    def presence_policy_id
+      return unless resource.event_type.in?(%w(hired work_contract)) &&
+          resource.employee_presence_policy.present?
+      resource.employee_presence_policy.presence_policy_id
+    end
+
+    def time_off_policy_amount
+      return unless resource.event_type.in?(%w(hired work_contract)) &&
+          resource.employee_time_off_policies.any?
+      resource.employee_time_off_policies.first.policy_assignation_balance.balance
     end
 
     def attribute_versions

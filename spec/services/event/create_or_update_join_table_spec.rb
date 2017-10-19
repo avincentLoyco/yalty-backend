@@ -20,6 +20,8 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
       described_class.new(join_table_class, resource_class, params, join_table_resource).call
     end
 
+    # TODO: Rework shared examples
+
     shared_examples 'Join Table create' do
       it { expect { subject }.to_not raise_error }
 
@@ -29,38 +31,21 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
       it { expect(subject[:status]).to eq 201 }
     end
 
-    shared_examples 'Join Table create with the same resource before' do
+    shared_examples 'Join Table create that doesnt allow same resource one after another' do
       it { expect { subject }.to_not raise_error }
 
-      it { expect { subject }.to change { join_table_class.exists?(existing_join_table.id) } }
-      it { expect { subject }.to change { join_table_class.count }.by(-1) }
-
-      it { expect(subject[:result].effective_at).to eq same_resource_before.effective_at }
-      it { expect(subject[:result].id).to eq same_resource_before.id }
-      it { expect(subject[:status]).to eq 205 }
-    end
-
-    shared_examples 'Join Table create with the same resource after' do
-      it { expect { subject }.to_not raise_error }
-
-      it { expect { subject }.to change { join_table_class.count }.by(-1) }
       it { expect { subject }.to change { join_table_class.exists?(existing_join_table.id) } }
       it { expect { subject }.to change { join_table_class.exists?(same_resource_after.id) } }
+    end
 
-      it { expect(subject[:result].effective_at).to eq params[:effective_at].to_date }
+    shared_examples 'Join Table create that allows same resource one after another' do
+      it { expect { subject }.to_not raise_error }
+
+      it { expect { subject }.not_to change { join_table_class.count } }
+      it { expect { subject }.to change { join_table_class.exists?(existing_join_table.id) } }
+      it { expect { subject }.not_to change { join_table_class.exists?(same_resource_after.id) } }
+
       it { expect(subject[:status]).to eq 201 }
-    end
-
-    shared_examples 'Join Table create with the same resource after and before' do
-      it { expect { subject }.to_not raise_error }
-
-      it { expect { subject }.to change { join_table_class.count }.by(-2) }
-      it { expect { subject }.to change { join_table_class.exists?(existing_join_table.id) } }
-      it { expect { subject }.to change { join_table_class.exists?(same_resource_after.id) } }
-
-      it { expect(subject[:result].effective_at).to eq same_resource_before.effective_at }
-      it { expect(subject[:result].id).to eq same_resource_before.id }
-      it { expect(subject[:status]).to eq 205 }
     end
 
     shared_examples 'Join Table create with different resource after and effective till in past' do
@@ -110,6 +95,15 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
       end
     end
 
+    shared_examples 'Join Table update with the same resource after previous effective at 2' do
+      it { expect { subject }.not_to change { join_table_class.count } }
+      it { expect { subject }.to change { join_table_resource.reload.effective_at } }
+      it do
+        expect { subject }
+          .not_to change { join_table_class.exists?(second_resource_tables.last.id) }
+      end
+    end
+
     shared_examples 'Join Table update with the same resource after new effective_at' do
       it { expect { subject }.to change { join_table_class.count }.by(-2) }
       it { expect { subject }.to change { join_table_resource.reload.effective_at } }
@@ -120,6 +114,19 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
       it do
         expect { subject }
           .to change { join_table_class.exists?(first_resource_tables.first.id) }.to false
+      end
+    end
+
+    shared_examples 'Join Table update with the same resource after new effective_at 2' do
+      it { expect { subject }.not_to change { join_table_class.count } }
+      it { expect { subject }.to change { join_table_resource.reload.effective_at } }
+      it do
+        expect { subject }
+          .not_to change { join_table_class.exists?(second_resource_tables.last.id) }
+      end
+      it do
+        expect { subject }
+          .not_to change { join_table_class.exists?(first_resource_tables.first.id) }
       end
     end
 
@@ -138,6 +145,24 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
       it do
         expect { subject }
           .to change { join_table_class.exists?(first_resource_tables.first.id) }.to false
+      end
+    end
+
+    shared_examples 'Join Table update with the same resource after and before new effective at 2' do
+      it { expect { subject }.to change { join_table_class.count }.by(-1) }
+      it do
+        expect { subject }.not_to change { join_table_class.exists?(join_table_resource.id) }
+      end
+      it do
+        expect { subject }.to change { join_table_class.exists?(third_resource_table.id) }.to false
+      end
+      it do
+        expect { subject }
+          .not_to change { join_table_class.exists?(second_resource_tables.last.id) }
+      end
+      it do
+        expect { subject }
+          .not_to change { join_table_class.exists?(first_resource_tables.first.id) }
       end
     end
 
@@ -187,7 +212,14 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
               effective_at: '1/3/2015', employee: employee, working_place: resource)
           end
 
-          it_behaves_like 'Join Table create with the same resource before'
+          it { expect { subject }.to_not raise_error }
+
+          it { expect { subject }.to change { join_table_class.exists?(existing_join_table.id) } }
+          it { expect { subject }.to change { join_table_class.count }.by(-1) }
+
+          it { expect(subject[:result].effective_at).to eq same_resource_before.effective_at }
+          it { expect(subject[:result].id).to eq same_resource_before.id }
+          it { expect(subject[:status]).to eq 205 }
         end
 
         context 'when there is JoinTable with the same resource assigned' do
@@ -197,7 +229,12 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
           end
 
           context 'after effective_at' do
-            it_behaves_like 'Join Table create with the same resource after'
+            it_behaves_like 'Join Table create that doesnt allow same resource one after another'
+
+            it { expect { subject }.to change { join_table_class.count }.by(-1) }
+
+            it { expect(subject[:result].effective_at).to eq params[:effective_at].to_date }
+            it { expect(subject[:status]).to eq 201 }
           end
 
           context 'before and after effective_at' do
@@ -206,7 +243,13 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
                 employee: employee, working_place: resource, effective_at: '1/3/2015')
             end
 
-            it_behaves_like 'Join Table create with the same resource after and before'
+            it_behaves_like  'Join Table create that doesnt allow same resource one after another'
+
+            it { expect { subject }.to change { join_table_class.count }.by(-2) }
+
+            it { expect(subject[:result].effective_at).to eq same_resource_before.effective_at }
+            it { expect(subject[:result].id).to eq same_resource_before.id }
+            it { expect(subject[:status]).to eq 205 }
           end
         end
 
@@ -338,7 +381,12 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
           end
 
           it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
-          it_behaves_like 'Join Table create with the same resource before'
+          it { expect { subject }.to_not raise_error }
+
+          it { expect { subject }.to change { join_table_class.exists?(existing_join_table.id) } }
+          it { expect { subject }.not_to change { join_table_class.count } }
+
+          it { expect(subject[:status]).to eq 201 }
         end
 
         context 'when there is JoinTable with the same resource assigned' do
@@ -347,8 +395,16 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
               effective_at: '1/5/2015', employee: employee, time_off_policy: resource)
           end
 
-          it { expect { subject }.to change { Employee::Balance.count }.by(-2) }
-          it_behaves_like 'Join Table create with the same resource after'
+          it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
+
+          it { expect { subject }.to_not raise_error }
+
+          it { expect { subject }.not_to change { join_table_class.count } }
+          it { expect { subject }.to change { join_table_class.exists?(existing_join_table.id) } }
+          it { expect { subject }.not_to change { join_table_class.exists?(same_resource_after.id) } }
+
+          it { expect(subject[:result].effective_at).to eq params[:effective_at].to_date }
+          it { expect(subject[:status]).to eq 201 }
 
           context 'before and after effective_at' do
             let!(:same_resource_before) do
@@ -356,8 +412,14 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
                 employee: employee, time_off_policy: resource, effective_at: '1/3/2015')
             end
 
-            it { expect { subject }.to change { Employee::Balance.count }.by(-2) }
-            it_behaves_like 'Join Table create with the same resource after and before'
+            it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
+
+            it { expect { subject }.to_not raise_error }
+            it { expect { subject }.not_to change { join_table_class.count } }
+            it { expect { subject }.to change { join_table_class.exists?(existing_join_table.id) } }
+            it { expect { subject }.not_to change { join_table_class.exists?(same_resource_after.id) } }
+
+            it { expect(subject[:status]).to eq 201 }
           end
         end
 
@@ -424,23 +486,53 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
         context 'when after old effective at is the same resource' do
           before { params[:effective_at] = 5.years.since.to_s }
 
-          it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
+          it { expect { subject }.not_to change { Employee::Balance.count } }
 
-          it_behaves_like 'Join Table update with the same resource after previous effective at'
+          it { expect { subject }.not_to change { join_table_class.count } }
+          it { expect { subject }.to change { join_table_resource.reload.effective_at } }
+          it do
+            expect { subject }
+              .not_to change { join_table_class.exists?(second_resource_tables.last.id) }
+          end
         end
 
         context 'when there is the same resource after new effective_at' do
           before { params[:effective_at] = (2.years.ago - 2.months).to_s }
 
-          it { expect { subject }.to change { Employee::Balance.count }.by(-2) }
-          it_behaves_like 'Join Table update with the same resource after new effective_at'
+          it { expect { subject }.not_to change { Employee::Balance.count } }
+
+          it { expect { subject }.not_to change { join_table_class.count } }
+          it { expect { subject }.to change { join_table_resource.reload.effective_at } }
+          it do
+            expect { subject }
+              .not_to change { join_table_class.exists?(second_resource_tables.last.id) }
+          end
+          it do
+            expect { subject }
+              .not_to change { join_table_class.exists?(first_resource_tables.first.id) }
+          end
         end
 
         context 'where there is the same resource after and before new effective_at' do
           before { params[:effective_at] = 3.years.ago.to_s }
 
-          it { expect { subject }.to change { Employee::Balance.count }.by(-4) }
-          it_behaves_like 'Join Table update with the same resource after and before new effective at'
+          it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
+
+          it { expect { subject }.to change { join_table_class.count }.by(-1) }
+          it do
+            expect { subject }.not_to change { join_table_class.exists?(join_table_resource.id) }
+          end
+          it do
+            expect { subject }.to change { join_table_class.exists?(third_resource_table.id) }.to false
+          end
+          it do
+            expect { subject }
+              .not_to change { join_table_class.exists?(second_resource_tables.last.id) }
+          end
+          it do
+            expect { subject }
+              .not_to change { join_table_class.exists?(first_resource_tables.first.id) }
+          end
         end
       end
     end
@@ -485,7 +577,14 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
               effective_at: '1/3/2015', employee: employee, presence_policy: resource)
           end
 
-          it_behaves_like 'Join Table create with the same resource before'
+          it { expect { subject }.to_not raise_error }
+
+          it { expect { subject }.to change { join_table_class.exists?(existing_join_table.id) } }
+          it { expect { subject }.not_to change { join_table_class.count } }
+
+          it { expect(subject[:result].effective_at).to eq existing_join_table.effective_at }
+          it { expect(subject[:result].id).not_to eq same_resource_before.id }
+          it { expect(subject[:status]).to eq 201 }
         end
 
         context 'when there is JoinTable with the same reosurce assigned' do
@@ -494,7 +593,9 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
               effective_at: '1/5/2015', employee: employee, presence_policy: resource)
           end
 
-          it_behaves_like 'Join Table create with the same resource after'
+          it_behaves_like 'Join Table create that allows same resource one after another'
+
+          it { expect(subject[:result].effective_at).to eq params[:effective_at].to_date }
 
           context 'before and after effective_at' do
             let!(:same_resource_before) do
@@ -502,7 +603,10 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
                 employee: employee, presence_policy: resource, effective_at: '1/3/2015')
             end
 
-            it_behaves_like 'Join Table create with the same resource after and before'
+            it_behaves_like 'Join Table create that allows same resource one after another'
+
+            it { expect(subject[:result].effective_at).to eq existing_join_table.effective_at }
+            it { expect(subject[:result].id).not_to eq same_resource_before.id }
           end
         end
 
@@ -545,19 +649,19 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
         context 'when after old effective at is the same resource' do
           before { params[:effective_at] = 5.years.since.to_s }
 
-          it_behaves_like 'Join Table update with the same resource after previous effective at'
+          it_behaves_like 'Join Table update with the same resource after previous effective at 2'
         end
 
         context 'when there is the same resource after new effective_at' do
           before { params[:effective_at] = (2.years.ago - 2.months).to_s }
 
-          it_behaves_like 'Join Table update with the same resource after new effective_at'
+          it_behaves_like 'Join Table update with the same resource after new effective_at 2'
         end
 
         context 'where there is the same resource after and before new effective_at' do
           before { params[:effective_at] = 3.years.ago.to_s }
 
-          it_behaves_like 'Join Table update with the same resource after and before new effective at'
+          it_behaves_like 'Join Table update with the same resource after and before new effective at 2'
         end
       end
     end

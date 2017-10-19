@@ -3,26 +3,51 @@ require 'rails_helper'
 RSpec.describe CreateEvent do
   include_context 'shared_context_account_helper'
 
-  before { Account.current = employee.account }
+  before do
+    Account.current = employee.account
+    employee.events.first.update!(effective_at: Date.new(2015, 4, 20))
+    etop_assignation_on_hired_event = create(:employee_time_off_policy,
+      employee: employee, effective_at: Date.new(2015, 4, 20),
+      time_off_policy: create(:time_off_policy, time_off_category: vacation_category)
+    )
+  end
 
   let!(:definition) do
     create(:employee_attribute_definition,
       account: employee.account, name: attribute_name, multiple: true, validation: { presence: true })
   end
+  let!(:occupation_rate_definition) do
+    create(:employee_attribute_definition,
+      name: 'occupation_rate',
+      account: employee.account,
+      attribute_type: Attribute::Number.attribute_type,
+      validation: { range: [0, 1] })
+  end
+  let!(:presence_policy) do
+    create(:presence_policy, :with_time_entries, account: employee.account, occupation_rate: 0.8,
+      standard_day_duration: 9600 )
+  end
   let(:employee) { create(:employee) }
   let(:employee_id) { employee.id }
-  let(:effective_at) { Date.today }
+  let(:effective_at) { Date.new(2015, 4, 21) }
   let(:event_type) { 'work_contract' }
   let(:value) { 'abc' }
   let(:attribute_name) { 'job_title' }
   let(:attribute_name_second) { 'job_title' }
+  let(:occupation_rate_attribute) { 'occupation_rate' }
+  let!(:vacation_category) do
+    create(:time_off_category, account: employee.account,
+      name: 'vacation')
+  end
   let(:params) do
     {
       effective_at: effective_at,
       event_type: event_type,
+      time_off_policy_amount: 9600,
       employee: {
         id: employee_id
-      }
+      },
+      presence_policy_id: presence_policy.id
     }
   end
   let(:employee_attributes_params) do
@@ -33,9 +58,14 @@ RSpec.describe CreateEvent do
         order: 1
       },
       {
-        value: 'xyz',
-        attribute_name: attribute_name_second,
+        value: 0.8,
+        attribute_name: occupation_rate_attribute,
         order: 2
+      },
+      {
+        value: 'xyz',
+        attribute_name: attribute_name,
+        order: 3
       }
     ]
   end
@@ -43,8 +73,14 @@ RSpec.describe CreateEvent do
   subject { described_class.new(params, employee_attributes_params).call }
 
   context 'with valid params' do
+    context 'and this is work contract event' do
+      it do
+        expect { subject }.to change { Employee::Balance.where(balance_type:
+          'assignation').count }.by(1)
+      end
+    end
     context 'when employee_id is present' do
-      it { expect { subject }.to change { Employee::AttributeVersion.count }.by(2) }
+      it { expect { subject }.to change { Employee::AttributeVersion.count }.by(3) }
       it { expect { subject }.to change { employee.events.count }.by(1) }
 
       it { expect(subject.effective_at).to eq effective_at }
@@ -53,6 +89,7 @@ RSpec.describe CreateEvent do
       context 'and this is contract end event' do
         let(:event_type) { 'contract_end' }
         let(:category) { create(:time_off_category, account: employee.account) }
+        let(:effective_at) { Date.today }
         let!(:etop) do
           create(:employee_time_off_policy,
             employee: employee, effective_at: 2.weeks.ago,
@@ -68,7 +105,7 @@ RSpec.describe CreateEvent do
         it { expect { subject }.to change { EmployeeTimeOffPolicy.with_reset.count }.by(1) }
         it do
           expect { subject }
-            .to change { Employee::Balance.where(balance_type: 'reset').count }.by(1)
+            .to change { Employee::Balance.where(balance_type: 'reset').count }.by(2)
         end
         it { expect { subject }.to_not change { time_off.reload.end_time } }
         it { expect { subject }.to_not change { time_off.reload.employee_balance.effective_at } }
@@ -94,7 +131,7 @@ RSpec.describe CreateEvent do
           )
         end
 
-        it { expect { subject }.to change { Employee::AttributeVersion.count }.by(3) }
+        it { expect { subject }.to change { Employee::AttributeVersion.count }.by(4) }
 
         it 'has valid data' do
           subject
@@ -109,9 +146,9 @@ RSpec.describe CreateEvent do
           end
 
           context 'when other parent work status is valid' do
-            let(:work_status) { 'salaried employee'}
+            let(:work_status) { 'salaried employee' }
 
-            it { expect { subject }.to change { Employee::AttributeVersion.count }.by(3) }
+            it { expect { subject }.to change { Employee::AttributeVersion.count }.by(4) }
             it { expect { subject }.to change { Employee::Event.count }.by(1) }
           end
 
@@ -124,7 +161,9 @@ RSpec.describe CreateEvent do
       end
 
       context 'and definition multiple is false' do
-        before { definition.update(multiple: false) }
+        before do
+          definition.update(multiple: false)
+        end
 
         it { expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
       end
@@ -134,7 +173,7 @@ RSpec.describe CreateEvent do
 
         let(:value) { nil }
 
-        it { expect { subject }.to change { Employee::AttributeVersion.count }.by(2) }
+        it { expect { subject }.to change { Employee::AttributeVersion.count }.by(3) }
         it { expect { subject }.to_not raise_error }
       end
     end
@@ -156,10 +195,14 @@ RSpec.describe CreateEvent do
       end
 
       it { expect { subject }.to change { Employee.count }.by(1) }
-      it { expect { subject }.to change { Employee::AttributeVersion.count }.by(2) }
+      it { expect { subject }.to change { Employee::AttributeVersion.count }.by(3) }
 
       it { expect(subject.effective_at).to eq effective_at }
       it { expect(subject.employee_attribute_versions.first.data.line).to eq value }
+      it do
+        expect { subject }.to change { Employee::Balance.where(balance_type:
+          'assignation').count }.by(1)
+      end
 
       context 'and required attribute is nil or not send' do
         context 'and value is nil' do
@@ -169,8 +212,7 @@ RSpec.describe CreateEvent do
         end
 
         context 'and required attribute does not send' do
-          before { employee_attributes_params.shift }
-
+          before { employee_attributes_params.shift(3) }
           it { expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
         end
       end
@@ -180,7 +222,7 @@ RSpec.describe CreateEvent do
 
         let(:value) { nil }
 
-        it { expect { subject }.to change { Employee::AttributeVersion.count }.by(2) }
+        it { expect { subject }.to change { Employee::AttributeVersion.count }.by(3) }
         it { expect { subject }.to_not raise_error }
       end
     end

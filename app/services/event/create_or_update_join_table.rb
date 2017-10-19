@@ -20,7 +20,7 @@ class CreateOrUpdateJoinTable
     @employee_join_tables = find_employees_join_tables
     ActiveRecord::Base.transaction do
       remove_duplicated_resources_join_tables
-      { result: return_new_current_with_efective_till, status: @status }
+      { result: return_new_current_with_effective_till, status: @status }
     end
   end
 
@@ -59,7 +59,7 @@ class CreateOrUpdateJoinTable
     join_tables.find { |table| table[:effective_at].eql?(params[:effective_at]) }
   end
 
-  def return_new_current_with_efective_till
+  def return_new_current_with_effective_till
     join_table_hash =
       JoinTableWithEffectiveTill
       .new(join_table_class, current_account.id, nil, nil, new_current_join_table.id, nil)
@@ -69,7 +69,8 @@ class CreateOrUpdateJoinTable
   end
 
   def new_current_join_table
-    if previous_join_table && previous_join_table.send(resource_class_id).eql?(resource_id) &&
+    if [TimeOffPolicy, PresencePolicy].exclude?(resource_class) && previous_join_table &&
+        previous_join_table.send(resource_class_id).eql?(resource_id) &&
         previous_in_the_same_period?
       destroy_current_join_table if join_table_resource
       create_reset_join_table_after_update(previous_join_table)

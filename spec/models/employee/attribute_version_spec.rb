@@ -153,4 +153,35 @@ RSpec.describe Employee::AttributeVersion, type: :model do
       it { expect(subject.valid?).to eq false }
     end
   end
+
+  context '#validate_range' do
+    let(:occupation_rate) { 0.5 }
+    let(:range) { [0, 1] }
+    let!(:attribute_definition) do
+      create(:employee_attribute_definition,
+        validation: { range: range },
+        name: 'occupation_rate',
+        attribute_type: 'Number')
+    end
+
+    subject do
+      build(:employee_attribute_version,
+        attribute_definition: attribute_definition, data: { number: occupation_rate })
+    end
+
+    context 'with number in range' do
+      it { expect(subject.valid?).to eq(true) }
+    end
+
+    context 'with invalid data' do
+      [1.01, -0.01, nil, "invalid"].each do |occupation_rate|
+        let(:occupation_rate) { occupation_rate }
+        it { expect(subject.valid?).to eq(false) }
+        it do
+          expect { subject.valid? }.to change { subject.errors.messages[:occupation_rate] }
+                                   .to include("occupation_rate - invalid value")
+        end
+      end
+    end
+  end
 end

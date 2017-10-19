@@ -262,10 +262,10 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
 
               it { is_expected.to have_http_status(201) }
 
-              it { expect { subject }.to_not change { EmployeePresencePolicy.not_reset.count } }
+              it { expect { subject }.to change { EmployeePresencePolicy.not_reset.count }.to(3) }
               it { expect { subject }.to change { EmployeePresencePolicy.with_reset.count }.by(-1) }
               it do
-                expect { subject }.to change { EmployeePresencePolicy.exists?(duplicated_table.id) }
+                expect { subject }.not_to change { EmployeePresencePolicy.exists?(duplicated_table.id) }
               end
             end
           end
@@ -301,7 +301,7 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
           it { expect { subject }.to_not change { balances.first.reload.being_processed } }
 
           it { expect { subject }.to have_enqueued_job(UpdateBalanceJob).exactly(1) }
-          it { is_expected.to have_http_status(205) }
+          it { is_expected.to have_http_status(201) }
         end
       end
 
@@ -319,10 +319,10 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
           let(:effective_at) { latest_epp.effective_at }
 
           context 'and the presence policy is the same as the oldest EPP' do
-            it { expect { subject }.to change { EmployeePresencePolicy.count }.by(-1) }
+            it { expect { subject }.not_to change { EmployeePresencePolicy.count } }
             it { expect { subject }.to change { EmployeePresencePolicy.exists?(latest_epp.id) } }
 
-            it { is_expected.to have_http_status(205) }
+            it { is_expected.to have_http_status(201) }
           end
 
           context "and the presence policy is different than the exisitng EPP's ones" do
@@ -357,9 +357,9 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
           let(:effective_at) { latest_epp.effective_at - 2.days }
 
           context 'and the presence policy is the same as the oldest EPP' do
-            it { expect { subject }.to_not change { EmployeePresencePolicy.count } }
+            it { expect { subject }.to change { EmployeePresencePolicy.count }.by(1) }
 
-            it { is_expected.to have_http_status(205) }
+            it { is_expected.to have_http_status(201) }
           end
 
           context "and the presence policy is different than the exisitng EPP's ones" do
@@ -516,10 +516,10 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
                 end
               end
 
-              it { expect { subject }.to change { EmployeePresencePolicy.count }.by(-2) }
+              it { expect { subject }.to change { EmployeePresencePolicy.count }.by(-1) }
               it { expect { subject }.to change { EmployeePresencePolicy.with_reset.count }.by(-1) }
               it do
-                expect { subject }.to change { EmployeePresencePolicy.exists?(new_epps.last.id) }
+                expect { subject }.not_to change { EmployeePresencePolicy.exists?(new_epps.last.id) }
               end
 
               it { is_expected.to have_http_status(200) }
@@ -549,16 +549,16 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
               end
 
               it { expect { subject }.to change { EmployeePresencePolicy.with_reset.count }.by(1) }
-              it { expect { subject }.to change { EmployeePresencePolicy.not_reset.count }.by(-2) }
+              it { expect { subject }.to change { EmployeePresencePolicy.not_reset.count }.by(0) }
               it do
-                expect { subject }.to change { EmployeePresencePolicy.exists?(new_epps.last.id) }
+                expect { subject }.not_to change { EmployeePresencePolicy.exists?(new_epps.last.id) }
               end
               it do
                 expect { subject }
-                  .to change { EmployeePresencePolicy.exists?(join_table_resource.id) }
+                  .not_to change { EmployeePresencePolicy.exists?(join_table_resource.id) }
               end
 
-              it { is_expected.to have_http_status(205) }
+              it { is_expected.to have_http_status(200) }
             end
           end
         end
@@ -639,7 +639,7 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
         it { expect { subject }.to_not change { balances.first.reload.being_processed } }
 
         it { expect { subject }.to have_enqueued_job(UpdateBalanceJob).exactly(1) }
-        it { is_expected.to have_http_status(205) }
+        it { is_expected.to have_http_status(200) }
       end
     end
 
@@ -669,11 +669,11 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
           let(:effective_at) { latest_epp.effective_at }
 
           context 'and the presence policy is the same as the oldest EPP' do
-            it { expect { subject }.to change { EmployeePresencePolicy.count }.by(-2) }
+            it { expect { subject }.to change { EmployeePresencePolicy.count }.by(-1) }
             it { expect { subject }.to change { EmployeePresencePolicy.exists?(latest_epp.id) } }
             it do
               expect { subject }
-                .to change { EmployeePresencePolicy.exists?(join_table_resource.id) }
+                .not_to change { EmployeePresencePolicy.exists?(join_table_resource.id) }
             end
           end
 
@@ -691,10 +691,10 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
           let(:effective_at) { latest_epp.effective_at - 2.days }
 
           context 'and the presence policy is the same as the oldest EPP' do
-            it { expect { subject }.to change { EmployeePresencePolicy.count }.by(-1) }
+            it { expect { subject }.not_to change { EmployeePresencePolicy.count } }
             it do
               expect { subject }
-                .to change { EmployeePresencePolicy.exists?(join_table_resource.id) }
+                .not_to change { EmployeePresencePolicy.exists?(join_table_resource.id) }
             end
           end
 
@@ -896,7 +896,7 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
           end
         end
 
-        it { expect { subject }.to change { EmployeePresencePolicy.count }.by(-2) }
+        it { expect { subject }.to change { EmployeePresencePolicy.count }.by(-1) }
         it { is_expected.to have_http_status(204) }
       end
 

@@ -10,6 +10,8 @@ class PresencePolicy < ActiveRecord::Base
   belongs_to :account
 
   validates :account_id, :name, presence: true
+  validates :occupation_rate,
+    numericality: { less_than_or_equal_to: 1, greater_than_or_equal_to: 0 }
 
   before_create :set_standard_day_duration,
     if: -> { !standard_day_duration.present? && presence_days.any? }
