@@ -64,7 +64,7 @@ module Api::V1
     end
 
     def active_vacation_policy_json
-      vacation_category = resource.time_off_categories.find_by(name: "vacation")
+      vacation_category = resource.time_off_categories.find_by(name: 'vacation')
       active_vacation_policy = resource.active_policy_in_category_at_date(vacation_category&.id)
       return {} unless active_vacation_policy.present?
 
