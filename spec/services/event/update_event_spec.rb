@@ -342,6 +342,31 @@ RSpec.describe do
             end
           end
 
+          context 'and there are work contracts which should be destroyed' do
+            let!(:work_contract_event) do
+              create(:employee_event,
+                employee: employee, event_type: 'work_contract',
+                effective_at: event.effective_at + 1.month)
+            end
+
+            let!(:employee_presence_policy) do
+              create(:employee_presence_policy,
+                employee: employee, effective_at: work_contract_event.effective_at,
+                employee_event_id: work_contract_event.id)
+            end
+            let!(:employee_time_off_policy) do
+              create(:employee_time_off_policy,
+                employee: employee, effective_at: work_contract_event.effective_at,
+                employee_event_id: work_contract_event.id)
+            end
+
+            it { expect { subject }.to change { employee.reload.events.count }.by(-1) }
+            it 'contract period event is deleted' do
+              subject
+              expect(employee.reload.events).to eq([event])
+            end
+          end
+
           context 'and hired date was one day after contract end and now not' do
             before do
               create(:employee_event,

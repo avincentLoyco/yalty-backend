@@ -304,4 +304,98 @@ RSpec.describe Employee::Event, type: :model do
       )
     end
   end
+
+  describe 'work_contract event' do
+    shared_examples 'invalid work contract event - not in contract period' do
+
+      it 'is invalid' do
+        expect(subject.valid?).to eq(false)
+      end
+
+      it 'has proper error message' do
+        expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
+          .to include("Work contract must be in work period")
+      end
+    end
+
+    subject do
+      build(:employee_event,
+        event_type: 'work_contract', employee: employee, effective_at: work_contract_effective_at)
+    end
+
+    let(:hired_date)                 { 3.months.ago }
+    let(:work_contract_effective_at) { hired_date - 1.month }
+    let(:contract_end_date)          { nil }
+
+    let(:employee) { create(:employee, hired_at: hired_date, contract_end_at: contract_end_date) }
+
+    context 'is NOT in contract period' do
+      context 'when contract period is in the future' do
+        it_behaves_like 'invalid work contract event - not in contract period'
+      end
+
+      context 'when contract period is in the past' do
+        let(:contract_end_date)          { hired_date + 2.months }
+        let(:work_contract_effective_at) { contract_end_date + 1.month }
+
+        it_behaves_like 'invalid work contract event - not in contract period'
+      end
+
+      context 'when there are multiple contract periods' do
+        let(:work_contract_effective_at) { contract_end.effective_at + 1.month }
+        let!(:contract_end) do
+          create(:employee_event,
+            event_type: 'contract_end', effective_at: hired_date + 2.months, employee: employee)
+        end
+        let!(:rehired) do
+          create(:employee_event,
+            event_type: 'hired', employee: employee,
+             effective_at: contract_end.effective_at + 2.months )
+        end
+
+        it_behaves_like 'invalid work contract event - not in contract period'
+      end
+    end
+
+    context 'is in contract period' do
+      let(:work_contract_effective_at) { hired_date + 1.month }
+
+      context 'is valid with only hired' do
+        it { expect(subject.valid?).to eq(true) }
+      end
+
+      context 'is valid with hired and contract_end' do
+        let(:contract_end_date) { hired_date + 2.months }
+
+        it { expect(subject.valid?).to eq(true) }
+      end
+
+      context 'is valid when there are multiple contract periods' do
+        let!(:contract_end) do
+          create(:employee_event,
+            event_type: 'contract_end', effective_at: hired_date + 2.months, employee: employee)
+        end
+        let!(:rehired) do
+          create(:employee_event,
+            event_type: 'hired', employee: employee,
+             effective_at: contract_end.effective_at + 1.month )
+        end
+
+        it { expect(subject.valid?).to eq(true) }
+      end
+    end
+
+    context 'is on hired date' do
+      let(:work_contract_effective_at) { hired_date }
+
+      it_behaves_like 'invalid work contract event - not in contract period'
+    end
+
+    context 'is on contract_end date' do
+      let(:contract_end_date) { hired_date + 2.months }
+      let(:work_contract_effective_at) { contract_end_date }
+
+      it_behaves_like 'invalid work contract event - not in contract period'
+    end
+  end
 end

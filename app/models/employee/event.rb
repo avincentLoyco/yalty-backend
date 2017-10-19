@@ -1,4 +1,6 @@
 class Employee::Event < ActiveRecord::Base
+  CONTRACT_PERIOD_ONLY_EVENTS = %w[work_contract]
+
   EVENT_ATTRIBUTES = {
     default: %w(),
     change: %w(),
@@ -48,13 +50,16 @@ class Employee::Event < ActiveRecord::Base
   validates :event_type,
     presence: true,
     inclusion: { in: proc { Employee::Event.event_types }, allow_nil: true }
-  validate :attributes_presence, if: [:event_attributes, :employee]
+  validate :attributes_presence, if: %i[event_attributes employee]
   validate :balances_before_hired_date, if: :employee, on: :update
-  validate :contract_end_and_hire_in_valid_order, if: [:employee, :event_type, :effective_at]
+  validate :contract_period_only_events, if: %i[employee event_type effective_at], on: :update
+  validate :contract_end_and_hire_in_valid_order, if: %i[employee event_type effective_at]
+  validate :work_contract_in_work_period, if: %i[employee event_type effective_at]
 
   scope :contract_ends, -> { where(event_type: 'contract_end') }
   scope :hired, -> { where(event_type: 'hired') }
-  scope :contract_types, -> { where(event_type: %w(contract_end hired)) }
+  scope :contract_types, -> { where(event_type: %w[contract_end hired]) }
+  scope :contract_period_only, -> { where(event_type: CONTRACT_PERIOD_ONLY_EVENTS) }
   scope :all_except, ->(id) { where.not(id: id) }
 
   before_destroy :check_if_event_deletable
@@ -104,6 +109,37 @@ class Employee::Event < ActiveRecord::Base
 
   private
 
+  def contract_period_only_events
+    return unless event_type.eql?('hired') && effective_at_changed?
+    change_period = (effective_at_change.first..effective_at_change.last)
+    contract_period_only_events = employee
+                                  .events
+                                  .contract_period_only
+                                  .where(effective_at: change_period)
+
+    transaction do
+      contract_period_only_events.each do |event|
+        event.employee_presence_policy.delete
+
+        ClearResetJoinTables.new(employee, effective_at, nil, nil).call
+        update_balances_params = [event.employee_presence_policy, effective_at.to_date, nil, nil]
+        FindAndUpdateEmployeeBalancesForJoinTables.new(*update_balances_params).call
+
+        event.employee_time_off_policies.delete_all
+        event.employee_time_off_policies.each do |etop|
+          ClearResetJoinTables.new(employee, effective_at, etop.time_off_category, nil).call
+          RecreateBalances::AfterEmployeeTimeOffPolicyDestroy.new(
+            destroyed_effective_at: effective_at,
+            time_off_category_id: etop.time_off_category_id,
+            employee_id: etop.employee_id
+          ).call
+        end
+      end
+
+      contract_period_only_events.delete_all
+    end
+  end
+
   def balances_before_hired_date
     return unless event_type.eql?('hired')
     hired_event =
@@ -123,6 +159,17 @@ class Employee::Event < ActiveRecord::Base
 
   def next_events
     employee.events.all_except(id).where('effective_at > ?', effective_at).order(:effective_at)
+  end
+
+  def work_contract_in_work_period
+    # checks if event type is work contract and if it is
+    # it checks if it belongs to employee contract period without hired and contract_end dates
+    return unless event_type.eql?('work_contract') &&
+        (!employee.contract_periods_include?(effective_at) ||
+         employee.hired_date_for(effective_at).eql?(effective_at) ||
+         employee.contract_end_for(effective_at).eql?(effective_at))
+
+    errors.add(:effective_at, 'Work contract must be in work period')
   end
 
   def contract_end_and_hire_in_valid_order
