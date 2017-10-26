@@ -37,7 +37,8 @@ class CreateEtopForEvent
   end
 
   def create_time_off_policy
-    days_off = time_off_policy_amount / 60.0 / 24.0
+    standard_day_duration = event.employee.account.presence_policies.full_time.standard_day_duration
+    days_off = time_off_policy_amount / standard_day_duration
     @time_off_policy = TimeOffPolicy.create!(
       start_day: 1,
       start_month: 1,

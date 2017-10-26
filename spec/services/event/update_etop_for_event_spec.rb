@@ -23,7 +23,7 @@ RSpec.describe UpdateEtopForEvent do
     create(:time_off_category, account: employee.account, name: 'vacation')
   end
   let(:employee_id) { employee.id }
-  let(:time_off_policy_amount) { 20 }
+  let(:time_off_policy_amount) { 20 * 1440 }
   let(:occupation_rate_value) { 0.8 }
   let(:occupation_rate_definition) do
     create(:employee_attribute_definition,
@@ -54,6 +54,10 @@ RSpec.describe UpdateEtopForEvent do
       time_off_policy: time_off_policy,
       effective_at: effective_at,
       occupation_rate: 0.8)
+  end
+  let!(:presence_policy) do
+    create(:presence_policy, :with_time_entries, account: employee.account, occupation_rate: 0.8,
+      standard_day_duration: 9600, default_full_time: true)
   end
 
   # SERVICE CALL
@@ -95,7 +99,7 @@ RSpec.describe UpdateEtopForEvent do
     end
 
     context 'and time off policy amount changed' do
-      let(:time_off_policy_amount) { 10 }
+      let(:time_off_policy_amount) { 10 * 1440 }
       it_behaves_like 'etops count did not change'
       it_behaves_like 'time off policy amount has changed'
     end
@@ -115,7 +119,7 @@ RSpec.describe UpdateEtopForEvent do
     end
 
     context 'and time off policy amount changed' do
-      let(:time_off_policy_amount) { 10 }
+      let(:time_off_policy_amount) { 10 * 1440 }
       it_behaves_like 'etops count did not change'
       it_behaves_like 'time off policy amount has changed'
     end
