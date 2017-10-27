@@ -32,8 +32,8 @@ class UpdateEvent
   def handle_hired_or_work_contract_event
     return unless event.event_type.in?(%w(hired work_contract)) &&
         time_off_policy_days.present? && presence_policy_id.present?
-    presence_policy = PresencePolicy.find(presence_policy_id)
-    time_off_policy_amount = time_off_policy_days * presence_policy.standard_day_duration
+    default_full_time_policy = Account.current.presence_policies.full_time
+    time_off_policy_amount = time_off_policy_days * default_full_time_policy.standard_day_duration
     HandleEppForEvent.new(event.id, presence_policy_id).call
     UpdateEtopForEvent.new(event.id, time_off_policy_amount, old_effective_at).call
   end

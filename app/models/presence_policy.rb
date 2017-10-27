@@ -19,7 +19,6 @@ class PresencePolicy < ActiveRecord::Base
   before_create :set_uniq_default_full_time, if: -> { default_full_time.eql?(true) }
 
   scope :not_reset, -> { where(reset: false) }
-  scope :full_time, -> { find_by(default_full_time: true) }
   scope :for_account, ->(account_id) { not_reset.where(account_id: account_id) }
 
   scope(:actives_for_employee, lambda do |employee_id, date|
@@ -38,6 +37,10 @@ class PresencePolicy < ActiveRecord::Base
 
   def self.active_for_employee(employee_id, date)
     actives_for_employee(employee_id, date).first
+  end
+
+  def self.full_time
+    find_by(default_full_time: true)
   end
 
   def set_standard_day_duration
