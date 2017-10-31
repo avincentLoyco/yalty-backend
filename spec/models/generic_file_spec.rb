@@ -30,6 +30,11 @@ RSpec.describe GenericFile, type: :model do
 
       expect(generic_file.valid?).to eq true
     end
+
+    it 'accepts xls' do
+      generic_file = build(:generic_file, :with_xls)
+      expect(generic_file.valid?).to eq true
+    end
   end
 
   it 'accepts archive bigger than 20 MB' do
