@@ -25,10 +25,18 @@ class HandleEppForEvent
   def attributes
     verify_presence_policy_existance
     effective_at = event.effective_at
+    # DateTime sees Sunday as 0, in our app it is 7
+    calculated_order_of_start_day = effective_at.wday.eql?(0) ? 7 : effective_at.wday
+    available_order_of_start_day =
+      if presence_policy.presence_days.pluck(:order).include?(calculated_order_of_start_day)
+        calculated_order_of_start_day
+      else
+        presence_policy.presence_days.pluck(:order).first
+      end
     {
       effective_at: effective_at,
       employee_id: event.employee_id,
-      order_of_start_day: 1,
+      order_of_start_day: available_order_of_start_day,
       presence_policy_id: presence_policy.id,
       employee_event_id: event.id
     }
