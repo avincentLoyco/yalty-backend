@@ -1,14 +1,14 @@
 class Adjustments::Calculate
-  attr_reader :employee_id
-
-  MINUTES_IN_A_DAY = 24 * 60
+  attr_reader :employee_id, :standard_day_duration
 
   def initialize(employee_id)
     @employee_id = employee_id
+    @standard_day_duration =
+      Employee.find(employee_id).account.presence_policies.full_time.standard_day_duration
   end
 
   def call
-    (adjustment * MINUTES_IN_A_DAY).round
+    (adjustment * standard_day_duration).round
   end
 
   private
@@ -59,7 +59,7 @@ class Adjustments::Calculate
   end
 
   def annual_allowance(etop)
-    (etop.time_off_policy.amount / 60.0 / 24.0) * etop.occupation_rate
+    (etop.time_off_policy.amount / standard_day_duration) * etop.occupation_rate
   end
 
   def number_of_days_until_end_of_year

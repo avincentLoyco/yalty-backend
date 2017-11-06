@@ -7,6 +7,10 @@ RSpec.describe Adjustments::Calculate, type: :service do
   let(:hired_date) { Date.new(2017, 6, 26) }
   let(:contract_end_date) { nil }
   let(:vacation_category) { employee.account.time_off_categories.find_by(name: "vacation") }
+  let!(:presence_policy) do
+    create(:presence_policy, :with_time_entries, account: employee.account, occupation_rate: 1,
+      standard_day_duration: 480, default_full_time: true)
+  end
   let(:time_off_policy) do
     create(:time_off_policy, amount: 9600, time_off_category: vacation_category) # 160 h
   end
