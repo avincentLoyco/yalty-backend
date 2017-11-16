@@ -54,7 +54,8 @@ module Api::V1
 
     def join_table_employee_id
       return if !resource.is_a?(ActiveRecord::Base) ||
-          Employee::RESOURCE_JOIN_TABLES.exclude?(resource.model_name.route_key)
+          (Employee::RESOURCE_JOIN_TABLES.exclude?(resource.model_name.route_key) &&
+          !resource.model_name.name.eql?('Employee::Event'))
       resource&.employee&.id
     end
 
