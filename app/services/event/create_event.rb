@@ -4,14 +4,14 @@ class CreateEvent
     :event, :versions, :presence_policy_id, :time_off_policy_days
 
   def initialize(params, employee_attributes_params)
-    @employee             = nil
-    @event                = nil
-    @versions             = []
-    @employee_params      = params[:employee]
-    @attributes_params    = employee_attributes_params
-    @presence_policy_id   = params[:presence_policy_id]
-    @time_off_policy_days = params[:time_off_policy_amount]
-    @event_params         = build_event_params(params)
+    @employee               = nil
+    @event                  = nil
+    @versions               = []
+    @employee_params        = params[:employee]
+    @attributes_params      = employee_attributes_params
+    @presence_policy_id     = params[:presence_policy_id]
+    @time_off_policy_days   = params[:time_off_policy_amount]
+    @event_params           = build_event_params(params)
   end
 
   def call
@@ -119,12 +119,21 @@ class CreateEvent
     HandleContractEnd.new(employee, event.effective_at).call
   end
 
+  def presence_policy_params
+    {
+      event_id: event.id,
+      presence_policy_id: presence_policy_id
+    }
+  end
+
   def handle_hired_or_work_contract_event
     return unless event.event_type.in?(%w(hired work_contract)) &&
         time_off_policy_days.present? && presence_policy_id.present?
+
     default_full_time_policy = Account.current.presence_policies.full_time
     time_off_policy_amount = time_off_policy_days * default_full_time_policy.standard_day_duration
-    HandleEppForEvent.new(event.id, presence_policy_id).call
+
+    EmployeePolicy::Presence::Create.call(presence_policy_params)
     CreateEtopForEvent.new(event.id, time_off_policy_amount).call
   end
 end

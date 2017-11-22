@@ -31,13 +31,13 @@ module Api::V1
 
     def time_off_policy_amount
       return unless resource.event_type.in?(%w(hired work_contract)) &&
-          resource.employee_time_off_policies.any?
+          resource.employee_time_off_policy.present?
 
       standard_day_duration =
         resource.employee.account.presence_policies.full_time.standard_day_duration
 
       return if standard_day_duration.nil?
-      resource.employee_time_off_policies.first.time_off_policy.amount / standard_day_duration
+      resource.employee_time_off_policy.time_off_policy.amount / standard_day_duration
     end
 
     def attribute_versions

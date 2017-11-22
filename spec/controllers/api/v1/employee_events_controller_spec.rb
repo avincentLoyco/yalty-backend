@@ -11,6 +11,14 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     )
     allow_any_instance_of(::Payments::UpdateSubscriptionQuantity).to receive(:perform_now).and_return(true)
   end
+  let(:epp) do
+    create(:employee_presence_policy, effective_at: event.effective_at, employee: event.employee)
+  end
+  let(:repp) do
+    create(:employee_presence_policy, effective_at: rehired.effective_at,
+           employee: rehired.employee)
+  end
+
   let(:available_modules) { [] }
   let!(:employee_eattribute_definition) do
     create(:employee_attribute_definition,
@@ -877,6 +885,8 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
   end
 
   describe 'PUT #update' do
+    before { event.employee_presence_policy = epp }
+
     subject { put :update, json_payload }
     let(:json_payload) do
       {
@@ -1363,6 +1373,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
             [
               { attribute_name: 'occupation_rate', value: '0.8' }
             ])
+          rehired.employee_presence_policy = repp
         end
         let(:update_event_id) { rehired.id }
         let(:event_type) { rehired.event_type }

@@ -5,6 +5,10 @@ class CreateOrUpdateJoinTable
     :resource_class, :resource_class_id, :join_table_resource, :current_account,
     :join_table_old_effective_at
 
+  def self.call(join_table_class, resource_class, params, join_table_resource = nil)
+    new(join_table_class, resource_class, params, join_table_resource).call
+  end
+
   def initialize(join_table_class, resource_class, params, join_table_resource = nil)
     @join_table_class = join_table_class
     @params = params

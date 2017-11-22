@@ -38,7 +38,10 @@ RSpec.describe CreateEtopForEvent do
       vacation_category.id), :count).by(1) }
     it { expect { subject }.to change(EmployeeTimeOffPolicy.where(time_off_category_id:
       vacation_category.id), :count).by(1) }
-    it { expect { subject }.to change(event.employee_time_off_policies, :count).by(1) }
+    it do
+      subject
+      expect(event.employee_time_off_policy).not_to be(nil)
+    end
   end
 
   shared_examples 'time off policy exists' do
@@ -55,7 +58,10 @@ RSpec.describe CreateEtopForEvent do
       vacation_category.id), :count).by(0) }
     it { expect { subject }.to change(EmployeeTimeOffPolicy.where(time_off_category_id:
       vacation_category.id), :count).by(1) }
-    it { expect { subject }.to change(event.employee_time_off_policies, :count).by(1) }
+    it do
+      subject
+      expect(event.employee_time_off_policy).not_to be(nil)
+    end
   end
 
   context 'when hired event happens' do

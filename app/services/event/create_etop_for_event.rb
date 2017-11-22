@@ -6,7 +6,7 @@ class CreateEtopForEvent
   def initialize(event_id, time_off_policy_amount)
     @event = Employee::Event.find(event_id)
     @time_off_policy_amount = time_off_policy_amount
-    @time_off_policy = get_time_off_policy(time_off_policy_amount)
+    @time_off_policy = find_time_off_policy(time_off_policy_amount)
   end
 
   def call
@@ -17,7 +17,7 @@ class CreateEtopForEvent
 
   private
 
-  def get_time_off_policy(time_off_policy_amount)
+  def find_time_off_policy(time_off_policy_amount)
     vacation_tops = event.employee.account.time_off_policies.all.select do |top|
       top.time_off_category.name == 'vacation' && !top.reset
     end
@@ -58,7 +58,7 @@ class CreateEtopForEvent
       new_effective_at: event.effective_at,
       time_off_category_id: time_off_policy.time_off_category_id,
       employee_id: event.employee_id,
-      manual_amount: Adjustments::Calculate.new(event.employee_id).call
+      manual_amount: Adjustments::Calculate.new(event.id).call
     ).call
   end
 end

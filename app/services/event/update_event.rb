@@ -1,7 +1,7 @@
 class UpdateEvent
   include API::V1::Exceptions
   attr_reader :employee_params, :attributes_params, :event_params, :versions, :event, :employee,
-    :updated_assignations, :old_effective_at, :presence_policy_id, :time_off_policy_days
+    :updated_assignations, :old_effective_at, :presence_policy_id, :time_off_policy_days, :params
 
   def initialize(params, employee_attributes_params)
     @versions             = []
@@ -9,10 +9,11 @@ class UpdateEvent
     @attributes_params    = employee_attributes_params
     @presence_policy_id   = params[:presence_policy_id]
     @time_off_policy_days = params[:time_off_policy_amount]
-    @event_params         = build_event_params(params.except(:time_off_policy_amount))
+    @event_params         = build_event_params(params)
     @updated_assignations = {}
     @event                = Account.current.employee_events.find(event_params[:id])
     @old_effective_at     = event.effective_at
+    @params               = params
   end
 
   def call
@@ -34,7 +35,14 @@ class UpdateEvent
         time_off_policy_days.present? && presence_policy_id.present?
     default_full_time_policy = Account.current.presence_policies.full_time
     time_off_policy_amount = time_off_policy_days * default_full_time_policy.standard_day_duration
-    HandleEppForEvent.new(event.id, presence_policy_id).call
+
+    if presence_policy_id.eql?(event.employee_presence_policy&.presence_policy&.id)
+      EmployeePolicy::Presence::Update.call(update_presence_policy_params)
+    else
+      EmployeePolicy::Presence::Destroy.call(event.employee_presence_policy)
+      EmployeePolicy::Presence::Create.call(create_presence_policy_params)
+    end
+
     UpdateEtopForEvent.new(event.id, time_off_policy_amount, old_effective_at).call
   end
 
@@ -52,7 +60,20 @@ class UpdateEvent
   end
 
   def build_event_params(params)
-    params.tap { |attr| attr.delete(:employee) && attr.delete(:employee_attributes) }
+    params.tap do |attr|
+      attr.delete(:employee)
+      attr.delete(:employee_attributes)
+      attr.delete(:presence_policy_id)
+      attr.delete(:time_off_policy_amount)
+    end
+  end
+
+  def update_presence_policy_params
+    { id: event.employee_presence_policy.id, effective_at: params[:effective_at] }
+  end
+
+  def create_presence_policy_params
+    { event_id: event.id, presence_policy_id: presence_policy_id }
   end
 
   def find_employee

@@ -2,13 +2,14 @@ class FindAndUpdateEmployeeBalancesForJoinTables
   attr_reader :join_table, :new_date, :previous_date, :resource_at_previous_date,
     :order_of_start_day
 
-  def initialize(
-    join_table,
-    new_date,
-    previous_date = nil,
-    resource_at_previous_date = nil,
-    order_of_start_day = nil
-  )
+  def self.call(join_table, new_date, previous_date = nil, resource_at_previous_date = nil,
+    order_of_start_day = nil)
+
+    new(join_table, new_date, previous_date, resource_at_previous_date, order_of_start_day).call
+  end
+
+  def initialize(join_table, new_date, previous_date = nil, resource_at_previous_date = nil,
+    order_of_start_day = nil)
     @join_table = join_table
     @new_date = new_date
     @previous_date = previous_date

@@ -2,6 +2,14 @@ module RecreateBalances
   class AfterEmployeeTimeOffPolicyDestroy
     attr_reader :recreate_balances_helper, :remove_balances_service
 
+    def self.call(destroyed_effective_at:, time_off_category_id:, employee_id:)
+      new(
+        destroyed_effective_at: destroyed_effective_at,
+        time_off_category_id: time_off_category_id,
+        employee_id: employee_id
+      ).call
+    end
+
     def initialize(destroyed_effective_at:, time_off_category_id:, employee_id:)
       @recreate_balances_helper = RecreateBalancesHelper.new(
         destroyed_effective_at: destroyed_effective_at,

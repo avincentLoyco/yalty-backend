@@ -40,7 +40,7 @@ class Employee::Event < ActiveRecord::Base
   has_one :account, through: :employee
 
   has_one :employee_presence_policy, inverse_of: :employee_event, foreign_key: :employee_event_id
-  has_many :employee_time_off_policies, inverse_of: :employee_event, foreign_key: :employee_event_id
+  has_one :employee_time_off_policy, inverse_of: :employee_event, foreign_key: :employee_event_id
 
   has_many :employee_attribute_versions,
     inverse_of: :event,
@@ -120,21 +120,8 @@ class Employee::Event < ActiveRecord::Base
 
     transaction do
       contract_period_only_events.each do |event|
-        event.employee_presence_policy.delete
-
-        ClearResetJoinTables.new(employee, effective_at, nil, nil).call
-        update_balances_params = [event.employee_presence_policy, effective_at.to_date, nil, nil]
-        FindAndUpdateEmployeeBalancesForJoinTables.new(*update_balances_params).call
-
-        event.employee_time_off_policies.delete_all
-        event.employee_time_off_policies.each do |etop|
-          ClearResetJoinTables.new(employee, effective_at, etop.time_off_category, nil).call
-          RecreateBalances::AfterEmployeeTimeOffPolicyDestroy.new(
-            destroyed_effective_at: effective_at,
-            time_off_category_id: etop.time_off_category_id,
-            employee_id: etop.employee_id
-          ).call
-        end
+        EmployeePolicy::Presence::Destroy.call(event.employee_presence_policy)
+        EmployeePolicy::TimeOff::Destroy.call(event.employee_time_off_policy)
       end
 
       contract_period_only_events.delete_all

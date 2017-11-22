@@ -8,7 +8,7 @@ class UpdateEtopForEvent
     @time_off_policy_amount = time_off_policy_amount
     @time_off_policy        = find_time_off_policy(time_off_policy_amount)
     @old_effective_at       = old_effective_at
-    @etop                   = find_etop
+    @etop                   = event.employee_time_off_policy
   end
 
   def call
@@ -19,11 +19,6 @@ class UpdateEtopForEvent
   end
 
   private
-
-  def find_etop
-    event_etops = event.employee_time_off_policies
-    event_etops.detect { |etop| etop.time_off_category.name == 'vacation' }
-  end
 
   def update_occupation_rate
     return unless event_occupation_rate != etop.occupation_rate
@@ -51,7 +46,7 @@ class UpdateEtopForEvent
   end
 
   def find_time_off_policy(time_off_policy_amount)
-    vacation_tops = TimeOffPolicy.all.select do |top|
+    vacation_tops = event.employee.account.time_off_policies.select do |top|
       top.time_off_category.name == 'vacation' && !top.reset
     end
     vacation_tops.detect { |vacation_top| vacation_top.amount == time_off_policy_amount }
@@ -84,7 +79,7 @@ class UpdateEtopForEvent
       old_effective_at: old_effective_at,
       time_off_category_id: time_off_policy.time_off_category_id,
       employee_id: event.employee_id,
-      manual_amount: Adjustments::Calculate.new(event.employee_id).call
+      manual_amount: Adjustments::Calculate.new(event.id).call
     ).call
   end
 end

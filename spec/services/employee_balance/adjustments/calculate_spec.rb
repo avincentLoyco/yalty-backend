@@ -3,170 +3,72 @@ require 'rails_helper'
 RSpec.describe Adjustments::Calculate, type: :service do
   include_context 'shared_context_timecop_helper'
 
-  let(:employee) { create(:employee, hired_at: hired_date, contract_end_at: contract_end_date) }
-  let(:hired_date) { Date.new(2017, 6, 26) }
-  let(:contract_end_date) { nil }
-  let(:vacation_category) { employee.account.time_off_categories.find_by(name: "vacation") }
+  before do
+    allow(Employee::Event).to receive(:find) { event }
+    allow(Employee).to receive(:find)        { employee }
+
+    allow(Adjustments::Calculator::Hired).to receive(:call)        { 1 }
+    allow(Adjustments::Calculator::WorkContract).to receive(:call) { 2 }
+    allow(Adjustments::Calculator::ContractEnd).to receive(:call)  { 3 }
+  end
+
+  let!(:vacation_category) { employee.account.time_off_categories.find_by(name: "vacation") }
+  let!(:time_off_policy) { create(:time_off_policy, time_off_category: vacation_category) }
   let!(:presence_policy) do
-    create(:presence_policy, :with_time_entries, account: employee.account, occupation_rate: 1,
-      standard_day_duration: 480, default_full_time: true)
-  end
-  let(:time_off_policy) do
-    create(:time_off_policy, amount: 9600, time_off_category: vacation_category) # 160 h
-  end
-  let(:time_off_policy_with_different_amount) do
-    create(:time_off_policy, amount: 14400, time_off_category: vacation_category ) # 240 h
-  end
-  let(:time_off_policy_with_start_date) do
-    create(:time_off_policy, amount: 9600, time_off_category: vacation_category,
-      start_day: 1, start_month: 6)
-  end
-  let(:days_to_minutes) { 24 * 60 }
-
-  let(:create_new_etop) do
-    create(:employee_time_off_policy,
-      employee: employee,
-      time_off_policy: time_off_policy,
-      effective_at: Date.new(2017, 6, 26),
-      occupation_rate: 0.5)
+    create(:presence_policy, :with_time_entries, account: employee.account,
+           standard_day_duration: 9600, default_full_time: true)
   end
 
-  let(:create_new_etop_different_or) do
-    create(:employee_time_off_policy,
-      employee: employee,
-      time_off_policy: time_off_policy,
-      effective_at: Date.new(2017, 6, 26),
-      occupation_rate: 0.8)
+  let(:employee) { create(:employee) }
+  let(:employee_presence_policy) do
+    create(:employee_presence_policy, presence_policy: presence_policy, employee: employee,
+           effective_at: event.effective_at)
+  end
+  let(:event) do
+    create(:employee_event, event_type: event_type, employee: employee, effective_at: 1.week.since)
+  end
+  let(:employee_time_off_policy) do
+    create(:employee_time_off_policy, employee: employee, effective_at: event.effective_at,
+           time_off_category: vacation_category)
   end
 
-  let(:create_new_etop_with_different_occupation_rate) do
-    create(:employee_time_off_policy,
-      employee: employee,
-      time_off_policy: time_off_policy_with_different_amount,
-      effective_at: Date.new(2017, 6, 26),
-      occupation_rate: 0.8)
-  end
+  subject { described_class.call(event.id) }
 
-  let(:create_new_etop_with_different_top) do
-    create(:employee_time_off_policy,
-      employee: employee,
-      time_off_policy: time_off_policy_with_different_amount,
-      effective_at: Date.new(2017, 6, 26),
-      occupation_rate: 0.5)
-  end
 
-  let(:create_etop_on_top_start_date) do
-    create(:employee_time_off_policy,
-      employee: employee,
-      time_off_policy: time_off_policy_with_start_date,
-      effective_at: Date.new(2017, 6, 1),
-      occupation_rate: 0.5)
-  end
-
-  let(:create_previous_etop) do
-    create(:employee_time_off_policy,
-      employee: employee,
-      time_off_policy: time_off_policy,
-      effective_at: Date.new(2017, 6, 1),
-      occupation_rate: 0.5)
-  end
-
-  subject { described_class.new(employee.id).call }
-
-  context 'when hired event' do
-    context 'and etop is assigned on different date than start date of time off policy' do
-      before do
-        create_new_etop
-      end
-
-      let(:number_of_days_until_end_of_year) { 189 }
-      let(:annual_allowance) { 9600 * 0.5 / 60.0 / 24.0 } # in days
-      it do
-        expect(subject).to eql((annual_allowance / 365.0 *
-          number_of_days_until_end_of_year * days_to_minutes).round)
-      end
-    end
-    context 'and etop is assigned on start date of time off policy' do
-      before do
-        create_etop_on_top_start_date
-      end
-      let(:hired_date) { Date.new(2017, 6, 1) }
-      let(:number_of_days_until_end_of_year) { 214 }
-      let(:annual_allowance) { 9600 * 0.5 / 60.0 / 24.0 } # in days
-      it do
-        expect(subject).to eql((annual_allowance / 365.0 *
-          number_of_days_until_end_of_year * days_to_minutes).round)
-      end
-    end
-  end
-
-  context 'when work contract event' do
-    let(:hired_date) { Date.new(2017, 6, 1) }
+  context 'hired' do
     before do
-      create_previous_etop
+      employee.events.delete_all
+      event.employee_time_off_policy = employee_time_off_policy
     end
-    context 'and time off policy did not change' do
-      context 'and occupation rate did not change' do
-        before do
-          create_new_etop
-        end
-        it do
-          expect(subject).to eql(0)
-        end
-      end
-      context 'and occupation rate has changed' do
-        before do
-          create_new_etop_different_or
-        end
-        let(:number_of_days_until_end_of_year) { 189 }
-        let(:previous_annual_allowance) { 9600 * 0.5 / 60.0 / 24.0 }
-        let(:current_annual_allowance) { 9600 * 0.8 / 60.0 / 24.0 }
-        let(:calculations) { ((-previous_annual_allowance + current_annual_allowance) /
-          365.0 * number_of_days_until_end_of_year * days_to_minutes).round }
-        it do
-          expect(subject).to eql(calculations)
-        end
-      end
-    end
-    context 'and time off policy has changed' do
-      context 'and occupation rate did not change' do
-        before do
-          create_new_etop_with_different_top
-        end
+    let(:event_type) { 'hired' }
 
-        let(:number_of_days_until_end_of_year) { 189 }
-        let(:previous_annual_allowance) { 9600 * 0.5 / 60.0 / 24.0 }
-        let(:current_annual_allowance) { 14400 * 0.5 / 60.0 / 24.0 }
-        it do
-          expect(subject).to eql(((-previous_annual_allowance + current_annual_allowance) / 365.0 *
-            number_of_days_until_end_of_year * days_to_minutes).round)
-        end
-      end
-      context 'and occupation rate has changed' do
-        before do
-          create_new_etop_with_different_occupation_rate
-        end
-        let(:number_of_days_until_end_of_year) { 189 }
-        let(:previous_annual_allowance) { 9600 * 0.5 / 60.0 / 24.0 }
-        let(:current_annual_allowance) { 14400 * 0.8 / 60.0 / 24.0 }
-        it do
-          expect(subject).to eql(((-previous_annual_allowance + current_annual_allowance) / 365.0 *
-            number_of_days_until_end_of_year * days_to_minutes).round)
-        end
-      end
-    end
+    it { expect(subject).to eq(9600) }
   end
-  context 'when contract end event' do
+
+  context 'work_contract' do
     before do
-      create_previous_etop
+      employee.events.delete_all
+      hired_event = create(:employee_event, event_type: 'hired', employee: employee,
+        effective_at: Date.today)
+      hired_event.employee_time_off_policy = create(:employee_time_off_policy, employee: employee,
+        effective_at: Date.today, time_off_policy: time_off_policy)
+      event.employee_time_off_policy = create(:employee_time_off_policy, employee: employee,
+        effective_at: event.effective_at, time_off_policy: time_off_policy)
+      employee.events << hired_event
+      employee.events << event
     end
-    let(:hired_date) { Date.new(2017, 6, 1) }
-    let(:contract_end_date) { Date.new(2017, 8, 1) }
-    let(:number_of_days_until_end_of_year) { 153 } # days from contract_end to end of year
-    let(:annual_allowance_in_days) { 9600 * 0.5 / 60.0 / 24.0 }
-    it do
-      expect(subject).to eql((number_of_days_until_end_of_year * -annual_allowance_in_days / 365 *
-        days_to_minutes).round)
+
+    let(:event_type) { 'work_contract' }
+
+    it { expect(subject).to eq(9600 * 2) }
+  end
+
+  context 'contract_end' do
+    before do
+      event.employee_time_off_policy = employee_time_off_policy
     end
+    let(:event_type) { 'contract_end' }
+
+    it { expect(subject).to eq(9600 * 3) }
   end
 end
