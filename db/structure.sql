@@ -15,6 +15,20 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
+-- Name: tiger; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA tiger;
+
+
+--
+-- Name: topology; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA topology;
+
+
+--
 -- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: -
 --
 
@@ -26,6 +40,20 @@ CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 --
 
 COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
+
+
+--
+-- Name: btree_gist; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS btree_gist WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION btree_gist; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION btree_gist IS 'support for indexing common datatypes in GiST';
 
 
 --
@@ -206,7 +234,8 @@ CREATE TABLE employee_events (
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
     id uuid DEFAULT uuid_generate_v4() NOT NULL,
-    event_type character varying NOT NULL
+    event_type character varying NOT NULL,
+    active boolean DEFAULT true
 );
 
 
@@ -662,8 +691,8 @@ CREATE TABLE working_places (
     street character varying(60),
     street_number character varying(10),
     timezone character varying,
-    reset boolean DEFAULT false NOT NULL,
     state_code character varying(60),
+    reset boolean DEFAULT false NOT NULL,
     country_code character varying
 );
 
@@ -911,13 +940,6 @@ ALTER TABLE ONLY time_offs
 
 ALTER TABLE ONLY working_places
     ADD CONSTRAINT working_places_pkey PRIMARY KEY (id);
-
-
---
--- Name: employee_attribute_versions_uniqueness_partial; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX employee_attribute_versions_uniqueness_partial ON employee_attribute_versions USING btree (attribute_definition_id, employee_id, employee_event_id) WHERE (multiple = false);
 
 
 --
@@ -1695,6 +1717,8 @@ INSERT INTO schema_migrations (version) VALUES ('20160309100705');
 
 INSERT INTO schema_migrations (version) VALUES ('20160316092439');
 
+INSERT INTO schema_migrations (version) VALUES ('20160324094939');
+
 INSERT INTO schema_migrations (version) VALUES ('20160401084042');
 
 INSERT INTO schema_migrations (version) VALUES ('20160401104731');
@@ -1842,4 +1866,6 @@ INSERT INTO schema_migrations (version) VALUES ('20170825104201');
 INSERT INTO schema_migrations (version) VALUES ('20170915101524');
 
 INSERT INTO schema_migrations (version) VALUES ('20171026101626');
+
+INSERT INTO schema_migrations (version) VALUES ('20171211080653');
 
