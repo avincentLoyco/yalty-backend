@@ -5,6 +5,7 @@ module Api::V1
         name: resource.name,
         occupation_rate: resource.occupation_rate,
         standard_day_duration: resource.standard_day_duration,
+        default_full_time: resource.default_full_time,
         deletable: assigned_employees_json.empty?
       }
         .merge(basic)
