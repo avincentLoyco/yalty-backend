@@ -5,6 +5,7 @@ module Api::V1
         effective_at: resource.effective_at,
         event_type: resource.event_type,
         deletable: resource.can_destroy_event?,
+        active: resource.can_edit_event?,
         presence_policy_id: presence_policy_id,
         time_off_policy_amount: time_off_policy_amount
       }

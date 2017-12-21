@@ -108,6 +108,10 @@ class Employee::Event < ActiveRecord::Base
       !%w(hired contract_end).include?(event_type) || contract_end_without_rehired_after?
   end
 
+  def can_edit_event?
+    active
+  end
+
   private
 
   def contract_period_only_events

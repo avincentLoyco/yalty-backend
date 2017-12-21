@@ -2,10 +2,10 @@
   "before_migration": [
 
   ],
-  "after_migration": [
-    {
-      "task_name": "remove_unecessary_enterprise_files",
-      "description": "Remove unecessary duplicates of enterprise event files"
-    }
-  ]
+  "after_migration": [{
+    "task_name": "add_active_attr_to_events",
+    "description": [
+      "Set hired, work_contract and contract_end events as inactive before year 2018"
+    ]
+  }]
 }
