@@ -17,6 +17,9 @@ RSpec.describe API::V1::EmployeeAttributesController, type: :controller do
       attribute_type: Attribute::Number.attribute_type,
       validation: { range: [0, 1] })
   end
+  let!(:vacation_category) do
+    create(:time_off_category, name: 'vacation', account: Account.current)
+  end
 
   describe '#GET /employees/:employee_id/attributes' do
     subject(:get_request) { get :show, params }
@@ -33,13 +36,22 @@ RSpec.describe API::V1::EmployeeAttributesController, type: :controller do
 
     before 'create attributes' do
       hired_event = employee.events.find_by(event_type: 'hired')
+      create(:employee_presence_policy,
+        employee: employee, effective_at: hired_event.effective_at,
+        presence_policy: presence_policy,
+        employee_event_id: hired_event.id)
+      create(:employee_time_off_policy,
+        employee: employee, effective_at: hired_event.effective_at,
+        occupation_rate: 0.5,
+        employee_event_id: hired_event.id)
       UpdateEvent.new(
         {
           id: hired_event.id,
           effective_at: hired_effective_at,
           event_type: hired_event.event_type,
           employee: { id: employee.id },
-          presence_policy_id: presence_policy.id
+          presence_policy_id: presence_policy.id,
+          time_off_policy_amount: 20
         },
         [
           { attribute_name: 'firstname', value: 'James' },

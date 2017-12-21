@@ -13,12 +13,19 @@ class UpdateEtopForEvent
 
   def call
     return unless event && event_occupation_rate && etop
+    update_effective_at
     update_occupation_rate
     update_time_off_policy
     recreate_balances
   end
 
   private
+
+  def update_effective_at
+    return unless event && etop
+    etop.effective_at = event.effective_at
+    etop.save!
+  end
 
   def update_occupation_rate
     return unless event_occupation_rate != etop.occupation_rate

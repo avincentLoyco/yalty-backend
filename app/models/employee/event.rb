@@ -56,6 +56,7 @@ class Employee::Event < ActiveRecord::Base
   validate :contract_period_only_events, if: %i(employee event_type effective_at), on: :update
   validate :contract_end_and_hire_in_valid_order, if: %i(employee event_type effective_at)
   validate :work_contract_in_work_period, if: %i(employee event_type effective_at)
+  validate :default_presence_policy_assigned, if: %i(employee event_type)
 
   scope :contract_ends, -> { where(event_type: 'contract_end') }
   scope :hired, -> { where(event_type: 'hired') }
@@ -207,5 +208,12 @@ class Employee::Event < ActiveRecord::Base
         .events
         .where('effective_at > ?', effective_at)
         .order(:effective_at).first&.event_type.eql?('hired')
+  end
+
+  def default_presence_policy_assigned
+    return unless event_type.in?(%w(work_contract hired)) &&
+      employee.account.presence_policies.full_time.nil?
+
+    errors.add(:base, 'No Default Full Time Presence Policy assigned')
   end
 end

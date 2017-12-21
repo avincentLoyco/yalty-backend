@@ -116,7 +116,7 @@ RSpec.describe API::V1::PresenceDaysController, type: :controller do
       end
 
       context 'with presence policy which belongs to other account' do
-        let(:second_presence_policy) { create(:presence_policy) }
+        let!(:second_presence_policy) { create(:presence_policy) }
         let(:presence_policy_id) { second_presence_policy.id.to_s }
 
         it { is_expected.to have_http_status(404) }

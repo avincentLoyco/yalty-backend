@@ -31,8 +31,11 @@ class UpdateEvent
   private
 
   def handle_hired_or_work_contract_event
-    return unless event.event_type.in?(%w(hired work_contract)) &&
-        time_off_policy_days.present? && presence_policy_id.present?
+    return unless event.event_type.in?(%w(hired work_contract))
+
+    validate_time_off_policy_days_presence
+    validate_presence_policy_presence
+
     default_full_time_policy = Account.current.presence_policies.full_time
     time_off_policy_amount = time_off_policy_days * default_full_time_policy.standard_day_duration
 
@@ -42,6 +45,8 @@ class UpdateEvent
       EmployeePolicy::Presence::Destroy.call(event.employee_presence_policy)
       EmployeePolicy::Presence::Create.call(create_presence_policy_params)
     end
+
+    validate_matching_occupation_rate
 
     UpdateEtopForEvent.new(event.id, time_off_policy_amount, old_effective_at).call
   end
@@ -242,5 +247,28 @@ class UpdateEvent
         UpdateBalanceJob.perform_later(balance.id, update_all: true)
       end
     end
+  end
+
+  def validate_time_off_policy_days_presence
+    return unless time_off_policy_days.nil?
+    raise InvalidResourcesError.new(event, ['Time Off Policy amount not present'])
+  end
+
+  def validate_presence_policy_presence
+    return unless presence_policy_id.nil?
+    raise InvalidResourcesError.new(event, ['Presence Policy days not present'])
+  end
+
+  def validate_matching_occupation_rate
+    return if presence_policy_occupation_rate.eql?(event_occupation_rate)
+    raise InvalidResourcesError.new(event, ['Occupation Rate does not match Presence Policy'])
+  end
+
+  def presence_policy_occupation_rate
+    event.employee_presence_policy.presence_policy.occupation_rate
+  end
+
+  def event_occupation_rate
+    event.attribute_values['occupation_rate'].to_f
   end
 end

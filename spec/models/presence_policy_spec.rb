@@ -42,12 +42,13 @@ RSpec.describe PresencePolicy, type: :model do
       let(:account) { create(:account) }
       let!(:presence_policies) { create_list(:presence_policy, 3, account: account) }
       let!(:other_presence_policies) { create_list(:presence_policy, 3) }
+      let(:all_presence_policies) { presence_policies << account.presence_policies.full_time }
 
       subject(:for_account_scope) { described_class.for_account(account.id) }
 
       it 'returns presence policies only for given account' do
-        expect(for_account_scope.count).to eq(3)
-        expect(for_account_scope).to match_array(presence_policies)
+        expect(for_account_scope.count).to eq(4)
+        expect(for_account_scope).to match_array(all_presence_policies)
       end
     end
 

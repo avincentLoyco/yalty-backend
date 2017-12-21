@@ -1,19 +1,22 @@
 class Adjustments::Calculate
   attr_reader :employee, :standard_day_duration, :event
 
+  MIGRATION_DATE = Rails.configuration.migration_date
+
   def self.call(event_id)
     new(event_id).call
   end
 
+  # when running specs we get DEPRECATION WARNING
+  # reason: https://github.com/rails/rails/issues/21945
   def initialize(event_id)
-    @event    = Employee::Event.find(event_id)
-    @employee = Employee.find(event.employee_id)
-    @standard_day_duration =
-      employee.account.presence_policies.full_time.standard_day_duration
+    @event                 = Employee::Event.find(event_id)
+    @employee              = Employee.find(event.employee_id)
+    @standard_day_duration = employee.account.presence_policies.full_time.standard_day_duration
   end
 
   def call
-    adjustment = if event.event_type.eql?('hired')
+    adjustment = if event.event_type.eql?('hired') || first_work_contract?
                    Adjustments::Calculator::Hired.call(
                      annual_allowance(current_etop), event.effective_at
                    )
@@ -27,11 +30,30 @@ class Adjustments::Calculate
                      event.effective_at
                    )
                  end
-
     (adjustment * standard_day_duration).round
   end
 
   private
+
+  def first_work_contract?
+    event.event_type.eql?('work_contract') && employee_created_before_migration? &&
+      event_after_migration? && first_work_contract_after_migration?
+  end
+
+  def first_work_contract_after_migration?
+    employee
+      .events
+      .where('event_type = ? AND effective_at >= ? AND effective_at < ?', 'work_contract',
+             MIGRATION_DATE, event.effective_at).empty?
+  end
+
+  def employee_created_before_migration?
+    employee.created_at < MIGRATION_DATE
+  end
+
+  def event_after_migration?
+    event.effective_at >= MIGRATION_DATE
+  end
 
   def annual_allowance(etop)
     (etop.time_off_policy.amount / standard_day_duration) * etop.occupation_rate

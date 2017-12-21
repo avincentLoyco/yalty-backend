@@ -4,12 +4,12 @@ RSpec.describe Import::SchedulePayslipsImport, type: :job do
   let(:import_payslips_job) { Import::ImportPayslipsJob }
 
   let!(:account) do
-    account = build(:account)
+    account = create(:account)
     account.available_modules.add(id: 'automatedexport')
     account.save
     account
   end
-  let!(:employee) { create(:employee, account: account) }
+  let(:employee) { create(:employee, account: account) }
 
   let(:payslip_filename) { "#{employee.id}-01-01-2016.pdf" }
   let(:ssh_payslip_path) { File.join('/fake/path', payslip_filename) }

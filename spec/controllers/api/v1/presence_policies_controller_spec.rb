@@ -85,7 +85,7 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
         JSON.parse(response.body).select { |p| p['assigned_employees'].empty? }.first
       end
 
-      it { expect_json_sizes(3) }
+      it { expect_json_sizes(4) }
       it { is_expected.to have_http_status(200) }
       it do
         expect_json_keys('*', [:id, :type, :name, :deletable, :occupation_rate, :presence_days, :assigned_employees])
@@ -105,8 +105,8 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
       context 'response' do
         before { subject }
 
-        it { expect_json_sizes(0) }
-        it { expect(response.body).to eq [].to_json }
+        it { expect_json_sizes(1) }
+        it { expect(response.body).not_to eq [].to_json }
         it { expect(response).to have_http_status(200) }
       end
     end

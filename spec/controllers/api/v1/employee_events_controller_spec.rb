@@ -1,16 +1,70 @@
 require 'rails_helper'
 
 RSpec.describe API::V1::EmployeeEventsController, type: :controller do
-  include_examples 'example_authorization', resource_name: 'employee_event'
   include_context 'shared_context_headers'
   include_context 'shared_context_remove_original_helper'
 
   before do
+    Account.current = default_presence.account
     Account.current.update(
       available_modules: ::Payments::AvailableModules.new(data: available_modules)
     )
     allow_any_instance_of(::Payments::UpdateSubscriptionQuantity).to receive(:perform_now).and_return(true)
   end
+
+  shared_examples 'Invalid Authorization' do
+    context 'when current account nil' do
+      before { Account.current = nil }
+
+      it { is_expected.to have_http_status(401) }
+
+      context 'response body' do
+        before { subject }
+
+        it { expect_json(
+          errors: [
+            {
+              field: 'error',
+              messages: ['User unauthorized'],
+              status: 'invalid',
+              type: 'nil_class',
+              codes: ['error_user_unauthorized'],
+              employee_id: nil
+            }
+          ]
+        )}
+      end
+    end
+
+    context 'when current user nil' do
+      before { Account::User.current = nil }
+
+      it { is_expected.to have_http_status(401) }
+
+      context 'response body' do
+        before { subject }
+
+        it { expect_json(
+          errors: [
+            {
+              field: 'error',
+              messages: ['User unauthorized'],
+              status: 'invalid',
+              type: 'nil_class',
+              codes: ['error_user_unauthorized'],
+              employee_id: nil
+            }
+          ]
+        )}
+      end
+    end
+  end
+
+  let!(:default_presence) do
+    create(:presence_policy, :with_time_entries, occupation_rate: 0.5,
+      standard_day_duration: 9600, default_full_time: true)
+  end
+
   let(:epp) do
     create(:employee_presence_policy, effective_at: event.effective_at, employee: event.employee)
   end
@@ -38,13 +92,15 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
   let!(:vacation_category) { create(:time_off_category, account: Account.current, name: 'vacation') }
 
   let!(:user) { create(:account_user, employee: employee, role: 'account_administrator') }
+
   let(:employee) do
     create(:employee_with_working_place, :with_attributes,
-      account: account,
+      account: default_presence.account,
       employee_attributes: {
         firstname: employee_first_name,
         lastname: employee_last_name,
         annual_salary: employee_annual_salary
+        # occupation_rate: 0.5
       })
   end
   let(:employee_id) { employee.id }
@@ -89,7 +145,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
   let(:last_name_attribute_id) { last_name_attribute.id }
   let!(:occupation_rate_definition) do
     create(:employee_attribute_definition,
-      account: Account.current,
+      account: default_presence.account,
       name: 'occupation_rate',
       attribute_type: 'Number',
       validation: { range: [0, 1] })
@@ -221,6 +277,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     let(:last_name) { 'Smith' }
     let(:event_type) { 'hired' }
 
+
     context 'a new employee' do
       let(:json_payload) do
         {
@@ -248,6 +305,9 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           ]
         }
       end
+
+      it_behaves_like "Invalid Authorization"
+
       it { expect { subject }.to change { Employee::Event.count }.by(1) }
       it { expect { subject }.to change { Employee.count }.by(1) }
       it { expect { subject }.to change { Employee::AttributeVersion.count }.by(3) }
@@ -339,7 +399,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       context 'when child attribute send' do
         let!(:child_definition) do
           create(:employee_attribute_definition,
-            account: account, name: 'child', attribute_type: 'Child',
+            account: default_presence.account, name: 'child', attribute_type: 'Child',
             validation: { inclusion: true })
         end
 
@@ -661,7 +721,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         context 'when employee wants to create event for other employee' do
           before do
             Account::User.current.update!(
-              employee: create(:employee, account: account), role: 'user'
+               employee: create(:employee, account: default_presence.account), role: 'user'
             )
           end
 
@@ -888,6 +948,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     before { event.employee_presence_policy = epp }
 
     subject { put :update, json_payload }
+
     let(:json_payload) do
       {
         id: event_id,
@@ -903,7 +964,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         employee_attributes: [
           {
             attribute_name: occupation_rate_attribute_definition,
-            value: 0.8
+            value: 1.0
           },
           {
             id: first_name_attribute_id,
@@ -926,6 +987,8 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         ]
       }
     end
+
+    it_behaves_like "Invalid Authorization"
 
     let(:effective_at) { Date.new(2015, 4, 21) }
 
@@ -1053,7 +1116,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
       context 'and he wants to update other employee attributes' do
         before do
-          user.employee = create(:employee, account: account)
+          user.employee = create(:employee, account: default_presence.account)
           json_payload[:employee_attributes].pop
         end
 
@@ -1115,7 +1178,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
     context 'when only occupation rate is sent' do
       before do
-        json_payload[:employee_attributes] = [{ attribute_name: 'occupation_rate', value: '0.8' }]
+        json_payload[:employee_attributes] = [{ attribute_name: 'occupation_rate', value: '1.0' }]
       end
 
       it { expect { subject }.to change { event.reload.effective_at }.to(effective_at) }
@@ -1371,7 +1434,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         before do
           json_payload.merge!(employee_attributes:
             [
-              { attribute_name: 'occupation_rate', value: '0.8' }
+              { attribute_name: 'occupation_rate', value: '1.0' }
             ])
           rehired.employee_presence_policy = repp
         end
@@ -1425,10 +1488,12 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
   context 'GET #index' do
     context "when employee_id specified" do
       before(:each) do
-        create_list(:employee_event, 3, account: account, employee: employee)
+        create_list(:employee_event, 3, account: default_presence.account, employee: employee)
       end
 
       let(:subject) { get :index, employee_id: employee.id }
+
+      it_behaves_like "Invalid Authorization"
 
       it 'should respond with success' do
         subject
@@ -1465,7 +1530,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       end
 
       context 'with regular user role' do
-        let(:user) { create(:account_user, account: account, employee: employee, role: 'user') }
+        let(:user) { create(:account_user, account: default_presence.account, employee: employee, role: 'user') }
 
         it 'should respond with success' do
           subject
@@ -1478,12 +1543,12 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
     context "when employee_id isn't specified" do
       let!(:second_employee) do
-        create(:employee_with_working_place, :with_attributes, account: account)
+        create(:employee_with_working_place, :with_attributes, account: default_presence.account)
       end
 
       before(:each) do
-        create_list(:employee_event, 3, account: account, employee: employee)
-        create_list(:employee_event, 2, account: account, employee: second_employee)
+        create_list(:employee_event, 3, account: default_presence.account, employee: employee)
+        create_list(:employee_event, 2, account: default_presence.account, employee: second_employee)
       end
 
       let(:subject) { get :index }
@@ -1522,6 +1587,8 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
   context 'GET #show' do
     subject { get :show, id: event.id }
+
+    it_behaves_like "Invalid Authorization"
 
     it 'should respond with success' do
       subject
@@ -1566,7 +1633,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       subject { get :show, id: event_id }
 
       context 'when current user is an administrator' do
-        let!(:user) { create(:account_user, account: account, role: 'account_administrator') }
+        let!(:user) { create(:account_user, account: default_presence.account, role: 'account_administrator') }
 
         it 'should include some attributes' do
           subject
@@ -1590,7 +1657,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       end
 
       context 'when current user is a standard user' do
-        let!(:user) { create(:account_user, account: account, role: 'user') }
+        let!(:user) { create(:account_user, account: default_presence.account, role: 'user') }
 
         it 'should not include some attributes' do
           subject
@@ -1615,7 +1682,9 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     end
 
     context 'with regular user role' do
-      let(:user) { create(:account_user, account: account, employee: employee, role: 'user') }
+      let(:user) do
+        create(:account_user, account: default_presence.account, employee: employee, role: 'user')
+      end
 
       it 'should respond with success' do
         subject
@@ -1633,6 +1702,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       it { expect(response.body).to match('Event cannot be destroyed') }
     end
 
+
     subject(:delete_event) { delete :destroy, { id: event_to_delete_id } }
 
     before { employee.employee_working_places.map(&:destroy!) }
@@ -1640,6 +1710,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     context 'removing hired event' do
       let(:event_to_delete_id) { event.id }
 
+      it_behaves_like "Invalid Authorization"
       context 'with other events after' do
         let!(:other_event) do
           create(:employee_event, employee: employee, effective_at: event.effective_at + 1.month)
@@ -1685,7 +1756,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
           context 'UpdateSubscriptionQuantity job' do
             it 'is scheduled' do
-              expect(::Payments::UpdateSubscriptionQuantity).to receive(:perform_now).with(account)
+              expect(::Payments::UpdateSubscriptionQuantity).to receive(:perform_now).with(default_presence.account)
               delete_event
             end
           end
@@ -1810,7 +1881,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           before do
             create(:employee_working_place, employee: employee, effective_at: 1.year.ago)
             create(:employee_presence_policy, employee: employee, effective_at: 1.year.ago)
-            categories = create_list(:time_off_category, 2, account: account)
+            categories = create_list(:time_off_category, 2, account: default_presence.account)
             policies =
               categories.map do |category|
                 create(:time_off_policy, time_off_category: category)
@@ -1850,7 +1921,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
       context 'UpdateSubscriptionQuantity job' do
         it 'is scheduled' do
-          expect(::Payments::UpdateSubscriptionQuantity).to receive(:perform_now).with(account)
+          expect(::Payments::UpdateSubscriptionQuantity).to receive(:perform_now).with(default_presence.account)
           delete_event
         end
       end
@@ -1877,7 +1948,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
       context 'wrong employee' do
         let!(:user) { create(:account_user, role: 'user') }
-        let!(:other_employee) { create(:employee, account: account) }
+        let!(:other_employee) { create(:employee, account: default_presence.account) }
         let!(:event) { create(:employee_event, employee: other_employee) }
         let(:event_to_delete_id) { event.id }
 

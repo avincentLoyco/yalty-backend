@@ -9,6 +9,8 @@ class Employee < ActiveRecord::Base
   RESOURCE_JOIN_TABLES =
     %w(employee_time_off_policies employee_working_places employee_presence_policies).freeze
 
+  MIGRATION_DATE = Rails.configuration.migration_date
+
   belongs_to :account, inverse_of: :employees, required: true
   belongs_to :user,
     class_name: 'Account::User',
@@ -107,6 +109,10 @@ class Employee < ActiveRecord::Base
         )
       "
     end
+  end
+
+  def current_hired_for(date)
+    events.where("effective_at = ? AND event_type = ?", hired_date_for(date), 'hired').first
   end
 
   def contract_periods_include?(*dates)
@@ -241,6 +247,10 @@ class Employee < ActiveRecord::Base
 
   def can_be_hired?
     !contract_periods.last.last.is_a?(DateTime::Infinity)
+  end
+
+  def is_hired_before_migration?
+    created_at < MIGRATION_DATE
   end
 
   private
