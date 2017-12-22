@@ -212,7 +212,7 @@ class Employee::Event < ActiveRecord::Base
 
   def default_presence_policy_assigned
     return unless event_type.in?(%w(work_contract hired)) &&
-      employee.account.presence_policies.full_time.nil?
+        employee.account.presence_policies.full_time.nil?
 
     errors.add(:base, 'No Default Full Time Presence Policy assigned')
   end

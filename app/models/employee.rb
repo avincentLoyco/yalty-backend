@@ -112,7 +112,7 @@ class Employee < ActiveRecord::Base
   end
 
   def current_hired_for(date)
-    events.where("effective_at = ? AND event_type = ?", hired_date_for(date), 'hired').first
+    events.where('effective_at = ? AND event_type = ?', hired_date_for(date), 'hired').first
   end
 
   def contract_periods_include?(*dates)
@@ -249,7 +249,7 @@ class Employee < ActiveRecord::Base
     !contract_periods.last.last.is_a?(DateTime::Infinity)
   end
 
-  def is_hired_before_migration?
+  def hired_before_migration?
     created_at < MIGRATION_DATE
   end
 

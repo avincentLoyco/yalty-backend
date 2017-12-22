@@ -5,7 +5,7 @@ module Api::V1
     def complete
       {
         hiring_status: resource.can_be_hired?,
-        is_old_employee: resource.is_hired_before_migration?
+        is_old_employee: resource.hired_before_migration?
       }
         .merge(basic)
         .merge(employee_data)

@@ -44,7 +44,7 @@ class Adjustments::Calculate
     employee
       .events
       .where('event_type = ? AND effective_at >= ? AND effective_at < ?', 'work_contract',
-             MIGRATION_DATE, event.effective_at).empty?
+        MIGRATION_DATE, event.effective_at).empty?
   end
 
   def employee_created_before_migration?
