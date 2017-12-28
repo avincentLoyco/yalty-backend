@@ -55,7 +55,10 @@ RSpec.describe PresencePolicy, type: :model do
     context '.full-time' do
       let(:presence_policy) { create(:presence_policy, default_full_time: true) }
       let(:account) { presence_policy.account }
-      it { expect(account.presence_policies.full_time).to eq(presence_policy) }
+      it do
+        presence_policy.save!
+        expect(account.presence_policies.reload.full_time).to eq(presence_policy)
+      end
     end
   end
 
@@ -104,11 +107,13 @@ RSpec.describe PresencePolicy, type: :model do
       let(:full_time) { true }
 
       it 'changes existing default policy to not default' do
-        subject
+        subject.save!
         expect(full_time_presence_policy.reload.default_full_time).to eq(false)
       end
 
-      it { expect(subject.default_full_time).to eq(true) }
+      it do
+        expect(subject.default_full_time).to eq(true)
+      end
     end
 
     context 'when new policy isnt default' do
