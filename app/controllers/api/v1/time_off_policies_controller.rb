@@ -57,14 +57,6 @@ module API
           else
             filter_by_status
           end
-        if params[:time_off_category_id]
-          verify_category_belongs_to_current_account(params[:time_off_category_id])
-          @resources ||=
-            filter_by_status
-            .where(time_off_category_id: params[:time_off_category_id])
-        else
-          @resources ||= filter_by_status
-        end
       end
 
       def filter_by_status
