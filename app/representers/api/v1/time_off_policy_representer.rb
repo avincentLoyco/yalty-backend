@@ -10,6 +10,7 @@ module Api::V1
         amount: resource.amount,
         policy_type: resource.policy_type,
         years_to_effect: resource.years_to_effect,
+        active: resource.active,
         deletable: assigned_employees_json.empty?
       }
         .merge(basic)

@@ -91,7 +91,6 @@ RSpec.shared_context 'shared_context_active_and_inactive_resources' do |settings
           it { expect(response.body).to include not_assigned_resources.last.id }
           it { expect(response.body).to include new_resource.id }
 
-          it { expect(response.body).to_not include resource.id }
           it { expect(response.body).to_not include other_account_resource.id }
         end
       end
@@ -118,7 +117,6 @@ RSpec.shared_context 'shared_context_active_and_inactive_resources' do |settings
 
         it { is_expected.to have_http_status(200) }
 
-        it { expect(response.body).to include resource.id }
         it { expect(response.body).to_not include new_resource.id }
         it { expect(response.body).to_not include other_account_resource.id }
       end

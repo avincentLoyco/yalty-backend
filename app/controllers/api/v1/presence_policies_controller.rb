@@ -10,8 +10,8 @@ module API
 
       def index
         response =
-          resources_by_status(PresencePolicy, EmployeePresencePolicy).not_reset.map do |item|
-            resource_representer.new(item).with_relationships
+          filter_by_status.not_reset.map do |presence_policy|
+            resource_representer.new(presence_policy).with_relationships
           end
         render json: response
       end
@@ -87,6 +87,10 @@ module API
 
       def resource_representer
         ::Api::V1::PresencePolicyRepresenter
+      end
+
+      def filter_by_status
+        resources.where(active: params[:status].eql?('active'))
       end
     end
   end

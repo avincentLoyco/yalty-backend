@@ -19,7 +19,7 @@ class CreateEtopForEvent
 
   def find_time_off_policy(time_off_policy_amount)
     vacation_tops = event.employee.account.time_off_policies.all.select do |top|
-      top.time_off_category.name == 'vacation' && !top.reset
+      top.time_off_category.name == 'vacation' && top.active && !top.reset
     end
     vacation_tops.detect { |vacation_top| vacation_top.amount == time_off_policy_amount }
   end
@@ -49,7 +49,8 @@ class CreateEtopForEvent
       policy_type: 'balancer',
       time_off_category_id: event.employee.account.time_off_categories.find_by(name: 'vacation').id,
       name: "Time Off Policy #{days_off}",
-      reset: false
+      reset: false,
+      active: true
     )
   end
 

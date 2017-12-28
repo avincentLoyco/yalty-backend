@@ -7,5 +7,15 @@
     "description": [
       "Set hired, work_contract and contract_end events as inactive before year 2018"
     ]
+  }, {
+    "task_name": "set_presence_policies_created_before_2018_as_inactive",
+    "description": [
+      "Set presence policies which were created before 2018 as inactive"
+    ]
+  }, {
+    "task_name": "set_time_off_policies_created_before_2018_as_inactive",
+    "description": [
+      "Set time off policies which were created before 2018 as inactive"
+    ]
   }]
 }

@@ -72,7 +72,8 @@ class UpdateEtopForEvent
       policy_type: 'balancer',
       time_off_category_id: event.employee.account.time_off_categories.find_by(name: 'vacation').id,
       name: "Time Off Policy #{days_off}",
-      reset: false
+      reset: false,
+      active: true
     )
   end
 

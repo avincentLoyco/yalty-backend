@@ -66,17 +66,23 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
   end
 
   describe 'GET #index' do
-    subject { get :index }
+    subject { get :index, { status: status } }
     let!(:presence_policies) do
-      create_list(:presence_policy, 3, :with_presence_day, account: account)
+      create_list(:presence_policy, 2, :with_presence_day, account: account,
+        created_at: Date.new(2017, 2, 1),
+        active: false)
     end
 
     before do
-      create(:employee_presence_policy, presence_policy: presence_policies.first, employee: first_employee)
-      create(:employee_presence_policy, presence_policy: presence_policies.first, employee: second_employee)
+      presence_policies << create(:presence_policy, :with_presence_day, account: account,
+        created_at: Date.new(2018, 1, 1),
+        active: true)
+      create(:employee_presence_policy, presence_policy: presence_policies.last, employee: first_employee)
+      create(:employee_presence_policy, presence_policy: presence_policies.last, employee: second_employee)
     end
 
     context 'with account presence policy' do
+      let(:status) { 'active' }
       before { subject }
       let(:presence_policy_with_employees) do
         JSON.parse(response.body).select { |p| p['assigned_employees'].present? }.first
@@ -85,7 +91,7 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
         JSON.parse(response.body).select { |p| p['assigned_employees'].empty? }.first
       end
 
-      it { expect_json_sizes(4) }
+      it { expect_json_sizes(2) }
       it { is_expected.to have_http_status(200) }
       it do
         expect_json_keys('*', [:id, :type, :name, :deletable, :occupation_rate, :presence_days, :assigned_employees])
@@ -97,6 +103,7 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
     end
 
     context 'with not account presence policy' do
+      let(:status) { 'active' }
       before(:each) do
         user = create(:account_user)
         Account.current = user.account
@@ -109,6 +116,30 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
         it { expect(response.body).not_to eq [].to_json }
         it { expect(response).to have_http_status(200) }
       end
+    end
+
+    context 'inactive policies' do
+      let(:status) { 'inactive' }
+      let(:active_policy) { presence_policies.last }
+      let(:inactive_policies) { presence_policies[0 .. 1] }
+
+      before { subject }
+
+      it { expect(response.body).to_not include active_policy.id }
+      it { expect(response.body).to include inactive_policies.first.id }
+      it { expect(response.body).to include inactive_policies.last.id }
+    end
+
+    context 'active policies' do
+      let(:status) { 'active' }
+      let(:active_policy) { presence_policies.last }
+      let(:inactive_policies) { presence_policies[0 .. 1] }
+
+      before { subject }
+
+      it { expect(response.body).to include active_policy.id }
+      it { expect(response.body).to_not include inactive_policies.first.id }
+      it { expect(response.body).to_not include inactive_policies.last.id }
     end
   end
 
