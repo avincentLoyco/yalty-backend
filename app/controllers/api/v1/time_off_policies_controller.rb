@@ -60,7 +60,8 @@ module API
       end
 
       def filter_by_status
-        Account.current.time_off_policies.where(active: params[:status].eql?('active'))
+        status = params[:status] ? params[:status].eql?('active') : true
+        Account.current.time_off_policies.where(active: status)
       end
 
       def verify_category_belongs_to_current_account(time_off_category_id)
