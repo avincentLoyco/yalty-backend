@@ -25,5 +25,11 @@
     "description": [
       "Remove work events (hired, work_contract, contract_end) after 31.12.2017"
     ]
+  },
+  {
+    "task_name": "split_time_offs:between_or_migration_date",
+    "description": [
+      "Split time offs that are between the migration date"
+    ]
   }]
 }

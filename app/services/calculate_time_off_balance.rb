@@ -196,7 +196,8 @@ class CalculateTimeOffBalance
 
   def day_order_in_period_and_not_holiday?(order_day, day_date)
     presence_days_with_entries_duration.include?(order_day) &&
-      !holidays_dates_hash[:start_or_end_days].include?(day_date)
+      !holidays_dates_hash[:start_or_end_days].include?(day_date) &&
+      !holidays_dates_hash[:middle_days].include?(day_date)
   end
 
   def orders_with_entries_occurances
