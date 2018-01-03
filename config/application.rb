@@ -128,7 +128,7 @@ module Yalty
     # Date when new occupation rate logic is active, it is IMPORTANT to be triple sure when
     # changing it. Since that date some calculation behave differently and logic before that for
     # existing accounts is blocked.
-    config.migration_date = Date.new(2017, 12, 3)
+    config.migration_date = Date.new(2018, 1, 1)
   end
 
   #
