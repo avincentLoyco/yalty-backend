@@ -1,5 +1,5 @@
 namespace :work_events do
-  WORK_EVENT_TYPES = %w(hired work_contract contract_end)
+  WORK_EVENT_TYPES = %w(hired work_contract contract_end).freeze
   task remove_after_2017: :environment do
     work_events            = Employee::Event.where(event_type: WORK_EVENT_TYPES)
     work_events_after_2017 =
@@ -56,9 +56,9 @@ namespace :work_events do
     return unless event.event_type.eql?('contract_end')
     policies_by_category(event, event.employee).map do |_category, policies|
       ManageEmployeeBalanceAdditions.new(policies.last).call
-      next unless policies.last.time_off_policy.end_day.present?
+      next if policies.last.time_off_policy.end_day.blank?
       reset_date = event.effective_at + 1.day + Employee::Balance::RESET_OFFSET
-      next unless first_balance_to_update(policies.first, reset_date).present?
+      next if first_balance_to_update(policies.first, reset_date).blank?
       PrepareEmployeeBalancesToUpdate.new(@first_balance_to_update, update_all: true).call
       UpdateBalanceJob.perform_later(@first_balance_to_update, update_all: true)
     end
