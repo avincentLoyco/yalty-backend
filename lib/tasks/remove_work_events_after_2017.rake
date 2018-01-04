@@ -14,7 +14,8 @@ namespace :work_events do
         remove_reset_resources(work_event, work_event.employee)
         work_event.destroy!
         create_missing_balances(work_event)
-        ::Payments::UpdateSubscriptionQuantity.perform_now(work_event.employee.account)
+        ::Payments::UpdateSubscriptionQuantity.perform_now(work_event.employee.account) unless
+          Rails.env.staging?
         remove_employee(work_event.employee) unless work_event.employee.events.hired.exists?
       end
     end
