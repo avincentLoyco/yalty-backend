@@ -43,7 +43,7 @@ class FileStorageUploadDownload
       raise InvalidData if invalid_params_for_upload?(token_data, params)
       IO.copy_stream(
         params['attachment'][:tempfile],
-        path_for_upload(token_data['file_id'], params['attachment'][:filename])
+        path_for_upload(token_data['file_id'], params['attachment'][:filename].tr(' ', '_'))
       )
       response = { message: 'File uploaded', file_id: token_data['file_id'], type: 'file' }
       [200, { 'Content-Type' => 'application/json' }, [response.to_json]]

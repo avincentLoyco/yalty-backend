@@ -3,6 +3,9 @@
 
   ],
   "after_migration": [
-
+    {
+      "task_name": "remove_unecessary_enterprise_files",
+      "description": "Remove unecessary duplicates of enterprise event files"
+    }
   ]
 }

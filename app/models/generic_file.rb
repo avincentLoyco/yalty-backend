@@ -2,6 +2,7 @@ class GenericFile < ActiveRecord::Base
   IMAGES_TYPES   = %w(image/jpg image/jpeg image/png).freeze
   DOCUMENT_TYPES = %w(
     application/pdf application/msword
+    application/vnd.ms-excel application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
     application/vnd.openxmlformats-officedocument.wordprocessingml.document
   ).freeze
   EXPORT_TYPES = %w(application/zip).freeze
@@ -23,6 +24,7 @@ class GenericFile < ActiveRecord::Base
 
   before_post_process :process_only_images
   after_save :rename_file, :generate_sha, if: -> { file.present? }
+  before_validation :process_xls_file, if: -> { file.present? }
   validates :file, attachment_content_type: { content_type: CONTENT_TYPES }
   validates :file, attachment_size: { less_than: 20.megabytes }, unless: :archive?
 
@@ -87,5 +89,12 @@ class GenericFile < ActiveRecord::Base
 
   def archive?
     fileable_type.eql?('Account')
+  end
+
+  # MimeMagic detects .xls file as 'application/x-ole-storage' type
+  def process_xls_file
+    return unless file.instance.file_content_type.eql?('application/x-ole-storage') &&
+        CONTENT_TYPES.include?('application/vnd.ms-excel')
+    file.instance.file_content_type = 'application/vnd.ms-excel'
   end
 end

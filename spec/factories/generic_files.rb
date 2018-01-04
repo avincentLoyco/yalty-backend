@@ -22,6 +22,10 @@ FactoryGirl.define do
       file File.open(File.join(Rails.root, '/spec/fixtures/files/test.zip'))
     end
 
+    trait :with_xls do
+      file File.open(File.join(Rails.root, '/spec/fixtures/files/test.xls'))
+    end
+
     trait :without_file do
       file nil
     end

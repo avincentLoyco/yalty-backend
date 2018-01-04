@@ -1,1 +1,8 @@
 Un événement d'entreprise a été <%= @action_name %> pour <%= @account.company_name %> le <%= link_to(l(@company_event.updated_at), url_for_company_event(@account, @company_event)) %>
+<br>Nom de l'événement: <%= @company_event.title %>
+<br>Description: <%= @company_event.comment %>
+<% if @company_event.files %>
+    <br>Les dossiers: <% @company_event.files.each do |file| %>
+    <br>- <%= file.file_file_name %>
+    <% end %>
+<% end %>
