@@ -38,6 +38,20 @@ class TimeOffPolicy < ActiveRecord::Base
     )
   end)
 
+  scope(:vacations, lambda do
+    joins(:time_off_category).where(time_off_categories: { name: 'vacation' })
+  end)
+
+  scope(:default_counters, lambda do
+    joins(:time_off_category)
+      .where(time_off_categories: { name: ['accident', 'sickness', 'maternity', 'civil_service'] })
+  end)
+
+  scope(:not_default_counters, lambda do
+    joins(:time_off_category).where
+      .not(time_off_categories: { name: ['accident', 'sickness', 'maternity', 'civil_service'] })
+  end)
+
   def counter?
     policy_type == 'counter'
   end
