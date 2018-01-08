@@ -12,6 +12,10 @@ RSpec.describe CreateEtopForEvent do
   end
   let(:employee) { event.employee }
   let!(:vacation_category) { create(:time_off_category, account: employee.account, name: 'vacation') }
+  let!(:presence_policy) do
+    create(:presence_policy, :with_time_entries, account: employee.account, occupation_rate: 0.8,
+      standard_day_duration: 9600, default_full_time: true)
+  end
   let(:employee_id) { employee.id }
   let(:time_off_policy_amount) { 9600 }
   let!(:occupation_rate_definition) do
@@ -34,7 +38,10 @@ RSpec.describe CreateEtopForEvent do
       vacation_category.id), :count).by(1) }
     it { expect { subject }.to change(EmployeeTimeOffPolicy.where(time_off_category_id:
       vacation_category.id), :count).by(1) }
-    it { expect { subject }.to change(event.employee_time_off_policies, :count).by(1) }
+    it do
+      subject
+      expect(event.employee_time_off_policy).not_to be(nil)
+    end
   end
 
   shared_examples 'time off policy exists' do
@@ -51,7 +58,10 @@ RSpec.describe CreateEtopForEvent do
       vacation_category.id), :count).by(0) }
     it { expect { subject }.to change(EmployeeTimeOffPolicy.where(time_off_category_id:
       vacation_category.id), :count).by(1) }
-    it { expect { subject }.to change(event.employee_time_off_policies, :count).by(1) }
+    it do
+      subject
+      expect(event.employee_time_off_policy).not_to be(nil)
+    end
   end
 
   context 'when hired event happens' do

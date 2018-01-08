@@ -9,7 +9,7 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
   belongs_to :employee
   belongs_to :time_off_policy
   belongs_to :time_off_category
-  belongs_to :employee_event, class_name: 'Employee::Event', inverse_of: :employee_time_off_policies
+  belongs_to :employee_event, class_name: 'Employee::Event', inverse_of: :employee_time_off_policy
 
   validates :employee_id, :time_off_policy_id, :effective_at, presence: true
   validates :effective_at, uniqueness: { scope: [:employee_id, :time_off_category_id] }

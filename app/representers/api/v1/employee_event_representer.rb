@@ -5,6 +5,7 @@ module Api::V1
         effective_at: resource.effective_at,
         event_type: resource.event_type,
         deletable: resource.can_destroy_event?,
+        active: resource.can_edit_event?,
         presence_policy_id: presence_policy_id,
         time_off_policy_amount: time_off_policy_amount
       }
@@ -31,8 +32,13 @@ module Api::V1
 
     def time_off_policy_amount
       return unless resource.event_type.in?(%w(hired work_contract)) &&
-          resource.employee_time_off_policies.any?
-      resource.employee_time_off_policies.first.policy_assignation_balance.balance
+          resource.employee_time_off_policy.present?
+
+      standard_day_duration =
+        resource.employee.account.presence_policies.full_time.standard_day_duration
+
+      return if standard_day_duration.nil?
+      resource.employee_time_off_policy.time_off_policy.amount / standard_day_duration
     end
 
     def attribute_versions

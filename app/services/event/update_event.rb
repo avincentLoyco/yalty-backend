@@ -1,7 +1,7 @@
 class UpdateEvent
   include API::V1::Exceptions
   attr_reader :employee_params, :attributes_params, :event_params, :versions, :event, :employee,
-    :updated_assignations, :old_effective_at, :presence_policy_id, :time_off_policy_days
+    :updated_assignations, :old_effective_at, :presence_policy_id, :time_off_policy_days, :params
 
   def initialize(params, employee_attributes_params)
     @versions             = []
@@ -9,10 +9,11 @@ class UpdateEvent
     @attributes_params    = employee_attributes_params
     @presence_policy_id   = params[:presence_policy_id]
     @time_off_policy_days = params[:time_off_policy_amount]
-    @event_params         = build_event_params(params.except(:time_off_policy_amount))
+    @event_params         = build_event_params(params)
     @updated_assignations = {}
     @event                = Account.current.employee_events.find(event_params[:id])
     @old_effective_at     = event.effective_at
+    @params               = params
   end
 
   def call
@@ -30,11 +31,23 @@ class UpdateEvent
   private
 
   def handle_hired_or_work_contract_event
-    return unless event.event_type.in?(%w(hired work_contract)) &&
-        time_off_policy_days.present? && presence_policy_id.present?
-    presence_policy = PresencePolicy.find(presence_policy_id)
-    time_off_policy_amount = time_off_policy_days * presence_policy.standard_day_duration
-    HandleEppForEvent.new(event.id, presence_policy_id).call
+    return unless event.event_type.in?(%w(hired work_contract))
+
+    validate_time_off_policy_days_presence
+    validate_presence_policy_presence
+
+    default_full_time_policy = Account.current.presence_policies.full_time
+    time_off_policy_amount = time_off_policy_days * default_full_time_policy.standard_day_duration
+
+    if presence_policy_id.eql?(event.employee_presence_policy&.presence_policy&.id)
+      EmployeePolicy::Presence::Update.call(update_presence_policy_params)
+    else
+      EmployeePolicy::Presence::Destroy.call(event.employee_presence_policy)
+      EmployeePolicy::Presence::Create.call(create_presence_policy_params)
+    end
+
+    validate_matching_occupation_rate
+
     UpdateEtopForEvent.new(event.id, time_off_policy_amount, old_effective_at).call
   end
 
@@ -52,7 +65,20 @@ class UpdateEvent
   end
 
   def build_event_params(params)
-    params.tap { |attr| attr.delete(:employee) && attr.delete(:employee_attributes) }
+    params.tap do |attr|
+      attr.delete(:employee)
+      attr.delete(:employee_attributes)
+      attr.delete(:presence_policy_id)
+      attr.delete(:time_off_policy_amount)
+    end
+  end
+
+  def update_presence_policy_params
+    { id: event.employee_presence_policy.id, effective_at: params[:effective_at] }
+  end
+
+  def create_presence_policy_params
+    { event_id: event.id, presence_policy_id: presence_policy_id }
   end
 
   def find_employee
@@ -221,5 +247,28 @@ class UpdateEvent
         UpdateBalanceJob.perform_later(balance.id, update_all: true)
       end
     end
+  end
+
+  def validate_time_off_policy_days_presence
+    return unless time_off_policy_days.nil?
+    raise InvalidResourcesError.new(event, ['Time Off Policy amount not present'])
+  end
+
+  def validate_presence_policy_presence
+    return unless presence_policy_id.nil?
+    raise InvalidResourcesError.new(event, ['Presence Policy days not present'])
+  end
+
+  def validate_matching_occupation_rate
+    return if presence_policy_occupation_rate.eql?(event_occupation_rate)
+    raise InvalidResourcesError.new(event, ['Occupation Rate does not match Presence Policy'])
+  end
+
+  def presence_policy_occupation_rate
+    event.employee_presence_policy.presence_policy.occupation_rate
+  end
+
+  def event_occupation_rate
+    event.attribute_values['occupation_rate'].to_f
   end
 end

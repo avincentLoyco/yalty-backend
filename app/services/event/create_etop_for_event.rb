@@ -6,7 +6,7 @@ class CreateEtopForEvent
   def initialize(event_id, time_off_policy_amount)
     @event = Employee::Event.find(event_id)
     @time_off_policy_amount = time_off_policy_amount
-    @time_off_policy = get_time_off_policy(time_off_policy_amount)
+    @time_off_policy = find_time_off_policy(time_off_policy_amount)
   end
 
   def call
@@ -17,9 +17,9 @@ class CreateEtopForEvent
 
   private
 
-  def get_time_off_policy(time_off_policy_amount)
+  def find_time_off_policy(time_off_policy_amount)
     vacation_tops = event.employee.account.time_off_policies.all.select do |top|
-      top.time_off_category.name == 'vacation' && !top.reset
+      top.time_off_category.name == 'vacation' && top.active && !top.reset
     end
     vacation_tops.detect { |vacation_top| vacation_top.amount == time_off_policy_amount }
   end
@@ -37,7 +37,8 @@ class CreateEtopForEvent
   end
 
   def create_time_off_policy
-    days_off = time_off_policy_amount / 60.0 / 24.0
+    standard_day_duration = event.employee.account.presence_policies.full_time.standard_day_duration
+    days_off = time_off_policy_amount / standard_day_duration
     @time_off_policy = TimeOffPolicy.create!(
       start_day: 1,
       start_month: 1,
@@ -48,7 +49,8 @@ class CreateEtopForEvent
       policy_type: 'balancer',
       time_off_category_id: event.employee.account.time_off_categories.find_by(name: 'vacation').id,
       name: "Time Off Policy #{days_off}",
-      reset: false
+      reset: false,
+      active: true
     )
   end
 
@@ -57,7 +59,7 @@ class CreateEtopForEvent
       new_effective_at: event.effective_at,
       time_off_category_id: time_off_policy.time_off_category_id,
       employee_id: event.employee_id,
-      manual_amount: Adjustments::Calculate.new(event.employee_id).call
+      manual_amount: Adjustments::Calculate.new(event.id).call
     ).call
   end
 end

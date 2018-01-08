@@ -8,11 +8,12 @@ class UpdateEtopForEvent
     @time_off_policy_amount = time_off_policy_amount
     @time_off_policy        = find_time_off_policy(time_off_policy_amount)
     @old_effective_at       = old_effective_at
-    @etop                   = find_etop
+    @etop                   = event.employee_time_off_policy
   end
 
   def call
     return unless event && event_occupation_rate && etop
+    update_effective_at
     update_occupation_rate
     update_time_off_policy
     recreate_balances
@@ -20,9 +21,10 @@ class UpdateEtopForEvent
 
   private
 
-  def find_etop
-    event_etops = event.employee_time_off_policies
-    event_etops.detect { |etop| etop.time_off_category.name == 'vacation' }
+  def update_effective_at
+    return unless event && etop
+    etop.effective_at = event.effective_at
+    etop.save!
   end
 
   def update_occupation_rate
@@ -51,14 +53,15 @@ class UpdateEtopForEvent
   end
 
   def find_time_off_policy(time_off_policy_amount)
-    vacation_tops = TimeOffPolicy.all.select do |top|
+    vacation_tops = event.employee.account.time_off_policies.select do |top|
       top.time_off_category.name == 'vacation' && !top.reset
     end
     vacation_tops.detect { |vacation_top| vacation_top.amount == time_off_policy_amount }
   end
 
   def create_time_off_policy
-    days_off = time_off_policy_amount / 60.0 / 24.0
+    standard_day_duration = event.employee.account.presence_policies.full_time.standard_day_duration
+    days_off = time_off_policy_amount / standard_day_duration
     @time_off_policy = TimeOffPolicy.create!(
       start_day: 1,
       start_month: 1,
@@ -69,7 +72,8 @@ class UpdateEtopForEvent
       policy_type: 'balancer',
       time_off_category_id: event.employee.account.time_off_categories.find_by(name: 'vacation').id,
       name: "Time Off Policy #{days_off}",
-      reset: false
+      reset: false,
+      active: true
     )
   end
 
@@ -83,7 +87,7 @@ class UpdateEtopForEvent
       old_effective_at: old_effective_at,
       time_off_category_id: time_off_policy.time_off_category_id,
       employee_id: event.employee_id,
-      manual_amount: Adjustments::Calculate.new(event.employee_id).call
+      manual_amount: Adjustments::Calculate.new(event.id).call
     ).call
   end
 end

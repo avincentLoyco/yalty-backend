@@ -23,6 +23,27 @@ RSpec.describe DeleteEvent do
     it { expect { subject }.to change { Employee::Event.count }.by(-1) }
   end
 
+  context 'event with etop and epp' do
+    let(:effective_at) { 2.years.ago }
+    let!(:employee_time_off_policy) do
+      create(:employee_time_off_policy, employee: employee, effective_at: effective_at)
+    end
+    let!(:employee_presence_policy) do
+      create(:employee_presence_policy, employee: employee, effective_at: effective_at)
+    end
+
+    let!(:event) do
+      create(:employee_event,
+             employee: employee, event_type: 'work_contract', effective_at: effective_at,
+             employee_presence_policy: employee_presence_policy,
+             employee_time_off_policy: employee_time_off_policy)
+    end
+
+    it { expect { subject }.to change{ Employee::Event.count }.by(-1) }
+    it { expect { subject }.to change{ EmployeePresencePolicy.count }.by(-1) }
+    it { expect { subject }.to change{ EmployeeTimeOffPolicy.count }.by(-1) }
+  end
+
   context 'when event has event type hired or contract end' do
     context 'when event has event type hired' do
       context 'and this is only hired event' do

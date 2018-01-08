@@ -15,7 +15,7 @@ module API
 
       def create
         verified_dry_params(dry_validation_schema) do |attributes|
-          vefiry_category_belongs_to_current_account(attributes[:time_off_category][:id])
+          verify_category_belongs_to_current_account(attributes[:time_off_category][:id])
           obligatory_params = get_obligatory_params(attributes)
           @resource = TimeOffPolicy.new(obligatory_params)
           transactions do
@@ -50,17 +50,21 @@ module API
       end
 
       def resources
-        if params[:time_off_category_id]
-          vefiry_category_belongs_to_current_account(params[:time_off_category_id])
-          @resources ||=
-            resources_by_status(TimeOffPolicy, EmployeeTimeOffPolicy)
-            .where(time_off_category_id: params[:time_off_category_id])
-        else
-          @resources ||= resources_by_status(TimeOffPolicy, EmployeeTimeOffPolicy)
-        end
+        @resources =
+          if params[:time_off_category_id]
+            verify_category_belongs_to_current_account(params[:time_off_category_id])
+            filter_by_status.where(time_off_category_id: params[:time_off_category_id])
+          else
+            filter_by_status
+          end
       end
 
-      def vefiry_category_belongs_to_current_account(time_off_category_id)
+      def filter_by_status
+        status = params[:status] ? params[:status].eql?('active') : true
+        Account.current.time_off_policies.where(active: status)
+      end
+
+      def verify_category_belongs_to_current_account(time_off_category_id)
         raise ActiveRecord::RecordNotFound unless
           Account.current.time_off_categories.pluck(:id).include?(time_off_category_id)
       end

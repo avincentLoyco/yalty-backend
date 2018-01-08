@@ -40,7 +40,7 @@ class Employee::Event < ActiveRecord::Base
   has_one :account, through: :employee
 
   has_one :employee_presence_policy, inverse_of: :employee_event, foreign_key: :employee_event_id
-  has_many :employee_time_off_policies, inverse_of: :employee_event, foreign_key: :employee_event_id
+  has_one :employee_time_off_policy, inverse_of: :employee_event, foreign_key: :employee_event_id
 
   has_many :employee_attribute_versions,
     inverse_of: :event,
@@ -56,6 +56,7 @@ class Employee::Event < ActiveRecord::Base
   validate :contract_period_only_events, if: %i(employee event_type effective_at), on: :update
   validate :contract_end_and_hire_in_valid_order, if: %i(employee event_type effective_at)
   validate :work_contract_in_work_period, if: %i(employee event_type effective_at)
+  validate :default_presence_policy_assigned, if: %i(employee event_type)
 
   scope :contract_ends, -> { where(event_type: 'contract_end') }
   scope :hired, -> { where(event_type: 'hired') }
@@ -108,6 +109,10 @@ class Employee::Event < ActiveRecord::Base
       !%w(hired contract_end).include?(event_type) || contract_end_without_rehired_after?
   end
 
+  def can_edit_event?
+    active
+  end
+
   private
 
   def contract_period_only_events
@@ -120,21 +125,8 @@ class Employee::Event < ActiveRecord::Base
 
     transaction do
       contract_period_only_events.each do |event|
-        event.employee_presence_policy.delete
-
-        ClearResetJoinTables.new(employee, effective_at, nil, nil).call
-        update_balances_params = [event.employee_presence_policy, effective_at.to_date, nil, nil]
-        FindAndUpdateEmployeeBalancesForJoinTables.new(*update_balances_params).call
-
-        event.employee_time_off_policies.delete_all
-        event.employee_time_off_policies.each do |etop|
-          ClearResetJoinTables.new(employee, effective_at, etop.time_off_category, nil).call
-          RecreateBalances::AfterEmployeeTimeOffPolicyDestroy.new(
-            destroyed_effective_at: effective_at,
-            time_off_category_id: etop.time_off_category_id,
-            employee_id: etop.employee_id
-          ).call
-        end
+        EmployeePolicy::Presence::Destroy.call(event.employee_presence_policy)
+        EmployeePolicy::TimeOff::Destroy.call(event.employee_time_off_policy)
       end
 
       contract_period_only_events.delete_all
@@ -216,5 +208,12 @@ class Employee::Event < ActiveRecord::Base
         .events
         .where('effective_at > ?', effective_at)
         .order(:effective_at).first&.event_type.eql?('hired')
+  end
+
+  def default_presence_policy_assigned
+    return unless event_type.in?(%w(work_contract hired)) &&
+        employee.account.presence_policies.full_time.nil?
+
+    errors.add(:base, 'No Default Full Time Presence Policy assigned')
   end
 end

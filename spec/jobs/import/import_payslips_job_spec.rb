@@ -2,11 +2,12 @@ require 'rails_helper'
 
 RSpec.describe Import::ImportPayslipsJob, type: :job do
   let!(:account) do
-    account = build(:account)
+    account = create(:account)
     account.available_modules.add(id: 'automatedexport')
     account.save
     account
   end
+
   let!(:employee) { create(:employee, account: account) }
 
   let(:payslip_filename) { "20160101_#{employee.id}.pdf" }

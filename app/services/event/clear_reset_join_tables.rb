@@ -1,4 +1,8 @@
 class ClearResetJoinTables
+  def self.call(employee, effective_at, time_off_category = nil, contract_end_destroy = false)
+    new(employee, effective_at, time_off_category, contract_end_destroy).call
+  end
+
   def initialize(employee, effective_at, time_off_category = nil, contract_end_destroy = false)
     @employee = employee
     @contract_end_date = employee.first_upcoming_contract_end(effective_at).try(:effective_at)

@@ -7,6 +7,7 @@ module PresencePolicySchemas
       required(:occupation_rate).filled(:float?)
       optional(:presence_days).maybe(:array?)
       optional(:standard_day_duration).maybe(:int?)
+      optional(:default_full_time).filled(:bool?)
     end
   end
 
@@ -16,6 +17,7 @@ module PresencePolicySchemas
       required(:name).filled(:str?)
       optional(:occupation_rate).filled(:float?)
       optional(:standard_day_duration).maybe(:int?)
+      optional(:default_full_time).filled(:bool?)
     end
   end
 end
