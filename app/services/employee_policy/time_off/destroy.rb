@@ -8,6 +8,7 @@ module EmployeePolicy
       end
 
       def initialize(employee_time_off_policy)
+        return unless employee_time_off_policy
         @employee_time_off_policy = employee_time_off_policy
         @employee                 = employee_time_off_policy.employee
         @time_off_category        = employee_time_off_policy.time_off_category
@@ -15,6 +16,7 @@ module EmployeePolicy
       end
 
       def call
+        return unless employee_time_off_policy
         employee_time_off_policy.delete
         ClearResetJoinTables.call(employee, effective_at, time_off_category, nil)
         RecreateBalances::AfterEmployeeTimeOffPolicyDestroy.call(
