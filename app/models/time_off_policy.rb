@@ -52,6 +52,8 @@ class TimeOffPolicy < ActiveRecord::Base
       .not(time_off_categories: { name: ['accident', 'sickness', 'maternity', 'civil_service'] })
   end)
 
+  scope :active_balancers, -> { where(active: true, policy_type: 'balancer') }
+
   def counter?
     policy_type == 'counter'
   end

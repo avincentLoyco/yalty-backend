@@ -1,7 +1,10 @@
 {
-  "before_migration": [
-
-  ],
+  "before_migration": [{
+    "task_name": "destroy_duplicate_time_off_policies",
+    "description": [
+      "Destroy duplicate time off policies of balancer type and reassign etops"
+    ]
+  }],
   "after_migration": [
 
   ]

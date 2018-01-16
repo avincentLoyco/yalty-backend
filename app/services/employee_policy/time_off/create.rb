@@ -14,11 +14,22 @@ module EmployeePolicy
       end
 
       def call
-        @time_off_policy = Policy::TimeOff::FindOrCreateByAmount.call(time_off_policy_amount,
-          event.employee.account.id)
+        ActiveRecord::Base.transaction do
+          begin
+            ActiveRecord::Base.transaction(requires_new: true) do
+              @time_off_policy = Policy::TimeOff::FindOrCreateByAmount.call(time_off_policy_amount,
+                event.employee.account.id)
+            end
+          rescue ActiveRecord::RecordNotUnique
+            @time_off_policy = Policy::TimeOff::FindByAmount.call(time_off_policy_amount,
+              event.employee.account.id)
+          rescue ActiveRecord::StatementInvalid
+            raise ActiveRecord::Rollback
+          end
 
-        CreateOrUpdateJoinTable.new(EmployeeTimeOffPolicy, TimeOffPolicy, attributes).call
-        EmployeeTimeOffPolicy.find_by(employee_event_id: event.id)
+          CreateOrUpdateJoinTable.new(EmployeeTimeOffPolicy, TimeOffPolicy, attributes).call
+          EmployeeTimeOffPolicy.find_by(employee_event_id: event.id)
+        end
       end
 
       private
