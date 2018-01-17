@@ -1,7 +1,7 @@
 class AddUniqueIndexOnTimeOffPolicyAmount < ActiveRecord::Migration
   def up
     execute <<-SQL
-      CREATE UNIQUE INDEX time_off_policies_amount_constraint ON time_off_policies (amount, time_off_category_id) WHERE active IS TRUE;
+      CREATE UNIQUE INDEX time_off_policies_amount_constraint ON time_off_policies (amount, time_off_category_id) WHERE active IS TRUE AND reset IS FALSE;
     SQL
   end
 
