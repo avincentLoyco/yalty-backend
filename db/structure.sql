@@ -1260,6 +1260,13 @@ CREATE INDEX index_time_off_categories_on_account_id ON time_off_categories USIN
 
 
 --
+-- Name: index_time_off_policies_on_amount_and_time_off_category_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_time_off_policies_on_amount_and_time_off_category_id ON time_off_policies USING btree (amount, time_off_category_id) WHERE ((active IS TRUE) AND (reset IS FALSE));
+
+
+--
 -- Name: index_time_off_policies_on_time_off_category_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1285,13 +1292,6 @@ CREATE INDEX index_time_offs_on_time_off_category_id ON time_offs USING btree (t
 --
 
 CREATE INDEX index_working_places_on_account_id ON working_places USING btree (account_id);
-
-
---
--- Name: time_off_policies_amount_constraint; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX time_off_policies_amount_constraint ON time_off_policies USING btree (amount, time_off_category_id) WHERE ((active IS TRUE) AND (reset IS FALSE));
 
 
 --
