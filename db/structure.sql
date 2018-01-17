@@ -1258,14 +1258,6 @@ CREATE INDEX index_time_entries_on_presence_day_id ON time_entries USING btree (
 
 CREATE INDEX index_time_off_categories_on_account_id ON time_off_categories USING btree (account_id);
 
-
---
--- Name: index_time_off_policies_on_amount_and_time_off_category_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX index_time_off_policies_on_amount_and_time_off_category_id ON time_off_policies USING btree (amount, time_off_category_id) WHERE ((active IS TRUE) AND (reset IS FALSE));
-
-
 --
 -- Name: index_time_off_policies_on_time_off_category_id; Type: INDEX; Schema: public; Owner: -
 --
@@ -1881,6 +1873,4 @@ INSERT INTO schema_migrations (version) VALUES ('20171211080653');
 INSERT INTO schema_migrations (version) VALUES ('20171227083011');
 
 INSERT INTO schema_migrations (version) VALUES ('20171227083055');
-
-INSERT INTO schema_migrations (version) VALUES ('20180115085022');
 
