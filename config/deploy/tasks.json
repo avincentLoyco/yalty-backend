@@ -5,7 +5,10 @@
       "Destroy duplicate time off policies of balancer type and reassign etops"
     ]
   }],
-  "after_migration": [
-
-  ]
+  "after_migration": [{
+    "task_name": "fix_banque_du_leman",
+    "description": [
+      "Do not carry over days from last year to year 2018 for account banque-du-leman"
+    ]
+  }]
 }
