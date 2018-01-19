@@ -4,6 +4,12 @@
     "description": [
       "Destroy duplicate time off policies of balancer type and reassign etops"
     ]
+  },
+  {
+    "task_name": "generate_manual_balance_json",
+    "description": [
+      "Create manual balance adjusting 2017 balances for specified clients"
+    ]
   }],
   "after_migration": [
 
