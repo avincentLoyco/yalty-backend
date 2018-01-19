@@ -8,6 +8,7 @@ class Employee::Balance < ActiveRecord::Base
   RESET_OFFSET         = 3.seconds
   ASSIGNATION_OFFSET   = 4.seconds
   ADDITION_OFFSET      = 5.seconds
+  MANUAL_ADJUSTMENT    = 6.seconds
 
   belongs_to :employee
   belongs_to :time_off_category
@@ -21,7 +22,7 @@ class Employee::Balance < ActiveRecord::Base
     :manual_amount, :balance_type, presence: true
   validates :validity_date, presence: true, if: :balance_credit_removal_id
   validates :balance_type,
-    inclusion: { in: %w(time_off reset removal end_of_period assignation addition) }
+    inclusion: { in: %w(time_off reset removal manual_adjustment end_of_period assignation addition) }
   validates :effective_at, uniqueness: { scope: [:time_off_category, :employee] }
   validate :validity_date_later_than_effective_at, if: [:effective_at, :validity_date]
   validate :counter_validity_date_blank
@@ -176,7 +177,7 @@ class Employee::Balance < ActiveRecord::Base
 
   def time_off_policy_presence
     return if time_off_policy && (balance_type.eql?('reset') || balance_type.eql?('time_off') ||
-      (!balance_type.eql?('reset') && !time_off_policy.reset))
+                                  (!balance_type.eql?('reset') && !time_off_policy.reset))
     errors.add(:employee, 'Must have an associated time off policy in the balance category')
   end
 
@@ -187,6 +188,7 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   def effective_at_equal_time_off_policy_dates
+    return if balance_type.eql?('manual_adjustment')
     etop = employee_time_off_policy
     return if etop.blank? || balance_type.eql?('reset') || !etop.not_reset?
     etop_hash = employee_time_off_policy_with_effective_till(etop)
