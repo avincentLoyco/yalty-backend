@@ -41,6 +41,8 @@ on_worker_boot do |worker|
     end
 
     # Create pid file for each worker
+    next unless Puma.respond_to? :cli_config
+
     if pidfile = Puma.cli_config.options[:pidfile]
       File.write(pidfile.gsub(/(.+?)(\.pid)?$/, "\\1.#{worker}\\2"), Process.pid)
     end
