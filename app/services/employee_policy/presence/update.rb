@@ -13,7 +13,7 @@ module EmployeePolicy
 
       def call
         params[:order_of_start_day] = EmployeePolicy::Presence::OrderOfStartDay::Calculate.call(
-          employee_presence_policy.presence_policy, params[:effective_at]
+          employee_presence_policy.presence_policy.id, params[:effective_at]
         )
         attributes =
           params.merge(previous_order_of_start_day: employee_presence_policy.order_of_start_day)
