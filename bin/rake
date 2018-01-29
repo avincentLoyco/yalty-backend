@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
+running_in_parallel = ARGV.any? { |arg| arg =~ /^parallel:/ }
+
 begin
-  load File.expand_path('../spring', __FILE__)
+  load File.expand_path('../spring', __FILE__) unless running_in_parallel
 rescue LoadError => e
   raise unless e.message.include?('spring')
 end

@@ -44,7 +44,7 @@ module API
 
       def destroy
         authorize! :destroy, resource
-        Employee::WorkingPlace::Destroy.call(resource)
+        EmployeePolicy::WorkingPlace::Destroy.call(resource)
 
         render_no_content
       end
