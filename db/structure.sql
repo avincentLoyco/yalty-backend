@@ -665,8 +665,7 @@ CREATE TABLE time_offs (
     employee_id uuid NOT NULL,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
-    being_processed boolean DEFAULT false,
-    hidden boolean DEFAULT false
+    being_processed boolean DEFAULT false
 );
 
 
@@ -1872,4 +1871,6 @@ INSERT INTO schema_migrations (version) VALUES ('20171227083011');
 INSERT INTO schema_migrations (version) VALUES ('20171227083055');
 
 INSERT INTO schema_migrations (version) VALUES ('20180118094424');
+
+INSERT INTO schema_migrations (version) VALUES ('20180130141310');
 
