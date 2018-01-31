@@ -29,19 +29,13 @@ Prepare development (& testing) environment
 -------------------------------------------
 
 Start by cloning repository and move in working directory, then installing
-above requirements and configure *pow* to use *api.yalty.dev* and
-*launchpad.yalty.dev* hosts:
+above requirements
 
-```bash
-ln -sf `pwd` ~/.pow/api.yalty
-ln -sf `pwd` ~/.pow/launchpad.yalty
-```
-
-lvh.me as alternative for pow. Run server like that and then app will be available
+lvh.me as a DNS mapper to localhost. We need it to access subdomains. Run server like that and then app will be available
 under: `api.yalty.lvh.me:3000` and `launchpad.yalty.lvh.me:3000`:
 
 ```bash
-rails s -p 3000 -b lvh.me
+rails s
 ```
 
 Now you need to run *bundler* in working directory. Then you can edit local
@@ -77,6 +71,9 @@ Get a key on [Google API console](https://code.google.com/apis/console/) and add
 * Google Maps Geocoding API
 
 
+Get keys from [stripe dashboard](https://dashboard.stripe.com/account/apikeys) and add them in
+`.env.local` file under `STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY` name, then enable following services:
+
 Running development
 -------------------
 
@@ -84,20 +81,9 @@ The API can be acceded through the API endpoint (http://api.yalty.dev) with a
 user token. You can also use the frontend if you have its development
 environment.
 
-To load an account and get user credentials, run the following command:
-```bash
-rake yalty:load_sample_account
-```
-
-An account for "My Company" with a user is created (or loaded when it exists) and
-the user credentials displayed.
 
 API use *Authentication* header with *bearer* token.
 
-You can use the following command if you want a complete set of sample data:
-```bash
-rake yalty:load_sample_data
-```
 
 ### Postman
 
