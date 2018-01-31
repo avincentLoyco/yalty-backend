@@ -13,6 +13,10 @@ class TimeOffCategory < ActiveRecord::Base
 
   after_create :create_reset_policy!
 
+  DEFAULT.each do |category|
+    scope category, -> { where(name: category) }
+  end
+
   def self.update_default_account_categories(account)
     TimeOffCategory::DEFAULT.each do |category|
       time_off_category = account.time_off_categories.where(name: category).first

@@ -38,9 +38,7 @@ class TimeOffPolicy < ActiveRecord::Base
     )
   end)
 
-  scope(:vacations, lambda do
-    joins(:time_off_category).where(time_off_categories: { name: 'vacation' })
-  end)
+  scope :vacations, -> { joins(:time_off_category).merge(TimeOffCategory.vacation) }
 
   scope(:default_counters, lambda do
     joins(:time_off_category)

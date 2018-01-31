@@ -13,10 +13,10 @@ module Policy
       end
 
       def call
-        vacation_tops = account.time_off_policies.all.select do |top|
-          top.time_off_category.name == 'vacation' && top.active && !top.reset
-        end
-        vacation_tops.detect { |vacation_top| vacation_top.amount == time_off_policy_amount }
+        account
+          .time_off_policies
+          .vacations
+          .find_by(active: true, amount: time_off_policy_amount, reset: false)
       end
     end
   end

@@ -1,7 +1,6 @@
 module EmployeePolicy
   module TimeOff
     class Create
-      attr_accessor :time_off_policy
       attr_reader :event, :time_off_policy_amount
 
       def self.call(event_id, time_off_policy_amount)
@@ -14,22 +13,15 @@ module EmployeePolicy
       end
 
       def call
-        ActiveRecord::Base.transaction do
-          begin
-            ActiveRecord::Base.transaction(requires_new: true) do
-              @time_off_policy = Policy::TimeOff::FindOrCreateByAmount.call(time_off_policy_amount,
-                event.employee.account.id)
-            end
-          rescue ActiveRecord::RecordNotUnique
-            @time_off_policy = Policy::TimeOff::FindByAmount.call(time_off_policy_amount,
-              event.employee.account.id)
-          rescue ActiveRecord::StatementInvalid
-            raise ActiveRecord::Rollback
-          end
+        CreateOrUpdateJoinTable.new(EmployeeTimeOffPolicy, TimeOffPolicy, attributes).call
+        EmployeeTimeOffPolicy.find_by(employee_event_id: event.id)
+      end
 
-          CreateOrUpdateJoinTable.new(EmployeeTimeOffPolicy, TimeOffPolicy, attributes).call
-          EmployeeTimeOffPolicy.find_by(employee_event_id: event.id)
-        end
+      def time_off_policy
+        Policy::TimeOff::FindOrCreateByAmount.call(
+          time_off_policy_amount,
+          event.employee.account.id
+        )
       end
 
       private
