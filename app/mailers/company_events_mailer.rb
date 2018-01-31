@@ -24,7 +24,7 @@ class CompanyEventsMailer < ApplicationMailer
 
   def url_for_company_event(account, company_event)
     url = subdomain_url_for(account)
-    url << "/company_events/#{company_event.id}"
+    url << "/manager/enterprise-timeline/#{company_event.id}/edit"
     url
   end
 end
