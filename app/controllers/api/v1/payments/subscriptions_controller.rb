@@ -32,7 +32,7 @@ module API
         end
 
         def upcoming_invoice
-          return if available_modules.size == available_modules.canceled.size
+          return if available_modules.size == available_modules.canceled.size || !default_card
           Stripe::Invoice.upcoming(customer: Account.current.customer_id)
         end
 
