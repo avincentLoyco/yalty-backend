@@ -14,6 +14,7 @@ end
 def create_manual_balances(filename, date)
   file                 = File.read(filename)
   employees_hash       = JSON.parse(file)
+  return if employees_hash.empty?
   account              = Employee.find(employees_hash.first.first).account
   time_off_category_id = account.time_off_categories.find_by(name: 'vacation').id
 
