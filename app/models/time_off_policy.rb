@@ -7,7 +7,6 @@ class TimeOffPolicy < ActiveRecord::Base
   validate :correct_dates, unless: :reset?
   validates :time_off_category, :name, presence: true
   validates :amount, presence: true, if: "policy_type == 'balancer'"
-  validates :amount, absence: true, if: "policy_type == 'counter'"
   validates :policy_type, presence: true, inclusion: { in: %w(counter balancer) }, unless: :reset?
   validates :years_to_effect,
     numericality: { greater_than_or_equal_to: 0 }, if: 'years_to_effect.present?'

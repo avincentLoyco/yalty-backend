@@ -11,7 +11,7 @@ FactoryGirl.define do
 
     trait :as_counter do
       policy_type 'counter'
-      amount nil
+      amount 0
     end
 
     trait :with_end_date do

@@ -218,7 +218,7 @@ RSpec.describe ManageEmployeeBalanceRemoval, type: :service do
     context 'when employee balance is a counter' do
       before do
         balance.time_off_policy.update!(
-          policy_type: 'counter', amount: nil, end_day: nil, end_month: nil
+          policy_type: 'counter', amount: 0, end_day: nil, end_month: nil
         )
       end
 

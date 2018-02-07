@@ -641,7 +641,7 @@ CREATE TABLE time_off_policies (
     end_day integer,
     start_month integer,
     end_month integer,
-    amount integer,
+    amount integer DEFAULT 0 NOT NULL,
     years_to_effect integer,
     policy_type character varying,
     time_off_category_id uuid NOT NULL,
@@ -1873,4 +1873,6 @@ INSERT INTO schema_migrations (version) VALUES ('20171227083055');
 INSERT INTO schema_migrations (version) VALUES ('20180118094424');
 
 INSERT INTO schema_migrations (version) VALUES ('20180130141310');
+
+INSERT INTO schema_migrations (version) VALUES ('20180207092439');
 

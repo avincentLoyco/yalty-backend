@@ -10,6 +10,12 @@
     "description": [
       "Create manual balance adjusting 2017 balances for specified clients"
     ]
+  },
+  {
+    "task_name": "change_time_off_policies_amount_from_nil_to_0",
+    "description": [
+      "Change time off policies amount from nil to 0"
+    ]
   }],
   "after_migration": [
 
