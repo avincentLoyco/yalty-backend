@@ -91,13 +91,14 @@ module Api::V1
       resource.active_policy_in_category_at_date(vacation_category&.id)
     end
 
-    def standard_day_duration
-      resource.active_presence_policy_at.standard_day_duration
+    def full_time_standard_day_duration
+      return unless resource.account.presence_policies.full_time.present?
+      resource.account.presence_policies.full_time.standard_day_duration
     end
 
     def time_off_policy_amount
-      return unless active_vacation_policy.present?
-      active_vacation_policy.time_off_policy.amount / standard_day_duration
+      return unless active_vacation_policy.present? && full_time_standard_day_duration.present?
+      active_vacation_policy.time_off_policy.amount / full_time_standard_day_duration
     end
   end
 end
