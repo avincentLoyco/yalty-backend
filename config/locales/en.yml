@@ -53,6 +53,8 @@ en:
       title: The company booked these services
     send-quote:
       title: The company request a quote for these services
+      book-it-now: Do you want to book this service now? Click
+      here: here
     resume:
       title: Total
       onetime_cost: "One time cost: %{value}"

@@ -1,5 +1,5 @@
 class ServiceRequestMailer < ApplicationMailer
-  helper_method :account, :user, :services, :options_for_service
+  helper_method :account, :user, :services, :options_for_service, :service_booking_url_for
 
   def quote_request(account, user, services)
     @account = account
@@ -29,5 +29,9 @@ class ServiceRequestMailer < ApplicationMailer
 
   def options_for_service(service)
     service.reject { |k| %I(toggle meta).include?(k.to_sym) }
+  end
+
+  def service_booking_url_for(account)
+    subdomain_url_for(account) + "/account/payment/yalty-services"
   end
 end
