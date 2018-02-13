@@ -1,6 +1,5 @@
 RSpec.shared_context 'shared_context_balances' do |settings|
   let!(:category) { create(:time_off_category, account: account) }
-  let(:policy_amount) { 10000 if settings[:type] == "balancer" }
   let(:policy) do
     create(:time_off_policy,
       time_off_category: category,
@@ -8,7 +7,7 @@ RSpec.shared_context 'shared_context_balances' do |settings|
       end_month: settings[:end_month],
       end_day: settings[:end_day],
       years_to_effect: settings[:years_to_effect],
-      amount: policy_amount
+      amount: settings.fetch(:policy_amount, 0)
     )
   end
 

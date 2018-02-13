@@ -175,7 +175,9 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
           type: 'balancer',
           years_to_effect: 0,
           end_day: 1,
-          end_month: 4
+          end_month: 4,
+          policy_amount: 1000
+
 
           let(:id) { previous_balance.id }
 
@@ -210,7 +212,9 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
     context 'with invalid params' do
       include_context 'shared_context_balances',
         type: 'balancer',
-        years_to_effect: 0
+        years_to_effect: 0,
+        policy_amount: 1000
+
       let(:id) { balance.id }
 
       context 'when param is missing' do
