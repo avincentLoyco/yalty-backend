@@ -31,7 +31,7 @@ RSpec.describe CreateEtopForEvent do
       attribute_definition: occupation_rate_definition, value: 0.8)
   end
 
-  subject { CreateEtopForEvent.new(event.id, time_off_policy_amount).call }
+  subject { described_class.new(event.id, time_off_policy_amount).call }
 
   shared_examples 'there is no time off policy' do
     it { expect { subject }.to change(TimeOffPolicy.where(time_off_category_id:

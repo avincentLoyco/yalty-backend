@@ -6,7 +6,8 @@ RSpec.describe RelativeEmployeeBalancesFinder do
     type: 'balancer',
     years_to_effect: '1',
     end_day: 1,
-    end_month: 4
+    end_month: 4,
+    policy_amount: 1000
 
   let(:account) { create(:account) }
   let(:employee) { create(:employee, account: account) }

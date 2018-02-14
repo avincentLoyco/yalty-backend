@@ -17,7 +17,8 @@ module Api::V1
         hired_date: resource.hired_date,
         contract_end_date: resource.contract_end_date,
         civil_status: resource.civil_status_for,
-        civil_status_date: resource.civil_status_date_for
+        civil_status_date: resource.civil_status_date_for,
+        time_off_policy_amount: time_off_policy_amount
       }
     end
 
@@ -65,12 +66,12 @@ module Api::V1
     end
 
     def active_vacation_policy_json
-      vacation_category = resource.time_off_categories.find_by(name: 'vacation')
-      active_vacation_policy = resource.active_policy_in_category_at_date(vacation_category&.id)
       return {} unless active_vacation_policy.present?
-
       {
+        id: active_vacation_policy.time_off_policy.id,
         assignation_id: active_vacation_policy.id,
+        type: active_vacation_policy.time_off_policy.class.name.underscore,
+        assignation_type: active_vacation_policy.class.name.underscore,
         effective_at: active_vacation_policy.effective_at,
         effective_till: active_vacation_policy.effective_till,
         employee_balance: employee_balance_json(active_vacation_policy)
@@ -80,6 +81,24 @@ module Api::V1
     def employee_balance_json(active_vacation_policy)
       return unless active_vacation_policy.policy_assignation_balance.present?
       EmployeeBalanceRepresenter.new(active_vacation_policy.policy_assignation_balance).complete
+    end
+
+    def vacation_category
+      resource.account.time_off_categories.vacation.first
+    end
+
+    def active_vacation_policy
+      resource.active_policy_in_category_at_date(vacation_category&.id)
+    end
+
+    def full_time_standard_day_duration
+      return unless resource.account.presence_policies.full_time.present?
+      resource.account.presence_policies.full_time.standard_day_duration
+    end
+
+    def time_off_policy_amount
+      return unless active_vacation_policy.present? && full_time_standard_day_duration.present?
+      active_vacation_policy.time_off_policy.amount / full_time_standard_day_duration
     end
   end
 end

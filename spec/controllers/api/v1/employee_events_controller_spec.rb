@@ -1407,8 +1407,13 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           effective_at: employee.events.order(:effective_at).first.effective_at)
       end
       let!(:etop_at_rehired) do
-        create(:employee_time_off_policy, :with_employee_balance,
-          employee: employee, effective_at: rehired.effective_at, time_off_policy: time_off_policy)
+        create(:employee_time_off_policy,
+          :with_employee_balance,
+          employee: employee,
+          effective_at: rehired.effective_at,
+          time_off_policy: time_off_policy,
+          employee_event: rehired
+        )
       end
       let!(:contract_end) do
         create(:employee_event, employee: employee, event_type: 'contract_end',

@@ -27,6 +27,8 @@ if ENV['PUMA_BINDING']
 else
   port ENV['RAILS_PORT'] || ENV['PORT'] || 3000
 
+  worker_timeout 3600
+
   preload_app!
 end
 

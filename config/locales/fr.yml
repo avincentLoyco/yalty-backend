@@ -53,6 +53,8 @@ fr:
       title: "L'entreprise a réservé ces services"
     send-quote:
       title: "L'entreprise demande un devis pour ces services"
+      book-it-now: Est-ce que vous voulez enregistrer pour ce service maintenant? Cliquez
+      here: ici
     resume:
       title: Total
       onetime_cost: "Coût unique : "

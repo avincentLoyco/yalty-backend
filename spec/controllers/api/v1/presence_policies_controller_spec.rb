@@ -365,7 +365,7 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
       end
 
       context 'it does not overwrite records when do not send' do
-        let(:policy_params) {{ name: 'test', id: presence_policy.id }}
+        let(:policy_params) {{ name: 'test', id: presence_policy.id, standard_day_duration: 23 }}
         subject { put :update, policy_params }
 
         it { expect { subject }.to change { presence_policy.reload.name } }

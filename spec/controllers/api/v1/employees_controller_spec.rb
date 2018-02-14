@@ -13,6 +13,8 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
     )
   }
 
+  let!(:vacation_category) { create(:time_off_category, name: 'vacation', account: account) }
+
   context 'GET #show' do
     let!(:employee) { create(:employee_with_working_place, :with_attributes, account: account) }
     let!(:employee_working_place) { employee.employee_working_places.order(:effective_at).first }

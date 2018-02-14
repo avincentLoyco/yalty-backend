@@ -7,7 +7,6 @@ class TimeOffPolicy < ActiveRecord::Base
   validate :correct_dates, unless: :reset?
   validates :time_off_category, :name, presence: true
   validates :amount, presence: true, if: "policy_type == 'balancer'"
-  validates :amount, absence: true, if: "policy_type == 'counter'"
   validates :policy_type, presence: true, inclusion: { in: %w(counter balancer) }, unless: :reset?
   validates :years_to_effect,
     numericality: { greater_than_or_equal_to: 0 }, if: 'years_to_effect.present?'
@@ -38,9 +37,7 @@ class TimeOffPolicy < ActiveRecord::Base
     )
   end)
 
-  scope(:vacations, lambda do
-    joins(:time_off_category).where(time_off_categories: { name: 'vacation' })
-  end)
+  scope :vacations, -> { joins(:time_off_category).merge(TimeOffCategory.vacation) }
 
   scope(:default_counters, lambda do
     joins(:time_off_category)
@@ -51,6 +48,8 @@ class TimeOffPolicy < ActiveRecord::Base
     joins(:time_off_category).where
       .not(time_off_categories: { name: ['accident', 'sickness', 'maternity', 'civil_service'] })
   end)
+
+  scope :active_balancers, -> { where(active: true, policy_type: 'balancer') }
 
   def counter?
     policy_type == 'counter'

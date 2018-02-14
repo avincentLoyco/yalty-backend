@@ -139,6 +139,12 @@ class CalculatePeriodOverview
   end
 
   def period_balances
+    @period[:end_date] =
+      if @period[:start_date].eql?(@period[:end_date])
+        @period[:end_date] += 1
+      else
+        @period[:end_date]
+      end
     balances_in_period = balances.between(@period[:start_date], @period[:end_date]).pluck(:id)
     period_start =
       balances

@@ -48,7 +48,7 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
     context 'and time off policy is a counter type' do
       before do
         time_off.employee_balance.update!(validity_date: nil)
-        policy.update!(policy_type: 'counter', end_day: nil, end_month: nil, amount: nil)
+        policy.update!(policy_type: 'counter', end_day: nil, end_month: nil, amount: 0)
         employee_policy.reload
       end
 

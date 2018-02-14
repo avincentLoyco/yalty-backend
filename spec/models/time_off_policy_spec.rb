@@ -8,7 +8,7 @@ RSpec.describe TimeOffPolicy, type: :model do
   it { is_expected.to have_db_column(:start_day).of_type(:integer).with_options(null: true) }
   it { is_expected.to have_db_column(:start_month).of_type(:integer).with_options(null: true) }
   it { is_expected.to have_db_column(:amount).of_type(:integer)
-    .with_options(null: true) }
+    .with_options(null: false, default: 0) }
   it { is_expected.to have_db_column(:years_to_effect).of_type(:integer)
     .with_options(null: true) }
 
@@ -58,7 +58,7 @@ RSpec.describe TimeOffPolicy, type: :model do
       context "without end dates" do
         let(:end_day) { nil }
         let(:end_month) { nil }
-        let(:amount) { nil }
+        let(:amount) { 0 }
         let(:policy_type) { 'counter' }
 
         it { expect(time_off_policy).to be_valid }
@@ -73,7 +73,7 @@ RSpec.describe TimeOffPolicy, type: :model do
     context 'for counter type' do
       let(:policy_type) { 'counter' }
 
-      it { expect(time_off_policy).to validate_absence_of(:amount) }
+      it { expect(time_off_policy.amount).to eq(amount) }
     end
 
     context 'for balancer type' do

@@ -15,7 +15,7 @@ RSpec.describe ManageEmployeeBalanceAdditions, type: :service do
 
   context 'when resource first start date in a past' do
     let(:policy) do
-      create(:time_off_policy, policy_type: 'counter', amount: nil, time_off_category: category)
+      create(:time_off_policy, policy_type: 'counter', amount: 0, time_off_category: category)
     end
 
     context 'when resource first start date in the future' do

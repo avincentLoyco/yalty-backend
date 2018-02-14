@@ -76,7 +76,9 @@ RSpec.describe UpdateBalanceJob do
         type: 'balancer',
         years_to_effect: 1,
         end_day: (Date.today + 1.year).day,
-        end_month: (Date.today + 1.year).month
+        end_month: (Date.today + 1.year).month,
+        policy_amount: 1000
+
 
       context 'and in current policy period' do
         before { Employee::Balance.update_all(being_processed: true) }
@@ -215,7 +217,9 @@ RSpec.describe UpdateBalanceJob do
     context 'policy does not have end date' do
       include_context 'shared_context_balances',
         type: 'balancer',
-        years_to_effect: 1
+        years_to_effect: 1,
+        policy_amount: 1000
+
 
       before { Employee::Balance.update_all(being_processed: true) }
 

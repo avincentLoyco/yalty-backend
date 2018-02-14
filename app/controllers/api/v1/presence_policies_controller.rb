@@ -1,7 +1,7 @@
 module API
   module V1
     class PresencePoliciesController < ApplicationController
-      authorize_resource except: :create
+      authorize_resource except: [:create]
       include PresencePolicySchemas
 
       def show

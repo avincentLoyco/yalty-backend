@@ -3,6 +3,7 @@ source 'https://rubygems.org'
 ruby '2.4.1'
 
 gem 'ar_after_transaction', '~> 0.4.1'
+gem 'attr_extras',          '~> 5.2.0'
 gem 'bcrypt',               '~> 3.1.10'
 gem 'cancancan',            '~> 1.13.1'
 gem 'countries',            '~> 1.2.5'
@@ -25,6 +26,7 @@ gem 'stripe',               '~> 2.0.0'
 gem 'timezone',             '~> 1.2.3'
 gem 'tod',                  '~> 2.0.2'
 gem 'virtus',               '~> 1.0.5'
+gem 'with_advisory_lock',   '~> 3.2.0'
 
 # background jobs
 gem 'sidekiq',              '~> 4.2.3'

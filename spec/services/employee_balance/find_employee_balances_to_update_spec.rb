@@ -74,7 +74,8 @@ RSpec.describe FindEmployeeBalancesToUpdate, type: :service do
       type: 'balancer',
       years_to_effect: 1,
       end_month: 4,
-      end_day: 1
+      end_day: 1,
+      policy_amount: 1000
 
     context 'when employee balance last in category and no effective at given' do
       let(:resource) { balance }
