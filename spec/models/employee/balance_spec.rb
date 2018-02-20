@@ -299,7 +299,7 @@ RSpec.describe Employee::Balance, type: :model do
       end
 
       context 'counter validity date blank' do
-        before { policy.update!(policy_type: 'counter', amount: nil) }
+        before { policy.update!(policy_type: 'counter', amount: 0) }
 
         context 'when validity date is nil' do
           it { expect(subject.valid?).to eq true }
