@@ -1,4 +1,4 @@
-desc 'Add standard_day_duration to existing presence policies'
+desc "Add standard_day_duration to existing presence policies"
 task add_standard_day_duration: :environment do
   PresencePolicy.where(standard_day_duration: nil, reset: false).each do |pp|
     next if pp.presence_days.empty?

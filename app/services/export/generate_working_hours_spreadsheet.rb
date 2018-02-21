@@ -2,7 +2,7 @@ module Export
   class GenerateWorkingHoursSpreadsheet
     attr_reader :account, :archive_dir_path
 
-    DEFAULT_WORKING_HOURS_COLUMNS = ['Employee UUID', 'Date', 'Comment'].freeze
+    DEFAULT_WORKING_HOURS_COLUMNS = ["Employee UUID", "Date", "Comment"].freeze
 
     def initialize(account, archive_dir_path)
       @account          = account
@@ -20,13 +20,13 @@ module Export
       columns = DEFAULT_WORKING_HOURS_COLUMNS
       columns += (1..max_time_entries_count).map { |number| "Timestamp #{number}" }
 
-      CSV.open("#{archive_dir_path}/working_hours.csv", 'wb') do |working_times_csv|
+      CSV.open("#{archive_dir_path}/working_hours.csv", "wb") do |working_times_csv|
         working_times_csv << columns
 
         working_times.each do |record|
-          row = [record.employee_id, record.date.strftime('%d.%m.%Y'), record.comment]
+          row = [record.employee_id, record.date.strftime("%d.%m.%Y"), record.comment]
           row += sorted_time_entries(record.time_entries).map do |time_entry|
-            "#{time_entry['start_time']} - #{time_entry['end_time']}"
+            "#{time_entry["start_time"]} - #{time_entry["end_time"]}"
           end
           working_times_csv << row
         end
@@ -34,7 +34,7 @@ module Export
     end
 
     def sorted_time_entries(time_entries)
-      time_entries.sort_by { |time_entry| time_entry['start_time'] }
+      time_entries.sort_by { |time_entry| time_entry["start_time"] }
     end
   end
 end

@@ -44,17 +44,17 @@ module API
 
         def stripe_error(exception)
           error = StripeError.new(
-            type: 'card',
+            type: "card",
             field: error_field,
             message: exception.message,
-            code: exception.try(:code) || 'proxy_gateway_error'
+            code: exception.try(:code) || "proxy_gateway_error"
           )
           render json: ::Api::V1::StripeErrorRepresenter.new(error).complete, status: 502
         end
 
         def error_field
-          if params.key?(:token) then 'token'
-          elsif params.key?(:id) then 'id'
+          if params.key?(:token) then "token"
+          elsif params.key?(:id) then "id"
           end
         end
       end

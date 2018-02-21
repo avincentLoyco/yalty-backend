@@ -13,7 +13,7 @@ class CreateOrUpdateJoinTable
     @join_table_class = join_table_class
     @params = params
     @resource_class = resource_class
-    @resource_class_id = resource_class.model_name.singular + '_id'
+    @resource_class_id = resource_class.model_name.singular + "_id"
     @join_table_resource = join_table_resource
     @join_table_old_effective_at = join_table_resource.try(:effective_at)
     @status = 205
@@ -54,7 +54,7 @@ class CreateOrUpdateJoinTable
   def remove_policy_assignation_balances(join_tables_to_remove)
     return unless join_table_class.eql?(EmployeeTimeOffPolicy)
     join_tables_to_remove.map(&:policy_assignation_balance).compact.map do |balance|
-      DestroyEmployeeBalance.new(balance, false).call unless balance.balance_type.eql?('reset')
+      DestroyEmployeeBalance.new(balance, false).call unless balance.balance_type.eql?("reset")
     end
   end
 
@@ -150,7 +150,7 @@ class CreateOrUpdateJoinTable
   def previous_join_table
     join_tables =
       employee_join_tables
-      .where('effective_at < ?', params[:effective_at].to_date).order(:effective_at)
+      .where("effective_at < ?", params[:effective_at].to_date).order(:effective_at)
     return join_tables.last unless join_table_class.eql?(EmployeeTimeOffPolicy)
     join_tables.where(time_off_category_id: time_off_category_id).last
   end

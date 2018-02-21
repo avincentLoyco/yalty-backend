@@ -1,4 +1,4 @@
-require 'employee_policy_period'
+require "employee_policy_period"
 
 class Employee::Balance < ActiveRecord::Base
   include RelatedAmount
@@ -14,21 +14,23 @@ class Employee::Balance < ActiveRecord::Base
   belongs_to :time_off_category
   belongs_to :time_off
 
-  has_many :balance_credit_additions, class_name: 'Employee::Balance',
-                                      foreign_key: 'balance_credit_removal_id'
-  belongs_to :balance_credit_removal, class_name: 'Employee::Balance'
+  has_many :balance_credit_additions, class_name: "Employee::Balance",
+                                      foreign_key: "balance_credit_removal_id"
+  belongs_to :balance_credit_removal, class_name: "Employee::Balance"
 
   validates :employee, :time_off_category, :balance, :effective_at, :resource_amount,
     :manual_amount, :balance_type, presence: true
   validates :validity_date, presence: true, if: :balance_credit_removal_id
   validates :balance_type,
-    inclusion: { in: %w(time_off reset removal manual_adjustment end_of_period assignation addition) }
+    inclusion: {
+      in: %w(time_off reset removal manual_adjustment end_of_period assignation addition)
+    }
   validates :effective_at, uniqueness: { scope: [:time_off_category, :employee] }
   validate :validity_date_later_than_effective_at, if: [:effective_at, :validity_date]
   validate :counter_validity_date_blank
   validate :time_off_policy_presence
   validate :effective_after_employee_start_date, if: :employee
-  validate :effective_at_equal_time_off_policy_dates, if: 'time_off_id.nil? && employee_id'
+  validate :effective_at_equal_time_off_policy_dates, if: "time_off_id.nil? && employee_id"
   validate :effective_at_equal_time_off_end_date, if: :time_off_id
   validate :removal_effective_at_date
   validate :end_time_not_after_contract_end, if: [:employee, :effective_at]
@@ -42,14 +44,14 @@ class Employee::Balance < ActiveRecord::Base
     where(employee_id: employee_id, time_off_category_id: time_off_category_id)
   end)
   scope :between, (lambda do |from_date, to_date|
-    where('employee_balances.effective_at BETWEEN ? and ?', from_date, to_date)
+    where("employee_balances.effective_at BETWEEN ? and ?", from_date, to_date)
   end)
-  scope :additions, -> { where(balance_type: 'addition').order(:effective_at) }
+  scope :additions, -> { where(balance_type: "addition").order(:effective_at) }
   scope :removals, -> { Employee::Balance.joins(:balance_credit_additions).distinct }
   scope :not_removals, (lambda do
-    joins('LEFT JOIN employee_balances AS b ON employee_balances.id = b.balance_credit_removal_id')
+    joins("LEFT JOIN employee_balances AS b ON employee_balances.id = b.balance_credit_removal_id")
     .distinct
-    .where('b.balance_credit_removal_id IS NULL')
+    .where("b.balance_credit_removal_id IS NULL")
   end)
   scope :removal_at_date, (lambda do |employee_id, time_off_category_id, date|
     for_employee_and_category(employee_id, time_off_category_id)
@@ -113,7 +115,7 @@ class Employee::Balance < ActiveRecord::Base
   private
 
   def effective_at_from_additions
-    if balance_credit_additions.map(&:balance_type).eql?(['end_of_period'])
+    if balance_credit_additions.map(&:balance_type).eql?(["end_of_period"])
       balance_credit_additions.first.effective_at - 1.day
     else
       balance_credit_additions.sort_by { |balance| balance[:effective_at] }.first.effective_at
@@ -123,18 +125,18 @@ class Employee::Balance < ActiveRecord::Base
   def end_time_not_after_contract_end
     contract_end = employee.contract_end_for(effective_at)
 
-    return unless !balance_type.eql?('reset') && contract_end.present? &&
+    return unless !balance_type.eql?("reset") && contract_end.present? &&
         contract_end > employee.hired_date_for(effective_at) &&
         (contract_end + 1.day) + Employee::Balance::REMOVAL_OFFSET < effective_at
-    errors.add(:effective_at, 'Employee Balance can not be added after employee contract end date')
+    errors.add(:effective_at, "Employee Balance can not be added after employee contract end date")
   end
 
   def reset_effective_at_after_contract_end
-    return unless balance_type.eql?('reset')
+    return unless balance_type.eql?("reset")
     contract_end = employee.contract_end_for(effective_at)
     return if contract_end &&
         (contract_end + 1.day + Employee::Balance::RESET_OFFSET) == effective_at
-    errors.add(:effective_at, 'Reset Balance effective at must be at contract end')
+    errors.add(:effective_at, "Reset Balance effective at must be at contract end")
   end
 
   def attributes_present?
@@ -151,13 +153,13 @@ class Employee::Balance < ActiveRecord::Base
 
   def counter_validity_date_blank
     return unless time_off_policy.try(:counter?) && validity_date.present?
-    errors.add(:validity_date, 'Must be nil when counter type')
+    errors.add(:validity_date, "Must be nil when counter type")
   end
 
   def removal_effective_at_date
     additions_validity_dates = balance_credit_additions.map(&:validity_date).uniq
 
-    return unless balance_type.eql?('removal') && additions_validity_dates.present?
+    return unless balance_type.eql?("removal") && additions_validity_dates.present?
     first_validity_date = additions_validity_dates.first.try(:to_date)
 
     if additions_validity_dates.size > 1 ||
@@ -166,41 +168,41 @@ class Employee::Balance < ActiveRecord::Base
           effective_at.to_date - 1.day, first_validity_date - 1.day
         )
       errors.add(
-        :effective_at, 'Removal effective at must equal addition validity date and period'
+        :effective_at, "Removal effective at must equal addition validity date and period"
       )
     end
   end
 
   def validity_date_later_than_effective_at
-    errors.add(:effective_at, 'Must be after start date') if effective_at > validity_date
+    errors.add(:effective_at, "Must be after start date") if effective_at > validity_date
   end
 
   def time_off_policy_presence
-    return if time_off_policy && (balance_type.eql?('reset') || balance_type.eql?('time_off') ||
-                                  (!balance_type.eql?('reset') && !time_off_policy.reset))
-    errors.add(:employee, 'Must have an associated time off policy in the balance category')
+    return if time_off_policy && (balance_type.eql?("reset") || balance_type.eql?("time_off") ||
+                                  (!balance_type.eql?("reset") && !time_off_policy.reset))
+    errors.add(:employee, "Must have an associated time off policy in the balance category")
   end
 
   def effective_after_employee_start_date
-    return if balance_type.eql?('reset') || employee.contract_periods_include?(effective_at)
+    return if balance_type.eql?("reset") || employee.contract_periods_include?(effective_at)
 
-    errors.add(:effective_at, 'can\'t be set outside of employee contract period')
+    errors.add(:effective_at, "can't be set outside of employee contract period")
   end
 
   def effective_at_equal_time_off_policy_dates
-    return if balance_type.eql?('manual_adjustment')
+    return if balance_type.eql?("manual_adjustment")
     etop = employee_time_off_policy
-    return if etop.blank? || balance_type.eql?('reset') || !etop.not_reset?
+    return if etop.blank? || balance_type.eql?("reset") || !etop.not_reset?
     etop_hash = employee_time_off_policy_with_effective_till(etop)
     matches_end_or_start_top_date = compare_effective_at_with_time_off_polices_related_dates(
       time_off_policy,
-      etop_hash['effective_at'].to_date,
-      etop_hash['effective_till'].try(:to_date)
+      etop_hash["effective_at"].to_date,
+      etop_hash["effective_till"].try(:to_date)
     )
     matches_effective_at = effective_at.to_date == etop.effective_at.to_date
     return unless !matches_end_or_start_top_date && !matches_effective_at
-    message = 'Must be at TimeOffPolicy  assignations date, end date, start date or the previous'\
-      ' day to start date'
+    message = "Must be at TimeOffPolicy  assignations date, end date, start date or the previous"\
+      " day to start date"
     errors.add(:effective_at, message)
   end
 

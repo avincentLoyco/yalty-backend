@@ -8,9 +8,9 @@ namespace :load do
 
     set :app_version, lambda {
       begin
-        File.read(File.expand_path('../../../VERSION', __dir__)).strip
+        File.read(File.expand_path("../../../VERSION", __dir__)).strip
       rescue
-        'VERSION file cannot be read'
+        "VERSION file cannot be read"
       end
     }
 
@@ -19,8 +19,8 @@ namespace :load do
       sha1 = nil
 
       run_locally do
-        sha1, = capture(:git, :'ls-remote', '--heads', 'origin', "releases/#{version}")
-                .split(' ')
+        sha1, = capture(:git, :'ls-remote', "--heads", "origin", "releases/#{version}")
+                .split(" ")
       end
 
       sha1
@@ -28,15 +28,12 @@ namespace :load do
 
     set :db_dump_path, lambda {
       timestamp = fetch(:release_timestamp, now)
-      File.join(shared_path, 'db', "dump.#{timestamp}.pgsql")
+      File.join(shared_path, "db", "dump.#{timestamp}.pgsql")
     }
 
-    set :rbenv_ruby, lambda {
-      path = File.expand_path('../../../Gemfile', __dir__)
-      File.read(path).match(/ruby '([^']+)'/)[1]
-    }
+    set :rbenv_ruby, File.read(".ruby-version").strip
     set :rbenv_bundler, lambda {
-      path = File.expand_path('../../../Gemfile.lock', __dir__)
+      path = File.expand_path("../../../Gemfile.lock", __dir__)
       File.read(path).match(/BUNDLED WITH\n(.+)/)[1].strip
     }
   end

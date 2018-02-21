@@ -55,7 +55,7 @@ class HolidaysForCountry
   end
 
   def valid_params?
-    (filter.nil? || filter.eql?('upcoming')) && regions? && (region.nil? ||
+    (filter.nil? || filter.eql?("upcoming")) && regions? && (region.nil? ||
       Holidays.available_regions.include?(country.to_sym))
   end
 
@@ -63,10 +63,10 @@ class HolidaysForCountry
     return if valid_params?
     raise(
       CustomError,
-      type: 'holiday',
-      field: 'country',
-      messages: ['Invalid param value'],
-      codes: ['country.invalid_param_value']
+      type: "holiday",
+      field: "country",
+      messages: ["Invalid param value"],
+      codes: ["country.invalid_param_value"]
     )
   end
 end

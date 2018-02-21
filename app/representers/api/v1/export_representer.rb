@@ -20,15 +20,15 @@ module Api
       private
 
       def archive_date
-        @account.archive_file&.created_at if archive_status.eql?('complete')
+        @account.archive_file&.created_at if archive_status.eql?("complete")
       end
 
       def file_id
-        @account.archive_file&.id if archive_status.eql?('complete')
+        @account.archive_file&.id if archive_status.eql?("complete")
       end
 
       def archive_status
-        @archive_status ||= @account.archive_processing ? 'processing' : 'complete'
+        @archive_status ||= @account.archive_processing ? "processing" : "complete"
       end
     end
   end

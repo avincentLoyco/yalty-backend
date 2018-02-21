@@ -3,7 +3,7 @@ FactoryGirl.define do
     employee
     time_off_policy
     effective_at { Time.zone.today - 1.year }
-    occupation_rate { '1.0' }
+    occupation_rate { "1.0" }
 
     after(:build) do |etop|
       reset_policy =
@@ -23,7 +23,7 @@ FactoryGirl.define do
           resource_amount: amount,
           employee: policy.employee,
           time_off_category: policy.time_off_policy.time_off_category,
-          balance_type: 'assignation',
+          balance_type: "assignation",
           effective_at: policy.effective_at + Employee::Balance::ASSIGNATION_OFFSET,
           validity_date: RelatedPolicyPeriod.new(policy).validity_date_for_balance_at(policy.effective_at)
         )
@@ -34,14 +34,14 @@ FactoryGirl.define do
       after(:create) do |policy|
         if policy.policy_assignation_balance.blank?
           previous_balance =
-            policy.employee.employee_balances.where('effective_at < ?', policy.effective_at)
+            policy.employee.employee_balances.where("effective_at < ?", policy.effective_at)
                   .where(time_off_category: policy.time_off_category).order(:effective_at).last
           amount = previous_balance ? -previous_balance.balance : 0
           create(:employee_balance_manual,
             resource_amount: amount,
             employee: policy.employee,
             time_off_category: policy.time_off_policy.time_off_category,
-            balance_type: 'reset',
+            balance_type: "reset",
             effective_at: policy.effective_at + Employee::Balance::RESET_OFFSET
           )
         end

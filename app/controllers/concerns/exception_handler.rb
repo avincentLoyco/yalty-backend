@@ -79,9 +79,9 @@ module ExceptionHandler
 
     error = CustomError.new(
       type: resource,
-      field: 'id',
-      messages: ['Record Not Found'],
-      codes: ['error_record_not_found']
+      field: "id",
+      messages: ["Record Not Found"],
+      codes: ["error_record_not_found"]
     )
 
     render json:
@@ -91,8 +91,8 @@ module ExceptionHandler
   def render_500_error(exception = nil)
     NewRelic::Agent.notice_error(exception) if exception
     error = CustomError.new(
-      messages: ['internal server error'],
-      codes: ['error_internal_server_error']
+      messages: ["internal server error"],
+      codes: ["error_internal_server_error"]
     )
     render json:
       ::Api::V1::ErrorsRepresenter.new(error).complete, status: 500
@@ -100,8 +100,8 @@ module ExceptionHandler
 
   def bad_request_error
     error = CustomError.new(
-      messages: ['Bad request'],
-      codes: ['error_bad_request']
+      messages: ["Bad request"],
+      codes: ["error_bad_request"]
     )
     render json:
       ::Api::V1::ErrorsRepresenter.new(error).complete, status: 400
@@ -147,7 +147,7 @@ module ExceptionHandler
     if RESOURCE_TYPES.include?(type)
       "Resource is locked because #{type} has assigned employees to it"
     else
-      'Resource is locked because employee attributes are not blank'
+      "Resource is locked because employee attributes are not blank"
     end
   end
 
@@ -155,7 +155,7 @@ module ExceptionHandler
     if RESOURCE_TYPES.include?(type)
       "#{type}_employees_present"
     else
-      'employee_attributes_not_blank'
+      "employee_attributes_not_blank"
     end
   end
 end

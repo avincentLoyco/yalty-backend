@@ -12,7 +12,7 @@ RSpec.describe EmployeePolicy::Presence::Balances::Update do
   let(:previous_effective_at)       { }
   let(:previous_order_of_start_day) { }
 
-  context 'when Employee Presence Policy was created' do
+  context "when Employee Presence Policy was created" do
     let(:attributes) {
       {
         id: employee_presence_policy.id,
@@ -24,7 +24,7 @@ RSpec.describe EmployeePolicy::Presence::Balances::Update do
     it { expect(subject).to eq( {} ) }
   end
 
-  context 'when Employee Presence Policy was updated' do
+  context "when Employee Presence Policy was updated" do
     let(:attributes) {
       {
         id: employee_presence_policy.id,
@@ -34,14 +34,14 @@ RSpec.describe EmployeePolicy::Presence::Balances::Update do
       }
     }
 
-    context 'when effective_at and order_of_start day changed' do
+    context "when effective_at and order_of_start day changed" do
       let(:previous_effective_at)       { effective_at - 1.month }
       let(:previous_order_of_start_day) { order_of_start_day + 2 }
 
       it { expect(subject).to eq( {} ) }
     end
 
-    context 'when effective_at and order_of_start day did not changed' do
+    context "when effective_at and order_of_start day did not changed" do
       let(:previous_effective_at)       { effective_at }
       let(:previous_order_of_start_day) { order_of_start_day }
 

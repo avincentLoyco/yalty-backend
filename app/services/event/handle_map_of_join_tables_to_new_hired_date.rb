@@ -24,8 +24,8 @@ class HandleMapOfJoinTablesToNewHiredDate
     return false unless employee && new_hired_date > old_hired_date
     employee
       .events
-      .where('effective_at > ? AND effective_at <= ?', old_hired_date, new_hired_date)
-      .pluck(:event_type).include?('contract_end')
+      .where("effective_at > ? AND effective_at <= ?", old_hired_date, new_hired_date)
+      .pluck(:event_type).include?("contract_end")
   end
 
   def updated_join_tables
@@ -137,7 +137,7 @@ class HandleMapOfJoinTablesToNewHiredDate
   end
 
   def employee_time_off_policy?
-    join_table_class.eql?('employee_time_off_policies')
+    join_table_class.eql?("employee_time_off_policies")
   end
 
   def balance_at_new_hired(etop)
@@ -156,10 +156,10 @@ class HandleMapOfJoinTablesToNewHiredDate
   def assign_attributes_to_assignation(etop, assignation_balance)
     assignation_balance.tap do |balance|
       validity_date =
-        RelatedPolicyPeriod.new(etop).validity_date_for_balance_at(new_hired_date, 'assignation')
+        RelatedPolicyPeriod.new(etop).validity_date_for_balance_at(new_hired_date, "assignation")
       balance.assign_attributes(
         effective_at: new_hired_date + Employee::Balance::ASSIGNATION_OFFSET,
-        balance_type: 'assignation',
+        balance_type: "assignation",
         validity_date: validity_date,
         resource_amount: 0
       )

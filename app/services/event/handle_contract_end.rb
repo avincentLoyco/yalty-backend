@@ -22,14 +22,14 @@ class HandleContractEnd
 
   def remove_join_tables
     join_tables = Employee::RESOURCE_JOIN_TABLES.map do |table_name|
-      @employee.send(table_name).where('effective_at > ?', @contract_end_date)
+      @employee.send(table_name).where("effective_at > ?", @contract_end_date)
     end
     return join_tables.map(&:delete_all) if @next_hire_date.nil?
     join_tables.map do |table|
       if @contract_end_date.eql?(@old_contract_end)
-        table.where('effective_at < ?', @next_hire_date).not_reset.delete_all
+        table.where("effective_at < ?", @next_hire_date).not_reset.delete_all
       else
-        table.where('effective_at < ?', @next_hire_date).delete_all
+        table.where("effective_at < ?", @next_hire_date).delete_all
       end
     end
   end
@@ -42,18 +42,18 @@ class HandleContractEnd
   end
 
   def time_offs
-    time_offs = @employee.time_offs.where('start_time > ?', @contract_end_date.end_of_day)
+    time_offs = @employee.time_offs.where("start_time > ?", @contract_end_date.end_of_day)
     return time_offs unless @next_hire_date.present?
-    time_offs.where('start_time < ?', @next_hire_date)
+    time_offs.where("start_time < ?", @next_hire_date)
   end
 
   def remove_balances
     balances_after =
       @employee
       .employee_balances
-      .not_time_off.where('effective_at > ?', @contract_end_date + 1.day + 2.seconds)
+      .not_time_off.where("effective_at > ?", @contract_end_date + 1.day + 2.seconds)
     return balances_after.delete_all unless @next_hire_date.present?
-    balances_after.where('effective_at < ?', @next_hire_date).delete_all
+    balances_after.where("effective_at < ?", @next_hire_date).delete_all
   end
 
   def assign_reset_resources
@@ -75,10 +75,10 @@ class HandleContractEnd
   end
 
   def move_time_offs
-    @employee.time_offs.where(''"
+    @employee.time_offs.where("""
       start_time <= '#{@contract_end_date.end_of_day}'::timestamp AND
       end_time > '#{@contract_end_date + 1.day}'::timestamp
-    "'').map do |time_off|
+    """).map do |time_off|
       time_off.update!(end_time: @contract_end_date + 1.day)
       validity_date = time_off.employee_balance.validity_date
       time_off.employee_balance.update!(
@@ -90,7 +90,7 @@ class HandleContractEnd
   def find_next_hire_date(employee)
     employee
       .events
-      .hired.where('effective_at > ?', @contract_end_date)
+      .hired.where("effective_at > ?", @contract_end_date)
       .order(:effective_at).first.try(:effective_at)
   end
 end

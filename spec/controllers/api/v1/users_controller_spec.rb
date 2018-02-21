@@ -1,10 +1,10 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe API::V1::UsersController, type: :controller do
-  include_context 'shared_context_headers'
+  include_context "shared_context_headers"
 
-  let!(:user) { create(:account_user, account: account, role: 'account_owner') }
-  let(:redirect_uri) { 'http://yalty.test/setup'}
+  let!(:user) { create(:account_user, account: account, role: "account_owner") }
+  let(:redirect_uri) { "http://yalty.test/setup"}
   let(:client) { FactoryGirl.create(:oauth_client, redirect_uri: redirect_uri) }
   let(:employee) { user.employee }
   let(:employee_id) { employee.id }
@@ -12,16 +12,16 @@ RSpec.describe API::V1::UsersController, type: :controller do
 
 
   before(:each) do
-    ENV['YALTY_OAUTH_ID'] = client.uid
-    ENV['YALTY_OAUTH_SECRET'] = client.secret
+    ENV["YALTY_OAUTH_ID"] = client.uid
+    ENV["YALTY_OAUTH_SECRET"] = client.secret
   end
 
-  describe 'POST #create' do
-    let(:email) { 'test@example.com' }
-    let(:locale) { 'en' }
-    let(:password) { '12345678' }
+  describe "POST #create" do
+    let(:email) { "test@example.com" }
+    let(:locale) { "en" }
+    let(:password) { "12345678" }
     let(:balance_in_hours) { false }
-    let(:role) { 'account_administrator' }
+    let(:role) { "account_administrator" }
     let(:employee) { create(:employee, account: account) }
     let(:params) do
       {
@@ -36,27 +36,27 @@ RSpec.describe API::V1::UsersController, type: :controller do
 
     subject { post :create, params }
 
-    context 'with valid data' do
+    context "with valid data" do
       it { expect { subject }.to change { Account::User.count }.by(1) }
       it { is_expected.to have_http_status(201) }
 
-      context 'response body' do
+      context "response body" do
         before { subject }
 
         it { expect_json_keys(:email, :role, :employee) }
       end
 
-      it 'should send email with generated login url' do
+      it "should send email with generated login url" do
         expect { subject }.to change(ActionMailer::Base.deliveries, :count)
 
         expect(ActionMailer::Base.deliveries.last.body).to match(/http.+code=.+/i)
       end
 
-      context 'assign employee' do
+      context "assign employee" do
         it { expect { subject }.to change { employee.reload.account_user_id } }
       end
 
-      context 'without employee id' do
+      context "without employee id" do
         before do
           params.delete(:employee)
         end
@@ -66,7 +66,7 @@ RSpec.describe API::V1::UsersController, type: :controller do
         it { expect { subject }.to_not change { employee.reload.account_user_id } }
       end
 
-      context 'without optional params' do
+      context "without optional params" do
         before do
           params.delete(:role)
         end
@@ -75,14 +75,14 @@ RSpec.describe API::V1::UsersController, type: :controller do
         it { expect { subject }.to change { Account::User.count }.by(1) }
       end
 
-      context 'with null employee' do
+      context "with null employee" do
         before { params[:employee] = nil }
 
         it { is_expected.to have_http_status(422) }
         it { expect { subject }.to_not change { Account::User.count } }
       end
 
-      context 'without password' do
+      context "without password" do
         before do
           params.delete(:password)
         end
@@ -90,33 +90,33 @@ RSpec.describe API::V1::UsersController, type: :controller do
         it { expect { subject }.to change { Account::User.count }.by(1) }
         it { is_expected.to have_http_status(201) }
 
-        it 'expect to add generated login url to email' do
+        it "expect to add generated login url to email" do
           expect(subject).to have_http_status(:created)
           expect(ActionMailer::Base.deliveries.last.body).to match(/http.+code=.+/i)
         end
       end
 
-      context 'should send email notification' do
+      context "should send email notification" do
         it { expect { subject }.to change { ActionMailer::Base.deliveries.count }.by(1) }
       end
     end
 
-    context 'with invalid data' do
-      context 'without email' do
-        let!(:email) { '' }
+    context "with invalid data" do
+      context "without email" do
+        let!(:email) { "" }
 
         it { expect { subject }.to_not change { Account::User.count } }
         it { is_expected.to have_http_status(422) }
       end
 
-      context 'with invalid employee id' do
+      context "with invalid employee id" do
         let(:employee_id) { 1234 }
 
         it { expect { subject }.to_not change {  Account::User.count } }
         it { is_expected.to have_http_status(404) }
       end
 
-      context 'with empty employee id' do
+      context "with empty employee id" do
         let(:employee_id) { nil }
 
         it { expect { subject }.to_not change {  Account::User.count } }
@@ -125,19 +125,19 @@ RSpec.describe API::V1::UsersController, type: :controller do
     end
   end
 
-  describe 'GET #index' do
+  describe "GET #index" do
     let!(:users) { create_list(:account_user, 3, account: account) }
 
     subject { get :index }
 
-    context 'user list' do
+    context "user list" do
       before { subject }
 
       it { expect_json_sizes(users.count + 1) }
       it { is_expected.to have_http_status(200) }
     end
 
-    it 'should return the users for the current account' do
+    it "should return the users for the current account" do
       subject
 
       users.each do |user|
@@ -145,7 +145,7 @@ RSpec.describe API::V1::UsersController, type: :controller do
       end
     end
 
-    it 'should not be visible in context of other account' do
+    it "should not be visible in context of other account" do
       Account.current = create(:account)
       subject
 
@@ -154,7 +154,7 @@ RSpec.describe API::V1::UsersController, type: :controller do
       end
     end
 
-    it 'should not include yalty user' do
+    it "should not include yalty user" do
       user = create(:account_user, :with_yalty_role, account: account)
       subject
 
@@ -162,13 +162,13 @@ RSpec.describe API::V1::UsersController, type: :controller do
     end
   end
 
-  describe 'GET #show' do
+  describe "GET #show" do
     let!(:users) { create_list(:account_user, 3, account: account) }
     let(:params) { { id: user.id } }
 
     subject { get :show, params }
 
-    context 'response body' do
+    context "response body" do
       before { subject }
 
       it { is_expected.to have_http_status(200) }
@@ -180,36 +180,36 @@ RSpec.describe API::V1::UsersController, type: :controller do
       end
       it do
         expect_json(
-          email: user.email, id: user.id, type: 'account_user', locale: nil, balance_in_hours: false
+          email: user.email, id: user.id, type: "account_user", locale: nil, balance_in_hours: false
         )
       end
 
-      context 'when locale is set' do
-        let(:user) { create(:account_user, account: account, locale: 'en') }
+      context "when locale is set" do
+        let(:user) { create(:account_user, account: account, locale: "en") }
 
-        it { expect_json(locale: 'en') }
+        it { expect_json(locale: "en") }
       end
 
-      context 'when balance_in_hours is true' do
+      context "when balance_in_hours is true" do
         let(:user) { create(:account_user, account: account, balance_in_hours: true) }
 
         it { expect_json(balance_in_hours: true) }
       end
 
-      context 'when is an employee' do
+      context "when is an employee" do
         let(:user) { create(:account_user, account: account) }
 
-        it { expect_json_keys('employee', [:id, :type]) }
+        it { expect_json_keys("employee", [:id, :type]) }
       end
     end
   end
 
-  describe 'PUT #update' do
+  describe "PUT #update" do
     let!(:users) { create_list(:account_user, 3, account: account) }
-    let(:email) { 'test123@example.com' }
+    let(:email) { "test123@example.com" }
     let(:role) { user.role }
     let(:balance_in_hours) { true }
-    let(:locale) { 'en' }
+    let(:locale) { "en" }
     let(:params) do
       {
         id: user.id,
@@ -223,14 +223,14 @@ RSpec.describe API::V1::UsersController, type: :controller do
 
     subject { put :update, params }
 
-    context 'with valid data' do
+    context "with valid data" do
       it { expect { subject }.to_not change { Account::User.count } }
       it { is_expected.to have_http_status(204) }
       it { expect { subject }.to change { user.reload.email } }
       it { expect { subject }.to change { user.reload.locale } }
       it { expect { subject }.to change { user.reload.balance_in_hours } }
 
-      context 'assign another employee' do
+      context "assign another employee" do
         before do
           params[:employee] = {
             id: unassiagned_employee.id
@@ -241,10 +241,10 @@ RSpec.describe API::V1::UsersController, type: :controller do
         it { expect { subject }.to change { unassiagned_employee.reload.account_user_id } }
       end
 
-      context 'account owner can change role when he is not last' do
-        before { users.last.update(role: 'account_owner') }
+      context "account owner can change role when he is not last" do
+        before { users.last.update(role: "account_owner") }
         let(:user_id) { user.id }
-        let(:role) { 'user' }
+        let(:role) { "user" }
 
         it { is_expected.to have_http_status(204) }
         it { expect { subject }.to change { user.reload.role } }
@@ -259,15 +259,15 @@ RSpec.describe API::V1::UsersController, type: :controller do
           it { is_expected.to have_http_status(422) }
           it { expect { subject }.not_to change { user.reload.role } }
 
-          context 'response' do
+          context "response" do
             before { subject }
 
-            it { expect_json(regex('last account owner cannot change role')) }
+            it { expect_json(regex("last account owner cannot change role")) }
           end
         end
       end
 
-      context 'that remove employee' do
+      context "that remove employee" do
         before do
           params[:employee] = nil
         end
@@ -276,55 +276,55 @@ RSpec.describe API::V1::UsersController, type: :controller do
         it { expect { subject }.to_not change { employee.reload.account_user_id } }
       end
 
-      context 'with password and existing password' do
+      context "with password and existing password" do
         before do
           params[:password_params] =  {
-            old_password: '1234567890',
-            password: 'newlongpassword',
-            password_confirmation: 'newlongpassword',
+            old_password: "1234567890",
+            password: "newlongpassword",
+            password_confirmation: "newlongpassword",
           }
         end
 
-        let(:user) { create(:account_user, account: account, password: '1234567890') }
+        let(:user) { create(:account_user, account: account, password: "1234567890") }
 
         it { is_expected.to have_http_status(204) }
         it { expect { subject }.to change { user.reload.password_digest } }
       end
 
-      context 'with password without existing password' do
+      context "with password without existing password" do
         before do
           params[:password_params] =  {
-            password: 'newlongpassword',
-            password_confirmation: 'newlongpassword',
+            password: "newlongpassword",
+            password_confirmation: "newlongpassword",
           }
         end
 
-        let(:user) { create(:account_user, account: account, password: '1234567890') }
+        let(:user) { create(:account_user, account: account, password: "1234567890") }
 
         it { is_expected.to have_http_status(204) }
         it { expect { subject }.to change { user.reload.password_digest } }
       end
 
-      context 'with role' do
-        context 'when administrator' do
-          let(:user) { create(:account_user, account: account, role: 'account_administrator') }
+      context "with role" do
+        context "when administrator" do
+          let(:user) { create(:account_user, account: account, role: "account_administrator") }
           let(:other_user) { users.last }
 
           before do
-            other_user.update!(role: 'user')
+            other_user.update!(role: "user")
             params[:id] = other_user.id
-            params[:role] = 'account_administrator'
+            params[:role] = "account_administrator"
           end
 
           it { is_expected.to have_http_status(204) }
           it { expect { subject }.to change { other_user.reload.role } }
         end
 
-        xcontext 'when user' do
-          let(:user) { create(:account_user, account: account, role: 'user') }
+        xcontext "when user" do
+          let(:user) { create(:account_user, account: account, role: "user") }
 
           before do
-            params[:role] = 'account_administrator'
+            params[:role] = "account_administrator"
           end
 
           it { is_expected.to have_http_status(403) }
@@ -333,31 +333,31 @@ RSpec.describe API::V1::UsersController, type: :controller do
       end
     end
 
-    context 'with yalty user' do
-      let(:user) { create(:account_user, :with_yalty_role, account: account, password: '1234567890') }
+    context "with yalty user" do
+      let(:user) { create(:account_user, :with_yalty_role, account: account, password: "1234567890") }
       let(:email) { user.email }
-      let(:role) { 'yalty' }
+      let(:role) { "yalty" }
       let(:locale) { nil }
 
       before do
         params.delete(:employee)
       end
 
-      describe 'when email changes' do
-        let(:email) { 'test123@example.com' }
+      describe "when email changes" do
+        let(:email) { "test123@example.com" }
 
         it { is_expected.to have_http_status(422) }
         it { expect { subject }.to_not change { user.reload.attributes } }
       end
 
-      describe 'when role changes' do
-        let(:role) { 'user' }
+      describe "when role changes" do
+        let(:role) { "user" }
 
         it { is_expected.to have_http_status(422) }
         it { expect { subject }.to_not change { user.reload.attributes } }
       end
 
-      describe 'when employee is assigned' do
+      describe "when employee is assigned" do
         before do
           params[:employee] = {
             id: unassiagned_employee.id
@@ -369,12 +369,12 @@ RSpec.describe API::V1::UsersController, type: :controller do
         it { expect { subject }.to_not change { unassiagned_employee.reload.account_user_id } }
       end
 
-      describe 'when password changes' do
+      describe "when password changes" do
         before do
           params[:password_params] =  {
-            old_password: '1234567890',
-            password: 'newlongpassword',
-            password_confirmation: 'newlongpassword',
+            old_password: "1234567890",
+            password: "newlongpassword",
+            password_confirmation: "newlongpassword",
           }
         end
 
@@ -382,8 +382,8 @@ RSpec.describe API::V1::UsersController, type: :controller do
         it { expect { subject }.to_not change { user.reload.attributes } }
       end
 
-      describe 'when authorized attributes change' do
-        let(:locale) { 'en' }
+      describe "when authorized attributes change" do
+        let(:locale) { "en" }
 
         it { is_expected.to have_http_status(204) }
         it { expect { subject }.to change { user.reload.locale } }
@@ -391,23 +391,23 @@ RSpec.describe API::V1::UsersController, type: :controller do
     end
   end
 
-  context 'DELETE #destroy' do
+  context "DELETE #destroy" do
     subject { delete :destroy, id: user.id }
     let!(:users) { create_list(:account_user, 3, account: account) }
 
-    context 'cannot delete last account owner' do
+    context "cannot delete last account owner" do
       it { is_expected.to have_http_status(403) }
       it { expect { subject }.to_not change { Account::User.count } }
 
-      context 'response' do
+      context "response" do
         before { subject }
 
-        it { expect_json(regex('last account owner cannot be deleted')) }
+        it { expect_json(regex("last account owner cannot be deleted")) }
       end
     end
 
-    context 'can delete account owner when he is not last' do
-      before { users.last.update(role: 'account_owner') }
+    context "can delete account owner when he is not last" do
+      before { users.last.update(role: "account_owner") }
       it { is_expected.to have_http_status(204) }
       it { expect { subject }.to change { Account::User.count } }
     end

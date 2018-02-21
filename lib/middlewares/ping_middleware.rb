@@ -4,8 +4,8 @@ class PingMiddleware
   end
 
   def call(env)
-    if env['PATH_INFO'] == '/ping'
-      [200, { 'Content-Type' => 'text/plain' }, ['PONG']]
+    if env["PATH_INFO"] == "/ping"
+      [200, { "Content-Type" => "text/plain" }, ["PONG"]]
     else
       @app.call(env)
     end

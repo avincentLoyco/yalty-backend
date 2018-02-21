@@ -1,20 +1,20 @@
 #!/usr/bin/env ruby
-require 'travis/pro'
+require "travis/pro"
 
 #
 # Configure
 #
 
-if ENV['GITHUB_ACCESS_TOKEN'].nil?
-  puts 'GITHUB_ACCESS_TOKEN is not set'
+if ENV["GITHUB_ACCESS_TOKEN"].nil?
+  puts "GITHUB_ACCESS_TOKEN is not set"
   exit 1
 end
 
 begin
-  repository = ENV['TRAVIS_REPO_SLUG']
-  branch = ENV['TRAVIS_BRANCH']
+  repository = ENV["TRAVIS_REPO_SLUG"]
+  branch = ENV["TRAVIS_BRANCH"]
 
-  Travis::Pro.github_auth(ENV['GITHUB_ACCESS_TOKEN'])
+  Travis::Pro.github_auth(ENV["GITHUB_ACCESS_TOKEN"])
 rescue Travis::Client::NotFound
   puts "Repository (#{repository}) or branch (#{branch}) not found"
   exit 0
@@ -24,9 +24,9 @@ end
 # Restart build for same branch on e2e-testing repository
 #
 
-if ENV['TRAVIS_PULL_REQUEST'] == 'false' && ENV['DISABLE_REBUILD'] != 'true'
+if ENV["TRAVIS_PULL_REQUEST"] == "false" && ENV["DISABLE_REBUILD"] != "true"
   begin
-    e2e = Travis::Pro::Repository.find('yalty/yalty-e2e-testing')
+    e2e = Travis::Pro::Repository.find("yalty/yalty-e2e-testing")
 
     build = e2e.branch(branch)
     if build.restartable?

@@ -20,7 +20,7 @@ module API
         return [] if attributes[:time_entries].nil?
         attributes[:time_entries].map do |entry|
           next unless entry.is_a?(Hash)
-          entry.except('type')
+          entry.except("type")
         end
       end
 
@@ -41,9 +41,9 @@ module API
         raise(
           CustomError,
           type: controller_name,
-          field: 'date',
-          messages: ['Date must be valid date'],
-          codes: ['registered_working_time.must_be_valid_date']
+          field: "date",
+          messages: ["Date must be valid date"],
+          codes: ["registered_working_time.must_be_valid_date"]
         )
       end
     end

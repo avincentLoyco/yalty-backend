@@ -1,6 +1,6 @@
 module AuthHelper
   def basic_http_login(user, pw)
-    request.env['HTTP_AUTHORIZATION'] = ActionController::HttpAuthentication::Basic.encode_credentials(user,pw)
+    request.env["HTTP_AUTHORIZATION"] = ActionController::HttpAuthentication::Basic.encode_credentials(user,pw)
   end
 end
 
@@ -12,6 +12,6 @@ module AuthRequestHelper
   #
   def basic_http_login(user, pw)
     @env ||= {}
-    @env['HTTP_AUTHORIZATION'] = ActionController::HttpAuthentication::Basic.encode_credentials(user,pw)
+    @env["HTTP_AUTHORIZATION"] = ActionController::HttpAuthentication::Basic.encode_credentials(user,pw)
   end
 end

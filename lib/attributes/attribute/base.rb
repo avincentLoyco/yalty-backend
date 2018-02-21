@@ -11,7 +11,7 @@ module Attribute
     end
 
     def self.attribute_type
-      name.gsub(/^.+::/, '')
+      name.gsub(/^.+::/, "")
     end
 
     def attribute_type
@@ -24,7 +24,7 @@ module Attribute
 
     def validate_presence(additional_validation)
       except_type = attributes.except(:attribute_type, *optional_attributes)
-      return if additional_validation.try(:[], 'allow_nil').eql?(true) &&
+      return if additional_validation.try(:[], "allow_nil").eql?(true) &&
           except_type.values.compact.empty?
       return unless except_type.values.size != except_type.values.compact.size
       except_type.each do |k, v|
@@ -35,7 +35,7 @@ module Attribute
     def validate_inclusion(_additional_validation)
       allowed_values.map do |field, allowed|
         next if self[field].blank? || allowed.include?(self[field])
-        errors.add(field, 'value not allowed')
+        errors.add(field, "value not allowed")
       end
     end
 
@@ -43,14 +43,14 @@ module Attribute
       except_type = attributes.except(:attribute_type)
       return if except_type.values.first.blank? ||
           ISO3166::Country.codes.include?(except_type.values.first)
-      errors.add('nationality', 'country code invalid')
+      errors.add("nationality", "country code invalid")
     end
 
     def validate_state_code(_additional_validation)
       except_type = attributes.except(:attribute_type)
       return if except_type.values.first.blank? ||
           ISO3166::Country.new(:ch).states.keys.include?(except_type.values.first)
-      errors.add('state', 'state code invalid')
+      errors.add("state", "state code invalid")
     end
 
     def optional_attributes

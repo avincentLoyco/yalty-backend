@@ -12,7 +12,7 @@ module DoorkeeperAuthorization
   end
 
   def client
-    @client ||= Doorkeeper::OAuth::Client.find(ENV['YALTY_OAUTH_ID'])
+    @client ||= Doorkeeper::OAuth::Client.find(ENV["YALTY_OAUTH_ID"])
   end
 
   def authorization
@@ -27,7 +27,7 @@ module DoorkeeperAuthorization
     @pre_auth ||= Doorkeeper::OAuth::PreAuthorization.new(
       Doorkeeper.configuration,
       client,
-      response_type: 'code',
+      response_type: "code",
       redirect_uri: client.redirect_uri,
       scope: client.scopes.to_s
     )

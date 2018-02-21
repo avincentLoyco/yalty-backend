@@ -1,4 +1,4 @@
-require 'pathname'
+require "pathname"
 
 class FileStorageUploadDownload
   class FileStreamer < ::File
@@ -16,13 +16,13 @@ class FileStorageUploadDownload
     def call(env)
       request = Rack::Request.new(env)
       params = request.params.select { |key, _| KEYS_WHITELIST.include?(key) }
-      token_data = manage_token(params['token'])
+      token_data = manage_token(params["token"])
 
       raise InvalidData if token_data.empty? || params.empty?
 
       if request.post? then upload_file(token_data, params)
-      elsif request.get?  then download_file(token_data, params, get_file_id(env['PATH_INFO']))
-      else [405, { 'Content-Type' => 'text/plain' }, ['Method Not Allowed']]
+      elsif request.get?  then download_file(token_data, params, get_file_id(env["PATH_INFO"]))
+      else [405, { "Content-Type" => "text/plain" }, ["Method Not Allowed"]]
       end
 
     rescue InvalidData
@@ -31,8 +31,8 @@ class FileStorageUploadDownload
 
     def file_upload_root_path
       @file_upload_root_path ||= begin
-        path = Pathname.new(ENV['FILE_STORAGE_UPLOAD_PATH'] || 'file')
-        path = path.expand_path(File.join(__dir__, '../..')) unless path.absolute?
+        path = Pathname.new(ENV["FILE_STORAGE_UPLOAD_PATH"] || "file")
+        path = path.expand_path(File.join(__dir__, "../..")) unless path.absolute?
         path
       end
     end
@@ -42,42 +42,42 @@ class FileStorageUploadDownload
     def upload_file(token_data, params)
       raise InvalidData if invalid_params_for_upload?(token_data, params)
       IO.copy_stream(
-        params['attachment'][:tempfile],
-        path_for_upload(token_data['file_id'], params['attachment'][:filename].tr(' ', '_'))
+        params["attachment"][:tempfile],
+        path_for_upload(token_data["file_id"], params["attachment"][:filename].tr(" ", "_"))
       )
-      response = { message: 'File uploaded', file_id: token_data['file_id'], type: 'file' }
-      [200, { 'Content-Type' => 'application/json' }, [response.to_json]]
+      response = { message: "File uploaded", file_id: token_data["file_id"], type: "file" }
+      [200, { "Content-Type" => "application/json" }, [response.to_json]]
     end
 
     def download_file(token_data, params, file_id)
-      params['disposition'] ||= 'attachment'
+      params["disposition"] ||= "attachment"
       raise InvalidData if invalid_params_for_download?(token_data, params, file_id)
-      path = path_for_download(file_id, token_data['version'])
+      path = path_for_download(file_id, token_data["version"])
       file = FileStreamer.open(path)
-      filename = token_data['file_name']
+      filename = token_data["file_name"]
       raise InvalidData if sha_checksum_incorrect?(file, token_data)
       [
         200,
         {
-          'Content-Type' => token_data['file_type'],
-          'Content-Disposition' => "#{params['disposition']}; filename=\"#{filename}\""
+          "Content-Type" => token_data["file_type"],
+          "Content-Disposition" => "#{params["disposition"]}; filename=\"#{filename}\""
         },
         file
       ]
     end
 
     def invalid_params_for_upload?(token_data, params)
-      token_data['action_type'] != 'upload' ||
-        params['action_type'] != token_data['action_type'] ||
-        !params['attachment'].is_a?(Hash) ||
-        params['attachment'].is_a?(Hash) && !params['attachment'][:tempfile].is_a?(Tempfile)
+      token_data["action_type"] != "upload" ||
+        params["action_type"] != token_data["action_type"] ||
+        !params["attachment"].is_a?(Hash) ||
+        params["attachment"].is_a?(Hash) && !params["attachment"][:tempfile].is_a?(Tempfile)
     end
 
     def invalid_params_for_download?(token_data, params, file_id)
-      token_data['action_type'] != 'download' ||
-        token_data['file_id'] != file_id ||
-        params['action_type'] != token_data['action_type'] ||
-        !%w(inline attachment).include?(params['disposition'])
+      token_data["action_type"] != "download" ||
+        token_data["file_id"] != file_id ||
+        params["action_type"] != token_data["action_type"] ||
+        !%w(inline attachment).include?(params["disposition"])
     end
 
     def get_file_id(path)
@@ -89,10 +89,10 @@ class FileStorageUploadDownload
 
       token_data, counter = redis.multi do
         redis.hgetall(token)
-        redis.hincrby(token, 'counter', -1)
+        redis.hincrby(token, "counter", -1)
       end
 
-      if token_data.empty? || token_data['duration'].eql?('shortterm') && counter&.negative?
+      if token_data.empty? || token_data["duration"].eql?("shortterm") && counter&.negative?
         redis.del(token)
         token_data = {}
       end
@@ -101,24 +101,24 @@ class FileStorageUploadDownload
     end
 
     def path_for_upload(file_id, filename)
-      file_storage_path = File.join(file_upload_root_path, file_id, 'original')
+      file_storage_path = File.join(file_upload_root_path, file_id, "original")
       FileUtils.mkdir_p(file_storage_path)
       File.join(file_storage_path, filename)
     end
 
     def path_for_download(file_id, version)
-      file_storage_path = File.join(file_upload_root_path, file_id, version, '*')
+      file_storage_path = File.join(file_upload_root_path, file_id, version, "*")
       files_in_directory = Dir.glob(file_storage_path)
       raise InvalidData if files_in_directory.size != 1
       files_in_directory.first
     end
 
     def sha_checksum_incorrect?(file, token_data)
-      Digest::SHA256.file(file).hexdigest != token_data['file_sha']
+      Digest::SHA256.file(file).hexdigest != token_data["file_sha"]
     end
 
     def error_response
-      [403, { 'Content-Type' => 'text/plain' }, ['Something went wrong']]
+      [403, { "Content-Type" => "text/plain" }, ["Something went wrong"]]
     end
   end
 end

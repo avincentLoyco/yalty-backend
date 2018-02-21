@@ -1,7 +1,7 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe Adjustments::Calculate, type: :service do
-  include_context 'shared_context_timecop_helper'
+  include_context "shared_context_timecop_helper"
 
   before do
     allow(Employee::Event).to receive(:find) { event }
@@ -35,20 +35,20 @@ RSpec.describe Adjustments::Calculate, type: :service do
   subject { described_class.call(event.id) }
 
 
-  context 'hired' do
+  context "hired" do
     before do
       employee.events.delete_all
       event.employee_time_off_policy = employee_time_off_policy
     end
-    let(:event_type) { 'hired' }
+    let(:event_type) { "hired" }
 
     it { expect(subject).to eq(9600) }
   end
 
-  context 'work_contract' do
+  context "work_contract" do
     before do
       employee.events.delete_all
-      hired_event = create(:employee_event, event_type: 'hired', employee: employee,
+      hired_event = create(:employee_event, event_type: "hired", employee: employee,
         effective_at: Date.today)
       hired_event.employee_time_off_policy = create(:employee_time_off_policy, employee: employee,
         effective_at: Date.today, time_off_policy: time_off_policy)
@@ -58,16 +58,16 @@ RSpec.describe Adjustments::Calculate, type: :service do
       employee.events << event
     end
 
-    let(:event_type) { 'work_contract' }
+    let(:event_type) { "work_contract" }
 
     it { expect(subject).to eq(9600 * 2) }
   end
 
-  context 'contract_end' do
+  context "contract_end" do
     before do
       event.employee_time_off_policy = employee_time_off_policy
     end
-    let(:event_type) { 'contract_end' }
+    let(:event_type) { "contract_end" }
 
     it { expect(subject).to eq(9600 * 3) }
   end

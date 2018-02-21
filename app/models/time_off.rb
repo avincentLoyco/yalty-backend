@@ -3,11 +3,11 @@ class TimeOff < ActiveRecord::Base
 
   belongs_to :employee
   belongs_to :time_off_category
-  has_one :employee_balance, class_name: 'Employee::Balance'
+  has_one :employee_balance, class_name: "Employee::Balance"
 
   validates :employee_id, :time_off_category_id, :start_time, :end_time, presence: true
   validate :end_time_after_start_time
-  validate :time_off_policy_presence, if: 'employee.present?'
+  validate :time_off_policy_presence, if: "employee.present?"
   validates :employee_balance, presence: true, on: :update
   validate :does_not_overlap_with_other_users_time_offs, if: [:employee, :time_off_category_id]
   validate :does_not_overlap_with_registered_working_times, if: [:employee]
@@ -21,11 +21,11 @@ class TimeOff < ActiveRecord::Base
   end)
 
   scope(:vacations, lambda do
-    joins(:time_off_category).where(time_off_categories: { name: 'vacation' })
+    joins(:time_off_category).where(time_off_categories: { name: "vacation" })
   end)
 
   scope(:not_vacations, lambda do
-    joins(:time_off_category).where.not(time_off_categories: { name: 'vacation' })
+    joins(:time_off_category).where.not(time_off_categories: { name: "vacation" })
   end)
 
   scope(:for_employee_in_period, lambda do |employee_id, start_date, end_date|
@@ -40,7 +40,7 @@ class TimeOff < ActiveRecord::Base
   end)
 
   scope(:for_employee_at_date, lambda do |employee_id, date|
-    for_employee(employee_id).where('? between start_time::date AND end_time::date', date)
+    for_employee(employee_id).where("? between start_time::date AND end_time::date", date)
   end)
 
   scope :for_employee_in_category, lambda { |employee_id, time_off_category_id|
@@ -54,11 +54,11 @@ class TimeOff < ActiveRecord::Base
   end
 
   def start_hour
-    TimeEntry.hour_as_time(start_time.strftime('%H:%M'))
+    TimeEntry.hour_as_time(start_time.strftime("%H:%M"))
   end
 
   def end_hour
-    TimeEntry.hour_as_time(end_time.strftime('%H:%M'))
+    TimeEntry.hour_as_time(end_time.strftime("%H:%M"))
   end
 
   def employee_time_off_policy
@@ -78,8 +78,8 @@ class TimeOff < ActiveRecord::Base
   end
 
   def overlap_check_for_one_day_time_off(registered_working_times)
-    day_start_time = TimeEntry.hour_as_time(start_time.strftime('%H:%M:%S'))
-    day_end_time = TimeEntry.hour_as_time(end_time.strftime('%H:%M:%S'))
+    day_start_time = TimeEntry.hour_as_time(start_time.strftime("%H:%M:%S"))
+    day_end_time = TimeEntry.hour_as_time(end_time.strftime("%H:%M:%S"))
 
     registered_working_times.each do |registered_working_time|
       overlaps_with_registered_working_time?(
@@ -108,18 +108,18 @@ class TimeOff < ActiveRecord::Base
 
   def end_time_after_start_time
     return unless start_time && end_time
-    errors.add(:end_time, 'Must be after start time') if start_time > end_time
+    errors.add(:end_time, "Must be after start time") if start_time > end_time
   end
 
   def time_off_policy_presence
     active_policy = employee.active_policy_in_category_at_date(time_off_category_id, start_time)
     return unless active_policy.blank? || active_policy.time_off_policy.reset?
-    errors.add(:employee, 'Time off policy in category required')
+    errors.add(:employee, "Time off policy in category required")
   end
 
   def first_day_overlaps?(registered_working_time)
-    first_day_start_time = TimeEntry.hour_as_time(start_time.strftime('%H:%M:%S'))
-    first_day_end_time = TimeEntry.hour_as_time('24:00:00')
+    first_day_start_time = TimeEntry.hour_as_time(start_time.strftime("%H:%M:%S"))
+    first_day_end_time = TimeEntry.hour_as_time("24:00:00")
     overlaps_with_registered_working_time?(
       registered_working_time,
       first_day_start_time,
@@ -128,8 +128,8 @@ class TimeOff < ActiveRecord::Base
   end
 
   def last_day_overlaps?(registered_working_time)
-    last_day_start_time = TimeEntry.hour_as_time('00:00:00')
-    last_day_end_time = TimeEntry.hour_as_time(end_time.strftime('%H:%M:%S'))
+    last_day_start_time = TimeEntry.hour_as_time("00:00:00")
+    last_day_end_time = TimeEntry.hour_as_time(end_time.strftime("%H:%M:%S"))
     overlaps_with_registered_working_time?(
       registered_working_time,
       last_day_start_time,
@@ -143,8 +143,8 @@ class TimeOff < ActiveRecord::Base
       TimeEntry.overlaps?(
         to_start_time,
         to_end_time,
-        TimeEntry.hour_as_time(time_entry['start_time']),
-        TimeEntry.hour_as_time(time_entry['end_time'])
+        TimeEntry.hour_as_time(time_entry["start_time"]),
+        TimeEntry.hour_as_time(time_entry["end_time"])
       )
       add_overlaping_with_working_time_errors(registered_working_time)
       break
@@ -172,13 +172,13 @@ class TimeOff < ActiveRecord::Base
         start_time, end_time, start_time, end_time, start_time, end_time
       )
     return if (employee_time_offs_in_period - [self]).blank?
-    errors.add(:start_time, 'Time off in period already exist')
-    errors.add(:end_time, 'Time off in period already exist')
+    errors.add(:start_time, "Time off in period already exist")
+    errors.add(:end_time, "Time off in period already exist")
   end
 
   def start_and_end_time_in_employee_periods
     return if employee.contract_periods_include?(end_time, start_time)
-    errors.add(:end_time, 'can\'t be set outside of employee contract period')
-    errors.add(:start_time, 'can\'t be set outside of employee contract period')
+    errors.add(:end_time, "can't be set outside of employee contract period")
+    errors.add(:start_time, "can't be set outside of employee contract period")
   end
 end

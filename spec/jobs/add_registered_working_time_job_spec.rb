@@ -1,7 +1,7 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe AddRegisteredWorkingTimes do
-  include_context 'shared_context_timecop_helper'
+  include_context "shared_context_timecop_helper"
 
   subject { described_class.perform_now }
 
@@ -26,26 +26,26 @@ RSpec.describe AddRegisteredWorkingTimes do
     )
   end
 
-  context 'when the employees have presence days with time entries' do
+  context "when the employees have presence days with time entries" do
     before(:each)  do
       day_a = create(:presence_day, order: 1, presence_policy: presence_policy_a)
-      create(:time_entry, presence_day: day_a, start_time: '1:00', end_time: '2:00')
-      create(:time_entry, presence_day: day_a, start_time: '3:00', end_time: '4:00')
+      create(:time_entry, presence_day: day_a, start_time: "1:00", end_time: "2:00")
+      create(:time_entry, presence_day: day_a, start_time: "3:00", end_time: "4:00")
       day_b = create(:presence_day, order: 1, presence_policy: presence_policy_b)
-      create(:time_entry, presence_day: day_b, start_time: '5:00', end_time: '6:00')
+      create(:time_entry, presence_day: day_b, start_time: "5:00", end_time: "6:00")
     end
 
-    context 'when there are days without registered working hours to add' do
-      context 'and no time offs' do
-        context 'when policy has length different than 7' do
+    context "when there are days without registered working hours to add" do
+      context "and no time offs" do
+        context "when policy has length different than 7" do
           before do
             Timecop.freeze(2016, 1, 14, 0, 0)
             day = create(:presence_day, order: 2, presence_policy: presence_policy_b)
-            create(:time_entry, presence_day: day, start_time: '2:00', end_time: '10:00')
+            create(:time_entry, presence_day: day, start_time: "2:00", end_time: "10:00")
           end
           after { Timecop.return }
 
-          it 'should create registered working time with proper time entries' do
+          it "should create registered working time with proper time entries" do
             expect { subject }.to change { RegisteredWorkingTime.count }.from(0).to(2)
             first_employee_rwt = RegisteredWorkingTime.find_by(employee_id: first_employee.id)
             expect(first_employee_rwt.date).to eq(Date.new(2016, 1, 13))
@@ -57,8 +57,8 @@ RSpec.describe AddRegisteredWorkingTimes do
             expect(first_employee_rwt.time_entries).to match_array(
               [
                 {
-                  'start_time' => "02:00:00",
-                  'end_time' => "10:00:00"
+                  "start_time" => "02:00:00",
+                  "end_time" => "10:00:00"
                 }
               ]
             )
@@ -73,12 +73,12 @@ RSpec.describe AddRegisteredWorkingTimes do
           expect(first_employee_rwt.time_entries).to match_array(
             [
               {
-                'start_time' => "01:00:00",
-                'end_time' => "02:00:00"
+                "start_time" => "01:00:00",
+                "end_time" => "02:00:00"
               },
               {
-                'start_time' => "03:00:00",
-                'end_time' => "04:00:00"
+                "start_time" => "03:00:00",
+                "end_time" => "04:00:00"
               }
             ]
           )
@@ -89,8 +89,8 @@ RSpec.describe AddRegisteredWorkingTimes do
           expect(second_employee_rwt.time_entries).to match_array(
             [
               {
-                'start_time' => "05:00:00",
-                'end_time' => "06:00:00"
+                "start_time" => "05:00:00",
+                "end_time" => "06:00:00"
               }
             ]
           )
@@ -98,7 +98,7 @@ RSpec.describe AddRegisteredWorkingTimes do
         end
       end
 
-      context 'and time offs' do
+      context "and time offs" do
         before do
           create(:time_off,
             employee: first_employee ,
@@ -119,16 +119,16 @@ RSpec.describe AddRegisteredWorkingTimes do
           expect(first_employee_rwt.time_entries).to match_array(
             [
               {
-                'start_time' => "01:00:00",
-                'end_time' => "01:20:00"
+                "start_time" => "01:00:00",
+                "end_time" => "01:20:00"
               },
               {
-                'start_time' => "01:40:00",
-                'end_time' => "02:00:00"
+                "start_time" => "01:40:00",
+                "end_time" => "02:00:00"
               },
               {
-                'start_time' => "03:00:00",
-                'end_time' => "04:00:00"
+                "start_time" => "03:00:00",
+                "end_time" => "04:00:00"
               }
             ]
           )
@@ -139,12 +139,12 @@ RSpec.describe AddRegisteredWorkingTimes do
           expect(second_employee_rwt.time_entries).to match_array(
             [
               {
-                'start_time' => "05:00:00",
-                'end_time' => "05:20:00"
+                "start_time" => "05:00:00",
+                "end_time" => "05:20:00"
               },
               {
-                'start_time' => "05:40:00",
-                'end_time' => "06:00:00"
+                "start_time" => "05:40:00",
+                "end_time" => "06:00:00"
               }
             ]
           )
@@ -152,13 +152,13 @@ RSpec.describe AddRegisteredWorkingTimes do
         end
       end
 
-      context 'when employee has contract end date' do
+      context "when employee has contract end date" do
         before do
           create(:employee_event, :contract_end,
             employee: first_employee, effective_at: effective_at)
         end
 
-        context 'and it is in the future' do
+        context "and it is in the future" do
           let(:effective_at) { 1.month.since }
 
           it do
@@ -170,7 +170,7 @@ RSpec.describe AddRegisteredWorkingTimes do
           end
         end
 
-        context 'and it is in the past' do
+        context "and it is in the past" do
           let(:effective_at) { 2.months.ago }
 
 
@@ -183,7 +183,7 @@ RSpec.describe AddRegisteredWorkingTimes do
           end
         end
 
-        context 'and it is today' do
+        context "and it is today" do
           let(:effective_at) { Date.today }
 
 
@@ -196,15 +196,15 @@ RSpec.describe AddRegisteredWorkingTimes do
           end
         end
 
-        context 'when employee is rehired' do
+        context "when employee is rehired" do
           let(:effective_at) { 2.months.ago }
 
           before do
             create(:employee_event,
-              employee: first_employee, event_type: 'hired', effective_at: rehired_effective_at)
+              employee: first_employee, event_type: "hired", effective_at: rehired_effective_at)
           end
 
-          context 'and today is before rehired event' do
+          context "and today is before rehired event" do
             let(:rehired_effective_at) { 1.week.since }
 
             it do
@@ -216,7 +216,7 @@ RSpec.describe AddRegisteredWorkingTimes do
             end
           end
 
-          context 'and today is after hired event' do
+          context "and today is after hired event" do
             let(:rehired_effective_at) { 1.week.ago }
 
             it do
@@ -230,7 +230,7 @@ RSpec.describe AddRegisteredWorkingTimes do
         end
       end
     end
-    context 'when there is a registered working time on that day for one empoyee' do
+    context "when there is a registered working time on that day for one empoyee" do
       let!(:rwt) { create(:registered_working_time, employee: first_employee , date: date) }
       it do
         expect { subject }
@@ -245,15 +245,15 @@ RSpec.describe AddRegisteredWorkingTimes do
         expect(second_employee_rwt.time_entries).to match_array(
           [
             {
-              'start_time' => "05:00:00",
-              'end_time' => "06:00:00"
+              "start_time" => "05:00:00",
+              "end_time" => "06:00:00"
             }
           ]
         )
         expect(second_employee_rwt.schedule_generated).to eq(true)
       end
 
-      context 'and a time off for another' do
+      context "and a time off for another" do
         before do
           create(:time_off,
             employee: second_employee ,
@@ -271,12 +271,12 @@ RSpec.describe AddRegisteredWorkingTimes do
           expect(second_employee_rwt.time_entries).to match_array(
             [
               {
-                'start_time' => "05:00:00",
-                'end_time' => "05:20:00"
+                "start_time" => "05:00:00",
+                "end_time" => "05:20:00"
               },
               {
-                'start_time' => "05:40:00",
-                'end_time' => "06:00:00"
+                "start_time" => "05:40:00",
+                "end_time" => "06:00:00"
               }
             ]
           )
@@ -286,16 +286,16 @@ RSpec.describe AddRegisteredWorkingTimes do
     end
   end
 
-  context 'when there is a holiday on that day for one employee and the employee has a time entry' do
+  context "when there is a holiday on that day for one employee and the employee has a time entry" do
     before(:each)  do
       day_a = create(:presence_day, order: 2, presence_policy: presence_policy_a)
-      create(:time_entry, presence_day: day_a, start_time: '1:00', end_time: '2:00')
+      create(:time_entry, presence_day: day_a, start_time: "1:00", end_time: "2:00")
       day_b = create(:presence_day, order: 2, presence_policy: presence_policy_b)
-      create(:time_entry, presence_day: day_b, start_time: '5:00', end_time: '6:00')
+      create(:time_entry, presence_day: day_b, start_time: "5:00", end_time: "6:00")
     end
 
     let!(:holiday_policy) do
-      create :holiday_policy, region: 'zh', country: 'ch'
+      create :holiday_policy, region: "zh", country: "ch"
     end
     let(:date_of_job_run) { Time.zone.now - 1.day }
 
@@ -306,7 +306,7 @@ RSpec.describe AddRegisteredWorkingTimes do
 
     after { Timecop.return }
 
-    context 'and there is a registered working time for another' do
+    context "and there is a registered working time for another" do
       let(:working_place) { employee_working_place.working_place }
       let(:employee_working_place) do
         create(:employee_working_place, employee: second_employee, effective_at: 6.years.ago)
@@ -321,12 +321,12 @@ RSpec.describe AddRegisteredWorkingTimes do
         expect(first_employee_rwt.time_entries).to match_array(
           [
             {
-              'start_time' => "10:00:00",
-              'end_time' => "14:00:00"
+              "start_time" => "10:00:00",
+              "end_time" => "14:00:00"
             },
             {
-              'start_time' => "15:00:00",
-              'end_time' => "20:00:00"
+              "start_time" => "15:00:00",
+              "end_time" => "20:00:00"
             }
           ]
         )
@@ -343,7 +343,7 @@ RSpec.describe AddRegisteredWorkingTimes do
       end
     end
 
-    context 'and a normal day for the other employee' do
+    context "and a normal day for the other employee" do
       let(:working_place) { employee_working_place.working_place }
       let(:employee_working_place) do
         create(:employee_working_place, employee: second_employee, effective_at: 6.years.ago)
@@ -358,8 +358,8 @@ RSpec.describe AddRegisteredWorkingTimes do
         expect(first_employee_rwt.time_entries).to match_array(
           [
             {
-              'start_time' => "01:00:00",
-              'end_time' => "02:00:00"
+              "start_time" => "01:00:00",
+              "end_time" => "02:00:00"
             }
           ]
         )
@@ -377,7 +377,7 @@ RSpec.describe AddRegisteredWorkingTimes do
       end
     end
 
-    context 'and also the same employee a registered woring time also  ' do
+    context "and also the same employee a registered woring time also  " do
       let(:working_place) { employee_working_place.working_place }
       let(:employee_working_place) do
         create(:employee_working_place, employee: first_employee, effective_at: 6.years.ago)
@@ -394,12 +394,12 @@ RSpec.describe AddRegisteredWorkingTimes do
         expect(first_employee_rwt.time_entries).to match_array(
           [
             {
-              'start_time' => "10:00:00",
-              'end_time' => "14:00:00"
+              "start_time" => "10:00:00",
+              "end_time" => "14:00:00"
             },
             {
-              'start_time' => "15:00:00",
-              'end_time' => "20:00:00"
+              "start_time" => "15:00:00",
+              "end_time" => "20:00:00"
             }
           ]
         )
@@ -415,8 +415,8 @@ RSpec.describe AddRegisteredWorkingTimes do
         expect(second_employee_rwt.time_entries).to match_array(
           [
             {
-              'start_time' => "05:00:00",
-              'end_time' => "06:00:00"
+              "start_time" => "05:00:00",
+              "end_time" => "06:00:00"
             }
           ]
         )
@@ -425,7 +425,7 @@ RSpec.describe AddRegisteredWorkingTimes do
     end
   end
 
-  context 'when the employees have no presence days with time entries' do
+  context "when the employees have no presence days with time entries" do
     it do
       expect { subject }.to change { RegisteredWorkingTime.count }.from(0).to(2)
       first_employee_rwt = RegisteredWorkingTime.find_by(employee_id: first_employee.id)

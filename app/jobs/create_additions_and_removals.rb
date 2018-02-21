@@ -14,7 +14,7 @@ class CreateAdditionsAndRemovals < ActiveJob::Base
   end
 
   def employee_time_off_policies_ids
-    ActiveRecord::Base.connection.execute(policies_query).map { |row| row['id'] }
+    ActiveRecord::Base.connection.execute(policies_query).map { |row| row["id"] }
   end
 
   def policies_query

@@ -1,4 +1,4 @@
-RSpec.shared_context 'shared_context_calculated_time_off_periods', :a => :b do
+RSpec.shared_context "shared_context_calculated_time_off_periods", :a => :b do
   let(:years_to_effect) { 2 }
   let(:effective_at) { Date.today }
   let(:start_month) { 1 }
@@ -13,88 +13,88 @@ RSpec.shared_context 'shared_context_calculated_time_off_periods', :a => :b do
     )
   end
 
-  context '.policy_length' do
+  context ".policy_length" do
     subject { related_policy.policy_length }
 
-    context 'when years to effect greater than 1' do
+    context "when years to effect greater than 1" do
       it { expect(subject).to eq 2 }
     end
 
-    context 'when years to effect eq 0 or 1' do
+    context "when years to effect eq 0 or 1" do
       let(:years_to_effect) { 0 }
 
       it { expect(subject).to eq 1 }
     end
   end
 
-  context '.previous_start_date' do
+  context ".previous_start_date" do
     let(:effective_at) { Date.today - 7.years }
     subject { related_policy.previous_start_date }
 
-    context 'policy length bigger than 1 year' do
+    context "policy length bigger than 1 year" do
       let(:years_to_effect) { 0 }
 
-      it { expect(subject).to eq '01/01/2015'.to_date }
+      it { expect(subject).to eq "01/01/2015".to_date }
     end
 
-    context 'policy length eql 1 year' do
+    context "policy length eql 1 year" do
       let(:years_to_effect) { 3 }
 
-      it { expect(subject).to eq '01/01/2012'.to_date }
+      it { expect(subject).to eq "01/01/2012".to_date }
     end
   end
 
-  context '.first_start_date' do
+  context ".first_start_date" do
     subject { related_policy.first_start_date }
 
-    context 'effective_at in the past or today' do
+    context "effective_at in the past or today" do
       let(:effective_at) { Date.today - 10.years }
 
-      context 'and the same date as start date' do
-        it { expect(subject).to eq '01/01/2006'.to_date }
+      context "and the same date as start date" do
+        it { expect(subject).to eq "01/01/2006".to_date }
       end
 
-      context 'and different date than start date' do
+      context "and different date than start date" do
         let(:start_month) { 4 }
 
-        it { expect(subject).to eq '01/04/2006'.to_date }
+        it { expect(subject).to eq "01/04/2006".to_date }
       end
     end
 
-    context 'effective_at later than start date' do
+    context "effective_at later than start date" do
       let(:effective_at) { Date.today - 9.years - 8.months }
       let(:start_month) { 3 }
 
-      it { expect(subject).to eq '01/03/2007'.to_date }
+      it { expect(subject).to eq "01/03/2007".to_date }
     end
 
-    context 'effective_at in the future' do
+    context "effective_at in the future" do
       let(:effective_at) { Date.today + 6.months }
 
-      it { expect(subject).to eq '01/01/2017'.to_date }
+      it { expect(subject).to eq "01/01/2017".to_date }
     end
   end
 
-  context '.last_start_date' do
+  context ".last_start_date" do
     let(:effective_at) { Date.today - 7.years }
     subject { related_policy.last_start_date }
 
-    context 'policy length bigger than 1 year' do
+    context "policy length bigger than 1 year" do
       let(:years_to_effect) { 0 }
 
-      it { expect(subject).to eq '01/01/2016'.to_date }
+      it { expect(subject).to eq "01/01/2016".to_date }
     end
 
-    context 'policy length eql 1 year' do
+    context "policy length eql 1 year" do
       let(:years_to_effect) { 3 }
 
-      it { expect(subject).to eq '01/01/2015'.to_date }
+      it { expect(subject).to eq "01/01/2015".to_date }
     end
   end
 
-  context '.end_date' do
+  context ".end_date" do
     subject { related_policy.end_date }
 
-    it { expect(subject).to eq '1/1/2018'.to_date }
+    it { expect(subject).to eq "1/1/2018".to_date }
   end
 end

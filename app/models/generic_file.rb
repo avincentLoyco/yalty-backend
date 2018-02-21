@@ -20,7 +20,7 @@ class GenericFile < ActiveRecord::Base
     .where(fileable_id: nil)
   end)
 
-  has_attached_file :file, styles: { thumbnail: ['296x235^'] }
+  has_attached_file :file, styles: { thumbnail: ["296x235^"] }
 
   before_post_process :process_only_images
   after_save :rename_file, :generate_sha, if: -> { file.present? }
@@ -28,8 +28,8 @@ class GenericFile < ActiveRecord::Base
   validates :file, attachment_content_type: { content_type: CONTENT_TYPES }
   validates :file, attachment_size: { less_than: 20.megabytes }, unless: :archive?
 
-  def find_file_path(version = 'original')
-    Dir.glob(Rails.application.config.file_upload_root_path.join(id, version, '*'))
+  def find_file_path(version = "original")
+    Dir.glob(Rails.application.config.file_upload_root_path.join(id, version, "*"))
   end
 
   def user_friendly_name
@@ -39,12 +39,12 @@ class GenericFile < ActiveRecord::Base
   private
 
   def account_friendly_name
-    date = file_updated_at.strftime('%Y%m%d')
+    date = file_updated_at.strftime("%Y%m%d")
     "archive-#{fileable.subdomain}-#{date}"
   end
 
   def invoice_friendly_name
-    date = fileable.date.strftime('%Y%m%d')
+    date = fileable.date.strftime("%Y%m%d")
     "invoice-#{date}"
   end
 
@@ -58,7 +58,7 @@ class GenericFile < ActiveRecord::Base
   end
 
   def company_event_friendly_name
-    original_filename.split('.').first
+    original_filename.split(".").first
   end
 
   def rename_file
@@ -75,7 +75,7 @@ class GenericFile < ActiveRecord::Base
   def generate_sha
     update_column(
       :sha_sums,
-      file.styles.keys.map(&:to_s).push('original').each_with_object({}) do |version, sha|
+      file.styles.keys.map(&:to_s).push("original").each_with_object({}) do |version, sha|
         file_path = find_file_path(version)
         next if file_path.empty?
         sha[:"#{version}_sha"] = Digest::SHA256.file(file_path.first).hexdigest
@@ -88,13 +88,13 @@ class GenericFile < ActiveRecord::Base
   end
 
   def archive?
-    fileable_type.eql?('Account')
+    fileable_type.eql?("Account")
   end
 
   # MimeMagic detects .xls file as 'application/x-ole-storage' type
   def process_xls_file
-    return unless file.instance.file_content_type.eql?('application/x-ole-storage') &&
-        CONTENT_TYPES.include?('application/vnd.ms-excel')
-    file.instance.file_content_type = 'application/vnd.ms-excel'
+    return unless file.instance.file_content_type.eql?("application/x-ole-storage") &&
+        CONTENT_TYPES.include?("application/vnd.ms-excel")
+    file.instance.file_content_type = "application/vnd.ms-excel"
   end
 end

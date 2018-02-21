@@ -10,7 +10,7 @@ class FindValueForAttribute
   end
 
   def call
-    return attribute[:value] unless attribute_type && attribute_type.eql?('File') &&
+    return attribute[:value] unless attribute_type && attribute_type.eql?("File") &&
         attribute[:value].present?
     generic_file = assign_file_to_employee_file!(attribute[:value])
     form_employee_attribute_version(generic_file)
@@ -24,9 +24,9 @@ class FindValueForAttribute
     verify_if_one_file_in_directory!(file_path, generic_file)
     file_name = "file_#{file_id}#{File.extname(file_path.first).downcase}"
     generic_file.update!(
-      file: File.open(file_path.first, 'r'),
+      file: File.open(file_path.first, "r"),
       file_file_name: file_name,
-      fileable_type: 'EmployeeFile'
+      fileable_type: "EmployeeFile"
     )
     remove_original(file_path)
     generic_file
@@ -38,7 +38,7 @@ class FindValueForAttribute
 
   def verify_if_one_file_in_directory!(file_path, generic_file)
     return unless (generic_file.id != version.data&.id && file_path.size != 1) || file_path.blank?
-    raise InvalidResourcesError.new(generic_file, ['Not authorized!'])
+    raise InvalidResourcesError.new(generic_file, ["Not authorized!"])
   end
 
   def form_employee_attribute_version(generic_file)

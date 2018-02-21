@@ -92,7 +92,7 @@ module API
           resource.employee_id,
           Account.current.id,
           time_off_id: resource.id,
-          balance_type: 'time_off',
+          balance_type: "time_off",
           resource_amount: resource.balance,
           manual_amount: params[:manual_amount] || 0,
           effective_at: resource.end_time
@@ -113,8 +113,8 @@ module API
 
       def convert_times_to_utc
         return unless params[:start_time].present? && params[:end_time].present?
-        params[:start_time] = params.delete(:start_time) + '+00:00'
-        params[:end_time] = params.delete(:end_time) + '+00:00'
+        params[:start_time] = params.delete(:start_time) + "+00:00"
+        params[:end_time] = params.delete(:end_time) + "+00:00"
       end
 
       def find_effective_at(previous_start_time)

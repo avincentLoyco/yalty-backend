@@ -9,18 +9,18 @@ class CalculatePeriodOverview
   def call
     periods_positive_amount = positive_amounts_between
     negative_amounts = negative_amounts_between
-    if @period[:type].eql?('balancer') && @period[:validity_date].present?
+    if @period[:type].eql?("balancer") && @period[:validity_date].present?
       amount_taken = -amount_taken_from_removal(periods_positive_amount)
     else
       amount_taken = period_start_balance + negative_amounts
       amount_taken = calculate_amount_taken(amount_taken, periods_positive_amount)
     end
     period_result = periods_positive_amount + amount_taken
-    period_result = 0 if period_result.negative? && @period[:type].eql?('balancer')
+    period_result = 0 if period_result.negative? && @period[:type].eql?("balancer")
     {
       amount_taken: amount_taken.abs,
       period_result: period_result,
-      balance: @period[:type].eql?('balancer') ? last_balance_value_in_period : amount_taken
+      balance: @period[:type].eql?("balancer") ? last_balance_value_in_period : amount_taken
     }
   end
 
@@ -29,7 +29,7 @@ class CalculatePeriodOverview
   def amount_taken_from_removal(positive_amounts)
     removal = period_balances.map(&:balance_credit_removal).compact.uniq.first
     return positive_amounts if removal.resource_amount >= 0
-    return positive_amounts + removal.resource_amount if removal.balance_type.eql?('removal')
+    return positive_amounts + removal.resource_amount if removal.balance_type.eql?("removal")
     next_periods_positives =
       positive_amounts_between(
         balances
@@ -75,7 +75,7 @@ class CalculatePeriodOverview
 
   def period_start_balance
     return 0 unless period_addition.present?
-    if @period[:type].eql?('balancer')
+    if @period[:type].eql?("balancer")
       period_addition.balance - period_addition.resource_amount - period_addition.manual_amount
     else
       period_addition.balance.abs
@@ -83,7 +83,7 @@ class CalculatePeriodOverview
   end
 
   def positive_amounts_between(balances_to_filter = period_balances)
-    if @period[:type].eql?('balancer')
+    if @period[:type].eql?("balancer")
       balances_to_filter.pluck(:manual_amount, :resource_amount)
     else
       balances_to_filter.pluck(:manual_amount)
@@ -92,7 +92,7 @@ class CalculatePeriodOverview
 
   def negative_amounts_between
     negative_balances =
-      balances.where.not(balance_type: 'removal').between(@period[:start_date], @period[:end_date])
+      balances.where.not(balance_type: "removal").between(@period[:start_date], @period[:end_date])
     manual_and_resource_amounts = negative_balances.pluck(:manual_amount, :resource_amount)
     negative_amounts = manual_and_resource_amounts.flatten.select(&:negative?).sum
     negative_amounts + end_of_period_time_off_amount - related_amount_at_period_beginning
@@ -101,7 +101,7 @@ class CalculatePeriodOverview
   def last_time_off_between(start_date, end_date)
     TimeOff
       .for_employee_in_category(@employee_id, @time_off_category_id)
-      .find_by('start_time >= ? AND end_time > ? AND start_time::date <= ?',
+      .find_by("start_time >= ? AND end_time > ? AND start_time::date <= ?",
         start_date, end_date, end_date)
   end
 
@@ -117,7 +117,7 @@ class CalculatePeriodOverview
   def related_amount_at_period_beginning
     time_off_at_start =
       TimeOff.where(
-        'start_time::date < ? AND end_time::date >= ?', @period[:start_date], @period[:start_date]
+        "start_time::date < ? AND end_time::date >= ?", @period[:start_date], @period[:start_date]
       ).first
     return 0 unless time_off_at_start.present?
     time_off_at_start.balance(nil, @period[:start_date].beginning_of_day)
@@ -125,13 +125,13 @@ class CalculatePeriodOverview
 
   def time_off_value(balance)
     time_off = last_time_off_between(@period[:start_date], @period[:end_date])
-    return 0 unless time_off && @period[:type].eql?('balancer')
+    return 0 unless time_off && @period[:type].eql?("balancer")
     balance.related_amount
   end
 
   def calculate_amount_taken(amount_taken, periods_positive_amount)
     return 0 if amount_taken >= 0
-    if @period[:type].eql?('balancer') && amount_taken.abs > periods_positive_amount.abs
+    if @period[:type].eql?("balancer") && amount_taken.abs > periods_positive_amount.abs
       - periods_positive_amount
     else
       amount_taken
@@ -148,8 +148,8 @@ class CalculatePeriodOverview
     balances_in_period = balances.between(@period[:start_date], @period[:end_date]).pluck(:id)
     period_start =
       balances
-      .where(balance_type: 'end_of_period')
-      .find_by('effective_at::date = ?', @period[:start_date]).try(:id)
+      .where(balance_type: "end_of_period")
+      .find_by("effective_at::date = ?", @period[:start_date]).try(:id)
 
     balances
       .where(id: [balances_in_period, period_end.try(:id)].compact.flatten)
@@ -171,7 +171,7 @@ class CalculatePeriodOverview
   def period_end
     @period_end ||=
       balances
-      .where(balance_type: 'end_of_period')
-      .find_by('effective_at::date = ?', @period[:end_date] + 1.day)
+      .where(balance_type: "end_of_period")
+      .find_by("effective_at::date = ?", @period[:end_date] + 1.day)
   end
 end

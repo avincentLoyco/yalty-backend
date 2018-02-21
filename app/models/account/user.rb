@@ -8,7 +8,7 @@ class Account::User < ActiveRecord::Base
   validates :email, presence: true
   validates :email, format: { with: /\b[A-Z0-9._%a-z\-]+@(?:[A-Z0-9a-z\-]+\.)+[A-Za-z]{2,}\z/ }
   validates :email, uniqueness: { scope: :account_id, case_sensitive: false }
-  validates :email, exclusion: { in: [ENV['YALTY_ACCESS_EMAIL']] }, if: ->() { !role.eql?('yalty') }
+  validates :email, exclusion: { in: [ENV["YALTY_ACCESS_EMAIL"]] }, if: ->() { !role.eql?("yalty") }
   validates :password, length: { in: 8..74 }, if: ->() { !password.nil? }
   validates :reset_password_token, uniqueness: true, allow_nil: true
   validates :role,
@@ -17,7 +17,7 @@ class Account::User < ActiveRecord::Base
   validates :locale, inclusion: { in: I18n.available_locales.map(&:to_s) }, allow_nil: true
   validates :employee, presence: true, unless: :empty_employee_allowed
   validate :validate_role_update, if: :role_changed?, on: :update
-  validate :validate_yalty_role, if: -> { role.eql?('yalty') }
+  validate :validate_yalty_role, if: -> { role.eql?("yalty") }
 
   belongs_to :account, inverse_of: :users, required: true
   belongs_to :referrer, primary_key: :email, foreign_key: :email
@@ -29,9 +29,9 @@ class Account::User < ActiveRecord::Base
   after_update :update_stripe_customer_email,
     if: -> { stripe_enabled? && (email_changed? || role_changed?) }
   after_destroy :update_stripe_customer_email,
-    if: -> { stripe_enabled? && role_was.eql?('account_owner') }
+    if: -> { stripe_enabled? && role_was.eql?("account_owner") }
 
-  skip_callback :save, :after, :create_or_update_on_intercom, if: -> { role.eql?('yalty') }
+  skip_callback :save, :after, :create_or_update_on_intercom, if: -> { role.eql?("yalty") }
 
   def self.current=(user)
     RequestStore.write(:current_account_user, user)
@@ -42,7 +42,7 @@ class Account::User < ActiveRecord::Base
   end
 
   def access_token
-    app = Doorkeeper::Application.where(uid: ENV['YALTY_OAUTH_ID']).first!
+    app = Doorkeeper::Application.where(uid: ENV["YALTY_OAUTH_ID"]).first!
 
     Doorkeeper::AccessToken.find_or_create_for(
       app,
@@ -73,16 +73,16 @@ class Account::User < ActiveRecord::Base
   end
 
   def update_stripe_customer_email
-    return unless role_change&.include?('account_owner') || email_changed? || destroyed?
+    return unless role_change&.include?("account_owner") || email_changed? || destroyed?
     Payments::UpdateStripeCustomerDescription.perform_later(account)
   end
 
   def validate_role_update
-    if role_changed? && role_was.eql?('yalty')
+    if role_changed? && role_was.eql?("yalty")
       errors.add(:role, "yalty role cannot be changed to #{role}")
-    elsif role_changed? && role_was.eql?('account_owner') &&
-        !account.users.where.not(id: id).where(role: 'account_owner').exists?
-      errors.add(:role, 'last account owner cannot change role')
+    elsif role_changed? && role_was.eql?("account_owner") &&
+        !account.users.where.not(id: id).where(role: "account_owner").exists?
+      errors.add(:role, "last account owner cannot change role")
     else
       return true
     end
@@ -91,15 +91,15 @@ class Account::User < ActiveRecord::Base
 
   def validate_yalty_role
     if persisted? && email_changed?
-      errors.add(:email, 'is not allowed to be changed for yalty role')
+      errors.add(:email, "is not allowed to be changed for yalty role")
     elsif persisted? && password_digest_changed?
-      errors.add(:password, 'is not allowed to be changed for yalty role')
+      errors.add(:password, "is not allowed to be changed for yalty role")
     elsif employee.present?
-      errors.add(:employee, 'is not allowed to be set for yalty role')
-    elsif account.users.where.not(id: id).where(role: 'yalty').exists?
-      errors.add(:role, 'is allowed only once per account')
-    elsif !email.eql?(ENV['YALTY_ACCESS_EMAIL'])
-      errors.add(:email, "is restricted to #{ENV['YALTY_ACCESS_EMAIL']} for yalty role")
+      errors.add(:employee, "is not allowed to be set for yalty role")
+    elsif account.users.where.not(id: id).where(role: "yalty").exists?
+      errors.add(:role, "is allowed only once per account")
+    elsif !email.eql?(ENV["YALTY_ACCESS_EMAIL"])
+      errors.add(:email, "is restricted to #{ENV["YALTY_ACCESS_EMAIL"]} for yalty role")
     else
       return true
     end
@@ -107,17 +107,17 @@ class Account::User < ActiveRecord::Base
   end
 
   def check_if_last_owner
-    return true unless role.eql?('account_owner') &&
-        !account.users.where.not(id: id).where(role: 'account_owner').exists?
+    return true unless role.eql?("account_owner") &&
+        !account.users.where.not(id: id).where(role: "account_owner").exists?
 
-    errors.add(:role, 'last account owner cannot be deleted')
+    errors.add(:role, "last account owner cannot be deleted")
     false
   end
 
   def empty_employee_allowed
-    role.eql?('yalty') ||
+    role.eql?("yalty") ||
       changed.eql?(%w(reset_password_token)) ||
-      role.eql?('account_owner') && (
+      role.eql?("account_owner") && (
         account.nil? || account.recently_created? || changed.eql?(%w(password_digest))
       )
   end

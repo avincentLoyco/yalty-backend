@@ -1,15 +1,15 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe HandleMapOfJoinTablesToNewHiredDate, type: :service do
-  include_context 'shared_context_account_helper'
-  include_context 'shared_context_timecop_helper'
+  include_context "shared_context_account_helper"
+  include_context "shared_context_timecop_helper"
   subject do
     HandleMapOfJoinTablesToNewHiredDate.new(employee, hired_date, old_hired_date).call
   end
 
   let(:old_hired_date) { employee.events.first.effective_at }
 
-  describe 'For EmployeeTimeOffPolicy' do
+  describe "For EmployeeTimeOffPolicy" do
     let(:employee) { create(:employee) }
     let!(:second_policy) do
       create(:employee_time_off_policy, :with_employee_balance, employee: employee)
@@ -22,10 +22,10 @@ RSpec.describe HandleMapOfJoinTablesToNewHiredDate, type: :service do
     let(:balances_ids) { subject[:employee_balances].map(&:id) }
     let(:join_tables_ids) { subject[:join_tables].map(&:id) }
 
-    context 'when hired_date moved to past' do
+    context "when hired_date moved to past" do
       let(:hired_date) { employee.hired_date - 5.days }
 
-      context 'and both employee time off policies are valid since hired date' do
+      context "and both employee time off policies are valid since hired date" do
         before do
           EmployeeTimeOffPolicy.all.update_all(effective_at: employee.hired_date)
           Employee::Balance.all.update_all(
@@ -45,7 +45,7 @@ RSpec.describe HandleMapOfJoinTablesToNewHiredDate, type: :service do
         it { expect { subject }.to_not change { Employee::Balance.count } }
       end
 
-      context 'and only one employee time off policy is valid since hired date' do
+      context "and only one employee time off policy is valid since hired date" do
         before do
           first_policy.update!(effective_at: employee.hired_date)
           first_balance.update!(
@@ -65,7 +65,7 @@ RSpec.describe HandleMapOfJoinTablesToNewHiredDate, type: :service do
         it { expect { subject }.to_not change { Employee::Balance.count } }
       end
 
-      context 'and none of the employee time off policies are valid since hired date' do
+      context "and none of the employee time off policies are valid since hired date" do
         it { expect(join_tables_ids).to_not include second_policy.id }
         it { expect(join_tables_ids).to_not include first_policy.id }
         it { expect(balances_ids).to_not include second_balance.id }
@@ -79,10 +79,10 @@ RSpec.describe HandleMapOfJoinTablesToNewHiredDate, type: :service do
       end
     end
 
-    context 'when effective at moved to future' do
+    context "when effective at moved to future" do
       let(:hired_date) { 5.days.since }
 
-      context 'and there is only one employee time off policy per time off category' do
+      context "and there is only one employee time off policy per time off category" do
         it { expect(join_tables_ids).to include second_policy.id }
         it { expect(join_tables_ids).to include first_policy.id }
         it { expect(balances_ids).to include first_balance.id }
@@ -95,7 +95,7 @@ RSpec.describe HandleMapOfJoinTablesToNewHiredDate, type: :service do
         it { expect { subject }.to_not change { EmployeeTimeOffPolicy.count } }
       end
 
-      context 'and there are more than one employee time off policies per time off category' do
+      context "and there are more than one employee time off policies per time off category" do
         let(:new_policy) do
           create(:time_off_policy, time_off_category: first_policy.time_off_category)
         end
@@ -123,20 +123,20 @@ RSpec.describe HandleMapOfJoinTablesToNewHiredDate, type: :service do
     end
   end
 
-  describe 'For EmployeeWorkingPlace' do
+  describe "For EmployeeWorkingPlace" do
     let(:employee) { create(:employee_with_working_place) }
     let!(:first_working_place) { employee.employee_working_places.order(:effective_at).first }
 
-    context 'when there is one working place in the period' do
-      context 'and hired_date moved to past' do
+    context "when there is one working place in the period" do
+      context "and hired_date moved to past" do
         let(:hired_date) { employee.hired_date - 5.days }
 
-        context 'and employee working place was at hired date' do
+        context "and employee working place was at hired date" do
           it { expect(subject[:join_tables].first.effective_at).to eq hired_date.to_date }
           it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
         end
 
-        context 'and employee working place wasn\'t at hired date' do
+        context "and employee working place wasn't at hired date" do
           before do
             employee.employee_working_places.first.update!(
               effective_at: employee.hired_date + 1.day)
@@ -147,7 +147,7 @@ RSpec.describe HandleMapOfJoinTablesToNewHiredDate, type: :service do
         end
       end
 
-      context 'and hired_date moved to future' do
+      context "and hired_date moved to future" do
         let(:hired_date) { 5.days.since }
 
         it { expect(subject[:join_tables].first.effective_at).to eq hired_date.to_date }
@@ -156,7 +156,7 @@ RSpec.describe HandleMapOfJoinTablesToNewHiredDate, type: :service do
       end
     end
 
-    context 'and employee has more employee working places but not in the period' do
+    context "and employee has more employee working places but not in the period" do
       let(:hired_date) { 5.days.since }
       let!(:second_working_place) do
         create(:employee_working_place, employee: employee, effective_at: 1.week.since)
@@ -167,7 +167,7 @@ RSpec.describe HandleMapOfJoinTablesToNewHiredDate, type: :service do
       it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
     end
 
-    context 'when more working places is in period' do
+    context "when more working places is in period" do
       let!(:second_working_place) do
         create(:employee_working_place, employee: employee, effective_at: 1.week.since)
       end
@@ -175,7 +175,7 @@ RSpec.describe HandleMapOfJoinTablesToNewHiredDate, type: :service do
         create(:employee_working_place, employee: employee, effective_at: 2.weeks.since)
       end
 
-      context 'and hired_date moved to past' do
+      context "and hired_date moved to past" do
         let(:hired_date) { 5.days.ago }
 
         it { expect(subject[:join_tables].first.id).to eq first_working_place.id }
@@ -184,7 +184,7 @@ RSpec.describe HandleMapOfJoinTablesToNewHiredDate, type: :service do
         it { expect { subject }.to_not change { EmployeeWorkingPlace.count } }
       end
 
-      context 'and effective at moved to future' do
+      context "and effective at moved to future" do
         let(:hired_date) { 3.weeks.since }
 
         it { expect(subject[:join_tables].first.effective_at).to eq hired_date.to_date }
@@ -199,22 +199,22 @@ RSpec.describe HandleMapOfJoinTablesToNewHiredDate, type: :service do
     end
   end
 
-  describe 'For EmployeePresencePolicy' do
+  describe "For EmployeePresencePolicy" do
     let(:employee) { create(:employee) }
     let!(:first_presence_policy) do
       create(:employee_presence_policy, employee: employee, effective_at: employee.hired_date)
     end
 
-    context 'when there is one working place in the period' do
-      context 'and hired_date moved to past' do
+    context "when there is one working place in the period" do
+      context "and hired_date moved to past" do
         let(:hired_date) { employee.hired_date - 5.days }
 
-        context 'and employee presence policy was at hired date' do
+        context "and employee presence policy was at hired date" do
           it { expect(subject[:join_tables].first.effective_at).to eq hired_date.to_date }
           it { expect { subject }.to_not change { EmployeePresencePolicy.count } }
         end
 
-        context 'and employee presence policy wasn\'t at hired date' do
+        context "and employee presence policy wasn't at hired date" do
           before do
             employee.employee_presence_policies.first.update!(
               effective_at: employee.hired_date + 1.day)
@@ -225,7 +225,7 @@ RSpec.describe HandleMapOfJoinTablesToNewHiredDate, type: :service do
         end
       end
 
-      context 'and hired_date moved to future' do
+      context "and hired_date moved to future" do
         let(:hired_date) { 5.days.since }
 
         it { expect(subject[:join_tables].first.effective_at).to eq hired_date.to_date }
@@ -234,7 +234,7 @@ RSpec.describe HandleMapOfJoinTablesToNewHiredDate, type: :service do
       end
     end
 
-    context 'and employee has more employee presence policy but not in the period' do
+    context "and employee has more employee presence policy but not in the period" do
       let(:hired_date) { 5.days.since }
       let!(:second_presence_policy) do
         create(:employee_presence_policy, employee: employee, effective_at: 1.week.since)
@@ -245,7 +245,7 @@ RSpec.describe HandleMapOfJoinTablesToNewHiredDate, type: :service do
       it { expect { subject }.to_not change { EmployeePresencePolicy.count } }
     end
 
-    context 'when more presence policies is in period' do
+    context "when more presence policies is in period" do
       let!(:second_presence_policy) do
         create(:employee_presence_policy, employee: employee, effective_at: 1.weeks.since)
       end
@@ -253,7 +253,7 @@ RSpec.describe HandleMapOfJoinTablesToNewHiredDate, type: :service do
         create(:employee_presence_policy, employee: employee, effective_at: 2.weeks.since)
       end
 
-      context 'and hired_date moved to past' do
+      context "and hired_date moved to past" do
         let(:hired_date) { 5.days.ago }
 
         it { expect(subject[:join_tables].first.id).to eq first_presence_policy.id }
@@ -262,7 +262,7 @@ RSpec.describe HandleMapOfJoinTablesToNewHiredDate, type: :service do
         it { expect { subject }.to_not change { EmployeePresencePolicy.count } }
       end
 
-      context 'and effective at moved to future' do
+      context "and effective at moved to future" do
         let(:hired_date) { 3.weeks.since }
 
         it { expect(subject[:join_tables].first.effective_at).to eq hired_date.to_date }

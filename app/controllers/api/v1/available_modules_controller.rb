@@ -33,7 +33,7 @@ module API
       end
 
       def internal_plans
-        YAML.load(File.read('config/internal_available_modules.yml')).map do |internal_module|
+        YAML.load(File.read("config/internal_available_modules.yml")).map do |internal_module|
           internal_module = OpenStruct.new(internal_module)
           enabled_and_free_fields_for(internal_module)
         end
@@ -41,7 +41,7 @@ module API
 
       def stripe_plans
         Stripe::Plan.list.select do |plan|
-          next if plan.id.eql?('free-plan')
+          next if plan.id.eql?("free-plan")
           enabled_and_free_fields_for(plan)
         end
       end

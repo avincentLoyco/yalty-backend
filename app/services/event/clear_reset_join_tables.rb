@@ -53,8 +53,8 @@ class ClearResetJoinTables
   def reset_balances
     @employee
       .employee_balances
-      .where(balance_type: 'reset')
-      .where('effective_at::date = ?', @reset_effective_at)
+      .where(balance_type: "reset")
+      .where("effective_at::date = ?", @reset_effective_at)
   end
 
   def remove_reset_presence_policy?
@@ -62,7 +62,7 @@ class ClearResetJoinTables
       @employee
       .employee_presence_policies
       .not_reset
-      .where('effective_at BETWEEN ? AND ?', @last_hired, @contract_end_date).empty?
+      .where("effective_at BETWEEN ? AND ?", @last_hired, @contract_end_date).empty?
     reset_presence_policy.present? && (policies_present || @contract_end_destroy)
   end
 
@@ -71,7 +71,7 @@ class ClearResetJoinTables
       @employee
       .employee_working_places
       .not_reset
-      .where('effective_at BETWEEN ? AND ?', @last_hired, @contract_end_date).empty?
+      .where("effective_at BETWEEN ? AND ?", @last_hired, @contract_end_date).empty?
     reset_working_place.present? && (working_places_present || @contract_end_destroy)
   end
 
@@ -84,7 +84,7 @@ class ClearResetJoinTables
       @employee
       .employee_time_off_policies
       .not_reset
-      .where('effective_at BETWEEN ? AND ?', @last_hired, @contract_end_date)
+      .where("effective_at BETWEEN ? AND ?", @last_hired, @contract_end_date)
 
     return time_off_policies if @time_off_category.nil?
     time_off_policies.where(time_off_category: @time_off_category)

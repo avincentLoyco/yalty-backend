@@ -1,4 +1,4 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe Invoice, type: :model do
   it { is_expected.to have_db_column(:invoice_id).of_type(:string) }

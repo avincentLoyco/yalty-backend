@@ -90,7 +90,7 @@ module API
       end
 
       def filter_by_status
-        status = params[:status] ? params[:status].eql?('active') : true
+        status = params[:status] ? params[:status].eql?("active") : true
         resources.where(active: status)
       end
     end

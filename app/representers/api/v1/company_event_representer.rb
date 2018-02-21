@@ -16,7 +16,7 @@ module Api
       def files_json
         resource.files.map do |file|
           {
-            type: 'file',
+            type: "file",
             id: file.id,
             original_filename: file.original_filename
           }

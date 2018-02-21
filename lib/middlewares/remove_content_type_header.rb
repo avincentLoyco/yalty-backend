@@ -7,7 +7,7 @@ class RemoveContentTypeHeader
     response = @app.call(env)
     status, headers, body = *response
     if status.eql?(205)
-      ['Content-Type', 'Content-Length'].each { |header| headers.delete(header) }
+      ["Content-Type", "Content-Length"].each { |header| headers.delete(header) }
       body = []
     end
     [status, headers, body]

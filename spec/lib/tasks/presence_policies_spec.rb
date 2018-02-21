@@ -1,16 +1,16 @@
-require 'rails_helper'
-require 'rake'
+require "rails_helper"
+require "rake"
 
-RSpec.describe 'presence_policies:add_missing_days', type: :rake do
-  include_context 'shared_context_account_helper'
-  include_context 'rake'
+RSpec.describe "presence_policies:add_missing_days", type: :rake do
+  include_context "shared_context_account_helper"
+  include_context "rake"
 
   let!(:account) { create(:account) }
   let!(:policy) { create(:presence_policy, :with_time_entries, number_of_days: 7, account: account) }
 
-  subject { rake['presence_policies:add_missing_days'].invoke }
+  subject { rake["presence_policies:add_missing_days"].invoke }
 
-  context 'when policy has different number of days than 7' do
+  context "when policy has different number of days than 7" do
     let!(:employee) { create(:employee, account: account) }
     let!(:employee_balance) { create(:employee_balance, employee: employee) }
     let!(:epp) do
@@ -23,14 +23,14 @@ RSpec.describe 'presence_policies:add_missing_days', type: :rake do
       policy.reload.presence_days
     end
 
-    context 'when middle day is added' do
+    context "when middle day is added" do
       let(:order) { 4 }
 
       it { expect { subject }.to change { policy.reload.presence_days.count }.by(1) }
       it { expect { subject }.to_not change { employee_balance.reload.being_processed } }
     end
 
-    context 'when last day is added' do
+    context "when last day is added" do
       let(:order) { 7 }
 
       it { expect { subject }.to change { policy.reload.presence_days.count }.by(1) }
@@ -38,7 +38,7 @@ RSpec.describe 'presence_policies:add_missing_days', type: :rake do
     end
   end
 
-  context 'when policy has 7 presence days assigned' do
+  context "when policy has 7 presence days assigned" do
     it { expect { subject }.to_not change { policy.reload.presence_days.count } }
   end
 end

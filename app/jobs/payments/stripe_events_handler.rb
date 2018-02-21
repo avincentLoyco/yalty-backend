@@ -10,25 +10,25 @@ module Payments
       @account = Account.find_by(customer_id: event.data.object.customer)
 
       case event.type
-      when 'invoice.created' then
+      when "invoice.created" then
         account.transaction do
           invoice = create_or_find_invoice(event.data.object)
           return unless invoice.present?
-          clear_modules('canceled')
+          clear_modules("canceled")
         end
-      when 'invoice.payment_failed' then
-        invoice = create_or_update_invoice(event.data.object, 'failed')
+      when "invoice.payment_failed" then
+        invoice = create_or_update_invoice(event.data.object, "failed")
         return unless invoice.present?
         PaymentsMailer.payment_failed(invoice.id).deliver_now
-      when 'invoice.payment_succeeded' then
-        invoice = create_or_update_invoice(event.data.object, 'success')
+      when "invoice.payment_succeeded" then
+        invoice = create_or_update_invoice(event.data.object, "success")
         return unless invoice.present?
         ::Payments::CreateInvoicePdf.new(invoice).call
         PaymentsMailer.payment_succeeded(invoice.id).deliver_now
-      when 'customer.subscription.updated' then
-        if event.data.object.status.eql?('canceled')
+      when "customer.subscription.updated" then
+        if event.data.object.status.eql?("canceled")
           account.transaction do
-            clear_modules('paid')
+            clear_modules("paid")
             recreate_subscription
           end
 
@@ -64,19 +64,19 @@ module Payments
 
       invoice_lines = []
       invoice.lines.auto_paging_each do |line|
-        next if line.plan.id.eql?('free-plan') || canceled_or_free_modules.include?(line.plan.id)
+        next if line.plan.id.eql?("free-plan") || canceled_or_free_modules.include?(line.plan.id)
         invoice_lines.push(line)
       end
 
       return if invoice_lines.empty? ||
-          Stripe::Subscription.retrieve(invoice.subscription).status == 'trialing'
+          Stripe::Subscription.retrieve(invoice.subscription).status == "trialing"
 
       account.invoices.create!(
         invoice_id: invoice.id,
         amount_due: invoice.amount_due,
         attempts: invoice.attempt_count,
         date: Time.zone.at(invoice.date).to_datetime,
-        status: 'pending',
+        status: "pending",
         starting_balance: invoice.starting_balance,
         subtotal: invoice.subtotal,
         tax: invoice.tax,
@@ -96,7 +96,7 @@ module Payments
       Payments::InvoiceLine.new(
         id: line_item.id,
         amount: line_item.amount,
-        currency: 'chf',
+        currency: "chf",
         period_start: line_item.period.start,
         period_end: line_item.period.end,
         proration: line_item.proration,
@@ -122,7 +122,7 @@ module Payments
     def recreate_subscription
       subscription = Stripe::Subscription.create(
         customer: account.customer_id,
-        plan: 'free-plan',
+        plan: "free-plan",
         tax_percent: Invoice::TAX_PERCENT,
         quantity: account.employees.chargeable_at_date(Time.zone.tomorrow).count
       )
@@ -132,8 +132,8 @@ module Payments
 
     def clear_modules(scope)
       case scope
-      when 'paid' then account.available_modules.delete_paid
-      when 'canceled' then account.available_modules.clean
+      when "paid" then account.available_modules.delete_paid
+      when "canceled" then account.available_modules.clean
       end
 
       account.save!

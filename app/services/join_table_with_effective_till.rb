@@ -27,9 +27,9 @@ class JoinTableWithEffectiveTill
       when EmployeeTimeOffPolicy.to_s
         sql(category_condition_sql, specific_time_off_policy_sql)
       when EmployeePresencePolicy.to_s
-        sql('', specific_presence_policy_sql)
+        sql("", specific_presence_policy_sql)
       when EmployeeWorkingPlace.to_s
-        sql('', specific_working_place_sql)
+        sql("", specific_working_place_sql)
       end
     ).to_ary
   end
@@ -63,12 +63,12 @@ class JoinTableWithEffectiveTill
   end
 
   def convert_array_to_sql(array)
-    "('#{array.join('\',\'')}')"
+    "('#{array.join("','")}')"
   end
 
   def conditional
-    conditions = [effective_till_after_date_sql, effective_at_before_date_sql].compact.join(' AND ')
-    conditions.empty? ? '' : " WHERE #{conditions}"
+    conditions = [effective_till_after_date_sql, effective_at_before_date_sql].compact.join(" AND ")
+    conditions.empty? ? "" : " WHERE #{conditions}"
   end
 
   def effective_till_after_date_sql
@@ -78,7 +78,7 @@ class JoinTableWithEffectiveTill
   end
 
   def category_condition_sql
-    'AND A.time_off_category_id = B.time_off_category_id'
+    "AND A.time_off_category_id = B.time_off_category_id"
   end
 
   def effective_at_before_date_sql
@@ -86,26 +86,26 @@ class JoinTableWithEffectiveTill
   end
 
   def specific_account_sql
-    account_id.present? ? "AND employees.account_id = '#{account_id}'" : ''
+    account_id.present? ? "AND employees.account_id = '#{account_id}'" : ""
   end
 
   def specific_presence_policy_sql
-    resource_id.present? ? "AND A.presence_policy_id = '#{resource_id}'" : ''
+    resource_id.present? ? "AND A.presence_policy_id = '#{resource_id}'" : ""
   end
 
   def specific_time_off_policy_sql
-    resource_id.present? ? "AND A.time_off_policy_id = '#{resource_id}'" : ''
+    resource_id.present? ? "AND A.time_off_policy_id = '#{resource_id}'" : ""
   end
 
   def specific_working_place_sql
-    resource_id.present? ? "AND A.working_place_id = '#{resource_id}'" : ''
+    resource_id.present? ? "AND A.working_place_id = '#{resource_id}'" : ""
   end
 
   def specific_employee_sql
-    employees_ids.present? ? "WHERE A.employee_id IN #{employees_ids}" : ''
+    employees_ids.present? ? "WHERE A.employee_id IN #{employees_ids}" : ""
   end
 
   def specific_join_table_instance_sql
-    join_table_id.present? ? "WHERE A.id = '#{join_table_id}'" : ''
+    join_table_id.present? ? "WHERE A.id = '#{join_table_id}'" : ""
   end
 end

@@ -11,7 +11,7 @@ module Payments
       return unless account.subscription_id?
 
       @subscription = Stripe::Subscription.retrieve(account.subscription_id)
-      subscribed_plans = @subscription.items.map { |i| i.plan.id }.reject { |p| p == 'free-plan' }
+      subscribed_plans = @subscription.items.map { |i| i.plan.id }.reject { |p| p == "free-plan" }
 
       (account.available_modules.all - subscribed_plans).each_with_index do |plan_id, index|
         @subscription = Stripe::Subscription.retrieve(account.subscription_id) if index == 1

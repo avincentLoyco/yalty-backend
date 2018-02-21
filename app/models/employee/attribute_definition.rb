@@ -1,4 +1,4 @@
-require 'attribute'
+require "attribute"
 
 class Employee::AttributeDefinition < ActiveRecord::Base
   belongs_to :account,
@@ -6,7 +6,7 @@ class Employee::AttributeDefinition < ActiveRecord::Base
     required: true
 
   has_many :employee_attributes,
-    class_name: 'Employee::Attribute'
+    class_name: "Employee::Attribute"
 
   validates :name,
     presence: true,
@@ -20,5 +20,5 @@ class Employee::AttributeDefinition < ActiveRecord::Base
     where("(((validation -> 'presence') is not null) AND (validation ->> 'presence' != 'false'))
             AND (account_id = ?)", Account.current).pluck(:name)
   }
-  scope :not_file, -> { where.not(attribute_type: 'File') }
+  scope :not_file, -> { where.not(attribute_type: "File") }
 end

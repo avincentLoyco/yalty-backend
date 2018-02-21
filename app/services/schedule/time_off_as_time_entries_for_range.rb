@@ -32,7 +32,7 @@ class TimeOffAsTimeEntriesForRange
     end_time =
       time_off.end_time < end_time ? time_off.end_time : end_time
 
-    return end_time unless end_time.strftime('%H:%M:%S') == '00:00:00'
+    return end_time unless end_time.strftime("%H:%M:%S") == "00:00:00"
     end_time - 1.second
   end
 
@@ -40,9 +40,9 @@ class TimeOffAsTimeEntriesForRange
     time_off_hashes =
       [
         {
-          type: 'time_off',
+          type: "time_off",
           name: time_off.time_off_category.name,
-          start_time: single_day_start_time.strftime('%H:%M:%S'),
+          start_time: single_day_start_time.strftime("%H:%M:%S"),
           end_time: day_end_time(single_day_end_time)
 
         }
@@ -81,6 +81,6 @@ class TimeOffAsTimeEntriesForRange
   end
 
   def day_end_time(end_time)
-    end_time.strftime('%H:%M:%S') == '23:59:59' ? '24:00:00' : end_time.strftime('%H:%M:%S')
+    end_time.strftime("%H:%M:%S") == "23:59:59" ? "24:00:00" : end_time.strftime("%H:%M:%S")
   end
 end

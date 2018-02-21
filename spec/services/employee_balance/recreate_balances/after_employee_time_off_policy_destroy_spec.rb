@@ -1,7 +1,7 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyDestroy, type: :service do
-  include_context 'shared_context_timecop_helper'
+  include_context "shared_context_timecop_helper"
 
   let!(:account) { create(:account) }
   let!(:employee) { create(:employee, account: account) }
@@ -11,7 +11,7 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyDestroy, type: :servi
   let(:top_for_second_category) { create(:time_off_policy, time_off_category: second_category) }
   let!(:etop_in_different_category) do
     create(:employee_time_off_policy, employee: employee, time_off_policy: top_for_second_category,
-      effective_at: Time.zone.parse('2015-01-01'))
+      effective_at: Time.zone.parse("2015-01-01"))
   end
   let(:existing_balances_effective_ats) do
     employee.employee_balances.where(time_off_category: category).pluck(:effective_at)
@@ -45,8 +45,8 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyDestroy, type: :servi
     end
   end
 
-  context 'when there are no etops after delete' do
-    let(:destroyed_effective_at) { Time.zone.parse('2014-01-15') }
+  context "when there are no etops after delete" do
+    let(:destroyed_effective_at) { Time.zone.parse("2014-01-15") }
     let(:top_to_destroy) { create(:time_off_policy, :with_end_date, time_off_category: category) }
 
     before do
@@ -58,8 +58,8 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyDestroy, type: :servi
     it { expect(employee.employee_balances.where(time_off_category: category).count).to eq(0) }
   end
 
-  context 'when there are no etops after one removed' do
-    let(:destroyed_effective_at) { Time.zone.parse('2015-10-01') }
+  context "when there are no etops after one removed" do
+    let(:destroyed_effective_at) { Time.zone.parse("2015-10-01") }
     let(:top_to_destroy) do
       create(:time_off_policy, time_off_category: category, start_month: 2, end_day: 1,
         end_month: 5, years_to_effect: 1)
@@ -67,14 +67,14 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyDestroy, type: :servi
     let(:top_a) { create(:time_off_policy, :with_end_date, time_off_category: category) }
     let!(:etop_a) do
       create(:employee_time_off_policy, employee: employee, time_off_policy: top_a,
-        effective_at: Time.zone.parse('2013-01-02'))
+        effective_at: Time.zone.parse("2013-01-02"))
     end
 
-    context 'without time off' do
+    context "without time off" do
       let(:expeted_balances_dates) do
-        ['2013-01-02', '2014-01-01', '2014-01-01', '2014-04-02', '2015-01-01', '2015-01-01',
-         '2015-04-02', '2016-01-01', '2016-01-01', '2016-04-02', '2017-01-01', '2017-01-01',
-         '2017-04-02', '2018-01-01', '2018-01-01', '2018-04-02', '2019-04-02'].map(&:to_date)
+        ["2013-01-02", "2014-01-01", "2014-01-01", "2014-04-02", "2015-01-01", "2015-01-01",
+         "2015-04-02", "2016-01-01", "2016-01-01", "2016-04-02", "2017-01-01", "2017-01-01",
+         "2017-04-02", "2018-01-01", "2018-01-01", "2018-04-02", "2019-04-02"].map(&:to_date)
       end
 
       before do
@@ -86,12 +86,12 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyDestroy, type: :servi
       it { expect(existing_balances_effective_ats).to match_array(expeted_balances_dates) }
     end
 
-    context 'with time off' do
+    context "with time off" do
       let(:expeted_balances_dates) do
         [
-          '2013-01-02', '2014-01-01', '2014-01-01', '2014-04-02', '2015-01-01', '2015-01-01',
-          '2015-04-02', '2015-10-01', '2016-01-01', '2016-01-01', '2016-04-02', '2017-01-01',
-          '2017-01-01', '2017-04-02', '2018-01-01', '2018-01-01', '2018-04-02', '2019-04-02'
+          "2013-01-02", "2014-01-01", "2014-01-01", "2014-04-02", "2015-01-01", "2015-01-01",
+          "2015-04-02", "2015-10-01", "2016-01-01", "2016-01-01", "2016-04-02", "2017-01-01",
+          "2017-01-01", "2017-04-02", "2018-01-01", "2018-01-01", "2018-04-02", "2019-04-02"
         ].map(&:to_date)
       end
       let(:time_off_effective_at) { destroyed_effective_at }
@@ -113,8 +113,8 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyDestroy, type: :servi
     end
   end
 
-  context 'when there are etop after one removed' do
-    let(:destroyed_effective_at) { Time.zone.parse('2015-10-01') }
+  context "when there are etop after one removed" do
+    let(:destroyed_effective_at) { Time.zone.parse("2015-10-01") }
     let(:top_to_destroy) do
       create(:time_off_policy, time_off_category: category, start_month: 2, end_day: 1,
         end_month: 5, years_to_effect: 1)
@@ -122,17 +122,17 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyDestroy, type: :servi
     let(:tops) { create_list(:time_off_policy, 2, :with_end_date, time_off_category: category) }
     let!(:etop_a) do
       create(:employee_time_off_policy, employee: employee, time_off_policy: tops.first,
-        effective_at: Time.zone.parse('2013-01-02'))
+        effective_at: Time.zone.parse("2013-01-02"))
     end
     let!(:etop_b) do
       create(:employee_time_off_policy, employee: employee, time_off_policy: tops.second,
-        effective_at: Time.zone.parse('2016-10-01'))
+        effective_at: Time.zone.parse("2016-10-01"))
     end
     let(:expeted_balances_dates) do
       [
-        '2013-01-02', '2014-01-01', '2014-01-01', '2014-04-02', '2015-01-01', '2015-01-01',
-        '2015-04-02', '2016-01-01', '2016-01-01', '2016-04-02', '2016-10-01', '2017-01-01',
-        '2017-01-01', '2017-04-02', '2018-01-01', '2018-01-01', '2018-04-02', '2019-04-02'
+        "2013-01-02", "2014-01-01", "2014-01-01", "2014-04-02", "2015-01-01", "2015-01-01",
+        "2015-04-02", "2016-01-01", "2016-01-01", "2016-04-02", "2016-10-01", "2017-01-01",
+        "2017-01-01", "2017-04-02", "2018-01-01", "2018-01-01", "2018-04-02", "2019-04-02"
      ].map(&:to_date)
     end
 

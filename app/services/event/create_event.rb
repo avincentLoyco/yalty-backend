@@ -93,7 +93,7 @@ class CreateEvent
     else
       messages = {}
       unless unique_attribute_versions?
-        messages = messages.merge(employee_attributes: ['Not unique'])
+        messages = messages.merge(employee_attributes: ["Not unique"])
       end
       messages = messages
                  .merge(event.errors.messages)
@@ -115,7 +115,7 @@ class CreateEvent
   end
 
   def handle_contract_end
-    return unless event.event_type.eql?('contract_end')
+    return unless event.event_type.eql?("contract_end")
     HandleContractEnd.new(employee, event.effective_at).call
   end
 
@@ -143,17 +143,17 @@ class CreateEvent
 
   def validate_time_off_policy_days_presence
     return unless time_off_policy_days.nil?
-    raise InvalidResourcesError.new(event, ['Time Off Policy amount not present'])
+    raise InvalidResourcesError.new(event, ["Time Off Policy amount not present"])
   end
 
   def validate_presence_policy_presence
     return unless presence_policy_id.nil?
-    raise InvalidResourcesError.new(event, ['Presence Policy days not present'])
+    raise InvalidResourcesError.new(event, ["Presence Policy days not present"])
   end
 
   def validate_matching_occupation_rate
     return if presence_policy_occupation_rate.eql?(event_occupation_rate)
-    raise InvalidResourcesError.new(event, ['Occupation Rate does not match Presence Policy'])
+    raise InvalidResourcesError.new(event, ["Occupation Rate does not match Presence Policy"])
   end
 
   def presence_policy_occupation_rate
@@ -161,6 +161,6 @@ class CreateEvent
   end
 
   def event_occupation_rate
-    event.attribute_values['occupation_rate'].to_f
+    event.attribute_values["occupation_rate"].to_f
   end
 end

@@ -16,15 +16,15 @@ class Adjustments::Calculate
   end
 
   def call
-    adjustment = if event.event_type.eql?('hired') || first_work_contract?
+    adjustment = if event.event_type.eql?("hired") || first_work_contract?
                    Adjustments::Calculator::Hired.call(
                      annual_allowance(current_etop), event.effective_at
                    )
-                 elsif event.event_type.eql?('contract_end')
+                 elsif event.event_type.eql?("contract_end")
                    Adjustments::Calculator::ContractEnd.call(
                      annual_allowance(current_etop), event.effective_at
                    )
-                 elsif event.event_type.eql?('work_contract')
+                 elsif event.event_type.eql?("work_contract")
                    Adjustments::Calculator::WorkContract.call(
                      annual_allowance(current_etop), annual_allowance(previous_etop),
                      event.effective_at
@@ -36,14 +36,14 @@ class Adjustments::Calculate
   private
 
   def first_work_contract?
-    event.event_type.eql?('work_contract') && employee_created_before_migration? &&
+    event.event_type.eql?("work_contract") && employee_created_before_migration? &&
       event_after_migration? && first_work_contract_after_migration?
   end
 
   def first_work_contract_after_migration?
     employee
       .events
-      .where('event_type = ? AND effective_at >= ? AND effective_at < ?', 'work_contract',
+      .where("event_type = ? AND effective_at >= ? AND effective_at < ?", "work_contract",
         MIGRATION_DATE, event.effective_at).empty?
   end
 
@@ -75,7 +75,7 @@ class Adjustments::Calculate
   # Specs would be aloooot easier to write
   def all_vacation_etops
     employee.employee_time_off_policies.select do |etop|
-      etop.time_off_category.name == 'vacation' && !etop.time_off_policy.reset &&
+      etop.time_off_category.name == "vacation" && !etop.time_off_policy.reset &&
         etop.effective_at < event.effective_at
     end
   end

@@ -1,23 +1,23 @@
-require 'sidekiq'
+require "sidekiq"
 
 class CustomJobAdapter
   class << self
     def enqueue(job)
       # Sidekiq::Client does not support symbols as keys
       Sidekiq::Client.push \
-        'class'   => wrapper_for(job),
-        'wrapped' => job.class.to_s,
-        'queue'   => job.queue_name,
-        'args'    => [job.serialize]
+        "class"   => wrapper_for(job),
+        "wrapped" => job.class.to_s,
+        "queue"   => job.queue_name,
+        "args"    => [job.serialize]
     end
 
     def enqueue_at(job, timestamp)
       Sidekiq::Client.push \
-        'class'   => wrapper_for(job),
-        'wrapped' => job.class.to_s,
-        'queue'   => job.queue_name,
-        'args'    => [job.serialize],
-        'at'      => timestamp
+        "class"   => wrapper_for(job),
+        "wrapped" => job.class.to_s,
+        "queue"   => job.queue_name,
+        "args"    => [job.serialize],
+        "at"      => timestamp
     end
 
     def wrapper_for(job)

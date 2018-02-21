@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe ServiceRequestMailer, type: :mailer do
   before do
-    ENV['YALTY_SERVICE_EMAIL'] = 'yalty@service.com'
+    ENV["YALTY_SERVICE_EMAIL"] = "yalty@service.com"
   end
 
   let(:services_payload) do
@@ -152,11 +152,11 @@ RSpec.describe ServiceRequestMailer, type: :mailer do
     }.with_indifferent_access
   end
 
-  context '#quote_request' do
-    let(:account) { create(:account, company_name: 'Wayne', yalty_access: true, default_locale: 'en') }
+  context "#quote_request" do
+    let(:account) { create(:account, company_name: "Wayne", yalty_access: true, default_locale: "en") }
     let(:requester) do
       user = create(:account_user, account: account)
-      allow(user.employee).to receive(:fullname).and_return('John Doe')
+      allow(user.employee).to receive(:fullname).and_return("John Doe")
       user
     end
 
@@ -164,20 +164,20 @@ RSpec.describe ServiceRequestMailer, type: :mailer do
 
     it { expect { subject }.to change { ActionMailer::Base.deliveries.count } }
     it { expect(subject.to).to include(requester.email) }
-    it { expect(subject.bcc).to include('yalty@service.com') }
+    it { expect(subject.bcc).to include("yalty@service.com") }
     it { expect(subject.body.to_s).to include(account.company_name) }
     it { expect(subject.body.to_s).to include(account.id) }
-    it { expect(subject.body.to_s).to include("#{account.subdomain}.#{ENV['YALTY_APP_DOMAIN']}") }
+    it { expect(subject.body.to_s).to include("#{account.subdomain}.#{ENV["YALTY_APP_DOMAIN"]}") }
     it { expect(subject.body.to_s).to include(requester.email) }
-    it { expect(subject.body.to_s).to include('John Doe') }
-    it { expect(subject.body.to_s).to include('Employee administration') }
+    it { expect(subject.body.to_s).to include("John Doe") }
+    it { expect(subject.body.to_s).to include("Employee administration") }
   end
 
-  context '#book_request' do
-    let(:account) { create(:account, company_name: 'Wayne', yalty_access: true, default_locale: 'en') }
+  context "#book_request" do
+    let(:account) { create(:account, company_name: "Wayne", yalty_access: true, default_locale: "en") }
     let(:requester) do
       user = create(:account_user, account: account)
-      allow(user.employee).to receive(:fullname).and_return('John Doe')
+      allow(user.employee).to receive(:fullname).and_return("John Doe")
       user
     end
 
@@ -185,12 +185,12 @@ RSpec.describe ServiceRequestMailer, type: :mailer do
 
     it { expect { subject }.to change { ActionMailer::Base.deliveries.count } }
     it { expect(subject.to).to include(requester.email) }
-    it { expect(subject.bcc).to include('yalty@service.com') }
+    it { expect(subject.bcc).to include("yalty@service.com") }
     it { expect(subject.body.to_s).to include(account.company_name) }
     it { expect(subject.body.to_s).to include(account.id) }
-    it { expect(subject.body.to_s).to include("#{account.subdomain}.#{ENV['YALTY_APP_DOMAIN']}") }
+    it { expect(subject.body.to_s).to include("#{account.subdomain}.#{ENV["YALTY_APP_DOMAIN"]}") }
     it { expect(subject.body.to_s).to include(requester.email) }
-    it { expect(subject.body.to_s).to include('John Doe') }
-    it { expect(subject.body.to_s).to include('Employee administration') }
+    it { expect(subject.body.to_s).to include("John Doe") }
+    it { expect(subject.body.to_s).to include("Employee administration") }
   end
 end

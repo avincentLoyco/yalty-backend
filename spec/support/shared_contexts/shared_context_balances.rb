@@ -1,4 +1,4 @@
-RSpec.shared_context 'shared_context_balances' do |settings|
+RSpec.shared_context "shared_context_balances" do |settings|
   let!(:category) { create(:time_off_category, account: account) }
   let(:policy) do
     create(:time_off_policy,
@@ -24,7 +24,7 @@ RSpec.shared_context 'shared_context_balances' do |settings|
   let(:previous) { periods.previous_policy_period }
   let(:current) { periods.current_policy_period }
 
-  if settings[:type] == 'balancer'
+  if settings[:type] == "balancer"
     if settings[:end_month] && settings[:end_day]
       let!(:previous_add) do
         create(:employee_balance_manual,
@@ -44,7 +44,7 @@ RSpec.shared_context 'shared_context_balances' do |settings|
       let!(:previous_removal) do
         create(:employee_balance_manual,
           resource_amount: -900, employee: employee, time_off_category: category,
-          balance_credit_additions: [previous_add], balance_type: 'removal',
+          balance_credit_additions: [previous_add], balance_type: "removal",
           effective_at: previous.last + Employee::Balance::REMOVAL_OFFSET
         )
       end
@@ -61,7 +61,7 @@ RSpec.shared_context 'shared_context_balances' do |settings|
         create(:employee_balance_manual,
           resource_amount: -900, employee: employee, time_off_category: category,
           effective_at: previous.last + Employee::Balance::END_OF_PERIOD_OFFSET,
-          balance_type: 'end_of_period'
+          balance_type: "end_of_period"
         )
       end
     end
@@ -70,7 +70,7 @@ RSpec.shared_context 'shared_context_balances' do |settings|
     let!(:previous_balance) do
       create(:employee_balance_manual,
         effective_at: previous.first + Employee::Balance::END_OF_PERIOD_OFFSET, resource_amount: -1000,
-        employee: employee, time_off_category: category, balance_type: 'end_of_period'
+        employee: employee, time_off_category: category, balance_type: "end_of_period"
       )
     end
 
@@ -78,27 +78,27 @@ RSpec.shared_context 'shared_context_balances' do |settings|
       create(:employee_balance_manual,
         effective_at: previous.last + Employee::Balance::END_OF_PERIOD_OFFSET,
         resource_amount: -500, employee: employee,
-        time_off_category: category, balance_type: 'end_of_period'
+        time_off_category: category, balance_type: "end_of_period"
       )
     end
   end
 
   # balances in current policy period
-  if settings[:end_month] && settings[:end_day] && settings[:type] == 'balancer'
+  if settings[:end_month] && settings[:end_day] && settings[:type] == "balancer"
     let!(:balance_add) do
       create(:employee_balance_manual,
         resource_amount: 1000, employee: employee, time_off_category: category,
         effective_at: current.first + Employee::Balance::ADDITION_OFFSET,
-        validity_date: current.last + Employee::Balance::REMOVAL_OFFSET, balance_type: 'addition'
+        validity_date: current.last + Employee::Balance::REMOVAL_OFFSET, balance_type: "addition"
       )
     end
   else
-    if settings[:type] == 'counter'
+    if settings[:type] == "counter"
       let!(:balance_add) do
         create(:employee_balance_manual,
           resource_amount: 1500, employee: employee, time_off_category: category,
           effective_at: current.first + Employee::Balance::ADDITION_OFFSET,
-          balance_type: 'addition'
+          balance_type: "addition"
         )
       end
     else
@@ -106,7 +106,7 @@ RSpec.shared_context 'shared_context_balances' do |settings|
         create(:employee_balance_manual,
           resource_amount: 1000, employee: employee, time_off_category: category,
           effective_at: current.first + Employee::Balance::ADDITION_OFFSET,
-          balance_type: 'addition'
+          balance_type: "addition"
         )
       end
     end

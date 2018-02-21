@@ -5,7 +5,7 @@ class AssignCollection
     @resource         = resource
     @collection       = collection.to_a
     @collection_name  = collection_name
-    @collection_ids   = collection_name.singularize + '_ids='
+    @collection_ids   = collection_name.singularize + "_ids="
   end
 
   def call

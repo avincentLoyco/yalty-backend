@@ -7,9 +7,9 @@ class CalculateEmployeeBalanceRemovalAmount
   end
 
   def call
-    return 0 unless removal.balance_type.eql?('reset') || additions.present? ||
-        (removal.balance_type.eql?('addition') && removal.time_off_policy.counter?)
-    if active_time_off_policy.counter? || removal.balance_type.eql?('reset')
+    return 0 unless removal.balance_type.eql?("reset") || additions.present? ||
+        (removal.balance_type.eql?("addition") && removal.time_off_policy.counter?)
+    if active_time_off_policy.counter? || removal.balance_type.eql?("reset")
       calculate_amount_for_counter
     else
       calculate_amount_for_balancer
@@ -49,7 +49,7 @@ class CalculateEmployeeBalanceRemovalAmount
 
   def positive_amounts
     balances_in_removal_period
-      .where('validity_date > ? OR validity_date IS NULL', removal.effective_at)
+      .where("validity_date > ? OR validity_date IS NULL", removal.effective_at)
       .pluck(:resource_amount, :manual_amount).flatten.select(&:positive?).sum
   end
 
@@ -74,7 +74,7 @@ class CalculateEmployeeBalanceRemovalAmount
     TimeOff
       .for_employee_in_category(removal.employee_id, removal.time_off_category_id)
       .find_by(
-        'start_time <= ? AND end_time > ?',
+        "start_time <= ? AND end_time > ?",
         removal.effective_at.end_of_day, removal.effective_at
       )
   end
@@ -87,7 +87,7 @@ class CalculateEmployeeBalanceRemovalAmount
     else
       related_amount_sum =
         previous_balances
-        .where('effective_at >= ?', time_off_in_period_end.start_time)
+        .where("effective_at >= ?", time_off_in_period_end.start_time)
         .map(&:related_amount).sum
       previous_balances.last.balance - related_amount_sum
     end
@@ -108,7 +108,7 @@ class CalculateEmployeeBalanceRemovalAmount
   def balances_in_removal_period
     Employee::Balance
       .for_employee_and_category(removal.employee_id, removal.time_off_category_id)
-      .where('effective_at BETWEEN ? AND ? AND id != ?',
+      .where("effective_at BETWEEN ? AND ? AND id != ?",
         first_addition.effective_at,
         removal.effective_at,
         removal.id)

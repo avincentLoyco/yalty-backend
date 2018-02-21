@@ -2,7 +2,7 @@ module API
   module V1
     class EmployeeBalancesController < API::ApplicationController
       include EmployeeBalanceSchemas
-      authorize_resource except: :show, class: 'Employee::Balance'
+      authorize_resource except: :show, class: "Employee::Balance"
 
       def show
         authorize! :show, resource

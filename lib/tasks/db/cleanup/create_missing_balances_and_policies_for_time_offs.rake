@@ -1,7 +1,7 @@
 namespace :db do
   namespace :cleanup do
     task create_missing_balances_and_policies_for_time_offs: [:environment] do
-      time_offs = TimeOff.includes(:employee_balance).where('employee_balances.id IS NULL')
+      time_offs = TimeOff.includes(:employee_balance).where("employee_balances.id IS NULL")
                          .references(:employee_balances)
 
       time_offs.find_each do |time_off|
@@ -36,15 +36,15 @@ namespace :db do
     end
 
     def time_off_policy_params(category)
-      { start_day: 1, start_month: 1, time_off_category: category, name: 'default' }
+      { start_day: 1, start_month: 1, time_off_category: category, name: "default" }
         .merge(policy_amount_and_type(category))
     end
 
     def policy_amount_and_type(category)
-      if category.name == 'vacancy'
-        { policy_type: 'balancer', amount: 28_800 }
+      if category.name == "vacancy"
+        { policy_type: "balancer", amount: 28_800 }
       else
-        { policy_type: 'counter', amount: nil }
+        { policy_type: "counter", amount: nil }
       end
     end
   end

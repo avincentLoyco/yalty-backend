@@ -44,7 +44,7 @@ class Auth::AccountsController < ApplicationController
 
   def build_account_and_user(params)
     account = Account.new(params[:account])
-    user = account.users.new(params[:user].merge(role: 'account_owner'))
+    user = account.users.new(params[:user].merge(role: "account_owner"))
     [account, user]
   end
 
@@ -83,6 +83,6 @@ class Auth::AccountsController < ApplicationController
   def verify_if_user_is_not_refering_himself!(email, account)
     referred_by = account.referred_by
     return unless referred_by.present? && Referrer.find_by(email: email).try(:token) == referred_by
-    raise InvalidResourcesError.new(account, ['can\'t use own referral token'])
+    raise InvalidResourcesError.new(account, ["can't use own referral token"])
   end
 end

@@ -28,9 +28,9 @@ module API
         raise(
           CustomError,
           type: controller_name,
-          field: 'date',
-          messages: ['From and to params must be in date format'],
-          codes: ['schedule.from_and_to_must_be_in_date_format']
+          field: "date",
+          messages: ["From and to params must be in date format"],
+          codes: ["schedule.from_and_to_must_be_in_date_format"]
         )
       end
     end

@@ -83,10 +83,10 @@ class GenerateBalanceOverview
       @employee
       .employee_balances
       .where(time_off_category: category)
-      .where('effective_at::date <= ?', period_start)
+      .where("effective_at::date <= ?", period_start)
       .order(:effective_at)
     return active_balances(balances) unless validity_date
-    balances.where('validity_date >= ?', period_start)
+    balances.where("validity_date >= ?", period_start)
   end
 
   def find_period_if_balances_present(category, date)
@@ -110,7 +110,7 @@ class GenerateBalanceOverview
   end
 
   def active_balances(balances)
-    positive = balances.where('resource_amount > 0 OR manual_amount > 0').order(:effective_at)
+    positive = balances.where("resource_amount > 0 OR manual_amount > 0").order(:effective_at)
     negative = balances.pluck(:manual_amount, :resource_amount)
                        .flatten.select(&:negative?).sum
 
@@ -125,6 +125,6 @@ class GenerateBalanceOverview
   end
 
   def contract_end(date = Time.zone.today)
-    @employee.events.contract_ends.where('effective_at <= ?', date).order(:effective_at).last
+    @employee.events.contract_ends.where("effective_at <= ?", date).order(:effective_at).last
   end
 end

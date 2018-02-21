@@ -6,7 +6,7 @@ class EmployeePresencePolicy < ActiveRecord::Base
 
   belongs_to :employee
   belongs_to :presence_policy
-  belongs_to :employee_event, class_name: 'Employee::Event', inverse_of: :employee_presence_policy
+  belongs_to :employee_event, class_name: "Employee::Event", inverse_of: :employee_presence_policy
 
   validates :employee_id, :presence_policy_id, :effective_at, presence: true
   validates :effective_at, uniqueness: { scope: [:employee_id, :presence_policy_id] }
@@ -16,7 +16,7 @@ class EmployeePresencePolicy < ActiveRecord::Base
 
   scope :with_reset, -> { joins(:presence_policy).where(presence_policies: { reset: true }) }
   scope :not_reset, -> { joins(:presence_policy).where(presence_policies: { reset: false }) }
-  scope :assigned_since, ->(date) { where('effective_at >= ?', date) }
+  scope :assigned_since, ->(date) { where("effective_at >= ?", date) }
 
   alias related_resource presence_policy
 
@@ -39,11 +39,11 @@ class EmployeePresencePolicy < ActiveRecord::Base
 
   def presence_days_presence
     return unless presence_policy.presence_days.blank?
-    errors.add(:presence_policy, 'Must have presence_days assigned')
+    errors.add(:presence_policy, "Must have presence_days assigned")
   end
 
   def order_smaller_than_last_presence_day_order
     return unless policy_length != 0 && order_of_start_day > policy_length
-    errors.add(:order_of_start_day, 'Must be smaller than last presence day order')
+    errors.add(:order_of_start_day, "Must be smaller than last presence day order")
   end
 end

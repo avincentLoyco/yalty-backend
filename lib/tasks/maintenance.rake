@@ -1,13 +1,13 @@
-require 'redis'
+require "redis"
 
 namespace :maintenance do
-  desc 'Turn maintenance mode on'
+  desc "Turn maintenance mode on"
   task :on do
-    Redis.current.set('maintenance_mode', true)
+    Redis.current.set("maintenance_mode", true)
   end
 
-  desc 'Turn maintencne mode off'
+  desc "Turn maintencne mode off"
   task :off do
-    Redis.current.set('maintenance_mode', false)
+    Redis.current.set("maintenance_mode", false)
   end
 end

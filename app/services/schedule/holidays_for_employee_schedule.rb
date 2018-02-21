@@ -37,7 +37,7 @@ class HolidaysForEmployeeSchedule
     {
       holiday.date.to_s => [
         {
-          type: 'holiday',
+          type: "holiday",
           name: holiday.name
         }
       ]

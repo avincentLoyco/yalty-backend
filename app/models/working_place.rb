@@ -10,16 +10,16 @@ class WorkingPlace < ActiveRecord::Base
   validates :street, length: { maximum: 72 }
   validates :state_code,
     length: { maximum: 60 },
-    format: { with: /\A[\D]+\z/, message: 'only nondigit' },
+    format: { with: /\A[\D]+\z/, message: "only nondigit" },
     allow_nil: true
   validates :postalcode,
     length: { maximum: 12 },
-    format: { with: /\A([A-Z0-9 -])\w+/, message: 'only numbers, capital letters, spaces and -' },
+    format: { with: /\A([A-Z0-9 -])\w+/, message: "only numbers, capital letters, spaces and -" },
     allow_nil: true
   validates :street_number,
     length: { maximum: 10 },
     format: { with: %r{\A([a-zA-Z0-9 \/]+\z)},
-              message: 'only numbers, capital letters, spaces and /' },
+              message: "only numbers, capital letters, spaces and /" },
     allow_nil: true
   validate :correct_address, if: [:coordinate_changed?, :coordinate?]
   validate :correct_state, if: [:coordinate_changed?, :coordinate?]
@@ -39,7 +39,7 @@ class WorkingPlace < ActiveRecord::Base
 	      AND employee_events.event_type = 'hired'
 	      ORDER BY employee_events.effective_at DESC LIMIT 1
         ) AND ?::date", employee_id, employee_id, date.to_date, date.to_date)
-      .order('employee_working_places.effective_at DESC')
+      .order("employee_working_places.effective_at DESC")
   end)
 
   def self.active_for_employee(employee_id, date)
@@ -59,7 +59,7 @@ class WorkingPlace < ActiveRecord::Base
   def location_attributes
     @location_attributes ||=
       Geokit::Geocoders::GoogleGeocoder
-      .geocode([city, state_code, country_code].compact.join(', '), language: 'en')
+      .geocode([city, state_code, country_code].compact.join(", "), language: "en")
   end
 
   def location_timezone
@@ -74,8 +74,8 @@ class WorkingPlace < ActiveRecord::Base
   def right_country?
     country_data?(country_code) &&
       country_data?(location_attributes.country_code) &&
-      standardize(country_data(location_attributes.country_code).translations['en']).eql?(
-        standardize(country_data(country_code).translations['en'])
+      standardize(country_data(location_attributes.country_code).translations["en"]).eql?(
+        standardize(country_data(country_code).translations["en"])
       )
   end
 
@@ -89,15 +89,15 @@ class WorkingPlace < ActiveRecord::Base
   end
 
   def correct_address
-    errors.add(:address, 'not found') unless address_found? && right_country?
+    errors.add(:address, "not found") unless address_found? && right_country?
   end
 
   def correct_state
-    errors.add(:state_code, 'does not match given address') unless right_state?
+    errors.add(:state_code, "does not match given address") unless right_state?
   end
 
   def correct_country
-    errors.add(:country_code, 'does not exist') unless !country_code? || country_data?(country_code)
+    errors.add(:country_code, "does not exist") unless !country_code? || country_data?(country_code)
   end
 
   def assign_coordinate_related_attributes

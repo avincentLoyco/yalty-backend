@@ -1,12 +1,12 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe Payments::UpdateStripeCustomerDescription, type: :job do
   let!(:account) { create(:account) }
 
   subject(:job) { described_class.perform_now(account) }
 
-  context 'in case of success' do
-    let(:customer) { StripeCustomer.new('cus_123', 'Some desc', 'test@emai.com') }
+  context "in case of success" do
+    let(:customer) { StripeCustomer.new("cus_123", "Some desc", "test@emai.com") }
 
     before { allow(Stripe::Customer).to receive(:retrieve).and_return(customer) }
 
@@ -14,7 +14,7 @@ RSpec.describe Payments::UpdateStripeCustomerDescription, type: :job do
 
     it { expect { subject }.to change(customer, :email) }
 
-    it 'methods are invoked' do
+    it "methods are invoked" do
       expect(customer).to receive(:save)
       subject
     end

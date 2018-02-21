@@ -10,7 +10,7 @@ class RegisteredWorkingTime < ActiveRecord::Base
   validates :date, uniqueness: { scope: :employee }, on: :create
 
   scope(:in_day_range, lambda do |start_date, end_date|
-    where('date >= ? AND date <= ?', start_date, end_date)
+    where("date >= ? AND date <= ?", start_date, end_date)
   end)
 
   scope(:manually_created_by_employee_ordered, lambda do |employee_id|
@@ -51,28 +51,28 @@ class RegisteredWorkingTime < ActiveRecord::Base
   end
 
   def entry_start_time(time_entry)
-    TimeEntry.hour_as_time(time_entry['start_time'])
+    TimeEntry.hour_as_time(time_entry["start_time"])
   end
 
   def entry_end_time(time_entry)
-    TimeEntry.hour_as_time(time_entry['end_time'])
+    TimeEntry.hour_as_time(time_entry["end_time"])
   end
 
   def parsable?(time)
-    Tod::TimeOfDay.parsable?(time) || time == '24:00' || time == '24:00:00'
+    Tod::TimeOfDay.parsable?(time) || time == "24:00" || time == "24:00:00"
   end
 
   def time_entries_valid?
     time_entries.map do |time_entry|
       time_entry.class == Hash && time_entry.keys.sort == %w(end_time start_time) &&
-        parsable?(time_entry['start_time']) && parsable?(time_entry['end_time'])
+        parsable?(time_entry["start_time"]) && parsable?(time_entry["end_time"])
     end.exclude?(false)
   end
 
   def time_entries_time_format_valid
     return if time_entries_valid?
     errors.add(
-      :time_entries, 'time entries must be array of hashes, with start_time and end_time as times'
+      :time_entries, "time entries must be array of hashes, with start_time and end_time as times"
     )
   end
 
@@ -80,12 +80,12 @@ class RegisteredWorkingTime < ActiveRecord::Base
     return unless time_entries.map do |time_entry|
       entry_end_time(time_entry) < entry_start_time(time_entry)
     end.include?(true)
-    errors.add(:time_entries, 'time_entries can not be longer than one day')
+    errors.add(:time_entries, "time_entries can not be longer than one day")
   end
 
   def unique_time_entries
     return unless time_entries != time_entries.uniq
-    errors.add(:time_entries, 'time_entries must be uniq')
+    errors.add(:time_entries, "time_entries must be uniq")
   end
 
   def time_entries_does_not_overlap
@@ -93,7 +93,7 @@ class RegisteredWorkingTime < ActiveRecord::Base
       entries = (time_entries - [time_entry]).drop(index)
       entries_overlap?(entry_start_time(time_entry), entry_end_time(time_entry), entries)
     end.flatten.include?(true)
-    errors.add(:time_entries, 'time_entries can not overlap')
+    errors.add(:time_entries, "time_entries can not overlap")
   end
 
   def time_entries_does_not_overlaps_with_time_off
@@ -101,14 +101,14 @@ class RegisteredWorkingTime < ActiveRecord::Base
     return unless time_offs_for_day.map do |time_off|
       time_off_entries_overlap?(time_off)
     end.flatten.include?(true)
-    errors.add(:date, 'working time day can not overlap with existing time off')
+    errors.add(:date, "working time day can not overlap with existing time off")
   end
 
   def time_off_entries_overlap?(time_off)
     if time_off.start_time.to_date == time_off.end_time.to_date
       entries_overlap?(time_off.start_hour, time_off.end_hour)
     else
-      starts = starts_at_date?(time_off) ? time_off.start_hour : TimeEntry.hour_as_time('00:00')
+      starts = starts_at_date?(time_off) ? time_off.start_hour : TimeEntry.hour_as_time("00:00")
       ends = ends_at_date?(time_off) ? time_off.end_hour : TimeEntry.midnight
       entries_overlap?(starts, ends)
     end

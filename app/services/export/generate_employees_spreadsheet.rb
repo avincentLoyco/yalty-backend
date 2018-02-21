@@ -2,9 +2,9 @@ module Export
   class GenerateEmployeesSpreadsheet
     attr_reader :account, :archive_dir_path
 
-    DEFAULT_EMPLOYEES_COLUMNS = ['Employee UUID', 'Last name', 'Last name (effective since)',
-                                 'First name', 'First name (effective since)',
-                                 'Hired date', 'Contract end date'].freeze
+    DEFAULT_EMPLOYEES_COLUMNS = ["Employee UUID", "Last name", "Last name (effective since)",
+                                 "First name", "First name (effective since)",
+                                 "Hired date", "Contract end date"].freeze
 
     def initialize(account, archive_dir_path)
       @account          = account
@@ -17,7 +17,7 @@ module Export
       columns = DEFAULT_EMPLOYEES_COLUMNS
       columns += attribute_definition_columns
 
-      CSV.open("#{archive_dir_path}/employees.csv", 'wb') do |employee_csv|
+      CSV.open("#{archive_dir_path}/employees.csv", "wb") do |employee_csv|
         employee_csv << columns.flatten
 
         account.employees.each do |employee|
@@ -34,28 +34,28 @@ module Export
 
     def attribute_definition_columns
       uniq_employee_attribute_definitions.map do |attribute_definition|
-        attribute_fields = attribute_fields(attribute_definition['attribute_type'])
+        attribute_fields = attribute_fields(attribute_definition["attribute_type"])
 
         if attribute_fields.count > 1
           attribute_fields.map do |field|
-            ["#{attribute_definition['name']}_#{field}",
-             "#{attribute_definition['name']}_#{field} (effective since)"]
+            ["#{attribute_definition["name"]}_#{field}",
+             "#{attribute_definition["name"]}_#{field} (effective since)"]
           end
         else
-          [attribute_definition['name'], "#{attribute_definition['name']} (effective since)"]
+          [attribute_definition["name"], "#{attribute_definition["name"]} (effective since)"]
         end
       end
     end
 
     def employee_basic_data(employee)
-      firstname_attribute = latest_attribute(employee, 'firstname')
-      lastname_attribute  = latest_attribute(employee, 'lastname')
+      firstname_attribute = latest_attribute(employee, "firstname")
+      lastname_attribute  = latest_attribute(employee, "lastname")
 
       [
         employee.id,
-        attribute_value(lastname_attribute.try(:[], 'data')),
+        attribute_value(lastname_attribute.try(:[], "data")),
         attribute_effective_at(lastname_attribute),
-        attribute_value(firstname_attribute.try(:[], 'data')),
+        attribute_value(firstname_attribute.try(:[], "data")),
         attribute_effective_at(firstname_attribute),
         normalize_date(employee.hired_date),
         normalize_date(employee.contract_end_date)
@@ -63,20 +63,20 @@ module Export
     end
 
     def employee_attribute_values(attribute_definition, employee)
-      attribute_fields       = attribute_fields(attribute_definition['attribute_type'])
-      attribute              = latest_attribute(employee, attribute_definition['name'])
+      attribute_fields       = attribute_fields(attribute_definition["attribute_type"])
+      attribute              = latest_attribute(employee, attribute_definition["name"])
       attribute_effective_at = attribute_effective_at(attribute)
-      attribute_value        = attribute_value(attribute.try(:[], 'data'))
+      attribute_value        = attribute_value(attribute.try(:[], "data"))
 
       if attribute_fields.count > 1
         attribute_fields.map do |field|
-          if attribute_field_is_datetime?(attribute_definition['attribute_type'], field)
+          if attribute_field_is_datetime?(attribute_definition["attribute_type"], field)
             [normalize_date(attribute_value.try(:[], field)&.to_datetime)]
           else
             [attribute_value.try(:[], field)]
           end << attribute_effective_at
         end
-      elsif attribute_definition['attribute_type'].eql?('Date')
+      elsif attribute_definition["attribute_type"].eql?("Date")
         [normalize_date(attribute_value&.to_date), attribute_effective_at]
       else
         [attribute_value, attribute_effective_at]
@@ -85,7 +85,7 @@ module Export
 
     def latest_attribute(employee, definition)
       attribute_versions_data.detect do |data|
-        data['name'] == definition && data['employee_id'] == employee.id
+        data["name"] == definition && data["employee_id"] == employee.id
       end
     end
 
@@ -105,7 +105,7 @@ module Export
 
     def attribute_effective_at(attribute_data)
       return if attribute_data.nil?
-      normalize_date(attribute_data['effective_at']&.to_date)
+      normalize_date(attribute_data["effective_at"]&.to_date)
     end
 
     def attribute_fields(attribute_type)
@@ -120,7 +120,7 @@ module Export
 
     def attribute_versions_data
       attribute_names = uniq_employee_attribute_definitions.map do |attr|
-        "'#{attr['name']}'"
+        "'#{attr["name"]}'"
       end + ["'firstname'", "'lastname'"]
 
       @attribute_versions_data ||=
@@ -138,7 +138,7 @@ module Export
           INNER JOIN employees
             ON employee_attribute_versions.employee_id=employees.id
           WHERE employees.account_id='#{account.id}'
-            AND employee_attribute_definitions.name IN (#{attribute_names.join(', ')})
+            AND employee_attribute_definitions.name IN (#{attribute_names.join(", ")})
           ORDER BY employee_events.effective_at DESC
         ").to_hash
     end
@@ -160,7 +160,7 @@ module Export
     end
 
     def normalize_date(date)
-      date&.strftime('%d.%m.%Y')
+      date&.strftime("%d.%m.%Y")
     end
   end
 end

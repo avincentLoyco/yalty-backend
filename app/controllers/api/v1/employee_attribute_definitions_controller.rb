@@ -1,7 +1,7 @@
 module API
   module V1
     class EmployeeAttributeDefinitionsController < API::ApplicationController
-      authorize_resource class: 'Employee::AttributeDefinition', except: :create
+      authorize_resource class: "Employee::AttributeDefinition", except: :create
       include EmployeeAttributeDefinitionSchemas
 
       def index
@@ -34,7 +34,7 @@ module API
           resource.destroy!
           render_no_content
         else
-          render_locked_error(controller_name, 'employee_attributes')
+          render_locked_error(controller_name, "employee_attributes")
         end
       end
 

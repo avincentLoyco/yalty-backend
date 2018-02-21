@@ -17,7 +17,7 @@ module Api::V1
     private
 
     def resource_type
-      @resource_type ||= resource.class.name.underscore.tr('/', '_')
+      @resource_type ||= resource.class.name.underscore.tr("/", "_")
     end
 
     def related_resources(join_table, related_id = nil, employee_id = nil, join_table_id = nil)

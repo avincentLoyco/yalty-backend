@@ -1,7 +1,7 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe CreateRegisteredWorkingTime do
-  include_context 'shared_context_timecop_helper'
+  include_context "shared_context_timecop_helper"
 
   subject { described_class.new(date, employees_ids).call }
 
@@ -48,8 +48,8 @@ RSpec.describe CreateRegisteredWorkingTime do
     Timecop.freeze(2016, 8, 10)
   end
 
-  context 'when the employee have policies of 7 days' do
-    context 'working from Monday to Friday' do
+  context "when the employee have policies of 7 days" do
+    context "working from Monday to Friday" do
       let!(:employee_presence_policy) do
         # To be sure we don't assign it on Monday
         effective_at = 10.months.ago.to_date.beginning_of_week + 1
@@ -62,10 +62,10 @@ RSpec.describe CreateRegisteredWorkingTime do
         )
       end
 
-      context 'on Sunday' do
+      context "on Sunday" do
         let(:date) { Date.today.beginning_of_week - 1 }
 
-        it 'should create registred working time without time entries' do
+        it "should create registred working time without time entries" do
           expect { subject }.to change { employee_rwt.count }.by(1)
           rwt = employee_rwt.first!
 
@@ -75,31 +75,31 @@ RSpec.describe CreateRegisteredWorkingTime do
         end
       end
 
-      context 'on Monday' do
+      context "on Monday" do
         let(:date) { Date.today.beginning_of_week }
 
-        it 'should create registred working time with time entries' do
+        it "should create registred working time with time entries" do
           expect { subject }.to change { employee_rwt.count }.by(1)
           rwt = employee_rwt.first!
 
           expect(rwt.date).to eq(date)
           expect(rwt.date.cwday).to eq(1)
           expect(rwt.time_entries).to match_array([
-            { 'start_time' => '08:00:00', 'end_time' => '12:00:00' },
-            { 'start_time' => '13:00:00', 'end_time' => '17:00:00' }
+            { "start_time" => "08:00:00", "end_time" => "12:00:00" },
+            { "start_time" => "13:00:00", "end_time" => "17:00:00" }
           ])
         end
       end
 
-      context 'with time-off' do
+      context "with time-off" do
         let(:time_off_category) do
-          account.time_off_categories.where(name: 'vacation').first!
+          account.time_off_categories.where(name: "vacation").first!
         end
 
         let(:time_off_policy) do
           create(:time_off_policy,
             time_off_category: time_off_category,
-            policy_type: 'balancer',
+            policy_type: "balancer",
             amount: 960
           )
         end
@@ -111,7 +111,7 @@ RSpec.describe CreateRegisteredWorkingTime do
           )
         end
 
-        context 'full day from Friday to Monday' do
+        context "full day from Friday to Monday" do
           let!(:time_off) do
             create(:time_off, employee: employee, time_off_category: time_off_category,
               start_time: (Date.today.beginning_of_week - 3).at_beginning_of_day,
@@ -119,10 +119,10 @@ RSpec.describe CreateRegisteredWorkingTime do
             )
           end
 
-          context 'on Friday' do
+          context "on Friday" do
             let(:date) { Date.today.beginning_of_week - 3 }
 
-            it 'should create registred working time without time entries' do
+            it "should create registred working time without time entries" do
               expect { subject }.to change { employee_rwt.count }.by(1)
               rwt = employee_rwt.first!
 
@@ -132,10 +132,10 @@ RSpec.describe CreateRegisteredWorkingTime do
             end
           end
 
-          context 'on Sunday' do
+          context "on Sunday" do
             let(:date) { Date.today.beginning_of_week - 1 }
 
-            it 'should create registred working time without time entries' do
+            it "should create registred working time without time entries" do
               expect { subject }.to change { employee_rwt.count }.by(1)
               rwt = employee_rwt.first!
 
@@ -145,24 +145,24 @@ RSpec.describe CreateRegisteredWorkingTime do
             end
           end
 
-          context 'on Tuesday' do
+          context "on Tuesday" do
             let(:date) { Date.today.beginning_of_week + 1 }
 
-            it 'should create registred working time with time entries' do
+            it "should create registred working time with time entries" do
               expect { subject }.to change { employee_rwt.count }.by(1)
               rwt = employee_rwt.first!
 
               expect(rwt.date).to eq(date)
               expect(rwt.date.cwday).to eq(2)
               expect(rwt.time_entries).to match_array([
-                { 'start_time' => '08:00:00', 'end_time' => '12:00:00' },
-                { 'start_time' => '13:00:00', 'end_time' => '17:00:00' }
+                { "start_time" => "08:00:00", "end_time" => "12:00:00" },
+                { "start_time" => "13:00:00", "end_time" => "17:00:00" }
               ])
             end
           end
         end
 
-        context 'half day on Tuesday' do
+        context "half day on Tuesday" do
           let(:date) { Date.today.beginning_of_week + 1 }
 
           let!(:time_off) do
@@ -172,21 +172,21 @@ RSpec.describe CreateRegisteredWorkingTime do
             )
           end
 
-          it 'should create registred working time with time entries' do
+          it "should create registred working time with time entries" do
             expect { subject }.to change { employee_rwt.count }.by(1)
             rwt = employee_rwt.first!
 
             expect(rwt.date).to eq(date)
             expect(rwt.date.cwday).to eq(2)
             expect(rwt.time_entries).to match_array([
-              { 'start_time' => '08:00:00', 'end_time' => '11:00:00' },
+              { "start_time" => "08:00:00", "end_time" => "11:00:00" },
             ])
           end
         end
       end
     end
 
-    context 'and have bank holidays' do
+    context "and have bank holidays" do
       let!(:employee_working_place) do
         create(:employee_working_place, employee: employee, effective_at: date)
       end
@@ -194,7 +194,7 @@ RSpec.describe CreateRegisteredWorkingTime do
       let(:working_place) { employee_working_place.working_place }
 
       let!(:holiday_policy) do
-        create(:holiday_policy, account: account, country: 'ch', region: 'vd')
+        create(:holiday_policy, account: account, country: "ch", region: "vd")
       end
 
       let!(:employee_presence_policy) do
@@ -214,12 +214,12 @@ RSpec.describe CreateRegisteredWorkingTime do
         working_place.save!
       end
 
-      context 'on a working day' do
-        context 'only in the region' do
+      context "on a working day" do
+        context "only in the region" do
           let(:date) { Date.new(2016, 1, 1) }
 
 
-          it 'should create registred working time without time entries' do
+          it "should create registred working time without time entries" do
             expect { subject }.to change { employee_rwt.count }.by(1)
             rwt = employee_rwt.first!
 
@@ -229,10 +229,10 @@ RSpec.describe CreateRegisteredWorkingTime do
           end
         end
 
-        context 'in the country' do
+        context "in the country" do
           let(:date) { Date.new(2016, 8, 1) }
 
-          it 'should create registred working time without time entries' do
+          it "should create registred working time without time entries" do
             expect { subject }.to change { employee_rwt.count }.by(1)
             rwt = employee_rwt.first!
 
@@ -243,10 +243,10 @@ RSpec.describe CreateRegisteredWorkingTime do
         end
       end
 
-      context 'not on a working day' do
+      context "not on a working day" do
         let(:date) { Date.new(2016, 1, 2) }
 
-        it 'should create registred working time without time entries' do
+        it "should create registred working time without time entries" do
           expect { subject }.to change { employee_rwt.count }.by(1)
           rwt = employee_rwt.first!
 
@@ -256,18 +256,18 @@ RSpec.describe CreateRegisteredWorkingTime do
         end
       end
 
-      context 'on another day' do
+      context "on another day" do
         let(:date) { Date.new(2016, 1, 4) }
 
-        it 'should create registred working time without time entries' do
+        it "should create registred working time without time entries" do
           expect { subject }.to change { employee_rwt.count }.by(1)
           rwt = employee_rwt.first!
 
           expect(rwt.date).to eq(date)
           expect(rwt.date.cwday).to eq(1)
           expect(rwt.time_entries).to match_array([
-            { 'start_time' => '08:00:00', 'end_time' => '12:00:00' },
-            { 'start_time' => '13:00:00', 'end_time' => '17:00:00' }
+            { "start_time" => "08:00:00", "end_time" => "12:00:00" },
+            { "start_time" => "13:00:00", "end_time" => "17:00:00" }
           ])
         end
       end

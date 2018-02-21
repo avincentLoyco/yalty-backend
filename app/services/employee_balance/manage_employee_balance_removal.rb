@@ -43,7 +43,7 @@ class ManageEmployeeBalanceRemoval
       .removal_at_date(resource.employee_id, resource.time_off_category_id, new_date)
     new_removal.first_or_create do |removal|
       removal.effective_at = new_date
-      removal.balance_type = 'removal'
+      removal.balance_type = "removal"
     end
   end
 

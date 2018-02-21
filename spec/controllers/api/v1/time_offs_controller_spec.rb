@@ -1,8 +1,8 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
-  include_context 'shared_context_headers'
-  include_context 'shared_context_timecop_helper'
+  include_context "shared_context_headers"
+  include_context "shared_context_timecop_helper"
 
   before { time_off_category.update!(account: Account.current) }
   let(:policy) { create(:presence_policy, :with_presence_day, account: Account.current) }
@@ -22,15 +22,15 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
     create(:time_off, time_off_category_id: time_off_category.id, employee: employee)
   end
 
-  describe 'GET #show' do
+  describe "GET #show" do
     subject { get :show, id: id }
 
-    context 'with valid id' do
+    context "with valid id" do
       let(:id) { time_off.id }
 
       it { is_expected.to have_http_status(200) }
 
-      context 'response body' do
+      context "response body" do
         before { subject }
 
         it { expect_json_keys(
@@ -39,14 +39,14 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
       end
     end
 
-    context 'with invalid id' do
-      context 'time off with given id does not exist' do
-        let(:id) { 'abc' }
+    context "with invalid id" do
+      context "time off with given id does not exist" do
+        let(:id) { "abc" }
 
         it { is_expected.to have_http_status(404) }
       end
 
-      context 'time off belongs to other account' do
+      context "time off belongs to other account" do
         before { Account.current = create(:account) }
         let(:id) { time_off.id }
 
@@ -55,16 +55,16 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
     end
   end
 
-  describe 'GET #index' do
+  describe "GET #index" do
     let(:params) {{ time_off_category_id: time_off_category.id }}
     let!(:time_offs) { create_list(:time_off, 3, time_off_category: time_off_category) }
     subject { get :index, params }
 
     before { user.employee = employee }
 
-    context 'when user is a manager' do
-      before { user.update_attribute(:role, 'account_administrator') }
-      it 'should return all time off category time offs' do
+    context "when user is a manager" do
+      before { user.update_attribute(:role, "account_administrator") }
+      it "should return all time off category time offs" do
         subject
 
         time_off_category.time_offs.each do |time_off|
@@ -76,10 +76,10 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
       it { is_expected.to have_http_status(200) }
     end
 
-    context 'when the user is not a manager' do
-      before { user.role = 'user' }
-      context 'when user has an employee' do
-        it 'should return employee time offs and not others time offs' do
+    context "when the user is not a manager" do
+      before { user.role = "user" }
+      context "when user has an employee" do
+        it "should return employee time offs and not others time offs" do
           subject
 
           expect(response.body).to include time_off.id
@@ -90,12 +90,12 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
         end
       end
 
-      context 'when the user does not has an employee' do
+      context "when the user does not has an employee" do
         before(:each) do
           user.employee = nil
         end
 
-        it 'should return an empty collection' do
+        it "should return an empty collection" do
           subject
 
           time_offs.each do |time_off|
@@ -108,8 +108,8 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
       it { is_expected.to have_http_status(200) }
     end
 
-    context 'when user does not have a an employee'
-    it 'should not be visible in context of other account' do
+    context "when user does not have a an employee"
+    it "should not be visible in context of other account" do
       Account.current = create(:account)
       subject
 
@@ -119,42 +119,42 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
     end
   end
 
-  describe 'POST #create' do
+  describe "POST #create" do
     before { Employee::Balance.where.not(id: assignation_balance.id).destroy_all }
     let(:time_off) { nil }
-    let(:start_time) { '2016-12-30T13:00:00'  }
-    let(:end_time) { '2017-1-3T15:00:00' }
+    let(:start_time) { "2016-12-30T13:00:00"  }
+    let(:end_time) { "2017-1-3T15:00:00" }
     let(:employee_id) { employee.id }
     let(:time_off_category_id) { time_off_category.id }
     let(:params) do
       {
-        type: 'time_off',
+        type: "time_off",
         start_time: start_time,
         end_time: end_time,
         employee: {
-          type: 'employee',
+          type: "employee",
           id: employee_id
         },
         time_off_category: {
-          type: 'time_off_category',
+          type: "time_off_category",
           id: time_off_category_id
         }
       }
     end
     subject { post :create, params }
 
-    shared_examples 'Invalid Data' do
+    shared_examples "Invalid Data" do
       it { expect { subject }.to_not change { TimeOff.count } }
       it { expect { subject }.to_not change { employee.reload.time_offs.count } }
       it { expect { subject }.to_not change { time_off_category.reload.time_offs } }
       it { expect { subject }.to_not change { Employee::Balance.count } }
     end
 
-    context 'when there is one day contract' do
+    context "when there is one day contract" do
       before do
         employee.events.hired.first.update!(effective_at: employee_time_off_policy.effective_at)
         create(:employee_event,
-          employee: employee, event_type: 'contract_end', effective_at: employee.hired_date)
+          employee: employee, event_type: "contract_end", effective_at: employee.hired_date)
       end
 
       let(:start_time) { "#{employee.hired_date}, 8:00" }
@@ -163,37 +163,37 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
       it { expect { subject }.to change { TimeOff.count }.by(1) }
       it { expect { subject }.to change { Employee::Balance.count }.by(1) }
 
-      context 'when end time is at midnight' do
+      context "when end time is at midnight" do
         let(:end_time)  { "#{employee.hired_date + 1.day}, 00:00"}
 
         it { expect { subject }.to change { TimeOff.count }.by(1) }
         it { expect { subject }.to change { Employee::Balance.count }.by(1) }
       end
 
-      context 'when end time is after contract periods' do
+      context "when end time is after contract periods" do
         let(:end_time) { "#{employee.hired_date + 1.day}, 20:00" }
 
-        it_behaves_like 'Invalid Data'
+        it_behaves_like "Invalid Data"
 
 
-        context 'and start_time' do
+        context "and start_time" do
           let(:start_time) { "#{employee.hired_date + 1.day}, 10:00" }
 
-          it_behaves_like 'Invalid Data'
+          it_behaves_like "Invalid Data"
         end
 
-        context 'when there is rehired after' do
+        context "when there is rehired after" do
           before do
             create(:employee_event,
-              employee: employee, event_type: 'hired', effective_at: employee.hired_date + 1.day)
+              employee: employee, event_type: "hired", effective_at: employee.hired_date + 1.day)
           end
 
-          it_behaves_like 'Invalid Data'
+          it_behaves_like "Invalid Data"
         end
       end
     end
 
-    context 'with valid params' do
+    context "with valid params" do
       it { expect { subject }.to change { TimeOff.count }.by(1) }
       it { expect { subject }.to change { Employee::Balance.count }.by(1) }
       it { expect { subject }.to change { time_off_category.reload.time_offs.count }.by(1) }
@@ -201,31 +201,31 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
 
       it { is_expected.to have_http_status(201) }
 
-      context 'response body' do
+      context "response body" do
         before { subject }
 
         it { expect_json_keys([:id, :type, :employee, :time_off_category, :start_time, :end_time]) }
       end
 
-      context 'with manual_amount' do
+      context "with manual_amount" do
         let(:params_with_manual_amount) { params.merge!(manual_amount: 200) }
         subject(:create_with_manual_amount) { post :create, params_with_manual_amount }
 
         it { expect { create_with_manual_amount }.to change { TimeOff.count }.by(1) }
         it { expect { create_with_manual_amount }.to change { Employee::Balance.count }.by(1) }
 
-        it 'properly assigns manual_amount' do
+        it "properly assigns manual_amount" do
           create_with_manual_amount
           expect(Employee::Balance.order(:effective_at).last.manual_amount).to eq(200)
         end
       end
 
-      context 'when time off has time entries in its period' do
+      context "when time off has time entries in its period" do
         let(:first_day) { create(:presence_day, order: 5, presence_policy: policy) }
         let(:second_day) { create(:presence_day, order: 2, presence_policy: policy) }
         let!(:second_entry) { create(:time_entry, presence_day: second_day) }
         let!(:first_entry) do
-          create(:time_entry, start_time: '10:00', end_time: '17:00', presence_day: first_day)
+          create(:time_entry, start_time: "10:00", end_time: "17:00", presence_day: first_day)
         end
 
         it { expect { subject }.to change { Employee::Balance.count }.by(1) }
@@ -233,7 +233,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
 
         it { is_expected.to have_http_status(201) }
 
-        context 'new employee balance amount' do
+        context "new employee balance amount" do
           before do
             create(:presence_day, order: 7, presence_policy: policy)
             EmployeePresencePolicy.first.update!(order_of_start_day: 5)
@@ -243,7 +243,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
           it { expect(Employee::Balance.order(:effective_at).last.amount).to eq (-240) }
         end
 
-        context 'when they are other balances in time offs period' do
+        context "when they are other balances in time offs period" do
           before do
             employee_time_off_policy.update!(effective_at: Time.now)
             ManageEmployeeBalanceAdditions.new(employee_time_off_policy).call
@@ -264,7 +264,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
         end
       end
 
-      context 'when employee does not have employee presence policy' do
+      context "when employee does not have employee presence policy" do
         before { EmployeePresencePolicy.destroy_all }
 
         it { expect { subject }.to change { Employee::Balance.count }.by(1) }
@@ -272,17 +272,17 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
 
         it { is_expected.to have_http_status(201) }
 
-        context 'new employee balance amount' do
+        context "new employee balance amount" do
           before { subject }
 
           it { expect(Employee::Balance.last.amount).to eq 0 }
         end
       end
 
-      context 'when time off is created after contract end' do
+      context "when time off is created after contract end" do
         before do
           create(:employee_event,
-            employee: employee, event_type: 'contract_end',
+            employee: employee, event_type: "contract_end",
             effective_at: start_time.to_date - 10.days)
         end
 
@@ -291,16 +291,16 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
           subject
 
           expect(response.body)
-            .to include 'can\'t be set outside of employee contract period'
+            .to include "can't be set outside of employee contract period"
         end
 
-        context 'and rehired event' do
+        context "and rehired event" do
           before do
             create(:employee_event,
-              employee: employee, event_type: 'hired', effective_at: start_time.to_date - 1.day)
+              employee: employee, event_type: "hired", effective_at: start_time.to_date - 1.day)
           end
 
-          context 'and employee has employee time off policy assigned' do
+          context "and employee has employee time off policy assigned" do
             before do
               create(:employee_time_off_policy,
                 effective_at: start_time.to_date - 1.day, employee: employee,
@@ -312,64 +312,64 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
             it { expect { subject }.to change { Employee::Balance.count }.by(1) }
           end
 
-          context 'and employee does not have employee time off policy assigned' do
+          context "and employee does not have employee time off policy assigned" do
             it { is_expected.to have_http_status(422) }
             it do
               subject
 
-              expect(response.body).to include 'Time off policy in category required'
+              expect(response.body).to include "Time off policy in category required"
             end
           end
         end
       end
     end
 
-    context 'with invalid params' do
-      context 'when params are missing' do
+    context "with invalid params" do
+      context "when params are missing" do
         before { params.delete(:start_time) }
 
-        it_behaves_like 'Invalid Data'
+        it_behaves_like "Invalid Data"
 
         it { is_expected.to have_http_status(422) }
       end
 
-      context 'with params that do not pass validation' do
-        let(:end_time) { '2016-10-4T13:00:00' }
+      context "with params that do not pass validation" do
+        let(:end_time) { "2016-10-4T13:00:00" }
 
-        it_behaves_like 'Invalid Data'
+        it_behaves_like "Invalid Data"
 
         it { is_expected.to have_http_status(422) }
       end
 
-      context 'with invalid id' do
-        context 'with invalid employee id' do
-          let(:employee_id) { 'abc' }
+      context "with invalid id" do
+        context "with invalid employee id" do
+          let(:employee_id) { "abc" }
 
-          it_behaves_like 'Invalid Data'
+          it_behaves_like "Invalid Data"
 
           it { is_expected.to have_http_status(404) }
         end
 
-        context 'with employee does not belong to account' do
+        context "with employee does not belong to account" do
           before { Account.current = create(:account) }
 
-          it_behaves_like 'Invalid Data'
+          it_behaves_like "Invalid Data"
 
           it { is_expected.to have_http_status(404) }
         end
 
-        context 'with invalid category id' do
-          let(:time_off_category_id) { 'abc' }
+        context "with invalid category id" do
+          let(:time_off_category_id) { "abc" }
 
-          it_behaves_like 'Invalid Data'
+          it_behaves_like "Invalid Data"
 
           it { is_expected.to have_http_status(404) }
         end
 
-        context 'with category does not belong to account' do
+        context "with category does not belong to account" do
           before { Account.current = create(:account) }
 
-          it_behaves_like 'Invalid Data'
+          it_behaves_like "Invalid Data"
 
           it { is_expected.to have_http_status(404) }
         end
@@ -377,7 +377,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
     end
   end
 
-  describe 'PUT #update' do
+  describe "PUT #update" do
     before { Employee::Balance.destroy_all }
 
     let(:id) { time_off.id }
@@ -386,7 +386,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
     let(:params) do
       {
         id: id,
-        type: 'time_off',
+        type: "time_off",
         start_time: start_time,
         end_time: end_time,
       }
@@ -398,18 +398,18 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
 
     subject { put :update, params }
 
-    context 'with valid params' do
+    context "with valid params" do
       it { expect { subject }.to change { time_off.reload.start_time } }
       it { expect { subject }.to change { time_off.reload.end_time } }
       it { expect { subject }.to change { employee_balance.reload.being_processed } }
 
       it { is_expected.to have_http_status(204) }
 
-      context 'with manual_amount' do
+      context "with manual_amount" do
         let(:params_with_manual_amount) { params.merge!(manual_amount: 200) }
         subject(:update_with_manual_amount) { put :update, params_with_manual_amount }
 
-        it 'should update balance' do
+        it "should update balance" do
           perform_enqueued_jobs do
             update_with_manual_amount
             expect(employee_balance.reload.manual_amount).to eq(200)
@@ -417,10 +417,10 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
         end
       end
 
-      context 'when there are balances between time offs start and end time' do
+      context "when there are balances between time offs start and end time" do
         before do
           time_off.update!(start_time: Date.new(2017, 1, 1))
-          policy.presence_days.first.time_entries.create!(start_time: '10:00', end_time: '18:00')
+          policy.presence_days.first.time_entries.create!(start_time: "10:00", end_time: "18:00")
           ManageEmployeeBalanceAdditions.new(employee_time_off_policy).call
           Employee::Balance.update_all(being_processed: false)
         end
@@ -428,12 +428,12 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
         let!(:balance_after_time_off) do
           Employee::Balance
           .where(
-            'effective_at BETWEEN ? AND ?', time_off.start_time, time_off.end_time
+            "effective_at BETWEEN ? AND ?", time_off.start_time, time_off.end_time
           )
           .where(time_off_id: nil).first
         end
 
-        context 'and time off moved to future' do
+        context "and time off moved to future" do
           let(:start_time) { 14.months.since }
           let(:end_time) { 15.months.since }
           let(:balances_after_new_effective_at) do
@@ -453,7 +453,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
           end
         end
 
-        context 'and time off moved to past' do
+        context "and time off moved to past" do
           let!(:balances_after_new_effective_at) { Employee::Balance.order(:effective_at).first(2) }
           let(:start_time) { 1.year.ago }
           let(:end_time) { 11.months.since }
@@ -472,10 +472,10 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
         end
       end
 
-      context 'when time off is created after contract end' do
+      context "when time off is created after contract end" do
         before do
           create(:employee_event,
-            employee: employee, event_type: 'contract_end',
+            employee: employee, event_type: "contract_end",
             effective_at: start_time.to_date - 10.days)
         end
 
@@ -484,16 +484,16 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
           subject
 
           expect(response.body)
-            .to include 'can\'t be set outside of employee contract period'
+            .to include "can't be set outside of employee contract period"
         end
 
-        context 'and rehired event' do
+        context "and rehired event" do
           before do
             create(:employee_event,
-              employee: employee, event_type: 'hired', effective_at: start_time.to_date - 1.day)
+              employee: employee, event_type: "hired", effective_at: start_time.to_date - 1.day)
           end
 
-          context 'and employee has employee time off policy assigned' do
+          context "and employee has employee time off policy assigned" do
             before do
               create(:employee_time_off_policy,
                 effective_at: start_time.to_date - 1.day, employee: employee,
@@ -505,19 +505,19 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
             it { expect { subject }.to change { time_off.reload.end_time } }
           end
 
-          context 'and employee does not have employee time off policy assigned' do
+          context "and employee does not have employee time off policy assigned" do
             it { is_expected.to have_http_status(422) }
             it do
               subject
 
-              expect(response.body).to include 'Time off policy in category required'
+              expect(response.body).to include "Time off policy in category required"
             end
           end
 
-          context 'and start time in previous period and end date in current' do
+          context "and start time in previous period and end date in current" do
             before do
               create(:employee_time_off_policy,
-                effective_at: '1/1/2016', employee: employee,
+                effective_at: "1/1/2016", employee: employee,
                 time_off_policy: create(:time_off_policy, time_off_category: time_off_category))
             end
             let(:params) do
@@ -535,8 +535,8 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
       end
     end
 
-    context 'with invalid params' do
-      context 'params are missing' do
+    context "with invalid params" do
+      context "params are missing" do
         before { params.delete(:start_time) }
 
         it { expect { subject }.to_not change { time_off.reload.start_time } }
@@ -546,7 +546,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
         it { is_expected.to have_http_status(422) }
       end
 
-      context 'params do not pass validation' do
+      context "params do not pass validation" do
         let(:end_time) { start_time - 1.week }
 
         it { expect { subject }.to_not change { time_off.reload.start_time } }
@@ -556,8 +556,8 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
         it { is_expected.to have_http_status(422) }
       end
 
-      context 'invalid id given' do
-        let(:id) { 'abc' }
+      context "invalid id given" do
+        let(:id) { "abc" }
 
         it { expect { subject }.to_not change { time_off.reload.start_time } }
         it { expect { subject }.to_not change { time_off.reload.end_time } }
@@ -568,13 +568,13 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
     end
   end
 
-  describe 'DELETE #destroy' do
+  describe "DELETE #destroy" do
     subject { delete :destroy, id: id }
     let(:id) { time_off.id }
 
-    context 'with valid data' do
+    context "with valid data" do
 
-      context 'when there are balances to be updated' do
+      context "when there are balances to be updated" do
         let(:id) { time_off.id }
 
         it { expect { subject }.to change { TimeOff.count }.by(-1) }
@@ -582,7 +582,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
         it { is_expected.to have_http_status(204) }
       end
 
-      context 'when there are balances between time off start and end time' do
+      context "when there are balances between time off start and end time" do
         before { time_off.update!(start_time: Date.new(2017, 1, 1)) }
         let!(:policy_start_balance) do
           create(:employee_balance_manual,
@@ -598,7 +598,7 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
         it { is_expected.to have_http_status(204) }
       end
 
-      context 'when there are no balances to be updated' do
+      context "when there are no balances to be updated" do
         let(:id) { time_off.id }
         let!(:later_time_off) do
           create(:time_off,
@@ -615,16 +615,16 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
       end
     end
 
-    context 'with invalid data' do
-      context 'with invalid id' do
-        let(:id) { 'abc' }
+    context "with invalid data" do
+      context "with invalid id" do
+        let(:id) { "abc" }
 
         it { expect { subject }.to_not change { TimeOff.count } }
         it { expect { subject }.to_not change { Employee::Balance.count } }
         it { is_expected.to have_http_status(404) }
       end
 
-      context 'with not account id' do
+      context "with not account id" do
         before { Account.current = create(:account) }
 
         it { expect { subject }.to_not change { TimeOff.count } }

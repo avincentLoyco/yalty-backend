@@ -1,7 +1,7 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe CreateAdditionsAndRemovals do
-  include_context 'shared_context_timecop_helper'
+  include_context "shared_context_timecop_helper"
 
   let!(:account)  { create(:account) }
   let!(:employee) { create(:employee, account: account) }
@@ -9,7 +9,7 @@ RSpec.describe CreateAdditionsAndRemovals do
 
   subject(:execute_job) { CreateAdditionsAndRemovals.perform_now }
 
-  context 'for balancer time off policy' do
+  context "for balancer time off policy" do
     let!(:policy) do
       create(:time_off_policy, :with_end_date, time_off_category: category, amount: 100)
     end
@@ -20,20 +20,20 @@ RSpec.describe CreateAdditionsAndRemovals do
     let!(:etop_balance_assignation) do
       create(:employee_balance_manual, :addition, employee: employee, time_off_category: category,
         effective_at: etop.effective_at + Employee::Balance::ADDITION_OFFSET,
-        validity_date: '2017-04-01'.to_date + 1.day + Employee::Balance::REMOVAL_OFFSET)
+        validity_date: "2017-04-01".to_date + 1.day + Employee::Balance::REMOVAL_OFFSET)
     end
     let!(:etop_balance_removal) do
       create(:employee_balance_manual, employee: employee, time_off_category: category,
-        effective_at: '2017-04-01'.to_date + 1.day + Employee::Balance::REMOVAL_OFFSET,
-        validity_date: nil, balance_type: 'removal')
+        effective_at: "2017-04-01".to_date + 1.day + Employee::Balance::REMOVAL_OFFSET,
+        validity_date: nil, balance_type: "removal")
     end
 
-    context 'no other etops in category' do
-      context 'there are no balances in periods yet' do
+    context "no other etops in category" do
+      context "there are no balances in periods yet" do
         it { expect { execute_job }.to change(Employee::Balance, :count).by(7) }
       end
 
-      context 'there are already balances in upcoming period' do
+      context "there are already balances in upcoming period" do
         before do
           CreateAdditionsAndRemovals.perform_now
           Timecop.freeze(2017, 1, 1, 0, 0)
@@ -45,7 +45,7 @@ RSpec.describe CreateAdditionsAndRemovals do
       end
     end
 
-    context 'there is etop before active one' do
+    context "there is etop before active one" do
       let!(:previous_policy) do
         create(:time_off_policy, :with_end_date, time_off_category: category, amount: 500)
       end
@@ -60,7 +60,7 @@ RSpec.describe CreateAdditionsAndRemovals do
       it { expect(Employee::Balance.additions.last.resource_amount).to eq(policy.amount) }
     end
 
-    context 'there is etop after active one' do
+    context "there is etop after active one" do
       let!(:next_policy) do
         create(:time_off_policy, :with_end_date, time_off_category: category, amount: 500)
       end
@@ -74,11 +74,11 @@ RSpec.describe CreateAdditionsAndRemovals do
       it { expect(Employee::Balance.count).to eq(10) }
     end
 
-    context 'there is etop after active one' do
+    context "there is etop after active one" do
       let!(:existing_balance) do
         create(:employee_balance_manual, :addition, employee: employee, time_off_category: category,
-          effective_at: '2017-01-01'.to_date + Employee::Balance::ASSIGNATION_OFFSET,
-          validity_date: '2018-04-01'.to_date + 1.day + Employee::Balance::REMOVAL_OFFSET,
+          effective_at: "2017-01-01".to_date + Employee::Balance::ASSIGNATION_OFFSET,
+          validity_date: "2018-04-01".to_date + 1.day + Employee::Balance::REMOVAL_OFFSET,
           created_at: 5.days.from_now, updated_at: 5.days.from_now)
       end
 
@@ -86,11 +86,11 @@ RSpec.describe CreateAdditionsAndRemovals do
       it { expect { execute_job }.to_not change(existing_balance, :updated_at) }
     end
 
-    context 'when employee has contract end date' do
+    context "when employee has contract end date" do
       before do
         etop_balance_removal.destroy!
         create(:employee_event,
-          event_type: 'contract_end', effective_at: reset_etop_effective_at - 1.day,
+          event_type: "contract_end", effective_at: reset_etop_effective_at - 1.day,
           employee: employee)
       end
 
@@ -100,25 +100,25 @@ RSpec.describe CreateAdditionsAndRemovals do
           employee: employee, time_off_policy: reset_policy, effective_at: reset_etop_effective_at)
       end
 
-      context 'and reset policy is assigned in the future' do
+      context "and reset policy is assigned in the future" do
         let(:reset_etop_effective_at) { 1.year.since }
 
-        context 'and employee is not rehired' do
+        context "and employee is not rehired" do
           it { expect { subject }.to_not raise_error }
         end
 
-        context 'it created end of period balance for contract end' do
+        context "it created end of period balance for contract end" do
           before { execute_job }
 
-          it { expect(Employee::Balance.where(balance_type: 'assignation').count).to eq 1 }
+          it { expect(Employee::Balance.where(balance_type: "assignation").count).to eq 1 }
           it { expect(Employee::Balance.additions.count).to eq 1 }
-          it { expect(Employee::Balance.where(balance_type: 'reset').count).to eq 1 }
+          it { expect(Employee::Balance.where(balance_type: "reset").count).to eq 1 }
         end
 
-        context 'and employee is rehired' do
+        context "and employee is rehired" do
           before do
             create(:employee_event,
-              event_type: 'hired', employee: employee, effective_at: 2.years.since)
+              event_type: "hired", employee: employee, effective_at: 2.years.since)
             create(:employee_time_off_policy,
               employee: employee, time_off_policy: policy, effective_at: 2.years.since)
           end
@@ -127,19 +127,19 @@ RSpec.describe CreateAdditionsAndRemovals do
         end
       end
 
-      context 'and reset policy was assigned in the past' do
+      context "and reset policy was assigned in the past" do
         let(:reset_etop_effective_at) { 1.year.ago + 1.week }
 
-        context 'and employee is not rehired' do
+        context "and employee is not rehired" do
           before { etop.destroy! }
 
           it { expect { execute_job }.to_not change { Employee::Balance.count } }
         end
 
-        context 'and employee is rehired' do
+        context "and employee is rehired" do
           before do
             create(:employee_event,
-              employee: employee, event_type: 'hired', effective_at: Time.zone.today)
+              employee: employee, event_type: "hired", effective_at: Time.zone.today)
           end
 
           it { expect { subject }.to change { Employee::Balance.count }.by(8) }
@@ -147,14 +147,14 @@ RSpec.describe CreateAdditionsAndRemovals do
       end
     end
 
-    context 'when etop time off policy has start day and month is not today' do
-      context 'when start day is different' do
+    context "when etop time off policy has start day and month is not today" do
+      context "when start day is different" do
         before { policy.update!(start_day: 10) }
 
         it { expect { execute_job }.to_not change { Employee::Balance.count } }
       end
 
-      context 'when start month is different' do
+      context "when start month is different" do
         before { policy.update!(start_month: 2) }
 
         it { expect { execute_job }.to_not change { Employee::Balance.count } }
@@ -162,14 +162,14 @@ RSpec.describe CreateAdditionsAndRemovals do
     end
   end
 
-  context 'for counter time off policy' do
+  context "for counter time off policy" do
     let(:policy) { create(:time_off_policy, :as_counter, time_off_category: category) }
     let!(:etop) do
       create(:employee_time_off_policy, :with_employee_balance,
         employee: employee, time_off_policy: policy, effective_at: 2.months.ago)
     end
 
-    context 'when they are previous balances' do
+    context "when they are previous balances" do
       before do
         create(:employee_presence_policy, :with_time_entries,
           employee: employee, effective_at: 2.years.ago)
@@ -182,16 +182,16 @@ RSpec.describe CreateAdditionsAndRemovals do
       end
 
       it { expect { subject }.to change { Employee::Balance.count }.by(6) }
-      it 'has proper amount' do
+      it "has proper amount" do
         subject
 
         expect(Employee::Balance.additions.pluck(:resource_amount).first).to eq(-time_off.balance)
       end
     end
 
-    context 'when there are no previous balances' do
+    context "when there are no previous balances" do
       it { expect { subject }.to change { Employee::Balance.count }.by(6) }
-      it 'has proper amount' do
+      it "has proper amount" do
         subject
 
         expect(Employee::Balance.additions.pluck(:resource_amount)).to match_array(

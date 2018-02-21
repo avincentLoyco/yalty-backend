@@ -1,5 +1,5 @@
-require 'rails_helper'
-require 'employee/attribute'
+require "rails_helper"
+require "employee/attribute"
 
 RSpec.describe Employee::Attribute, type: :model do
   it { is_expected.to have_db_column(:attribute_name) }
@@ -12,7 +12,7 @@ RSpec.describe Employee::Attribute, type: :model do
 
   it { is_expected.to have_one(:account).through(:employee) }
 
-  it { is_expected.to belong_to(:attribute_definition).class_name('Employee::AttributeDefinition') }
+  it { is_expected.to belong_to(:attribute_definition).class_name("Employee::AttributeDefinition") }
 
-  it { is_expected.to belong_to(:event).class_name('Employee::Event') }
+  it { is_expected.to belong_to(:event).class_name("Employee::Event") }
 end

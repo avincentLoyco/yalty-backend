@@ -42,7 +42,7 @@ module API
 
         def plans
           Stripe::Plan.list.select do |plan|
-            next if plan.id.eql?('free-plan')
+            next if plan.id.eql?("free-plan")
             plan.active = subscribed_plans.include?(plan.id)
             plan.free = free_plans.include?(plan.id)
             plan
@@ -76,7 +76,7 @@ module API
         end
 
         def stripe_error(exception)
-          error = StripeError.new(type: 'subscription', field: nil, message: exception.message)
+          error = StripeError.new(type: "subscription", field: nil, message: exception.message)
           render json: ::Api::V1::StripeErrorRepresenter.new(error).complete, status: 502
         end
       end

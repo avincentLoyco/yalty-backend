@@ -6,11 +6,11 @@ module Attribute
 
     def allowed_values
       {
-        'other_parent_work_status' => [
-          'salaried employee', 'unemployed', 'no activity', 'sick', 'injured', 'self-employed',
-          'pensioner'
+        "other_parent_work_status" => [
+          "salaried employee", "unemployed", "no activity", "sick", "injured", "self-employed",
+          "pensioner"
         ],
-        'nationality' => ISO3166::Country.codes
+        "nationality" => ISO3166::Country.codes
       }
     end
   end

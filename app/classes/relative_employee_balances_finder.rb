@@ -7,7 +7,7 @@ class RelativeEmployeeBalancesFinder
   end
 
   def previous_balances
-    related_balances.where('effective_at < ?', employee_balance.now_or_effective_at)
+    related_balances.where("effective_at < ?", employee_balance.now_or_effective_at)
                     .order(effective_at: :asc)
   end
 
@@ -19,14 +19,14 @@ class RelativeEmployeeBalancesFinder
         employee_balance.now_or_effective_at
       end
 
-    related_balances.where('effective_at > ? AND id != ?', effective_at, employee_balance.id)
+    related_balances.where("effective_at > ? AND id != ?", effective_at, employee_balance.id)
                     .order(effective_at: :asc).first.try(:id)
   end
 
   def active_balances
     related_balances
       .where(
-        'effective_at < ? AND validity_date > ?',
+        "effective_at < ? AND validity_date > ?",
         employee_balance.effective_at, employee_balance.effective_at
       )
   end

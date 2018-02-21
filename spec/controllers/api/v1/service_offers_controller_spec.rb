@@ -1,10 +1,10 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe API::V1::ServiceOffersController, type: :controller do
-  include_context 'shared_context_headers'
+  include_context "shared_context_headers"
 
   before do
-    ENV['YALTY_SERVICE_EMAIL'] = 'yalty@service.com'
+    ENV["YALTY_SERVICE_EMAIL"] = "yalty@service.com"
   end
 
   let(:params) do
@@ -154,19 +154,19 @@ RSpec.describe API::V1::ServiceOffersController, type: :controller do
     }.with_indifferent_access
   end
 
-  describe 'POST #create' do
+  describe "POST #create" do
     subject { post :create, params }
 
-    context 'with book-now action' do
-      let(:service_action) { 'book-now' }
+    context "with book-now action" do
+      let(:service_action) { "book-now" }
 
       it { is_expected.to have_http_status(204) }
       it { expect(ServiceRequestMailer).to receive(:book_request); subject }
       it { expect { subject }.to change(ActionMailer::Base.deliveries, :count) }
     end
 
-    context 'with send-quote action' do
-      let(:service_action) { 'send-quote' }
+    context "with send-quote action" do
+      let(:service_action) { "send-quote" }
 
       it { is_expected.to have_http_status(204) }
       it { expect(ServiceRequestMailer).to receive(:quote_request); subject }

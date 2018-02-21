@@ -1,4 +1,4 @@
-require 'active_support/concern'
+require "active_support/concern"
 
 module ActsAsAttribute
   extend ActiveSupport::Concern
@@ -18,7 +18,7 @@ module ActsAsAttribute
   included do
     belongs_to :attribute_definition,
       -> { readonly },
-      class_name: 'Employee::AttributeDefinition',
+      class_name: "Employee::AttributeDefinition",
       required: true
 
     serialize :data, AttributeSerializer
@@ -81,7 +81,7 @@ module ActsAsAttribute
 
   def map_errors
     data.attribute_model.errors.messages.each do |kv|
-      errors.add(attribute_definition.name, kv.join(' - '))
+      errors.add(attribute_definition.name, kv.join(" - "))
     end
   end
 
@@ -115,7 +115,7 @@ module ActsAsAttribute
 
     def initialize(data)
       @data = data || {}
-      @attribute_type = @data[:attribute_type] || @data['attribute_type']
+      @attribute_type = @data[:attribute_type] || @data["attribute_type"]
     end
 
     def attribute_type=(attribute_type)
@@ -128,7 +128,7 @@ module ActsAsAttribute
 
     def value
       value = to_hash.dup
-      value.delete(:attribute_type) || value.delete('attribute_type')
+      value.delete(:attribute_type) || value.delete("attribute_type")
 
       if value.keys.size > 1
         value

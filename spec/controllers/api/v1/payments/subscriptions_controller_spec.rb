@@ -1,35 +1,35 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
-  include_context 'shared_context_headers'
-  include_context 'shared_context_timecop_helper'
+  include_context "shared_context_headers"
+  include_context "shared_context_timecop_helper"
 
   let(:account) do
-    modules = [::Payments::PlanModule.new(id: 'master-plan', canceled: false)]
+    modules = [::Payments::PlanModule.new(id: "master-plan", canceled: false)]
     create(:account, :with_billing_information,
       available_modules: ::Payments::AvailableModules.new(data: modules))
   end
   let!(:employees) { create_list(:employee, 5, account: account) }
-  let(:user) { create(:account_user, role: 'account_administrator', account: account) }
+  let(:user) { create(:account_user, role: "account_administrator", account: account) }
 
   let!(:timestamp) { Time.zone.now.to_i }
-  let(:customer) { StripeCustomer.new('cus_123', 'desc', 'test@email.com', 'ca_123') }
+  let(:customer) { StripeCustomer.new("cus_123", "desc", "test@email.com", "ca_123") }
   let(:subscription) do
-    subscription = StripeSubscription.new('sub_123', timestamp)
+    subscription = StripeSubscription.new("sub_123", timestamp)
     subscription.tax_percent = 8.0
     subscription
   end
-  let(:invoice) { StripeInvoice.new('in_123', 666, timestamp) }
-  let(:card) { StripeCard.new('ca_123', 4567, 'Visa', 12, 2018) }
+  let(:invoice) { StripeInvoice.new("in_123", 666, timestamp) }
+  let(:card) { StripeCard.new("ca_123", 4567, "Visa", 12, 2018) }
   let(:plans) do
-    ['master-plan', 'evil-plan', 'sweet-sweet-plan', 'free-plan'].map do |plan_id|
-      StripePlan.new(plan_id, 400, 'chf', 'month', plan_id.titleize)
+    ["master-plan", "evil-plan", "sweet-sweet-plan", "free-plan"].map do |plan_id|
+      StripePlan.new(plan_id, 400, "chf", "month", plan_id.titleize)
     end
   end
   let(:subscription_items) do
     [
-      StripeSubscriptionItem.new('si_123', plans.first, 5),
-      StripeSubscriptionItem.new('si_456', plans.last, 5)
+      StripeSubscriptionItem.new("si_123", plans.first, 5),
+      StripeSubscriptionItem.new("si_456", plans.last, 5)
     ]
   end
 
@@ -42,7 +42,7 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
         Payments::PlanModule.new(id: plans.second.id, canceled: true)
       ])
     )
-    Account::User.current.update(role: 'account_owner')
+    Account::User.current.update(role: "account_owner")
 
     allow(Stripe::Customer).to receive(:retrieve).and_return(customer)
     allow(Stripe::Invoice).to receive(:upcoming).and_return(invoice)
@@ -54,12 +54,12 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
     allow_any_instance_of(StripeInvoice).to receive_message_chain(:lines, :data).and_return([])
   end
 
-  describe '#GET /v1/payments/subscription' do
+  describe "#GET /v1/payments/subscription" do
     let(:expected_json) do
       {
         id: subscription.id,
         tax_percent: 8.0,
-        current_period_end: '2016-01-01T00:00:00.000Z',
+        current_period_end: "2016-01-01T00:00:00.000Z",
         quantity: 6,
         plans: [
           {
@@ -93,7 +93,7 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
         invoice: {
           id: invoice.id,
           amount_due: invoice.amount_due,
-          date: '2016-01-01T00:00:00.000Z',
+          date: "2016-01-01T00:00:00.000Z",
           prorate_amount: 0,
           line_items: []
         },
@@ -124,28 +124,28 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
 
     subject(:get_subscription) { get :index  }
 
-    context 'when user is an account_owner' do
+    context "when user is an account_owner" do
       before { get_subscription }
 
       it { expect(response.status).to eq(200) }
       it { expect_json(expected_json) }
     end
 
-    context 'when user is not an account_owner but' do
-      context 'an account_administrator' do
+    context "when user is not an account_owner but" do
+      context "an account_administrator" do
         before do
-          create(:account_user, account: Account::User.current.account, role: 'account_owner')
-          Account::User.current.update!(role: 'account_administrator')
+          create(:account_user, account: Account::User.current.account, role: "account_owner")
+          Account::User.current.update!(role: "account_administrator")
           get_subscription
         end
 
         it { expect(response.status).to eq(403) }
       end
 
-      context 'a regular user' do
+      context "a regular user" do
         before do
-          create(:account_user, account: Account::User.current.account, role: 'account_owner')
-          Account::User.current.update!(role: 'user')
+          create(:account_user, account: Account::User.current.account, role: "account_owner")
+          Account::User.current.update!(role: "user")
           get_subscription
         end
 
@@ -153,15 +153,15 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
       end
     end
 
-    context 'free-plan is not returned' do
-      let(:json_plans) { JSON.parse(response.body)['plans'] }
+    context "free-plan is not returned" do
+      let(:json_plans) { JSON.parse(response.body)["plans"] }
       before { get_subscription }
 
       it { expect(json_plans.size).to eq(3) }
-      it { expect(json_plans.map { |plan| plan['id'] }).to_not include('free-plan') }
+      it { expect(json_plans.map { |plan| plan["id"] }).to_not include("free-plan") }
     end
 
-    context 'quantity shows active employee at next billing date' do
+    context "quantity shows active employee at next billing date" do
       let!(:employee_after_period_end) { create(:employee, account: account) }
 
       before do
@@ -173,7 +173,7 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
       it { expect_json(quantity: 6) }
     end
 
-    context 'do not include invoice if all modules are canceled at billing date' do
+    context "do not include invoice if all modules are canceled at billing date" do
       before do
         account.available_modules.data.each do |mod|
           mod[:canceled] = true
@@ -185,7 +185,7 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
       it { expect_json(invoice: nil) }
     end
 
-    context 'do not include invoice if no module are active at billing date' do
+    context "do not include invoice if no module are active at billing date" do
       before do
         account.update!(available_modules: ::Payments::AvailableModules.new)
         get_subscription
@@ -195,9 +195,9 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
     end
   end
 
-  describe '#PUT /v1/payments/subscription/settings' do
+  describe "#PUT /v1/payments/subscription/settings" do
     let(:params) {{ company_information: company_information, emails: invoice_emails }}
-    let(:invoice_emails) { ['bruce@wayne.com'] }
+    let(:invoice_emails) { ["bruce@wayne.com"] }
     let(:company_information) do
       attributes_for(:account, :with_billing_information)[:company_information]
     end
@@ -209,14 +209,14 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
 
     subject(:update_settings) { put :settings, params }
 
-    context 'update all settings' do\
+    context "update all settings" do\
       it { expect { update_settings }.to change { account.company_information } }
       it { expect { update_settings }.to change { account.invoice_emails } }
 
-      context 'settings are valid' do
+      context "settings are valid" do
         before { update_settings }
 
-        it 'company_information is valid' do
+        it "company_information is valid" do
           company_information.keys.each do |key|
             expect(account.company_information[key]).to eq(company_information[key])
           end
@@ -225,14 +225,14 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
       end
     end
 
-    context 'update only company_information' do
+    context "update only company_information" do
       let(:params) {{ company_information: company_information }}
 
       it { expect { update_settings }.to     change { account.company_information } }
       it { expect { update_settings }.to_not change { account.invoice_emails } }
     end
 
-    context 'update only emails' do
+    context "update only emails" do
       let(:params) {{ emails: invoice_emails }}
 
       before { account.update!(invoice_emails: ["fake"]) }
@@ -240,38 +240,38 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
       it { expect { update_settings }.to_not change { account.company_information } }
       it { expect { update_settings }.to     change { account.invoice_emails } }
 
-      shared_examples 'wrong parameter' do |error_message|
+      shared_examples "wrong parameter" do |error_message|
         before { update_settings }
 
         it { expect_json(regex(error_message)) }
       end
 
-      context 'emails is string' do
-        let(:params) {{ emails: 'string' }}
+      context "emails is string" do
+        let(:params) {{ emails: "string" }}
 
-        it_behaves_like 'wrong parameter', 'must be an array'
+        it_behaves_like "wrong parameter", "must be an array"
       end
 
-      context 'emails is integer' do
+      context "emails is integer" do
         let(:params) {{ emails: 123 }}
 
-        it_behaves_like 'wrong parameter', 'must be an array'
+        it_behaves_like "wrong parameter", "must be an array"
       end
 
-      context 'emails is nil' do
+      context "emails is nil" do
         let(:params) {{ emails: nil }}
 
         it { expect { update_settings }.to change { account.invoice_emails }.to([]) }
       end
 
-      context 'emails is empty array' do
+      context "emails is empty array" do
         let(:params) {{ emails: [] }}
 
         it { expect { update_settings }.to change { account.invoice_emails }.to([]) }
       end
     end
 
-    context 'empty params clear settings' do
+    context "empty params clear settings" do
       before do
         account.update(company_information: company_information, invoice_emails: invoice_emails)
       end
@@ -281,10 +281,10 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
       it { expect { update_settings }.to change { account.company_information } }
       it { expect { update_settings }.to change { account.invoice_emails } }
 
-      context 'settings are empty' do
+      context "settings are empty" do
         before { update_settings }
 
-        it 'company_information is valid' do
+        it "company_information is valid" do
           expect(account.company_information).to be_a(Payments::CompanyInformation)
 
           company_information.keys.each do |key|
@@ -296,22 +296,22 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
       end
     end
 
-    context 'require params missing' do
-      let(:params_error) { JSON.parse(response.body).fetch('errors').first }
-      let(:params) {{ company_information: { address_2: 'test' } }}
+    context "require params missing" do
+      let(:params_error) { JSON.parse(response.body).fetch("errors").first }
+      let(:params) {{ company_information: { address_2: "test" } }}
 
       before { update_settings }
 
       it { expect(response.status).to eq(422) }
-      it { expect(params_error['field']).to eq('company_information') }
-      it 'returns missing params' do
+      it { expect(params_error["field"]).to eq("company_information") }
+      it "returns missing params" do
         company_information.except(:address_2).each_key do |key|
-          expect(params_error['messages'][key.to_s]).to eq(['is missing'])
+          expect(params_error["messages"][key.to_s]).to eq(["is missing"])
         end
       end
     end
 
-    context 'account update fails' do
+    context "account update fails" do
       before do
         allow(account).to receive(:update!).and_raise(ActiveRecord::RecordInvalid.new(account))
         update_settings

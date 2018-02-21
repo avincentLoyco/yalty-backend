@@ -52,13 +52,13 @@ class UpdateEvent
   end
 
   def handle_contract_end
-    return unless event.event_type.eql?('contract_end') && old_effective_at != event.effective_at
+    return unless event.event_type.eql?("contract_end") && old_effective_at != event.effective_at
     reset_effective_at = old_effective_at + 1.day
     Employee::RESOURCE_JOIN_TABLES.each do |table_name|
       event.employee.send(table_name).with_reset.where(effective_at: reset_effective_at).delete_all
-      next unless table_name.eql?('employee_time_off_policies')
+      next unless table_name.eql?("employee_time_off_policies")
       event.employee.employee_balances.where(
-        'effective_at::date = ? AND balance_type = ?', reset_effective_at, 'reset'
+        "effective_at::date = ? AND balance_type = ?", reset_effective_at, "reset"
       ).delete_all
     end
     HandleContractEnd.new(employee, event.effective_at, reset_effective_at).call
@@ -90,7 +90,7 @@ class UpdateEvent
   end
 
   def update_employee_join_tables
-    return if event.event_type != 'hired'
+    return if event.event_type != "hired"
     @updated_assignations =
       HandleMapOfJoinTablesToNewHiredDate.new(
         employee, event_params[:effective_at], event.effective_at_was
@@ -178,7 +178,7 @@ class UpdateEvent
     else
       messages = {}
       unless unique_attribute_versions?
-        messages = messages.merge(employee_attributes: ['Not unique'])
+        messages = messages.merge(employee_attributes: ["Not unique"])
       end
       messages = messages.merge(attribute_versions_errors)
 
@@ -187,7 +187,7 @@ class UpdateEvent
   end
 
   def update_event_and_assignations
-    return event.save! unless event.event_type.eql?('hired')
+    return event.save! unless event.event_type.eql?("hired")
     if event.effective_at.to_date < old_effective_at
       event.save!
       update_assignations_and_balances
@@ -251,17 +251,17 @@ class UpdateEvent
 
   def validate_time_off_policy_days_presence
     return unless time_off_policy_days.nil?
-    raise InvalidResourcesError.new(event, ['Time Off Policy amount not present'])
+    raise InvalidResourcesError.new(event, ["Time Off Policy amount not present"])
   end
 
   def validate_presence_policy_presence
     return unless presence_policy_id.nil?
-    raise InvalidResourcesError.new(event, ['Presence Policy days not present'])
+    raise InvalidResourcesError.new(event, ["Presence Policy days not present"])
   end
 
   def validate_matching_occupation_rate
     return if presence_policy_occupation_rate.eql?(event_occupation_rate)
-    raise InvalidResourcesError.new(event, ['Occupation Rate does not match Presence Policy'])
+    raise InvalidResourcesError.new(event, ["Occupation Rate does not match Presence Policy"])
   end
 
   def presence_policy_occupation_rate
@@ -269,6 +269,6 @@ class UpdateEvent
   end
 
   def event_occupation_rate
-    event.attribute_values['occupation_rate'].to_f
+    event.attribute_values["occupation_rate"].to_f
   end
 end

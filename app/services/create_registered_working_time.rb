@@ -22,7 +22,7 @@ class CreateRegisteredWorkingTime
         SplitTimeEntriesByTimeEntriesAndEmployeesForDate.new(
           employees_time_entries,
           time_offs_time_entries[@today.to_s],
-          '',
+          "",
           true
         ).call
     end
@@ -79,8 +79,8 @@ class CreateRegisteredWorkingTime
         nil,
         @today,
         @today)
-      .sql('', '')
-      .tr(';', '')
+      .sql("", "")
+      .tr(";", "")
   end
 
   def find_employees_ids_with_holidays(employees_ids)
@@ -105,7 +105,7 @@ class CreateRegisteredWorkingTime
       countries_and_regions_hash[country.to_sym] = []
       country_plus_regions = holiday_today.present? ? holiday_today[:regions] : []
       country_plus_regions.each do |country_plus_region|
-        countries_and_regions_hash[country.to_sym] << country_plus_region.to_s.split('_')[1]
+        countries_and_regions_hash[country.to_sym] << country_plus_region.to_s.split("_")[1]
       end
       countries_and_regions_hash[country.to_sym].compact!
     end
@@ -123,12 +123,12 @@ class CreateRegisteredWorkingTime
 
   def employees_ids_with_holiday(employees_ids, holiday_policies_ids)
     employees_with_holiday_today(employees_ids, holiday_policies_ids).map do |employee_id_hash|
-      employee_id_hash['id']
+      employee_id_hash["id"]
     end
   end
 
   def convert_array_to_sql(array)
-    "('#{array.join('\',\'')}')"
+    "('#{array.join("','")}')"
   end
 
   def employees_with_holiday_policy_active_today_sql(employees_ids, holiday_policies_ids)
@@ -151,7 +151,7 @@ class CreateRegisteredWorkingTime
         nil,
         @today,
         @today)
-      .sql('', '')
-      .tr(';', '')
+      .sql("", "")
+      .tr(";", "")
   end
 end

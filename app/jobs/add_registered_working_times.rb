@@ -16,10 +16,10 @@ class AddRegisteredWorkingTimes < ActiveJob::Base
           employee
           .events
           .contract_types
-          .where('effective_at <= ?', Time.zone.today)
+          .where("effective_at <= ?", Time.zone.today)
           .order(:effective_at).last
 
-        last_event_for.nil? || last_event_for.event_type.eql?('hired')
+        last_event_for.nil? || last_event_for.event_type.eql?("hired")
       end.map(&:id)
 
     CreateRegisteredWorkingTime.new(today, employees_ids).call

@@ -39,12 +39,12 @@ class DestroyEmployeeBalance
       .employee
       .employee_balances
       .where(time_off_category: oldest_balance.time_off_category)
-      .where('effective_at >= ?', date_for_balance_type(oldest_balance))
+      .where("effective_at >= ?", date_for_balance_type(oldest_balance))
       .order(:effective_at).first
   end
 
   def date_for_balance_type(oldest_balance)
-    if oldest_balance.balance_type.eql?('time_off')
+    if oldest_balance.balance_type.eql?("time_off")
       oldest_balance.time_off.start_time
     else
       oldest_balance.effective_at

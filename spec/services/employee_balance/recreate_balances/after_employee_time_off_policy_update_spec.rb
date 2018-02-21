@@ -1,7 +1,7 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyUpdate, type: :service do
-  include_context 'shared_context_timecop_helper'
+  include_context "shared_context_timecop_helper"
 
   let!(:account) { create(:account) }
   let!(:employee) { create(:employee, account: account) }
@@ -11,7 +11,7 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyUpdate, type: :servic
   let(:top_for_second_category) { create(:time_off_policy, time_off_category: second_category) }
   let!(:etop_in_different_category) do
     create(:employee_time_off_policy, employee: employee, time_off_policy: top_for_second_category,
-      effective_at: Time.zone.parse('2015-01-01'))
+      effective_at: Time.zone.parse("2015-01-01"))
   end
   let(:existing_balances_effective_ats) do
     employee.employee_balances.where(time_off_category: category).pluck(:effective_at)
@@ -41,10 +41,10 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyUpdate, type: :servic
     end
   end
 
-  context 'to past' do
-    context 'when there are no other etops' do
-      let(:new_effective_at) { Time.zone.parse('2013-01-15') }
-      let(:old_effective_at) { Time.zone.parse('2014-01-15') }
+  context "to past" do
+    context "when there are no other etops" do
+      let(:new_effective_at) { Time.zone.parse("2013-01-15") }
+      let(:old_effective_at) { Time.zone.parse("2014-01-15") }
       let(:top_to_update) { create(:time_off_policy, :with_end_date, time_off_category: category) }
       let!(:etop_to_update) do
         create(:employee_time_off_policy, employee: employee, time_off_policy: top_to_update,
@@ -52,9 +52,9 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyUpdate, type: :servic
       end
       let(:expeted_balances_dates) do
         [
-          '2013-01-15', '2014-01-01', '2014-01-01', '2014-04-02', '2015-01-01', '2015-01-01',
-          '2015-04-02', '2016-01-01', '2016-01-01', '2016-04-02', '2017-01-01', '2017-01-01',
-          '2017-04-02', '2018-01-01', '2018-01-01', '2018-04-02', '2019-04-02'
+          "2013-01-15", "2014-01-01", "2014-01-01", "2014-04-02", "2015-01-01", "2015-01-01",
+          "2015-04-02", "2016-01-01", "2016-01-01", "2016-04-02", "2017-01-01", "2017-01-01",
+          "2017-04-02", "2018-01-01", "2018-01-01", "2018-04-02", "2019-04-02"
         ].map(&:to_date)
       end
 
@@ -67,8 +67,8 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyUpdate, type: :servic
       it { expect(existing_balances_effective_ats).to match_array(expeted_balances_dates) }
     end
 
-    context 'when there are etop before updated one' do
-      let(:old_effective_at) { Time.zone.parse('2015-06-01') }
+    context "when there are etop before updated one" do
+      let(:old_effective_at) { Time.zone.parse("2015-06-01") }
       let(:top_to_update) do
         create(:time_off_policy, time_off_category: category, start_month: 2, end_day: 1,
           end_month: 5, years_to_effect: 1)
@@ -80,17 +80,17 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyUpdate, type: :servic
       let(:top_a) { create(:time_off_policy, :with_end_date, time_off_category: category) }
       let!(:etop_a) do
         create(:employee_time_off_policy, employee: employee, time_off_policy: top_a,
-          effective_at: Time.zone.parse('2013-02-01'))
+          effective_at: Time.zone.parse("2013-02-01"))
       end
 
-      context 'with additions before new etop' do
-        let(:old_effective_at) { Time.zone.parse('2015-06-01') }
-        let(:new_effective_at) { Time.zone.parse('2014-02-01') }
+      context "with additions before new etop" do
+        let(:old_effective_at) { Time.zone.parse("2015-06-01") }
+        let(:new_effective_at) { Time.zone.parse("2014-02-01") }
         let(:expeted_balances_dates) do
           [
-            '2013-02-01', '2014-01-01', '2014-01-01', '2014-02-01', '2014-02-01',
-           '2014-04-02', '2015-02-01', '2015-02-01', '2015-04-02', '2015-05-02', '2016-02-01',
-           '2016-02-01', '2016-05-02', '2017-02-01', '2017-02-01', '2017-05-02', '2018-05-02'
+            "2013-02-01", "2014-01-01", "2014-01-01", "2014-02-01", "2014-02-01",
+           "2014-04-02", "2015-02-01", "2015-02-01", "2015-04-02", "2015-05-02", "2016-02-01",
+           "2016-02-01", "2016-05-02", "2017-02-01", "2017-02-01", "2017-05-02", "2018-05-02"
          ].map(&:to_date)
         end
 
@@ -103,16 +103,16 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyUpdate, type: :servic
         it { expect(existing_balances_effective_ats).to match_array(expeted_balances_dates) }
       end
 
-      context 'without additions before new etop' do
-        let(:old_effective_at) { Time.zone.parse('2015-06-01') }
-        let(:new_effective_at) { Time.zone.parse('2013-06-01') }
+      context "without additions before new etop" do
+        let(:old_effective_at) { Time.zone.parse("2015-06-01") }
+        let(:new_effective_at) { Time.zone.parse("2013-06-01") }
 
-        context 'with time off' do
+        context "with time off" do
           let(:balances_dates_with_time_off) do
             [
-              '2013-02-01', '2013-06-01', '2014-02-01', '2014-02-01', '2014-04-02', '2014-05-02',
-              '2015-02-01', '2015-02-01', '2015-05-02', '2015-06-01', '2016-02-01', '2016-02-01',
-              '2016-05-02', '2017-02-01', '2017-02-01', '2017-05-02', '2018-05-02'
+              "2013-02-01", "2013-06-01", "2014-02-01", "2014-02-01", "2014-04-02", "2014-05-02",
+              "2015-02-01", "2015-02-01", "2015-05-02", "2015-06-01", "2016-02-01", "2016-02-01",
+              "2016-05-02", "2017-02-01", "2017-02-01", "2017-05-02", "2018-05-02"
             ].map(&:to_date)
           end
           let(:time_off_effective_at) { old_effective_at }
@@ -133,12 +133,12 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyUpdate, type: :servic
           it { expect(existing_balances_effective_ats).to match_array(balances_dates_with_time_off) }
         end
 
-        context 'without time off' do
+        context "without time off" do
           let(:expeted_balances_dates) do
             [
-              '2013-02-01', '2013-06-01', '2014-02-01', '2014-02-01', '2014-04-02', '2014-05-02',
-              '2015-02-01', '2015-02-01', '2015-05-02', '2016-02-01', '2016-02-01', '2016-05-02',
-              '2017-02-01', '2017-02-01', '2017-05-02', '2018-05-02'
+              "2013-02-01", "2013-06-01", "2014-02-01", "2014-02-01", "2014-04-02", "2014-05-02",
+              "2015-02-01", "2015-02-01", "2015-05-02", "2016-02-01", "2016-02-01", "2016-05-02",
+              "2017-02-01", "2017-02-01", "2017-05-02", "2018-05-02"
             ].map(&:to_date)
           end
 
@@ -152,22 +152,22 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyUpdate, type: :servic
         end
       end
 
-      context 'when moving behind another etop' do
-        let(:old_effective_at) { Time.zone.parse('2016-06-01') }
-        let(:new_effective_at) { Time.zone.parse('2014-06-01') }
+      context "when moving behind another etop" do
+        let(:old_effective_at) { Time.zone.parse("2016-06-01") }
+        let(:new_effective_at) { Time.zone.parse("2014-06-01") }
         let(:top_b) do
           create(:time_off_policy, :with_end_date, time_off_category: category, start_month: 2)
         end
         let!(:etop_b) do
           create(:employee_time_off_policy, employee: employee, time_off_policy: top_b,
-            effective_at: Time.zone.parse('2014-10-01'))
+            effective_at: Time.zone.parse("2014-10-01"))
         end
 
         let(:expeted_balances_dates) do
           [
-            '2013-02-01', '2014-01-01', '2014-01-01', '2014-04-02', '2014-06-01', '2014-10-01',
-            '2015-02-01', '2015-02-01', '2015-04-02', '2015-05-02', '2016-02-01', '2016-02-01',
-            '2016-04-02', '2017-02-01', '2017-02-01', '2017-04-02', '2018-04-02'
+            "2013-02-01", "2014-01-01", "2014-01-01", "2014-04-02", "2014-06-01", "2014-10-01",
+            "2015-02-01", "2015-02-01", "2015-04-02", "2015-05-02", "2016-02-01", "2016-02-01",
+            "2016-04-02", "2017-02-01", "2017-02-01", "2017-04-02", "2018-04-02"
           ].map(&:to_date)
         end
 
@@ -180,30 +180,30 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyUpdate, type: :servic
         it { expect(existing_balances_effective_ats).to match_array(expeted_balances_dates) }
       end
 
-      context 'when moving behind more than one etop' do
-        let(:old_effective_at) { Time.zone.parse('2016-06-01') }
-        let(:new_effective_at) { Time.zone.parse('2014-02-15') }
+      context "when moving behind more than one etop" do
+        let(:old_effective_at) { Time.zone.parse("2016-06-01") }
+        let(:new_effective_at) { Time.zone.parse("2014-02-15") }
         let(:top_b) do
           create(:time_off_policy, :with_end_date, time_off_category: category, start_month: 2)
         end
         let!(:etop_b) do
           create(:employee_time_off_policy, employee: employee, time_off_policy: top_b,
-            effective_at: Time.zone.parse('2014-10-01'))
+            effective_at: Time.zone.parse("2014-10-01"))
         end
         let(:top_c) do
           create(:time_off_policy, :with_end_date, time_off_category: category)
         end
         let!(:etop_c) do
           create(:employee_time_off_policy, employee: employee, time_off_policy: top_c,
-            effective_at: Time.zone.parse('2015-10-01'))
+            effective_at: Time.zone.parse("2015-10-01"))
         end
 
         let(:expeted_balances_dates) do
           [
-            '2013-02-01', '2014-01-01', '2014-01-01', '2014-02-15', '2014-04-02', '2014-10-01',
-            '2015-02-01', '2015-02-01', '2015-04-02', '2015-05-02', '2015-10-01', '2016-01-01',
-            '2016-01-01', '2016-04-02', '2017-01-01', '2017-01-01', '2017-04-02', '2018-01-01',
-            '2018-01-01', '2018-04-02', '2019-04-02'
+            "2013-02-01", "2014-01-01", "2014-01-01", "2014-02-15", "2014-04-02", "2014-10-01",
+            "2015-02-01", "2015-02-01", "2015-04-02", "2015-05-02", "2015-10-01", "2016-01-01",
+            "2016-01-01", "2016-04-02", "2017-01-01", "2017-01-01", "2017-04-02", "2018-01-01",
+            "2018-01-01", "2018-04-02", "2019-04-02"
           ].map(&:to_date)
         end
 
@@ -218,10 +218,10 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyUpdate, type: :servic
     end
   end
 
-  context 'to future' do
-    context 'when there are no other etops' do
-      let(:old_effective_at) { Time.zone.parse('2013-01-15') }
-      let(:new_effective_at) { Time.zone.parse('2014-10-01') }
+  context "to future" do
+    context "when there are no other etops" do
+      let(:old_effective_at) { Time.zone.parse("2013-01-15") }
+      let(:new_effective_at) { Time.zone.parse("2014-10-01") }
       let(:top_to_update) { create(:time_off_policy, :with_end_date, time_off_category: category) }
       let!(:etop_to_update) do
         create(:employee_time_off_policy, employee: employee, time_off_policy: top_to_update,
@@ -229,9 +229,9 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyUpdate, type: :servic
       end
       let(:expeted_balances_dates) do
         [
-          '2014-10-01', '2015-01-01', '2015-01-01', '2015-04-02', '2016-01-01', '2016-01-01',
-          '2016-04-02', '2017-01-01', '2017-01-01', '2017-04-02', '2018-01-01', '2018-01-01',
-          '2018-04-02', '2019-04-02'
+          "2014-10-01", "2015-01-01", "2015-01-01", "2015-04-02", "2016-01-01", "2016-01-01",
+          "2016-04-02", "2017-01-01", "2017-01-01", "2017-04-02", "2018-01-01", "2018-01-01",
+          "2018-04-02", "2019-04-02"
         ].map(&:to_date)
       end
 
@@ -244,9 +244,9 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyUpdate, type: :servic
       it { expect(existing_balances_effective_ats).to match_array(expeted_balances_dates) }
     end
 
-    context 'with etop before moved one' do
-      let(:old_effective_at) { Time.zone.parse('2014-10-01') }
-      let(:new_effective_at) { Time.zone.parse('2015-10-01') }
+    context "with etop before moved one" do
+      let(:old_effective_at) { Time.zone.parse("2014-10-01") }
+      let(:new_effective_at) { Time.zone.parse("2015-10-01") }
       let(:top_to_update) do
         create(:time_off_policy, :with_end_date, time_off_category: category, start_month: 2)
       end
@@ -257,13 +257,13 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyUpdate, type: :servic
       let(:top_a)  { create(:time_off_policy, :with_end_date, time_off_category: category) }
       let!(:etop_a) do
         create(:employee_time_off_policy, employee: employee, time_off_policy: top_a,
-          effective_at: Time.zone.parse('2013-02-01'))
+          effective_at: Time.zone.parse("2013-02-01"))
       end
       let(:expeted_balances_dates) do
         [
-          '2013-02-01', '2014-01-01', '2014-01-01', '2014-04-02', '2015-01-01', '2015-01-01',
-          '2015-04-02', '2015-10-01', '2016-02-01', '2016-02-01', '2016-04-02', '2017-02-01',
-          '2017-02-01', '2017-04-02', '2018-04-02'
+          "2013-02-01", "2014-01-01", "2014-01-01", "2014-04-02", "2015-01-01", "2015-01-01",
+          "2015-04-02", "2015-10-01", "2016-02-01", "2016-02-01", "2016-04-02", "2017-02-01",
+          "2017-02-01", "2017-04-02", "2018-04-02"
         ].map(&:to_date)
       end
 
@@ -276,9 +276,9 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyUpdate, type: :servic
       it { expect(existing_balances_effective_ats).to match_array(expeted_balances_dates) }
     end
 
-    context 'when moved etop is between other two' do
-      let(:old_effective_at) { Time.zone.parse('2014-10-01') }
-      let(:new_effective_at) { Time.zone.parse('2015-10-01') }
+    context "when moved etop is between other two" do
+      let(:old_effective_at) { Time.zone.parse("2014-10-01") }
+      let(:new_effective_at) { Time.zone.parse("2015-10-01") }
       let(:top_to_update) do
         create(:time_off_policy, :with_end_date, time_off_category: category, start_month: 2)
       end
@@ -289,17 +289,17 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyUpdate, type: :servic
       let(:tops) { create_list(:time_off_policy, 2, :with_end_date, time_off_category: category) }
       let!(:etop_a) do
         create(:employee_time_off_policy, employee: employee, time_off_policy: tops.first,
-          effective_at: Time.zone.parse('2013-02-01'))
+          effective_at: Time.zone.parse("2013-02-01"))
       end
       let!(:etop_b) do
         create(:employee_time_off_policy, employee: employee, time_off_policy: tops.second,
-          effective_at: Time.zone.parse('2016-06-01'))
+          effective_at: Time.zone.parse("2016-06-01"))
       end
       let(:expeted_balances_dates) do
         [
-          '2013-02-01', '2014-01-01', '2014-01-01', '2014-04-02', '2015-01-01', '2015-01-01',
-          '2015-04-02', '2015-10-01', '2016-02-01', '2016-02-01', '2016-04-02', '2016-06-01',
-          '2017-01-01', '2017-01-01', '2017-04-02', '2018-04-02'
+          "2013-02-01", "2014-01-01", "2014-01-01", "2014-04-02", "2015-01-01", "2015-01-01",
+          "2015-04-02", "2015-10-01", "2016-02-01", "2016-02-01", "2016-04-02", "2016-06-01",
+          "2017-01-01", "2017-01-01", "2017-04-02", "2018-04-02"
         ].map(&:to_date)
       end
 
@@ -312,9 +312,9 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyUpdate, type: :servic
       it { expect(existing_balances_effective_ats).to match_array(expeted_balances_dates) }
     end
 
-    context 'moving etop after another one' do
-      let(:old_effective_at) { Time.zone.parse('2013-10-01') }
-      let(:new_effective_at) { Time.zone.parse('2015-10-01') }
+    context "moving etop after another one" do
+      let(:old_effective_at) { Time.zone.parse("2013-10-01") }
+      let(:new_effective_at) { Time.zone.parse("2015-10-01") }
       let(:top_to_update) do
         create(:time_off_policy, :with_end_date, time_off_category: category, start_month: 2)
       end
@@ -325,16 +325,16 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyUpdate, type: :servic
       let(:tops) { create_list(:time_off_policy, 2, :with_end_date, time_off_category: category) }
       let!(:etop_a) do
         create(:employee_time_off_policy, employee: employee, time_off_policy: tops.first,
-          effective_at: Time.zone.parse('2013-02-01'))
+          effective_at: Time.zone.parse("2013-02-01"))
       end
       let!(:etop_b) do
         create(:employee_time_off_policy, employee: employee, time_off_policy: tops.second,
-          effective_at: Time.zone.parse('2015-03-01'))
+          effective_at: Time.zone.parse("2015-03-01"))
       end
       let(:expeted_balances_dates) do
-        ['2013-02-01', '2014-01-01', '2014-01-01', '2014-04-02', '2015-01-01', '2015-01-01',
-         '2015-03-01', '2015-04-02', '2015-10-01', '2016-02-01', '2016-02-01', '2016-04-02',
-         '2017-02-01', '2017-02-01', '2017-04-02', '2018-04-02'].map(&:to_date)
+        ["2013-02-01", "2014-01-01", "2014-01-01", "2014-04-02", "2015-01-01", "2015-01-01",
+         "2015-03-01", "2015-04-02", "2015-10-01", "2016-02-01", "2016-02-01", "2016-04-02",
+         "2017-02-01", "2017-02-01", "2017-04-02", "2018-04-02"].map(&:to_date)
       end
 
       before do

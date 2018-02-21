@@ -25,17 +25,17 @@ class UpdateEventAttributeValidator
   end
 
   def attribute_is_file?(employee_attribute)
-    Account::DEFAULT_ATTRIBUTES['File'].include?(employee_attribute[:attribute_name])
+    Account::DEFAULT_ATTRIBUTES["File"].include?(employee_attribute[:attribute_name])
   end
 
   def unauthorized_attribute_handling
-    raise CanCan::AccessDenied.new('Not authorized!', :update, Employee)
+    raise CanCan::AccessDenied.new("Not authorized!", :update, Employee)
   end
 
   def can_assign_file?(employee_attribute)
     return true unless attribute_is_file?(employee_attribute)
     employee_attribute[:value].nil? ||
-      Account.current.available_modules.include?('filevault') ||
-      employee_attribute[:attribute_name].eql?('profile_picture')
+      Account.current.available_modules.include?("filevault") ||
+      employee_attribute[:attribute_name].eql?("profile_picture")
   end
 end

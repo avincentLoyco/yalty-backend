@@ -1,14 +1,14 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe CreateOrUpdateJoinTable, type: :service do
-  include_context 'shared_context_account_helper'
-  include_context 'shared_context_timecop_helper'
+  include_context "shared_context_account_helper"
+  include_context "shared_context_timecop_helper"
   before { Account.current = create(:account) }
 
-  describe '#call' do
+  describe "#call" do
     let(:employee) { create(:employee, account: Account.current) }
     let(:join_table_resource) { nil }
-    let(:params_effective_at) { '1/4/2015' }
+    let(:params_effective_at) { "1/4/2015" }
     let(:params) do
       {
         effective_at: params_effective_at,
@@ -22,7 +22,7 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
 
     # TODO: Rework shared examples
 
-    shared_examples 'Join Table create' do
+    shared_examples "Join Table create" do
       it { expect { subject }.to_not raise_error }
 
       it { expect { subject }.to change { join_table_class.exists?(existing_join_table.id) } }
@@ -31,14 +31,14 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
       it { expect(subject[:status]).to eq 201 }
     end
 
-    shared_examples 'Join Table create that doesnt allow same resource one after another' do
+    shared_examples "Join Table create that doesnt allow same resource one after another" do
       it { expect { subject }.to_not raise_error }
 
       it { expect { subject }.to change { join_table_class.exists?(existing_join_table.id) } }
       it { expect { subject }.to change { join_table_class.exists?(same_resource_after.id) } }
     end
 
-    shared_examples 'Join Table create that allows same resource one after another' do
+    shared_examples "Join Table create that allows same resource one after another" do
       it { expect { subject }.to_not raise_error }
 
       it { expect { subject }.not_to change { join_table_class.count } }
@@ -48,7 +48,7 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
       it { expect(subject[:status]).to eq 201 }
     end
 
-    shared_examples 'Join Table create with different resource after and effective till in past' do
+    shared_examples "Join Table create with different resource after and effective till in past" do
       it { expect { subject }.to_not raise_error }
 
       it { expect { subject }.to change { join_table_class.count }.by(1) }
@@ -58,7 +58,7 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
       end
     end
 
-    shared_examples 'Join Table create with different resource after, after Time now' do
+    shared_examples "Join Table create with different resource after, after Time now" do
       it { expect { subject }.to_not raise_error }
 
       it { expect { subject }.to change { join_table_class.count }.by(1) }
@@ -68,11 +68,11 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
       end
     end
 
-    shared_examples 'Join Table create with different resource before and contract_end' do
+    shared_examples "Join Table create with different resource before and contract_end" do
       it { expect { subject }.to_not raise_error }
       it { expect(subject[:result].effective_at).to eq(params[:effective_at].to_date) }
       it { expect(subject[:status]).to eq(201) }
-      it 'removes reset join table' do
+      it "removes reset join table" do
         expect { subject }
           .to change { join_table_class.exists?(existing_join_table.id) }
           .from(true)
@@ -80,13 +80,13 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
       end
     end
 
-    shared_examples 'Duplicated Join Table' do
-      it 'should raise error with proper message' do
+    shared_examples "Duplicated Join Table" do
+      it "should raise error with proper message" do
         expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError)
       end
     end
 
-    shared_examples 'Join Table update with the same resource after previous effective at' do
+    shared_examples "Join Table update with the same resource after previous effective at" do
       it { expect { subject }.to change { join_table_class.count }.by(-1) }
       it { expect { subject }.to change { join_table_resource.reload.effective_at } }
       it do
@@ -95,7 +95,7 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
       end
     end
 
-    shared_examples 'Join Table update with the same resource after previous effective at 2' do
+    shared_examples "Join Table update with the same resource after previous effective at 2" do
       it { expect { subject }.not_to change { join_table_class.count } }
       it { expect { subject }.to change { join_table_resource.reload.effective_at } }
       it do
@@ -104,7 +104,7 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
       end
     end
 
-    shared_examples 'Join Table update with the same resource after new effective_at' do
+    shared_examples "Join Table update with the same resource after new effective_at" do
       it { expect { subject }.to change { join_table_class.count }.by(-2) }
       it { expect { subject }.to change { join_table_resource.reload.effective_at } }
       it do
@@ -117,7 +117,7 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
       end
     end
 
-    shared_examples 'Join Table update with the same resource after new effective_at 2' do
+    shared_examples "Join Table update with the same resource after new effective_at 2" do
       it { expect { subject }.not_to change { join_table_class.count } }
       it { expect { subject }.to change { join_table_resource.reload.effective_at } }
       it do
@@ -130,7 +130,7 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
       end
     end
 
-    shared_examples 'Join Table update with the same resource after and before new effective at' do
+    shared_examples "Join Table update with the same resource after and before new effective at" do
       it { expect { subject }.to change { join_table_class.count }.by(-4) }
       it do
         expect { subject }.to change { join_table_class.exists?(join_table_resource.id) }.to false
@@ -148,7 +148,7 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
       end
     end
 
-    shared_examples 'Join Table update with the same resource after and before new effective at 2' do
+    shared_examples "Join Table update with the same resource after and before new effective at 2" do
       it { expect { subject }.to change { join_table_class.count }.by(-1) }
       it do
         expect { subject }.not_to change { join_table_class.exists?(join_table_resource.id) }
@@ -166,7 +166,7 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
       end
     end
 
-    context 'for EmployeeWorkingPlace' do
+    context "for EmployeeWorkingPlace" do
       before do
         create(:employee_working_place,
           employee: employee, effective_at: employee.events.first.effective_at)
@@ -176,26 +176,26 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
       let(:join_table_class) { EmployeeWorkingPlace }
       let(:resource) { create(:working_place, account: Account.current) }
 
-      context 'JoinTable create' do
+      context "JoinTable create" do
         let(:resource_params) { { working_place_id: resource.id } }
         let!(:existing_join_table) do
-          create(:employee_working_place, effective_at: '1/4/2015', employee: employee)
+          create(:employee_working_place, effective_at: "1/4/2015", employee: employee)
         end
 
-        it_behaves_like 'Join Table create'
+        it_behaves_like "Join Table create"
 
-        context 'when there is Join Table with the same resource and date' do
+        context "when there is Join Table with the same resource and date" do
           let(:resource_params) { { working_place_id: existing_join_table.working_place_id } }
 
-          it_behaves_like 'Duplicated Join Table'
+          it_behaves_like "Duplicated Join Table"
         end
 
-        context 'when there is contract_end assigned and no reset working_place' do
+        context "when there is contract_end assigned and no reset working_place" do
           before do
             employee.employee_working_places.map(&:destroy)
             event_params = {
-              effective_at: Time.zone.parse('2016/03/01'),
-              event_type: 'contract_end',
+              effective_at: Time.zone.parse("2016/03/01"),
+              event_type: "contract_end",
               employee: { id: employee.id }
             }
             CreateEvent.new(event_params, {}).call
@@ -206,10 +206,10 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
           it { expect(employee.reload.working_places.where(reset: true).exists?).to be(true) }
         end
 
-        context 'when there is JoinTable with the same reosurce assigned before' do
+        context "when there is JoinTable with the same reosurce assigned before" do
           let!(:same_resource_before) do
             create(:employee_working_place,
-              effective_at: '1/3/2015', employee: employee, working_place: resource)
+              effective_at: "1/3/2015", employee: employee, working_place: resource)
           end
 
           it { expect { subject }.to_not raise_error }
@@ -222,14 +222,14 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
           it { expect(subject[:status]).to eq 205 }
         end
 
-        context 'when there is JoinTable with the same resource assigned' do
+        context "when there is JoinTable with the same resource assigned" do
           let!(:same_resource_after) do
             create(:employee_working_place,
-              effective_at: '1/5/2015', employee: employee, working_place: resource)
+              effective_at: "1/5/2015", employee: employee, working_place: resource)
           end
 
-          context 'after effective_at' do
-            it_behaves_like 'Join Table create that doesnt allow same resource one after another'
+          context "after effective_at" do
+            it_behaves_like "Join Table create that doesnt allow same resource one after another"
 
             it { expect { subject }.to change { join_table_class.count }.by(-1) }
 
@@ -237,13 +237,13 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
             it { expect(subject[:status]).to eq 201 }
           end
 
-          context 'before and after effective_at' do
+          context "before and after effective_at" do
             let!(:same_resource_before) do
               create(:employee_working_place,
-                employee: employee, working_place: resource, effective_at: '1/3/2015')
+                employee: employee, working_place: resource, effective_at: "1/3/2015")
             end
 
-            it_behaves_like  'Join Table create that doesnt allow same resource one after another'
+            it_behaves_like  "Join Table create that doesnt allow same resource one after another"
 
             it { expect { subject }.to change { join_table_class.count }.by(-2) }
 
@@ -253,20 +253,20 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
           end
         end
 
-        context 'when there is table with other resource' do
+        context "when there is table with other resource" do
           before { params[:effective_at] = 2.years.ago.to_s }
 
-          it_behaves_like 'Join Table create with different resource after and effective till in past'
+          it_behaves_like "Join Table create with different resource after and effective till in past"
 
-          context 'and effective till is in the future' do
+          context "and effective till is in the future" do
             before { existing_join_table.update!(effective_at: 2.years.since) }
 
-            it_behaves_like 'Join Table create with different resource after, after Time now'
+            it_behaves_like "Join Table create with different resource after, after Time now"
           end
         end
       end
 
-      context 'Join Table Update' do
+      context "Join Table Update" do
         before { employee.employee_working_places.reload }
         let(:resource_params) { {} }
         let(:second_resource) { create(:working_place, account: Account.current) }
@@ -291,27 +291,27 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
             employee: employee, effective_at: 3.years.ago, working_place: third_resource)
         end
 
-        context 'when after old effective at is the same resource' do
+        context "when after old effective at is the same resource" do
           before { params[:effective_at] = 5.years.since.to_s }
 
-          it_behaves_like 'Join Table update with the same resource after previous effective at'
+          it_behaves_like "Join Table update with the same resource after previous effective at"
         end
 
-        context 'when there is the same resource after new effective_at' do
+        context "when there is the same resource after new effective_at" do
           before { params[:effective_at] = (2.years.ago - 2.months).to_s }
 
-          it_behaves_like 'Join Table update with the same resource after new effective_at'
+          it_behaves_like "Join Table update with the same resource after new effective_at"
         end
 
-        context 'where there is the same resource after and before new effective_at' do
+        context "where there is the same resource after and before new effective_at" do
           before { params[:effective_at] = 3.years.ago.to_s }
 
-          it_behaves_like 'Join Table update with the same resource after and before new effective at'
+          it_behaves_like "Join Table update with the same resource after and before new effective at"
         end
       end
     end
 
-    context 'for EmployeeTimeOffPolicy' do
+    context "for EmployeeTimeOffPolicy" do
       let(:category) { create(:time_off_category, account: Account.current) }
       let(:resource) { create(:time_off_policy, time_off_category: category) }
       let(:existing_resource) { create(:time_off_policy, time_off_category: category) }
@@ -320,18 +320,18 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
       let(:join_table_class) { EmployeeTimeOffPolicy }
       let!(:existing_join_table) do
         create(:employee_time_off_policy, :with_employee_balance,
-          effective_at: '1/4/2015', employee: employee, time_off_policy: existing_resource)
+          effective_at: "1/4/2015", employee: employee, time_off_policy: existing_resource)
       end
 
-      context 'Join table create' do
-        context 'when before is Join Table with different resource' do
+      context "Join table create" do
+        context "when before is Join Table with different resource" do
           let!(:resource_before) do
             create(:employee_time_off_policy, :with_employee_balance,
               employee: employee, effective_at: params[:effective_at].to_date - 1.week,
               time_off_policy: policy)
           end
 
-          context 'in different category' do
+          context "in different category" do
             let(:policy) do
               create(:time_off_policy,
                 time_off_category: create(:time_off_category, account: Account.current))
@@ -341,7 +341,7 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
             it { expect(subject[:status]).to eq 201 }
           end
 
-          context 'in the same category' do
+          context "in the same category" do
             let(:policy) { create(:time_off_policy, time_off_category: category) }
 
             it { expect { subject }.to_not raise_error }
@@ -349,15 +349,15 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
           end
         end
 
-        it_behaves_like 'Join Table create'
+        it_behaves_like "Join Table create"
 
-        context 'when there is contract_end assigned and no reset time_off_policy' do
+        context "when there is contract_end assigned and no reset time_off_policy" do
           before do
             employee.employee_time_off_policies.map(&:destroy)
             employee.employee_balances.map(&:destroy)
             event_params = {
-              effective_at: Time.zone.parse('2016/03/01'),
-              event_type: 'contract_end',
+              effective_at: Time.zone.parse("2016/03/01"),
+              event_type: "contract_end",
               employee: { id: employee.reload.id }
             }
             CreateEvent.new(event_params, {}).call
@@ -368,16 +368,16 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
           it { expect(employee.reload.time_off_policies.where(reset: true).exists?).to be(true) }
         end
 
-        context 'when there is Join Table with the same resource and date' do
+        context "when there is Join Table with the same resource and date" do
           let(:resource_params) { { time_off_policy_id: existing_join_table.time_off_policy_id } }
 
-          it_behaves_like 'Duplicated Join Table'
+          it_behaves_like "Duplicated Join Table"
         end
 
-        context 'when there is JoinTable with the same reosurce assigned before' do
+        context "when there is JoinTable with the same reosurce assigned before" do
           let!(:same_resource_before) do
             create(:employee_time_off_policy, :with_employee_balance,
-              effective_at: '1/3/2015', employee: employee, time_off_policy: resource)
+              effective_at: "1/3/2015", employee: employee, time_off_policy: resource)
           end
 
           it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
@@ -389,10 +389,10 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
           it { expect(subject[:status]).to eq 201 }
         end
 
-        context 'when there is JoinTable with the same resource assigned' do
+        context "when there is JoinTable with the same resource assigned" do
           let!(:same_resource_after) do
             create(:employee_time_off_policy, :with_employee_balance,
-              effective_at: '1/5/2015', employee: employee, time_off_policy: resource)
+              effective_at: "1/5/2015", employee: employee, time_off_policy: resource)
           end
 
           it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
@@ -406,10 +406,10 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
           it { expect(subject[:result].effective_at).to eq params[:effective_at].to_date }
           it { expect(subject[:status]).to eq 201 }
 
-          context 'before and after effective_at' do
+          context "before and after effective_at" do
             let!(:same_resource_before) do
               create(:employee_time_off_policy, :with_employee_balance,
-                employee: employee, time_off_policy: resource, effective_at: '1/3/2015')
+                employee: employee, time_off_policy: resource, effective_at: "1/3/2015")
             end
 
             it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
@@ -423,22 +423,22 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
           end
         end
 
-        context 'when there is table with other resource' do
+        context "when there is table with other resource" do
           before { params[:effective_at] = 2.years.ago.to_s }
 
           it { expect { subject }.to_not change { Employee::Balance.count } }
-          it_behaves_like 'Join Table create with different resource after and effective till in past'
+          it_behaves_like "Join Table create with different resource after and effective till in past"
 
-          context 'and effective till is in the future' do
+          context "and effective till is in the future" do
             before { existing_join_table.update!(effective_at: 2.years.since) }
 
             it { expect { subject }.to_not change { Employee::Balance.count } }
-            it_behaves_like 'Join Table create with different resource after, after Time now'
+            it_behaves_like "Join Table create with different resource after, after Time now"
           end
         end
       end
 
-      context 'Join Table Update' do
+      context "Join Table Update" do
         before do
           assignation_balance = existing_join_table.policy_assignation_balance
           existing_join_table.update!(effective_at: 4.years.ago)
@@ -470,7 +470,7 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
             time_off_policy: create(:time_off_policy, time_off_category: category))
         end
 
-        context 'when resource is before employee\'s hired date' do
+        context "when resource is before employee's hired date" do
           before do
             allow_any_instance_of(Employee::Event).to receive(:valid?) { true }
             employee.events.first.update!(effective_at: 4.years.ago + 1.week)
@@ -483,7 +483,7 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
           it { expect { subject }.to change { assignation_balance.reload.effective_at } }
         end
 
-        context 'when after old effective at is the same resource' do
+        context "when after old effective at is the same resource" do
           before { params[:effective_at] = 5.years.since.to_s }
 
           it { expect { subject }.not_to change { Employee::Balance.count } }
@@ -496,7 +496,7 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
           end
         end
 
-        context 'when there is the same resource after new effective_at' do
+        context "when there is the same resource after new effective_at" do
           before { params[:effective_at] = (2.years.ago - 2.months).to_s }
 
           it { expect { subject }.not_to change { Employee::Balance.count } }
@@ -513,7 +513,7 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
           end
         end
 
-        context 'where there is the same resource after and before new effective_at' do
+        context "where there is the same resource after and before new effective_at" do
           before { params[:effective_at] = 3.years.ago.to_s }
 
           it { expect { subject }.to change { Employee::Balance.count }.by(-1) }
@@ -537,24 +537,24 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
       end
     end
 
-    context 'for EmployeePresencePolicy' do
+    context "for EmployeePresencePolicy" do
       let(:resource) { create(:presence_policy, :with_presence_day, account: Account.current) }
       let(:resource_params) { { presence_policy_id: resource.id, order_of_start_day: 3 } }
       let(:resource_class) { PresencePolicy }
       let(:join_table_class) { EmployeePresencePolicy }
       let!(:existing_join_table) do
-        create(:employee_presence_policy, effective_at: '1/4/2015', employee: employee)
+        create(:employee_presence_policy, effective_at: "1/4/2015", employee: employee)
       end
 
-      context 'Join table create' do
-        it_behaves_like 'Join Table create'
+      context "Join table create" do
+        it_behaves_like "Join Table create"
 
-        context 'when there is contract_end assigned and no reset presence_policy' do
+        context "when there is contract_end assigned and no reset presence_policy" do
           before do
             employee.employee_presence_policies.map(&:destroy)
             event_params = {
-              effective_at: Time.zone.parse('2016/03/01'),
-              event_type: 'contract_end',
+              effective_at: Time.zone.parse("2016/03/01"),
+              event_type: "contract_end",
               employee: { id: employee.id }
             }
             CreateEvent.new(event_params, {}).call
@@ -565,16 +565,16 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
           it { expect(employee.reload.presence_policies.where(reset: true).exists?).to be(true) }
         end
 
-        context 'when there is Join Table with the same resource and date' do
+        context "when there is Join Table with the same resource and date" do
           let(:resource_params) { { presence_policy_id: existing_join_table.presence_policy_id } }
 
-          it_behaves_like 'Duplicated Join Table'
+          it_behaves_like "Duplicated Join Table"
         end
 
-        context 'when there is JoinTable with the same reosurce assigned before' do
+        context "when there is JoinTable with the same reosurce assigned before" do
           let!(:same_resource_before) do
             create(:employee_presence_policy,
-              effective_at: '1/3/2015', employee: employee, presence_policy: resource)
+              effective_at: "1/3/2015", employee: employee, presence_policy: resource)
           end
 
           it { expect { subject }.to_not raise_error }
@@ -587,43 +587,43 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
           it { expect(subject[:status]).to eq 201 }
         end
 
-        context 'when there is JoinTable with the same reosurce assigned' do
+        context "when there is JoinTable with the same reosurce assigned" do
           let!(:same_resource_after) do
             create(:employee_presence_policy,
-              effective_at: '1/5/2015', employee: employee, presence_policy: resource)
+              effective_at: "1/5/2015", employee: employee, presence_policy: resource)
           end
 
-          it_behaves_like 'Join Table create that allows same resource one after another'
+          it_behaves_like "Join Table create that allows same resource one after another"
 
           it { expect(subject[:result].effective_at).to eq params[:effective_at].to_date }
 
-          context 'before and after effective_at' do
+          context "before and after effective_at" do
             let!(:same_resource_before) do
               create(:employee_presence_policy,
-                employee: employee, presence_policy: resource, effective_at: '1/3/2015')
+                employee: employee, presence_policy: resource, effective_at: "1/3/2015")
             end
 
-            it_behaves_like 'Join Table create that allows same resource one after another'
+            it_behaves_like "Join Table create that allows same resource one after another"
 
             it { expect(subject[:result].effective_at).to eq existing_join_table.effective_at }
             it { expect(subject[:result].id).not_to eq same_resource_before.id }
           end
         end
 
-        context 'when there is table with other resource' do
+        context "when there is table with other resource" do
           before { params[:effective_at] = 2.years.ago.to_s }
 
-          it_behaves_like 'Join Table create with different resource after and effective till in past'
+          it_behaves_like "Join Table create with different resource after and effective till in past"
 
-          context 'and effective_till is in the future' do
+          context "and effective_till is in the future" do
             before { existing_join_table.update!(effective_at: 2.years.since) }
 
-            it_behaves_like 'Join Table create with different resource after, after Time now'
+            it_behaves_like "Join Table create with different resource after, after Time now"
           end
         end
       end
 
-      context 'Join Table Update' do
+      context "Join Table Update" do
         before { existing_join_table.update!(effective_at: 4.years.ago) }
         let(:resource_params) { {} }
         let(:second_resource) { create(:presence_policy, :with_presence_day, account: Account.current) }
@@ -646,27 +646,27 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
                                             presence_policy: third_resource)
         end
 
-        context 'when after old effective at is the same resource' do
+        context "when after old effective at is the same resource" do
           before { params[:effective_at] = 5.years.since.to_s }
 
-          it_behaves_like 'Join Table update with the same resource after previous effective at 2'
+          it_behaves_like "Join Table update with the same resource after previous effective at 2"
         end
 
-        context 'when there is the same resource after new effective_at' do
+        context "when there is the same resource after new effective_at" do
           before { params[:effective_at] = (2.years.ago - 2.months).to_s }
 
-          it_behaves_like 'Join Table update with the same resource after new effective_at 2'
+          it_behaves_like "Join Table update with the same resource after new effective_at 2"
         end
 
-        context 'where there is the same resource after and before new effective_at' do
+        context "where there is the same resource after and before new effective_at" do
           before { params[:effective_at] = 3.years.ago.to_s }
 
-          it_behaves_like 'Join Table update with the same resource after and before new effective at 2'
+          it_behaves_like "Join Table update with the same resource after and before new effective at 2"
         end
       end
     end
 
-    context 'with contract_end' do
+    context "with contract_end" do
       let(:now) { Time.zone.now }
       let(:time_off_category) { create(:time_off_category, account: Account.current) }
       let(:time_off_policy)   { create(:time_off_policy, time_off_category: time_off_category) }
@@ -675,18 +675,18 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
       let!(:ewp)  { create(:employee_working_place, employee: employee, effective_at: now) }
       let!(:contract_end) do
         create(:employee_event, effective_at: now + 3.months, employee: employee,
-          event_type: 'contract_end')
+          event_type: "contract_end")
       end
       let!(:rehire) do
         create(:employee_event, effective_at: contract_end.effective_at + 1.days, employee: employee,
-          event_type: 'hired')
+          event_type: "hired")
       end
 
-      context 'when moving join table from current hire period' do
-       context 'when moving after current contract_end_date' do
+      context "when moving join table from current hire period" do
+       context "when moving after current contract_end_date" do
           let!(:contract_end_2) do
             create(:employee_event, effective_at: contract_end.effective_at + 6.months,
-              employee: employee, event_type: 'contract_end')
+              employee: employee, event_type: "contract_end")
           end
 
           let(:join_table_resource) { epp }
@@ -702,10 +702,10 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
           it { expect(policies_dates).to match_array(expected_dates) }
        end
 
-       context 'when moving before current hire_date' do
+       context "when moving before current hire_date" do
           let!(:contract_end_2) do
             create(:employee_event, effective_at: contract_end.effective_at + 6.months,
-              employee: employee, event_type: 'contract_end')
+              employee: employee, event_type: "contract_end")
           end
 
           let!(:join_table_resource) { create(:employee_presence_policy, employee: employee, effective_at: contract_end_2.effective_at - 1.month) }
@@ -726,29 +726,29 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
        end
       end
 
-      context 'when rehire day after contract_end' do
+      context "when rehire day after contract_end" do
         let(:params_effective_at) { rehire.effective_at }
 
-        context 'for EmployeeTimeOffPolicy' do
+        context "for EmployeeTimeOffPolicy" do
           let(:same_resource_before) { etop }
           let(:existing_join_table)  { employee.employee_time_off_policies.with_reset.first }
           let(:resource_class)       { TimeOffPolicy }
           let(:join_table_class)     { EmployeeTimeOffPolicy }
 
-          context 'when assigning different EmployeeTimeOffPolicy' do
+          context "when assigning different EmployeeTimeOffPolicy" do
             let!(:top) { create(:time_off_policy, time_off_category: etop.time_off_category) }
             let(:resource_params) { { time_off_policy_id: top.id } }
 
-            it_behaves_like 'Join Table create with different resource before and contract_end'
+            it_behaves_like "Join Table create with different resource before and contract_end"
           end
 
-          context 'when assigning the same EmployeeTimeOffPolicy' do
+          context "when assigning the same EmployeeTimeOffPolicy" do
             let(:resource_params) { { time_off_policy_id: same_resource_before.time_off_policy_id } }
 
-            it_behaves_like 'Join Table create'
+            it_behaves_like "Join Table create"
           end
 
-          context 'when moving assigned policy from day after contract_end' do
+          context "when moving assigned policy from day after contract_end" do
             let(:top) { create(:time_off_policy, time_off_category: time_off_category, policy_type: time_off_policy.policy_type) }
             let!(:join_table_resource) do
               create(:employee_time_off_policy, employee: employee, time_off_policy: top, effective_at: rehire.effective_at)
@@ -756,14 +756,14 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
             let(:params_effective_at) { rehire.effective_at + 1.month - 1.day }
             let(:resource_params) {{}}
 
-            context 'employee have proper resources' do
+            context "employee have proper resources" do
               before { subject }
 
               it { expect(employee.employee_time_off_policies.count).to eq(3) }
               it { expect(employee.employee_time_off_policies.with_reset.count).to eq(1) }
-              it 'returns policies in proper dates' do
+              it "returns policies in proper dates" do
                 dates = employee.reload.employee_time_off_policies.map { |etop| etop.effective_at.to_date }
-                expected_dates = ['01/01/2016', '02/04/2016', '01/05/2016'].map(&:to_date)
+                expected_dates = ["01/01/2016", "02/04/2016", "01/05/2016"].map(&:to_date)
                 expect(dates).to match_array(expected_dates)
               end
             end
@@ -772,26 +772,26 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
           end
         end
 
-        context 'for EmployeePresencePolicy' do
+        context "for EmployeePresencePolicy" do
           let(:same_resource_before) { epp }
           let(:existing_join_table)  { employee.employee_presence_policies.with_reset.first }
           let(:resource_class)       { PresencePolicy }
           let(:join_table_class)     { EmployeePresencePolicy }
 
-          context 'when assigning different EmployeePresencePolicy' do
+          context "when assigning different EmployeePresencePolicy" do
             let!(:presence_policy) { create(:presence_policy, :with_presence_day) }
             let(:resource_params) { { presence_policy_id: presence_policy.id } }
 
-            it_behaves_like 'Join Table create with different resource before and contract_end'
+            it_behaves_like "Join Table create with different resource before and contract_end"
           end
 
-          context 'when assigning the same EmployeePresencePolicy' do
+          context "when assigning the same EmployeePresencePolicy" do
             let(:resource_params) { { presence_policy_id: same_resource_before.presence_policy_id } }
 
-            it_behaves_like 'Join Table create'
+            it_behaves_like "Join Table create"
           end
 
-          context 'when moving assigned policy from day after contract_end' do
+          context "when moving assigned policy from day after contract_end" do
             let!(:presence_policy) { create(:presence_policy, :with_presence_day) }
             let!(:join_table_resource) do
               create(:employee_presence_policy, employee: employee, presence_policy: presence_policy,
@@ -800,14 +800,14 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
             let(:params_effective_at) { rehire.effective_at + 1.month - 1.day }
             let(:resource_params) {{}}
 
-            context 'employee have proper resources' do
+            context "employee have proper resources" do
               before { subject }
 
               it { expect(employee.employee_presence_policies.count).to eq(3) }
               it { expect(employee.employee_presence_policies.with_reset.count).to eq(1) }
-              it 'returns policies in proper dates' do
+              it "returns policies in proper dates" do
                 dates = employee.employee_presence_policies.map { |epp| epp.effective_at.to_date }
-                expected_dates = ['01/01/2016', '02/04/2016', '01/05/2016'].map(&:to_date)
+                expected_dates = ["01/01/2016", "02/04/2016", "01/05/2016"].map(&:to_date)
                 expect(dates).to match_array(expected_dates)
               end
             end
@@ -816,26 +816,26 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
           end
         end
 
-        context 'for EmployeeWorkingPlace' do
+        context "for EmployeeWorkingPlace" do
           let(:same_resource_before) { ewp }
           let(:existing_join_table)  { employee.employee_working_places.with_reset.first }
           let(:resource_class)       { WorkingPlace }
           let(:join_table_class)     { EmployeeWorkingPlace }
 
-          context 'when assigning different EmployeeWorkingPlace' do
+          context "when assigning different EmployeeWorkingPlace" do
             let!(:working_place) { create(:working_place) }
             let(:resource_params) { { working_place_id: working_place.id } }
 
-            it_behaves_like 'Join Table create with different resource before and contract_end'
+            it_behaves_like "Join Table create with different resource before and contract_end"
           end
 
-          context 'when assigning the same EmployeeWorkingPlace' do
+          context "when assigning the same EmployeeWorkingPlace" do
             let(:resource_params) { { working_place_id: same_resource_before.working_place_id } }
 
-            it_behaves_like 'Join Table create'
+            it_behaves_like "Join Table create"
           end
 
-          context 'when moving assigned working place from day after contract_end' do
+          context "when moving assigned working place from day after contract_end" do
             let!(:working_place) { create(:working_place, account: Account.current) }
             let!(:join_table_resource) do
               create(:employee_working_place, employee: employee, working_place: working_place,
@@ -844,14 +844,14 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
             let(:params_effective_at) { rehire.effective_at + 1.month - 1.day }
             let(:resource_params) {{}}
 
-            context 'employee have proper resources' do
+            context "employee have proper resources" do
               before { subject }
 
               it { expect(employee.employee_working_places.count).to eq(3) }
               it { expect(employee.employee_working_places.with_reset.count).to eq(1) }
-              it 'returns policies in proper dates' do
+              it "returns policies in proper dates" do
                 dates = employee.employee_working_places.map { |ewp| ewp.effective_at.to_date }
-                expected_dates = ['01/01/2016', '02/04/2016', '01/05/2016'].map(&:to_date)
+                expected_dates = ["01/01/2016", "02/04/2016", "01/05/2016"].map(&:to_date)
                 expect(dates).to match_array(expected_dates)
               end
             end

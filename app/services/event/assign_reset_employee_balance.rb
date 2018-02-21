@@ -21,7 +21,7 @@ class AssignResetEmployeeBalance
         @time_off_category.id,
         @employee.id,
         @employee.account.id,
-        balance_type: 'reset',
+        balance_type: "reset",
         effective_at: @new_contract_end + Employee::Balance::RESET_OFFSET,
         skip_update: true
       ).call.first
@@ -33,7 +33,7 @@ class AssignResetEmployeeBalance
       .employee_balances
       .in_category(@time_off_category.id)
       .where(
-        'effective_at <= ? AND validity_date > ?', @new_contract_end, @new_contract_end
+        "effective_at <= ? AND validity_date > ?", @new_contract_end, @new_contract_end
       ).order(:effective_at)
     balances_valid_after_contract_end.map do |balance|
       UpdateEmployeeBalance.new(balance, validity_date: @reset_employee_balance.effective_at).call
@@ -85,7 +85,7 @@ class AssignResetEmployeeBalance
     @employee
       .employee_balances
       .in_category(@time_off_category.id)
-      .where(balance_type: 'time_off', effective_at: @new_contract_end.beginning_of_day)
+      .where(balance_type: "time_off", effective_at: @new_contract_end.beginning_of_day)
       .first
   end
 end

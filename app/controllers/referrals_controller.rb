@@ -6,7 +6,7 @@ class ReferralsController < ApplicationController
   def referrers_csv
     verified_dry_params(referrers_csv_schema) do |attributes|
       csv_file = generate_csv(attributes[:from], attributes[:to])
-      filename = "referrers-#{Time.zone.now.to_s.tr(' ', '-')}.csv"
+      filename = "referrers-#{Time.zone.now.to_s.tr(" ", "-")}.csv"
 
       respond_to do |format|
         format.csv { send_data csv_file, filename: filename }
@@ -31,8 +31,8 @@ class ReferralsController < ApplicationController
 
     lead = intercom_client.contacts.find_all(email: email).first
 
-    if lead.present? && !lead.custom_attributes['referral_token'].present?
-      lead.custom_attributes['referral_token'] = referrer.token
+    if lead.present? && !lead.custom_attributes["referral_token"].present?
+      lead.custom_attributes["referral_token"] = referrer.token
       intercom_client.contacts.save(lead)
     elsif !lead.present?
       lead = intercom_client.contacts.create(
@@ -41,13 +41,13 @@ class ReferralsController < ApplicationController
       )
     end
 
-    intercom_client.tags.tag(name: 'referral_program', users: [{ id: lead.id }])
+    intercom_client.tags.tag(name: "referral_program", users: [{ id: lead.id }])
   end
 
   def intercom_client
     @intercom_client ||= Intercom::Client.new(
-      app_id: ENV['INTERCOM_APP_ID'],
-      api_key: ENV['INTERCOM_API_KEY']
+      app_id: ENV["INTERCOM_APP_ID"],
+      api_key: ENV["INTERCOM_API_KEY"]
     )
   end
 
@@ -56,7 +56,7 @@ class ReferralsController < ApplicationController
     to   = to.in_time_zone.end_of_day if to.present?
 
     CSV.generate do |csv|
-      csv << ['from:', from, 'to:', to].compact
+      csv << ["from:", from, "to:", to].compact
 
       column_names = %w(email token referred_accounts_count)
       csv << column_names

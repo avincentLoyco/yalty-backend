@@ -1,10 +1,10 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
-  include_context 'shared_context_headers'
-  include_context 'shared_context_timecop_helper'
+  include_context "shared_context_headers"
+  include_context "shared_context_timecop_helper"
 
-  let!(:vacation_category) { create(:time_off_category, account: Account.current, name: 'vacation') }
+  let!(:vacation_category) { create(:time_off_category, account: Account.current, name: "vacation") }
   let(:vacation_balancer_policy_A_amount) { 100 }
   let(:vacation_balancer_policy_A) do
     create(:time_off_policy, :with_end_date, time_off_category: vacation_category,
@@ -27,7 +27,7 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
 
   let!(:occupation_rate_definition) do
     create(:employee_attribute_definition,
-      name: 'occupation_rate',
+      name: "occupation_rate",
       account: Account.current,
       attribute_type: Attribute::Number.attribute_type,
       validation: { range: [0, 1] })
@@ -36,7 +36,7 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
   let!(:firstname_definition) do
     create(:employee_attribute_definition,
       account: Account.current,
-      name: 'firstname',
+      name: "firstname",
       attribute_type: Attribute::String.attribute_type,
       validation: { presence: true })
   end
@@ -44,7 +44,7 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
   let!(:lastname_definition) do
     create(:employee_attribute_definition,
       account: Account.current,
-      name: 'lastname',
+      name: "lastname",
       attribute_type: Attribute::String.attribute_type,
       validation: { presence: true })
   end
@@ -54,7 +54,7 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
   let(:event_params) do
     {
       effective_at: effective_at,
-      event_type: 'hired',
+      event_type: "hired",
       time_off_policy_amount: 10,
       employee: {},
       presence_policy_id: presence_policy.id
@@ -64,22 +64,22 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
     [
       {
         value: 1.0,
-        attribute_name: 'occupation_rate',
+        attribute_name: "occupation_rate",
       },
       {
-        value: 'John',
-        attribute_name: 'firstname'
+        value: "John",
+        attribute_name: "firstname"
       },
       {
-        value: 'Smith',
-        attribute_name: 'lastname'
+        value: "Smith",
+        attribute_name: "lastname"
       }
     ]
   end
   let(:contract_end_params) do
     {
       effective_at: effective_at + 6.months,
-      event_type: 'contract_end',
+      event_type: "contract_end",
       employee: {
         id: event.employee_id
       }
@@ -104,7 +104,7 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
 
   before do
     presence_days.map do |presence_day|
-      create(:time_entry, presence_day: presence_day, start_time: '00:00', end_time: '24:00')
+      create(:time_entry, presence_day: presence_day, start_time: "00:00", end_time: "24:00")
     end
   end
 
@@ -124,14 +124,14 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
   # end
 
 
-  describe 'GET #show' do
+  describe "GET #show" do
     let(:event) { create_hired_event }
     subject { get :show, employee_id: event.employee.id }
 
-    context 'when there are many categories' do
-      context' and one category policy is  counter type and the other is balancer type' do
+    context "when there are many categories" do
+      context" and one category policy is  counter type and the other is balancer type" do
         let!(:emergency_category) do
-          create(:time_off_category, account: Account.current, name: 'emergency')
+          create(:time_off_category, account: Account.current, name: "emergency")
         end
         let(:emergency_counter_policy) do
            create(:time_off_policy, :as_counter, time_off_category: emergency_category)
@@ -150,48 +150,48 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
           expect(JSON.parse(response.body)).to eq(
             [
               {
-                'employee' => event.employee_id,
-                'category' => "emergency",
-                'periods' =>
+                "employee" => event.employee_id,
+                "category" => "emergency",
+                "periods" =>
                   [
                       {
-                        'type' => "counter",
-                        'start_date' => '2016-01-01',
-                        'validity_date' => nil,
-                        'amount_taken' => 0,
-                        'period_result' => 0,
-                        'balance' => 0
+                        "type" => "counter",
+                        "start_date" => "2016-01-01",
+                        "validity_date" => nil,
+                        "amount_taken" => 0,
+                        "period_result" => 0,
+                        "balance" => 0
                       },
                       {
-                        'type' => "counter",
-                        'start_date' => '2017-01-01',
-                        'validity_date' => nil,
-                        'amount_taken' => 0,
-                        'period_result' => 0,
-                        'balance' => 0
+                        "type" => "counter",
+                        "start_date" => "2017-01-01",
+                        "validity_date" => nil,
+                        "amount_taken" => 0,
+                        "period_result" => 0,
+                        "balance" => 0
                       }
                   ]
               },
               {
-                'employee' => event.employee_id,
-                'category' => "vacation",
-                'periods' =>
+                "employee" => event.employee_id,
+                "category" => "vacation",
+                "periods" =>
                   [
                       {
-                        'type' => "balancer",
-                        'start_date' => '2016-01-01',
-                        'validity_date' => nil,
-                        'amount_taken' => 0,
-                        'period_result' => 14400,
-                        'balance' => 14400
+                        "type" => "balancer",
+                        "start_date" => "2016-01-01",
+                        "validity_date" => nil,
+                        "amount_taken" => 0,
+                        "period_result" => 14400,
+                        "balance" => 14400
                       },
                       {
-                        'type' => "balancer",
-                        'start_date' => '2017-01-01',
-                        'validity_date' => nil,
-                        'amount_taken' => 0,
-                        'period_result' => 14400,
-                        'balance' => 28800
+                        "type" => "balancer",
+                        "start_date" => "2017-01-01",
+                        "validity_date" => nil,
+                        "amount_taken" => 0,
+                        "period_result" => 14400,
+                        "balance" => 28800
                       }
                   ]
               }
@@ -199,15 +199,15 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
           )
         end
 
-        context 'and both have time offs ' do
+        context "and both have time offs " do
           before do
             # vacation_policy_A_assignation
-            create(:time_off, start_time: Time.zone.parse('1/2/2016 00:00:00'),
-              end_time: Time.zone.parse('1/2/2016 02:30:00'), employee: event.employee,
+            create(:time_off, start_time: Time.zone.parse("1/2/2016 00:00:00"),
+              end_time: Time.zone.parse("1/2/2016 02:30:00"), employee: event.employee,
               time_off_category: vacation_category
             )
-            create(:time_off, start_time: Time.zone.parse('1/2/2016 05:00:00'),
-              end_time: Time.zone.parse('1/2/2016 07:30:00'), employee: event.employee,
+            create(:time_off, start_time: Time.zone.parse("1/2/2016 05:00:00"),
+              end_time: Time.zone.parse("1/2/2016 07:30:00"), employee: event.employee,
               time_off_category: emergency_category
             )
             create_policy_balances
@@ -219,48 +219,48 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
             expect(JSON.parse(response.body)).to eq(
               [
                 {
-                  'employee' => event.employee_id,
-                  'category' => "emergency",
-                  'periods' =>
+                  "employee" => event.employee_id,
+                  "category" => "emergency",
+                  "periods" =>
                     [
                         {
-                          'type' => "counter",
-                          'start_date' => '2016-01-01',
-                          'validity_date' => nil,
-                          'amount_taken' => 150,
-                          'period_result' => -150,
-                          'balance' => -150
+                          "type" => "counter",
+                          "start_date" => "2016-01-01",
+                          "validity_date" => nil,
+                          "amount_taken" => 150,
+                          "period_result" => -150,
+                          "balance" => -150
                         },
                         {
-                          'type' => "counter",
-                          'start_date' => '2017-01-01',
-                          'validity_date' => nil,
-                          'amount_taken' => 0,
-                          'period_result' => 0,
-                          'balance' => 0
+                          "type" => "counter",
+                          "start_date" => "2017-01-01",
+                          "validity_date" => nil,
+                          "amount_taken" => 0,
+                          "period_result" => 0,
+                          "balance" => 0
                         },
                     ]
                 },
                 {
-                  'employee' => event.employee_id,
-                  'category' => "vacation",
-                  'periods' =>
+                  "employee" => event.employee_id,
+                  "category" => "vacation",
+                  "periods" =>
                     [
                         {
-                          'type' => "balancer",
-                          'start_date' => '2016-01-01',
-                          'validity_date' => nil,
-                          'amount_taken' => 150,
-                          'period_result' => 14250,
-                          'balance' => 14250
+                          "type" => "balancer",
+                          "start_date" => "2016-01-01",
+                          "validity_date" => nil,
+                          "amount_taken" => 150,
+                          "period_result" => 14250,
+                          "balance" => 14250
                         },
                         {
-                          'type' => "balancer",
-                          'start_date' => '2017-01-01',
-                          'validity_date' => nil,
-                          'amount_taken' => 0,
-                          'period_result' => 14400,
-                          'balance' => 28650
+                          "type" => "balancer",
+                          "start_date" => "2017-01-01",
+                          "validity_date" => nil,
+                          "amount_taken" => 0,
+                          "period_result" => 14400,
+                          "balance" => 28650
                         },
                     ]
                 }
@@ -272,25 +272,25 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
       end
     end
 
-    context 'when in the current period there are no assignations but there are in the next period' do
+    context "when in the current period there are no assignations but there are in the next period" do
       let(:effective_at) { Date.new(2018, 1, 1) }
 
-      context ' and hired event is in the next period' do
+      context " and hired event is in the next period" do
         it do
           subject
           expect(JSON.parse(response.body)).to eq(
             [
               {
-                'employee' => event.employee_id,
-                'category' => "vacation",
-                'periods' => [
+                "employee" => event.employee_id,
+                "category" => "vacation",
+                "periods" => [
                     {
-                      'type' => "balancer",
-                      'start_date' => '2018-01-01',
-                      'validity_date' => nil,
-                      'amount_taken' => 0,
-                      'period_result' => 14400,
-                      'balance' => 14400
+                      "type" => "balancer",
+                      "start_date" => "2018-01-01",
+                      "validity_date" => nil,
+                      "amount_taken" => 0,
+                      "period_result" => 14400,
+                      "balance" => 14400
                     }
                 ]
               }
@@ -300,42 +300,42 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
       end
     end
 
-    context 'balancer type' do
-      context 'when there is contract end' do
+    context "balancer type" do
+      context "when there is contract end" do
         before do
           create_contract_end
         end
 
-        context 'and balances do not have validity date' do
+        context "and balances do not have validity date" do
 
-          context 'contract end in next period' do
-            context 'and there are time offs' do
+          context "contract end in next period" do
+            context "and there are time offs" do
               before do
                 create(:time_off,
                   employee: event.employee, time_off_category: vacation_category,
-                  start_time: Time.zone.parse('1/2/2016 07:30:00'), end_time: end_time)
+                  start_time: Time.zone.parse("1/2/2016 07:30:00"), end_time: end_time)
                 update_balances
               end
 
-              context 'and whole amount used' do
-                context 'only from active' do
-                  let(:end_time) { Time.zone.parse('1/2/2016 11:30:00') }
+              context "and whole amount used" do
+                context "only from active" do
+                  let(:end_time) { Time.zone.parse("1/2/2016 11:30:00") }
 
                   it do
                     subject
                     expect(JSON.parse(response.body)).to eq(
                       [
                         {
-                          'employee' => event.employee_id,
-                          'category' => "vacation",
-                          'periods' => [
+                          "employee" => event.employee_id,
+                          "category" => "vacation",
+                          "periods" => [
                               {
-                                'type' => "balancer",
-                                'start_date' => '2016-01-01',
-                                'validity_date' => nil,
-                                'amount_taken' => 240,
-                                'period_result' => 14160,
-                                'balance' => 14160
+                                "type" => "balancer",
+                                "start_date" => "2016-01-01",
+                                "validity_date" => nil,
+                                "amount_taken" => 240,
+                                "period_result" => 14160,
+                                "balance" => 14160
                               }
                           ]
                         }
@@ -344,24 +344,24 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
                   end
                 end
 
-                context 'from current and active' do
-                  let(:end_time) { Time.zone.parse('1/2/2016 8:30:00') }
+                context "from current and active" do
+                  let(:end_time) { Time.zone.parse("1/2/2016 8:30:00") }
 
                   it do
                     subject
                     expect(JSON.parse(response.body)).to eq(
                       [
                         {
-                          'employee' => event.employee_id,
-                          'category' => "vacation",
-                          'periods' => [
+                          "employee" => event.employee_id,
+                          "category" => "vacation",
+                          "periods" => [
                             {
-                              'type' => "balancer",
-                              'start_date' => '2016-01-01',
-                              'validity_date' => nil,
-                              'amount_taken' => 60,
-                              'period_result' => 14340,
-                              'balance' => 14340
+                              "type" => "balancer",
+                              "start_date" => "2016-01-01",
+                              "validity_date" => nil,
+                              "amount_taken" => 60,
+                              "period_result" => 14340,
+                              "balance" => 14340
                             }
                           ]
                         }
@@ -371,24 +371,24 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
                 end
               end
 
-              context 'and not whole active period amount used' do
-                let(:end_time) { Time.zone.parse('1/2/2016 10:30:00') }
+              context "and not whole active period amount used" do
+                let(:end_time) { Time.zone.parse("1/2/2016 10:30:00") }
 
                 it do
                   subject
                   expect(JSON.parse(response.body)).to eq(
                     [
                       {
-                        'employee' => event.employee_id,
-                        'category' => "vacation",
-                        'periods' => [
+                        "employee" => event.employee_id,
+                        "category" => "vacation",
+                        "periods" => [
                             {
-                              'type' => "balancer",
-                              'start_date' => '2016-01-01',
-                              'validity_date' => nil,
-                              'amount_taken' => 180,
-                              'period_result' => 14220,
-                              'balance' => 14220
+                              "type" => "balancer",
+                              "start_date" => "2016-01-01",
+                              "validity_date" => nil,
+                              "amount_taken" => 180,
+                              "period_result" => 14220,
+                              "balance" => 14220
                             }
                         ]
                       }
@@ -398,7 +398,7 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
               end
             end
 
-            context 'and there are no time offs' do
+            context "and there are no time offs" do
               before do
                 update_balances
               end
@@ -408,16 +408,16 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
                 expect(JSON.parse(response.body)).to eq(
                   [
                     {
-                      'employee' => event.employee_id,
-                      'category' => "vacation",
-                      'periods' => [
+                      "employee" => event.employee_id,
+                      "category" => "vacation",
+                      "periods" => [
                         {
-                          'type' => "balancer",
-                          'start_date' => '2016-01-01',
-                          'validity_date' => nil,
-                          'amount_taken' => 0,
-                          'period_result' => 14400,
-                          'balance' => 14400
+                          "type" => "balancer",
+                          "start_date" => "2016-01-01",
+                          "validity_date" => nil,
+                          "amount_taken" => 0,
+                          "period_result" => 14400,
+                          "balance" => 14400
                         }
                       ]
                     }
@@ -427,8 +427,8 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
             end
           end
 
-          context 'contract end in current period' do
-            context 'and no time offs' do
+          context "contract end in current period" do
+            context "and no time offs" do
               let(:effective_at) { Date.new(2014, 1, 1) }
 
               it do
@@ -436,16 +436,16 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
                 expect(JSON.parse(response.body)).to eq(
                   [
                     {
-                      'employee' => event.employee_id,
-                      'category' => "vacation",
-                      'periods' => [
+                      "employee" => event.employee_id,
+                      "category" => "vacation",
+                      "periods" => [
                           {
-                            'type' => "balancer",
-                            'start_date' => '2014-01-01',
-                            'validity_date' => nil,
-                            'amount_taken' => 0,
-                            'period_result' => 14400,
-                            'balance' => 14400
+                            "type" => "balancer",
+                            "start_date" => "2014-01-01",
+                            "validity_date" => nil,
+                            "amount_taken" => 0,
+                            "period_result" => 14400,
+                            "balance" => 14400
                           }
                       ]
                     }
@@ -454,15 +454,15 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
               end
             end
 
-            context 'and there is time offs in previous periods' do
+            context "and there is time offs in previous periods" do
               before do
                 create(:time_off,
                   employee: event.employee, time_off_category: vacation_category,
-                  start_time: Time.zone.parse('1/1/2016 07:30:00'), end_time: end_time)
+                  start_time: Time.zone.parse("1/1/2016 07:30:00"), end_time: end_time)
               end
 
-              context 'and not whole period amount used' do
-                let(:end_time) { Time.zone.parse('1/1/2016 8:30:00') }
+              context "and not whole period amount used" do
+                let(:end_time) { Time.zone.parse("1/1/2016 8:30:00") }
 
                 before do
                   update_balances
@@ -472,16 +472,16 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
                   expect(JSON.parse(response.body)).to eq(
                     [
                       {
-                        'employee' => event.employee_id,
-                        'category' => "vacation",
-                        'periods' => [
+                        "employee" => event.employee_id,
+                        "category" => "vacation",
+                        "periods" => [
                             {
-                              'type' => "balancer",
-                              'start_date' => '2016-01-01',
-                              'validity_date' => nil,
-                              'amount_taken' => 60,
-                              'period_result' => 14340,
-                              'balance' => 14340
+                              "type" => "balancer",
+                              "start_date" => "2016-01-01",
+                              "validity_date" => nil,
+                              "amount_taken" => 60,
+                              "period_result" => 14340,
+                              "balance" => 14340
                             }
                         ]
                       }
@@ -490,7 +490,7 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
                 end
               end
 
-              context 'and whole period amount used' do
+              context "and whole period amount used" do
                 let(:end_time) { effective_at + 12.days }
 
                 before do
@@ -502,16 +502,16 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
                   expect(JSON.parse(response.body)).to eq(
                     [
                       {
-                        'employee' => event.employee_id,
-                        'category' => "vacation",
-                        'periods' => [
+                        "employee" => event.employee_id,
+                        "category" => "vacation",
+                        "periods" => [
                             {
-                              'type' => "balancer",
-                              'start_date' => '2016-01-01',
-                              'validity_date' => nil,
-                              'amount_taken' => 14400,
-                              'period_result' => 0,
-                              'balance' => -2430
+                              "type" => "balancer",
+                              "start_date" => "2016-01-01",
+                              "validity_date" => nil,
+                              "amount_taken" => 14400,
+                              "period_result" => 0,
+                              "balance" => -2430
                             }
                         ]
                       }

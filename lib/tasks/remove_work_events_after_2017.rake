@@ -3,7 +3,7 @@ namespace :work_events do
   task remove_after_2017: :environment do
     work_events            = Employee::Event.where(event_type: WORK_EVENT_TYPES)
     work_events_after_2017 =
-      work_events.where('effective_at >= ?', Date.new(2018, 1, 1)).order(event_type: :desc)
+      work_events.where("effective_at >= ?", Date.new(2018, 1, 1)).order(event_type: :desc)
 
     work_events_after_2017.each do |work_event|
       delete_working_places(work_event.employee, work_event.effective_at)
@@ -49,12 +49,12 @@ namespace :work_events do
   end
 
   def remove_reset_resources(event, employee)
-    return unless event.event_type.eql?('contract_end')
+    return unless event.event_type.eql?("contract_end")
     ClearResetJoinTables.new(employee, event.effective_at - 1.day, nil, true).call
   end
 
   def create_missing_balances(event)
-    return unless event.event_type.eql?('contract_end')
+    return unless event.event_type.eql?("contract_end")
     policies_by_category(event, event.employee).map do |_category, policies|
       ManageEmployeeBalanceAdditions.new(policies.last).call
       next if policies.last.time_off_policy.end_day.blank?

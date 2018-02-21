@@ -1,7 +1,7 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
-  include_context 'shared_context_headers'
+  include_context "shared_context_headers"
 
   let(:previous_start) { related_period.first_start_date - policy.years_to_effect.years }
   let(:previous_end) { previous_start + policy.years_to_effect.years }
@@ -26,20 +26,20 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
     )
   end
 
-  shared_examples 'Not Account Manager' do
-    before { Account::User.current.update!(role: 'user') }
+  shared_examples "Not Account Manager" do
+    before { Account::User.current.update!(role: "user") }
 
     it { is_expected.to have_http_status(403) }
   end
 
-  describe 'GET #show' do
+  describe "GET #show" do
     let(:id) { employee_balance.id }
     subject { get :show, id: id }
 
-    context 'with valid params' do
+    context "with valid params" do
       it { is_expected.to have_http_status(200) }
 
-      context 'response body' do
+      context "response body" do
         before { subject }
 
         it { expect_json_keys(
@@ -51,30 +51,30 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
       end
     end
 
-    context 'when employee is a balance owner' do
-      before { Account::User.current.update!(role: 'user', employee: employee) }
+    context "when employee is a balance owner" do
+      before { Account::User.current.update!(role: "user", employee: employee) }
 
       it { is_expected.to have_http_status(200) }
     end
 
-    context 'with invalid params' do
-      context 'when invalid id' do
-        let(:id) { 'abc' }
+    context "with invalid params" do
+      context "when invalid id" do
+        let(:id) { "abc" }
 
         it { is_expected.to have_http_status(404) }
       end
 
-      context 'when balance does not belong to account user' do
+      context "when balance does not belong to account user" do
         before { Account.current = create(:account) }
         let(:id) { employee_balance.id }
 
         it { is_expected.to have_http_status(404) }
       end
-      it_behaves_like 'Not Account Manager'
+      it_behaves_like "Not Account Manager"
     end
   end
 
-  describe 'GET #index' do
+  describe "GET #index" do
     subject { get :index, employee_id: employee_id, time_off_category_id: category_id }
     let(:category_id) { nil }
     let(:employee_id) { employee.id }
@@ -88,8 +88,8 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
 
     it { expect(first_balance.time_off_category_id).to_not eq second_balance.time_off_category_id }
 
-    context 'with valid data' do
-      context 'when only employee_id given' do
+    context "with valid data" do
+      context "when only employee_id given" do
         before { subject }
 
         it { expect_json_sizes(2) }
@@ -99,7 +99,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
         it { expect(response.body).to_not include(second_balance.id) }
       end
 
-      context 'when employee id and category id given' do
+      context "when employee id and category id given" do
         let(:category_id) { second_balance.time_off_category_id }
         before { subject }
 
@@ -111,26 +111,26 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
       end
     end
 
-    context 'with invalid data' do
-      context 'when invalid employee_id' do
-        let(:employee_id) { 'abc' }
+    context "with invalid data" do
+      context "when invalid employee_id" do
+        let(:employee_id) { "abc" }
 
         it { is_expected.to have_http_status(404) }
       end
 
-      context 'when invalid time_off_category_id' do
-        let(:category_id) { 'abc' }
+      context "when invalid time_off_category_id" do
+        let(:category_id) { "abc" }
 
         it { is_expected.to have_http_status(404) }
       end
 
-      it_behaves_like 'Not Account Manager'
+      it_behaves_like "Not Account Manager"
     end
   end
 
-  describe 'PUT #update' do
+  describe "PUT #update" do
     subject { put :update, params }
-    let(:amount) { '100' }
+    let(:amount) { "100" }
     let(:employee_id) { employee.id }
     let(:params) do
       {
@@ -139,15 +139,15 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
       }
     end
 
-    context 'with valid params' do
-      context 'employee balance policy of type counter' do
-        let(:amount) { '50' }
+    context "with valid params" do
+      context "employee balance policy of type counter" do
+        let(:amount) { "50" }
 
-        include_context 'shared_context_balances',
-          type: 'counter',
+        include_context "shared_context_balances",
+          type: "counter",
           years_to_effect: 0
 
-        context 'and in current policy period' do
+        context "and in current policy period" do
           let(:id) { balance.id }
 
           it { expect { subject }.to have_enqueued_job(UpdateBalanceJob).exactly(1) }
@@ -158,7 +158,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
           it { is_expected.to have_http_status(204) }
         end
 
-        context 'and in previous policy period' do
+        context "and in previous policy period" do
           let(:id) { previous_balance.id }
 
           it { expect { subject }.to have_enqueued_job(UpdateBalanceJob).exactly(1) }
@@ -170,9 +170,9 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
         end
       end
 
-      context 'employee balance policy of type balancer' do
-        include_context 'shared_context_balances',
-          type: 'balancer',
+      context "employee balance policy of type balancer" do
+        include_context "shared_context_balances",
+          type: "balancer",
           years_to_effect: 0,
           end_day: 1,
           end_month: 4,
@@ -181,8 +181,8 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
 
           let(:id) { previous_balance.id }
 
-        context 'when manual amount is negative' do
-          context 'when manual amount change is greater than removal amount' do
+        context "when manual amount is negative" do
+          context "when manual amount change is greater than removal amount" do
             let(:amount) { -1100 }
 
             it { expect { subject }.to change { previous_balance.reload.being_processed }.to true }
@@ -190,7 +190,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
             it { expect { subject }.to change { balance_add.reload.being_processed }.to true }
           end
 
-          context 'when manual amount change is smaller than removal amount' do
+          context "when manual amount change is smaller than removal amount" do
             let(:amount) { -900 }
 
             it { expect { subject }.to change { previous_balance.reload.being_processed }.to true }
@@ -199,7 +199,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
           end
         end
 
-        context 'when manual amount is positive' do
+        context "when manual amount is positive" do
           let(:amount) { 1000 }
 
           it { expect { subject }.to change { previous_balance.reload.being_processed }.to true }
@@ -209,22 +209,22 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
       end
     end
 
-    context 'with invalid params' do
-      include_context 'shared_context_balances',
-        type: 'balancer',
+    context "with invalid params" do
+      include_context "shared_context_balances",
+        type: "balancer",
         years_to_effect: 0,
         policy_amount: 1000
 
       let(:id) { balance.id }
 
-      context 'when param is missing' do
+      context "when param is missing" do
         before { params.delete(:manual_amount) }
 
         it { expect { subject }.to_not change { balance.reload.being_processed } }
         it { is_expected.to have_http_status(422) }
       end
 
-      context 'cannot modify resource_amount' do
+      context "cannot modify resource_amount" do
         before { params.merge!(validity_date: current.last - 1.month, resource_amount: 5000) }
         let(:id) { balance_add.id }
 
@@ -235,7 +235,7 @@ RSpec.describe API::V1::EmployeeBalancesController, type: :controller do
         it { is_expected.to have_http_status(204) }
       end
 
-      it_behaves_like 'Not Account Manager'
+      it_behaves_like "Not Account Manager"
     end
   end
 end

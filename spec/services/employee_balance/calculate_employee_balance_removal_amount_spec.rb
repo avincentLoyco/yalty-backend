@@ -1,10 +1,10 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe CalculateEmployeeBalanceRemovalAmount do
-  include_context 'shared_context_account_helper'
-  include_context 'shared_context_timecop_helper'
+  include_context "shared_context_account_helper"
+  include_context "shared_context_timecop_helper"
 
-  describe '.call' do
+  describe ".call" do
     before do
       create(:employee_presence_policy, :with_time_entries,
         employee: employee, effective_at: 1.year.ago)
@@ -24,7 +24,7 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
         employee: employee, time_off_category: category, validity_date: validity_date,
         resource_amount: 0, manual_amount: policy_adjustment,
         effective_at: employee_policy.effective_at + Employee::Balance::ASSIGNATION_OFFSET,
-        balance_type: 'assignation')
+        balance_type: "assignation")
     end
     let(:account) { create(:account) }
     let(:category) { create(:time_off_category, account: account) }
@@ -45,29 +45,29 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
 
     subject { described_class.new(removal).call }
 
-    context 'and time off policy is a counter type' do
+    context "and time off policy is a counter type" do
       before do
         time_off.employee_balance.update!(validity_date: nil)
-        policy.update!(policy_type: 'counter', end_day: nil, end_month: nil, amount: 0)
+        policy.update!(policy_type: "counter", end_day: nil, end_month: nil, amount: 0)
         employee_policy.reload
       end
 
       let(:time_off_removal) { nil }
 
-      context 'and there were previous balances' do
-        context 'and their balance bigger than 0' do
+      context "and there were previous balances" do
+        context "and their balance bigger than 0" do
           let(:time_off_manual) { 5000 }
 
           it { expect(subject).to eq -(5000 + time_off.balance) }
         end
 
-        context 'and their balance smaller than 0' do
+        context "and their balance smaller than 0" do
           let(:time_off_manual) { -1500 }
 
           it { expect(subject).to eq (1500 - time_off.balance) }
         end
 
-        context 'and their balance equal 0' do
+        context "and their balance equal 0" do
           let(:time_off_manual) { 960 }
 
           it { expect(subject).to eq 0 }
@@ -75,21 +75,21 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
       end
     end
 
-    context 'and time off policy is a balancer type' do
+    context "and time off policy is a balancer type" do
       let(:time_off_removal) { removal }
       let(:time_off_manual) { 100 }
 
-      context 'and the removal validity date is the same as the effective at' do
+      context "and the removal validity date is the same as the effective at" do
         let(:removal_manual_amount) { 7 }
         let!(:removal) do
           create(:employee_balance_manual,
             employee: employee, time_off_category: category,
             effective_at: validity_date, validity_date: validity_date,
             balance_credit_additions: [policy_balance], manual_amount: removal_manual_amount,
-            balance_type: 'removal'
+            balance_type: "removal"
           )
         end
-        context 'when there are no other balances except addition' do
+        context "when there are no other balances except addition" do
           before do
             time_off.employee_balance.destroy!
             time_off.destroy!
@@ -102,7 +102,7 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
               )
           end
 
-          context 'but there is a time off which starts before effective at and ends after' do
+          context "but there is a time off which starts before effective at and ends after" do
             before do
               create(:time_off,
                 employee: employee, time_off_category: removal.time_off_category,
@@ -110,7 +110,7 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
               )
             end
 
-            context 'when removal manual amount greater than time off related amount' do
+            context "when removal manual amount greater than time off related amount" do
               let(:policy_adjustment) { 1000 }
 
               it do
@@ -120,7 +120,7 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
               end
             end
 
-            context 'when removal manual amount smaller than time off related amount' do
+            context "when removal manual amount smaller than time off related amount" do
               let(:policy_adjustment) { 100 }
 
               it { expect(subject).to eq -7 }
@@ -128,31 +128,31 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
           end
         end
 
-        context 'when there are no end dates, start dates and assignations in the period' do
-          context 'and whole additions amount was used' do
+        context "when there are no end dates, start dates and assignations in the period" do
+          context "and whole additions amount was used" do
             let(:policy_adjustment) { 100 }
 
             it { expect(subject).to eq (- removal_manual_amount) }
           end
 
-          context 'and not whole addition amoount was used' do
+          context "and not whole addition amoount was used" do
             let(:policy_adjustment) { 2000 }
 
             it { expect(subject).to eq(-(2100 - time_off.balance.abs + removal_manual_amount)) }
           end
         end
 
-        context 'when there are balances which belongs to other removal but they are smaller than 0' do
+        context "when there are balances which belongs to other removal but they are smaller than 0" do
           let(:policy_adjustment) { 10000 }
 
-          context 'and removal is not in their period' do
+          context "and removal is not in their period" do
             let!(:new_time_off) do
               create(:time_off,
-                employee: employee, time_off_category: category, start_time: '3/3/2016',
-                end_time: '6/3/2016')
+                employee: employee, time_off_category: category, start_time: "3/3/2016",
+                end_time: "6/3/2016")
             end
 
-            it '' do
+            it "" do
               expect(subject).to eq (-( 10100 + time_off.balance + new_time_off.balance +
                 removal_manual_amount)
               )
@@ -160,14 +160,14 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
             end
           end
 
-          context 'and removal is in their period' do
+          context "and removal is in their period" do
             let!(:new_time_off) do
               create(:time_off,
-                employee: employee, time_off_category: category, start_time: '25/3/2016',
-                end_time: '4/4/2016')
+                employee: employee, time_off_category: category, start_time: "25/3/2016",
+                end_time: "4/4/2016")
             end
 
-            it 'has proper value' do
+            it "has proper value" do
               expect(subject).to eq (
                 -(
                   10100 + time_off.balance - new_time_off.employee_balance.related_amount +
@@ -175,22 +175,22 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
                )
             end
 
-            context 'when other policy addition added in the period' do
+            context "when other policy addition added in the period" do
               before { new_employee_policy.policy_assignation_balance.update!(resource_amount: 0) }
               let(:new_policy) do
                 create(:time_off_policy, time_off_category: category, end_day: 1, end_month: 5)
               end
               let(:new_employee_policy) do
                 create(:employee_time_off_policy, :with_employee_balance,
-                  employee: employee, time_off_policy: new_policy, effective_at: '1/3/2016')
+                  employee: employee, time_off_policy: new_policy, effective_at: "1/3/2016")
               end
 
-              context 'and all balances amount was used' do
+              context "and all balances amount was used" do
                 let(:policy_adjustment) { 960 }
 
                 it { expect(subject).to eq (- removal_manual_amount) }
 
-                context 'when removal for the new policy is created' do
+                context "when removal for the new policy is created" do
                   let(:time_off_manual) { 0 }
 
                   before do
@@ -202,9 +202,9 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
                   let(:new_removal) do
                     create(:employee_balance_manual,
                       employee: employee, time_off_category: category,
-                      effective_at: '2/5/2016'.to_date + Employee::Balance::REMOVAL_OFFSET,
+                      effective_at: "2/5/2016".to_date + Employee::Balance::REMOVAL_OFFSET,
                       balance_credit_additions: [new_employee_policy.policy_assignation_balance],
-                      balance_type: 'removal')
+                      balance_type: "removal")
                   end
 
                   subject { described_class.new(new_removal).call }
@@ -213,20 +213,20 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
                 end
               end
 
-              context 'and all balances amount wasn\'t used' do
+              context "and all balances amount wasn't used" do
                 it do
                   expect(subject).to eq ( -( 10100 + time_off.balance +
-                    new_time_off.balance(nil, '1/4/2016'.to_time.end_of_day) +
+                    new_time_off.balance(nil, "1/4/2016".to_time.end_of_day) +
                     removal_manual_amount)
                   )
                 end
 
-                context 'when removal for the new policy is created' do
+                context "when removal for the new policy is created" do
                   before do
                     new_employee_policy.policy_assignation_balance.update!(manual_amount: 1000)
                     removal.update!(
                       resource_amount:
-                        -(10100 + time_off.balance + new_time_off.balance(nil, '1/4/2016'.to_time.end_of_day))
+                        -(10100 + time_off.balance + new_time_off.balance(nil, "1/4/2016".to_time.end_of_day))
                     )
                     new_time_off.employee_balance.update!(balance: 0)
                   end
@@ -234,7 +234,7 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
                   let(:new_removal) do
                     create(:employee_balance_manual,
                       employee: employee, time_off_category: category,
-                      effective_at: '2/5/2016'.to_date + Employee::Balance::REMOVAL_OFFSET,
+                      effective_at: "2/5/2016".to_date + Employee::Balance::REMOVAL_OFFSET,
                       balance_credit_additions: [new_employee_policy.policy_assignation_balance])
                   end
 
@@ -242,7 +242,7 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
 
                   it do
                     expect(subject).to eq ( -( 1000 +
-                       new_time_off.balance('1/4/2016'.to_time.end_of_day, nil) +
+                       new_time_off.balance("1/4/2016".to_time.end_of_day, nil) +
                        removal_manual_amount)
                     )
                   end
@@ -253,8 +253,8 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
         end
       end
 
-      context 'and the removal of the validity_date is different than the effective at' do
-        context 'when there are no other balances except addition' do
+      context "and the removal of the validity_date is different than the effective at" do
+        context "when there are no other balances except addition" do
           before do
             time_off.employee_balance.destroy!
             time_off.destroy!
@@ -266,38 +266,38 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
           end
         end
 
-        context 'when there are no end dates, start dates and assignations in the period' do
-          context 'and whole additions amount was used' do
+        context "when there are no end dates, start dates and assignations in the period" do
+          context "and whole additions amount was used" do
             let(:policy_adjustment) { 100 }
 
             it { expect(subject).to eq 0 }
           end
 
-          context 'and not whole addition amoount was used' do
+          context "and not whole addition amoount was used" do
             let(:policy_adjustment) { 2000 }
 
             it { expect(subject).to eq(-(2100 - time_off.balance.abs)) }
           end
         end
 
-        context 'when there are balances which belongs to other removal but they are smaller than 0' do
+        context "when there are balances which belongs to other removal but they are smaller than 0" do
           let(:policy_adjustment) { 10000 }
 
-          context 'and removal is not in their period' do
+          context "and removal is not in their period" do
             let!(:new_time_off) do
               create(:time_off,
-                employee: employee, time_off_category: category, start_time: '3/3/2016',
-                end_time: '6/3/2016')
+                employee: employee, time_off_category: category, start_time: "3/3/2016",
+                end_time: "6/3/2016")
             end
 
             it { expect(subject).to eq -(10100 + time_off.balance + new_time_off.balance) }
           end
 
-          context 'and removal is in their period' do
+          context "and removal is in their period" do
             let!(:new_time_off) do
               create(:time_off,
-                employee: employee, time_off_category: category, start_time: '25/3/2016',
-                end_time: '4/4/2016')
+                employee: employee, time_off_category: category, start_time: "25/3/2016",
+                end_time: "4/4/2016")
             end
 
             it do
@@ -306,22 +306,22 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
               )
             end
 
-            context 'when other policy addition added in the period' do
+            context "when other policy addition added in the period" do
               before { new_employee_policy.policy_assignation_balance.update!(resource_amount: 0) }
               let(:new_policy) do
                 create(:time_off_policy, time_off_category: category, end_day: 1, end_month: 5)
               end
               let(:new_employee_policy) do
                 create(:employee_time_off_policy, :with_employee_balance,
-                  employee: employee, time_off_policy: new_policy, effective_at: '1/3/2016')
+                  employee: employee, time_off_policy: new_policy, effective_at: "1/3/2016")
               end
 
-              context 'and all balances amount was used' do
+              context "and all balances amount was used" do
                 let(:policy_adjustment) { 960 }
 
                 it { expect(subject).to eq 0 }
 
-                context 'when removal for the new policy is created' do
+                context "when removal for the new policy is created" do
                   let(:time_off_manual) { 0 }
 
                   before do
@@ -333,9 +333,9 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
                   let(:new_removal) do
                     create(:employee_balance_manual,
                       employee: employee, time_off_category: category,
-                      effective_at: '2/5/2016'.to_date + Employee::Balance::REMOVAL_OFFSET,
+                      effective_at: "2/5/2016".to_date + Employee::Balance::REMOVAL_OFFSET,
                       balance_credit_additions: [new_employee_policy.policy_assignation_balance],
-                      balance_type: 'removal')
+                      balance_type: "removal")
                   end
 
                   subject { described_class.new(new_removal).call }
@@ -344,19 +344,19 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
                 end
               end
 
-              context 'and all balances amount wasn\'t used' do
+              context "and all balances amount wasn't used" do
                 it do
                   expect(subject).to eq -(
-                    10100 + time_off.balance + new_time_off.balance(nil, '1/4/2016'.to_time.end_of_day)
+                    10100 + time_off.balance + new_time_off.balance(nil, "1/4/2016".to_time.end_of_day)
                   )
                 end
 
-                context 'when removal for the new policy is created' do
+                context "when removal for the new policy is created" do
                   before do
                     new_employee_policy.policy_assignation_balance.update!(manual_amount: 1000)
                     removal.update!(
                       resource_amount:
-                        -(10100 + time_off.balance + new_time_off.balance(nil, '1/4/2016'.to_time.end_of_day))
+                        -(10100 + time_off.balance + new_time_off.balance(nil, "1/4/2016".to_time.end_of_day))
                     )
                     new_time_off.employee_balance.update!(balance: 0)
                   end
@@ -364,7 +364,7 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
                   let(:new_removal) do
                     create(:employee_balance_manual,
                       employee: employee, time_off_category: category,
-                      effective_at: '2/5/2016'.to_date + Employee::Balance::REMOVAL_OFFSET,
+                      effective_at: "2/5/2016".to_date + Employee::Balance::REMOVAL_OFFSET,
                       balance_credit_additions: [new_employee_policy.policy_assignation_balance])
                   end
 
@@ -372,7 +372,7 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
 
                   it do
                     expect(subject)
-                      .to eq -(1000 + new_time_off.balance('1/4/2016'.to_time.end_of_day, nil))
+                      .to eq -(1000 + new_time_off.balance("1/4/2016".to_time.end_of_day, nil))
                   end
                 end
               end

@@ -16,7 +16,7 @@ FactoryGirl.define do
                    end
 
         hired_event = build(:employee_event,
-          event_type: 'hired',
+          event_type: "hired",
           employee: employee,
           effective_at: hired_at
         )
@@ -24,7 +24,7 @@ FactoryGirl.define do
 
         if evaluator.contract_end_at
           contract_end_event = build(:employee_event,
-            event_type: 'contract_end',
+            event_type: "contract_end",
             employee: employee,
             effective_at: evaluator.contract_end_at
           )
@@ -37,7 +37,7 @@ FactoryGirl.define do
       after(:build) do |employee|
         employee.events.delete_all
         hired_event = build(:employee_event,
-          event_type: 'hired',
+          event_type: "hired",
           employee: employee,
           effective_at: Time.zone.now
         )
@@ -174,11 +174,11 @@ FactoryGirl.define do
               event: event
             )
 
-            if attribute.data.attribute_type.eql?('File') && value
+            if attribute.data.attribute_type.eql?("File") && value
               attribute.data.id = value[:value]
               attribute.data.size = 1000
-              attribute.data.file_type = 'image/jpeg'
-              attribute.data.original_sha = '123456781234'
+              attribute.data.file_type = "image/jpeg"
+              attribute.data.original_sha = "123456781234"
             else
               attribute.value = value
             end

@@ -38,7 +38,7 @@ class RecreateBalancesHelper
       return etop.try(:effective_till) unless old_effective_at.present?
       date_in_future = new_effective_at > old_effective_at ? new_effective_at : old_effective_at
       first_etop_after_date_in_future =
-        etops_in_category.where('effective_at > ?', date_in_future).first
+        etops_in_category.where("effective_at > ?", date_in_future).first
       return unless first_etop_after_date_in_future.present?
       first_etop_after_date_in_future.effective_at - 1.day
     end
@@ -72,7 +72,7 @@ class RecreateBalancesHelper
       balances_in_category
       .not_time_off
       .where(
-        'effective_at = ?',
+        "effective_at = ?",
         old_effective_at + Employee::Balance::ASSIGNATION_OFFSET
       )
       .first
@@ -89,9 +89,9 @@ class RecreateBalancesHelper
       employee.id,
       employee.account.id,
       effective_at: new_effective_at,
-      validity_date: find_validity_date(etop, new_effective_at, 'assignation'),
+      validity_date: find_validity_date(etop, new_effective_at, "assignation"),
       manual_amount: manual_amount,
-      balance_type: 'assignation',
+      balance_type: "assignation",
       resource_amount: 0,
       skip_update: true
     ).call
@@ -109,7 +109,7 @@ class RecreateBalancesHelper
   def manage_additions_for_etops_between_dates!
     end_effective_at = new_effective_at > old_effective_at ? new_effective_at : old_effective_at
     etops = etops_in_category.where(
-      'effective_at BETWEEN ? AND ?', starting_date, ending_date || end_effective_at
+      "effective_at BETWEEN ? AND ?", starting_date, ending_date || end_effective_at
     )
     etops.each { |etop_between| ManageEmployeeBalanceAdditions.new(etop_between, false).call }
   end
@@ -125,9 +125,9 @@ class RecreateBalancesHelper
   def balance_at_starting_date_or_first_balance
     related_balances =
       Employee::Balance.where(time_off_category: time_off_category, employee: employee)
-    related_balances.where('effective_at::date = ?', starting_date.to_date).first ||
+    related_balances.where("effective_at::date = ?", starting_date.to_date).first ||
       related_balances.where(
-        'effective_at::date = ?', etops_in_category.first.effective_at.to_date
+        "effective_at::date = ?", etops_in_category.first.effective_at.to_date
       ).first
   end
 
@@ -144,7 +144,7 @@ class RecreateBalancesHelper
   end
 
   def first_etop_before(date = new_effective_at)
-    etops_in_category.where('effective_at < ?', date).last
+    etops_in_category.where("effective_at < ?", date).last
   end
 
   def balances_in_category
@@ -154,7 +154,7 @@ class RecreateBalancesHelper
   def update_time_offs_balances!
     balances_with_time_offs.each do |balance|
       balance_etop = etop.present? ? etop : first_etop_before(balance.effective_at)
-      new_date = find_validity_date(balance_etop, balance.effective_at, 'time_off')
+      new_date = find_validity_date(balance_etop, balance.effective_at, "time_off")
       UpdateEmployeeBalance.new(balance).call if new_date != balance.validity_date
     end
   end
@@ -162,7 +162,7 @@ class RecreateBalancesHelper
   def balances_with_time_offs
     balances_in_category = employee.employee_balances.with_time_off.in_category(time_off_category)
     return balances_in_category.between(starting_date, ending_date) if ending_date
-    balances_in_category.where('effective_at >= ?', starting_date)
+    balances_in_category.where("effective_at >= ?", starting_date)
   end
 
   def find_validity_date(etop, date, balance_type)

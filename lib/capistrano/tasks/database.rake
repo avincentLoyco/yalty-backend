@@ -1,25 +1,25 @@
 namespace :db do
-  desc 'Run database migrations'
+  desc "Run database migrations"
   task :migrate do
     on fetch(:migration_server) do
       within release_path do
-        info 'Run database migration'
-        execute :rake, 'db:migrate'
+        info "Run database migration"
+        execute :rake, "db:migrate"
       end
     end
   end
 
-  desc 'Dump database'
+  desc "Dump database"
   task :dump do
     on fetch(:migration_server) do
-      uri = URI.parse(capture('echo $DATABASE_URL'))
+      uri = URI.parse(capture("echo $DATABASE_URL"))
       dump_path = fetch(:db_dump_path)
 
       with pgpassword: uri.password do
         info "Dump database backup to #{dump_path}"
 
-        execute :mkdir, '-p', File.dirname(dump_path)
-        execute :pg_dump, '--format=c',
+        execute :mkdir, "-p", File.dirname(dump_path)
+        execute :pg_dump, "--format=c",
           "--dbname #{uri.path[1..-1]}",
           "-h #{uri.host} -p #{uri.port}",
           "-U #{uri.user}",
@@ -28,16 +28,16 @@ namespace :db do
     end
   end
 
-  desc 'Dowload a database dump'
+  desc "Dowload a database dump"
   task :download do
-    invoke 'db:dump'
+    invoke "db:dump"
 
     on fetch(:migration_server) do
       dump_path = fetch(:db_dump_path)
       local_path = "tmp/dump.#{fetch(:stage)}.pgsql"
       info "Download database dump to #{local_path}"
       download! dump_path, local_path
-      execute :rm, '-f', dump_path
+      execute :rm, "-f", dump_path
     end
   end
 end

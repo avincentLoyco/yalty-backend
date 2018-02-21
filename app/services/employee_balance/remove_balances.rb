@@ -28,14 +28,14 @@ class RemoveBalances
   end
 
   def removals_to_delete
-    balances_after_starting_date.where(balance_type: 'removal') -
+    balances_after_starting_date.where(balance_type: "removal") -
       balances_after_starting_date.removals
   end
 
   def additions_to_delete
-    balances = balances_after_starting_date.where(balance_type: 'addition').not_time_off
+    balances = balances_after_starting_date.where(balance_type: "addition").not_time_off
     return balances - assignation_balances unless ending_date.present?
-    balances.where('effective_at <= ?', ending_date) - assignation_balances
+    balances.where("effective_at <= ?", ending_date) - assignation_balances
   end
 
   def assignation_balances_ids
@@ -46,7 +46,7 @@ class RemoveBalances
     @assignation_balances ||= begin
       etop_effective_ats = etops_in_category.pluck(:effective_at).map do |date|
         "\'#{date + Employee::Balance::ASSIGNATION_OFFSET}\'"
-      end.join(', ')
+      end.join(", ")
 
       clause_for_etops = "effective_at IN (#{etop_effective_ats})"
 
@@ -57,7 +57,7 @@ class RemoveBalances
 
       sql_where_clause =
         if etop_effective_ats.present? && old_effective_at.present?
-          clause_for_etops + ' OR ' + clause_for_old_effective_at
+          clause_for_etops + " OR " + clause_for_old_effective_at
         elsif etop_effective_ats.empty? && old_effective_at.present?
           clause_for_old_effective_at
         elsif etop_effective_ats.present? && old_effective_at.nil?
@@ -70,7 +70,7 @@ class RemoveBalances
 
   def balances_after_starting_date
     @balances_after_starting_date ||=
-      balances_in_category.where('employee_balances.effective_at::date >= ?', starting_date.to_date)
+      balances_in_category.where("employee_balances.effective_at::date >= ?", starting_date.to_date)
   end
 
   def etops_in_category

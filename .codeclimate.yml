@@ -1,23 +1,26 @@
 ---
-engines:
+version: 2
+plugins:
   rubocop:
     enabled: true
+    channel: rubocop-0-52
   bundler-audit:
     enabled: true
+  brakeman:
+    enabled: true
+  structure:
+    exclude_patterns:
+      - "spec/**/*"
+  duplication:
+    exclude_patterns:
+      - "spec/**/*"
   fixme:
     enabled: true
     config:
       strings:
         - FIXME
         - BUG
-ratings:
-  paths:
-  - "Gemfile.lock"
-  - "app/**"
-  - "lib/**"
-  - "**.rb"
-exclude_paths:
-- "config/**/*"
-- "db/**/*"
-- "spec/**/*"
-- "bin/*"
+exclude_patterns:
+  - "config/**/*"
+  - "db/**/*"
+  - "bin/*"

@@ -1,19 +1,19 @@
 namespace :payments do
-  desc 'Update Stripe customer and subscription for accounts'
+  desc "Update Stripe customer and subscription for accounts"
   task update_customers_for_existing_accounts: [:environment] do
     Account.find_each do |account|
       ::Payments::CreateOrUpdateCustomerWithSubscription.perform_later(account)
     end
   end
 
-  desc 'Updates available modules on Stripe for subscribed account'
+  desc "Updates available modules on Stripe for subscribed account"
   task update_available_modules: [:environment] do
     Account.where.not('available_modules::text = \'{"data":[]}\'::text').find_each do |account|
       ::Payments::UpdateAvailableModules.perform_later(account)
     end
   end
 
-  desc 'Generate missing PDF for invoices'
+  desc "Generate missing PDF for invoices"
   task generate_pdf_for_invoices: :environment do
     Invoice.includes(:generic_file).where(generic_files: { id: nil }).each do |invoice|
       Stripe::Invoice.list(customer: invoice.account.customer_id).auto_paging_each do |stripe_in|
@@ -24,7 +24,7 @@ namespace :payments do
         )
         break
       end
-      next unless invoice.status.eql?('success')
+      next unless invoice.status.eql?("success")
       ::Payments::CreateInvoicePdf.new(invoice).call
     end
   end

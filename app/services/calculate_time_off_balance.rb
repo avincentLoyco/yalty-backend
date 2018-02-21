@@ -209,11 +209,11 @@ class CalculateTimeOffBalance
   end
 
   def starts
-    TimeEntry.hour_as_time(@epp_start_datetime.strftime('%H:%M:%S'))
+    TimeEntry.hour_as_time(@epp_start_datetime.strftime("%H:%M:%S"))
   end
 
   def ends
-    TimeEntry.hour_as_time(@epp_end_datetime.strftime('%H:%M:%S'))
+    TimeEntry.hour_as_time(@epp_end_datetime.strftime("%H:%M:%S"))
   end
 
   def midnight

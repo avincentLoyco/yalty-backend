@@ -12,7 +12,7 @@ FactoryGirl.define do
 
 
     trait :from_zurich do
-      timezone { 'Europe/Zurich' }
+      timezone { "Europe/Zurich" }
     end
 
     trait :with_stripe_fields do
@@ -23,7 +23,7 @@ FactoryGirl.define do
     trait :with_available_modules do
       available_modules {
         modules = Payments::AvailableModules.new
-        modules.add(id: 'filevault')
+        modules.add(id: "filevault")
         modules
       }
     end

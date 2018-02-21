@@ -49,7 +49,7 @@ class RelatedPolicyPeriod
     last_start_date
   end
 
-  def validity_date_for_balance_at(date, balance_type = 'addition')
+  def validity_date_for_balance_at(date, balance_type = "addition")
     return unless end_date?
     validity_date =
       if %w(addition assignation).include?(balance_type) && in_start_date?(date)
@@ -64,7 +64,7 @@ class RelatedPolicyPeriod
     no_period_with_dates =
       related_policy.employee.contract_periods.none? do |period|
         period.include?(validity_date.to_date) && period.include?(date.to_date) &&
-          !(balance_type.eql?('end_of_period') && period.first.eql?(date.to_date))
+          !(balance_type.eql?("end_of_period") && period.first.eql?(date.to_date))
       end
     return validity_date unless no_period_with_dates
     contract_end_for(date, validity_date, balance_type)
@@ -83,7 +83,7 @@ class RelatedPolicyPeriod
 
   def validity_date_for_period_time(date, balance_type)
     start_date = Date.new(date.year, start_month, start_day)
-    if date.to_date <= start_date && years_to_effect.positive? && !balance_type.eql?('time_off')
+    if date.to_date <= start_date && years_to_effect.positive? && !balance_type.eql?("time_off")
       start_date -= 1.year
     end
     validity_date = validity_date_for_period_start(start_date)
@@ -95,7 +95,7 @@ class RelatedPolicyPeriod
     related_policy
       .employee_balances
       .where(balance_type: %w(addition assignation))
-      .where('effective_at < ?', date)
+      .where("effective_at < ?", date)
       .order(:effective_at)
       .last
   end
@@ -111,7 +111,7 @@ class RelatedPolicyPeriod
       periods.select { |period| period.last.is_a?(Date) && period.last < validity_date.to_date }
     return validity_date unless previous_periods.present?
     contract_end = previous_periods.last.last + 1.day + Employee::Balance::RESET_OFFSET
-    if contract_end > validity_date || (balance_type.eql?('assignation') &&
+    if contract_end > validity_date || (balance_type.eql?("assignation") &&
         (date.eql?(contract_end.to_date) || related_policy.effective_at > contract_end.to_date))
       validity_date
     else

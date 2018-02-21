@@ -1,19 +1,19 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe API::V1::Payments::InvoicesController, type: :controller do
-  include_context 'shared_context_headers'
-  include_context 'shared_context_timecop_helper'
+  include_context "shared_context_headers"
+  include_context "shared_context_timecop_helper"
 
-  let!(:account) { create(:account, customer_id: 'cus_123') }
-  let!(:user)    { create(:account_user, account: account, role: 'account_owner') }
+  let!(:account) { create(:account, customer_id: "cus_123") }
+  let!(:user)    { create(:account_user, account: account, role: "account_owner") }
   let!(:invoice) { create(:invoice, account: account) }
 
   subject(:get_invoices) { get(:index) }
 
   before { allow(Stripe::Customer).to receive(:retrieve) }
 
-  describe 'GET /v1/payments/invoices' do
-    context 'success' do
+  describe "GET /v1/payments/invoices" do
+    context "success" do
       let(:expected_json) do
         [{
           id: invoice.id,
@@ -61,8 +61,8 @@ RSpec.describe API::V1::Payments::InvoicesController, type: :controller do
       it { expect_json(expected_json) }
     end
 
-    context 'errors' do
-      context 'customer not created' do
+    context "errors" do
+      context "customer not created" do
         before do
           account.update!(customer_id: nil)
           get_invoices
@@ -71,21 +71,21 @@ RSpec.describe API::V1::Payments::InvoicesController, type: :controller do
         it { expect(response.status).to eq(502) }
       end
 
-      context 'user is not account_owner' do
-        context 'user is account_administrator' do
+      context "user is not account_owner" do
+        context "user is account_administrator" do
           before do
-            create(:account_user, account: user.account, role: 'account_owner')
-            user.update!(role: 'account_administrator')
+            create(:account_user, account: user.account, role: "account_owner")
+            user.update!(role: "account_administrator")
             get_invoices
           end
 
           it { expect(response.status).to eq(403) }
         end
 
-        context 'user is regular user' do
+        context "user is regular user" do
           before do
-            create(:account_user, account: user.account, role: 'account_owner')
-            user.update!(role: 'user')
+            create(:account_user, account: user.account, role: "account_owner")
+            user.update!(role: "user")
             get_invoices
           end
 

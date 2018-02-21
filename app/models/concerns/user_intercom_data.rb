@@ -1,4 +1,4 @@
-require 'active_support/concern'
+require "active_support/concern"
 
 module UserIntercomData
   extend ActiveSupport::Concern
@@ -82,7 +82,7 @@ module UserIntercomData
 
       if beta_invitation_key.present?
         lead = intercom_client.contacts.all.find do |contact|
-          contact.custom_attributes['beta_invitation_key'] == beta_invitation_key
+          contact.custom_attributes["beta_invitation_key"] == beta_invitation_key
         end
       end
       leads = intercom_client.contacts.find_all(email: email) if lead.nil?

@@ -26,6 +26,6 @@ class CurrentAccountMiddleware
   end
 
   def account_subdomain
-    @request.env['HTTP_YALTY_ACCOUNT_SUBDOMAIN']
+    @request.env["HTTP_YALTY_ACCOUNT_SUBDOMAIN"]
   end
 end

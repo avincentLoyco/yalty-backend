@@ -25,12 +25,12 @@ module Payments
     end
 
     def events_tomorrow
-      hired_or_contract_end_events.where('effective_at = ?::date', Time.zone.tomorrow)
+      hired_or_contract_end_events.where("effective_at = ?::date", Time.zone.tomorrow)
     end
 
     def events_recently_updated
       hired_or_contract_end_events.where(
-        'updated_at BETWEEN ? AND ?',
+        "updated_at BETWEEN ? AND ?",
         Time.zone.yesterday.beginning_of_day,
         Time.zone.today.beginning_of_day
       )

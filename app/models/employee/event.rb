@@ -44,8 +44,8 @@ class Employee::Event < ActiveRecord::Base
 
   has_many :employee_attribute_versions,
     inverse_of: :event,
-    foreign_key: 'employee_event_id',
-    class_name: 'Employee::AttributeVersion'
+    foreign_key: "employee_event_id",
+    class_name: "Employee::AttributeVersion"
 
   validates :effective_at, presence: true
   validates :event_type,
@@ -58,8 +58,8 @@ class Employee::Event < ActiveRecord::Base
   validate :work_contract_in_work_period, if: %i(employee event_type effective_at)
   validate :default_presence_policy_assigned, if: %i(employee event_type)
 
-  scope :contract_ends, -> { where(event_type: 'contract_end') }
-  scope :hired, -> { where(event_type: 'hired') }
+  scope :contract_ends, -> { where(event_type: "contract_end") }
+  scope :hired, -> { where(event_type: "hired") }
   scope :contract_types, -> { where(event_type: %w(contract_end hired)) }
   scope :contract_period_only, -> { where(event_type: CONTRACT_PERIOD_ONLY_EVENTS) }
   scope :all_except, ->(id) { where.not(id: id) }
@@ -91,7 +91,7 @@ class Employee::Event < ActiveRecord::Base
     defined = attributes_defined_in_event + already_defined_attributes
     missing = required - defined
     return if missing.empty?
-    errors.add :employee_attribute_versions, "missing params: #{missing.join(', ')}"
+    errors.add :employee_attribute_versions, "missing params: #{missing.join(", ")}"
   end
 
   def attributes_defined_in_event
@@ -116,7 +116,7 @@ class Employee::Event < ActiveRecord::Base
   private
 
   def contract_period_only_events
-    return unless event_type.eql?('hired') && effective_at_changed?
+    return unless event_type.eql?("hired") && effective_at_changed?
     change_period = (effective_at_change.first..effective_at_change.last)
     contract_period_only_events = employee
                                   .events
@@ -134,46 +134,46 @@ class Employee::Event < ActiveRecord::Base
   end
 
   def balances_before_hired_date
-    return unless event_type.eql?('hired')
+    return unless event_type.eql?("hired")
     hired_event =
       employee
       .events
       .hired
-      .where('effective_at <= ?', effective_at)
+      .where("effective_at <= ?", effective_at)
       .all_except(id).order(:effective_at).last
 
     return unless hired_event.blank? && balances_before_effective_at?
-    errors.add(:base, 'There can\'t be balances before hired date')
+    errors.add(:base, "There can't be balances before hired date")
   end
 
   def balances_before_effective_at?
-    employee.employee_balances.where('effective_at < ?', effective_at).present?
+    employee.employee_balances.where("effective_at < ?", effective_at).present?
   end
 
   def next_events
-    employee.events.all_except(id).where('effective_at > ?', effective_at).order(:effective_at)
+    employee.events.all_except(id).where("effective_at > ?", effective_at).order(:effective_at)
   end
 
   def work_contract_in_work_period
     # checks if event type is work contract and if it is
     # it checks if it belongs to employee contract period without hired and contract_end dates
-    return unless event_type.eql?('work_contract') &&
+    return unless event_type.eql?("work_contract") &&
         (!employee.contract_periods_include?(effective_at) ||
          employee.hired_date_for(effective_at).eql?(effective_at) ||
          employee.contract_end_for(effective_at).eql?(effective_at))
 
-    errors.add(:effective_at, 'Work contract must be in work period')
+    errors.add(:effective_at, "Work contract must be in work period")
   end
 
   def contract_end_and_hire_in_valid_order
     return unless event_type.in?(%w(contract_end hired))
     work_events =
-      employee.events.contract_types.all_except(id).where('effective_at <= ?', effective_at)
+      employee.events.contract_types.all_except(id).where("effective_at <= ?", effective_at)
     current_type = work_events.select { |event| event[:event_type].eql?(event_type) }
     other_type = work_events - current_type
     at_date = other_type.any? { |event| event[:effective_at].eql?(effective_at) }
 
-    return if ((event_type.eql?('contract_end') && (current_type.size + 1).eql?(other_type.size)) ||
+    return if ((event_type.eql?("contract_end") && (current_type.size + 1).eql?(other_type.size)) ||
         hired_events_in_valid_order?(current_type.size, other_type.size, at_date)) &&
         (!next_events.contract_types.first&.event_type.eql?(event_type) || at_date)
 
@@ -184,36 +184,36 @@ class Employee::Event < ActiveRecord::Base
   end
 
   def hired_events_in_valid_order?(current_type, other_type, at_date)
-    event_type.eql?('hired') && ((!at_date && current_type.eql?(other_type)) ||
+    event_type.eql?("hired") && ((!at_date && current_type.eql?(other_type)) ||
       (at_date && (current_type + 1).eql?(other_type)))
   end
 
   def check_if_event_deletable
-    can_destroy_event? || errors.add(:base, 'Event cannot be destroyed')
+    can_destroy_event? || errors.add(:base, "Event cannot be destroyed")
     errors.empty?
   end
 
   def hired_without_events_and_join_tables_after?
-    return unless event_type.eql?('hired')
+    return unless event_type.eql?("hired")
 
-    employee.events.where('effective_at >= ?', effective_at).all_except(id).empty? &&
+    employee.events.where("effective_at >= ?", effective_at).all_except(id).empty? &&
       Employee::RESOURCE_JOIN_TABLES.map do |join_table|
         employee.send(join_table).not_reset.assigned_since(effective_at).empty?
       end.uniq.eql?([true])
   end
 
   def contract_end_without_rehired_after?
-    event_type.eql?('contract_end') &&
+    event_type.eql?("contract_end") &&
       !employee
         .events
-        .where('effective_at > ?', effective_at)
-        .order(:effective_at).first&.event_type.eql?('hired')
+        .where("effective_at > ?", effective_at)
+        .order(:effective_at).first&.event_type.eql?("hired")
   end
 
   def default_presence_policy_assigned
     return unless event_type.in?(%w(work_contract hired)) &&
         employee.account.presence_policies.full_time.nil?
 
-    errors.add(:base, 'No Default Full Time Presence Policy assigned')
+    errors.add(:base, "No Default Full Time Presence Policy assigned")
   end
 end

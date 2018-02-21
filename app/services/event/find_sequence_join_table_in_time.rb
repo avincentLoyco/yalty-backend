@@ -8,7 +8,7 @@ class FindSequenceJoinTableInTime
     @new_effective_at = new_effective_at.try(:to_date)
     @join_table_resource = join_table_resource
     @resource = resource
-    @resource_class = resource.class.model_name.singular + '_id'
+    @resource_class = resource.class.model_name.singular + "_id"
   end
 
   def call
@@ -39,7 +39,7 @@ class FindSequenceJoinTableInTime
     return if resource.is_a?(TimeOffPolicy) || resource.is_a?(PresencePolicy)
     next_table =
       join_tables
-      .where('effective_at > ?', effective_at.to_date)
+      .where("effective_at > ?", effective_at.to_date)
       .order(:effective_at)
       .first
 
@@ -48,7 +48,7 @@ class FindSequenceJoinTableInTime
 
   def previous_join_table(effective_at = new_effective_at)
     join_tables
-      .where('effective_at < ?', effective_at)
+      .where("effective_at < ?", effective_at)
       .order(:effective_at)
       .last
   end
@@ -65,7 +65,7 @@ class FindSequenceJoinTableInTime
     return unless current_join_table.try(:send, resource_class) == resource.id
     raise InvalidResourcesError.new(
       join_tables.first,
-      effective_at: ['Join Table with given date and resource already exists']
+      effective_at: ["Join Table with given date and resource already exists"]
     )
   end
 
@@ -75,7 +75,7 @@ class FindSequenceJoinTableInTime
         !employee.contract_periods_include?(new_effective_at)
     raise InvalidResourcesError.new(
       join_tables.first,
-      effective_at: ['Can not assign in reset resource effective at']
+      effective_at: ["Can not assign in reset resource effective at"]
     )
   end
 

@@ -47,15 +47,15 @@ class RegisteredWorkingTimeForEmployeeSchedule
     return [{}] unless time_entries.any?
     time_entries.map do |time_entry|
       {
-        type: 'working_time',
-        start_time: TimeEntry.hour_as_time(time_entry['start_time']).strftime('%H:%M:%S'),
-        end_time: prepare_end_time(time_entry['end_time'])
+        type: "working_time",
+        start_time: TimeEntry.hour_as_time(time_entry["start_time"]).strftime("%H:%M:%S"),
+        end_time: prepare_end_time(time_entry["end_time"])
       }
     end
   end
 
   def prepare_end_time(end_time)
-    return '24:00:00' if end_time.in?(%w(24:00 24:00:00))
-    TimeEntry.hour_as_time(end_time).strftime('%H:%M:%S')
+    return "24:00:00" if end_time.in?(%w(24:00 24:00:00))
+    TimeEntry.hour_as_time(end_time).strftime("%H:%M:%S")
   end
 end

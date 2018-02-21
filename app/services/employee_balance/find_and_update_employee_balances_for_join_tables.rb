@@ -73,7 +73,7 @@ class FindAndUpdateEmployeeBalancesForJoinTables
   def previous_resource(date)
     join_table
       .class
-      .where('effective_at < ? AND employee_id = ?', date, join_table.employee.id)
+      .where("effective_at < ? AND employee_id = ?", date, join_table.employee.id)
       .order(:effective_at)
       .last
       .try(:working_place)
@@ -85,7 +85,7 @@ class FindAndUpdateEmployeeBalancesForJoinTables
       .employee
       .employee_balances
       .where.not(time_off_id: nil)
-      .where('effective_at >= ?', date)
+      .where("effective_at >= ?", date)
       .order(:effective_at)
   end
 end

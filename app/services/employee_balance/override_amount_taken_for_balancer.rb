@@ -9,7 +9,7 @@ class OverrideAmountTakenForBalancer
   end
 
   def call
-    return periods unless periods.first[:type].eql?('balancer') && !periods.first[:validity_date]
+    return periods unless periods.first[:type].eql?("balancer") && !periods.first[:validity_date]
     override_amount_for_periods
   end
 

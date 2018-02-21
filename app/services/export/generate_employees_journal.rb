@@ -24,13 +24,13 @@ module Export
     private
 
     def create_csv
-      CSV.open(journal_path, 'wb') do |csv|
+      CSV.open(journal_path, "wb") do |csv|
         csv << EMPLOYEES_JOURNAL_COLUMNS
 
         events_since_last_export.each do |event|
           ordered_versions = event.employee_attribute_versions
                                   .joins(:attribute_definition)
-                                  .order('employee_attribute_definitions.name ASC')
+                                  .order("employee_attribute_definitions.name ASC")
 
           ordered_versions.each do |attribute_version|
             if attribute_version.value.is_a?(Enumerable)
@@ -52,13 +52,13 @@ module Export
         event.employee_id,
         event.id,
         event.event_type,
-        event.effective_at.strftime('%d-%m-%Y'),
-        event.updated_at.strftime('%d-%m-%YT%H:%M:%S')
+        event.effective_at.strftime("%d-%m-%Y"),
+        event.updated_at.strftime("%d-%m-%YT%H:%M:%S")
       ]
     end
 
     def generate_journal_path(base_path)
-      filename = "#{account.id}-#{journal_timestamp.strftime('%Y-%m-%dT%H:%M:%S')}.csv"
+      filename = "#{account.id}-#{journal_timestamp.strftime("%Y-%m-%dT%H:%M:%S")}.csv"
       Pathname.new(base_path).join(filename)
     end
 
@@ -74,12 +74,12 @@ module Export
     end
 
     def first_export_sql
-      ['employee_events.updated_at < ?::timestamp', journal_timestamp]
+      ["employee_events.updated_at < ?::timestamp", journal_timestamp]
     end
 
     def scheduled_export_sql
       [
-        'employee_events.updated_at >= ?::timestamp AND employee_events.updated_at < ?::timestamp',
+        "employee_events.updated_at >= ?::timestamp AND employee_events.updated_at < ?::timestamp",
         journal_since,
         journal_timestamp
       ]

@@ -1,4 +1,4 @@
-desc 'Destroy duplicate time off policies (of balancer type and with the same amount)'
+desc "Destroy duplicate time off policies (of balancer type and with the same amount)"
 task destroy_duplicate_time_off_policies: :environment do
   Account.all.each do |account|
     grouped_tops = account.time_off_policies.active_balancers.group_by(&:amount)

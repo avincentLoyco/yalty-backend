@@ -1,5 +1,5 @@
-require 'rack'
-require 'digest/md5'
+require "rack"
+require "digest/md5"
 
 class ETagMiddleware
   ETAG_REGEX = %r{W/"([^"]+)"}i

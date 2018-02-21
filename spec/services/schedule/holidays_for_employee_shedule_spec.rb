@@ -1,36 +1,36 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe HolidaysForEmployeeSchedule, type: :service do
-  include_context 'shared_context_account_helper'
+  include_context "shared_context_account_helper"
 
   before do
-    employee.first_employee_event.update!(effective_at: '1/1/2015')
+    employee.first_employee_event.update!(effective_at: "1/1/2015")
   end
 
   let(:employee) { create(:employee) }
-  let(:policy) { create(:holiday_policy, country: 'ch', region: 'zh') }
+  let(:policy) { create(:holiday_policy, country: "ch", region: "zh") }
 
   subject { described_class.new(employee, range_start, range_end).call }
 
-  context 'with working place' do
-    before 'create employee working place' do
+  context "with working place" do
+    before "create employee working place" do
       working_place =
         create(:working_place, account: employee.account, holiday_policy: policy)
       create(
         :employee_working_place,
         working_place: working_place,
         employee: employee,
-        effective_at: '1/1/2015',
+        effective_at: "1/1/2015",
       )
     end
 
-    context 'when employee has holidays in given range' do
+    context "when employee has holidays in given range" do
       let(:range_start) { Date.new(2015, 12, 24) }
       let(:range_end) { Date.new(2016, 1, 1) }
 
-      context 'when all holidays have names' do
+      context "when all holidays have names" do
         it { expect(subject.size).to eq 9 }
-        it 'should have valid format' do
+        it "should have valid format" do
           expect(subject).to match_hash(
             {
               "2015-12-24" => [],
@@ -62,12 +62,12 @@ RSpec.describe HolidaysForEmployeeSchedule, type: :service do
         end
       end
     end
-    context 'when employee does not have holodays in given range' do
+    context "when employee does not have holodays in given range" do
       let(:range_start) { Date.new(2015, 2, 2) }
       let(:range_end) { Date.new(2015, 2, 5) }
 
       it { expect(subject.size).to eq 4 }
-      it 'should have valid format' do
+      it "should have valid format" do
         expect(subject).to match_hash(
           {
             "2015-02-02" => [],
@@ -80,14 +80,14 @@ RSpec.describe HolidaysForEmployeeSchedule, type: :service do
     end
   end
 
-  context 'without working place' do
-    context 'when there should be holidays in range' do
+  context "without working place" do
+    context "when there should be holidays in range" do
       let(:range_start) { Date.new(2015, 12, 24) }
       let(:range_end) { Date.new(2016, 1, 1) }
 
       it { expect(employee.employee_working_places.size).to eq 0 }
       it { expect(subject.size).to eq 9 }
-      it 'returns only registered working times' do
+      it "returns only registered working times" do
         expect(subject).to match_hash(
           {
             "2015-12-24" => [],

@@ -20,7 +20,7 @@ module Policy
           start_day: 1,
           start_month: 1,
           amount: time_off_policy_amount,
-          policy_type: 'balancer',
+          policy_type: "balancer",
           time_off_category_id: account.time_off_categories.vacation.first.id,
           name: "Time Off Policy #{days_off}",
           active: true

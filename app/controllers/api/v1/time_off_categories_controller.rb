@@ -37,7 +37,7 @@ module API
           editable_resource.destroy!
           render_no_content
         else
-          render_locked_error(controller_name, 'time-off')
+          render_locked_error(controller_name, "time-off")
         end
       end
 

@@ -59,7 +59,7 @@ module API
         end
 
         def cancel_plan_module(plan_id)
-          if subscription.status.eql?('trialing')
+          if subscription.status.eql?("trialing")
             available_modules.delete(plan_id)
             Account.current.save!
             find_subscription_item(plan_id).delete
@@ -73,8 +73,8 @@ module API
           plan = find_subscription_item(plan_id).plan
           plan.active = active
           plan ||
-            raise(StripeError.new(type: 'plan', field: 'id', message: "No such plan: #{plan_id}"),
-              'No such plan')
+            raise(StripeError.new(type: "plan", field: "id", message: "No such plan: #{plan_id}"),
+              "No such plan")
         end
 
         def find_subscription_item(plan_id)
@@ -101,8 +101,8 @@ module API
 
         def validate_free_plan
           return unless available_modules.free.include?(params[:id])
-          message = 'This plan is free'
-          raise(StripeError.new(type: 'plan', field: 'id', message: message), message)
+          message = "This plan is free"
+          raise(StripeError.new(type: "plan", field: "id", message: message), message)
         end
 
         def available_modules
@@ -110,7 +110,7 @@ module API
         end
 
         def stripe_error(exception)
-          error = StripeError.new(type: 'plan', field: 'id', message: exception.message)
+          error = StripeError.new(type: "plan", field: "id", message: exception.message)
           render json: ::Api::V1::StripeErrorRepresenter.new(error).complete, status: 502
         end
       end

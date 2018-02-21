@@ -1,4 +1,4 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe Payments::CreateOrUpdateCustomerWithSubscription, type: :job do
   let!(:account) { create(:account) }
@@ -7,7 +7,7 @@ RSpec.describe Payments::CreateOrUpdateCustomerWithSubscription, type: :job do
 
   before { allow_any_instance_of(Account).to receive(:stripe_enabled?).and_return(true) }
 
-  context 'in case of success' do
+  context "in case of success" do
     before do
       allow(Stripe::Customer).to receive(:create).and_return(customer)
       allow(Stripe::Customer).to receive(:retrieve).and_return(customer)
@@ -17,40 +17,40 @@ RSpec.describe Payments::CreateOrUpdateCustomerWithSubscription, type: :job do
       allow(subscription).to receive(:save)
     end
 
-    let(:customer) { StripeCustomer.new('cus_123') }
-    let(:subscription) { StripeSubscription.new('sub_123') }
+    let(:customer) { StripeCustomer.new("cus_123") }
+    let(:subscription) { StripeSubscription.new("sub_123") }
 
-    context 'when customer does not exist' do
-      it { expect { job }.to change(account, :customer_id).from(nil).to('cus_123') }
-      it 'should create stripe cusomer' do
+    context "when customer does not exist" do
+      it { expect { job }.to change(account, :customer_id).from(nil).to("cus_123") }
+      it "should create stripe cusomer" do
         job
         expect(Stripe::Customer).to have_received(:create)
       end
     end
 
-    context 'when subscription does not exist' do
-      it { expect { job }.to change(account, :subscription_id).from(nil).to('sub_123') }
-      it 'should create stripe cusomer' do
+    context "when subscription does not exist" do
+      it { expect { job }.to change(account, :subscription_id).from(nil).to("sub_123") }
+      it "should create stripe cusomer" do
         job
         expect(Stripe::Subscription).to have_received(:create)
       end
     end
 
-    context 'when customer exists' do
-      let!(:account) { create(:account, customer_id: 'cus_456') }
+    context "when customer exists" do
+      let!(:account) { create(:account, customer_id: "cus_456") }
 
       it { expect { job }.to_not change(account, :customer_id) }
-      it 'should update stripe cusomer' do
+      it "should update stripe cusomer" do
         job
         expect(customer).to have_received(:save)
       end
     end
 
-    context 'when subscription exists' do
-      let!(:account) { create(:account, customer_id: 'cus_456', subscription_id: 'sub_123') }
+    context "when subscription exists" do
+      let!(:account) { create(:account, customer_id: "cus_456", subscription_id: "sub_123") }
 
       it { expect { job }.to_not change(account, :subscription_id) }
-      it 'should update stripe cusomer' do
+      it "should update stripe cusomer" do
         job
         expect(subscription).to have_received(:save)
       end

@@ -1,23 +1,23 @@
 namespace :attribute_definitions do
-  desc 'Creates missing attribute definitions, updates their validations, remove the unused ones.'
+  desc "Creates missing attribute definitions, updates their validations, remove the unused ones."
 
   MARRIAGE_STATUSES = %w(Marié Mariée).freeze
 
   task update: :environment do
-    puts 'Remove unused attribute definitions'
-    Rake::Task['attribute_definitions:remove_not_used'].invoke
+    puts "Remove unused attribute definitions"
+    Rake::Task["attribute_definitions:remove_not_used"].invoke
 
-    puts 'Create new definitions'
-    Rake::Task['attribute_definitions:create_missing'].invoke
+    puts "Create new definitions"
+    Rake::Task["attribute_definitions:create_missing"].invoke
 
-    puts 'Update existing nested attributes'
-    Rake::Task['attribute_definitions:update_existing_nested_attributes'].invoke
+    puts "Update existing nested attributes"
+    Rake::Task["attribute_definitions:update_existing_nested_attributes"].invoke
 
-    puts 'Update existing definitions validations'
-    Rake::Task['attribute_definitions:update_existing_definitions_validations'].invoke
+    puts "Update existing definitions validations"
+    Rake::Task["attribute_definitions:update_existing_definitions_validations"].invoke
   end
 
-  desc 'Creates events for contract end and status change, remove not used attribute definitions'
+  desc "Creates events for contract end and status change, remove not used attribute definitions"
   task remove_not_used: :environment do
     manage_employee_civil_status
     manage_employee_exit_date
@@ -26,23 +26,23 @@ namespace :attribute_definitions do
     Employee::AttributeDefinition.where(id: ids_to_remove).destroy_all
   end
 
-  desc 'Creates missing employee attributes definitions'
+  desc "Creates missing employee attributes definitions"
   task create_missing: :environment do
     Account.find_each do |account|
       account.update_default_attribute_definitions! unless all_attribute_definitions?(account)
     end
   end
 
-  desc 'Updates values for existing nested employee attributes'
+  desc "Updates values for existing nested employee attributes"
   task update_existing_nested_attributes: :environment do
     Employee::AttributeVersion.where("data -> 'attribute_type' = 'Child'").find_each do |version|
-      values = version.data.instance_values['data']
-      values['other_parent_working'] = values.delete('mother_is_working')
+      values = version.data.instance_values["data"]
+      values["other_parent_working"] = values.delete("mother_is_working")
       version.save!
     end
   end
 
-  desc 'Updates validations for existing employee attribute definitions'
+  desc "Updates validations for existing employee attribute definitions"
   task update_existing_definitions_validations: :environment do
     attributes = Account::ATTR_VALIDATIONS.keys
     Employee::AttributeDefinition.where(name: attributes, system: true).find_each do |definition|
@@ -62,22 +62,22 @@ namespace :attribute_definitions do
   end
 
   def manage_employee_exit_date
-    ids_to_remove = Employee::AttributeDefinition.where(name: 'exit_date').pluck(:id)
+    ids_to_remove = Employee::AttributeDefinition.where(name: "exit_date").pluck(:id)
     Employee::AttributeVersion.where(attribute_definition_id: ids_to_remove).map do |version|
       employee = version.employee
       event_effective_at = version.data.date.to_date
       next if event_effective_at <= employee.hired_date
       Employee::Event.create!(
-        effective_at: event_effective_at, event_type: 'contract_end', employee: employee
+        effective_at: event_effective_at, event_type: "contract_end", employee: employee
       )
       HandleContractEnd.new(employee, event_effective_at).call
     end
   end
 
   def manage_employee_civil_status
-    ids_to_remove = Employee::AttributeDefinition.where(name: 'civil_status').pluck(:id)
+    ids_to_remove = Employee::AttributeDefinition.where(name: "civil_status").pluck(:id)
     Employee::AttributeVersion.where(attribute_definition_id: ids_to_remove).find_each do |version|
-      next if version.attribute_definition.name.eql?('start_date')
+      next if version.attribute_definition.name.eql?("start_date")
       event_type = find_event_type_for(version)
       next if event_type.nil?
       event_effective_at = civil_event_effective_at(version)
@@ -90,12 +90,12 @@ namespace :attribute_definitions do
   def find_event_type_for(version)
     event_type = Employee::CIVIL_STATUS.select { |_k, v| v.eql?(version.data.string) }.keys[0]
     return event_type if event_type.present?
-    return 'marriage' if MARRIAGE_STATUSES.include?(version.data.string)
+    return "marriage" if MARRIAGE_STATUSES.include?(version.data.string)
   end
 
   def civil_event_effective_at(version)
     civil_date_definition =
-      version.account.employee_attribute_definitions.find_by(name: 'civil_status_date')
+      version.account.employee_attribute_definitions.find_by(name: "civil_status_date")
     civil_date =
       version
       .event

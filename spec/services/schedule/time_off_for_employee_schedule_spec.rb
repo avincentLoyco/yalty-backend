@@ -1,8 +1,8 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe TimeOffForEmployeeSchedule, type: :service do
-  include_context 'shared_context_account_helper'
-  include_context 'shared_context_timecop_helper'
+  include_context "shared_context_account_helper"
+  include_context "shared_context_timecop_helper"
 
 
   let(:start_date) { Date.new(2016, 1, 1) }
@@ -10,13 +10,13 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
   let(:employee) { create(:employee) }
   let(:category_name) { time_offs_in_range.first.time_off_category.name }
 
-  context 'when requested for only one employee' do
+  context "when requested for only one employee" do
     subject { described_class.new(employee, start_date, end_date).call }
-    context 'when employee does not have time offs in given range' do
+    context "when employee does not have time offs in given range" do
       let(:time_offs_in_range) { [] }
 
       it { expect(subject.size).to eq 3 }
-      it 'should have valid format' do
+      it "should have valid format" do
         expect(subject).to match_hash(
           {
             "2016-01-01" => [],
@@ -27,15 +27,15 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
       end
     end
 
-    context 'when employee has time offs in given range' do
-      context 'when their start time or end time is outside given range' do
+    context "when employee has time offs in given range" do
+      context "when their start time or end time is outside given range" do
         let!(:time_offs_in_range) do
           [create(:time_off,
             start_time: Time.zone.now - 2.days, end_time: Time.zone.now + 6.days, employee: employee)]
         end
 
         it { expect(subject.size).to eq 3 }
-        it 'should have valid format' do
+        it "should have valid format" do
           expect(subject).to match_hash(
             {
               "2016-01-01" => [
@@ -67,9 +67,9 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
         end
       end
 
-      context 'and they are whole inside given range' do
-        context 'and they are shorter than one day' do
-          context 'and they are in the same day' do
+      context "and they are whole inside given range" do
+        context "and they are shorter than one day" do
+          context "and they are in the same day" do
             let!(:time_offs_in_range) do
               [[Time.zone.now + 2.hours, Time.zone.now + 5.hours],
                [Time.zone.now + 7.hours, Time.zone.now + 12.hours]].map do |start_time, end_time|
@@ -78,7 +78,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
             end
 
             it { expect(subject.size).to eq 3 }
-            it 'should have valid format' do
+            it "should have valid format" do
               expect(subject).to match_hash(
                 {
                   "2016-01-01" => [
@@ -101,7 +101,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
               )
             end
 
-            context 'and they are more than two time offs in one day' do
+            context "and they are more than two time offs in one day" do
               let!(:time_offs_in_range) do
                 [[Time.zone.now + 1.hour, Time.zone.now + 4.hours],
                  [Time.zone.now + 5.hours, Time.zone.now + 8.hours],
@@ -112,7 +112,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
               end
 
               it { expect(subject.size).to eq 3 }
-              it 'should have valid format' do
+              it "should have valid format" do
                 expect(subject).to match_hash(
                   {
                     "2016-01-01" => [
@@ -149,7 +149,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
             end
           end
 
-          context 'and they are in different days' do
+          context "and they are in different days" do
             let!(:time_offs_in_range) do
               [[Time.zone.now + 2.hours, Time.zone.now + 5.hours],
                [Time.zone.now + 1.day + 7.hours, Time.zone.now + 1.day + 24.hours]].map do |start_time, end_time|
@@ -158,7 +158,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
             end
 
             it { expect(subject.size).to eq 3 }
-            it 'should have valid format' do
+            it "should have valid format" do
               expect(subject).to match_hash(
                 {
                   "2016-01-01" => [
@@ -184,7 +184,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
           end
         end
 
-        context 'and they are shorter than two days but longer than one' do
+        context "and they are shorter than two days but longer than one" do
           let!(:time_offs_in_range) do
             [[Time.zone.now + 1.hour, Time.zone.now + 1.day + 2.hours],
              [Time.zone.now + 1.day + 7.hours, Time.zone.now + 2.days + 12.hours]].map do |start_time, end_time|
@@ -193,7 +193,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
           end
 
           it { expect(subject.size).to eq 3 }
-          it 'should have valid format' do
+          it "should have valid format" do
             expect(subject).to match_hash(
               {
                 "2016-01-01" => [
@@ -234,13 +234,13 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
     end
   end
 
-  context 'when requested for many employee' do
+  context "when requested for many employee" do
       subject { described_class.new([employee], start_date, end_date).call }
-    context 'when employee does not have time offs in given range' do
+    context "when employee does not have time offs in given range" do
       let(:time_offs_in_range) { [] }
 
       it { expect(subject.size).to eq 3 }
-      it 'should have valid format' do
+      it "should have valid format" do
         expect(subject).to match_hash(
           {
             "2016-01-01" => {},
@@ -251,8 +251,8 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
       end
     end
 
-    context 'when employee has time offs in given range' do
-      context 'when their start time or end time is outside given range' do
+    context "when employee has time offs in given range" do
+      context "when their start time or end time is outside given range" do
         let!(:time_offs_in_range) do
           [create(:time_off,
             start_time: Time.zone.now - 2.days, end_time: Time.zone.now + 6.days, employee: employee)]
@@ -272,7 +272,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
         let(:another_employee_id) { another_time_offs_in_range.first.employee_id }
 
         it { expect(subject.size).to eq 3 }
-        it 'should have valid format' do
+        it "should have valid format" do
           expect(subject).to match_hash(
             {
               "2016-01-01" => {
@@ -340,9 +340,9 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
         end
       end
 
-      context 'and they are whole inside given range' do
-        context 'and they are shorter than one day' do
-          context 'and they are in the same day' do
+      context "and they are whole inside given range" do
+        context "and they are shorter than one day" do
+          context "and they are in the same day" do
             let!(:time_offs_in_range) do
               [[Time.zone.now + 2.hours, Time.zone.now + 5.hours],
                [Time.zone.now + 7.hours, Time.zone.now + 12.hours]].map do |start_time, end_time|
@@ -351,7 +351,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
             end
 
             it { expect(subject.size).to eq 3 }
-            it 'should have valid format' do
+            it "should have valid format" do
               expect(subject).to match_hash(
                 {
                   "2016-01-01" => {
@@ -377,7 +377,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
               )
             end
 
-            context 'and they are more than two time offs in one day' do
+            context "and they are more than two time offs in one day" do
               let!(:time_offs_in_range) do
                 [[Time.zone.now + 1.hour, Time.zone.now + 4.hours],
                  [Time.zone.now + 5.hours, Time.zone.now + 8.hours],
@@ -388,7 +388,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
               end
 
               it { expect(subject.size).to eq 3 }
-              it 'should have valid format' do
+              it "should have valid format" do
                 expect(subject).to match_hash(
                   {
                     "2016-01-01" => {
@@ -428,7 +428,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
             end
           end
 
-          context 'and they are in different days' do
+          context "and they are in different days" do
             let!(:time_offs_in_range) do
               [[Time.zone.now + 2.hours, Time.zone.now + 5.hours],
                [Time.zone.now + 1.day + 7.hours, Time.zone.now + 1.day + 24.hours]].map do |start_time, end_time|
@@ -437,7 +437,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
             end
 
             it { expect(subject.size).to eq 3 }
-            it 'should have valid format' do
+            it "should have valid format" do
               expect(subject).to match_hash(
                 {
                   "2016-01-01" => {
@@ -469,7 +469,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
           end
         end
 
-        context 'and they are shorter than two days but longer than one' do
+        context "and they are shorter than two days but longer than one" do
           let!(:time_offs_in_range) do
             [[Time.zone.now + 1.hour, Time.zone.now + 1.day + 2.hours],
              [Time.zone.now + 1.day + 7.hours, Time.zone.now + 2.days + 12.hours]].map do |start_time, end_time|
@@ -478,7 +478,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
           end
 
           it { expect(subject.size).to eq 3 }
-          it 'should have valid format' do
+          it "should have valid format" do
             expect(subject).to match_hash(
               {
                 "2016-01-01" => {

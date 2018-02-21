@@ -1,15 +1,15 @@
 namespace :employee_balance do
   task update_offsets: :environment do
-    puts 'update assignations and additions'
+    puts "update assignations and additions"
     update_additions_and_assignations
-    puts 'end of period balance'
+    puts "end of period balance"
     update_end_off_period_balances
-    puts 'update removal and reset'
+    puts "update removal and reset"
     update_removals_and_validity_dates
-    puts 'create missing additions and removals'
+    puts "create missing additions and removals"
     create_missing_additions_and_removals
-    puts 'recalculate'
-    Rake::Task['db:cleanup:recalculate_all_balances'].invoke
+    puts "recalculate"
+    Rake::Task["db:cleanup:recalculate_all_balances"].invoke
   end
 
   def update_additions_and_assignations
@@ -22,7 +22,7 @@ namespace :employee_balance do
   end
 
   def update_end_off_period_balances
-    Employee::Balance.where(balance_type: 'end_of_period').map do |balance|
+    Employee::Balance.where(balance_type: "end_of_period").map do |balance|
       balance_policy = balance.time_off_policy
 
       next if balance_policy.start_day.eql?(balance.effective_at.day) &&

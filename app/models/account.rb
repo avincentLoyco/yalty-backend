@@ -20,12 +20,12 @@ class Account < ActiveRecord::Base
   validates :default_locale, inclusion: { in: I18n.available_locales.map(&:to_s) }
   validate :referrer_must_exist, if: :referred_by, on: :create
 
-  has_many :users, -> { where.not(role: 'yalty') },
-    class_name: 'Account::User',
+  has_many :users, -> { where.not(role: "yalty") },
+    class_name: "Account::User",
     inverse_of: :account
   has_many :employees, inverse_of: :account, dependent: :destroy
   has_many :employee_attribute_definitions,
-    class_name: 'Employee::AttributeDefinition',
+    class_name: "Employee::AttributeDefinition",
     inverse_of: :account
   has_many :working_places, inverse_of: :account
   has_many :employee_events, through: :employees, source: :events
@@ -33,7 +33,7 @@ class Account < ActiveRecord::Base
   has_many :holiday_policies
   has_many :presence_policies
   has_many :presence_days, through: :presence_policies
-  has_one :registration_key, class_name: 'Account::RegistrationKey'
+  has_one :registration_key, class_name: "Account::RegistrationKey"
   has_many :time_off_categories, dependent: :destroy
   has_many :time_offs, through: :time_off_categories
   has_many :time_entries, through: :presence_days
@@ -45,11 +45,11 @@ class Account < ActiveRecord::Base
   has_many :invoices, dependent: :destroy
   has_many :company_events, dependent: :destroy
   belongs_to :referrer, primary_key: :token, foreign_key: :referred_by
-  has_one :archive_file, as: :fileable, class_name: 'GenericFile'
+  has_one :archive_file, as: :fileable, class_name: "GenericFile"
 
   scope :with_yalty_access, lambda {
-    joins('INNER JOIN account_users ON account_users.account_id = accounts.id')
-      .where('account_users.role = \'yalty\'')
+    joins("INNER JOIN account_users ON account_users.account_id = accounts.id")
+      .where("account_users.role = 'yalty'")
   }
 
   before_validation :generate_subdomain, on: :create
@@ -173,8 +173,8 @@ class Account < ActiveRecord::Base
   end
 
   def create_reset_presence_policy_and_working_place!
-    presence_policies.create!(name: 'Reset policy', reset: true)
-    working_places.create!(name: 'Reset working place', reset: true)
+    presence_policies.create!(name: "Reset policy", reset: true)
+    working_places.create!(name: "Reset working place", reset: true)
   end
 
   def stripe_description
@@ -182,12 +182,12 @@ class Account < ActiveRecord::Base
   end
 
   def stripe_email
-    users.where(role: 'account_owner').reorder('created_at ASC').limit(1).pluck(:email).first
+    users.where(role: "account_owner").reorder("created_at ASC").limit(1).pluck(:email).first
   end
 
   def yalty_access
     if @yalty_access.nil?
-      Account::User.where(account_id: id, role: 'yalty').exists?
+      Account::User.where(account_id: id, role: "yalty").exists?
     else
       @yalty_access
     end
@@ -218,9 +218,9 @@ class Account < ActiveRecord::Base
     self.subdomain = ActiveSupport::Inflector.transliterate(company_name)
                                              .strip
                                              .downcase
-                                             .gsub(/\s/, '-')
-                                             .gsub(/(\A[\-]+)|([^a-z\d-])|([\-]+\z)/, '')
-                                             .squeeze('-')
+                                             .gsub(/\s/, "-")
+                                             .gsub(/(\A[\-]+)|([^a-z\d-])|([\-]+\z)/, "")
+                                             .squeeze("-")
 
     ensure_subdomain_is_unique
   end
@@ -229,11 +229,11 @@ class Account < ActiveRecord::Base
   #
   # Add a random suffix to subdomain composed by 4 chars after a dash
   def ensure_subdomain_is_unique
-    suffix = ''
+    suffix = ""
 
     loop do
       if Account.where(subdomain: subdomain + suffix).exists?
-        suffix = '-' + String(SecureRandom.random_number(999) + 1)
+        suffix = "-" + String(SecureRandom.random_number(999) + 1)
       else
         self.subdomain = subdomain + suffix
         break
@@ -247,12 +247,12 @@ class Account < ActiveRecord::Base
 
   def referrer_must_exist
     return if Referrer.where(token: referred_by).exists?
-    errors.add(:referred_by, 'must belong to existing referrer')
+    errors.add(:referred_by, "must belong to existing referrer")
   end
 
   def timezone_must_exist
     return if ActiveSupport::TimeZone[timezone].present?
-    errors.add(:timezone, 'must be a valid time zone')
+    errors.add(:timezone, "must be a valid time zone")
   end
 
   def create_intercom_and_stripe_resources
@@ -271,13 +271,13 @@ class Account < ActiveRecord::Base
     if @yalty_access
       Account::User.find_or_create_by(
         account_id: id,
-        email: ENV['YALTY_ACCESS_EMAIL'],
-        password_digest: ENV['YALTY_ACCESS_PASSWORD_DIGEST'],
-        role: 'yalty'
+        email: ENV["YALTY_ACCESS_EMAIL"],
+        password_digest: ENV["YALTY_ACCESS_PASSWORD_DIGEST"],
+        role: "yalty"
       )
       YaltyAccessMailer.access_enable(self).deliver_later
     else
-      Account::User.where(account_id: id, role: 'yalty').destroy_all
+      Account::User.where(account_id: id, role: "yalty").destroy_all
       YaltyAccessMailer.access_disable(self).deliver_later
     end
   ensure

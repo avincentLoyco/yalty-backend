@@ -1,4 +1,4 @@
-require 'active_support/concern'
+require "active_support/concern"
 
 module RelatedAmount
   extend ActiveSupport::Concern
@@ -14,10 +14,10 @@ module RelatedAmount
   def related_amount_at_time_off_end_date
     balances = employee.employee_balances.in_category(time_off_category_id).not_time_off
                        .where(
-                         'employee_balances.effective_at::date BETWEEN ? AND ?',
+                         "employee_balances.effective_at::date BETWEEN ? AND ?",
                          time_off.start_time.to_date, time_off.end_time.to_date
                        ).where(
-                         'employee_balances.effective_at::date BETWEEN ? AND ?',
+                         "employee_balances.effective_at::date BETWEEN ? AND ?",
                          time_off.start_time.to_date, time_off.end_time.to_date
                        )
     not_removals =
@@ -57,7 +57,7 @@ module RelatedAmount
     previous_balance =
       balances_in_category_and_not_time_off
       .where(
-        'employee_balances.effective_at >= ? AND employee_balances.effective_at < ?',
+        "employee_balances.effective_at >= ? AND employee_balances.effective_at < ?",
         time_off_containing_this_balance.start_time,
         effective_at
       ).order(:effective_at)
@@ -67,7 +67,7 @@ module RelatedAmount
     balances_in_category_and_not_time_off
       .removals
       .where(
-        'employee_balances.effective_at::date = ? AND employee_balances.effective_at < ?',
+        "employee_balances.effective_at::date = ? AND employee_balances.effective_at < ?",
         time_off_containing_this_balance.start_time.to_date,
         effective_at
       ).order(:effective_at)

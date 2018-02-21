@@ -31,7 +31,7 @@ module EmployeePolicy
           effective_at: event.effective_at,
           effective_till: nil,
           employee_id: event.employee_id,
-          occupation_rate: event.attribute_values['occupation_rate'],
+          occupation_rate: event.attribute_values["occupation_rate"],
           time_off_policy_id: time_off_policy.id,
           employee_event_id: event.id
         }

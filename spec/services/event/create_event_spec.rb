@@ -1,7 +1,7 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe CreateEvent do
-  include_context 'shared_context_account_helper'
+  include_context "shared_context_account_helper"
 
   before do
     Account.current = employee.account
@@ -18,7 +18,7 @@ RSpec.describe CreateEvent do
   end
   let!(:occupation_rate_definition) do
     create(:employee_attribute_definition,
-      name: 'occupation_rate',
+      name: "occupation_rate",
       account: employee.account,
       attribute_type: Attribute::Number.attribute_type,
       validation: { range: [0, 1] })
@@ -30,14 +30,14 @@ RSpec.describe CreateEvent do
   let(:employee) { create(:employee) }
   let(:employee_id) { employee.id }
   let(:effective_at) { Date.new(2015, 4, 21) }
-  let(:event_type) { 'work_contract' }
-  let(:value) { 'abc' }
-  let(:attribute_name) { 'job_title' }
-  let(:attribute_name_second) { 'job_title' }
-  let(:occupation_rate_attribute) { 'occupation_rate' }
+  let(:event_type) { "work_contract" }
+  let(:value) { "abc" }
+  let(:attribute_name) { "job_title" }
+  let(:attribute_name_second) { "job_title" }
+  let(:occupation_rate_attribute) { "occupation_rate" }
   let!(:vacation_category) do
     create(:time_off_category, account: employee.account,
-      name: 'vacation')
+      name: "vacation")
   end
   let(:params) do
     {
@@ -63,7 +63,7 @@ RSpec.describe CreateEvent do
         order: 2
       },
       {
-        value: 'xyz',
+        value: "xyz",
         attribute_name: attribute_name,
         order: 3
       }
@@ -72,22 +72,22 @@ RSpec.describe CreateEvent do
 
   subject { described_class.new(params, employee_attributes_params).call }
 
-  context 'with valid params' do
-    context 'and this is work contract event' do
+  context "with valid params" do
+    context "and this is work contract event" do
       it do
         expect { subject }.to change { Employee::Balance.where(balance_type:
-          'assignation').count }.by(1)
+          "assignation").count }.by(1)
       end
     end
-    context 'when employee_id is present' do
+    context "when employee_id is present" do
       it { expect { subject }.to change { Employee::AttributeVersion.count }.by(3) }
       it { expect { subject }.to change { employee.events.count }.by(1) }
 
       it { expect(subject.effective_at).to eq effective_at }
       it { expect(subject.employee_attribute_versions.first.data.line).to eq value }
 
-      context 'and this is contract end event' do
-        let(:event_type) { 'contract_end' }
+      context "and this is contract end event" do
+        let(:event_type) { "contract_end" }
         let(:category) { create(:time_off_category, account: employee.account) }
         let(:effective_at) { Date.today }
         let!(:etop) do
@@ -105,27 +105,27 @@ RSpec.describe CreateEvent do
         it { expect { subject }.to change { EmployeeTimeOffPolicy.with_reset.count }.by(1) }
         it do
           expect { subject }
-            .to change { Employee::Balance.where(balance_type: 'reset').count }.by(2)
+            .to change { Employee::Balance.where(balance_type: "reset").count }.by(2)
         end
         it { expect { subject }.to_not change { time_off.reload.end_time } }
         it { expect { subject }.to_not change { time_off.reload.employee_balance.effective_at } }
       end
 
-      context 'and nested attribute send' do
+      context "and nested attribute send" do
         let!(:child_definition) do
           create(:employee_attribute_definition,
-            account: employee.account, name: 'child', attribute_type: 'Child',
+            account: employee.account, name: "child", attribute_type: "Child",
             validation: { inclusion: true} )
         end
 
         before do
           employee_attributes_params.unshift(
             {
-              attribute_name: 'child',
+              attribute_name: "child",
               order: 2,
               value: {
-                lastname: 'Stark',
-                firstname: 'Arya'
+                lastname: "Stark",
+                firstname: "Arya"
               }
             }
           )
@@ -133,34 +133,34 @@ RSpec.describe CreateEvent do
 
         it { expect { subject }.to change { Employee::AttributeVersion.count }.by(4) }
 
-        it 'has valid data' do
+        it "has valid data" do
           subject
 
           expect(subject.employee_attribute_versions
-            .where(attribute_definition: child_definition).first.data[:firstname]).to eq 'Arya'
+            .where(attribute_definition: child_definition).first.data[:firstname]).to eq "Arya"
         end
 
-        context 'other parent work status validation' do
+        context "other parent work status validation" do
           before do
             employee_attributes_params.first[:value][:other_parent_work_status] = work_status
           end
 
-          context 'when other parent work status is valid' do
-            let(:work_status) { 'salaried employee' }
+          context "when other parent work status is valid" do
+            let(:work_status) { "salaried employee" }
 
             it { expect { subject }.to change { Employee::AttributeVersion.count }.by(4) }
             it { expect { subject }.to change { Employee::Event.count }.by(1) }
           end
 
-          context 'when other parent work status is invalid' do
-            let(:work_status) { 'test status' }
+          context "when other parent work status is invalid" do
+            let(:work_status) { "test status" }
 
             it { expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
           end
         end
       end
 
-      context 'and definition multiple is false' do
+      context "and definition multiple is false" do
         before do
           definition.update(multiple: false)
         end
@@ -168,7 +168,7 @@ RSpec.describe CreateEvent do
         it { expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
       end
 
-      context 'and definition has not validation' do
+      context "and definition has not validation" do
         before { definition.update(validation: nil) }
 
         let(:value) { nil }
@@ -178,11 +178,11 @@ RSpec.describe CreateEvent do
       end
     end
 
-    context 'when employee_id is not present' do
-      let(:event_type) { 'hired' }
-      let(:value) { 'Ned' }
-      let(:attribute_name) { 'firstname' }
-      let(:attribute_name_second) { 'nationality' }
+    context "when employee_id is not present" do
+      let(:event_type) { "hired" }
+      let(:value) { "Ned" }
+      let(:attribute_name) { "firstname" }
+      let(:attribute_name_second) { "nationality" }
 
       let!(:definition_second) do
         create(:employee_attribute_definition,
@@ -201,23 +201,23 @@ RSpec.describe CreateEvent do
       it { expect(subject.employee_attribute_versions.first.data.line).to eq value }
       it do
         expect { subject }.to change { Employee::Balance.where(balance_type:
-          'assignation').count }.by(1)
+          "assignation").count }.by(1)
       end
 
-      context 'and required attribute is nil or not send' do
-        context 'and value is nil' do
+      context "and required attribute is nil or not send" do
+        context "and value is nil" do
           let(:value) { nil }
 
           it { expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
         end
 
-        context 'and required attribute does not send' do
+        context "and required attribute does not send" do
           before { employee_attributes_params.shift(3) }
           it { expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
         end
       end
 
-      context 'and definition does not have validation' do
+      context "and definition does not have validation" do
         before { definition.update(validation: nil) }
 
         let(:value) { nil }
@@ -228,32 +228,32 @@ RSpec.describe CreateEvent do
     end
   end
 
-  context 'with invalid params' do
-    context 'and params are nil' do
+  context "with invalid params" do
+    context "and params are nil" do
       let(:params) { nil }
 
       it { expect { subject }.to raise_error(NoMethodError) }
     end
 
-    context 'and definition is not multiple' do
+    context "and definition is not multiple" do
       before { definition.update(multiple: false) }
 
       it { expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
     end
 
-    context 'and employee attributes params are nil' do
+    context "and employee attributes params are nil" do
       let(:employee_attributes_params) { nil }
 
       it { expect { subject }.to raise_error(NoMethodError) }
     end
 
-    context 'and employee id is invalid' do
-      let(:employee_id) { 'abc' }
+    context "and employee id is invalid" do
+      let(:employee_id) { "abc" }
 
       it { expect { subject }.to raise_error(ActiveRecord::RecordNotFound) }
     end
 
-    context 'and employee id is nil' do
+    context "and employee id is nil" do
       let(:employee_id) { nil }
 
       it { expect { subject }.to raise_error(ActiveRecord::RecordNotFound) }

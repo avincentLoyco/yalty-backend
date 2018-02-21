@@ -63,16 +63,16 @@ module API
       class CustomerNotCreated < BaseError
         def initialize
           super(
-            type: 'account',
-            field: 'customer_id',
-            message: 'Customer is not created',
-            code: 'required_field'
+            type: "account",
+            field: "customer_id",
+            message: "Customer is not created",
+            code: "required_field"
           )
         end
       end
 
       class StripeError < BaseError
-        def initialize(type:, field:, message:, code: 'proxy_gateway_error')
+        def initialize(type:, field:, message:, code: "proxy_gateway_error")
           super
         end
       end

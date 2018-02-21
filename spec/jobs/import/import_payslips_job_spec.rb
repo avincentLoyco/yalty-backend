@@ -1,9 +1,9 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe Import::ImportPayslipsJob, type: :job do
   let!(:account) do
     account = create(:account)
-    account.available_modules.add(id: 'automatedexport')
+    account.available_modules.add(id: "automatedexport")
     account.save
     account
   end
@@ -11,8 +11,8 @@ RSpec.describe Import::ImportPayslipsJob, type: :job do
   let!(:employee) { create(:employee, account: account) }
 
   let(:payslip_filename) { "20160101_#{employee.id}.pdf" }
-  let(:payslip_date) { Date.parse('01-01-2016') }
-  let(:ssh_payslip_path) { File.join('/fake/path', payslip_filename) }
+  let(:payslip_date) { Date.parse("01-01-2016") }
+  let(:ssh_payslip_path) { File.join("/fake/path", payslip_filename) }
 
   subject(:import_payslips) { described_class.new.perform(ssh_payslip_path) }
 
@@ -21,7 +21,7 @@ RSpec.describe Import::ImportPayslipsJob, type: :job do
     allow(Import::ImportAndAssignPayslips).to receive(:enable?).and_return(true)
   end
 
-  it 'call import service', :focus do
+  it "call import service", :focus do
     expect(::Import::ImportAndAssignPayslips)
       .to receive_message_chain(:new, :call).with(employee, anything, payslip_date).with(no_args)
     import_payslips

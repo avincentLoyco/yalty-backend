@@ -1,4 +1,4 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe Payments::Plan do
   it { is_expected.to be_respond_to(:id) }

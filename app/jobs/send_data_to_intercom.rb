@@ -2,7 +2,7 @@ class SendDataToIntercom < ActiveJob::Base
   queue_as :intercom
 
   class JobWrapper < CustomJobAdapter::JobWrapper
-    sidekiq_options unique: :until_executing, unique_args: ->(args) { args.first['arguments'] }
+    sidekiq_options unique: :until_executing, unique_args: ->(args) { args.first["arguments"] }
   end
 
   def perform(resource_id, resource_class)

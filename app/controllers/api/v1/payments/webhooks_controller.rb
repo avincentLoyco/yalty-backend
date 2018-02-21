@@ -14,7 +14,7 @@ module API
         private
 
         def remove_canceled_plans
-          return unless params[:type].eql?('invoice.created')
+          return unless params[:type].eql?("invoice.created")
 
           account = Account.find_by!(customer_id: params[:data][:object][:customer])
           canceled_or_free = account.available_modules.canceled_or_free
@@ -27,7 +27,7 @@ module API
 
         def request_authentication
           authenticate_or_request_with_http_basic do |_, password|
-            password == ENV['STRIPE_WEBHOOK_PASSWORD']
+            password == ENV["STRIPE_WEBHOOK_PASSWORD"]
           end
         end
 

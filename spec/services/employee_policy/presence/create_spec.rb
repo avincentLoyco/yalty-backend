@@ -10,7 +10,7 @@ RSpec.describe EmployeePolicy::Presence::Create do
 
   subject { described_class.call(params) }
 
-  let(:event_type) { 'hired' }
+  let(:event_type) { "hired" }
   let(:effective_at) { Date.new(2017, 2, 1) }
 
   let(:event) { build(:employee_event, effective_at: effective_at) }

@@ -1,4 +1,4 @@
-require 'employee_policy_period'
+require "employee_policy_period"
 
 class EmployeeTimeOffPolicy < ActiveRecord::Base
   include ActsAsIntercomTrigger
@@ -9,7 +9,7 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
   belongs_to :employee
   belongs_to :time_off_policy
   belongs_to :time_off_category
-  belongs_to :employee_event, class_name: 'Employee::Event', inverse_of: :employee_time_off_policy
+  belongs_to :employee_event, class_name: "Employee::Event", inverse_of: :employee_time_off_policy
 
   validates :employee_id, :time_off_policy_id, :effective_at, presence: true
   validates :effective_at, uniqueness: { scope: [:employee_id, :time_off_category_id] }
@@ -21,9 +21,9 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
   before_save :add_category_id
   before_destroy :balances_without_valid_policy_present?
 
-  scope :not_assigned_at, ->(date) { where(['effective_at > ?', date]) }
-  scope :assigned_at, ->(date) { where(['effective_at <= ?', date]) }
-  scope :assigned_since, ->(date) { where('effective_at >= ?', date) }
+  scope :not_assigned_at, ->(date) { where(["effective_at > ?", date]) }
+  scope :assigned_at, ->(date) { where(["effective_at <= ?", date]) }
+  scope :assigned_since, ->(date) { where("effective_at >= ?", date) }
   scope(:active_at, lambda do |date|
     where("
       employee_time_off_policies.effective_at BETWEEN (
@@ -70,10 +70,10 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
   def employee_balances
     if effective_till
       Employee::Balance.for_employee_and_category(employee.id, time_off_category.id)
-                       .where('effective_at BETWEEN ? and ?', effective_at, effective_till)
+                       .where("effective_at BETWEEN ? and ?", effective_at, effective_till)
     else
       Employee::Balance.for_employee_and_category(employee.id, time_off_category.id)
-                       .where('effective_at >= ?', effective_at)
+                       .where("effective_at >= ?", effective_at)
     end
   end
 
@@ -82,7 +82,7 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
       self
       .class
       .by_employee_in_category(employee_id, time_off_category_id)
-      .where('effective_at > ?', effective_at)
+      .where("effective_at > ?", effective_at)
       .last
       .try(:effective_at)
     next_effective_at - 1.day if next_effective_at
@@ -92,7 +92,7 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
     self
       .class
       .by_employee_in_category(employee_id, time_off_category_id)
-      .where('effective_at < ?', date)
+      .where("effective_at < ?", date)
       .where.not(id: id)
   end
 
@@ -105,7 +105,7 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
         !previous_policy_for(time_off_after.start_time).present?
 
     errors.add(
-      :effective_at, 'Can\'t change if there are time offs after and there is no previous policy'
+      :effective_at, "Can't change if there are time offs after and there is no previous policy"
     )
   end
 
@@ -114,7 +114,7 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
     employee
       .time_offs
       .in_category(time_off_category_id)
-      .where('end_time >= ?', date)
+      .where("end_time >= ?", date)
       .order(:start_time)
       .first
   end
@@ -124,7 +124,7 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
     return unless time_off_after.present? && time_off_after.employee_time_off_policy.id.eql?(id) &&
         !previous_policy_for(effective_at_was).present?
     errors.add(
-      :effective_at, 'Can\'t remove if there are time offs after and there is no previous policy'
+      :effective_at, "Can't remove if there are time offs after and there is no previous policy"
     )
     errors.blank?
   end
@@ -141,7 +141,7 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
       firts_etop && firts_etop.time_off_policy.policy_type != time_off_policy.policy_type
     errors.add(
       :policy_type,
-      'The employee has an existing policy of different type in the category'
+      "The employee has an existing policy of different type in the category"
     )
   end
 

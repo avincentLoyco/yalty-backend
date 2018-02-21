@@ -5,7 +5,7 @@ class YaltyAccessMailer < ApplicationMailer
     @account = account
 
     I18n.with_locale(@account.default_locale) do
-      mail to: ENV['YALTY_ACCESS_EMAIL']
+      mail to: ENV["YALTY_ACCESS_EMAIL"]
     end
   end
 
@@ -13,7 +13,7 @@ class YaltyAccessMailer < ApplicationMailer
     @account = account
 
     I18n.with_locale(@account.default_locale) do
-      mail to: ENV['YALTY_ACCESS_EMAIL']
+      mail to: ENV["YALTY_ACCESS_EMAIL"]
     end
   end
 

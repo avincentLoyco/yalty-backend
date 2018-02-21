@@ -45,7 +45,7 @@ class CreateEmployeeBalance
       Employee::Balance.new(
         employee_id: employee.id,
         time_off_category_id: category.id,
-        balance_type: employee_balance.validity_date.sec.eql?(3) ? 'reset' : 'removal',
+        balance_type: employee_balance.validity_date.sec.eql?(3) ? "reset" : "removal",
         effective_at: employee_balance.validity_date
       )
     balance_removal.balance_credit_additions << [employee_balance]
@@ -63,7 +63,7 @@ class CreateEmployeeBalance
     return if options[:time_off_id] || options[:effective_at].blank?
     Employee::Balance
       .for_employee_and_category(employee.id, category.id)
-      .find_by('effective_at = ? AND time_off_id is NULL', options[:effective_at])
+      .find_by("effective_at = ? AND time_off_id is NULL", options[:effective_at])
   end
 
   def valid_balance?
@@ -96,7 +96,7 @@ class CreateEmployeeBalance
   end
 
   def calculate_amount
-    return unless employee_balance.balance_type.eql?('reset') ||
+    return unless employee_balance.balance_type.eql?("reset") ||
         employee_balance.balance_credit_additions.present? || counter_addition? ||
         balance_removal.present?
     if balance_removal
@@ -118,7 +118,7 @@ class CreateEmployeeBalance
     start_time =
       [employee_balance.effective_at, employee_balance.time_off.try(:start_time)].compact.min
     Employee::Balance
-      .where('effective_at >= ?', start_time)
+      .where("effective_at >= ?", start_time)
       .where.not(id: [employee_balance.id, balance_removal.try(:id)])
       .blank?
   end
@@ -128,6 +128,6 @@ class CreateEmployeeBalance
   end
 
   def counter_addition?
-    employee_balance.balance_type.eql?('addition') && employee_balance.time_off_policy.counter?
+    employee_balance.balance_type.eql?("addition") && employee_balance.time_off_policy.counter?
   end
 end

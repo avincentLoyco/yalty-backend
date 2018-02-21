@@ -1,9 +1,9 @@
-require 'spec_helper'
+require "spec_helper"
 require File.expand_path("../../config/environment", __FILE__)
-require 'rspec/rails'
+require "rspec/rails"
 
-require 'fantaskspec'
-require 'paperclip/matchers'
+require "fantaskspec"
+require "paperclip/matchers"
 
 # Load rails tasks
 Rails.application.load_tasks
@@ -21,7 +21,7 @@ Rails.application.load_tasks
 # directory. Alternatively, in the individual `*_spec.rb` files, manually
 # require only the support files necessary.
 #
-Dir[Rails.root.join('spec/support/**/*.rb')].each { |f| require f }
+Dir[Rails.root.join("spec/support/**/*.rb")].each { |f| require f }
 
 # Checks for pending migrations before tests are run.
 # If you are not using ActiveRecord, you can remove this line.
@@ -61,8 +61,8 @@ RSpec.configure do |config|
     DatabaseCleaner.clean_with(:truncation)
 
     client = FactoryGirl.create(:oauth_client)
-    ENV['YALTY_OAUTH_ID'] = client.uid
-    ENV['YALTY_OAUTH_SECRET'] = client.secret
+    ENV["YALTY_OAUTH_ID"] = client.uid
+    ENV["YALTY_OAUTH_SECRET"] = client.secret
   end
 
   config.after(:all) do

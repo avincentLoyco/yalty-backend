@@ -8,12 +8,12 @@ class ActiveAndInactiveJoinTableFinders
   end
 
   def active
-    return active_for_account_related if resource_class.attribute_names.include?('account_id')
+    return active_for_account_related if resource_class.attribute_names.include?("account_id")
     active_for_not_account_related
   end
 
   def inactive
-    return inactive_for_account_related if resource_class.attribute_names.include?('account_id')
+    return inactive_for_account_related if resource_class.attribute_names.include?("account_id")
     inactive_for_non_account_related
   end
 
@@ -31,7 +31,7 @@ class ActiveAndInactiveJoinTableFinders
 
   def active_for_account_related
     resource_class.where(
-      'id IN (?) AND account_id = ?', assigned_ids + without_join_tables_assigned, account_id
+      "id IN (?) AND account_id = ?", assigned_ids + without_join_tables_assigned, account_id
     )
   end
 
@@ -43,7 +43,7 @@ class ActiveAndInactiveJoinTableFinders
   end
 
   def inactive_for_account_related
-    resource_class.where('id NOT IN (?) AND account_id = ?', active.pluck(:id), account_id)
+    resource_class.where("id NOT IN (?) AND account_id = ?", active.pluck(:id), account_id)
   end
 
   def inactive_for_non_account_related

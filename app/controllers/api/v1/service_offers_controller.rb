@@ -3,11 +3,11 @@ module API
     class ServiceOffersController < ApplicationController
       def create
         case params[:meta][:action]
-        when 'book-now'
+        when "book-now"
           ServiceRequestMailer
             .book_request(Account.current, Account::User.current, params)
             .deliver_later
-        when 'send-quote'
+        when "send-quote"
           ServiceRequestMailer
             .quote_request(Account.current, Account::User.current, params)
             .deliver_later

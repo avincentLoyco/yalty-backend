@@ -1,4 +1,4 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe Payments::UpdateAvailableModules, type: :job do
   let!(:account) { create(:account, :with_stripe_fields, available_modules: available_modules) }
@@ -9,7 +9,7 @@ RSpec.describe Payments::UpdateAvailableModules, type: :job do
     end
     available_modules
   end
-  let(:plan_ids) { ['master-plan', 'super-plan', 'ultra-plan'] }
+  let(:plan_ids) { ["master-plan", "super-plan", "ultra-plan"] }
   let(:subscription) do
     subscription = StripeSubscription.new(account.subscription_id || SecureRandom.hex)
     subscription.items = subscription_items
@@ -25,15 +25,15 @@ RSpec.describe Payments::UpdateAvailableModules, type: :job do
     allow(Stripe::SubscriptionItem).to receive(:create)
   end
 
-  context 'when subscription item missing' do
+  context "when subscription item missing" do
     before { job }
 
-    it 'create missing subscription items' do
+    it "create missing subscription items" do
       expect(Stripe::SubscriptionItem).to have_received(:create).exactly(3)
     end
   end
 
-  context 'when subscription exist' do
+  context "when subscription exist" do
     let(:subscription_items) do
       [
         StripeSubscriptionItem.new(SecureRandom.hex, StripePlan.new(plan_ids.first))
@@ -42,7 +42,7 @@ RSpec.describe Payments::UpdateAvailableModules, type: :job do
 
     before { job }
 
-    it 'create missing subscription items' do
+    it "create missing subscription items" do
       expect(Stripe::SubscriptionItem).to have_received(:create).exactly(2)
     end
   end

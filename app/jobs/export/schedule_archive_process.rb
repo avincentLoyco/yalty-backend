@@ -6,7 +6,7 @@ module Export
       sidekiq_options retry: 6
       sidekiq_retries_exhausted do |message|
         GlobalID::Locator.locate(
-          message['args'].first['arguments'].first['_aj_globalid']
+          message["args"].first["arguments"].first["_aj_globalid"]
         ).update!(archive_processing: false)
       end
     end

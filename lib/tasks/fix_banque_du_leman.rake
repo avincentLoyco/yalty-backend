@@ -1,6 +1,6 @@
-desc 'Fix balances for banque-du-leman account'
+desc "Fix balances for banque-du-leman account"
 task fix_banque_du_leman: :environment do
-  account = Account.find_by(subdomain: 'banque-du-leman')
+  account = Account.find_by(subdomain: "banque-du-leman")
   time_off_policies = account.time_off_policies.where(active: false, reset: false)
   time_off_policies.each do |time_off_policy|
     new_time_off_policy = time_off_policy.dup

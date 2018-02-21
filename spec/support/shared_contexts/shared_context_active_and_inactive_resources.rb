@@ -1,16 +1,16 @@
-RSpec.shared_context 'shared_context_active_and_inactive_resources' do |settings|
-  include_context 'shared_context_account_helper'
+RSpec.shared_context "shared_context_active_and_inactive_resources" do |settings|
+  include_context "shared_context_account_helper"
 
-  context 'GET #index' do
+  context "GET #index" do
     subject { get :index, { status: status } }
 
-    if settings[:resource_class].name == 'TimeOffPolicy'
+    if settings[:resource_class].name == "TimeOffPolicy"
       let(:category) { create(:time_off_category, account: account) }
       let(:resource) { create(resource_sym, time_off_category: category) }
       let(:new_resource) { create(resource_sym, time_off_category: category) }
       let!(:not_assigned_resources) { create_list(resource_sym, 2, time_off_category: category) }
       let!(:other_account_resource) { create(resource_sym) }
-    elsif settings[:resource_class].name == 'PresencePolicy'
+    elsif settings[:resource_class].name == "PresencePolicy"
       let(:resource) { create(resource_sym, :with_presence_day, account: account) }
       let(:new_resource) { create(resource_sym, :with_presence_day, account: account) }
       let!(:other_account_resource) { create(resource_sym) }
@@ -33,10 +33,10 @@ RSpec.shared_context 'shared_context_active_and_inactive_resources' do |settings
       create(:employee, settings[:join_table_class].plural.to_sym => [join_table], account: account)
     end
 
-    context 'with status active param' do
-      let(:status) { 'active' }
+    context "with status active param" do
+      let(:status) { "active" }
 
-      context 'when there are no active resources' do
+      context "when there are no active resources" do
         before do
           employee.destroy!
           settings[:resource_class].name.constantize.all.delete_all
@@ -47,7 +47,7 @@ RSpec.shared_context 'shared_context_active_and_inactive_resources' do |settings
         it { expect(response.body).to eq [].to_json }
       end
 
-      context 'when all resources are active' do
+      context "when all resources are active" do
         before { subject }
 
         it { is_expected.to have_http_status(200) }
@@ -59,13 +59,13 @@ RSpec.shared_context 'shared_context_active_and_inactive_resources' do |settings
         it { expect(response.body).to_not include other_account_resource.id }
       end
 
-      context 'when not all resources are active' do
+      context "when not all resources are active" do
         before do
           create(join_table_sym,
             effective_at: Time.now - 1.day, employee: employee, resource_sym => new_resource)
         end
 
-        context 'when resource is inactive for one employee and active for other' do
+        context "when resource is inactive for one employee and active for other" do
           before do
             new_join_table = create(join_table_sym, resource_sym => resource)
             create(:employee, account: account,
@@ -82,7 +82,7 @@ RSpec.shared_context 'shared_context_active_and_inactive_resources' do |settings
           it { expect(response.body).to_not include other_account_resource.id }
         end
 
-        context 'when resource is inactive for all employees' do
+        context "when resource is inactive for all employees" do
           before { subject }
 
           it { is_expected.to have_http_status(200) }
@@ -96,10 +96,10 @@ RSpec.shared_context 'shared_context_active_and_inactive_resources' do |settings
       end
     end
 
-    context 'with status inactive param' do
-      let(:status) { 'inactive' }
+    context "with status inactive param" do
+      let(:status) { "inactive" }
 
-      context 'when there are no inactive resources' do
+      context "when there are no inactive resources" do
         before { subject }
 
         it { is_expected.to have_http_status(200) }
@@ -108,7 +108,7 @@ RSpec.shared_context 'shared_context_active_and_inactive_resources' do |settings
         it { expect(response.body).to_not include other_account_resource.id }
       end
 
-      context 'when there are inactive resources' do
+      context "when there are inactive resources" do
         before do
           create(join_table_sym,
             effective_at: Time.now - 1.day, employee: employee, resource_sym => new_resource)

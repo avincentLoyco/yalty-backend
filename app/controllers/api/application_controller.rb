@@ -24,13 +24,13 @@ class API::ApplicationController < ApplicationController
   def authenticate!
     return unless Account.current.nil? || Account::User.current.nil?
     render json:
-      ::Api::V1::ErrorsRepresenter.new(nil, error: ['User unauthorized']).complete, status: 401
+      ::Api::V1::ErrorsRepresenter.new(nil, error: ["User unauthorized"]).complete, status: 401
   end
 
   def subdomain_access!
     return unless Account.current.nil?
     render json:
-      ::Api::V1::ErrorsRepresenter.new(nil, error: ['User unauthorized']).complete, status: 401
+      ::Api::V1::ErrorsRepresenter.new(nil, error: ["User unauthorized"]).complete, status: 401
   end
 
   def update_affected_balances(presence_policy, employees = [])
@@ -57,7 +57,7 @@ class API::ApplicationController < ApplicationController
 
   def destroy_join_tables_with_duplicated_resources
     employee_collection = resource.employee.send(resource.class.model_name.plural)
-    related_resource = resource.send(resource.class.model_name.element.gsub('employee_', ''))
+    related_resource = resource.send(resource.class.model_name.element.gsub("employee_", ""))
     contract_end = resource.employee.contract_end_for(resource.effective_at)
     if contract_end.eql?(resource.effective_at - 1.day)
       HandleContractEnd.new(resource.employee, contract_end).call
@@ -91,9 +91,9 @@ class API::ApplicationController < ApplicationController
       .new(join_table, Account.current.id, resource_id, nil, nil, nil)
       .call
 
-    if params[:filter].eql?('inactive')
+    if params[:filter].eql?("inactive")
       resources = resources.select do |resource|
-        resource['effective_till'].present? && resource['effective_till'].to_date < Time.zone.today
+        resource["effective_till"].present? && resource["effective_till"].to_date < Time.zone.today
       end
     end
 
@@ -101,7 +101,7 @@ class API::ApplicationController < ApplicationController
   end
 
   def resources_with_filters(join_table, resource_id)
-    if params[:filter].blank? || params[:filter].eql?('active')
+    if params[:filter].blank? || params[:filter].eql?("active")
       resources_with_effective_till(join_table, nil, resource_id)
     else
       resources_with_filters_and_effective_till(join_table, resource_id)
@@ -109,7 +109,7 @@ class API::ApplicationController < ApplicationController
   end
 
   def resources_by_status(resource_class, join_table_class)
-    status = params[:status] == 'inactive' ? 'inactive' : 'active'
+    status = params[:status] == "inactive" ? "inactive" : "active"
     ActiveAndInactiveJoinTableFinders
       .new(resource_class, join_table_class, Account.current.id)
       .send(status)
@@ -155,7 +155,7 @@ class API::ApplicationController < ApplicationController
     head :reset_content
   end
 
-  def verify_if_resource_not_locked!(resource_type, resource_field = 'employees')
+  def verify_if_resource_not_locked!(resource_type, resource_field = "employees")
     return unless resource_type.send(resource_field).present?
     raise generate_locked_error(resource_type.class.name.underscore, resource_field)
   end

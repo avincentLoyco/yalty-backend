@@ -1,10 +1,10 @@
 class Employee < ActiveRecord::Base
   include ActsAsIntercomTrigger
 
-  CIVIL_STATUS = { 'marriage' => 'married', 'divorce' => 'divorced',
-                   'partnership' => 'registered partnership', 'spouse_death' => 'widowed',
-                   'partnership_dissolution' => 'dissolved partnership',
-                   'partner_death' => 'dissolved partnership due to death' }.freeze
+  CIVIL_STATUS = { "marriage" => "married", "divorce" => "divorced",
+                   "partnership" => "registered partnership", "spouse_death" => "widowed",
+                   "partnership_dissolution" => "dissolved partnership",
+                   "partner_death" => "dissolved partnership due to death" }.freeze
 
   RESOURCE_JOIN_TABLES =
     %w(employee_time_off_policies employee_working_places employee_presence_policies).freeze
@@ -13,18 +13,18 @@ class Employee < ActiveRecord::Base
 
   belongs_to :account, inverse_of: :employees, required: true
   belongs_to :user,
-    class_name: 'Account::User',
+    class_name: "Account::User",
     foreign_key: :account_user_id,
     inverse_of: :employee
   has_many :employee_attribute_versions,
-    class_name: 'Employee::AttributeVersion',
+    class_name: "Employee::AttributeVersion",
     inverse_of: :employee
   has_many :employee_attributes,
-    class_name: 'Employee::Attribute',
+    class_name: "Employee::Attribute",
     inverse_of: :employee
-  has_many :events, class_name: 'Employee::Event', inverse_of: :employee
+  has_many :events, class_name: "Employee::Event", inverse_of: :employee
   has_many :time_offs
-  has_many :employee_balances, class_name: 'Employee::Balance'
+  has_many :employee_balances, class_name: "Employee::Balance"
   has_many :employee_time_off_policies
   has_many :time_off_policies, through: :employee_time_off_policies
   has_many :time_off_categories, through: :employee_balances
@@ -47,7 +47,7 @@ class Employee < ActiveRecord::Base
       .where(
         "employee_events.event_type = 'hired' AND
         employee_events.effective_at = ?::date OR
-        #{previous_event_sql('hired', date)}", date
+        #{previous_event_sql("hired", date)}", date
       )
       .distinct
   end)
@@ -57,7 +57,7 @@ class Employee < ActiveRecord::Base
       .where(
         "employee_events.event_type = 'hired' AND
         employee_events.effective_at >= ?::date OR
-        #{previous_event_sql('hired', date)}", date
+        #{previous_event_sql("hired", date)}", date
       )
       .distinct
   end)
@@ -67,7 +67,7 @@ class Employee < ActiveRecord::Base
   end)
 
   scope(:active_user_by_account, lambda do |account_id|
-    active_by_account(account_id).where('account_user_id IS NOT NULL')
+    active_by_account(account_id).where("account_user_id IS NOT NULL")
   end)
 
   scope(:affected_by_presence_policy, lambda do |presence_policy_id|
@@ -97,7 +97,7 @@ class Employee < ActiveRecord::Base
     def previous_event_sql(type, date)
       return unless %w(hired contract_end).include?(type)
 
-      formatted_date = date.strftime('%Y-%m-%d')
+      formatted_date = date.strftime("%Y-%m-%d")
       "
         '#{type}' = (
           SELECT employee_events.event_type FROM employee_events
@@ -112,7 +112,7 @@ class Employee < ActiveRecord::Base
   end
 
   def current_hired_for(date)
-    events.where('effective_at = ? AND event_type = ?', hired_date_for(date), 'hired').first
+    events.where("effective_at = ? AND event_type = ?", hired_date_for(date), "hired").first
   end
 
   def contract_periods_include?(*dates)
@@ -131,7 +131,7 @@ class Employee < ActiveRecord::Base
     attributes =
       employee_attributes
       .joins(:attribute_definition)
-      .where('employee_attribute_definitions.name IN (?)', %w(firstname lastname))
+      .where("employee_attribute_definitions.name IN (?)", %w(firstname lastname))
       .map { |attr| [attr.attribute_name.to_sym, attr.value] }
       .to_h
 
@@ -140,7 +140,7 @@ class Employee < ActiveRecord::Base
 
   def civil_status_for(date = Time.zone.today)
     civil_status_event = last_civil_status_event_for(date)
-    return 'single' unless civil_status_event
+    return "single" unless civil_status_event
     CIVIL_STATUS[civil_status_event.event_type]
   end
 
@@ -186,9 +186,9 @@ class Employee < ActiveRecord::Base
   def contract_periods
     dates =
       if persisted?
-        events.contract_types.reorder('employee_events.effective_at ASC').pluck(:effective_at)
+        events.contract_types.reorder("employee_events.effective_at ASC").pluck(:effective_at)
       else
-        events.select { |e| e.event_type == 'hired' }.map(&:effective_at)
+        events.select { |e| e.event_type == "hired" }.map(&:effective_at)
       end
 
     dates.each_slice(2)
@@ -196,7 +196,7 @@ class Employee < ActiveRecord::Base
   end
 
   def first_employee_event
-    events.hired.reorder('employee_events.effective_at DESC').first
+    events.hired.reorder("employee_events.effective_at DESC").first
   end
 
   def active_policy_in_category_at_date(category_id, date = Time.zone.today)
@@ -212,7 +212,7 @@ class Employee < ActiveRecord::Base
   end
 
   def last_balance_in_category(category_id)
-    employee_balances.where(time_off_category_id: category_id).order('effective_at').last
+    employee_balances.where(time_off_category_id: category_id).order("effective_at").last
   end
 
   def assigned_time_off_policies_in_category(category_id, date = Time.zone.today)
@@ -242,7 +242,7 @@ class Employee < ActiveRecord::Base
   end
 
   def first_upcoming_contract_end(date = Time.zone.today)
-    events.contract_ends.where('effective_at > ?', date).order(:effective_at).first
+    events.contract_ends.where("effective_at > ?", date).order(:effective_at).first
   end
 
   def can_be_hired?
@@ -262,14 +262,14 @@ class Employee < ActiveRecord::Base
   end
 
   def hired_event_presence
-    return if events && events.map(&:event_type).include?('hired')
-    errors.add(:events, 'Employee must have hired event')
+    return if events && events.map(&:event_type).include?("hired")
+    errors.add(:events, "Employee must have hired event")
   end
 
   def last_civil_status_event_for(date)
     @last_civil_status_event_for ||=
       events
-      .where('event_type IN (?) AND effective_at <= ?', CIVIL_STATUS.keys, date)
+      .where("event_type IN (?) AND effective_at <= ?", CIVIL_STATUS.keys, date)
       .order(:effective_at).last
   end
 end

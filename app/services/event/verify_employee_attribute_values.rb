@@ -7,7 +7,7 @@ class VerifyEmployeeAttributeValues
   attr_reader :value, :errors, :type
 
   def initialize(employee_attribute)
-    @value = employee_attribute.select { |k, _v| k.to_s == 'value' }
+    @value = employee_attribute.select { |k, _v| k.to_s == "value" }
     @type = attribute_type(employee_attribute[:attribute_name])
     @errors = {}
   end
@@ -33,7 +33,7 @@ class VerifyEmployeeAttributeValues
 
   def verify_schema
     schema = type_schema
-    return errors.merge!(value: 'Invalid type') if schema.nil?
+    return errors.merge!(value: "Invalid type") if schema.nil?
     schema.call(value)
   end
 

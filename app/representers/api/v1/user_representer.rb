@@ -30,12 +30,12 @@ module Api::V1
     end
 
     def intercom_hash
-      return {} if resource.role.eql?('yalty')
+      return {} if resource.role.eql?("yalty")
 
       {
         intercom_hash: OpenSSL::HMAC.hexdigest(
-          'sha256',
-          ENV['INTERCOM_SECRET_KEY'],
+          "sha256",
+          ENV["INTERCOM_SECRET_KEY"],
           resource.id
         )
       }

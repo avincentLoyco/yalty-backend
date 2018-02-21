@@ -1,7 +1,7 @@
-RSpec.shared_context 'shared_context_geoloc_helper' do
+RSpec.shared_context "shared_context_geoloc_helper" do
   def geoloc_instance(attributes)
     if !(%i(city state_name state_code country country_code) - attributes.keys).empty?
-      raise ArgumentError, 'should include all attributes'
+      raise ArgumentError, "should include all attributes"
     end
 
     loc = Geokit::GeoLoc.new(city: attributes[:city])
@@ -29,9 +29,9 @@ RSpec.shared_context 'shared_context_geoloc_helper' do
   end
 
   let(:city) { nil }
-  let(:state_name) { 'Zurich' }
-  let(:state_code) { 'ZH' }
-  let(:country) { 'Switzerland' }
-  let(:country_code) { 'CH' }
-  let(:timezone) { 'Europe/Zurich' }
+  let(:state_name) { "Zurich" }
+  let(:state_code) { "ZH" }
+  let(:country) { "Switzerland" }
+  let(:country_code) { "CH" }
+  let(:timezone) { "Europe/Zurich" }
 end

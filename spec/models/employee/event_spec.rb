@@ -1,7 +1,7 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe Employee::Event, type: :model do
-  include_context 'shared_context_timecop_helper'
+  include_context "shared_context_timecop_helper"
 
   subject! { build(:employee_event) }
 
@@ -27,13 +27,13 @@ RSpec.describe Employee::Event, type: :model do
       )
   end
 
-  context '#attributes_presence validation' do
+  context "#attributes_presence validation" do
     before { allow(Account).to receive(:current) { subject.account } }
     let(:employee) { create(:employee, :with_attributes) }
     subject { employee.events.first }
 
-    context 'when event contain required attributes' do
-      subject { build(:employee_event, event_type: 'hired') }
+    context "when event contain required attributes" do
+      subject { build(:employee_event, event_type: "hired") }
 
       it { expect(subject.valid?).to eq false }
       it { expect { subject.valid? }.to change {
@@ -41,15 +41,15 @@ RSpec.describe Employee::Event, type: :model do
       }
     end
 
-    context 'when event do not have required attributes' do
+    context "when event do not have required attributes" do
       before do
-        lastname_def = Account.current.employee_attribute_definitions.find_by(name: 'lastname')
-        firstname_def = Account.current.employee_attribute_definitions.find_by(name: 'firstname')
+        lastname_def = Account.current.employee_attribute_definitions.find_by(name: "lastname")
+        firstname_def = Account.current.employee_attribute_definitions.find_by(name: "firstname")
         event.employee_attribute_versions.last.update!(
-          attribute_definition: lastname_def, data: { value: 'a' }
+          attribute_definition: lastname_def, data: { value: "a" }
         )
         event.employee_attribute_versions.first.update!(
-          attribute_definition: firstname_def, data: { value: 'b' }
+          attribute_definition: firstname_def, data: { value: "b" }
         )
       end
 
@@ -64,27 +64,27 @@ RSpec.describe Employee::Event, type: :model do
     end
   end
 
-  context '#contract_end_and_hire_in_valid_order' do
+  context "#contract_end_and_hire_in_valid_order" do
     let(:employee) { create(:employee) }
     let(:effective_at) { 1.week.ago }
     let(:contract_end) do
       build(:employee_event,
-        employee: employee, event_type: 'contract_end', effective_at: effective_at)
+        employee: employee, event_type: "contract_end", effective_at: effective_at)
     end
     let(:rehire) do
       create(:employee_event,
-        event_type: 'hired', effective_at: Time.zone.today, employee: employee)
+        event_type: "hired", effective_at: Time.zone.today, employee: employee)
     end
 
-    context 'for contract end' do
-      context 'contract end at hired date' do
+    context "for contract end" do
+      context "contract end at hired date" do
         let(:effective_at) {  employee.events.order(:effective_at).first.effective_at }
 
         it { expect(contract_end.valid?).to eq true }
         it { expect { contract_end.valid? }.to_not change { contract_end.errors.messages.count } }
       end
 
-      context 'contract end at rehired event' do
+      context "contract end at rehired event" do
         before do
           contract_end.save
           rehire.save!
@@ -101,14 +101,14 @@ RSpec.describe Employee::Event, type: :model do
       end
     end
 
-    context 'for hired event' do
+    context "for hired event" do
       before { contract_end.save! }
 
-      context 'rehired at its contract end date' do
+      context "rehired at its contract end date" do
         before do
           rehire.save!
           rehire_end = create(:employee_event,
-            employee: employee, event_type: 'contract_end', effective_at: 1.week.since)
+            employee: employee, event_type: "contract_end", effective_at: 1.week.since)
           rehire.effective_at = rehire_end.effective_at
         end
 
@@ -116,7 +116,7 @@ RSpec.describe Employee::Event, type: :model do
         it { expect { rehire.valid? }.to_not change { rehire.errors.messages } }
       end
 
-      context 'rehired at previous contract end' do
+      context "rehired at previous contract end" do
         before { rehire.effective_at = contract_end.effective_at }
 
         it { expect(rehire.valid?).to eq false }
@@ -130,7 +130,7 @@ RSpec.describe Employee::Event, type: :model do
     end
   end
 
-  context '#no_two_contract_end_dates_or_hired_events_in_row' do
+  context "#no_two_contract_end_dates_or_hired_events_in_row" do
     let(:employee) { create(:employee) }
     let(:subject_effective_at) { Time.now - 3.years }
 
@@ -139,11 +139,11 @@ RSpec.describe Employee::Event, type: :model do
         employee: employee, event_type: event_type, effective_at: subject_effective_at)
     end
 
-    shared_examples 'Two contract end or hired events in a row' do
+    shared_examples "Two contract end or hired events in a row" do
       before do
         if try(:marriage_effective_at)
           create(:employee_event,
-            employee: employee, event_type: 'marriage', effective_at: marriage_effective_at)
+            employee: employee, event_type: "marriage", effective_at: marriage_effective_at)
           employee.reload.events
         end
       end
@@ -157,45 +157,45 @@ RSpec.describe Employee::Event, type: :model do
       end
     end
 
-    context 'when event has type contract_end' do
-      let(:event_type) { 'contract_end' }
+    context "when event has type contract_end" do
+      let(:event_type) { "contract_end" }
       before do
         create(:employee_event,
-          employee: employee, event_type: 'contract_end', effective_at: effective_at)
+          employee: employee, event_type: "contract_end", effective_at: effective_at)
         employee.reload.events
       end
 
-      context 'and previous event is the same' do
+      context "and previous event is the same" do
         let(:effective_at) { subject.effective_at - 1.week }
 
-        it_behaves_like 'Two contract end or hired events in a row'
+        it_behaves_like "Two contract end or hired events in a row"
 
-        context 'and they are separated by other events' do
+        context "and they are separated by other events" do
           let(:marriage_effective_at) { subject.effective_at - 4.days }
           let(:effective_at) { subject.effective_at - 1.week }
 
-          it_behaves_like 'Two contract end or hired events in a row'
+          it_behaves_like "Two contract end or hired events in a row"
         end
       end
 
-      context 'and next event is the same' do
+      context "and next event is the same" do
         let(:effective_at) { subject.effective_at + 1.week }
 
-        it_behaves_like 'Two contract end or hired events in a row'
+        it_behaves_like "Two contract end or hired events in a row"
 
-        context 'and they are separated by other events' do
+        context "and they are separated by other events" do
           let(:marriage_effective_at) { subject.effective_at + 4.days }
 
-          it_behaves_like 'Two contract end or hired events in a row'
+          it_behaves_like "Two contract end or hired events in a row"
         end
       end
     end
 
-    context 'contract end must have hired event' do
-      let(:event_type) { 'contract_end' }
+    context "contract end must have hired event" do
+      let(:event_type) { "contract_end" }
       let(:effective_at) { 1.day.ago }
 
-      shared_examples 'Contract end does not have its hired event' do
+      shared_examples "Contract end does not have its hired event" do
         it { expect(subject).to_not be_valid }
         it do
           expect { subject.valid? }.to change { subject.errors.messages[:event_type] }
@@ -205,63 +205,63 @@ RSpec.describe Employee::Event, type: :model do
         end
       end
 
-      context 'when there is only one contract end' do
-        before { employee.events.first.update!(event_type: 'marriage') }
+      context "when there is only one contract end" do
+        before { employee.events.first.update!(event_type: "marriage") }
 
-        it_behaves_like 'Contract end does not have its hired event'
+        it_behaves_like "Contract end does not have its hired event"
       end
 
-      context 'when this next employee\'s contract end' do
+      context "when this next employee's contract end" do
         before do
-          create(:employee_event, event_type: 'contract_end', employee: employee)
+          create(:employee_event, event_type: "contract_end", employee: employee)
           employee.reload.events
         end
 
-        it_behaves_like 'Contract end does not have its hired event'
+        it_behaves_like "Contract end does not have its hired event"
       end
     end
 
-    context 'when event has type hired' do
-      let(:event_type) { 'hired' }
+    context "when event has type hired" do
+      let(:event_type) { "hired" }
 
-      context 'and previous event is the same' do
-        it_behaves_like 'Two contract end or hired events in a row'
+      context "and previous event is the same" do
+        it_behaves_like "Two contract end or hired events in a row"
 
-        context 'and they are separated by other event' do
+        context "and they are separated by other event" do
           let(:effective_at) { subject.effective_at - 1.hour }
           let(:marriage_effective_at) { subject.effective_at - 1.day }
 
-          it_behaves_like 'Two contract end or hired events in a row'
+          it_behaves_like "Two contract end or hired events in a row"
         end
       end
 
-      context 'and next event is the same' do
+      context "and next event is the same" do
         let(:subject_effective_at) { employee.events.first.effective_at - 10.days }
 
-        it_behaves_like 'Two contract end or hired events in a row'
+        it_behaves_like "Two contract end or hired events in a row"
 
-        context 'and they are separated by other event' do
+        context "and they are separated by other event" do
           let(:marriage_effective_at) { subject.effective_at + 1.day }
 
-          it_behaves_like 'Two contract end or hired events in a row'
+          it_behaves_like "Two contract end or hired events in a row"
         end
       end
     end
   end
 
-  describe '#hired_without_events_and_join_tables_after?' do
-    context 'when rehired events and its assignations are in the future' do
+  describe "#hired_without_events_and_join_tables_after?" do
+    context "when rehired events and its assignations are in the future" do
       let!(:employee) { create(:employee) }
       let!(:hired_etop) do
         create(:employee_time_off_policy, employee: employee, effective_at: 2.months.ago)
       end
       let!(:contract_end) do
         create(:employee_event,
-          event_type: 'contract_end', effective_at: 1.week.ago, employee: employee)
+          event_type: "contract_end", effective_at: 1.week.ago, employee: employee)
       end
       let!(:rehired) do
         create(:employee_event,
-          event_type: 'hired', employee: employee, effective_at: 1.year.since)
+          event_type: "hired", employee: employee, effective_at: 1.year.since)
       end
       let!(:etop) do
         create(:employee_time_off_policy, employee: employee, effective_at: 2.years.since)
@@ -271,7 +271,7 @@ RSpec.describe Employee::Event, type: :model do
 
       it { expect { rehired.destroy! }.to raise_error { ActiveRecord::RecordNotDestroyed } }
 
-      context 'when hired is one day after contract end' do
+      context "when hired is one day after contract end" do
         before do
           etop.destroy!
           rehired.update!(effective_at: contract_end.effective_at + 1.day)
@@ -282,7 +282,7 @@ RSpec.describe Employee::Event, type: :model do
     end
   end
 
-  describe '#balances_before_hired_date' do
+  describe "#balances_before_hired_date" do
     let(:employee) { create(:employee) }
     let!(:etop) do
       create(
@@ -300,19 +300,19 @@ RSpec.describe Employee::Event, type: :model do
     it do
       expect { update_hired_date }.to raise_error(
         ActiveRecord::RecordInvalid,
-        'Validation failed: There can\'t be balances before hired date'
+        "Validation failed: There can't be balances before hired date"
       )
     end
   end
 
-  describe 'work_contract event' do
-    shared_examples 'invalid work contract event - not in contract period' do
+  describe "work_contract event" do
+    shared_examples "invalid work contract event - not in contract period" do
 
-      it 'is invalid' do
+      it "is invalid" do
         expect(subject.valid?).to eq(false)
       end
 
-      it 'has proper error message' do
+      it "has proper error message" do
         expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
           .to include("Work contract must be in work period")
       end
@@ -320,7 +320,7 @@ RSpec.describe Employee::Event, type: :model do
 
     subject do
       build(:employee_event,
-        event_type: 'work_contract', employee: employee, effective_at: work_contract_effective_at)
+        event_type: "work_contract", employee: employee, effective_at: work_contract_effective_at)
     end
 
     let(:hired_date)                 { 3.months.ago }
@@ -329,55 +329,55 @@ RSpec.describe Employee::Event, type: :model do
 
     let(:employee) { create(:employee, hired_at: hired_date, contract_end_at: contract_end_date) }
 
-    context 'is NOT in contract period' do
-      context 'when contract period is in the future' do
-        it_behaves_like 'invalid work contract event - not in contract period'
+    context "is NOT in contract period" do
+      context "when contract period is in the future" do
+        it_behaves_like "invalid work contract event - not in contract period"
       end
 
-      context 'when contract period is in the past' do
+      context "when contract period is in the past" do
         let(:contract_end_date)          { hired_date + 2.months }
         let(:work_contract_effective_at) { contract_end_date + 1.month }
 
-        it_behaves_like 'invalid work contract event - not in contract period'
+        it_behaves_like "invalid work contract event - not in contract period"
       end
 
-      context 'when there are multiple contract periods' do
+      context "when there are multiple contract periods" do
         let(:work_contract_effective_at) { contract_end.effective_at + 1.month }
         let!(:contract_end) do
           create(:employee_event,
-            event_type: 'contract_end', effective_at: hired_date + 2.months, employee: employee)
+            event_type: "contract_end", effective_at: hired_date + 2.months, employee: employee)
         end
         let!(:rehired) do
           create(:employee_event,
-            event_type: 'hired', employee: employee,
+            event_type: "hired", employee: employee,
              effective_at: contract_end.effective_at + 2.months )
         end
 
-        it_behaves_like 'invalid work contract event - not in contract period'
+        it_behaves_like "invalid work contract event - not in contract period"
       end
     end
 
-    context 'is in contract period' do
+    context "is in contract period" do
       let(:work_contract_effective_at) { hired_date + 1.month }
 
-      context 'is valid with only hired' do
+      context "is valid with only hired" do
         it { expect(subject.valid?).to eq(true) }
       end
 
-      context 'is valid with hired and contract_end' do
+      context "is valid with hired and contract_end" do
         let(:contract_end_date) { hired_date + 2.months }
 
         it { expect(subject.valid?).to eq(true) }
       end
 
-      context 'is valid when there are multiple contract periods' do
+      context "is valid when there are multiple contract periods" do
         let!(:contract_end) do
           create(:employee_event,
-            event_type: 'contract_end', effective_at: hired_date + 2.months, employee: employee)
+            event_type: "contract_end", effective_at: hired_date + 2.months, employee: employee)
         end
         let!(:rehired) do
           create(:employee_event,
-            event_type: 'hired', employee: employee,
+            event_type: "hired", employee: employee,
              effective_at: contract_end.effective_at + 1.month )
         end
 
@@ -385,17 +385,17 @@ RSpec.describe Employee::Event, type: :model do
       end
     end
 
-    context 'is on hired date' do
+    context "is on hired date" do
       let(:work_contract_effective_at) { hired_date }
 
-      it_behaves_like 'invalid work contract event - not in contract period'
+      it_behaves_like "invalid work contract event - not in contract period"
     end
 
-    context 'is on contract_end date' do
+    context "is on contract_end date" do
       let(:contract_end_date) { hired_date + 2.months }
       let(:work_contract_effective_at) { contract_end_date }
 
-      it_behaves_like 'invalid work contract event - not in contract period'
+      it_behaves_like "invalid work contract event - not in contract period"
     end
   end
 end

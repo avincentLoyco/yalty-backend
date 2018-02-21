@@ -1,5 +1,5 @@
 namespace :fix_employees_quantity do
-  desc 'Fix quantity for accounts in stripe'
+  desc "Fix quantity for accounts in stripe"
   task update_stripe: :environment do
     Account.where.not(subscription_id: nil).find_each do |account|
       employees_count = account.employees.chargeable_at_date(Time.zone.today).count

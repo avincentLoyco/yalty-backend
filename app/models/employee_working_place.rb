@@ -11,7 +11,7 @@ class EmployeeWorkingPlace < ActiveRecord::Base
 
   scope :with_reset, -> { joins(:working_place).where(working_places: { reset: true }) }
   scope :not_reset, -> { joins(:working_place).where(working_places: { reset: false }) }
-  scope :assigned_since, ->(date) { where('effective_at >= ?', date) }
+  scope :assigned_since, ->(date) { where("effective_at >= ?", date) }
 
   alias related_resource working_place
 end

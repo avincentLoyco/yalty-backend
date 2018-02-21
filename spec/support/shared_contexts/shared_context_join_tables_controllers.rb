@@ -1,4 +1,4 @@
-RSpec.shared_context 'shared_context_join_tables_controller' do |settings|
+RSpec.shared_context "shared_context_join_tables_controller" do |settings|
   let(:resource_name) { "#{settings[:resource]}_id".to_sym }
 
   if settings[:resource].eql?(:time_off_policy)
@@ -17,27 +17,27 @@ RSpec.shared_context 'shared_context_join_tables_controller' do |settings|
   end
   let!(:contract_end) do
     create(:employee_event,
-      employee: employee, effective_at: Date.today, event_type: 'contract_end')
+      employee: employee, effective_at: Date.today, event_type: "contract_end")
   end
   let!(:rehired_event) do
     create(:employee_event,
-      employee: employee, effective_at: 1.year.since, event_type: 'hired')
+      employee: employee, effective_at: 1.year.since, event_type: "hired")
   end
   let(:reset_resource) { employee.send(settings[:join_table].to_s.pluralize).with_reset.first }
 
-  describe 'GET #index' do
+  describe "GET #index" do
     subject { get :index, resource_name => resource.id }
 
     it { is_expected.to have_http_status(200) }
-    it 'takes contract end date into consideration' do
+    it "takes contract end date into consideration" do
       subject
 
       parsed_response = JSON.parse(response.body)
-      expect(parsed_response.first['effective_till']).to eq contract_end.effective_at.to_s
+      expect(parsed_response.first["effective_till"]).to eq contract_end.effective_at.to_s
     end
   end
 
-  describe 'POST #create' do
+  describe "POST #create" do
     before { params.merge!(order_of_start_day: 1) if settings[:resource].eql?(:presence_policy) }
     subject { post :create, params }
 
@@ -54,11 +54,11 @@ RSpec.shared_context 'shared_context_join_tables_controller' do |settings|
     it do
       subject
 
-      expect(response.body).to include 'Can not assign in reset resource effective at'
+      expect(response.body).to include "Can not assign in reset resource effective at"
     end
   end
 
-  describe 'PUT #update' do
+  describe "PUT #update" do
     before { params.merge!(order_of_start_day: 1) if settings[:resource].eql?(:presence_policy) }
     subject { put :update, params }
 
@@ -73,7 +73,7 @@ RSpec.shared_context 'shared_context_join_tables_controller' do |settings|
     it { expect { subject }.to_not change { reset_resource.reload.effective_at } }
   end
 
-  describe 'DELETE #destroy' do
+  describe "DELETE #destroy" do
     subject { delete :destroy, id: reset_resource.id }
 
     it { is_expected.to have_http_status(404) }

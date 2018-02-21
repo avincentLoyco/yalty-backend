@@ -4,7 +4,7 @@ class TimeOffCategory < ActiveRecord::Base
   belongs_to :account
   has_many :time_offs
   has_many :time_off_policies
-  has_many :employee_balances, class_name: 'Employee::Balance'
+  has_many :employee_balances, class_name: "Employee::Balance"
 
   validates :account, :name, presence: true
   validates :name, uniqueness: { scope: :account }
@@ -33,6 +33,6 @@ class TimeOffCategory < ActiveRecord::Base
   end
 
   def create_reset_policy!
-    time_off_policies.create!(reset: true, name: 'Reset time off policy')
+    time_off_policies.create!(reset: true, name: "Reset time off policy")
   end
 end

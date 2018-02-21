@@ -1,4 +1,4 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe TimeOffCategory, type: :model do
   it { is_expected.to have_db_column(:id).of_type(:uuid) }
@@ -16,7 +16,7 @@ RSpec.describe TimeOffCategory, type: :model do
 
   it { expect(TimeOffCategory.new.system).to eq false }
 
-  context 'editable scope' do
+  context "editable scope" do
     let!(:editable_category) { create(:time_off_category) }
     let!(:system_category) { create(:time_off_category, :system) }
 
@@ -25,19 +25,19 @@ RSpec.describe TimeOffCategory, type: :model do
     it { expect(TimeOffCategory.editable).to_not include(system_category) }
   end
 
-  context 'uniqueness validation' do
+  context "uniqueness validation" do
     let(:category) { build(:time_off_category) }
     let(:duplicate_category) { category.dup }
 
     before { category.save }
 
-    context 'with the same account' do
+    context "with the same account" do
       it { expect(duplicate_category.valid?).to eq false }
       it { expect { duplicate_category.valid? }
         .to change { duplicate_category.errors.messages.count }.by(1) }
     end
 
-    context 'with other accounts' do
+    context "with other accounts" do
       let(:same_name_category) { build(:time_off_category, name: category.name) }
 
       it { expect(same_name_category.valid?).to eq true }
@@ -46,13 +46,13 @@ RSpec.describe TimeOffCategory, type: :model do
     end
   end
 
-  describe 'reset policy' do
+  describe "reset policy" do
     let!(:account) { create(:account) }
     let(:category) { build(:time_off_category, account: account) }
 
     it { expect { category.save! }.to change(TimeOffPolicy, :count).by(1) }
 
-    context 'policy has reset flag' do
+    context "policy has reset flag" do
       before { category.save! }
 
       it { expect(category.time_off_policies.last.reset).to be(true) }

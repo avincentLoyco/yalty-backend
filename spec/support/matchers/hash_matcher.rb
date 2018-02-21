@@ -1,4 +1,4 @@
-require 'rspec/expectations'
+require "rspec/expectations"
 
 RSpec::Matchers.define :match_hash do |expected|
   @errors = nil
@@ -10,7 +10,7 @@ RSpec::Matchers.define :match_hash do |expected|
 
   def keys_and_values_match?
     result = expected.is_a?(Hash) ? check_for_hash : check_for_array_of_hashes
-    @errors = 'keys and values do not match' unless result
+    @errors = "keys and values do not match" unless result
     result
   end
 
@@ -50,18 +50,18 @@ RSpec::Matchers.define :match_hash do |expected|
   def length_match?
     result = (actual.is_a?(Hash) && actual.size == expected.size) ||
       actual.map(&:keys).flatten.size == expected.map(&:keys).flatten.size
-    @errors = 'length is not matching' unless result
+    @errors = "length is not matching" unless result
     result
   end
 
   def type_match?
-    @errors = 'type is not matching' if expected.class != actual.class
+    @errors = "type is not matching" if expected.class != actual.class
     expected.class == actual.class
   end
 
   def hash_or_array_of_hashes?
     result = expected.is_a?(Hash) || is_array_of_hashes?
-    @errors = 'expected value must be a hash of array of hashes' unless result
+    @errors = "expected value must be a hash of array of hashes" unless result
     result
   end
 

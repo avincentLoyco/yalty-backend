@@ -1,12 +1,12 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe ActiveAndInactiveJoinTableFinders do
-  include_context 'shared_context_account_helper'
+  include_context "shared_context_account_helper"
 
   let(:account) { create(:account) }
   let!(:employee) { create(:employee, account: account) }
 
-  shared_examples 'Without join tables assigned' do
+  shared_examples "Without join tables assigned" do
     subject do
       ActiveAndInactiveJoinTableFinders
         .new(resource_class, join_table_class, account.id)
@@ -20,7 +20,7 @@ RSpec.describe ActiveAndInactiveJoinTableFinders do
     it { expect(subject).to_not include resources.last.id }
   end
 
-  shared_examples 'Assigned ids' do
+  shared_examples "Assigned ids" do
     subject do
       ActiveAndInactiveJoinTableFinders
         .new(resource_class, join_table_class, account.id)
@@ -34,7 +34,7 @@ RSpec.describe ActiveAndInactiveJoinTableFinders do
     it { expect(subject).to_not include resources.third.id }
   end
 
-  context 'PresencePolicy' do
+  context "PresencePolicy" do
     before do
       create(:employee_presence_policy,
         employee: employee, presence_policy: resources.third, effective_at: Time.now - 1.year)
@@ -46,11 +46,11 @@ RSpec.describe ActiveAndInactiveJoinTableFinders do
     let(:join_table_class) { EmployeePresencePolicy }
     let(:resources) { create_list(:presence_policy, 4, :with_presence_day, account: account) }
 
-    it_behaves_like 'Without join tables assigned'
-    it_behaves_like 'Assigned ids'
+    it_behaves_like "Without join tables assigned"
+    it_behaves_like "Assigned ids"
   end
 
-  context 'WorkingPlace' do
+  context "WorkingPlace" do
     before do
       create(:employee_working_place,
         employee: employee, working_place: resources.third, effective_at: Time.now - 6.years)
@@ -62,11 +62,11 @@ RSpec.describe ActiveAndInactiveJoinTableFinders do
     let(:join_table_class) { EmployeeWorkingPlace }
     let(:resources) { create_list(:working_place, 4, account: account) }
 
-    it_behaves_like 'Without join tables assigned'
-    it_behaves_like 'Assigned ids'
+    it_behaves_like "Without join tables assigned"
+    it_behaves_like "Assigned ids"
   end
 
-  context 'TimeOffPolicy' do
+  context "TimeOffPolicy" do
     before do
       create(:employee_time_off_policy,
         employee: employee, time_off_policy: resources.third, effective_at: Time.now - 1.year)
@@ -79,7 +79,7 @@ RSpec.describe ActiveAndInactiveJoinTableFinders do
     let(:category) { create(:time_off_category, account: account) }
     let(:resources) { create_list(:time_off_policy, 4, time_off_category: category) }
 
-    it_behaves_like 'Without join tables assigned'
-    it_behaves_like 'Assigned ids'
+    it_behaves_like "Without join tables assigned"
+    it_behaves_like "Assigned ids"
   end
 end

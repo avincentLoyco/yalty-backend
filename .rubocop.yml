@@ -1,46 +1,38 @@
+inherit_from: .rubocop_todo.yml
+
+require: rubocop-rspec
+
 AllCops:
+  DisplayCopNames: true
   Exclude:
-    - 'bin/**/*'
+    - 'config.ru'
+    - 'Rakefile'
+    - 'db/migrate/*'
+    - 'db/schema.rb'
+    - 'db/seeds.rb'
     - 'config/**/*'
-    - 'db/**/*'
+    - 'bin/*'
+    - 'script/*'
     - 'vendor/**/*'
-    - 'spec/**/*'
 
 Rails:
   Enabled: true
 
-Rails/FindBy:
-  Enabled: false
-
-Metrics/AbcSize:
-  Enabled: false
-
-Metrics/ClassLength:
-  Enabled: false
-
-Metrics/CyclomaticComplexity:
-  Enabled: false
+Metrics:
+  Exclude:
+    - 'app/models/ability.rb'
 
 Metrics/LineLength:
   Max: 100
+  Exclude:
+    - 'spec/**/*'
 
-Metrics/MethodLength:
-  Enabled: false
+Metrics/ModuleLength:
+  Max: 150
 
-Metrics/ParameterLists:
-  Enabled: false
-
-Metrics/PerceivedComplexity:
-  Enabled: false
-
-Style/Documentation:
-  Enabled: false
-
-Style/ClassAndModuleChildren:
-  Enabled: false
-
-Style/AlignParameters:
-  EnforcedStyle: with_fixed_indentation
+Metrics/BlockLength:
+  Exclude:
+    - spec/controllers/**/*
 
 Style/BracesAroundHashParameters:
   EnforcedStyle: context_dependent
@@ -48,8 +40,45 @@ Style/BracesAroundHashParameters:
 Style/FrozenStringLiteralComment:
   Enabled: false
 
-Style/MultilineOperationIndentation:
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+Style/StringLiteralsInInterpolation:
+  EnforcedStyle: double_quotes
+
+Style/BracesAroundHashParameters:
+  EnforcedStyle: context_dependent
+
+Style/TrailingCommaInArguments:
+  EnforcedStyleForMultiline: comma
+
+Style/TrailingCommaInLiteral:
+  EnforcedStyleForMultiline: comma
+
+Style/NumericPredicate:
+  AutoCorrect: true
+
+Style/SymbolArray:
+  Enabled: false
+
+Style/PercentLiteralDelimiters:
+  PreferredDelimiters:
+    '%i': '()'
+    '%w': '()'
+    '%W': '()'
+
+Layout/MultilineOperationIndentation:
   EnforcedStyle: indented
 
-Style/SingleLineBlockParams:
-  Enabled: false
+Layout/SpaceInLambdaLiteral:
+  EnforcedStyle: require_space
+
+Layout/AlignParameters:
+  EnforcedStyle: with_fixed_indentation
+
+Lint/AmbiguousBlockAssociation:
+  Exclude:
+    - "spec/**/*"
+
+Lint/DefEndAlignment:
+  AutoCorrect: true

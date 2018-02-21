@@ -8,7 +8,7 @@ class ServiceRequestMailer < ApplicationMailer
 
     I18n.with_locale(@user.locale || @account.default_locale) do
       mail to: @user.email,
-           bcc: [ENV['YALTY_SERVICE_EMAIL'], ENV['CJODRY_EMAIL']]
+           bcc: [ENV["YALTY_SERVICE_EMAIL"], ENV["CJODRY_EMAIL"]]
     end
   end
 
@@ -19,7 +19,7 @@ class ServiceRequestMailer < ApplicationMailer
 
     I18n.with_locale(@user.locale || @account.default_locale) do
       mail to: @user.email,
-           bcc: ENV['YALTY_SERVICE_EMAIL']
+           bcc: ENV["YALTY_SERVICE_EMAIL"]
     end
   end
 

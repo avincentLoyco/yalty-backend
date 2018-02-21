@@ -1,5 +1,5 @@
 namespace :presence_policies do
-  desc 'Update presence policies to have seven presence days assigned, updates balances if needed'
+  desc "Update presence policies to have seven presence days assigned, updates balances if needed"
   task add_missing_days: :environment do
     ActiveRecord::Base.transaction do
       not_seven_days_policies.map do |policy|
@@ -17,8 +17,8 @@ namespace :presence_policies do
   def not_seven_days_policies
     PresencePolicy
       .joins(:presence_days)
-      .group('presence_policies.id')
-      .having('count(presence_days.id) != 7')
+      .group("presence_policies.id")
+      .having("count(presence_days.id) != 7")
   end
 
   def create_missing_days(policy, missing_days_order)
@@ -36,7 +36,7 @@ namespace :presence_policies do
     Employee
       .find(employee_id)
       .employee_balances
-      .where('effective_at >= ?', epp.effective_at)
+      .where("effective_at >= ?", epp.effective_at)
       .order(:effective_at)
       .group_by { |balance| balance[:time_off_category_id] }
   end

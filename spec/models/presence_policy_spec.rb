@@ -1,4 +1,4 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe PresencePolicy, type: :model do
   let(:employee) { create(:employee, :with_presence_policy) }
@@ -26,8 +26,8 @@ RSpec.describe PresencePolicy, type: :model do
       .is_greater_than_or_equal_to(0)
   end
 
-  context 'scopes' do
-    context '.active_for_employee' do
+  context "scopes" do
+    context ".active_for_employee" do
       let(:presence_policy) { create(:presence_policy) }
 
       subject { described_class.active_for_employee(employee.id, Time.now) }
@@ -38,7 +38,7 @@ RSpec.describe PresencePolicy, type: :model do
       it { expect(subject.id).not_to eq(presence_policy.id) }
     end
 
-    context '.for_account' do
+    context ".for_account" do
       let(:account) { create(:account) }
       let!(:presence_policies) { create_list(:presence_policy, 3, account: account) }
       let!(:other_presence_policies) { create_list(:presence_policy, 3) }
@@ -46,13 +46,13 @@ RSpec.describe PresencePolicy, type: :model do
 
       subject(:for_account_scope) { described_class.for_account(account.id) }
 
-      it 'returns presence policies only for given account' do
+      it "returns presence policies only for given account" do
         expect(for_account_scope.count).to eq(4)
         expect(for_account_scope).to match_array(all_presence_policies)
       end
     end
 
-    context '.full-time' do
+    context ".full-time" do
       let(:presence_policy) { create(:presence_policy, default_full_time: true) }
       let(:account) { presence_policy.account }
       it do
@@ -62,51 +62,51 @@ RSpec.describe PresencePolicy, type: :model do
     end
   end
 
-  context 'callbacks' do
-    context '.set_standard_day_duration' do
+  context "callbacks" do
+    context ".set_standard_day_duration" do
       let(:presence_days) { build_list(:presence_day, 3, minutes: 140) }
       let!(:policy) { create(:presence_policy, presence_days: presence_days) }
 
       it { expect(policy.reload.standard_day_duration).to eq(140) }
 
-      context 'there already is standard_day_duration' do
-        subject { policy.update!(name: 'test') }
+      context "there already is standard_day_duration" do
+        subject { policy.update!(name: "test") }
 
         it { expect { subject }.to_not change { policy.reload.standard_day_duration } }
       end
 
-      context 'standard_day_duration is set manueally' do
+      context "standard_day_duration is set manueally" do
         subject { policy.update!(standard_day_duration: 80) }
 
         it { expect { subject }.to change { policy.reload.standard_day_duration }.from(140).to(80) }
       end
     end
 
-    context '.trigger_intercom_update' do
+    context ".trigger_intercom_update" do
       let!(:account) { create(:account) }
       let(:policy) { build(:presence_policy, account: account) }
 
-      it 'should invoke trigger_intercom_update method' do
+      it "should invoke trigger_intercom_update method" do
         expect(policy).to receive(:trigger_intercom_update)
         policy.save!
       end
 
-      it 'should trigger create_or_update_on_intercom on account' do
+      it "should trigger create_or_update_on_intercom on account" do
         expect(account).to receive(:create_or_update_on_intercom).with(true)
         policy.save!
       end
     end
   end
 
-  context 'sets one default policy' do
+  context "sets one default policy" do
     let!(:full_time_presence_policy) do
       create(:presence_policy, default_full_time: true, account: account)
     end
 
-    context 'when new policy is default' do
+    context "when new policy is default" do
       let(:full_time) { true }
 
-      it 'changes existing default policy to not default' do
+      it "changes existing default policy to not default" do
         subject.save!
         expect(full_time_presence_policy.reload.default_full_time).to eq(false)
       end
@@ -116,10 +116,10 @@ RSpec.describe PresencePolicy, type: :model do
       end
     end
 
-    context 'when new policy isnt default' do
+    context "when new policy isnt default" do
       let(:full_time) { false }
 
-      it 'does not change existing default policy' do
+      it "does not change existing default policy" do
         subject
         expect(full_time_presence_policy.reload.default_full_time).to eq(true)
       end

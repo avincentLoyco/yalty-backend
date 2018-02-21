@@ -3,20 +3,20 @@ class Employee::AttributeVersion < ActiveRecord::Base
 
   belongs_to :employee, inverse_of: :employee_attribute_versions, required: true
   belongs_to :event,
-    class_name: 'Employee::Event',
-    foreign_key: 'employee_event_id',
+    class_name: "Employee::Event",
+    foreign_key: "employee_event_id",
     inverse_of: :employee_attribute_versions,
     required: true
   has_one :account, through: :employee
 
   validates :attribute_definition_id,
     uniqueness: { allow_nil: true, scope: [:employee, :event] },
-    if: '!multiple?'
+    if: "!multiple?"
   validates :order,
     uniqueness: { allow_nil: true, scope: [:employee, :attribute_definition] },
-    if: 'multiple?'
+    if: "multiple?"
 
-  validates :order, presence: true, if: 'multiple?'
+  validates :order, presence: true, if: "multiple?"
 
   scope :visible_for_other_employees, lambda {
     joins(:attribute_definition)

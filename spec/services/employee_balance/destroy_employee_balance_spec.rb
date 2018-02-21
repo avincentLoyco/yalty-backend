@@ -1,4 +1,4 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe DestroyEmployeeBalance, type: :service do
   let(:update) { true }
@@ -10,11 +10,11 @@ RSpec.describe DestroyEmployeeBalance, type: :service do
 
   subject { DestroyEmployeeBalance.new(balance, update).call }
 
-  shared_examples 'Dependent balances update' do
+  shared_examples "Dependent balances update" do
     let(:balances_to_update) { balances - [balance].flatten }
 
-    context 'when update flag is true' do
-      it 'updates later balances' do
+    context "when update flag is true" do
+      it "updates later balances" do
         subject
 
         balances_to_update.map do |balance|
@@ -23,10 +23,10 @@ RSpec.describe DestroyEmployeeBalance, type: :service do
       end
     end
 
-    context 'when update flag is false' do
+    context "when update flag is false" do
       let(:update) { false }
 
-      it 'does not update later balances' do
+      it "does not update later balances" do
         subject
 
         balances_to_update.map do |balance|
@@ -36,14 +36,14 @@ RSpec.describe DestroyEmployeeBalance, type: :service do
     end
   end
 
-  shared_examples 'Given balances and their removals destroy' do
+  shared_examples "Given balances and their removals destroy" do
     let(:to_destroy) do
       ids = balance.is_a?(Array) ? balance.map(&:id) : balance.id
       Employee::Balance.where(id: ids)
     end
 
-    context 'when balances to destroy do not have removals' do
-      it 'removes send balances' do
+    context "when balances to destroy do not have removals" do
+      it "removes send balances" do
         subject
 
         to_destroy.map do |balance|
@@ -54,7 +54,7 @@ RSpec.describe DestroyEmployeeBalance, type: :service do
       it { expect { subject }.to change { Employee::Balance.count }.by(-to_destroy.size) }
     end
 
-    context 'when balances to destroy have removals' do
+    context "when balances to destroy have removals" do
       before do
         TimeOffPolicy.not_reset.first.update!(end_day: 1, end_month: 4, years_to_effect: 1)
         to_destroy.map { |balance| UpdateEmployeeBalance.new(balance).call }
@@ -63,7 +63,7 @@ RSpec.describe DestroyEmployeeBalance, type: :service do
 
       let(:removals) { to_destroy.map(&:balance_credit_removal_id) }
 
-      it 'removes proper balances' do
+      it "removes proper balances" do
         subject
 
         to_destroy.map do |balance|
@@ -71,7 +71,7 @@ RSpec.describe DestroyEmployeeBalance, type: :service do
         end
       end
 
-      it 'removes balances removals' do
+      it "removes balances removals" do
         subject
 
         removals.map do |removal_id|
@@ -83,26 +83,26 @@ RSpec.describe DestroyEmployeeBalance, type: :service do
     end
   end
 
-  context 'when single balance send' do
+  context "when single balance send" do
     let(:balance) { balances.first }
 
-    it_behaves_like 'Dependent balances update'
-    it_behaves_like 'Given balances and their removals destroy'
+    it_behaves_like "Dependent balances update"
+    it_behaves_like "Given balances and their removals destroy"
   end
 
-  context 'when array of balances send' do
-    context 'when two balances send' do
+  context "when array of balances send" do
+    context "when two balances send" do
       let!(:balance) { balances.first(2) }
 
-      it_behaves_like 'Dependent balances update'
-      it_behaves_like 'Given balances and their removals destroy'
+      it_behaves_like "Dependent balances update"
+      it_behaves_like "Given balances and their removals destroy"
     end
 
-    context 'when all balances send' do
+    context "when all balances send" do
       let!(:balance) { balances.first(3) }
 
-      it_behaves_like 'Dependent balances update'
-      it_behaves_like 'Given balances and their removals destroy'
+      it_behaves_like "Dependent balances update"
+      it_behaves_like "Given balances and their removals destroy"
     end
   end
 end

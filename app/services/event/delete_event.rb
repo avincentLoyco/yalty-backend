@@ -31,12 +31,12 @@ class DeleteEvent
   end
 
   def remove_reset_resources
-    return unless event.event_type.eql?('contract_end')
+    return unless event.event_type.eql?("contract_end")
     ClearResetJoinTables.new(employee, event.effective_at - 1.day, nil, true).call
   end
 
   def create_missing_balances
-    return unless event.event_type.eql?('contract_end')
+    return unless event.event_type.eql?("contract_end")
     policies_by_category.map do |_category, policies|
       ManageEmployeeBalanceAdditions.new(policies.last).call
       next unless policies.last.time_off_policy.end_day.present?

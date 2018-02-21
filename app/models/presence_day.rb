@@ -7,7 +7,7 @@ class PresenceDay < ActiveRecord::Base
 
   scope :with_entries, lambda { |policy_id|
     joins(:time_entries)
-      .where('time_entries.id IS NOT NULL AND presence_policy_id = ?', policy_id)
+      .where("time_entries.id IS NOT NULL AND presence_policy_id = ?", policy_id)
   }
 
   def update_minutes!

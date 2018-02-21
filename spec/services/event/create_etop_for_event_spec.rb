@@ -1,17 +1,17 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe CreateEtopForEvent do
-  include_context 'shared_context_account_helper'
+  include_context "shared_context_account_helper"
 
   let!(:effective_at) { Date.new(2017, 5, 1) }
-  let(:event_type) { 'hired' }
+  let(:event_type) { "hired" }
   let(:event) do
     create(:employee_event,
       effective_at: effective_at,
       event_type: event_type)
   end
   let(:employee) { event.employee }
-  let!(:vacation_category) { create(:time_off_category, account: employee.account, name: 'vacation') }
+  let!(:vacation_category) { create(:time_off_category, account: employee.account, name: "vacation") }
   let!(:presence_policy) do
     create(:presence_policy, :with_time_entries, account: employee.account, occupation_rate: 0.8,
       standard_day_duration: 9600, default_full_time: true)
@@ -20,7 +20,7 @@ RSpec.describe CreateEtopForEvent do
   let(:time_off_policy_amount) { 9600 }
   let!(:occupation_rate_definition) do
     create(:employee_attribute_definition,
-           name: 'occupation_rate',
+           name: "occupation_rate",
            account: employee.account,
            attribute_type: Attribute::Number.attribute_type,
            validation: { range: [0, 1] }
@@ -33,7 +33,7 @@ RSpec.describe CreateEtopForEvent do
 
   subject { described_class.new(event.id, time_off_policy_amount).call }
 
-  shared_examples 'there is no time off policy' do
+  shared_examples "there is no time off policy" do
     it { expect { subject }.to change(TimeOffPolicy.where(time_off_category_id:
       vacation_category.id), :count).by(1) }
     it { expect { subject }.to change(EmployeeTimeOffPolicy.where(time_off_category_id:
@@ -44,7 +44,7 @@ RSpec.describe CreateEtopForEvent do
     end
   end
 
-  shared_examples 'time off policy exists' do
+  shared_examples "time off policy exists" do
     before do
       create(:time_off_policy,
         time_off_category_id: vacation_category.id,
@@ -64,21 +64,21 @@ RSpec.describe CreateEtopForEvent do
     end
   end
 
-  context 'when hired event happens' do
-    context 'and time off policy of given amount does not exist' do
-      it_behaves_like 'there is no time off policy'
+  context "when hired event happens" do
+    context "and time off policy of given amount does not exist" do
+      it_behaves_like "there is no time off policy"
     end
-    context 'and time off policy of given amount already exists' do
-      it_behaves_like 'time off policy exists'
+    context "and time off policy of given amount already exists" do
+      it_behaves_like "time off policy exists"
     end
   end
-  context 'when work contract event happens' do
-    let(:event_type) { 'work_contract' }
-    context 'and time off policy of given amount does not exist' do
-      it_behaves_like 'there is no time off policy'
+  context "when work contract event happens" do
+    let(:event_type) { "work_contract" }
+    context "and time off policy of given amount does not exist" do
+      it_behaves_like "there is no time off policy"
     end
-    context 'and time off policy of given amount does exist' do
-      it_behaves_like 'time off policy exists'
+    context "and time off policy of given amount does exist" do
+      it_behaves_like "time off policy exists"
     end
   end
 end

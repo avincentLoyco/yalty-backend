@@ -2,21 +2,21 @@ namespace :rbenv do
   task :install_rbenv do
     on release_roles(fetch(:rbenv_roles)) do
       next if test "[ -d #{fetch(:rbenv_path)} ]"
-      execute :git, :clone, 'https://github.com/rbenv/rbenv.git', fetch(:rbenv_path)
+      execute :git, :clone, "https://github.com/rbenv/rbenv.git", fetch(:rbenv_path)
     end
   end
 
   task :install_ruby_build do
-    rbenv_ruby_build_path = File.join(fetch(:rbenv_path), 'plugins', 'ruby-build')
+    rbenv_ruby_build_path = File.join(fetch(:rbenv_path), "plugins", "ruby-build")
 
     on release_roles(fetch(:rbenv_roles)) do
       next if test "[ -d #{rbenv_ruby_build_path} ]"
-      execute :git, :clone, 'https://github.com/sstephenson/ruby-build.git', rbenv_ruby_build_path
+      execute :git, :clone, "https://github.com/sstephenson/ruby-build.git", rbenv_ruby_build_path
     end
   end
 
   task :install_ruby do
-    rbenv_ruby_build_path = File.join(fetch(:rbenv_path), 'plugins', 'ruby-build')
+    rbenv_ruby_build_path = File.join(fetch(:rbenv_path), "plugins", "ruby-build")
 
     on release_roles(fetch(:rbenv_roles)) do
       next if test "[ -d #{fetch(:rbenv_ruby_dir)} ]"
@@ -44,13 +44,13 @@ namespace :rbenv do
         execute "cd #{fetch(:local_temporary_root)}; gem fetch bundler -v #{bundler_version}"
       end
 
-      execute :mkdir, '-p', fetch(:remote_temporary_root)
+      execute :mkdir, "-p", fetch(:remote_temporary_root)
       upload! local_gem_path, fetch(:remote_temporary_root)
-      execute :gem, :install, '--force --local --quiet --no-rdoc --no-ri', remote_gem_path
+      execute :gem, :install, "--force --local --quiet --no-rdoc --no-ri", remote_gem_path
     end
   end
 
-  desc 'Run rbenv rehash command'
+  desc "Run rbenv rehash command"
   task rehash: [:'rbenv:install'] do
     on release_roles(fetch(:rbenv_roles)) do
       execute :rbenv, :rehash
@@ -69,25 +69,25 @@ namespace :rbenv do
       SSHKit.config.command_map.prefix[command.to_sym].unshift(rbenv_prefix)
     end
     fetch(:bundle_map_bins).each do |command|
-      SSHKit.config.command_map.prefix[command.to_sym].unshift('bundle exec')
+      SSHKit.config.command_map.prefix[command.to_sym].unshift("bundle exec")
       SSHKit.config.command_map.prefix[command.to_sym].unshift(rbenv_prefix)
     end
   end
 
-  desc 'Install rbenv ruby'
+  desc "Install rbenv ruby"
   task :install do
-    invoke 'rbenv:install_rbenv'
-    invoke 'rbenv:install_ruby_build'
-    invoke 'rbenv:install_ruby'
-    invoke 'rbenv:install_bundler'
+    invoke "rbenv:install_rbenv"
+    invoke "rbenv:install_ruby_build"
+    invoke "rbenv:install_ruby"
+    invoke "rbenv:install_bundler"
   end
 
-  before 'deploy:publishing', 'rbenv:rehash'
+  before "deploy:publishing", "rbenv:rehash"
 end
 
 Capistrano::DSL.stages.each do |stage|
-  after stage, 'rbenv:install'
-  after stage, 'rbenv:map_bins'
+  after stage, "rbenv:install"
+  after stage, "rbenv:map_bins"
 end
 
 namespace :load do

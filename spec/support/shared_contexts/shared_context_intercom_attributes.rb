@@ -1,4 +1,4 @@
-RSpec.shared_context 'shared_context_intercom_attributes' do
+RSpec.shared_context "shared_context_intercom_attributes" do
   let(:proper_account_intercom_attributes) do
     %w(
       id created_at company_name subdomain referred_by yalty_access

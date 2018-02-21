@@ -30,11 +30,11 @@ FactoryGirl.define do
               presence_day.time_entries << create(:time_entry,
                 presence_day: presence_day,
                 start_time: Tod::TimeOfDay.new(12) - hours_per_time_entry,
-                end_time: '12:00'
+                end_time: "12:00"
               )
               presence_day.time_entries << create(:time_entry,
                 presence_day: presence_day,
-                start_time: '13:00',
+                start_time: "13:00",
                 end_time: Tod::TimeOfDay.new(13) + hours_per_time_entry
               )
             else

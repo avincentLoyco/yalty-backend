@@ -60,7 +60,7 @@ class ScheduleForEmployee
         SplitTimeEntriesByTimeEntriesForDate.new(
           @time_entries_in_range[date],
           @time_off_in_range[date],
-          'working_time'
+          "working_time"
         ).call
     end
   end

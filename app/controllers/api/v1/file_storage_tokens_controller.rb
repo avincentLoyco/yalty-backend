@@ -26,9 +26,9 @@ module API
         raise(
           CustomError,
           type: controller_name,
-          field: 'version',
-          messages: ['Requested version of the file does not exist'],
-          codes: ['version.requested_version_of_the_file_does_not_exist']
+          field: "version",
+          messages: ["Requested version of the file does not exist"],
+          codes: ["version.requested_version_of_the_file_does_not_exist"]
         )
       end
 
@@ -37,14 +37,14 @@ module API
         raise(
           CustomError,
           type: controller_name,
-          field: 'duration',
-          messages: ['Requested longterm token when not allowed'],
-          codes: ['duration.requested_longterm_token_when_not_allowed']
+          field: "duration",
+          messages: ["Requested longterm token when not allowed"],
+          codes: ["duration.requested_longterm_token_when_not_allowed"]
         )
       end
 
       def incorrect_duration?(attr_version, duration)
-        duration.present? && duration.eql?('longterm') &&
+        duration.present? && duration.eql?("longterm") &&
           !attr_version.attribute_definition.long_token_allowed
       end
 

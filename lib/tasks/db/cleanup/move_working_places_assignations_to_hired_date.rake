@@ -1,6 +1,6 @@
 namespace :db do
   namespace :cleanup do
-    desc 'Move employee working places which effective at is before hired date'
+    desc "Move employee working places which effective at is before hired date"
     task move_working_places_assignations_to_hired_date: [:environment] do
       Employee.find_each do |employee|
         first_ewp = employee.employee_working_places.order(:effective_at).first

@@ -13,9 +13,9 @@ class AssignResetJoinTable
     return unless @contract_end_date.present? && create_reset_join_table?
 
     case @resources_name
-    when 'presence_policies' then assing_presence_policy
-    when 'working_places' then assing_working_place
-    when 'time_off_policies' then assing_time_off_policies
+    when "presence_policies" then assing_presence_policy
+    when "working_places" then assing_working_place
+    when "time_off_policies" then assing_time_off_policies
     end
   end
 
@@ -85,7 +85,7 @@ class AssignResetJoinTable
 
   def create_reset_join_table?
     resources_present =
-      if @resources_name.eql?('time_off_policies')
+      if @resources_name.eql?("time_off_policies")
         @employee.time_off_categories.distinct.present?
       else
         @employee.send(@resources_name)

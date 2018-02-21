@@ -26,7 +26,7 @@ module Policy
       end
 
       def lockname
-        ['time_off_policy', time_off_policy_amount].join
+        ["time_off_policy", time_off_policy_amount].join
       end
     end
   end

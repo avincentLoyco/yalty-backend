@@ -1,12 +1,12 @@
 namespace :db do
   namespace :cleanup do
-    desc 'Remove duplicated join tables, update balances if any affected'
+    desc "Remove duplicated join tables, update balances if any affected"
 
     task remove_duplicated_join_tables: :environment do
       join_tables_with_resources = [
-        [EmployeeWorkingPlace, 'working_place_id'],
-        [EmployeePresencePolicy, 'presence_policy_id'],
-        [EmployeeTimeOffPolicy, 'time_off_policy_id']
+        [EmployeeWorkingPlace, "working_place_id"],
+        [EmployeePresencePolicy, "presence_policy_id"],
+        [EmployeeTimeOffPolicy, "time_off_policy_id"]
       ]
 
       join_tables_to_delete = join_tables_with_resources.map do |join_table_class, resource_class|

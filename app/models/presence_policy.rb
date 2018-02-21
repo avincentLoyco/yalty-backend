@@ -32,7 +32,7 @@ class PresencePolicy < ActiveRecord::Base
 	      AND employee_events.event_type = 'hired'
 	      ORDER BY employee_events.effective_at DESC LIMIT 1
         ) AND ?::date", employee_id, employee_id, date.to_date, date.to_date)
-      .order('employee_presence_policies.effective_at DESC')
+      .order("employee_presence_policies.effective_at DESC")
   end)
 
   def self.active_for_employee(employee_id, date)
@@ -50,7 +50,7 @@ class PresencePolicy < ActiveRecord::Base
   def set_uniq_default_full_time
     account.presence_policies
            .where(default_full_time: true)
-           .where('id != ?', id)
+           .where("id != ?", id)
            .update_all(default_full_time: false)
   end
 end

@@ -1,31 +1,31 @@
 #!/usr/bin/env ruby
-require 'travis/pro'
-require 'octokit'
+require "travis/pro"
+require "octokit"
 
 #
 # Configure
 #
 
-if ENV['GITHUB_ACCESS_TOKEN'].nil?
-  puts 'GITHUB_ACCESS_TOKEN is not set'
+if ENV["GITHUB_ACCESS_TOKEN"].nil?
+  puts "GITHUB_ACCESS_TOKEN is not set"
   exit 1
 end
 
 begin
-  repository = ENV['TRAVIS_REPO_SLUG']
-  if ENV['TRAVIS_PULL_REQUEST'] == 'false'
-    branch = ENV['TRAVIS_BRANCH']
-    sha1 = ENV['TRAVIS_COMMIT']
+  repository = ENV["TRAVIS_REPO_SLUG"]
+  if ENV["TRAVIS_PULL_REQUEST"] == "false"
+    branch = ENV["TRAVIS_BRANCH"]
+    sha1 = ENV["TRAVIS_COMMIT"]
   else
-    branch = ENV['TRAVIS_PULL_REQUEST_BRANCH']
-    sha1 = ENV['TRAVIS_PULL_REQUEST_SHA']
+    branch = ENV["TRAVIS_PULL_REQUEST_BRANCH"]
+    sha1 = ENV["TRAVIS_PULL_REQUEST_SHA"]
   end
 
-  Travis::Pro.github_auth(ENV['GITHUB_ACCESS_TOKEN'])
+  Travis::Pro.github_auth(ENV["GITHUB_ACCESS_TOKEN"])
   travis = Travis::Pro::Repository.find(repository)
 
   Octokit.configure do |config|
-    config.access_token = ENV['GITHUB_ACCESS_TOKEN']
+    config.access_token = ENV["GITHUB_ACCESS_TOKEN"]
   end
   github = Octokit::Client.new
   github.branch(repository, branch) # validate repository and target branch exists
@@ -38,31 +38,31 @@ end
 # Build docker image
 #
 
-if ENV['DISABLE_DOCKER_IMAGE'] != 'true' &&
+if ENV["DISABLE_DOCKER_IMAGE"] != "true" &&
     (
       (
-        ENV['TRAVIS_PULL_REQUEST'] == 'false' &&
-        (branch == 'mater' || branch =~ %r{^releases?/\d+\.\d+\.\d+(?:\.\d+)?$}i)
+        ENV["TRAVIS_PULL_REQUEST"] == "false" &&
+        (branch == "mater" || branch =~ %r{^releases?/\d+\.\d+\.\d+(?:\.\d+)?$}i)
       ) || (
-        ENV['TRAVIS_PULL_REQUEST'] != 'false' &&
+        ENV["TRAVIS_PULL_REQUEST"] != "false" &&
         branch =~ %r{^(?:tasks?|features?|bugs?|fix(?:es)?)/.*?ywa-\d+}i
       )
     )
 
-  target = if ENV['TRAVIS_PULL_REQUEST'] == 'false'
+  target = if ENV["TRAVIS_PULL_REQUEST"] == "false"
              branch
            else
-             ENV['TRAVIS_PULL_REQUEST']
+             ENV["TRAVIS_PULL_REQUEST"]
            end
 
   github.create_status(
-    repository, sha1, 'pending',
-    context: 'yalty/build', description: 'Docker image build queued'
+    repository, sha1, "pending",
+    context: "yalty/build", description: "Docker image build queued"
   )
 
   travis.session.headers.merge!(
-    'Content-Type' => 'application/json',
-    'Travis-API-Version' => '3'
+    "Content-Type" => "application/json",
+    "Travis-API-Version" => "3"
   )
   travis.session.raw(
     :post,
@@ -83,21 +83,21 @@ if ENV['DISABLE_DOCKER_IMAGE'] != 'true' &&
       }
     )
   )
-  Travis::Pro.session.headers.delete('Content-Type')
-  Travis::Pro.session.headers.delete('Travis-API-Version')
+  Travis::Pro.session.headers.delete("Content-Type")
+  Travis::Pro.session.headers.delete("Travis-API-Version")
 end
 
 #
 # Restart builds that have a pull request on current branch
 #
 
-if ENV['TRAVIS_PULL_REQUEST'] == 'false' && ENV['DISABLE_REBUILD'] != 'true'
-  pull_requests = github.pull_requests(repository, state: 'open').select do |pull_request|
+if ENV["TRAVIS_PULL_REQUEST"] == "false" && ENV["DISABLE_REBUILD"] != "true"
+  pull_requests = github.pull_requests(repository, state: "open").select do |pull_request|
     pull_request.base.ref == branch
   end.map(&:number)
 
   unless pull_requests.empty?
-    travis.each_build(event_type: 'pull_request').each do |build|
+    travis.each_build(event_type: "pull_request").each do |build|
       next unless pull_requests.include?(build.pull_request_number)
 
       if build.restartable?

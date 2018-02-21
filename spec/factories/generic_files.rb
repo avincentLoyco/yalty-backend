@@ -1,29 +1,29 @@
 FactoryGirl.define do
   factory :generic_file do
-    fileable_type { 'EmployeeFile' }
+    fileable_type { "EmployeeFile" }
 
     trait :with_jpg do
-      file File.open(File.join(Rails.root, '/spec/fixtures/files/test.jpg'))
+      file File.open(File.join(Rails.root, "/spec/fixtures/files/test.jpg"))
     end
 
     trait :with_pdf do
-      file File.open(File.join(Rails.root, '/spec/fixtures/files/example.pdf'))
+      file File.open(File.join(Rails.root, "/spec/fixtures/files/example.pdf"))
     end
 
     trait :with_doc do
-      file File.open(File.join(Rails.root, '/spec/fixtures/files/sample.doc'))
+      file File.open(File.join(Rails.root, "/spec/fixtures/files/sample.doc"))
     end
 
     trait :with_docx do
-      file File.open(File.join(Rails.root, '/spec/fixtures/files/test.docx'))
+      file File.open(File.join(Rails.root, "/spec/fixtures/files/test.docx"))
     end
 
     trait :with_zip do
-      file File.open(File.join(Rails.root, '/spec/fixtures/files/test.zip'))
+      file File.open(File.join(Rails.root, "/spec/fixtures/files/test.zip"))
     end
 
     trait :with_xls do
-      file File.open(File.join(Rails.root, '/spec/fixtures/files/test.xls'))
+      file File.open(File.join(Rails.root, "/spec/fixtures/files/test.xls"))
     end
 
     trait :without_file do

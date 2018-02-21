@@ -10,8 +10,8 @@ FactoryGirl.define do
     end
 
     trait :with_yalty_role do
-      email { ENV['YALTY_ACCESS_EMAIL'] }
-      role { 'yalty' }
+      email { ENV["YALTY_ACCESS_EMAIL"] }
+      role { "yalty" }
       employee { nil }
     end
 

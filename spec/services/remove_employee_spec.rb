@@ -1,7 +1,7 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe RemoveEmployee, type: :service do
-  include_context 'shared_context_timecop_helper'
+  include_context "shared_context_timecop_helper"
 
   let!(:user) { create(:account_user) }
   let!(:employee) { create(:employee, account_user_id: user.id) }
@@ -12,8 +12,8 @@ RSpec.describe RemoveEmployee, type: :service do
 
   subject(:call_service) { described_class.new(employee).call }
 
-  context 'employee still have hired event' do
-    it 'checks if employee have hired events' do
+  context "employee still have hired event" do
+    it "checks if employee have hired events" do
       expect(Employee::Event).to receive(:hired).and_return(employee.events.first)
       call_service
     end
@@ -24,10 +24,10 @@ RSpec.describe RemoveEmployee, type: :service do
     it { expect { call_service }.to_not change { Account::User.count } }
   end
 
-  context 'employee have no hired events left' do
-    before { employee.events.where(event_type: 'hired').last.destroy! }
+  context "employee have no hired events left" do
+    before { employee.events.where(event_type: "hired").last.destroy! }
 
-    it 'checks if employee have hired events' do
+    it "checks if employee have hired events" do
       expect(Employee::Event).to receive(:hired).and_return([])
       call_service
     end

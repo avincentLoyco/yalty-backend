@@ -1,5 +1,5 @@
 FactoryGirl.define do
-  factory :employee_attribute_version, aliases: [:employee_attribute], class: 'Employee::AttributeVersion' do
+  factory :employee_attribute_version, aliases: [:employee_attribute], class: "Employee::AttributeVersion" do
     employee
     account { employee.account }
     sequence(:order)

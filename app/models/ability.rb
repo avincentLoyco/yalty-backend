@@ -2,20 +2,20 @@ class Ability
   include CanCan::Ability
 
   def initialize(user)
-    if user.role.eql?('account_owner')
+    if user.role.eql?("account_owner")
       can :manage, :all
       cannot :manage, :available_modules
       companyevent_management(user)
-    elsif user.role.eql?('yalty')
+    elsif user.role.eql?("yalty")
       can :manage, :all
       cannot :manage, :payments
       companyevent_management(user)
-    elsif user.role.eql?('account_administrator')
+    elsif user.role.eql?("account_administrator")
       can :manage, :all
       cannot :manage, :payments
       cannot :manage, :available_modules
       companyevent_management(user)
-    elsif user.role.eql?('user')
+    elsif user.role.eql?("user")
       cannot :read, CompanyEvent
       can [:index], TimeOffCategory do |_time_off_category, employee_id|
         employee_id.nil? || Account::User.current&.employee&.id == employee_id
@@ -54,7 +54,7 @@ class Ability
       end
       can :create, :tokens do |_, file_id, attribute_version|
         (file_id.nil? && attribute_version.nil?) ||
-          (attribute_version.present? && attribute_version.attribute_name == 'profile_picture') ||
+          (attribute_version.present? && attribute_version.attribute_name == "profile_picture") ||
           (user.employee.present? && user.employee.file_with?(file_id))
       end
     end
@@ -63,7 +63,7 @@ class Ability
   private
 
   def companyevent_management(user)
-    return if user.account.available_modules.include?('companyevent')
+    return if user.account.available_modules.include?("companyevent")
     cannot [:create, :update, :destroy], CompanyEvent
   end
 end

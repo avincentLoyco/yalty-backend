@@ -26,24 +26,24 @@ module TimeOffs
 
     def convert_time_to_utc(time)
       return if time.nil?
-      time.to_s + '00:00'
+      time.to_s + "00:00"
     end
 
     private
 
     def create_new_employee_balance(time_off)
-     account_id = Employee.find(employee_id).account.id
+      account_id = Employee.find(employee_id).account.id
 
-     CreateEmployeeBalance.new(
-       time_off_category_id,
-       employee_id,
-       account_id,
-       time_off_id: time_off.id,
-       balance_type: 'time_off',
-       resource_amount: time_off.balance,
-       manual_amount: 0,
-       effective_at: time_off.end_time
-     ).call
+      CreateEmployeeBalance.new(
+        time_off_category_id,
+        employee_id,
+        account_id,
+        time_off_id: time_off.id,
+        balance_type: "time_off",
+        resource_amount: time_off.balance,
+        manual_amount: 0,
+        effective_at: time_off.end_time
+      ).call
     end
   end
 end

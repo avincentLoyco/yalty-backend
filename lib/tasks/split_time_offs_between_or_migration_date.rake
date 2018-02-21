@@ -1,6 +1,6 @@
 namespace :split_time_offs do
   task between_or_migration_date: :environment do
-    time_offs = TimeOff.where('start_time <= ? AND end_time > ?',
+    time_offs = TimeOff.where("start_time <= ? AND end_time > ?",
                               Time.zone.local(2017, 12, 31, 23, 59, 59),
                               Time.zone.local(2018, 1, 1, 0, 0)).vacations
 
@@ -17,7 +17,7 @@ namespace :split_time_offs do
   end
 
   def update_first_time_off(time_off)
-    utc_end_time = Time.new(2017, 12, 31, 23, 59, 59, '+00:00').to_s
+    utc_end_time = Time.new(2017, 12, 31, 23, 59, 59, "+00:00").to_s
     balance_attr = balance_attributes(time_off)
 
     ActiveRecord::Base.transaction do
@@ -35,7 +35,7 @@ namespace :split_time_offs do
   end
 
   def time_off_attributes(time_off, end_time)
-    start_time = Time.new(2018, 1, 1, 0, 0, 0, '+00:00').to_s
+    start_time = Time.new(2018, 1, 1, 0, 0, 0, "+00:00").to_s
     {
       start_time: start_time,
       end_time: end_time,
@@ -58,7 +58,7 @@ namespace :split_time_offs do
       resource.employee_id,
       resource.employee.account.id,
       time_off_id: resource.id,
-      balance_type: 'time_off',
+      balance_type: "time_off",
       resource_amount: resource.balance,
       manual_amount: 0,
       effective_at: resource.end_time

@@ -1,7 +1,7 @@
 module API
   module V1
     class UsersController < ApplicationController
-      authorize_resource class: 'Account::User', except: :create
+      authorize_resource class: "Account::User", except: :create
       include DoorkeeperAuthorization
       include UserSchemas
 
@@ -57,7 +57,7 @@ module API
       def resource
         @resource ||= resources.find(params[:id])
       rescue ActiveRecord::RecordNotFound => e
-        Account::User.where(account: Account.current, id: params[:id], role: 'yalty').first ||
+        Account::User.where(account: Account.current, id: params[:id], role: "yalty").first ||
           raise(e)
       end
 
@@ -78,7 +78,7 @@ module API
 
       def check_old_password(attributes)
         return if resource.authenticate(attributes.delete(:old_password))
-        raise InvalidPasswordError.new(resource, messages: ['Given Password Invalid'])
+        raise InvalidPasswordError.new(resource, messages: ["Given Password Invalid"])
       end
 
       def send_user_invitation

@@ -31,7 +31,7 @@ class UpdateEmployeeBalance
   end
 
   def recalculate_amount
-    return unless employee_balance.balance_type.eql?('reset') ||
+    return unless employee_balance.balance_type.eql?("reset") ||
         employee_balance.balance_credit_additions.present? || counter_and_addition?
     employee_balance.calculate_removal_amount
   end
@@ -56,7 +56,7 @@ class UpdateEmployeeBalance
   end
 
   def counter_and_addition?
-    employee_balance.time_off_policy&.counter? && employee_balance.balance_type.eql?('addition')
+    employee_balance.time_off_policy&.counter? && employee_balance.balance_type.eql?("addition")
   end
 
   def find_validity_date

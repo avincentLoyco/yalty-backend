@@ -46,7 +46,7 @@ class FindEmployeeBalancesToUpdate
   end
 
   def all_later_balances_ids
-    related_balances.where('effective_at >= ?', effective_at).pluck(:id)
+    related_balances.where("effective_at >= ?", effective_at).pluck(:id)
   end
 
   def find_ids_for_counter
@@ -66,8 +66,8 @@ class FindEmployeeBalancesToUpdate
 
   def next_addition
     related_balances
-      .where(balance_type: 'addition')
-      .where('effective_at > ?', effective_at)
+      .where(balance_type: "addition")
+      .where("effective_at > ?", effective_at)
       .order(:effective_at).first
   end
 
@@ -83,7 +83,7 @@ class FindEmployeeBalancesToUpdate
   def active_balances_with_removals
     related_balances
       .where(
-        'effective_at < ? AND validity_date > ? AND balance_credit_removal_id IS NOT NULL',
+        "effective_at < ? AND validity_date > ? AND balance_credit_removal_id IS NOT NULL",
         effective_at, effective_at
       )
   end

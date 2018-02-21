@@ -43,7 +43,7 @@ module Api::V1
         {
           field: field.to_s,
           messages: messages,
-          status: 'invalid',
+          status: "invalid",
           type: resource_type,
           codes: generate_codes(field, messages),
           employee_id: join_table_employee_id
@@ -55,7 +55,7 @@ module Api::V1
     def join_table_employee_id
       return if !resource.is_a?(ActiveRecord::Base) ||
           (Employee::RESOURCE_JOIN_TABLES.exclude?(resource.model_name.route_key) &&
-          !resource.model_name.name.eql?('Employee::Event'))
+          !resource.model_name.name.eql?("Employee::Event"))
       resource&.employee&.id
     end
 
@@ -63,9 +63,9 @@ module Api::V1
       return [] if messages.blank?
       messages.each_with_object([]) do |message, codes|
         next unless message && !message.is_a?(Array)
-        codes << field.to_s + '_' + message
-                                    .gsub(/([^a-z0-9\s]|( \da\+.$| on \d+\.$|\.$))/i, '')
-                                    .tr(' ', '_').downcase
+        codes << field.to_s + "_" + message
+                                    .gsub(/([^a-z0-9\s]|( \da\+.$| on \d+\.$|\.$))/i, "")
+                                    .tr(" ", "_").downcase
         codes
       end
     end

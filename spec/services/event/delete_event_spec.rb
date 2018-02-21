@@ -1,7 +1,7 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe DeleteEvent do
-  include_context 'shared_context_timecop_helper'
+  include_context "shared_context_timecop_helper"
 
   before do
     allow_any_instance_of(::Payments::UpdateSubscriptionQuantity)
@@ -15,15 +15,15 @@ RSpec.describe DeleteEvent do
     create(:employee_event, employee: employee, event_type: event_type, effective_at: effective_at)
   end
 
-  context 'when event has different type than contract end or hired' do
-    let(:event_type) { 'child_death' }
+  context "when event has different type than contract end or hired" do
+    let(:event_type) { "child_death" }
     let(:effective_at) { Date.today }
     let!(:event) { new_event }
 
     it { expect { subject }.to change { Employee::Event.count }.by(-1) }
   end
 
-  context 'event with etop and epp' do
+  context "event with etop and epp" do
     let(:effective_at) { 2.years.ago }
     let!(:employee_time_off_policy) do
       create(:employee_time_off_policy, employee: employee, effective_at: effective_at)
@@ -34,7 +34,7 @@ RSpec.describe DeleteEvent do
 
     let!(:event) do
       create(:employee_event,
-             employee: employee, event_type: 'work_contract', effective_at: effective_at,
+             employee: employee, event_type: "work_contract", effective_at: effective_at,
              employee_presence_policy: employee_presence_policy,
              employee_time_off_policy: employee_time_off_policy)
     end
@@ -44,36 +44,36 @@ RSpec.describe DeleteEvent do
     it { expect { subject }.to change{ EmployeeTimeOffPolicy.count }.by(-1) }
   end
 
-  context 'when event has event type hired or contract end' do
-    context 'when event has event type hired' do
-      context 'and this is only hired event' do
+  context "when event has event type hired or contract end" do
+    context "when event has event type hired" do
+      context "and this is only hired event" do
         let(:event) { employee.events.first }
 
-        context 'when employee does not have join tables assigned' do
+        context "when employee does not have join tables assigned" do
           it { expect { subject }.to change { Employee::Event.count }.by(-1) }
           it { expect { subject }.to change { Employee.count }.by(-1) }
         end
 
-        context 'when employee has join tables assigned' do
+        context "when employee has join tables assigned" do
           before { create(:employee_presence_policy, employee: employee, effective_at: Date.today) }
 
           it { expect { subject }.to raise_error(ActiveRecord::RecordNotDestroyed) }
         end
       end
 
-      context 'and employee has other hire events' do
+      context "and employee has other hire events" do
         before do
           create(:employee_event,
-            event_type: 'contract_end', effective_at: 1.year.ago, employee: employee)
+            event_type: "contract_end", effective_at: 1.year.ago, employee: employee)
         end
         let!(:event) { new_event }
-        let(:event_type) { 'hired' }
+        let(:event_type) { "hired" }
         let(:effective_at) { Date.today }
 
         it { expect { subject }.to change { Employee::Event.count }.by(-1) }
         it { expect { subject }.to_not change { Employee.count } }
 
-        context 'when employee has join tables assigned' do
+        context "when employee has join tables assigned" do
           before do
             create(:employee_presence_policy, employee: employee, effective_at: effective_at)
           end
@@ -83,14 +83,14 @@ RSpec.describe DeleteEvent do
       end
     end
 
-    context 'when event has event type contract end' do
-      let(:event_type) { 'contract_end' }
+    context "when event has event type contract end" do
+      let(:event_type) { "contract_end" }
       let(:effective_at) { Date.today }
 
-      context 'and employee does not have join tables assigned' do
+      context "and employee does not have join tables assigned" do
         let!(:event) { new_event }
 
-        context 'and there is no hired event after' do
+        context "and there is no hired event after" do
           it { expect { subject }.to change { Employee::Event.count }.by(-1) }
 
           it { expect { subject }.to_not change { Employee.count } }
@@ -99,17 +99,17 @@ RSpec.describe DeleteEvent do
           it { expect { subject }.to_not change { EmployeeTimeOffPolicy.count } }
         end
 
-        context 'and there is hired event after' do
+        context "and there is hired event after" do
           before do
             create(:employee_event,
-              employee: employee, event_type: 'hired', effective_at: 1.year.since)
+              employee: employee, event_type: "hired", effective_at: 1.year.since)
           end
 
           it { expect { subject }.to raise_error(ActiveRecord::RecordNotDestroyed) }
         end
       end
 
-      context 'and employee has join tables assigned' do
+      context "and employee has join tables assigned" do
         before do
           options = { employee: employee, effective_at: 1.year.ago }
           policy = create(:time_off_policy, :with_end_date,
@@ -125,7 +125,7 @@ RSpec.describe DeleteEvent do
 
         let!(:event) { new_event }
 
-        context 'and no hired event after' do
+        context "and no hired event after" do
           let!(:balance_to_update) do
             Employee::Balance.where(
               validity_date: new_event.effective_at + 1.day + Employee::Balance::RESET_OFFSET
@@ -138,11 +138,11 @@ RSpec.describe DeleteEvent do
           it { expect { subject }.to change { EmployeeTimeOffPolicy.with_reset.count }.by(-1) }
           it do
             expect { subject }
-              .to change { Employee::Balance.where.not(balance_type: 'reset').count }
+              .to change { Employee::Balance.where.not(balance_type: "reset").count }
           end
           it do
             expect { subject }
-              .to change { Employee::Balance.where(balance_type: 'reset').count }.by(-1)
+              .to change { Employee::Balance.where(balance_type: "reset").count }.by(-1)
           end
 
           it { expect { subject }.to_not change { Employee.count } }
@@ -151,10 +151,10 @@ RSpec.describe DeleteEvent do
           end
         end
 
-        context 'and hired event after' do
+        context "and hired event after" do
           before do
             create(:employee_event,
-              employee: employee, effective_at: 1.year.since, event_type: 'hired')
+              employee: employee, effective_at: 1.year.since, event_type: "hired")
           end
 
           it { expect { subject }.to raise_error(ActiveRecord::RecordNotDestroyed) }

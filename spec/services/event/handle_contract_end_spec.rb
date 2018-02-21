@@ -1,13 +1,13 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe HandleContractEnd, type: :service do
-  include_context 'shared_context_account_helper'
-  include_context 'shared_context_timecop_helper'
+  include_context "shared_context_account_helper"
+  include_context "shared_context_timecop_helper"
 
   subject(:create_contract_end) do
     params = {
-      effective_at: Time.zone.parse('2016/03/01'),
-      event_type: 'contract_end',
+      effective_at: Time.zone.parse("2016/03/01"),
+      event_type: "contract_end",
       employee: { id: employee.id }
     }
     CreateEvent.new(params, {}).call
@@ -61,11 +61,11 @@ RSpec.describe HandleContractEnd, type: :service do
     create(:employee_working_place, employee: employee, working_place: working_places.last,
       effective_at: 6.months.from_now)
   end
-  let(:start_time) { '2016/2/20' }
-  let(:end_time) { '2016/3/10' }
+  let(:start_time) { "2016/2/20" }
+  let(:end_time) { "2016/3/10" }
   let(:last_time_off) { employee.time_offs.order(:start_time).last }
   let!(:time_offs) do
-    [['2011/1/1', '2011/1/10'], [start_time, end_time], ['2016/3/15', '2016/3/20']].map do |dates|
+    [["2011/1/1", "2011/1/10"], [start_time, end_time], ["2016/3/15", "2016/3/20"]].map do |dates|
       create(:time_off, employee: employee, time_off_category: time_off_categories.first,
         start_time: dates[0], end_time: dates[1])
     end
@@ -84,30 +84,30 @@ RSpec.describe HandleContractEnd, type: :service do
     create_contract_end
   end
 
-  context 'removed and modified resources' do
+  context "removed and modified resources" do
     it { expect(employee.employee_time_off_policies).to_not include(etops_after) }
     it { expect(employee.employee_presence_policies).to_not include(epp_after) }
     it { expect(employee.employee_working_places).to_not include(ewp_after) }
     it { expect(employee.time_offs).to_not include(time_offs.last) }
-    it { expect(last_time_off.end_time).to eq(Time.zone.parse('2016/03/02')) }
+    it { expect(last_time_off.end_time).to eq(Time.zone.parse("2016/03/02")) }
 
-    context 'when time off start at contract end date' do
-      let(:start_time) { Time.zone.parse('2016/03/01') }
+    context "when time off start at contract end date" do
+      let(:start_time) { Time.zone.parse("2016/03/01") }
 
-      it { expect(last_time_off.start_time).to eq(Time.zone.parse('2016/03/01')) }
-      it { expect(last_time_off.end_time).to eq(Time.zone.parse('2016/03/02')) }
+      it { expect(last_time_off.start_time).to eq(Time.zone.parse("2016/03/01")) }
+      it { expect(last_time_off.end_time).to eq(Time.zone.parse("2016/03/02")) }
     end
 
-    context 'when time offs starts and end at contract end' do
-      let(:start_time) { '2016-03-01T08:00:00' }
-      let(:end_time) { '2016-03-01T16:00:00' }
+    context "when time offs starts and end at contract end" do
+      let(:start_time) { "2016-03-01T08:00:00" }
+      let(:end_time) { "2016-03-01T16:00:00" }
 
-      it { expect(last_time_off.start_time).to eq(Time.zone.parse('2016/03/01, 8:00')) }
-      it { expect(last_time_off.end_time).to eq(Time.zone.parse('2016/03/01, 16:00')) }
+      it { expect(last_time_off.start_time).to eq(Time.zone.parse("2016/03/01, 8:00")) }
+      it { expect(last_time_off.end_time).to eq(Time.zone.parse("2016/03/01, 16:00")) }
     end
   end
 
-  context 'assigned reset resources' do
+  context "assigned reset resources" do
     let(:removal_balance) do
       time_off_categories.first.employee_balances.order(:effective_at).last
     end
@@ -131,11 +131,11 @@ RSpec.describe HandleContractEnd, type: :service do
     end
     it do
       expect(time_off_categories.first.employee_balances.order(:effective_at).last.balance_type)
-        .to eq 'reset'
+        .to eq "reset"
     end
     it do
       expect(time_off_categories.last.employee_balances.order(:effective_at).last.balance_type)
-        .to eq 'reset'
+        .to eq "reset"
     end
     it { expect(removal_balance.amount).to eq (-time_offs.second.employee_balance.balance) }
     it do

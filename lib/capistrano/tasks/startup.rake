@@ -13,20 +13,20 @@ rescue SSHKit::Command::Failed => e
 end
 
 namespace :start do
-  desc 'Start all services'
+  desc "Start all services"
   task :all do
-    invoke 'start:backend'
-    invoke 'start:worker'
+    invoke "start:backend"
+    invoke "start:worker"
   end
 
-  desc 'Start backend service'
+  desc "Start backend service"
   task :backend do
     on roles(%w(api launchpad)) do
       systemctl(:start, fetch(:backend_service_name))
     end
   end
 
-  desc 'Start worker service'
+  desc "Start worker service"
   task :worker do
     on roles(%w(worker)) do
       systemctl(:start, fetch(:worker_service_name))
@@ -35,21 +35,21 @@ namespace :start do
 end
 
 namespace :stop do
-  desc 'Stop all services'
+  desc "Stop all services"
   task :all do
-    invoke 'deploy:quiet_workers'
-    invoke 'stop:backend'
-    invoke 'stop:worker'
+    invoke "deploy:quiet_workers"
+    invoke "stop:backend"
+    invoke "stop:worker"
   end
 
-  desc 'Stop backend service'
+  desc "Stop backend service"
   task :backend do
     on roles(%w(api launchpad)) do
       systemctl(:stop, fetch(:backend_service_name))
     end
   end
 
-  desc 'Stop worker service'
+  desc "Stop worker service"
   task :worker do
     on roles(%w(worker)) do
       systemctl(:stop, fetch(:worker_service_name))
@@ -58,14 +58,14 @@ namespace :stop do
 end
 
 namespace :restart do
-  desc 'Restart all services'
+  desc "Restart all services"
   task :all do
-    invoke 'deploy:quiet_workers'
-    invoke 'restart:backend'
-    invoke 'restart:worker'
+    invoke "deploy:quiet_workers"
+    invoke "restart:backend"
+    invoke "restart:worker"
   end
 
-  desc 'Restart backend service (phased-restart if maintenance mode is active)'
+  desc "Restart backend service (phased-restart if maintenance mode is active)"
   task :backend do
     command = fetch(:maintenance_mode_enable, false) ? :restart : :reload
 
@@ -74,7 +74,7 @@ namespace :restart do
     end
   end
 
-  desc 'Restart worker service'
+  desc "Restart worker service"
   task :worker do
     on roles(%w(worker)) do
       systemctl(:restart, fetch(:worker_service_name))

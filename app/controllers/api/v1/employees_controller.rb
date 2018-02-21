@@ -43,9 +43,9 @@ module API
 
       def resources_scope
         case params[:status]
-        when 'active' then 'active_at_date'
-        when 'inactive' then 'inactive_at_date'
-        else 'all'
+        when "active" then "active_at_date"
+        when "inactive" then "inactive_at_date"
+        else "all"
         end
       end
     end

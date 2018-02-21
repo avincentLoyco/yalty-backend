@@ -1,31 +1,31 @@
 namespace :assign_types_to_existing_balances do
   task update: :environment do
     # Set balance type for end_of_period, removal, reset and time_off
-    Employee::Balance.where('extract(second from effective_at) = 1')
-                     .update_all(balance_type: 'end_of_period')
-    Employee::Balance.where('extract(second from effective_at) = 3')
-                     .update_all(balance_type: 'removal')
+    Employee::Balance.where("extract(second from effective_at) = 1")
+                     .update_all(balance_type: "end_of_period")
+    Employee::Balance.where("extract(second from effective_at) = 3")
+                     .update_all(balance_type: "removal")
     Employee::Balance.where.not(time_off_id: nil)
-                     .update_all(balance_type: 'time_off')
+                     .update_all(balance_type: "time_off")
     Employee::Balance.where(reset_balance: true)
-                     .update_all(balance_type: 'reset')
+                     .update_all(balance_type: "reset")
 
     # Destroy not used removal balances
     Employee::Balance.includes(:balance_credit_additions)
-                     .where(balance_type: 'removal')
+                     .where(balance_type: "removal")
                      .where(balance_credit_additions_employee_balances: {
                               balance_credit_removal_id: nil
                             })
                      .destroy_all
 
     # Set balance type for assignation and addition (first to assignation, then fix additions)
-    Employee::Balance.where('extract(second from effective_at) = 2')
-                     .update_all(balance_type: 'assignation')
+    Employee::Balance.where("extract(second from effective_at) = 2")
+                     .update_all(balance_type: "assignation")
 
-    count = Employee::Balance.where(balance_type: 'assignation')
+    count = Employee::Balance.where(balance_type: "assignation")
                              .where(policy_credit_addition: true)
                              .count
-    Employee::Balance.where(balance_type: 'assignation')
+    Employee::Balance.where(balance_type: "assignation")
                      .where(policy_credit_addition: true)
                      .find_each.with_index do |balance, index|
       puts "migrate #{balance.id} (#{index + 1} / #{count})"
@@ -41,7 +41,7 @@ namespace :assign_types_to_existing_balances do
       result = create_addition_balance(balance)
       puts "create #{result.id}"
     else
-      balance.balance_type = 'addition'
+      balance.balance_type = "addition"
     end
   end
 
@@ -58,7 +58,7 @@ namespace :assign_types_to_existing_balances do
       time_off_category: balance.time_off_category,
       employee: balance.employee,
       validity_date: validity_date,
-      balance_type: 'addition'
+      balance_type: "addition"
     )
   end
 end

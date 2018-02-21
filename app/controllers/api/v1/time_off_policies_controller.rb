@@ -39,7 +39,7 @@ module API
           resource.destroy!
           render_no_content
         else
-          render_locked_error(controller_name, 'employees')
+          render_locked_error(controller_name, "employees")
         end
       end
 
@@ -60,7 +60,7 @@ module API
       end
 
       def filter_by_status
-        status = params[:status] ? params[:status].eql?('active') : true
+        status = params[:status] ? params[:status].eql?("active") : true
         Account.current.time_off_policies.where(active: status)
       end
 
