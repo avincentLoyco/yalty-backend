@@ -21,7 +21,7 @@ RSpec.describe Import::ImportPayslipsJob, type: :job do
     allow(Import::ImportAndAssignPayslips).to receive(:enable?).and_return(true)
   end
 
-  it "call import service", :focus do
+  it "call import service" do
     expect(::Import::ImportAndAssignPayslips)
       .to receive_message_chain(:new, :call).with(employee, anything, payslip_date).with(no_args)
     import_payslips
