@@ -14,7 +14,7 @@ gem "holidays",             "~> 4.0"
 gem "intercom",             "~> 3.3.0"
 gem "net-sftp",             "~> 2.1.2"
 gem "newrelic_rpm",         "~> 3.18.1"
-gem "paperclip",            "~> 5.0.0"
+gem "paperclip",            "~> 5.2.0"
 gem "pg",                   "~> 0.19.0"
 gem "prawn",                "~> 2.2.2"
 gem "prawn-table",          "~> 0.2.2"
@@ -49,7 +49,6 @@ group :development, :test do
   gem "faker"
   gem "mutant-rspec"
   gem "simplecov"
-  gem "yard", "~> 0.8.7"
 
   # improve test speed
   gem "parallel_tests"

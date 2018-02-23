@@ -84,7 +84,7 @@ GEM
       i18n
       rake (>= 10.0.0)
       sshkit (>= 1.9.0)
-    climate_control (0.1.0)
+    climate_control (0.2.0)
     cocaine (0.5.8)
       climate_control (>= 0.0.3, < 1.0)
     codeclimate-test-reporter (1.0.8)
@@ -211,7 +211,7 @@ GEM
     method_source (0.8.2)
     mime-types (2.99.3)
     mimemagic (0.3.2)
-    mini_portile2 (2.2.0)
+    mini_portile2 (2.3.0)
     minitest (5.10.2)
     morpher (0.2.6)
       abstract_type (~> 0.0.7)
@@ -250,12 +250,12 @@ GEM
     net-ssh (4.1.0)
     netrc (0.11.0)
     newrelic_rpm (3.18.1.330)
-    nokogiri (1.8.0)
-      mini_portile2 (~> 2.2.0)
+    nokogiri (1.8.2)
+      mini_portile2 (~> 2.3.0)
     notiffany (0.0.8)
       nenv (~> 0.1)
       shellany (~> 0.0)
-    paperclip (5.0.0)
+    paperclip (5.2.1)
       activemodel (>= 4.2.0)
       activesupport (>= 4.2.0)
       cocaine (~> 0.5.5)
@@ -455,7 +455,6 @@ GEM
       sprockets-rails (>= 2.0, < 4.0)
     with_advisory_lock (3.2.0)
       activerecord (>= 3.2)
-    yard (0.8.7.6)
 
 PLATFORMS
   ruby
@@ -490,7 +489,7 @@ DEPENDENCIES
   mutant-rspec
   net-sftp (~> 2.1.2)
   newrelic_rpm (~> 3.18.1)
-  paperclip (~> 5.0.0)
+  paperclip (~> 5.2.0)
   parallel_tests
   pg (~> 0.19.0)
   prawn (~> 2.2.2)
@@ -524,7 +523,6 @@ DEPENDENCIES
   virtus (~> 1.0.5)
   web-console (~> 2.0)
   with_advisory_lock (~> 3.2.0)
-  yard (~> 0.8.7)
 
 RUBY VERSION
    ruby 2.4.1p111
