@@ -43,6 +43,7 @@ end
 
 # Development environment dependencies (also needed by test environement)
 group :development, :test do
+  gem "bullet"
   gem "codeclimate-test-reporter", require: false
   gem "dotenv-rails"
   gem "factory_girl_rails"

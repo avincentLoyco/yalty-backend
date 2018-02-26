@@ -27,4 +27,9 @@ Rails.application.configure do
 
   # Preview email in the browser instead of sending.
   config.action_mailer.delivery_method = :letter_opener
+
+  config.after_initialize do
+    Bullet.enable = true
+    Bullet.rails_logger = true
+  end
 end
