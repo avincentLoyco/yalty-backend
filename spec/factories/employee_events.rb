@@ -9,8 +9,6 @@ FactoryGirl.define do
         employee = build(:employee, events: [employee_event])
         employee_event.employee = employee
       end
-
-      employee_event.account = employee_event.employee.account
     end
 
     after(:create) do |employee_event|

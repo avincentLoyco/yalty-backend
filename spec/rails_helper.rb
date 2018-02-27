@@ -87,11 +87,17 @@ RSpec.configure do |config|
 
 
   if Bullet.enable?
-    config.around(:each) do |example|
-      Bullet.start_request
-      example.run
-      Bullet.perform_out_of_channel_notifications if Bullet.notification?
-      Bullet.end_request
+    config.before(:each) do |example|
+      unless example.metadata[:ignore_bullet]
+        Bullet.start_request
+      end
+    end
+
+    config.after(:each) do |example|
+      unless example.metadata[:ignore_bullet]
+        Bullet.perform_out_of_channel_notifications if Bullet.notification?
+        Bullet.end_request
+      end
     end
   end
 end

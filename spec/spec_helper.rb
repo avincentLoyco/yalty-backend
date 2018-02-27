@@ -87,6 +87,13 @@ RSpec.configure do |config|
   #     --seed 1234
   config.order = :random
 
+  # This config option will be enabled by default on RSpec 4,
+  # but for reasons of backwards compatibility, you have to
+  # set it on RSpec 3.
+  # It causes the host group and examples to inherit metadata
+  # from the shared context.
+  config.shared_context_metadata_behavior = :apply_to_host_groups
+
   # Seed global randomization in this process using the `--seed` CLI option.
   # Setting this allows you to use `--seed` to deterministically reproduce
   # test failures related to randomization by passing the same `--seed` value

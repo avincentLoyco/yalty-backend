@@ -75,7 +75,7 @@ group :test do
   gem "fakeredis", "~> 0.5.0"
   gem "fantaskspec"
   gem "guard-rspec"
-  gem "rspec-rails", "3.4.0"
+  gem "rspec-rails", "~> 3.5.0"
   gem "shoulda-matchers"
   gem "temping"
   gem "timecop"
