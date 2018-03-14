@@ -1,22 +1,7 @@
 {
-  "before_migration": [{
-    "task_name": "destroy_duplicate_time_off_policies",
-    "description": [
-      "Destroy duplicate time off policies of balancer type and reassign etops"
-    ]
-  },
-  {
-    "task_name": "generate_manual_balance_json",
-    "description": [
-      "Create manual balance adjusting 2017 balances for specified clients"
-    ]
-  },
-  {
-    "task_name": "change_time_off_policies_amount_from_nil_to_0",
-    "description": [
-      "Change time off policies amount from nil to 0"
-    ]
-  }],
+  "before_migration": [
+
+  ],
   "after_migration": [
 
   ]
