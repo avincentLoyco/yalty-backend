@@ -217,6 +217,7 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
 
     context "with valid params" do
       it { expect { subject }.to change { TimeOffCategory.where(system: false).count }.by(1) }
+      it { expect { subject }.to change { TimeOffPolicy.count } }
       it { expect { subject }.to_not change { TimeOffCategory.where(system: true).count } }
 
       it { is_expected.to have_http_status(201) }
