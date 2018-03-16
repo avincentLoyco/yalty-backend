@@ -15,11 +15,13 @@ module API
 
       def create
         verified_dry_params(dry_validation_schema) do |attributes|
-          resource = Account.current.time_off_categories.new(attributes)
-          authorize! :create, resource
-
-          resource.save!
-          render_resource(resource, status: :created)
+          ActiveRecord::Base.transaction do
+            resource = Account.current.time_off_categories.new(attributes)
+            authorize! :create, resource
+            resource.save!
+            Policy::TimeOff::CreateCounterForCategory.call(resource)
+            render_resource(resource, status: :created)
+          end
         end
       end
 

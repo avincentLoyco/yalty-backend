@@ -1,10 +1,6 @@
 require "rails_helper"
 
 RSpec.describe CompanyEventsMailer, type: :mailer do
-  before do
-    ENV["YALTY_ACCESS_EMAIL"] = "yalty@access.com"
-  end
-
   let(:account)        { create(:account, company_name: "Wayne", yalty_access: true) }
 
   let(:title)          { "Batman is Bruce Wayne" }
@@ -25,7 +21,7 @@ RSpec.describe CompanyEventsMailer, type: :mailer do
     end
 
     it { expect(mail.subject).to eq(expected_subject) }
-    it { expect(mail.to).to match_array(owners.map(&:email) + ["yalty@access.com"]) }
+    it { expect(mail.to).to match_array(owners.map(&:email) + [ENV["YALTY_SERVICE_EMAIL"]]) }
     it { expect(mail.from).to eq([ENV["YALTY_APP_EMAIL"]]) }
     it { expect(mail.body).to match_regex(mail_body) }
 

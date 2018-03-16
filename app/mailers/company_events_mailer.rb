@@ -18,8 +18,11 @@ class CompanyEventsMailer < ApplicationMailer
   private
 
   def recipients(account, user_id)
-    roles = %w(account_owner account_administrator yalty)
-    Account::User.where(account: account, role: roles).where.not(id: user_id).pluck(:email)
+    roles = %w(account_owner account_administrator)
+    recipients = Account::User
+      .where(account: account, role: roles)
+      .where.not(id: user_id).pluck(:email)
+    account.yalty_access ? recipients.push(ENV["YALTY_SERVICE_EMAIL"]) : recipients
   end
 
   def url_for_company_event(account, company_event)

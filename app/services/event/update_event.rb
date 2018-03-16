@@ -251,17 +251,18 @@ class UpdateEvent
 
   def validate_time_off_policy_days_presence
     return unless time_off_policy_days.nil?
-    raise InvalidResourcesError.new(event, ["Time Off Policy amount not present"])
+    raise InvalidResourcesError.new(event, { time_off_policy_amount: ["not present"] })
   end
 
   def validate_presence_policy_presence
     return unless presence_policy_id.nil?
-    raise InvalidResourcesError.new(event, ["Presence Policy days not present"])
+    raise InvalidResourcesError.new(event, { presence_policy: ["not present"] })
   end
 
   def validate_matching_occupation_rate
     return if presence_policy_occupation_rate.eql?(event_occupation_rate)
-    raise InvalidResourcesError.new(event, ["Occupation Rate does not match Presence Policy"])
+    raise InvalidResourcesError.new(event, { occupation_rate:
+      ["Does not match Presence Policy's occupation rate"] })
   end
 
   def presence_policy_occupation_rate
