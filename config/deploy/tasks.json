@@ -5,9 +5,14 @@
   		"description": [
   			"Add adjustment and comment to account attributes"
   		]
-  	}
+    }
   ],
   "after_migration": [
-
+    {
+  		"task_name": "create_missing_adjustment_events",
+  		"description": [
+  			"Create missing adjustment events for employees for which previously we had to manually adjust balances"
+  		]
+  	}
   ]
 }
