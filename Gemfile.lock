@@ -109,7 +109,7 @@ GEM
     docile (1.1.5)
     domain_name (0.5.20170404)
       unf (>= 0.0.5, < 1.0.0)
-    doorkeeper (4.2.0)
+    doorkeeper (4.2.6)
       railties (>= 4.2)
     dotenv (2.1.0)
     dotenv-rails (2.1.0)
@@ -473,7 +473,7 @@ DEPENDENCIES
   codeclimate-test-reporter
   countries (~> 1.2.5)
   database_cleaner
-  doorkeeper (~> 4.2.0)
+  doorkeeper (~> 4.2.6)
   dotenv-rails
   dry-validation (~> 0.10.5)
   factory_girl_rails

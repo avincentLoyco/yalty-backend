@@ -2,7 +2,6 @@ class Auth::Accounts::TokensController < Doorkeeper::TokensController
   include AbstractController::Callbacks
 
   before_action :setup_params
-  after_action :destroy_token, only: [:create]
 
   private
 
@@ -14,9 +13,5 @@ class Auth::Accounts::TokensController < Doorkeeper::TokensController
       client_id: ENV["YALTY_OAUTH_ID"],
       client_secret: ENV["YALTY_OAUTH_SECRET"]
     )
-  end
-
-  def destroy_token
-    strategy.grant.try(:destroy)
   end
 end
