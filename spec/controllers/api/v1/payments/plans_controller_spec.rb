@@ -196,7 +196,9 @@ RSpec.describe API::V1::Payments::PlansController, type: :controller do
 
       context "when we subscribe to first plan" do
         context "and account save fails" do
-          before { allow(account).to receive(:save!).and_raise("Cannot save") }
+          before do
+            allow(account).to receive(:save!).and_raise(ActiveRecord::RecordInvalid, account)
+          end
 
           it { expect(Stripe::SubscriptionItem).to_not have_received(:create) }
           it { expect { create_plan }.to_not change { account.reload.available_modules.data } }
@@ -206,7 +208,7 @@ RSpec.describe API::V1::Payments::PlansController, type: :controller do
           before do
             allow(Stripe::SubscriptionItem)
               .to receive(:create)
-              .and_raise(Stripe::InvalidRequestError)
+              .and_raise(Stripe::InvalidRequestError.new(:body, :message))
           end
 
           it { expect { create_plan }.to_not change { account.reload.available_modules.data } }
@@ -220,7 +222,9 @@ RSpec.describe API::V1::Payments::PlansController, type: :controller do
         end
 
         context "and account update fails" do
-          before { allow(account).to receive(:save!).and_raise("Cannot save") }
+          before do
+            allow(account).to receive(:save!).and_raise(ActiveRecord::RecordInvalid, account)
+          end
 
           it { expect(Stripe::SubscriptionItem).to_not have_received(:list) }
           it { expect { create_plan }.to_not change { account.reload.available_modules.canceled } }
@@ -228,7 +232,9 @@ RSpec.describe API::V1::Payments::PlansController, type: :controller do
 
         context "and Stripe fails" do
           before do
-            allow(Stripe::SubscriptionItem).to receive(:list).and_raise(Stripe::InvalidRequestError)
+            allow(Stripe::SubscriptionItem)
+              .to receive(:list)
+              .and_raise(Stripe::InvalidRequestError.new(:body, :message))
           end
 
           it { expect { create_plan }.to_not change { account.reload.available_modules.canceled } }
@@ -317,7 +323,7 @@ RSpec.describe API::V1::Payments::PlansController, type: :controller do
       it_should_behave_like "errors", :destroy
 
       context "when account save fails" do
-        before { allow(account).to receive(:save!).and_raise("Cannot save") }
+        before { allow(account).to receive(:save!).and_raise(ActiveRecord::RecordInvalid, account) }
 
         it { expect { delete_plan }.to_not change { account.reload.available_modules.data } }
         it { expect(sub_item).to_not receive(:delete) }

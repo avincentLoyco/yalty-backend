@@ -760,6 +760,99 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           expect(Employee::AttributeVersion.count).to eq(7)
         end
       end
+
+      context "when creating adjustment balance event" do
+        let(:adjustment_value) { 20 }
+
+        let(:json_payload) do
+          {
+            type: "employee_event",
+            effective_at: event_effective_at,
+            event_type: "adjustment_of_balances",
+            employee: {
+              id: employee_id,
+              type: "employee"
+            },
+            employee_attributes: [
+              {
+                type: "employee_attribute",
+                attribute_name: "adjustment",
+                value: adjustment_value
+              },
+              {
+                type: "employee_attribute",
+                attribute_name: "comment",
+                value: "correction"
+              }
+            ]
+          }
+        end
+
+        let(:event_effective_at) { effective_at }
+
+        let(:time_off_policy) { create(:time_off_policy, time_off_category: vacation_category) }
+
+        let(:employee_adjustment_balance) do
+          employee.employee_balances
+            .where(balance_type: "manual_adjustment")
+            .where(resource_amount: adjustment_value)
+        end
+
+        let(:employee_adjustment_events) do
+          employee.events.where(event_type: "adjustment_of_balances")
+        end
+
+        before do
+          create(:employee_attribute_definition, :required,
+            account: Account.current,
+            name: "adjustment",
+            attribute_type: "Number"
+          )
+
+          create(:employee_attribute_definition, :required,
+            account: Account.current,
+            name: "comment",
+            attribute_type: "String"
+          )
+
+          create(:employee_time_off_policy, :with_employee_balance,
+            employee: employee, time_off_policy: time_off_policy,
+            effective_at: effective_at)
+
+        end
+
+        it "should respond with success" do
+          expect(subject).to have_http_status(201)
+        end
+
+        it "creates event" do
+          expect { subject }.to change { employee_adjustment_events.count }.by(1)
+        end
+
+        it "creates adjustment balance" do
+          expect { subject }.to change { employee_adjustment_balance.count }.by(1)
+        end
+
+        context "when employee has no time off policy at that date" do
+          let(:event_effective_at) { effective_at - 1.day }
+
+          it { is_expected.to have_http_status(422) }
+
+          it "doesn't create event" do
+            expect { subject }.not_to change { employee_adjustment_events.count }
+          end
+        end
+
+        context "and current user is not manager" do
+          before do
+            Account::User.current = create(:account_user, account: account, employee: employee)
+          end
+
+          it "should respond with permission denied" do
+            expect(subject).to have_http_status(403)
+          end
+        end
+      end
     end
 
     context "rehired event one day after contract end" do
@@ -1488,6 +1581,123 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         it { expect { subject }.to change { event.reload.effective_at }.to(effective_at) }
       end
     end
+
+    context "when updating adjustment balance event" do
+      let(:adjustment_value) { 50 }
+
+      let(:json_payload) do
+        {
+          id: adjustment_event.id,
+          type: "employee_event",
+          effective_at: event_effective_at,
+          event_type: "adjustment_of_balances",
+          employee: {
+            id: employee.id,
+            type: "employee"
+          },
+          employee_attributes: [
+            {
+              type: "employee_attribute",
+              attribute_name: "adjustment",
+              value: adjustment_value
+            },
+            {
+              type: "employee_attribute",
+              attribute_name: "comment",
+              value: "new correction"
+            }
+          ]
+        }
+      end
+
+      let(:time_off_policy) { create(:time_off_policy, time_off_category: vacation_category) }
+      let(:event_effective_at) { effective_at }
+
+      let(:adjustment_event) do
+        CreateEvent.new(
+          {
+            effective_at: 5.days.from_now,
+            event_type: "adjustment_of_balances",
+            employee: { id: employee.id }
+          },
+          [
+            {attribute_name: "lastname", value: "Howlett" },
+            {attribute_name: "adjustment", value: 40 }
+          ]
+        ).call
+      end
+
+      let(:adjustment_balance) do
+        CreateEmployeeBalance.new(
+          adjustment_event.account.vacation_category.id,
+          adjustment_event.employee_id,
+          adjustment_event.account.id,
+          balance_type: "manual_adjustment",
+          resource_amount: adjustment_event.attribute_value("adjustment"),
+          manual_amount: 0,
+          effective_at: adjustment_event.effective_at
+        ).call.first
+      end
+
+      before do
+        create(:employee_attribute_definition, :required,
+          account: Account.current,
+          name: "adjustment",
+          attribute_type: "Number"
+        )
+
+        create(:employee_attribute_definition,
+          account: Account.current,
+          name: "comment",
+          attribute_type: "String"
+        )
+
+        create(:employee_time_off_policy, :with_employee_balance,
+          employee: employee, time_off_policy: time_off_policy,
+          effective_at: effective_at
+        )
+
+        adjustment_balance
+      end
+
+      it "should respond with success" do
+        expect(subject).to have_http_status(:no_content)
+      end
+
+      it "updates event attributes" do
+        expect { subject }
+          .to change { adjustment_event.reload.attribute_values }
+          .to({"adjustment" => "50", "comment"=>"new correction"})
+      end
+
+      it "updates adjustment balance" do
+        subject
+        adjustment_balance.reload
+
+        expect(adjustment_balance.effective_at).to eq(effective_at)
+        expect(adjustment_balance.resource_amount).to eq(50)
+      end
+
+      context "and current user is not manager" do
+        before do
+          Account::User.current = create(:account_user, account: account, employee: employee)
+        end
+
+        it "should respond with permission denied" do
+          expect(subject).to have_http_status(403)
+        end
+      end
+
+      context "when employee has no time off policy at that date" do
+        let(:event_effective_at) { effective_at - 1.day }
+
+        it { is_expected.to have_http_status(422) }
+
+        it "doesn't update event attributes" do
+          expect { subject }.not_to change { adjustment_event.reload.attribute_values }
+        end
+      end
+    end
   end
 
   context "GET #index" do
@@ -1931,6 +2141,79 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         end
       end
     end
+
+    context "when removing adjustment balance event" do
+      let(:adjustment_value) { 50 }
+
+
+      let(:time_off_policy) { create(:time_off_policy, time_off_category: vacation_category) }
+
+      let(:event_to_delete_id) { adjustment_event.id }
+
+      let(:adjustment_event) do
+        CreateEvent.new(
+          {
+            effective_at: 5.days.from_now,
+            event_type: "adjustment_of_balances",
+            employee: { id: employee.id }
+          },
+          [
+            {attribute_name: "lastname", value: "Howlett" },
+            {attribute_name: "adjustment", value: 40 }
+          ]
+        ).call
+      end
+
+      let(:adjustment_balance) do
+        CreateEmployeeBalance.new(
+          adjustment_event.account.vacation_category.id,
+          adjustment_event.employee_id,
+          adjustment_event.account.id,
+          balance_type: "manual_adjustment",
+          resource_amount: adjustment_event.attribute_value("adjustment"),
+          manual_amount: 0,
+          effective_at: adjustment_event.effective_at
+        ).call.first
+      end
+
+      before do
+        create(:employee_attribute_definition, :required,
+          account: Account.current,
+          name: "adjustment",
+          attribute_type: "Number"
+        )
+
+        create(:employee_attribute_definition,
+          account: Account.current,
+          name: "comment",
+          attribute_type: "String"
+        )
+
+        create(:employee_time_off_policy, :with_employee_balance,
+          employee: employee, time_off_policy: time_off_policy,
+          effective_at: employee.events.order(:effective_at).last.effective_at
+        )
+
+        adjustment_balance
+      end
+
+      it "should respond with success" do
+        expect(subject).to have_http_status(:no_content)
+      end
+
+      it "deletes event" do
+        expect { subject }
+          .to change { Employee::Event.exists?(adjustment_event.id) }
+          .from(true).to(false)
+      end
+
+      it "delets adjustment balance" do
+        expect { subject }
+          .to change { Employee::Balance.exists?(adjustment_balance.id) }
+          .from(true).to(false)
+      end
+    end
+
 
     context "removing any other event" do
       let!(:any_other_event) do

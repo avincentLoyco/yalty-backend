@@ -20,7 +20,11 @@ module EmployeePolicy
 
         def call
           if contract_end.eql?(effective_at - 1.day)
-            HandleContractEnd.new(employee, contract_end).call
+            ::ContractEnd::Update.call(
+              employee: employee,
+              new_contract_end_date: contract_end,
+              old_contract_end_date: contract_end
+            )
           else
             duplicated = FindSequenceJoinTableInTime.new(
               employee_working_places, nil, working_place, employee_working_place

@@ -3,15 +3,15 @@ class UpdateEvent
   attr_reader :employee_params, :attributes_params, :event_params, :versions, :event, :employee,
     :updated_assignations, :old_effective_at, :presence_policy_id, :time_off_policy_days, :params
 
-  def initialize(params, employee_attributes_params)
+  def initialize(event, params)
     @versions             = []
     @employee_params      = params[:employee].tap { |attr| attr.delete(:employee_attributes) }
-    @attributes_params    = employee_attributes_params
+    @attributes_params    = params[:employee_attributes].to_a
     @presence_policy_id   = params[:presence_policy_id]
     @time_off_policy_days = params[:time_off_policy_amount]
     @event_params         = build_event_params(params)
     @updated_assignations = {}
-    @event                = Account.current.employee_events.find(event_params[:id])
+    @event                = event
     @old_effective_at     = event.effective_at
     @params               = params
   end
@@ -53,15 +53,11 @@ class UpdateEvent
 
   def handle_contract_end
     return unless event.event_type.eql?("contract_end") && old_effective_at != event.effective_at
-    reset_effective_at = old_effective_at + 1.day
-    Employee::RESOURCE_JOIN_TABLES.each do |table_name|
-      event.employee.send(table_name).with_reset.where(effective_at: reset_effective_at).delete_all
-      next unless table_name.eql?("employee_time_off_policies")
-      event.employee.employee_balances.where(
-        "effective_at::date = ? AND balance_type = ?", reset_effective_at, "reset"
-      ).delete_all
-    end
-    HandleContractEnd.new(employee, event.effective_at, reset_effective_at).call
+    ContractEnd::Update.call(
+      employee: employee,
+      new_contract_end_date: event.effective_at,
+      old_contract_end_date: old_effective_at
+    )
   end
 
   def build_event_params(params)
@@ -203,7 +199,11 @@ class UpdateEvent
   def update_contract_end
     contract_end_for = employee.contract_end_for(old_effective_at)
     return unless contract_end_for.present? && contract_end_for + 1.day == old_effective_at
-    HandleContractEnd.new(employee, old_effective_at - 1.day, old_effective_at - 1.day).call
+    ::ContractEnd::Update.call(
+      employee: employee,
+      new_contract_end_date: old_effective_at,
+      old_contract_end_date: old_effective_at
+    )
   end
 
   def update_assignations_and_balances
@@ -270,6 +270,6 @@ class UpdateEvent
   end
 
   def event_occupation_rate
-    event.attribute_values["occupation_rate"].to_f
+    event.attribute_value("occupation_rate").to_f
   end
 end

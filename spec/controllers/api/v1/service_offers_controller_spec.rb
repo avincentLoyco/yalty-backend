@@ -5,6 +5,8 @@ RSpec.describe API::V1::ServiceOffersController, type: :controller do
 
   before do
     ENV["YALTY_SERVICE_EMAIL"] = "yalty@service.com"
+    allow(ServiceRequestMailer).to receive(:book_request).and_call_original
+    allow(ServiceRequestMailer).to receive(:quote_request).and_call_original
   end
 
   let(:params) do
@@ -161,16 +163,26 @@ RSpec.describe API::V1::ServiceOffersController, type: :controller do
       let(:service_action) { "book-now" }
 
       it { is_expected.to have_http_status(204) }
-      it { expect(ServiceRequestMailer).to receive(:book_request); subject }
       it { expect { subject }.to change(ActionMailer::Base.deliveries, :count) }
+      it "calls ServiceRequestMailer" do
+        subject
+        expect(ServiceRequestMailer)
+          .to have_received(:book_request)
+          .with(Account.current, Account::User.current, anything)
+      end
     end
 
     context "with send-quote action" do
       let(:service_action) { "send-quote" }
 
       it { is_expected.to have_http_status(204) }
-      it { expect(ServiceRequestMailer).to receive(:quote_request); subject }
       it { expect { subject }.to change(ActionMailer::Base.deliveries, :count) }
+      it "calls ServiceRequestMailer" do
+        subject
+        expect(ServiceRequestMailer)
+          .to have_received(:quote_request)
+          .with(Account.current, Account::User.current, anything)
+      end
     end
   end
 end

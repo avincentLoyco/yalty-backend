@@ -10,11 +10,10 @@ RSpec.describe UpdateEvent do
     Account::User.current = create(:account_user, account: employee.account)
     employee.events.first.update!(effective_at: 2.years.ago - 2.days)
   end
-  subject { UpdateEvent.new(params, employee_attributes_params).call }
+  subject { UpdateEvent.new(event, params).call }
   let(:first_name_order) { 1 }
   let(:employee) { create(:employee, :with_attributes) }
   let(:event) { employee.events.first }
-  let(:event_id) { event.id }
   let(:first_attribute) { event.employee_attribute_versions.first }
   let(:second_attribute) { event.employee_attribute_versions.last }
   let(:effective_at) { Date.new(2015, 4, 21) }
@@ -36,14 +35,14 @@ RSpec.describe UpdateEvent do
   end
   let(:params) do
     {
-      id: event_id,
       effective_at: effective_at,
       event_type: event_type,
       employee: {
         id: employee_id
       },
       presence_policy_id: presence_policy.id,
-      time_off_policy_amount: 20
+      time_off_policy_amount: 20,
+      employee_attributes: employee_attributes_params
     }
   end
 
@@ -86,7 +85,8 @@ RSpec.describe UpdateEvent do
       create(:employee_time_off_policy,
         employee: employee, effective_at: event.effective_at,
         occupation_rate: 0.5,
-        employee_event_id: event.id)
+        employee_event_id: event.id
+      )
     end
     context "when attributes id send" do
       it { expect { subject }.to change { event.employee_attribute_versions.count }.by(2) }
@@ -117,6 +117,7 @@ RSpec.describe UpdateEvent do
             id: picture_version.id
           }
         )
+        event.reload
       end
 
       context "when version does not have picture assigned" do
@@ -172,6 +173,7 @@ RSpec.describe UpdateEvent do
         event.reload.employee_attribute_versions
         definition.update!(validation: nil)
       end
+      let(:category) { create(:time_off_category, account: Account.current) }
       let!(:epp_for_hired) do
         create(:employee_presence_policy,
           employee: employee, effective_at: event.effective_at,
@@ -182,7 +184,9 @@ RSpec.describe UpdateEvent do
         create(:employee_time_off_policy,
           employee: employee, effective_at: event.effective_at,
           occupation_rate: 0.5,
-          employee_event_id: event.id)
+          employee_event_id: event.id,
+          time_off_policy: create(:time_off_policy, time_off_category: category)
+        )
       end
       let!(:salary_attribute) do
         create(:employee_attribute_version,
@@ -272,7 +276,8 @@ RSpec.describe UpdateEvent do
           employee: employee,
           effective_at: employee.events.first.effective_at,
           occupation_rate: 0.5,
-          employee_event_id: employee.events.first.id)
+          employee_event_id: employee.events.first.id
+        )
         employee.events.first.update!(effective_at: 2.years.ago + 1.day)
         if !employee_attributes_params.nil? &&
             employee_attributes_params.first[:attribute_name].eql?("firstname")
@@ -285,8 +290,8 @@ RSpec.describe UpdateEvent do
         end
       end
 
-      let(:first_category) { create(:time_off_category, account: employee.account) }
-      let(:second_category) { create(:time_off_category, account: employee.account) }
+      let(:first_category) { create(:time_off_category, account: Account.current) }
+      let(:second_category) { create(:time_off_category, account: Account.current) }
       let!(:ewp) do
         create(:employee_working_place, employee: employee, effective_at: 2.years.ago + 1.day)
       end
@@ -303,7 +308,7 @@ RSpec.describe UpdateEvent do
         create(:employee_time_off_policy, :with_employee_balance,
           employee: employee, effective_at: 2.years.ago + 5.days,
           time_off_policy:
-            create(:time_off_policy, :with_end_date,time_off_category: first_category)
+            create(:time_off_policy, :with_end_date, time_off_category: first_category)
         )
       end
       let!(:epp) do
@@ -315,6 +320,8 @@ RSpec.describe UpdateEvent do
       let(:effective_at) { 1.year.since + 2.days }
 
       context "and this is event hired" do
+        before { event.reload }
+
         context "and date move to the future" do
           it { expect { subject }.to change { event.reload.effective_at } }
           it { expect { subject }.to change { ewp.reload.effective_at } }
@@ -339,10 +346,10 @@ RSpec.describe UpdateEvent do
             before do
               employee.employee_balances.where(time_off_category: second_category).destroy_all
               etops.last.destroy!
-              EmployeeTimeOffPolicy.all.map do |etop|
+              [etops, new_etop].flatten.map do |etop|
                 ManageEmployeeBalanceAdditions.new(etop).call
               end
-              Employee::Balance.order(:effective_at).map do |balance|
+              employee.employee_balances.order(:effective_at).map do |balance|
                 UpdateEmployeeBalance.new(balance).call
               end
             end
@@ -355,7 +362,7 @@ RSpec.describe UpdateEvent do
             end
             let(:effective_at) { 2.months.since }
 
-            xit do
+            it do
               subject
               removals_to_destroy.map do |removal|
                 next unless removal.balance_credit_additions.blank?
@@ -495,7 +502,7 @@ RSpec.describe UpdateEvent do
 
         skip "rewrite specs - and date move to the past" do
           before do
-            EmployeeTimeOffPolicy.all.map do |etop|
+            [etops, new_etop].flatten.map do |etop|
               ManageEmployeeBalanceAdditions.new(etop).call
             end
             params[:effective_at] = 3.years.ago
@@ -1036,12 +1043,6 @@ RSpec.describe UpdateEvent do
 
     context "with invalid employee id" do
       let(:employee_id) { "ab" }
-
-      it { expect { subject }.to raise_error(ActiveRecord::RecordNotFound) }
-    end
-
-    context "with invalid event id" do
-      let(:event_id) { "ab" }
 
       it { expect { subject }.to raise_error(ActiveRecord::RecordNotFound) }
     end

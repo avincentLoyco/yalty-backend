@@ -1,7 +1,7 @@
 class CreateEvent
   include API::V1::Exceptions
   attr_reader :employee_params, :attributes_params, :event_params, :employee,
-    :event, :versions, :presence_policy_id, :time_off_policy_days
+    :versions, :presence_policy_id
 
   def initialize(params, employee_attributes_params)
     @employee               = nil
@@ -10,30 +10,21 @@ class CreateEvent
     @employee_params        = params[:employee]
     @attributes_params      = employee_attributes_params
     @presence_policy_id     = params[:presence_policy_id]
-    @time_off_policy_days   = params[:time_off_policy_amount]
     @event_params           = build_event_params(params)
   end
 
   def call
-    ActiveRecord::Base.transaction do
-      build_event
+    event.tap do
       find_or_build_employee
       build_versions
       save!
-      event.tap { handle_hired_or_work_contract_event }
-      event.tap { handle_contract_end }
     end
   end
 
   private
 
   def build_event_params(params)
-    params.tap do |attr|
-      attr.delete(:employee)
-      attr.delete(:employee_attributes)
-      attr.delete(:presence_policy_id)
-      attr.delete(:time_off_policy_amount)
-    end
+    params.except(:employee, :employee_attributes, :presence_policy_id, :time_off_policy_amount)
   end
 
   def find_or_build_employee
@@ -47,8 +38,8 @@ class CreateEvent
     event.employee = @employee
   end
 
-  def build_event
-    @event = Account.current.employee_events.new(event_params)
+  def event
+    @event ||= Account.current.employee_events.new(event_params)
   end
 
   def build_versions
@@ -112,56 +103,5 @@ class CreateEvent
       }
     end
     errors.delete_if { |error| error.values.first.empty? }.reduce({}, :merge)
-  end
-
-  def handle_contract_end
-    return unless event.event_type.eql?("contract_end")
-    HandleContractEnd.new(employee, event.effective_at).call
-  end
-
-  def presence_policy_params
-    {
-      event_id: event.id,
-      presence_policy_id: presence_policy_id
-    }
-  end
-
-  def handle_hired_or_work_contract_event
-    return unless event.event_type.in?(%w(hired work_contract))
-
-    validate_time_off_policy_days_presence
-    validate_presence_policy_presence
-
-    default_full_time_policy = Account.current.presence_policies.full_time
-    time_off_policy_amount = time_off_policy_days * default_full_time_policy.standard_day_duration
-
-    EmployeePolicy::Presence::Create.call(presence_policy_params)
-    validate_matching_occupation_rate
-
-    CreateEtopForEvent.new(event.id, time_off_policy_amount).call
-  end
-
-  def validate_time_off_policy_days_presence
-    return unless time_off_policy_days.nil?
-    raise InvalidResourcesError.new(event, { time_off_policy_amount: ["not present"] })
-  end
-
-  def validate_presence_policy_presence
-    return unless presence_policy_id.nil?
-    raise InvalidResourcesError.new(event, { presence_policy: ["not present"] })
-  end
-
-  def validate_matching_occupation_rate
-    return if presence_policy_occupation_rate.eql?(event_occupation_rate)
-    raise InvalidResourcesError.new(event, { occupation_rate:
-      ["does not match Presence Policy's occupation rate"] })
-  end
-
-  def presence_policy_occupation_rate
-    event.employee_presence_policy.presence_policy.occupation_rate
-  end
-
-  def event_occupation_rate
-    event.attribute_values["occupation_rate"].to_f
   end
 end

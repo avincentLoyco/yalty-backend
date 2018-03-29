@@ -3,12 +3,18 @@ require "employee_policy_period"
 class Employee::Balance < ActiveRecord::Base
   include RelatedAmount
 
-  END_OF_PERIOD_OFFSET = 1.second
-  REMOVAL_OFFSET       = 2.seconds
-  RESET_OFFSET         = 3.seconds
-  ASSIGNATION_OFFSET   = 4.seconds
-  ADDITION_OFFSET      = 5.seconds
-  MANUAL_ADJUSTMENT    = 6.seconds
+  # BALANCE ORDER OFFSETS
+  # Balances should be calculated in specified order
+  # This offset is taken into consideration when balance is
+  # created (balance effective_at)
+  END_OF_PERIOD_OFFSET     = 1.second
+  REMOVAL_OFFSET           = 2.seconds
+  RESET_OFFSET             = 3.seconds
+  ASSIGNATION_OFFSET       = 4.seconds
+  ADDITION_OFFSET          = 5.seconds
+  MANUAL_ADJUSTMENT_OFFSET = 6.seconds
+
+  TYPES = %w(time_off reset removal end_of_period assignation addition manual_adjustment)
 
   belongs_to :employee
   belongs_to :time_off_category
@@ -20,21 +26,18 @@ class Employee::Balance < ActiveRecord::Base
 
   validates :employee, :time_off_category, :balance, :effective_at, :resource_amount,
     :manual_amount, :balance_type, presence: true
-  validates :validity_date, presence: true, if: :balance_credit_removal_id
-  validates :balance_type,
-    inclusion: {
-      in: %w(time_off reset removal manual_adjustment end_of_period assignation addition)
-    }
+  validates :validity_date, presence: true, if: :balance_credit_removal_id, on: :update
+  validates :balance_type, inclusion: { in: TYPES }
   validates :effective_at, uniqueness: { scope: [:time_off_category, :employee] }
   validate :validity_date_later_than_effective_at, if: [:effective_at, :validity_date]
   validate :counter_validity_date_blank
   validate :time_off_policy_presence
   validate :effective_after_employee_start_date, if: :employee
-  validate :effective_at_equal_time_off_policy_dates, if: "time_off_id.nil? && employee_id"
   validate :effective_at_equal_time_off_end_date, if: :time_off_id
   validate :removal_effective_at_date
   validate :end_time_not_after_contract_end, if: [:employee, :effective_at]
   validate :reset_effective_at_after_contract_end, if: [:employee, :effective_at]
+  validate ->(balance) { BalanceEffectiveAtValidator.validate(balance) }
 
   before_validation :find_effective_at
   before_validation :calculate_amount_from_time_off, if: :time_off_id
@@ -187,140 +190,6 @@ class Employee::Balance < ActiveRecord::Base
     return if balance_type.eql?("reset") || employee.contract_periods_include?(effective_at)
 
     errors.add(:effective_at, "can't be set outside of employee contract period")
-  end
-
-  def effective_at_equal_time_off_policy_dates
-    return if balance_type.eql?("manual_adjustment")
-    etop = employee_time_off_policy
-    return if etop.blank? || balance_type.eql?("reset") || !etop.not_reset?
-    etop_hash = employee_time_off_policy_with_effective_till(etop)
-    matches_end_or_start_top_date = compare_effective_at_with_time_off_polices_related_dates(
-      time_off_policy,
-      etop_hash["effective_at"].to_date,
-      etop_hash["effective_till"].try(:to_date)
-    )
-    matches_effective_at = effective_at.to_date == etop.effective_at.to_date
-    return unless !matches_end_or_start_top_date && !matches_effective_at
-    message = "Must be at TimeOffPolicy  assignations date, end date, start date or the previous"\
-      " day to start date"
-    errors.add(:effective_at, message)
-  end
-
-  def employee_time_off_policy_with_effective_till(etop)
-    JoinTableWithEffectiveTill.new(
-      EmployeeTimeOffPolicy,
-      nil,
-      nil,
-      nil,
-      etop.id,
-      nil
-    ).call.first
-  end
-
-  def compare_effective_at_with_time_off_polices_related_dates(
-    time_off_policy,
-    etop_effective_at,
-    etop_effective_till
-  )
-    day = now_or_effective_at.to_date.day
-    month = now_or_effective_at.to_date.month
-    year = now_or_effective_at.to_date.year
-
-    valid_start_day_related =
-      check_start_day_related(
-        time_off_policy,
-        etop_effective_at,
-        etop_effective_till,
-        year,
-        month,
-        day
-      )
-    valid_end_date =
-      check_end_date(
-        time_off_policy,
-        etop_effective_at,
-        etop_effective_till,
-        year,
-        month,
-        day
-      )
-
-    valid_start_day_related || valid_end_date
-  end
-
-  def check_start_day_related(
-    time_off_policy,
-    etop_effective_at,
-    etop_effective_till,
-    year,
-    month,
-    day
-  )
-    start_day = time_off_policy.start_day
-    start_month = time_off_policy.start_month
-    year_in_range = year >= etop_effective_at.year &&
-      (etop_effective_till.nil? || year <= etop_effective_till.year)
-    correct_day_and_month = (day == start_day && month == start_month)
-    year_in_range && correct_day_and_month
-  end
-
-  def check_end_date(
-    time_off_policy,
-    etop_effective_at,
-    etop_effective_till,
-    year,
-    month,
-    day
-  )
-    return false unless time_off_policy.end_month && time_off_policy.end_day
-    date_in_year = Date.new(year, time_off_policy.end_month, time_off_policy.end_day) + 1.day
-    end_day = date_in_year.day
-    end_month = date_in_year.month
-    start_day = time_off_policy.start_day
-    start_month = time_off_policy.start_month
-
-    years_to_effect = years_to_effect_for_check(
-      etop_effective_till,
-      end_month,
-      end_day,
-      start_month,
-      start_day,
-      time_off_policy
-    )
-    years_to_compare = years_to_effect.eql?(0) ? 1 : years_to_effect
-    year_in_range = year >= etop_effective_at.year &&
-      (etop_effective_till.nil? || year <= etop_effective_till.year + years_to_compare)
-    correct_day_and_month = (day == end_day && month == end_month)
-    year_in_range && correct_day_and_month
-  end
-
-  def years_to_effect_for_check(
-    etop_effective_till,
-    end_month,
-    end_day,
-    start_month,
-    start_day,
-    time_off_policy
-  )
-    return unless etop_effective_till.present?
-    end_date = Date.new(etop_effective_till.year, end_month, end_day)
-    start_date = Date.new(etop_effective_till.year, start_month, start_day)
-    etop_effective_at = employee_time_off_policy.effective_at
-    end_date_before_start_date = end_date < start_date
-    end_date_after_or_equal_start_date = end_date >= start_date
-    effective_till_after_or_equal_start_date = etop_effective_till >= start_date
-    effective_till_before_start_date = etop_effective_till < start_date
-
-    offset =
-      if end_date_before_start_date && effective_till_after_or_equal_start_date
-        time_off_policy.years_to_effect + 1
-      elsif end_date_after_or_equal_start_date && effective_till_before_start_date
-        time_off_policy.years_to_effect - 1
-      else
-        time_off_policy.years_to_effect
-      end
-
-    etop_effective_at <= end_date ? offset : offset + 1
   end
 
   def effective_at_equal_time_off_end_date

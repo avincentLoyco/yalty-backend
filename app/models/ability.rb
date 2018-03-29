@@ -38,10 +38,8 @@ class Ability
       can [:show], Employee::Balance do |employee_balance|
         employee_balance.employee_id == user.employee.try(:id)
       end
-      can [:create, :update], Employee::Event do |event, event_attributes|
-        event.employee_id == user.employee.id ||
-          event_attributes[:employee][:id] == user.employee.id
-      end
+      can %i(create update), Employee::Event, employee_id: user.employee&.id
+      cannot %i(create update), Employee::Event, event_type: Employee::Event::MANAGER_EVENTS
       can [:show], Employee::Event do |event|
         event.account.id == user.account.id
       end

@@ -57,7 +57,8 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
       event_type: "hired",
       time_off_policy_amount: 10,
       employee: {},
-      presence_policy_id: presence_policy.id
+      presence_policy_id: presence_policy.id,
+      employee_attributes: employee_attributes_params
     }
   end
   let(:employee_attributes_params) do
@@ -87,11 +88,11 @@ RSpec.describe API::V1::EmployeeBalanceOverviewsController, type: :controller do
   end
 
   subject(:create_hired_event) do
-    CreateEvent.new(event_params, employee_attributes_params).call
+    Events::WorkContract::Create.call(event_params)
   end
 
   subject(:create_contract_end) do
-    CreateEvent.new(contract_end_params, []).call
+    Events::ContractEnd::Create.call(contract_end_params)
   end
 
   subject(:create_policy_balances) do

@@ -16,13 +16,12 @@ module API
 
       def create
         verified_dry_params(dry_validation_schema) do |attributes|
-          authorize! :create, Employee::Event.new, attributes.except(:employee_attributes)
-
+          authorize! :create, event_for_auth(attributes)
           verify_employee_attributes_values(attributes[:employee_attributes])
           UpdateEventAttributeValidator.new(attributes[:employee_attributes]).call
-          resource = CreateEvent.new(attributes, attributes[:employee_attributes].to_a).call
+          new_resource = event_service_class.new(attributes).call
 
-          render_resource(resource, status: :created)
+          render_resource(new_resource, status: :created)
         end
       end
 
@@ -31,25 +30,22 @@ module API
           authorize! :update, resource, attributes.except(:employee_attributes)
           verify_employee_attributes_values(attributes[:employee_attributes])
           UpdateEventAttributeValidator.new(attributes[:employee_attributes]).call
-          UpdateEvent.new(attributes, attributes[:employee_attributes].to_a).call
+          event_service_class.new(resource, attributes).call
+
           render_no_content
         end
       end
 
       def destroy
         authorize! :destroy, resource
-        DeleteEvent.new(resource).call
+        event_service_class.new(resource).call
         render_no_content
       end
 
       private
 
-      def run_quantity_job?
-        %w(hired contract_end).include?(resource.event_type)
-      end
-
       def resource
-        @resource ||= Account.current.employee_events.find(params[:id])
+        @resource ||= Account.current.employee_events.find_by!(id: params[:id])
       end
 
       def resources
@@ -76,6 +72,34 @@ module API
           end
 
         raise InvalidResourcesError.new(nil, result_errors) unless result_errors.blank?
+      end
+
+      def event_service_type
+        case event_type
+        when "hired", "work_contract"
+          "WorkContract"
+        when "contract_end"
+          "ContractEnd"
+        when "adjustment_of_balances"
+          "Adjustment"
+        else
+          "Default"
+        end
+      end
+
+      def event_type
+        params["event_type"] || resource.event_type
+      end
+
+      def event_service_class(action: action_name)
+        Events.const_get(event_service_type).const_get(action.classify)
+      end
+
+      def event_for_auth(attributes)
+        Employee::Event.new(
+          employee_id: attributes.dig(:employee, :id),
+          event_type: attributes[:event_type]
+        )
       end
     end
   end

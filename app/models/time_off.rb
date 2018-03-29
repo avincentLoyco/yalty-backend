@@ -47,6 +47,11 @@ class TimeOff < ActiveRecord::Base
     where(employee_id: employee_id, time_off_category_id: time_off_category_id)
   }
 
+  scope :at_date, lambda { |contract_end_date|
+    where("start_time <= ? AND end_time > ?",
+      contract_end_date.end_of_day, contract_end_date.beginning_of_day + 1.day)
+  }
+
   scope :in_category, ->(category_id) { where(time_off_category_id: category_id) }
 
   def balance(starts = start_time, ends = end_time)

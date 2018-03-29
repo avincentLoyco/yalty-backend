@@ -105,7 +105,7 @@ RSpec.describe CreateEmployeeBalance, type: :service, jobs: true do
             it_behaves_like "employee balance with other employee balances after"
           end
 
-          context "with validity_date in the past" do
+          context "with validity_date in the past", skip: "validity date abandoned" do
             let(:options) {{ effective_at: Time.now - 1.year, validity_date: "2/4/2015" }}
 
             it { expect { subject }.to change { Employee::Balance.count }.by(2) }
@@ -138,8 +138,7 @@ RSpec.describe CreateEmployeeBalance, type: :service, jobs: true do
         let(:effective_at) { Time.now + Employee::Balance::ADDITION_OFFSET }
         let(:options) do
           {
-            effective_at: effective_at,
-            validity_date: RelatedPolicyPeriod.new(employee_policy).validity_date_for_balance_at(effective_at)
+            effective_at: effective_at
           }
         end
         let!(:other_working_place_policy) do

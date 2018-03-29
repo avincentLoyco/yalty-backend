@@ -24,7 +24,6 @@ class FileStorageUploadDownload
       elsif request.get?  then download_file(token_data, params, get_file_id(env["PATH_INFO"]))
       else [405, { "Content-Type" => "text/plain" }, ["Method Not Allowed"]]
       end
-
     rescue InvalidData
       error_response
     end

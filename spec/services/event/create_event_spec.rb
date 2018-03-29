@@ -5,11 +5,6 @@ RSpec.describe CreateEvent do
 
   before do
     Account.current = employee.account
-    employee.events.first.update!(effective_at: Date.new(2015, 4, 20))
-    etop_assignation_on_hired_event = create(:employee_time_off_policy,
-      employee: employee, effective_at: Date.new(2015, 4, 20),
-      time_off_policy: create(:time_off_policy, time_off_category: vacation_category)
-    )
   end
 
   let!(:definition) do
@@ -73,12 +68,6 @@ RSpec.describe CreateEvent do
   subject { described_class.new(params, employee_attributes_params).call }
 
   context "with valid params" do
-    context "and this is work contract event" do
-      it do
-        expect { subject }.to change { Employee::Balance.where(balance_type:
-          "assignation").count }.by(1)
-      end
-    end
     context "when employee_id is present" do
       it { expect { subject }.to change { Employee::AttributeVersion.count }.by(3) }
       it { expect { subject }.to change { employee.events.count }.by(1) }
@@ -102,13 +91,7 @@ RSpec.describe CreateEvent do
         end
 
         it { expect { subject }.to change { Employee::Event.count } }
-        it { expect { subject }.to change { EmployeeTimeOffPolicy.with_reset.count }.by(1) }
-        it do
-          expect { subject }
-            .to change { Employee::Balance.where(balance_type: "reset").count }.by(2)
-        end
         it { expect { subject }.to_not change { time_off.reload.end_time } }
-        it { expect { subject }.to_not change { time_off.reload.employee_balance.effective_at } }
       end
 
       context "and nested attribute send" do
@@ -199,10 +182,6 @@ RSpec.describe CreateEvent do
 
       it { expect(subject.effective_at).to eq effective_at }
       it { expect(subject.employee_attribute_versions.first.data.line).to eq value }
-      it do
-        expect { subject }.to change { Employee::Balance.where(balance_type:
-          "assignation").count }.by(1)
-      end
 
       context "and required attribute is nil or not send" do
         context "and value is nil" do

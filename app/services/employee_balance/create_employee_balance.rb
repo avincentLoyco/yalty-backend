@@ -3,11 +3,15 @@ class CreateEmployeeBalance
   attr_reader :category, :employee, :resource_amount, :employee_balance,
     :account, :options, :balance_removal, :active_balance
 
+  def self.call(category_id, employee_id, account_id, options)
+    new(category_id, employee_id, account_id, options).call
+  end
+
   def initialize(category_id, employee_id, account_id, options = {})
-    @options = options
-    @account = Account.find(account_id)
-    @category = account.time_off_categories.find(category_id)
-    @employee = account.employees.find(employee_id)
+    @options        = options
+    @account        = Account.find(account_id)
+    @category       = account.time_off_categories.find(category_id)
+    @employee       = account.employees.find(employee_id)
     @active_balance = find_active_assignation_balance_for_date
   end
 
@@ -107,20 +111,8 @@ class CreateEmployeeBalance
   end
 
   def update_next_employee_balances
-    return if only_in_balance_period? || options[:skip_update]
-    PrepareEmployeeBalancesToUpdate.new(employee_balance).call
-    ActiveRecord::Base.after_transaction do
-      UpdateBalanceJob.perform_later(employee_balance.id)
-    end
-  end
-
-  def only_in_balance_period?
-    start_time =
-      [employee_balance.effective_at, employee_balance.time_off.try(:start_time)].compact.min
-    Employee::Balance
-      .where("effective_at >= ?", start_time)
-      .where.not(id: [employee_balance.id, balance_removal.try(:id)])
-      .blank?
+    return if options[:skip_update]
+    UpdateNextEmployeeBalances.new(employee_balance).call
   end
 
   def balancer_removal?

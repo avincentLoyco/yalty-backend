@@ -1,6 +1,12 @@
 class PrepareEmployeeBalancesToUpdate
   attr_reader :resource, :options, :balances_to_update_ids
 
+  class << self
+    def call(resource, options = {})
+      new(resource, options).call
+    end
+  end
+
   def initialize(resource, options = {})
     @resource = resource
     @options = options
