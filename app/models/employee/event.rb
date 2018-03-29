@@ -34,7 +34,8 @@ class Employee::Event < ActiveRecord::Base
     partner_death: %w(spouse),
     child_studies: %w(child),
     contract_end: %w(),
-    adjustment_of_balances: %w(comment adjustment)
+    adjustment_of_balances: %w(comment adjustment),
+    other: %w(title comment)
   }.with_indifferent_access
 
   MANAGER_EVENTS = %w(
