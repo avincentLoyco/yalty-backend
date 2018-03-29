@@ -1,7 +1,7 @@
 {
   "before_migration": [
     {
-  		"task_name": "rake add_adjustment_and_comment_to_account_attributes",
+  		"task_name": "add_adjustment_and_comment_to_account_attributes",
   		"description": [
   			"Add adjustment and comment to account attributes"
   		]
