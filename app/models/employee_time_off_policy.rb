@@ -15,7 +15,6 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
   validates :effective_at, uniqueness: { scope: [:employee_id, :time_off_category_id] }
   validates :occupation_rate,
     numericality: { less_than_or_equal_to: 1, greater_than_or_equal_to: 0 }
-  validate :verify_not_change_of_policy_type_in_category, if: [:employee, :time_off_policy]
   validate :no_balances_without_valid_policy, on: :update
 
   before_save :add_category_id
@@ -127,22 +126,6 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
       :effective_at, "Can't remove if there are time offs after and there is no previous policy"
     )
     errors.blank?
-  end
-
-  def verify_not_change_of_policy_type_in_category
-    return if time_off_policy.reset
-    firts_etop =
-      employee
-      .employee_time_off_policies
-      .where(time_off_category_id: time_off_policy.time_off_category_id)
-      .order(:effective_at)
-      .first
-    return unless
-      firts_etop && firts_etop.time_off_policy.policy_type != time_off_policy.policy_type
-    errors.add(
-      :policy_type,
-      "The employee has an existing policy of different type in the category"
-    )
   end
 
   def add_category_id
