@@ -9,7 +9,7 @@
   ],
   "after_migration": [
     {
-  		"task_name": "create_missing_adjustment_events",
+  		"task_name": "employee_event:create_missing_adjustment_events",
   		"description": [
   			"Create missing adjustment events for employees for which previously we had to manually adjust balances"
   		]
