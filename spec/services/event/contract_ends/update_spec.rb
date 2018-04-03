@@ -1,5 +1,5 @@
 require "rails_helper"
-RSpec.describe ContractEnd::Update, :service do
+RSpec.describe ContractEnds::Update, :service do
   include_context "shared_context_account_helper"
   include_context "shared_context_timecop_helper"
 

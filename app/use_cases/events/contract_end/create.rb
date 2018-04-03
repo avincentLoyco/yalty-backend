@@ -2,7 +2,7 @@ module Events
   module ContractEnd
     class Create < Default::Create
       config_accessor :contract_end_service do
-        ::ContractEnd::Create
+        ::ContractEnds::Create
       end
 
       def call

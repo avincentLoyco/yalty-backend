@@ -1,6 +1,6 @@
 require "rails_helper"
 # CreateContractEnd
-RSpec.describe ContractEnd::Create, :service do
+RSpec.describe ContractEnds::Create, :service do
   include_context "shared_context_account_helper"
   include_context "shared_context_timecop_helper"
 

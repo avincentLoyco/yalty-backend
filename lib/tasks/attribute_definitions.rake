@@ -70,7 +70,7 @@ namespace :attribute_definitions do
       Employee::Event.create!(
         effective_at: event_effective_at, event_type: "contract_end", employee: employee
       )
-      ::ContractEnd::Update.call(
+      ::ContractEnds::Update.call(
         employee: employee,
         new_contract_end_date: event_effective_at,
         old_contract_end_date: event_effective_at

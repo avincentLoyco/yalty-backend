@@ -1,6 +1,6 @@
 # module Event
-module ContractEnd
-  class Create < ContractEnd::Removal
+module ContractEnds
+  class Create < Removal
     attr_reader :employee, :unemployment_period
 
     def self.call(employee:, contract_end_date:)

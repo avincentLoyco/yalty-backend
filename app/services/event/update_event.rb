@@ -53,7 +53,7 @@ class UpdateEvent
 
   def handle_contract_end
     return unless event.event_type.eql?("contract_end") && old_effective_at != event.effective_at
-    ContractEnd::Update.call(
+    ContractEnds::Update.call(
       employee: employee,
       new_contract_end_date: event.effective_at,
       old_contract_end_date: old_effective_at
@@ -199,7 +199,7 @@ class UpdateEvent
   def update_contract_end
     contract_end_for = employee.contract_end_for(old_effective_at)
     return unless contract_end_for.present? && contract_end_for + 1.day == old_effective_at
-    ::ContractEnd::Update.call(
+    ::ContractEnds::Update.call(
       employee: employee,
       new_contract_end_date: old_effective_at,
       old_contract_end_date: old_effective_at

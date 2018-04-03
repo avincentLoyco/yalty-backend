@@ -1,4 +1,4 @@
-module ContractEnd
+module ContractEnds
   class Removal
     UnemploymentPeriod = Struct.new(:start_date, :end_date)
 

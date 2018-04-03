@@ -1,5 +1,5 @@
-module ContractEnd
-  class Update < ContractEnd::Removal
+module ContractEnds
+  class Update < Removal
     attr_reader :employee, :old_contract_end_date, :next_hire_date, :unemployment_period
 
     def self.call(employee:, new_contract_end_date:, old_contract_end_date:)

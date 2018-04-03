@@ -20,7 +20,7 @@ module EmployeePolicy
 
         def call
           if contract_end.eql?(effective_at - 1.day)
-            ::ContractEnd::Update.call(
+            ::ContractEnds::Update.call(
               employee: employee,
               new_contract_end_date: contract_end,
               old_contract_end_date: contract_end
