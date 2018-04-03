@@ -11,6 +11,7 @@ module ContractEnd
         remove_time_offs
         remove_balances
         remove_work_contracts
+        remove_adjustment_events
         assign_reset_resources
         move_time_offs
         assign_reset_balances_and_create_additions
@@ -37,6 +38,14 @@ module ContractEnd
       DeleteTypeInPeriod.call(
         period_to_delete: unemployment_period,
         event_type: "work_contract",
+        employee: employee
+      )
+    end
+
+    def remove_adjustment_events
+      DeleteTypeInPeriod.call(
+        period_to_delete: unemployment_period,
+        event_type: "adjustment_of_balances",
         employee: employee
       )
     end
