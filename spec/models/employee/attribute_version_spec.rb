@@ -184,4 +184,36 @@ RSpec.describe Employee::AttributeVersion, type: :model do
       end
     end
   end
+
+  context "#validate_integer" do
+    let!(:attribute_definition) do
+      create(:employee_attribute_definition,
+        validation: { integer: true },
+        name: "integer_test",
+        attribute_type: "Number")
+    end
+
+    subject do
+      build(:employee_attribute_version,
+        attribute_definition: attribute_definition, data: { number: number_to_test })
+    end
+
+    context "when presenting integer value" do
+      let(:number_to_test) { "12" }
+
+      it { is_expected.to be_valid }
+    end
+
+    context "when presenting bad value" do
+      let(:number_to_test) { "bad" }
+
+      it { is_expected.not_to be_valid }
+    end
+
+    context "when out of DB integer range" do
+      let(:number_to_test) { 2**33 }
+
+      it { is_expected.not_to be_valid }
+    end
+  end
 end

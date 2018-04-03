@@ -87,7 +87,8 @@ class Account < ActiveRecord::Base
     nationality: { country_code: true },
     tax_canton: { state_code: true },
     spouse_working_region: { state_code: true },
-    occupation_rate: { range: [0, 1], presence: true }
+    occupation_rate: { range: [0, 1], presence: true },
+    adjustment: { integer: true }
   }.with_indifferent_access
 
   MULTIPLE_ATTRIBUTES = %w(child).freeze

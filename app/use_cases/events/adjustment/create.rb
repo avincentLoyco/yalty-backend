@@ -6,8 +6,10 @@ module Events
       end
 
       def call
-        event.tap do
-          handle_adjustment
+        ActiveRecord::Base.transaction do
+          event.tap do
+            handle_adjustment
+          end
         end
       end
 

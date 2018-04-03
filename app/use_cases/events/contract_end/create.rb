@@ -6,8 +6,10 @@ module Events
       end
 
       def call
-        event.tap do
-          handle_contract_end
+        ActiveRecord::Base.transaction do
+          event.tap do
+            handle_contract_end
+          end
         end
       end
 
