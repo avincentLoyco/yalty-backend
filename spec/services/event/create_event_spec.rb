@@ -22,14 +22,15 @@ RSpec.describe CreateEvent do
     create(:presence_policy, :with_time_entries, account: employee.account, occupation_rate: 0.8,
       standard_day_duration: 9600, default_full_time: true)
   end
-  let(:employee) { create(:employee) }
-  let(:employee_id) { employee.id }
-  let(:effective_at) { Date.new(2015, 4, 21) }
-  let(:event_type) { "work_contract" }
-  let(:value) { "abc" }
-  let(:attribute_name) { "job_title" }
-  let(:attribute_name_second) { "job_title" }
+  let(:employee)                  { create(:employee) }
+  let(:employee_id)               { employee.id }
+  let(:effective_at)              { Date.new(2015, 4, 21) }
+  let(:event_type)                { "work_contract" }
+  let(:value)                     { "abc" }
+  let(:attribute_name)            { "job_title" }
+  let(:attribute_name_second)     { "job_title" }
   let(:occupation_rate_attribute) { "occupation_rate" }
+
   let!(:vacation_category) do
     create(:time_off_category, account: employee.account,
       name: "vacation")

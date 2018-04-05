@@ -5,11 +5,12 @@ RSpec.shared_context "event update context" do
   let(:event_updater) { class_double("UpdateEvent") }
   let(:event_updater_instance) { instance_double("UpdateEvent") }
   let(:params) do
-    { employee_attributes: employee_attributes }
+    { employee_attributes: employee_attributes, effective_at: event_effective_at }
   end
 
-  let(:event) { double }
+  let(:event)               { double }
   let(:employee_attributes) { nil }
+  let(:event_effective_at)  { nil }
 
   before do
     use_case.event_updater = event_updater

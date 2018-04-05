@@ -20,7 +20,10 @@ RSpec.describe Events::Adjustment::Update do
     )
   end
 
-  let(:balance_updater) { class_double("UpdateNextEmployeeBalances") }
+  let(:account)                  { create(:account) }
+  let(:vacation_category)        { account.vacation_category }
+  let(:employee)                 { create(:employee, account: account) }
+  let(:balance_updater)          { class_double("UpdateNextEmployeeBalances") }
   let(:balance_updater_instance) { instance_double("UpdateNextEmployeeBalances") }
 
   let(:event) do

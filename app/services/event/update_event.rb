@@ -1,14 +1,12 @@
 class UpdateEvent
   include API::V1::Exceptions
   attr_reader :employee_params, :attributes_params, :event_params, :versions, :event, :employee,
-    :updated_assignations, :old_effective_at, :presence_policy_id, :time_off_policy_days, :params
+    :updated_assignations, :old_effective_at, :params
 
   def initialize(event, params)
     @versions             = []
     @employee_params      = params[:employee].tap { |attr| attr.delete(:employee_attributes) }
     @attributes_params    = params[:employee_attributes].to_a
-    @presence_policy_id   = params[:presence_policy_id]
-    @time_off_policy_days = params[:time_off_policy_amount]
     @event_params         = build_event_params(params)
     @updated_assignations = {}
     @event                = event
@@ -24,65 +22,20 @@ class UpdateEvent
       manage_versions
       save!
     end
-    event.tap { handle_hired_or_work_contract_event }
-    event.tap { handle_contract_end }
   end
 
   private
 
-  def handle_hired_or_work_contract_event
-    return unless event.event_type.in?(%w(hired work_contract))
-
-    validate_time_off_policy_days_presence
-    validate_presence_policy_presence
-
-    default_full_time_policy = Account.current.presence_policies.full_time
-    time_off_policy_amount = time_off_policy_days * default_full_time_policy.standard_day_duration
-
-    if presence_policy_id.eql?(event.employee_presence_policy&.presence_policy&.id)
-      EmployeePolicy::Presence::Update.call(update_presence_policy_params)
-    else
-      EmployeePolicy::Presence::Destroy.call(event.employee_presence_policy)
-      EmployeePolicy::Presence::Create.call(create_presence_policy_params)
-    end
-
-    validate_matching_occupation_rate
-
-    UpdateEtopForEvent.new(event.id, time_off_policy_amount, old_effective_at).call
-  end
-
-  def handle_contract_end
-    return unless event.event_type.eql?("contract_end") && old_effective_at != event.effective_at
-    ContractEnds::Update.call(
-      employee: employee,
-      new_contract_end_date: event.effective_at,
-      old_contract_end_date: old_effective_at
-    )
-  end
-
   def build_event_params(params)
-    params.tap do |attr|
-      attr.delete(:employee)
-      attr.delete(:employee_attributes)
-      attr.delete(:presence_policy_id)
-      attr.delete(:time_off_policy_amount)
-    end
-  end
-
-  def update_presence_policy_params
-    { id: event.employee_presence_policy.id, effective_at: params[:effective_at] }
-  end
-
-  def create_presence_policy_params
-    { event_id: event.id, presence_policy_id: presence_policy_id }
-  end
-
-  def find_employee
-    @employee = Account.current.employees.find(employee_params[:id])
+    params.except(:employee, :employee_attributes, :presence_policy_id, :time_off_policy_amount)
   end
 
   def find_and_update_event
     event.attributes = event_params.except(:presence_policy_id)
+  end
+
+  def find_employee
+    @employee = Account.current.employees.find(employee_params[:id])
   end
 
   def update_employee_join_tables
@@ -247,29 +200,5 @@ class UpdateEvent
         UpdateBalanceJob.perform_later(balance.id, update_all: true)
       end
     end
-  end
-
-  def validate_time_off_policy_days_presence
-    return unless time_off_policy_days.nil?
-    raise InvalidResourcesError.new(event, { time_off_policy_amount: ["not present"] })
-  end
-
-  def validate_presence_policy_presence
-    return unless presence_policy_id.nil?
-    raise InvalidResourcesError.new(event, { presence_policy: ["not present"] })
-  end
-
-  def validate_matching_occupation_rate
-    return if presence_policy_occupation_rate.eql?(event_occupation_rate)
-    raise InvalidResourcesError.new(event, { occupation_rate:
-      ["Does not match Presence Policy's occupation rate"] })
-  end
-
-  def presence_policy_occupation_rate
-    event.employee_presence_policy.presence_policy.occupation_rate
-  end
-
-  def event_occupation_rate
-    event.attribute_value("occupation_rate").to_f
   end
 end
