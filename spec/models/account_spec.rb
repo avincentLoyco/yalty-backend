@@ -422,4 +422,11 @@ RSpec.describe Account, type: :model do
       expect(data_keys).to match_array(proper_account_data_keys)
     end
   end
+
+  describe "#vacation_category" do
+    subject(:vacation_category) { account.vacation_category }
+    let(:account) { create(:account) }
+
+    it { is_expected.to be_kind_of(TimeOffCategory) }
+  end
 end

@@ -47,36 +47,13 @@ namespace :deploy do
     end
   end
 
-  task :clean_tasks_json do
-    # do we have access to version?
-    version = fetch(:app_version)
-
-    tasks_file = File.expand_path("../../../config/deploy/tasks.json", __dir__)
-    tasks_json = JSON.parse(File.read(tasks_file))
-    tasks_json["before_migration"].clear
-    tasks_json["after_migration"].clear
-
-    # what locally means in this task?
-    run_locally do
-      info "Cleanup tasks list"
-      File.write(tasks_file, JSON.pretty_generate(tasks_json))
-      if test "git diff-index --ignore-space-change --quiet v#{version} -- #{tasks_file}"
-        info "nothing to do..."
-      else
-        # do we have access to git?
-        execute :git, :add, tasks_file
-        execute :git, :commit, '-m "Cleanup list of deploy tasks"'
-        execute :git, :push, "-u origin releases/#{version}"
-      end
-    end
-  end
-
   namespace :rake do
     task :before_migrate_database do
       on fetch(:running_task_server) do
         within release_path do
           tasks = JSON.parse(capture(:cat, "config/deploy/tasks.json"))
           tasks["before_migration"].each do |task|
+            info "running #{task} before migration"
             execute :rake, task["task_name"]
           end
         end
@@ -88,6 +65,7 @@ namespace :deploy do
         within release_path do
           tasks = JSON.parse(capture(:cat, "config/deploy/tasks.json"))
           tasks["after_migration"].each do |task|
+            info "running #{task} after migration"
             execute :rake, task["task_name"]
           end
         end

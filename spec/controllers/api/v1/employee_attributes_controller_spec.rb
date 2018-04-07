@@ -45,18 +45,18 @@ RSpec.describe API::V1::EmployeeAttributesController, type: :controller do
         occupation_rate: 0.5,
         employee_event_id: hired_event.id)
       UpdateEvent.new(
+        hired_event,
         {
-          id: hired_event.id,
           effective_at: hired_effective_at,
           event_type: hired_event.event_type,
           employee: { id: employee.id },
           presence_policy_id: presence_policy.id,
-          time_off_policy_amount: 20
-        },
-        [
-          { attribute_name: "firstname", value: "James" },
-          { attribute_name: "occupation_rate", value: "0.5" }
-        ]
+          time_off_policy_amount: 20,
+          employee_attributes: [
+            { attribute_name: "firstname", value: "James" },
+            { attribute_name: "occupation_rate", value: "0.5" }
+          ]
+        }
       ).call
 
       CreateEvent.new(

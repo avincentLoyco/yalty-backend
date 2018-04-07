@@ -30,10 +30,10 @@ namespace :release do
     version = fetch(:app_version)
     sha1 = fetch(:app_version_sha1)
 
-    # tasks_file = File.expand_path('../../../config/deploy/tasks.json', __dir__)
-    # tasks_json = JSON.parse(File.read(tasks_file))
-    # tasks_json['before_migration'].clear
-    # tasks_json['after_migration'].clear
+    tasks_file = File.expand_path("../../../config/deploy/tasks.json", __dir__)
+    tasks_json = JSON.parse(File.read(tasks_file))
+    tasks_json["before_migration"].clear
+    tasks_json["after_migration"].clear
 
     run_locally do
       info "Create release tag"
@@ -43,15 +43,15 @@ namespace :release do
       execute :docker, :push, "yalty/backend:#{version}"
       execute :git, :push, "--tags"
 
-      # info 'Cleanup tasks list'
-      # File.write(tasks_file, JSON.pretty_generate(tasks_json))
-      # if test "git diff-index --ignore-space-change --quiet v#{version} -- #{tasks_file}"
-      #   info 'nothing to do...'
-      # else
-      #   execute :git, :add, tasks_file
-      #   execute :git, :commit, '-m "Cleanup list of deploy tasks"'
-      #   execute :git, :push, "-u origin releases/#{version}"
-      # end
+      info "Cleanup tasks list"
+      File.write(tasks_file, JSON.pretty_generate(tasks_json))
+      if test "git diff-index --ignore-space-change --quiet v#{version} -- #{tasks_file}"
+        info "nothing to do..."
+      else
+        execute :git, :add, tasks_file
+        execute :git, :commit, '-m "Cleanup list of deploy tasks"'
+        execute :git, :push, "-u origin releases/#{version}"
+      end
 
       info 'Deploy to production environment:
         cap production deploy'

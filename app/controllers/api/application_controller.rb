@@ -60,7 +60,11 @@ class API::ApplicationController < ApplicationController
     related_resource = resource.send(resource.class.model_name.element.gsub("employee_", ""))
     contract_end = resource.employee.contract_end_for(resource.effective_at)
     if contract_end.eql?(resource.effective_at - 1.day)
-      HandleContractEnd.new(resource.employee, contract_end).call
+      ::ContractEnds::Update.call(
+        employee: resource.employee,
+        new_contract_end_date: contract_end,
+        old_contract_end_date: contract_end,
+      )
     else
       duplicated = FindSequenceJoinTableInTime.new(
         employee_collection, nil, related_resource, resource

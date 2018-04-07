@@ -33,8 +33,20 @@ class Employee::Event < ActiveRecord::Base
     child_adoption: %w(child),
     partner_death: %w(spouse),
     child_studies: %w(child),
-    contract_end: %w()
+    contract_end: %w(),
+    adjustment_of_balances: %w(comment adjustment),
+    other: %w(title comment_communication)
   }.with_indifferent_access
+
+  MANAGER_EVENTS = %w(
+    work_contract
+    tax_at_source
+    contract_end
+    salary_paid
+    salary_certificate
+    performance_review
+    adjustment_of_balances
+  ).freeze
 
   belongs_to :employee, inverse_of: :events, required: true
   has_one :account, through: :employee
@@ -57,6 +69,7 @@ class Employee::Event < ActiveRecord::Base
   validate :contract_end_and_hire_in_valid_order, if: %i(employee event_type effective_at)
   validate :work_contract_in_work_period, if: %i(employee event_type effective_at)
   validate :default_presence_policy_assigned, if: %i(employee event_type)
+  validate :active_etop_exists, if: :etop_validation_required?
 
   scope :contract_ends, -> { where(event_type: "contract_end") }
   scope :hired, -> { where(event_type: "hired") }
@@ -79,6 +92,13 @@ class Employee::Event < ActiveRecord::Base
       attrs_keys[attribute_version.attribute_definition.name] = event_version.value
     end
     attrs_keys
+  end
+
+  def attribute_value(attribute_definition_name)
+    employee_attribute_versions
+      .joins(:attribute_definition)
+      .merge(Employee::AttributeDefinition.where(name: attribute_definition_name))
+      .first&.value
   end
 
   def event_attributes
@@ -215,5 +235,15 @@ class Employee::Event < ActiveRecord::Base
         employee.account.presence_policies.full_time.nil?
 
     errors.add(:base, "No Default Full Time Presence Policy assigned")
+  end
+
+  def active_etop_exists
+    return if employee.employee_time_off_policies.active_at(effective_at).exists?
+
+    errors.add(:effective_at, "No TimeOffPolicy at the effective at date")
+  end
+
+  def etop_validation_required?
+    event_type == "adjustment_of_balances"
   end
 end

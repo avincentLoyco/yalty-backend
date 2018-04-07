@@ -53,7 +53,7 @@ class UpdateEtopForEvent
   end
 
   def event_occupation_rate
-    event.attribute_values["occupation_rate"]
+    event.attribute_value("occupation_rate")
   end
 
   def recreate_balances

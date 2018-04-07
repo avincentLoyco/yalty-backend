@@ -87,7 +87,8 @@ class Account < ActiveRecord::Base
     nationality: { country_code: true },
     tax_canton: { state_code: true },
     spouse_working_region: { state_code: true },
-    occupation_rate: { range: [0, 1], presence: true }
+    occupation_rate: { range: [0, 1], presence: true },
+    adjustment: { integer: true }
   }.with_indifferent_access
 
   MULTIPLE_ATTRIBUTES = %w(child).freeze
@@ -101,10 +102,10 @@ class Account < ActiveRecord::Base
       emergency_firstname emergency_phone permit_type tax_source_code bank_name
       account_owner_name iban clearing_number job_title contract_type department
       cost_center manager spouse_working_region professional_phone personal_mobile
-      spouse_is_working bank_account_number tax_canton
+      spouse_is_working bank_account_number tax_canton comment title comment_communication
     ),
     Attribute::Date.attribute_type => %w(birthdate permit_expiry),
-    Attribute::Number.attribute_type => %w(occupation_rate monthly_payments tax_rate),
+    Attribute::Number.attribute_type => %w(occupation_rate monthly_payments tax_rate adjustment),
     Attribute::Currency.attribute_type => %w(annual_salary hourly_salary representation_fees),
     Attribute::Address.attribute_type => %w(address),
     Attribute::Child.attribute_type => %w(child),
@@ -202,6 +203,10 @@ class Account < ActiveRecord::Base
 
   def recently_created?
     new_record? || @recently_created
+  end
+
+  def vacation_category
+    time_off_categories.find_by(name: "vacation")
   end
 
   private

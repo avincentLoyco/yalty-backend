@@ -5,8 +5,10 @@ module ExceptionHandler
   RESOURCE_TYPES = %w(presence_policy time_off_policies time_off_categories working_places)
 
   included do
-    rescue_from Exception, with: :render_500_error
-    rescue_from StandardError, with: :render_500_error
+    unless Rails.application.config.consider_all_requests_local
+      rescue_from Exception, with: :render_500_error
+      rescue_from StandardError, with: :render_500_error
+    end
     rescue_from ActionController::RoutingError, with: :bad_request_error
     rescue_from ActiveRecord::RecordNotFound, with: :record_not_found_error
     rescue_from ActiveRecord::RecordInvalid, with: :resource_invalid_error
