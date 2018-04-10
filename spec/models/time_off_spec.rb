@@ -189,9 +189,9 @@ RSpec.describe TimeOff, type: :model do
       shared_examples "TimeOff overlaps with RegisteredWorkingTime" do
         it { expect(subject.valid?).to eq false }
         it { expect { subject.valid? }.to change { subject.errors.messages[:start_time] }
-          .to include "Overlaps with registered working time on #{date}" }
+          .to include "Overlaps with registered working time" }
         it { expect { subject.valid? }.to change { subject.errors.messages[:end_time] }
-          .to include "Overlaps with registered working time on #{date}" }
+          .to include "Overlaps with registered working time" }
       end
 
       context "when overlapping occurs on the" do
