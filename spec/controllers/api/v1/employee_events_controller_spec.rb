@@ -803,13 +803,14 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         end
 
         before do
-          create(:employee_attribute_definition, :required,
+          create(:employee_attribute_definition,
             account: Account.current,
             name: "adjustment",
-            attribute_type: "Number"
+            attribute_type: "Number",
+            validation: { integer: true }
           )
 
-          create(:employee_attribute_definition, :required,
+          create(:employee_attribute_definition,
             account: Account.current,
             name: "comment",
             attribute_type: "String"

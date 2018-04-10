@@ -45,7 +45,7 @@ module Api::V1
           messages: messages,
           status: "invalid",
           type: resource_type,
-          codes: generate_codes(field, messages),
+          codes: generate_codes(field, messages).flatten,
           employee_id: join_table_employee_id
         }
       end
@@ -61,12 +61,13 @@ module Api::V1
 
     def generate_codes(field, messages)
       return [] if messages.blank?
-      messages.each_with_object([]) do |message, codes|
-        next unless message && !message.is_a?(Array)
-        codes << field.to_s + "_" + message
-                                    .gsub(/([^a-z0-9\s]|( \da\+.$| on \d+\.$|\.$))/i, "")
-                                    .tr(" ", "_").downcase
-        codes
+      messages.map do |message|
+        next unless message.present?
+        if message.is_a?(Array)
+          nested_field, nested_messages = message
+          next generate_codes(nested_field, nested_messages)
+        end
+        field.to_s + "_" + message.to_s.remove("'").parameterize("_")
       end
     end
   end

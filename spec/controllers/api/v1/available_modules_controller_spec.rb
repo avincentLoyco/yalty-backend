@@ -14,7 +14,6 @@ RSpec.describe API::V1::AvailableModulesController, type: :controller do
   end
 
   before do
-    ENV["YALTY_ACCESS_EMAIL"] = "access@example.com"
     allow(YAML).to receive(:load).and_return(free_plans)
     allow(Stripe::Plan).to receive(:list).and_return(stripe_plans)
   end
@@ -34,7 +33,8 @@ RSpec.describe API::V1::AvailableModulesController, type: :controller do
 
       let(:user) do
         create(:account_user, account: account, role: "yalty", employee: nil,
-          email: "access@example.com")
+          email: ENV["YALTY_ACCESS_EMAIL"]
+        )
       end
 
       before do
