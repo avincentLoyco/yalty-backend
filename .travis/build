@@ -48,7 +48,7 @@ def build_docker_image(docker_tag)
     docker_repository = ENV['TRAVIS_REPO_SLUG'].gsub(%r{^yalty/yalty-}, 'yalty/')
 
     puts "Build docker image #{docker_repository}:#{docker_tag}"
-    system("docker login -u=\"#{ENV['DOCKER_USERNAME']}\" -p=\"#{ENV['DOCKER_PASSWORD']}\"") &&
+    system("echo \"$DOCKER_PASSWORD\" | docker login -u=\"#{ENV['DOCKER_USERNAME']}\" --password-stdin") &&
       system("./bin/build #{docker_repository}:#{docker_tag}") &&
       system("docker push #{docker_repository}:#{docker_tag}")
   end
