@@ -1,8 +1,0 @@
-/.bundle
-/log/*
-!/log/.keep
-/tmp
-/.env.local
-/doc
-/.yardoc
-/coverage
