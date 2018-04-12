@@ -60,6 +60,12 @@ class Employee::Event < ActiveRecord::Base
     class_name: "Employee::AttributeVersion"
 
   validates :effective_at, presence: true
+  validates :effective_at,
+    uniqueness: {
+      scope: [:event_type, :employee_id],
+      message: "adjustment at that day already exists"
+    },
+    if: :adjustment_event?
   validates :event_type,
     presence: true,
     inclusion: { in: proc { Employee::Event.event_types }, allow_nil: true }
@@ -69,7 +75,7 @@ class Employee::Event < ActiveRecord::Base
   validate :contract_end_and_hire_in_valid_order, if: %i(employee event_type effective_at)
   validate :work_contract_in_work_period, if: %i(employee event_type effective_at)
   validate :default_presence_policy_assigned, if: %i(employee event_type)
-  validate :active_etop_exists, if: :etop_validation_required?
+  validate :active_etop_exists, if: :adjustment_event?
 
   scope :contract_ends, -> { where(event_type: "contract_end") }
   scope :hired, -> { where(event_type: "hired") }
@@ -243,7 +249,7 @@ class Employee::Event < ActiveRecord::Base
     errors.add(:effective_at, "No TimeOffPolicy at the effective at date")
   end
 
-  def etop_validation_required?
+  def adjustment_event?
     event_type == "adjustment_of_balances"
   end
 end

@@ -853,6 +853,18 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
             expect(subject).to have_http_status(403)
           end
         end
+
+        context "and adjustment event already exist at given date" do
+          before do
+            post :create, json_payload
+          end
+
+          it { is_expected.to have_http_status(422) }
+
+          it "doesn't create event" do
+            expect { subject }.not_to change { employee_adjustment_events.count }
+          end
+        end
       end
     end
 
