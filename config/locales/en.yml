@@ -19,7 +19,7 @@ en:
         account: 'Billing account: %{domain}'
       items:
         card_charged: "Your <b>%{brand}</b> ending in <b>%{last4}</b> was charged\
-          \ CHF <b>%{amount_due}</b>. This charge will appear from \"yalty\" on your\
+          \ CHF <b>%{amount_due}</b>. This charge will appear from \"Yalty\" on your\
           \ statement. <b>Questions?</b> Please contact us: <b>%{email}</b>"
         value:
           adjustment: |-
@@ -28,7 +28,7 @@ en:
           period: '%{period_start} - %{period_end}'
         subtotal: |-
           Subtotal in CHF
-          %{subtotal} * TVA(%{tva}%)
+          %{subtotal} * TVA (%{tva}%)
         total_due: TOTAL DUE IN CHF
         header:
           description: DESCRIPTION
@@ -40,8 +40,8 @@ en:
             AMOUNT
             (CHF)
           period: PERIOD
-      footer: "YALTY SA, c/o Y. LUGRIN, Ch. du Boisy 10, 1004 Lausanne, %{email}\n\
-        TVA Number: %{tva}"
+      footer: "YALTY SA, c/o Loyco SA Rue Marterey 5, 1005 Lausanne, %{email}\nNumé\
+        ro de TVA: %{tva}"
     plan:
       filevault: File Vault
   locale:
@@ -107,30 +107,30 @@ en:
       network-list: "Social networks list: %{value}"
       animate: "Animated: %{value}"
       num-of-logos: "Number of logos: %{value}"
-      num-of-material-packages: "Number of material pacakges: %{value}"
+      num-of-material-packages: "Number of material packages: %{value}"
       num-of-photo-shooting: "Number of photo shooting: %{value}"
       num-of-email-campaigns: "Number of email campaigns: %{value}"
       num-of-social-network-campaigns: "Number of social network campaigns: %{value}"
       minutes-of-promotional-video: "Minutes of promotional video: %{value}"
       minutes-of-video-reportage: "Minutes of video reportage: %{value}"
-      num-of-voiceover-packages: "Number of of voiceover packages: %{value}"
+      num-of-voiceover-packages: "Number of voiceover packages: %{value}"
   payments_mailer:
     payment_succeeded:
       subject: '%{company_name}: Your plan has been renewed'
     payment_failed:
-      subject: '%{company_name}: Payment failure! Check your yalty Account'
+      subject: '%{company_name}: Payment failure! Check your Yalty Account'
     subscription_canceled:
       subject: '%{company_name}: Payment failure - your premium features are deactivated'
   service_request_mailer:
     quote_request:
-      subject: A service request of yalty services
+      subject: A service request of Yalty services
     book_request:
       subject: A booking request of yalty services
   yalty_access_mailer:
     access_enable:
       subject: "A company enabled yalty's access!"
     access_disable:
-      subject: "A company disabled yalty's access!"
+      subject: "A company disabled Yalty's access!"
   export_mailer:
     archive_generation:
       subject: "%{company_name}: Your archive is ready to download!"

@@ -40,8 +40,8 @@ fr:
             MONTANT
             (CHF)
           period: PÉRIODE
-      footer: "YALTY SA, c/o Y. LUGRIN, Ch. du Boisy 10, 1004 Lausanne, %{email}\n\
-        Numéro de TVA: %{tva}"
+      footer: "YALTY SA, c/o Loyco SA Rue Marterey 5, 1005 Lausanne, %{email}\nNumé\
+        ro de TVA: %{tva}"
     plan:
       filevault: Coffre-fort de documents
   locale:
@@ -53,7 +53,7 @@ fr:
       title: "L'entreprise a réservé ces services"
     send-quote:
       title: "L'entreprise demande un devis pour ces services"
-      book-it-now: Est-ce que vous voulez enregistrer pour ce service maintenant? Cliquez
+      book-it-now: Voulez-vous réserver ce service maintenant? Cliquez
       here: ici
     resume:
       title: Total

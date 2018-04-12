@@ -1,10 +1,192 @@
 de:
+  user_mailer:
+    account_creation_confirmation:
+      subject: Wilkommen auf Yalty
+    credentials:
+      subject: Wilkommen auf Yalty
+    reset_password:
+      subject: Passwort rücksetzen
+    accounts_list:
+      subject: Ihre Yalty Team
+  payment:
+    pdf:
+      header:
+        invoiced_to: 'Abgerechnet an:'
+        title: RECHNUNG DETAILS
+        billing_date: 'Rechnungsdatum: %{billing_date}'
+        period: 'Periode: %{period_start} - %{period_end}'
+        receipt_number: 'Rechnungsnummer: <sup>o</sup>:%{receipt_number}'
+        account: 'Abrechnungskonto: %{domain}'
+      items:
+        card_charged: "Ihre Kreditkarte <b>%{brand}</b>, die mit <b>%{last4}</b> endet,\
+          \ war von <b>%{amount_due}</b> belastet. Diese Bezahlung wird unter \" Yalty\
+          \ \" auf Ihrer bankgeschäftlichen Aufstellung erscheinen. Fragen? Bitte\
+          \ kontaktieren Sie uns: <b>%{email}</b>"
+        value:
+          adjustment: |-
+            Ausgleich
+            %{plan}
+          period: '%{period_start} - %{period_end}'
+        subtotal: |-
+          Zwischensumme im CHF
+          %{subtotal} * MwST (%{tva}%)
+        total_due: FÄLLIGER GESAMTBETRAG IM CHF
+        header:
+          description: BESCHREIBUNG
+          units: STÜCKZAHL
+          unit_price: |-
+            STÜCKPREIS
+            (CHF)
+          amount: |-
+            BETRAG
+            (CHF)
+          period: Frist
+      footer: "YALTY SA, c/o Loyco SA Rue Marterey 5, 1005 Lausanne, %{email}\nMwST\
+        \ Nummer: %{tva}"
+    plan:
+      filevault: Dateiwölbung
+  locale:
+    en: Englisch
+    fr: Französisch
+    de: Deutsch
+  services:
+    book-now:
+      title: Die Firma meldete diese Dienstleistungen an.
+    send-quote:
+      title: Die Firma bittet um ein Zitat für diese Dienstleistungen
+      book-it-now: Wollen Sie diesen Dienst jetzt anmelden? Klicken Sie
+      here: hier
+    resume:
+      title: Total
+      onetime_cost: "Einzeitige Kosten"
+      recuring_cost: "Häufige Kosten"
+    company_info:
+      request_by: "Anfragt von"
+      phone: "Telefon"
+      company_name: "Firma"
+      url: "URL"
+      address: "Adresse"
+    header:
+      title: Dienste
+      name: Name des Dienstes
+      options: Optionen
+      onetime_cost: Einzeitige Kosten
+      recuring_cost: Häufige Kosten
+    sections:
+      employee-administration: Angestellt-Verwaltung
+      enterprise-administration: Unternehmensverwaltung
+      marketing-communication: Marketing Kommunikation
+      it: IT
+      logistics: Logistik
+    names:
+      payroll-outsourcing: Payroll outsourcing
+      hr-administration: HR Verwaltung
+      sickness-accident-mgmt: Krankheit und Unfall-Management
+      accounting: Buchhaltung
+      taxation: Taxe
+      enterprise-creation: Firmengründung
+      hr-consulting: HR consulting
+      website-creation: Einrichtung einer Webseite
+      social-networks: Soziale Netwerke
+      creative-content-creation: Kreative Inhaltschaffung
+      marketing-campaign: Marketing Kampagnen
+      promotional-movie: Werbefilm
+      it-consulting: IT consulting
+      logistics-support: Logistik Unterstützung
+    options:
+      num-of-employees: "Zahl der Angestellten"
+      from-when: "Von"
+      num-of-accounting-pieces: "Zahl dem Buchungsbeleg"
+      num-of-intermediate-closing: "Zahl des Zwischenschliessens"
+      handle-tax-declaration: "Steuererklärung behanleln"
+      hours-of-consulting: "Consulting Stunden"
+      juridic-form: "Rechtsform"
+      num-of-hours: "Stundenzahl"
+      num-of-pages: "Seitenzahl"
+      photo-shooting: "Foto shooting: %{value}"
+      network-list: "Sozial networks Liste: %{value}"
+      animate: "Animiert: %{value}"
+      num-of-logos: "Zahl von Firmenzeichen: %{value}"
+      num-of-material-packages: "Zahl von materiellen Paketen: %{value}"
+      num-of-photo-shooting: "Zahl von Foto shooting: %{value}"
+      num-of-email-campaigns: "Zahl von Email-Kampagnen: %{value}"
+      num-of-social-network-campaigns: "Zahl von sozialen Netzwerk-Kampagnen: %{value}"
+      minutes-of-promotional-video: "Minuten des Beförderungsvideos: %{value}"
+      minutes-of-video-reportage: "Minuten des Videoreportage: %{value}"
+      num-of-voiceover-packages: "Zahl von Off-Kommentar-Paketen: %{value}"
+  payments_mailer:
+    payment_succeeded:
+      subject: '%{company_name}: Ihr Plan ist erneuert worden'
+    payment_failed:
+      subject: '%{company_name}: Zahlungsfehlschlag! Prüfen Sie Ihr Yalty-Konto nach'
+    subscription_canceled:
+      subject: '%{company_name}: Zahlungsfehlschlag - Ihre erstklassigen Eigenschaften
+        werden ausgeschaltet'
+  service_request_mailer:
+    quote_request:
+      subject: Ein Dienstantrag von Yalty-Dienstleistungen
+    book_request:
+      subject: Ein Anmeldungsantrag von Yalty Dienstleistungen
+  yalty_access_mailer:
+    access_enable:
+      subject: Eine Firma befähigte Zugang von yalty!
+    access_disable:
+      subject: Eine Firma hat sein Yalty Zugang behindert!
   date:
+    abbr_day_names:
+    - Son
+    - Mon
+    - Die
+    - Mit
+    - Don
+    - Fre
+    - Sam
     abbr_month_names:
     - '~'
+    - Jan
+    - Feb
+    - Mär
+    - Apr
+    - May
+    - Jun
+    - Jul
+    - Aug
+    - Sep
+    - Okt
+    - Nov
+    - Dez
+    day_names:
+    - Sonntag
+    - Montag
+    - Dienstag
+    - Mittwoch
+    - Donnerstag
+    - Freitag
+    - Samstag
     month_names:
     - '~'
+    - Januar
+    - Februar
+    - März
+    - April
+    - May
+    - Juni
+    - Juli
+    - August
+    - September
+    - Oktober
+    - November
+    - Dezember
     order:
     - :day
     - :month
     - :year
+  export_mailer:
+    archive_generation:
+      subject: "%{company_name}: Die Archivdatei ist für downloaden bereit!"
+  company_events_mailer:
+    event_changed:
+      subject: '%{company_name}: Ein Firma''s Event war geändert'
+    action_create: 'erstellt'
+    action_update: 'aktualisiert'
+    action_destroy: 'vernichtet'
