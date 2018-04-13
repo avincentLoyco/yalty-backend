@@ -56,7 +56,7 @@ RSpec.describe PaymentsMailer, type: :mailer do
 
     it { expect { mailer }.to change { ActionMailer::Base.deliveries.count } }
     it { expect(mailer.attachments.size).to eq(0) }
-    it { expect(mailer.subject).to eq("#{account.company_name}: Payment failure! Check your yalty Account") }
+    it { expect(mailer.subject).to eq("#{account.company_name}: Payment failure! Check your Yalty Account") }
   end
 
   context "subscription_canceled" do
