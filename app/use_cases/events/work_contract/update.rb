@@ -28,23 +28,25 @@ module Events
       attr_reader :old_effective_at
 
       def handle_hired_or_work_contract_event
-        validate_time_off_policy_days_presence
-        validate_presence_policy_presence
+        ActiveRecord::Base.transaction do
+          validate_time_off_policy_days_presence
+          validate_presence_policy_presence
 
-        default_full_time_policy = Account.current.presence_policies.full_time
-        time_off_policy_amount =
-          params[:time_off_policy_amount] * default_full_time_policy.standard_day_duration
+          default_full_time_policy = Account.current.presence_policies.full_time
+          time_off_policy_amount =
+            params[:time_off_policy_amount] * default_full_time_policy.standard_day_duration
 
-        if params[:presence_policy_id].eql?(event.employee_presence_policy&.presence_policy&.id)
-          EmployeePolicy::Presence::Update.call(update_presence_policy_params)
-        else
-          EmployeePolicy::Presence::Destroy.call(event.employee_presence_policy)
-          EmployeePolicy::Presence::Create.call(create_presence_policy_params)
+          if params[:presence_policy_id].eql?(event.employee_presence_policy&.presence_policy&.id)
+            EmployeePolicy::Presence::Update.call(update_presence_policy_params)
+          else
+            EmployeePolicy::Presence::Destroy.call(event.employee_presence_policy)
+            EmployeePolicy::Presence::Create.call(create_presence_policy_params)
+          end
+
+          validate_matching_occupation_rate
+
+          etop_updater.new(event.id, params[:time_off_policy_amount], old_effective_at).call
         end
-
-        validate_matching_occupation_rate
-
-        etop_updater.new(event.id, params[:time_off_policy_amount], old_effective_at).call
       end
 
       def validate_time_off_policy_days_presence

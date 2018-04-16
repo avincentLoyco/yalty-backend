@@ -18,13 +18,15 @@ module Events
       private
 
       def handle_hired_or_work_contract_event
-        validate_time_off_policy_days_presence
-        validate_presence_policy_presence
+        ActiveRecord::Base.transaction do
+          validate_time_off_policy_days_presence
+          validate_presence_policy_presence
 
-        EmployeePolicy::Presence::Create.call(presence_policy_params)
-        validate_matching_occupation_rate
+          EmployeePolicy::Presence::Create.call(presence_policy_params)
+          validate_matching_occupation_rate
 
-        etop_creator.new(event.id, time_off_policy_amount).call
+          etop_creator.new(event.id, time_off_policy_amount).call
+        end
       end
 
       def validate_time_off_policy_days_presence
