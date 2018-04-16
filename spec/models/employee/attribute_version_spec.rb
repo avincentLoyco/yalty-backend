@@ -179,7 +179,7 @@ RSpec.describe Employee::AttributeVersion, type: :model do
         it { expect(subject.valid?).to eq(false) }
         it do
           expect { subject.valid? }.to change { subject.errors.messages[:occupation_rate] }
-                                   .to include("occupation_rate - invalid value")
+                                   .to include("invalid value")
         end
       end
     end

@@ -34,9 +34,9 @@ module Yalty
     config.autoload_once_paths << config.root.join('lib', 'sidekiq')
     config.autoload_once_paths << config.root.join('lib', 'doorkeeper')
 
-    config.autoload_once_paths << config.root.join('app', 'services', 'employee_balance')
-    config.autoload_once_paths << config.root.join('app', 'services', 'schedule')
-    config.autoload_once_paths << config.root.join('app', 'services', 'event')
+    config.eager_load_paths << config.root.join('app', 'services', 'employee_balance')
+    config.eager_load_paths << config.root.join('app', 'services', 'schedule')
+    config.eager_load_paths << config.root.join('app', 'services', 'event')
 
     # Genrators
     config.generators do |g|

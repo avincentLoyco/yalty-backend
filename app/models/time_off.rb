@@ -151,18 +151,18 @@ class TimeOff < ActiveRecord::Base
         TimeEntry.hour_as_time(time_entry["start_time"]),
         TimeEntry.hour_as_time(time_entry["end_time"])
       )
-      add_overlaping_with_working_time_errors(registered_working_time)
+      add_overlaping_with_working_time_errors
       break
     end
   end
 
   def overlaps_with_middle_days?(registered_working_time)
     return if registered_working_time.time_entries.empty?
-    add_overlaping_with_working_time_errors(registered_working_time)
+    add_overlaping_with_working_time_errors
   end
 
-  def add_overlaping_with_working_time_errors(registered_working_time)
-    message = "Overlaps with registered working time on #{registered_working_time.date}"
+  def add_overlaping_with_working_time_errors
+    message = "Overlaps with registered working time"
     errors.add(:start_time, message)
     errors.add(:end_time, message)
   end

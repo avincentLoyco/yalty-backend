@@ -398,7 +398,7 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
             time_off: time_off
           )
         end
-        let(:error_code) { ["presence_policy_must_have_presencedays_assigned"] }
+        let(:error_code) { ["presence_policy_must_have_presence_days_assigned"] }
 
         it { expect { subject }.to_not change { employee.employee_presence_policies.count } }
         it { is_expected.to have_http_status(422) }

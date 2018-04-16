@@ -81,7 +81,7 @@ module ActsAsAttribute
 
   def map_errors
     data.attribute_model.errors.messages.each do |kv|
-      errors.add(attribute_definition.name, kv.join(" - "))
+      errors.add(attribute_definition.name, kv.last.join)
     end
   end
 
