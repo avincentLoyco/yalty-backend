@@ -95,7 +95,7 @@ de:
       logistics-support: Logistik Unterstützung
     options:
       num-of-employees: "Zahl der Angestellten: %{value}"
-      from-when: "Von"
+      from-when: "Von: %{value}"
       num-of-accounting-pieces: "Zahl dem Buchungsbeleg: %{value}"
       num-of-intermediate-closing: "Zahl des Zwischenschliessens"
       handle-tax-declaration: "Steuererklärung behanleln"
