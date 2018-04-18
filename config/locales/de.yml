@@ -61,9 +61,9 @@ de:
       onetime_cost: "Einzeitige Kosten: %{value}"
       recuring_cost: "Häufige Kosten: %{value}"
     company_info:
-      request_by: "Anfragt von"
+      request_by: "Anfragt von %{fullname} (%{email})"
       phone: "Telefon %{phone}"
-      company_name: "Firma"
+      company_name: "Firma %{company_name} (%{id})"
       url: "URL: %{url}"
       address: "Adresse :"
     header:
