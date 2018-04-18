@@ -58,14 +58,14 @@ de:
       here: hier
     resume:
       title: Total
-      onetime_cost: "Einzeitige Kosten"
-      recuring_cost: "Häufige Kosten"
+      onetime_cost: "Einzeitige Kosten: %{value}"
+      recuring_cost: "Häufige Kosten: %{value}"
     company_info:
-      request_by: "Anfragt von"
-      phone: "Telefon"
-      company_name: "Firma"
-      url: "URL"
-      address: "Adresse"
+      request_by: "Anfragt von %{fullname} (%{email})"
+      phone: "Telefon %{phone}"
+      company_name: "Firma %{company_name} (%{id})"
+      url: "URL: %{url}"
+      address: "Adresse :"
     header:
       title: Dienste
       name: Name des Dienstes
@@ -94,15 +94,15 @@ de:
       it-consulting: IT consulting
       logistics-support: Logistik Unterstützung
     options:
-      num-of-employees: "Zahl der Angestellten"
-      from-when: "Von"
-      num-of-accounting-pieces: "Zahl dem Buchungsbeleg"
-      num-of-intermediate-closing: "Zahl des Zwischenschliessens"
-      handle-tax-declaration: "Steuererklärung behanleln"
-      hours-of-consulting: "Consulting Stunden"
-      juridic-form: "Rechtsform"
-      num-of-hours: "Stundenzahl"
-      num-of-pages: "Seitenzahl"
+      num-of-employees: "Zahl der Angestellten: %{value}"
+      from-when: "Von: %{value}"
+      num-of-accounting-pieces: "Zahl dem Buchungsbeleg: %{value}"
+      num-of-intermediate-closing: "Zahl des Zwischenschliessens: %{value}"
+      handle-tax-declaration: "Steuererklärung behanleln: %{value}"
+      hours-of-consulting: "Consulting Stunden: %{value}"
+      juridic-form: "Rechtsform: %{value}"
+      num-of-hours: "Stundenzahl: %{value}"
+      num-of-pages: "Seitenzahl: %{value}"
       photo-shooting: "Foto shooting: %{value}"
       network-list: "Sozial networks Liste: %{value}"
       animate: "Animiert: %{value}"

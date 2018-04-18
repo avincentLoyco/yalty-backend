@@ -187,9 +187,9 @@ GEM
     i18n_data (0.7.0)
     ice_nine (0.11.2)
     inflecto (0.0.2)
-    intercom (3.3.0)
-      json (~> 1.8)
-    json (1.8.6)
+    intercom (3.5.23)
+      json (>= 1.8)
+    json (2.1.0)
     launchy (2.4.3)
       addressable (~> 2.3)
     letter_opener (1.4.1)
@@ -485,7 +485,7 @@ DEPENDENCIES
   geokit (~> 1.10.0)
   guard-rspec
   holidays (~> 4.0)
-  intercom (~> 3.3.0)
+  intercom (~> 3.5.23)
   letter_opener (~> 1.4.1)
   meta_request
   mutant-rspec

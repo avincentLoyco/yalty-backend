@@ -28,9 +28,6 @@ class NewslettersController < ApplicationController
   private
 
   def intercom_client
-    @intercom_client ||= Intercom::Client.new(
-      app_id: ENV["INTERCOM_APP_ID"],
-      api_key: ENV["INTERCOM_API_KEY"]
-    )
+    @intercom_client ||= Intercom::Client.new(token: ENV["INTERCOM_ACCESS_TOKEN"])
   end
 end
