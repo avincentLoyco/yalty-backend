@@ -64,8 +64,7 @@ en:
       phone: "Phone: %{phone}"
       company_name: "Company: %{company_name} (%{id})"
       url: "URL: %{url}"
-      address: "Address:<br/> %{company_name}<br/> %{address_1}<br/> %{address_2}<br/>\
-        \ %{postalcode} %{city}<br/> %{country} "
+      address: "Address:"
     header:
       title: Services
       name: Service name
