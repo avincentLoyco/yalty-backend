@@ -65,6 +65,7 @@ class Employee::Balance < ActiveRecord::Base
   scope :in_category, ->(category_id) { where(time_off_category_id: category_id) }
   scope :with_time_off, -> { where.not(time_off_id: nil) }
   scope :not_time_off, -> { where(time_off_id: nil) }
+  scope :recent, -> { order(effective_at: :desc) }
 
   def amount
     return unless resource_amount && manual_amount

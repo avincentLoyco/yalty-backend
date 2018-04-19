@@ -17,9 +17,6 @@ class Ability
       companyevent_management(user)
     elsif user.role.eql?("user")
       cannot :read, CompanyEvent
-      can [:index], TimeOffCategory do |_time_off_category, employee_id|
-        employee_id.nil? || Account::User.current&.employee&.id == employee_id
-      end
       can :show, PresencePolicy do |presence_policy|
         EmployeePresencePolicy
           .where(employee_id: user.employee.id)
@@ -28,8 +25,7 @@ class Ability
       end
       can :read, Employee::AttributeDefinition
       can :read, WorkingPlace
-      can [:show, :index], Employee
-      can :update, Employee, account_user_id: user.id
+      can [:read, :update], Employee, account_user_id: user.id
       can [:update, :read, :index], Account::User, id: user.id
       can [:show, :create, :update], TimeOff do |time_off|
         time_off.employee_id == user.employee.try(:id)

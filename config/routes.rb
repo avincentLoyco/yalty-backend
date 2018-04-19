@@ -29,12 +29,12 @@ Rails.application.routes.draw do
       resources :employees, only: [:index, :show] do
         get 'employee_balance_overview', to: 'employee_balance_overviews#show'
         resources :employee_events, only: :index
-        resources :employee_balances, only: :index
         post '/working_times', to: 'registered_working_times#create'
         get '/schedule', to: 'schedules#schedule_for_employee'
         get '/working_places', to: "employee_working_places#index"
         get '/attributes', to: 'employee_attributes#show'
       end
+      get '/employee_balance_overview', to: 'employee_balance_overviews#index'
       get '/employee_events', to: 'employee_events#index'
       resources :employee_events, only: [:show, :create, :update]
       resources :company_events
@@ -62,7 +62,6 @@ Rails.application.routes.draw do
       mount FileStorageUploadDownload, at: '/files'
 
       resources :users
-      resources :employee_balances, except: [:edit, :new]
       resources :file_storage_tokens, only: :create
 
       get '/employee_event_types/:employee_event_type', to: "employee_event_types#show"

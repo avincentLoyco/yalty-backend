@@ -34,6 +34,7 @@ module Yalty
     config.autoload_once_paths << config.root.join('lib', 'sidekiq')
     config.autoload_once_paths << config.root.join('lib', 'doorkeeper')
 
+    # TODO: add namespaces to classes below and handle by rails autoload
     config.eager_load_paths << config.root.join('app', 'services', 'employee_balance')
     config.eager_load_paths << config.root.join('app', 'services', 'schedule')
     config.eager_load_paths << config.root.join('app', 'services', 'event')

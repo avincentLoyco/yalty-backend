@@ -20,6 +20,8 @@ class EmployeePresencePolicy < ActiveRecord::Base
 
   alias related_resource presence_policy
 
+  delegate :policy_length, to: :presence_policy
+
   def order_for(date)
     order_difference = ((date - effective_at) % policy_length).to_i
     new_order = order_of_start_day + order_difference
@@ -28,11 +30,6 @@ class EmployeePresencePolicy < ActiveRecord::Base
     else
       new_order
     end
-  end
-
-  def policy_length
-    return 0 unless presence_policy.presence_days.present?
-    presence_policy.presence_days.pluck(:order).max
   end
 
   private
