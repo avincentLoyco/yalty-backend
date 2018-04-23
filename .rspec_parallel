@@ -1,4 +1,6 @@
 --require spec_helper
+--require rspec/instafail
 --no-profile
+--format RSpec::Instafail
 --format progress
 --format ParallelTests::RSpec::RuntimeLogger --out tmp/parallel_runtime_rspec.log
