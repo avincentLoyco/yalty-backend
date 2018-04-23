@@ -90,6 +90,96 @@ RSpec.describe BalanceOverview::Generate do
           }
         )
       end
+
+      context "when there is timeoff" do
+        let(:time_off_minutes) { 60 * 3 } # 3 hours
+
+        let(:vacation_end) do
+          vacation_start + time_off_minutes.minutes
+        end
+
+        before do
+          TimeOffs::Create.call(vacation_start, vacation_end, vacation_category.id, employee.id)
+        end
+
+        context "this year" do
+          let(:vacation_start) do
+            hired_date.at_midnight + 1.month
+          end
+
+          it "returns correct values" do
+            expect(mapped_values).to contain_exactly(
+              {
+                category: "vacation",
+                result: vacation_minutes - time_off_minutes
+              }
+            )
+          end
+        end
+
+        context "next year" do
+          let(:vacation_start) do
+            hired_date.at_midnight + 1.year
+          end
+
+          it "returns correct values" do
+            expect(mapped_values).to contain_exactly(
+              {
+                category: "vacation",
+                result: vacation_minutes
+              }
+            )
+          end
+        end
+      end
+
+      context "when there is adjustment event" do
+        let(:adjustment_minutes) { 500 }
+
+        before do
+          Events::Adjustment::Create.call(
+            effective_at: adjustment_date,
+            event_type: "adjustment_of_balances",
+            employee: {
+              id: employee.id,
+              type: "employee"
+            },
+            employee_attributes: [
+              {
+                type: "employee_attribute",
+                attribute_name: "adjustment",
+                value: adjustment_minutes
+              }
+            ]
+          )
+        end
+
+        context "in the current period" do
+          let(:adjustment_date) { hired_date + 1.month}
+
+          it "returns correct values" do
+            expect(mapped_values).to contain_exactly(
+              {
+                category: "vacation",
+                result: vacation_minutes + adjustment_minutes
+              }
+            )
+          end
+        end
+
+        context "in the next period" do
+          let(:adjustment_date) { hired_date + 1.year}
+
+          it "returns correct values" do
+            expect(mapped_values).to contain_exactly(
+              {
+                category: "vacation",
+                result: vacation_minutes
+              }
+            )
+          end
+        end
+      end
     end
 
     context "when there are many categories" do

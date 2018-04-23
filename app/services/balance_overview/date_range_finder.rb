@@ -17,7 +17,7 @@ module BalanceOverview
     end
 
     def end_date
-      [next_etop_start, current_time_off_policy.end_date, contract_end_date].compact.min
+      [current_time_off_policy.end_date, contract_end_date].compact.min
     end
 
     def contract_end_date
@@ -26,10 +26,6 @@ module BalanceOverview
 
     def current_etop
       @current_etop ||= policies_in_category.not_reset.assigned_at(date).first
-    end
-
-    def next_etop_start
-      policies_in_category.not_assigned_at(date).last.try(&:effective_at)
     end
 
     def policies_in_category
