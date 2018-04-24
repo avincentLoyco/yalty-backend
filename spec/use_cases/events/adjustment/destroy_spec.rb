@@ -15,7 +15,7 @@ RSpec.describe Events::Adjustment::Destroy do
   let_it_be(:employee) { create(:employee, account: account) }
 
   let!(:adjustment_balance) do
-    create(:employee_balance,
+    Employee::Balance.create!(
       employee: employee,
       resource_amount: 200,
       time_off_category: vacation_category,
