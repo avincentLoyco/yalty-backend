@@ -5,28 +5,21 @@ RSpec.describe Events::Adjustment::Update do
 
   it_behaves_like "event update example"
 
-  before do
-    use_case.next_balance_updater = balance_updater
-
-    allow(balance_updater).to receive(:new).and_return(balance_updater_instance)
-    allow(balance_updater_instance).to receive(:call)
-    allow(event_updater_instance).to receive(:call).and_return(changed_event)
-    allow(changed_event).to receive(:attribute_value).with("adjustment").and_return(30)
-  end
+  let_it_be(:account) { create(:account) }
+  let_it_be(:vacation_category) { account.vacation_category }
+  let_it_be(:time_off_policy) { create(:time_off_policy, time_off_category: vacation_category) }
+  let_it_be(:employee) { create(:employee, account: account) }
 
   let!(:adjustment_balance) do
-    create(:employee_balance,
+    Employee::Balance.create!(
       employee: employee,
       resource_amount: 200,
       time_off_category: vacation_category,
       balance_type: "manual_adjustment",
-      effective_at: event.effective_at
+      effective_at: event.effective_at + Employee::Balance::MANUAL_ADJUSTMENT_OFFSET
     )
   end
 
-  let(:account) { create(:account) }
-  let(:vacation_category) { account.vacation_category }
-  let(:employee) { create(:employee, account: account) }
   let(:balance_updater) { class_double("UpdateNextEmployeeBalances") }
   let(:balance_updater_instance) { instance_double("UpdateNextEmployeeBalances") }
 
@@ -38,7 +31,21 @@ RSpec.describe Events::Adjustment::Update do
     event.dup.tap{ |event| event.effective_at += 1.day }
   end
 
+  before_all do
+    create(:employee_time_off_policy,
+      employee: employee, time_off_policy: time_off_policy,
+      effective_at: Date.new(2018,1,1)
+    )
+  end
 
+  before do
+    use_case.next_balance_updater = balance_updater
+
+    allow(balance_updater).to receive(:new).and_return(balance_updater_instance)
+    allow(balance_updater_instance).to receive(:call)
+    allow(event_updater_instance).to receive(:call).and_return(changed_event)
+    allow(changed_event).to receive(:attribute_value).with("adjustment").and_return(30)
+  end
 
   it "updates balance amount" do
     expect{ subject }.to change { adjustment_balance.reload.resource_amount }.to(30)

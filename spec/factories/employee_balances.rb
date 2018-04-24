@@ -41,7 +41,7 @@ FactoryGirl.define do
         else
           balance_date = etop.effective_at
         end
-        employee_balance.effective_at = balance_date
+        employee_balance.effective_at ||= balance_date
       end
     end
 

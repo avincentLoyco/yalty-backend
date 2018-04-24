@@ -28,7 +28,7 @@ RSpec.describe Events::Adjustment::Create do
       balance_type: "manual_adjustment",
       resource_amount: 20,
       manual_amount: 0,
-      effective_at: event.effective_at
+      effective_at: event.effective_at + Employee::Balance::MANUAL_ADJUSTMENT_OFFSET
     )
   end
 end
