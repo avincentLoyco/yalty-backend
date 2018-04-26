@@ -22,7 +22,7 @@ module Events
           update_event.tap do |event|
             adjustment_balance.update!(
               resource_amount: event.attribute_value("adjustment"),
-              effective_at: event.effective_at
+              effective_at: event.effective_at + Employee::Balance::MANUAL_ADJUSTMENT_OFFSET
             )
             next_balance_updater.new(adjustment_balance).call
           end

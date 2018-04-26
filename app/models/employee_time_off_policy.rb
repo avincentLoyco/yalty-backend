@@ -34,13 +34,13 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
       ) AND ?::date", date.to_date, date.to_date)
   end)
 
-  scope :by_employee_in_category, lambda { |employee_id, category_id|
+  scope :in_category, lambda { |category_id|
     joins(:time_off_policy)
-      .where(time_off_policies: { time_off_category_id: category_id }, employee_id: employee_id)
+      .merge(TimeOffPolicy.where(time_off_category_id: category_id))
       .order(effective_at: :desc)
   }
-  scope :with_reset, -> { joins(:time_off_policy).where(time_off_policies: { reset: true }) }
-  scope :not_reset, -> { joins(:time_off_policy).where(time_off_policies: { reset: false }) }
+  scope :with_reset, -> { joins(:time_off_policy).merge(TimeOffPolicy.reset_policies) }
+  scope :not_reset, -> { joins(:time_off_policy).merge(TimeOffPolicy.not_reset) }
 
   alias related_resource time_off_policy
 
@@ -80,7 +80,8 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
     next_effective_at =
       self
       .class
-      .by_employee_in_category(employee_id, time_off_category_id)
+      .in_category(time_off_category_id)
+      .where(employee_id: employee_id)
       .where("effective_at > ?", effective_at)
       .last
       .try(:effective_at)
@@ -90,7 +91,8 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
   def previous_policy_for(date = effective_at)
     self
       .class
-      .by_employee_in_category(employee_id, time_off_category_id)
+      .in_category(time_off_category_id)
+      .where(employee_id: employee_id)
       .where("effective_at < ?", date)
       .where.not(id: id)
   end

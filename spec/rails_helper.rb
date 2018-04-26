@@ -5,6 +5,9 @@ require "rspec/rails"
 require "fantaskspec"
 require "paperclip/matchers"
 
+require "test_prof/recipes/rspec/before_all"
+require "test_prof/recipes/rspec/let_it_be"
+
 # Load rails tasks
 Rails.application.load_tasks
 
@@ -84,5 +87,9 @@ RSpec.configure do |config|
     DatabaseCleaner.cleaning do
       example.run
     end
+  end
+
+  config.before(type: :request) do
+    host! "api.example.com"
   end
 end

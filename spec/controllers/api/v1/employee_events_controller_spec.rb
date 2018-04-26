@@ -1627,29 +1627,25 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       let(:event_effective_at) { effective_at }
 
       let(:adjustment_event) do
-        CreateEvent.new(
-          {
-            effective_at: 5.days.from_now,
-            event_type: "adjustment_of_balances",
-            employee: { id: employee.id }
+        Events::Adjustment::Create.call(
+          effective_at: 5.days.from_now,
+          event_type: "adjustment_of_balances",
+          employee: {
+            id: employee.id,
+            type: "employee"
           },
-          [
-            {attribute_name: "lastname", value: "Howlett" },
-            {attribute_name: "adjustment", value: 40 }
+          employee_attributes: [
+            {
+              type: "employee_attribute",
+              attribute_name: "adjustment",
+              value: 0
+            }
           ]
-        ).call
+        )
       end
 
       let(:adjustment_balance) do
-        CreateEmployeeBalance.new(
-          adjustment_event.account.vacation_category.id,
-          adjustment_event.employee_id,
-          adjustment_event.account.id,
-          balance_type: "manual_adjustment",
-          resource_amount: adjustment_event.attribute_value("adjustment"),
-          manual_amount: 0,
-          effective_at: adjustment_event.effective_at
-        ).call.first
+        Events::Adjustment::Update.new(adjustment_event.reload, {}).adjustment_balance
       end
 
       before do
@@ -1670,7 +1666,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           effective_at: effective_at
         )
 
-        adjustment_balance
+        adjustment_event
       end
 
       it "should respond with success" do
@@ -1685,9 +1681,9 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
       it "updates adjustment balance" do
         subject
-        adjustment_balance.reload
 
-        expect(adjustment_balance.effective_at).to eq(effective_at)
+        expect(adjustment_balance.effective_at)
+          .to eq(effective_at + Employee::Balance::MANUAL_ADJUSTMENT_OFFSET)
         expect(adjustment_balance.resource_amount).to eq(50)
       end
 
@@ -2164,29 +2160,25 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       let(:event_to_delete_id) { adjustment_event.id }
 
       let(:adjustment_event) do
-        CreateEvent.new(
-          {
-            effective_at: 5.days.from_now,
-            event_type: "adjustment_of_balances",
-            employee: { id: employee.id }
+        Events::Adjustment::Create.call(
+          effective_at: 5.days.from_now,
+          event_type: "adjustment_of_balances",
+          employee: {
+            id: employee.id,
+            type: "employee"
           },
-          [
-            {attribute_name: "lastname", value: "Howlett" },
-            {attribute_name: "adjustment", value: 40 }
+          employee_attributes: [
+            {
+              type: "employee_attribute",
+              attribute_name: "adjustment",
+              value: 0
+            }
           ]
-        ).call
+        )
       end
 
       let(:adjustment_balance) do
-        CreateEmployeeBalance.new(
-          adjustment_event.account.vacation_category.id,
-          adjustment_event.employee_id,
-          adjustment_event.account.id,
-          balance_type: "manual_adjustment",
-          resource_amount: adjustment_event.attribute_value("adjustment"),
-          manual_amount: 0,
-          effective_at: adjustment_event.effective_at
-        ).call.first
+        Events::Adjustment::Update.new(adjustment_event.reload, {}).adjustment_balance
       end
 
       before do

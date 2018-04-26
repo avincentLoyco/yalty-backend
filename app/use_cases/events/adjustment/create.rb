@@ -23,7 +23,7 @@ module Events
           balance_type: "manual_adjustment",
           resource_amount: event.attribute_value("adjustment"),
           manual_amount: 0,
-          effective_at: event.effective_at
+          effective_at: event.effective_at + Employee::Balance::MANUAL_ADJUSTMENT_OFFSET
         )
       end
     end

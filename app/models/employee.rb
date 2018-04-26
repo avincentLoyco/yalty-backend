@@ -27,7 +27,7 @@ class Employee < ActiveRecord::Base
   has_many :employee_balances, class_name: "Employee::Balance"
   has_many :employee_time_off_policies
   has_many :time_off_policies, through: :employee_time_off_policies
-  has_many :time_off_categories, through: :employee_balances
+  has_many :time_off_categories, -> { uniq }, through: :time_off_policies
   has_many :employee_working_places
   has_many :working_places, through: :employee_working_places
   has_many :employee_presence_policies
@@ -83,6 +83,30 @@ class Employee < ActiveRecord::Base
       start_date, end_date, start_date, end_date, end_date, start_date
     )
   end)
+
+  class ContractPeriods
+    pattr_initialize :employee
+
+    def build
+      contract_dates
+        .each_slice(2)
+        .map { |period| period.first..(period.size > 1 ? period.last : DateTime::Infinity.new) }
+    end
+
+    private
+
+    def contract_dates
+      employee.persisted? ? dates_for_existing : dates_for_new
+    end
+
+    def dates_for_existing
+      employee.events.contract_types.reorder(effective_at: :asc).pluck(:effective_at)
+    end
+
+    def dates_for_new
+      Array.wrap(employee.events.detect(&:contract_border?)&.effective_at)
+    end
+  end
 
   class << self
     def active_employee_ratio_per_account(account_id)
@@ -184,15 +208,7 @@ class Employee < ActiveRecord::Base
   end
 
   def contract_periods
-    dates =
-      if persisted?
-        events.contract_types.reorder("employee_events.effective_at ASC").pluck(:effective_at)
-      else
-        events.select { |e| e.event_type == "hired" }.map(&:effective_at)
-      end
-
-    dates.each_slice(2)
-         .map { |period| period.first..(period.size > 1 ? period.last : DateTime::Infinity.new) }
+    ContractPeriods.new(self).build
   end
 
   def first_employee_event
@@ -216,11 +232,11 @@ class Employee < ActiveRecord::Base
   end
 
   def assigned_time_off_policies_in_category(category_id, date = Time.zone.today)
-    EmployeeTimeOffPolicy.assigned_at(date).by_employee_in_category(id, category_id).limit(3)
+    employee_time_off_policies.assigned_at(date).in_category(category_id).limit(3)
   end
 
   def not_assigned_time_off_policies_in_category(category_id, date = Time.zone.today)
-    EmployeeTimeOffPolicy.not_assigned_at(date).by_employee_in_category(id, category_id).limit(2)
+    employee_time_off_policies.not_assigned_at(date).in_category(category_id).limit(2)
   end
 
   def file_with?(file_id)

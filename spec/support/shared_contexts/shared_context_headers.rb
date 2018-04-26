@@ -1,4 +1,4 @@
-RSpec.shared_context "shared_context_headers", :a => :b do
+RSpec.shared_context "shared_context_headers" do
   let(:account) { create(:account) }
   let(:user) { create(:account_user, account: account, role: "account_administrator") }
 

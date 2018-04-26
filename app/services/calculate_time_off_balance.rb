@@ -104,20 +104,17 @@ class CalculateTimeOffBalance
     (@epp_end_date.to_date - @epp_start_date.to_date).to_i + 1
   end
 
-  def presence_days_with_entries_duration
-    PresenceDay.with_entries(@epp.presence_policy.id).each_with_object({}) do |day, total|
-      total[day.order] = day.time_entries.pluck(:duration).sum
-      total
+  def presence_days_with_entries_duration(presence_policy = @epp.presence_policy)
+    presence_policy.presence_days.with_entries.each_with_object({}) do |day, total|
+      total[day.order] = day.time_entries.map(&:duration).sum
     end
   end
 
   def whole_entries
     holidays_order_numbers = middle_holidays_order_number
-    orders_with_entries_occurances.map do |k, v|
-      holiday_count_with_order =
-        holidays_order_numbers.key?(k.to_s) ? holidays_order_numbers[k.to_s] : 0
-      presence_days_with_entries_duration[k] * (v - holiday_count_with_order)
-    end.sum
+    orders_with_entries_occurances.sum do |k, v|
+      presence_days_with_entries_duration[k] * (v - holidays_order_numbers.fetch(k.to_s, 0))
+    end
   end
 
   def start_entries

@@ -5,10 +5,7 @@ class PresenceDay < ActiveRecord::Base
   validates :order, presence: true, uniqueness: { scope: :presence_policy_id }
   validates :presence_policy_id, presence: true
 
-  scope :with_entries, lambda { |policy_id|
-    joins(:time_entries)
-      .where("time_entries.id IS NOT NULL AND presence_policy_id = ?", policy_id)
-  }
+  scope :with_entries, -> { joins(:time_entries).includes(:time_entries) }
 
   def update_minutes!
     update!(minutes: calculated_day_minutes)

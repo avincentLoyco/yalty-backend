@@ -53,4 +53,8 @@ class PresencePolicy < ActiveRecord::Base
            .where("id != ?", id)
            .update_all(default_full_time: false)
   end
+
+  def policy_length
+    @policy_length ||= presence_days.maximum(:order).to_i
+  end
 end

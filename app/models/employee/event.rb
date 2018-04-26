@@ -139,6 +139,10 @@ class Employee::Event < ActiveRecord::Base
     active
   end
 
+  def contract_border?
+    event_type.in? %w(contract_end hired)
+  end
+
   private
 
   def contract_period_only_events

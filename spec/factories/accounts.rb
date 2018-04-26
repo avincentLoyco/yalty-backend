@@ -2,12 +2,18 @@ FactoryGirl.define do
   factory :account do
     company_name { Faker::Company.name }
 
-    after(:create) do |account|
-      default_presence_policy =
-        create(:presence_policy, :with_time_entries, occupation_rate: 0.5,
-               standard_day_duration: 9600, default_full_time: true, account: account)
+    transient do
+      create_presence_policy true
+    end
 
-      account.presence_policies << default_presence_policy
+    after(:create) do |account, evaluator|
+      if evaluator.create_presence_policy
+        default_presence_policy =
+          create(:presence_policy, :with_time_entries, occupation_rate: 0.5,
+                 standard_day_duration: 9600, default_full_time: true, account: account)
+
+        account.presence_policies << default_presence_policy
+      end
     end
 
 
