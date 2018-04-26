@@ -44,10 +44,6 @@ RSpec.describe CreateRegisteredWorkingTime do
     )
   end
 
-  before do
-    Timecop.freeze(2016, 8, 10)
-  end
-
   context "when the employee have policies of 7 days" do
     context "working from Monday to Friday" do
       let!(:employee_presence_policy) do

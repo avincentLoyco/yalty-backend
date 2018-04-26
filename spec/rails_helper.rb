@@ -39,6 +39,7 @@ RSpec.configure do |config|
   config.include ActiveJob::TestHelper, jobs: true
   config.include Paperclip::Shoulda::Matchers
   config.include Yalty::Helpers
+  config.include ActiveSupport::Testing::TimeHelpers
 
   # If you're not using ActiveRecord, or you'd prefer not to run each of your
   # examples within a transaction, remove the following line or assign false

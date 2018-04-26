@@ -2,12 +2,13 @@ require "rails_helper"
 
 RSpec.describe ScheduleForEmployee, type: :service do
   include_context "shared_context_account_helper"
+
   before do
-    Timecop.freeze(2015, 12, 28, 0, 0)
+    travel_to Date.new(2015, 12, 28)
   end
 
   after do
-    Timecop.return
+    travel_back
   end
 
   before do

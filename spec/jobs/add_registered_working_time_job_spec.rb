@@ -39,11 +39,11 @@ RSpec.describe AddRegisteredWorkingTimes do
       context "and no time offs" do
         context "when policy has length different than 7" do
           before do
-            Timecop.freeze(2016, 1, 14, 0, 0)
+            travel_to Date.new(2016, 1, 14)
             day = create(:presence_day, order: 2, presence_policy: presence_policy_b)
             create(:time_entry, presence_day: day, start_time: "2:00", end_time: "10:00")
           end
-          after { Timecop.return }
+          after { travel_back }
 
           it "should create registered working time with proper time entries" do
             expect { subject }.to change { RegisteredWorkingTime.count }.from(0).to(2)
@@ -300,11 +300,11 @@ RSpec.describe AddRegisteredWorkingTimes do
     let(:date_of_job_run) { Time.zone.now - 1.day }
 
     before do
-      Timecop.freeze(2016, 1, 2, 0, 0)
+      travel_to Date.new(2016, 1, 2)
       working_place.update_attribute(:holiday_policy_id, holiday_policy.id)
     end
 
-    after { Timecop.return }
+    after { travel_back }
 
     context "and there is a registered working time for another" do
       let(:working_place) { employee_working_place.working_place }

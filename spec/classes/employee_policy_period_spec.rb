@@ -18,14 +18,14 @@ RSpec.describe EmployeePolicyPeriod do
         effective_at: employee.events.first.effective_at)
       create(:employee_event,
         event_type: "contract_end", effective_at: 4.months.ago, employee: employee)
-      Timecop.freeze(2016, 4, 1, 0, 0)
+      travel_to Date.new(2016, 4, 1)
       create(:employee_event,
         event_type: "hired", effective_at: 1.week.ago, employee: employee)
       create(:employee_time_off_policy,
         employee: employee, time_off_policy: policy, effective_at: 1.week.ago)
     end
 
-    after { Timecop.return }
+    after { travel_back }
 
     let(:policy) { create(:time_off_policy, :as_counter, time_off_category: category) }
     let(:category) { create(:time_off_category, account: account) }

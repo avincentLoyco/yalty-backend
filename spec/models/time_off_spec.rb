@@ -432,9 +432,9 @@ RSpec.describe TimeOff, type: :model do
       let(:employee) { create(:employee) }
 
       before "create time_offs in order" do
-        Timecop.travel(2016, 1, 1, 0, 0)
+        travel_to Date.new(2016, 1, 1)
         create(:time_off, employee: employee, start_time: Time.zone.now, end_time: 1.day.from_now)
-        Timecop.travel(2016, 4, 4, 0, 0)
+        travel_to Date.new(2016, 4, 4)
         create(:time_off, employee: employee, start_time: Time.zone.now, end_time: 1.day.from_now)
       end
 

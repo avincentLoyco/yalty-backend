@@ -85,7 +85,6 @@ RSpec.describe Export::GenerateEmployeesJournal, type: :service do
   end
 
   before do
-    Timecop.freeze(journal_timestamp)
     FileUtils.mkdir_p(folder_path)
     events.each_with_index do |event, index|
       event.employee_attribute_versions << [fname_attributes[index], lname_attributes[index]]

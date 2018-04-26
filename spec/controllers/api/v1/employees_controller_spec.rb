@@ -104,13 +104,13 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
 
       context "when future policy is now active one" do
         before do
-          Timecop.freeze(Time.now + 1.month)
+          travel_to(Time.now + 1.month)
           employee.reload.employee_working_places
           subject
         end
 
         after do
-          Timecop.return
+          travel_back
         end
 
         it "have future policy in json" do

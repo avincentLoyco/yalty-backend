@@ -495,8 +495,11 @@ RSpec.describe Employee::Balance, type: :model do
 
       let(:time_off_balance) { time_off.employee_balance }
 
-      before { Timecop.freeze("15/01/2015") }
-      after { Timecop.return }
+      around(:each) do |example|
+        travel_to Date.new(2015, 1, 15) do
+          example.run
+        end
+      end
 
       context "presence policy does not change" do
         let(:time_off_amount) { time_off.balance }

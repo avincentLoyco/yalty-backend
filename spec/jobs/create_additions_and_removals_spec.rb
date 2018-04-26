@@ -36,10 +36,10 @@ RSpec.describe CreateAdditionsAndRemovals do
       context "there are already balances in upcoming period" do
         before do
           CreateAdditionsAndRemovals.perform_now
-          Timecop.freeze(2017, 1, 1, 0, 0)
+          travel_to Date.new(2017, 1, 1)
         end
 
-        after { Timecop.freeze(2016, 1, 1, 0, 0) }
+        after { travel_back }
 
         it { expect { execute_job }.to change(Employee::Balance, :count).by(3) }
       end

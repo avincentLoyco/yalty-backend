@@ -430,7 +430,6 @@ GEM
     thor (0.19.4)
     thread_safe (0.3.6)
     tilt (2.0.5)
-    timecop (0.7.4)
     timezone (1.2.3)
     tod (2.0.2)
     ttfunk (1.5.0)
@@ -526,7 +525,6 @@ DEPENDENCIES
   temping
   test-prof
   therubyracer (~> 0.12.3)
-  timecop
   timezone (~> 1.2.3)
   tod (~> 2.0.2)
   virtus (~> 1.0.5)

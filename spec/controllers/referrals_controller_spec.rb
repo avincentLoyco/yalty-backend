@@ -70,8 +70,7 @@ RSpec.describe ReferralsController, type: :controller do
   end
 
   describe "GET #referrers.csv" do
-    before { Timecop.freeze(Date.new(2016, 1, 1)) }
-    after { Timecop.return }
+    include_context "shared_context_timecop_helper", date: Date.new(2016, 1, 1)
 
     let!(:referrers) { create_list(:referrer, 3) }
 

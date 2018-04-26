@@ -80,7 +80,6 @@ group :test do
   gem "shoulda-matchers"
   gem "temping"
   gem "test-prof"
-  gem "timecop"
 end
 
 # Development environment dependencies (only)
