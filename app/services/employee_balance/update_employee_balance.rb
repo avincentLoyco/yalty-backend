@@ -3,7 +3,7 @@ class UpdateEmployeeBalance
   attr_reader :employee_balance, :options, :previous_validity_date
 
   def initialize(employee_balance, options = {})
-    @employee_balance = employee_balance.reload
+    @employee_balance = employee_balance
     @options = options
     @previous_validity_date = employee_balance.validity_date
   end
