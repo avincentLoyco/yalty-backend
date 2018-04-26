@@ -71,6 +71,7 @@ end
 group :test do
   gem "airborne"
   gem "database_cleaner"
+  gem "db-query-matchers"
   gem "fakeredis", "~> 0.5.0"
   gem "fantaskspec"
   gem "guard-rspec"
