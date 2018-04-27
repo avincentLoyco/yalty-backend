@@ -9,7 +9,6 @@ module API
       end
 
       def index
-        authorize! :index, TimeOffCategory.new
         render_resource(resources)
       end
 
