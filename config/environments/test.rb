@@ -47,3 +47,8 @@ Rails.application.configure do
   # config.action_view.raise_on_missing_translations = true
   config.log_level = :unknown
 end
+
+DBQueryMatchers.configure do |config|
+  config.ignores = [/SHOW TABLES LIKE/]
+  config.schemaless = true
+end
