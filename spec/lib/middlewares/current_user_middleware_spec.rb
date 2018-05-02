@@ -52,7 +52,6 @@ RSpec.describe CurrentUserMiddleware do
 
   context "when AUTHORIZATION header not send" do
     before { env.delete("HTTP_AUTHORIZATION") }
-    before { middleware.call(env) }
 
     it { expect(Account::User.current).to eql(nil) }
     it { expect(middleware.call(env)).to_not eq [
