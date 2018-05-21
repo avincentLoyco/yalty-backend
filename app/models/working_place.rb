@@ -14,12 +14,11 @@ class WorkingPlace < ActiveRecord::Base
     allow_nil: true
   validates :postalcode,
     length: { maximum: 12 },
-    format: { with: /\A([A-Z0-9 -])\w+/, message: "only numbers, capital letters, spaces and -" },
+    format: { with: /\A[A-Z0-9 -]+\z/, message: "only numbers, capital letters, spaces and -" },
     allow_nil: true
   validates :street_number,
     length: { maximum: 10 },
-    format: { with: %r{\A([a-zA-Z0-9 \/]+\z)},
-              message: "only numbers, capital letters, spaces and /" },
+    format: { with: %r{\A[\w\/ ]+\z}, message: "only numbers, letters, spaces and /" },
     allow_nil: true
   validate :correct_address, if: [:coordinate_changed?, :coordinate?]
   validate :correct_state, if: [:coordinate_changed?, :coordinate?]

@@ -49,7 +49,7 @@ module API
             message: exception.message,
             code: exception.try(:code) || "proxy_gateway_error"
           )
-          render json: ::Api::V1::StripeErrorRepresenter.new(error).complete, status: 502
+          render json: ::Api::V1::StripeErrorRepresenter.new(error).complete, status: :bad_gateway
         end
 
         def error_field

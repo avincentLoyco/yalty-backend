@@ -9,7 +9,7 @@ module Api::V1
         effective_at: resource.effective_at,
         being_processed: resource.being_processed,
         validity_date: resource.validity_date,
-        balance_type: resource.balance_type
+        balance_type: resource.balance_type,
       }
         .merge(basic)
         .merge(relationship)
@@ -22,7 +22,7 @@ module Api::V1
         manual_amount: resource.manual_amount,
         resource_amount: resource.resource_amount,
         effective_at: resource.effective_at,
-        being_processed: resource.being_processed
+        being_processed: resource.being_processed,
       }
         .merge(basic)
     end
@@ -32,7 +32,7 @@ module Api::V1
         employee: employee_json,
         time_off_category: time_off_category_json,
         time_off_policy: time_off_policy_json,
-        time_off: time_off_json
+        time_off: time_off_json,
       }
     end
 

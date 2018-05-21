@@ -29,7 +29,7 @@ class TimeEntriesForEmployeeSchedule
       "end_date" => end_date,
       "start_order" => order_for(start_date, query_hash),
       "range_size" => calculate_time_range(start_date, end_date),
-      "policy_length" => query_hash["max_order"].to_i
+      "policy_length" => query_hash["max_order"].to_i,
     }
   end
 
@@ -89,7 +89,7 @@ class TimeEntriesForEmployeeSchedule
     {
       type: "working_time",
       start_time: query_hash["start_time"],
-      end_time: query_hash["end_time"]
+      end_time: query_hash["end_time"],
     }
   end
 

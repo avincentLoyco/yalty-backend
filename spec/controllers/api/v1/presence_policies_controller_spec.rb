@@ -154,7 +154,7 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
         name: name,
         type: "presence_policy",
         occupation_rate: 0.8,
-        standard_day_duration: standard_day_duration
+        standard_day_duration: standard_day_duration,
       }
     end
 
@@ -194,13 +194,13 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
             {
               time_entries: [{ start_time: "12:00:00", end_time: "16:00:00" }],
               minutes: 40,
-              order: 1
+              order: 1,
             },
             {
               time_entries: [{ start_time: "12:00:00", end_time: "16:00:00" }],
               minutes: 40,
-              order: 7
-            }
+              order: 7,
+            },
           ]
         end
 
@@ -285,13 +285,13 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
             {
               time_entries: [{ start_time: "12:00:00", end_time: "16:00:00" }],
               minutes: 40,
-              order: 1
+              order: 1,
             },
             {
               time_entries: [{ start_time: "12:00:00", end_time: "16:00:00" }],
               minutes: 40,
-              order: 1
-            }
+              order: 1,
+            },
           ]
         end
 
@@ -319,7 +319,7 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
         id: id,
         name: name,
         standard_day_duration: standard_day_duration,
-        type: "presence_policy"
+        type: "presence_policy",
       }
     end
 

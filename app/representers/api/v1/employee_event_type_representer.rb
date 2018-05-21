@@ -10,7 +10,7 @@ module Api::V1
     def basic
       {
         event_type: type,
-        attributes: attributes
+        attributes: attributes,
       }
     end
   end

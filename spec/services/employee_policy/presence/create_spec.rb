@@ -19,14 +19,14 @@ RSpec.describe EmployeePolicy::Presence::Create do
   let(:params) do
     {
       event_id: event.id,
-      presence_policy_id: employee_presence_policy.presence_policy.id
+      presence_policy_id: employee_presence_policy.presence_policy.id,
     }
   end
 
   let(:response_from_create_or_update_join_table_service) do
     {
       result: employee_presence_policy,
-      status: 201
+      status: 201,
     }
   end
 

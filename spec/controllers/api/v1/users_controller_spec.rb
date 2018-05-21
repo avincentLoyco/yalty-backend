@@ -30,7 +30,7 @@ RSpec.describe API::V1::UsersController, type: :controller do
         password: password,
         role: role,
         balance_in_hours: balance_in_hours,
-        employee: { id: employee_id }
+        employee: { id: employee_id },
       }
     end
 
@@ -217,7 +217,7 @@ RSpec.describe API::V1::UsersController, type: :controller do
         role: role,
         locale: locale,
         employee: { id: user.employee&.id },
-        balance_in_hours: balance_in_hours
+        balance_in_hours: balance_in_hours,
       }
     end
 
@@ -233,7 +233,7 @@ RSpec.describe API::V1::UsersController, type: :controller do
       context "assign another employee" do
         before do
           params[:employee] = {
-            id: unassiagned_employee.id
+            id: unassiagned_employee.id,
           }
         end
 
@@ -360,7 +360,7 @@ RSpec.describe API::V1::UsersController, type: :controller do
       describe "when employee is assigned" do
         before do
           params[:employee] = {
-            id: unassiagned_employee.id
+            id: unassiagned_employee.id,
           }
         end
 

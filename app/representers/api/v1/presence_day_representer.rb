@@ -3,7 +3,7 @@ module Api::V1
     def complete
       {
         order: resource.order,
-        minutes: resource.minutes
+        minutes: resource.minutes,
       }
         .merge(basic)
         .merge(relationships)
@@ -11,7 +11,7 @@ module Api::V1
 
     def relationships
       {
-        time_entries: time_entries_json
+        time_entries: time_entries_json,
       }
     end
 

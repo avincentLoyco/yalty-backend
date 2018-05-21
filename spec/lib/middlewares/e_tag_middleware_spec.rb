@@ -4,7 +4,7 @@ RSpec.describe ETagMiddleware do
   let(:account) { create(:account, id: "c5cbba38-b738-44af-997a-5ab130d81726", subdomain: account_subdomain) }
   let(:account_subdomain) { "timecorps" }
   let(:env) { Rack::MockRequest.env_for("https://api.yalty.io", {
-    "HTTP_YALTY_ACCOUNT_SUBDOMAIN" => "#{account_subdomain}"
+    "HTTP_YALTY_ACCOUNT_SUBDOMAIN" => "#{account_subdomain}",
   })}
   let(:app) { ->(env) { [200, env, [""]] }}
   let(:middleware) { ETagMiddleware.new(app) }

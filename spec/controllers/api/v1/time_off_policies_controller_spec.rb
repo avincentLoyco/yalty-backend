@@ -38,7 +38,7 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
             :years_to_effect,
             :time_off_category,
             :assigned_employees,
-            :deletable
+            :deletable,
           ]
         )
       end
@@ -153,7 +153,7 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
               :years_to_effect,
               :time_off_category,
               :assigned_employees,
-              :deletable
+              :deletable,
             ]
           )
         end
@@ -197,7 +197,7 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
               :assignation_id,
               :assignation_type,
               :effective_at,
-              :effective_till
+              :effective_till,
             ]
           )
         end
@@ -226,19 +226,19 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
         years_to_effect: 2,
         time_off_category:{
           id: time_off_category_id,
-          type: "time_off_category"
+          type: "time_off_category",
         },
         employees: [
           {
             id: employee_id,
-            type: "employee"
-          }
+            type: "employee",
+          },
         ],
         working_places: [
           { id: working_place_id,
-            type: "working_place"
-          }
-        ]
+            type: "working_place",
+          },
+        ],
       }
     end
     subject { post :create, params }
@@ -263,7 +263,7 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
               :amount,
               :policy_type,
               :years_to_effect,
-              :time_off_category
+              :time_off_category,
             ]
           )
         end
@@ -357,14 +357,14 @@ RSpec.describe API::V1::TimeOffPoliciesController, type: :controller do
         employees: [
           {
             id: employee_id,
-            type: "employee"
-          }
+            type: "employee",
+          },
         ],
         working_places: [
           { id: working_place_id,
-            type: "working_place"
-          }
-        ]
+            type: "working_place",
+          },
+        ],
       }
     end
 

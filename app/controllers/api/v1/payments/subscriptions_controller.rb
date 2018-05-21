@@ -77,7 +77,7 @@ module API
 
         def stripe_error(exception)
           error = StripeError.new(type: "subscription", field: nil, message: exception.message)
-          render json: ::Api::V1::StripeErrorRepresenter.new(error).complete, status: 502
+          render json: ::Api::V1::StripeErrorRepresenter.new(error).complete, status: :bad_gateway
         end
       end
     end

@@ -14,7 +14,7 @@ RSpec.describe Events::WorkContract::Create do
         {attribute_name: "firstname", value: "Walter"},
         {attribute_name: "lastname", value: "Smith"},
         {attribute_name: "occupation_rate", value: "0.8"},
-      ]
+      ],
     }
   end
 

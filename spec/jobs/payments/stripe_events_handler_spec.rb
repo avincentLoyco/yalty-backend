@@ -118,7 +118,7 @@ RSpec.describe Payments::StripeEventsHandler, type: :job do
     allow(Stripe::Subscription).to receive(:retrieve).and_return(subscription)
     modules = [
       ::Payments::PlanModule.new(id: "filevault", canceled: false),
-      ::Payments::PlanModule.new(id: "exports", canceled: true)
+      ::Payments::PlanModule.new(id: "exports", canceled: true),
     ]
     account.update(available_modules: ::Payments::AvailableModules.new(data: modules))
     allow(::Payments::CreateInvoicePdf).to receive_message_chain(:new, :call)

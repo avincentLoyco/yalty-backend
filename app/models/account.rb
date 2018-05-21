@@ -12,7 +12,7 @@ class Account < ActiveRecord::Base
     length: { maximum: 63 },
     format: {
       with: /\A[a-z\d]+(?:[-][a-z\d]+)*\z/,
-      allow_blank: true
+      allow_blank: true,
     },
     exclusion: { in: Yalty.reserved_subdomains }
   validates :company_name, presence: true
@@ -88,7 +88,7 @@ class Account < ActiveRecord::Base
     tax_canton: { state_code: true },
     spouse_working_region: { state_code: true },
     occupation_rate: { range: [0, 1], presence: true },
-    adjustment: { integer: true }
+    adjustment: { integer: true },
   }.with_indifferent_access
 
   MULTIPLE_ATTRIBUTES = %w(child).freeze
@@ -113,7 +113,7 @@ class Account < ActiveRecord::Base
     Attribute::File.attribute_type => %w(
       profile_picture salary_slip contract salary_certificate id_card work_permit avs_card
       performance_review
-    )
+    ),
   }.freeze
 
   DEFAULT_ATTRIBUTE_DEFINITIONS = Account::DEFAULT_ATTRIBUTES.map do |type, attributes|

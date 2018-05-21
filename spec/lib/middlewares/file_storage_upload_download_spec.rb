@@ -24,10 +24,6 @@ RSpec.describe FileStorageUploadDownload do
 
   subject(:get_token) { Redis.current.hgetall(token) }
 
-  before(:all) do
-    ENV["FILE_STORAGE_UPLOAD_PATH"] = "tmp/files#{ENV["TEST_ENV_NUMBER"]}"
-  end
-
   after(:each) do
     FileUtils.rm_rf(FileStorageUploadDownload.file_upload_root_path)
   end

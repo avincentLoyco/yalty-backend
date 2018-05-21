@@ -6,7 +6,7 @@ RSpec.describe SplitTimeEntryByTimeEntries, type: :service do
       {
         :type => "working_time",
         :start_time => "00:00:00",
-        :end_time => "05:00:00"
+        :end_time => "05:00:00",
       }
   end
   let(:time) { Time.zone.local(1900,1,1) }
@@ -15,18 +15,18 @@ RSpec.describe SplitTimeEntryByTimeEntries, type: :service do
       {
         :type => "working_time",
         :start_time => "00:00:00",
-        :end_time => "01:00:00"
+        :end_time => "01:00:00",
       },
       {
         :type => "working_time",
         :start_time => "02:00:00",
-        :end_time => "03:00:00"
+        :end_time => "03:00:00",
       },
       {
         :type => "working_time",
         :start_time => "04:00:00",
-        :end_time => "05:00:00"
-      }
+        :end_time => "05:00:00",
+      },
     ]
   end
 
@@ -41,7 +41,7 @@ RSpec.describe SplitTimeEntryByTimeEntries, type: :service do
         expect(subject).to eql(
           [
             [time + 1.hour, time + 2.hours],
-            [time + 3.hours, time + 4.hours]
+            [time + 3.hours, time + 4.hours],
           ]
         )
       end

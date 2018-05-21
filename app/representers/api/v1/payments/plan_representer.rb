@@ -10,7 +10,7 @@ module Api
             currency: resource.currency,
             interval: resource.interval,
             active: resource.active,
-            free: resource.free
+            free: resource.free,
           }
         end
       end

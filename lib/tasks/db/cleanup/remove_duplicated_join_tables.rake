@@ -6,7 +6,7 @@ namespace :db do
       join_tables_with_resources = [
         [EmployeeWorkingPlace, "working_place_id"],
         [EmployeePresencePolicy, "presence_policy_id"],
-        [EmployeeTimeOffPolicy, "time_off_policy_id"]
+        [EmployeeTimeOffPolicy, "time_off_policy_id"],
       ]
 
       join_tables_to_delete = join_tables_with_resources.map do |join_table_class, resource_class|

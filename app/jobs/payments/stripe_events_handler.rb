@@ -45,7 +45,7 @@ module Payments
       options = {
         status: status,
         next_attempt: stripe_invoice.next_payment_attempt,
-        attempts: stripe_invoice.attempt_count
+        attempts: stripe_invoice.attempt_count,
       }
       update_invoice_status(existing_invoice, options)
     end

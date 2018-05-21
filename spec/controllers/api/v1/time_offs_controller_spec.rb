@@ -133,12 +133,12 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
         end_time: end_time,
         employee: {
           type: "employee",
-          id: employee_id
+          id: employee_id,
         },
         time_off_category: {
           type: "time_off_category",
-          id: time_off_category_id
-        }
+          id: time_off_category_id,
+        },
       }
     end
     subject { post :create, params }

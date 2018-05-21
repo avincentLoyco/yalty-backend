@@ -20,7 +20,7 @@ RSpec.describe EmployeePolicy::Presence::Update do
   let(:params) {
     {
       id: employee_presence_policy_id,
-      effective_at: effective_at
+      effective_at: effective_at,
     }
   }
 

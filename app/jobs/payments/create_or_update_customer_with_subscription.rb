@@ -33,7 +33,7 @@ module Payments
 
     def customer_metadata(account)
       {
-        account_id: account.id
+        account_id: account.id,
       }
     end
 

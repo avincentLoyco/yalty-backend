@@ -35,7 +35,7 @@ module Export
         ENV["LOYCO_SSH_HOST"],
         ENV["LOYCO_SSH_USER"],
         ENV["LOYCO_SSH_KEY_PATH"],
-        ENV["LOYCO_SSH_EXPORT_JOURNAL_PATH"]
+        ENV["LOYCO_SSH_EXPORT_JOURNAL_PATH"],
       ].all?(&:present?)
     end
 

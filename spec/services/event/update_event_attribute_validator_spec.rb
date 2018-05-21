@@ -14,7 +14,7 @@ RSpec.describe UpdateEventAttributeValidator, type: :service do
       events: [hired_event],
       employee_attributes: {
         firstname: employee_first_name,
-        annual_salary: employee_annual_salary
+        annual_salary: employee_annual_salary,
       }
     )
   end
@@ -51,18 +51,18 @@ RSpec.describe UpdateEventAttributeValidator, type: :service do
       {
         id: first_name_attribute_id,
         value: new_first_name_value,
-        attribute_name: first_name_attribute_definition
+        attribute_name: first_name_attribute_definition,
       },
       {
         type: "profile_picture",
         value: profile_picture_id,
-        attribute_name: file_definition_name
+        attribute_name: file_definition_name,
       },
       {
         id: annual_salary_attribute_id,
         value: new_annual_salary_value,
-        attribute_name: annual_salary_attribute_definition
-      }
+        attribute_name: annual_salary_attribute_definition,
+      },
     ]
   end
 

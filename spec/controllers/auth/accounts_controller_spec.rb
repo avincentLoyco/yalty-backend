@@ -16,12 +16,12 @@ RSpec.describe Auth::AccountsController, type: :controller do
         account:
           {
             company_name: company_name,
-            default_locale: "en"
+            default_locale: "en",
           },
         user:
           {
-            email: "test@test.com"
-          }
+            email: "test@test.com",
+          },
       }
     end
 

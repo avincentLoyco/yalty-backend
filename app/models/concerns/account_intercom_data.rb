@@ -28,14 +28,14 @@ module AccountIntercomData
         {
           subdomain: subdomain,
           yalty_access: yalty_access,
-          referred_by: referred_by
+          referred_by: referred_by,
         },
         intercom_files_attributes,
         intercom_policies_attributes,
         intercom_employee_attributes,
         intercom_time_offs_attributes,
-        intercom_rwt_attributes
-      ].inject(:merge)
+        intercom_rwt_attributes,
+      ].inject(:merge),
     }
   end
 
@@ -45,7 +45,7 @@ module AccountIntercomData
     {
       number_of_files: number_of_files,
       total_amount_of_data: total_amount_of_data,
-      employee_files_ratio: employee_files_ratio
+      employee_files_ratio: employee_files_ratio,
     }
   end
 
@@ -64,7 +64,7 @@ module AccountIntercomData
           TimeOffPolicy,
           EmployeeTimeOffPolicy,
           id
-        ).active.not_reset.count
+        ).active.not_reset.count,
     }
   end
 
@@ -72,7 +72,7 @@ module AccountIntercomData
     {
       active_employee_count: Employee.active_by_account(id).count,
       user_employee_ratio: Employee.active_employee_ratio_per_account(id),
-      employee_event_ratio: employees.exists? ? (employee_events.count / employees.count.to_f) : nil
+      employee_event_ratio: (employee_events.count / employees.count.to_f if employees.exists?),
     }
   end
 
@@ -81,7 +81,7 @@ module AccountIntercomData
       vacation_count: TimeOff.vacations.for_account(id).count,
       other_time_offs_count: TimeOff.not_vacations.for_account(id).count,
       last_vacation_created_at:  TimeOff.vacations.for_account(id).pluck(:created_at).last,
-      last_other_time_off_created_at: TimeOff.not_vacations.for_account(id).pluck(:created_at).last
+      last_other_time_off_created_at: TimeOff.not_vacations.for_account(id).pluck(:created_at).last,
     }
   end
 
@@ -89,7 +89,7 @@ module AccountIntercomData
     {
       last_manual_working_time_created_at:
         RegisteredWorkingTime.manually_created_by_account_ordered(id).pluck(:created_at).last,
-      manual_working_time_ratio: RegisteredWorkingTime.manually_created_ratio_per_account(id)
+      manual_working_time_ratio: RegisteredWorkingTime.manually_created_ratio_per_account(id),
     }
   end
 end

@@ -20,7 +20,7 @@ class ScheduleForEmployee
       day_hash =
         {
           date: date.to_s,
-          time_entries: []
+          time_entries: [],
         }
       @calculated_schedule << day_hash
     end

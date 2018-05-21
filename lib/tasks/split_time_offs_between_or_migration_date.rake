@@ -40,7 +40,7 @@ namespace :split_time_offs do
       start_time: start_time,
       end_time: end_time,
       time_off_category: time_off.time_off_category,
-      employee: time_off.employee
+      employee: time_off.employee,
     }
   end
 
@@ -48,7 +48,7 @@ namespace :split_time_offs do
     {
       manual_amount: 0,
       resource_amount: time_off.balance,
-      effective_at: time_off.start_time.to_s
+      effective_at: time_off.start_time.to_s,
     }
   end
 

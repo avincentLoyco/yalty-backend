@@ -27,7 +27,7 @@ RSpec.describe "Tokens", type: :request do
         expires_in: Integer,
         refresh_token: String,
         created_at: Integer,
-        user: hash_including(:id, :role, :type, :employee)
+        user: hash_including(:id, :role, :type, :employee),
       }
     end
 

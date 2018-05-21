@@ -17,7 +17,7 @@ RSpec.describe Payments::UpdateSubscriptionQuantity, type: :job do
     [
       StripeSubscriptionItem.new(SecureRandom.hex, plans.first, 3),
       StripeSubscriptionItem.new(SecureRandom.hex, plans.second, 3),
-      StripeSubscriptionItem.new(SecureRandom.hex, plans.third, 3)
+      StripeSubscriptionItem.new(SecureRandom.hex, plans.third, 3),
     ]
   end
 
@@ -158,7 +158,7 @@ RSpec.describe Payments::UpdateSubscriptionQuantity, type: :job do
         [
           StripeSubscriptionItem.new(SecureRandom.hex, plans.first, 2),
           StripeSubscriptionItem.new(SecureRandom.hex, plans.second, 2),
-          StripeSubscriptionItem.new(SecureRandom.hex, plans.third, 2)
+          StripeSubscriptionItem.new(SecureRandom.hex, plans.third, 2),
         ]
       end
 
@@ -260,7 +260,7 @@ RSpec.describe Payments::UpdateSubscriptionQuantity, type: :job do
       [
         StripeSubscriptionItem.new(SecureRandom.hex, plans.first, 0),
         StripeSubscriptionItem.new(SecureRandom.hex, plans.second, 0),
-        StripeSubscriptionItem.new(SecureRandom.hex, plans.third, 0)
+        StripeSubscriptionItem.new(SecureRandom.hex, plans.third, 0),
       ]
     end
 

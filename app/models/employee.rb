@@ -43,23 +43,11 @@ class Employee < ActiveRecord::Base
   end)
 
   scope(:chargeable_at_date, lambda do |date = Time.zone.now|
-    joins(:events)
-      .where(
-        "employee_events.event_type = 'hired' AND
-        employee_events.effective_at = ?::date OR
-        #{previous_event_sql("hired", date)}", date
-      )
-      .distinct
+    related_to_date(date, :eq)
   end)
 
   scope(:active_at_date, lambda do |date = Time.zone.now|
-    joins(:events)
-      .where(
-        "employee_events.event_type = 'hired' AND
-        employee_events.effective_at >= ?::date OR
-        #{previous_event_sql("hired", date)}", date
-      )
-      .distinct
+    related_to_date(date, :gteq)
   end)
 
   scope(:inactive_at_date, lambda do |date = Time.zone.now|
@@ -83,6 +71,20 @@ class Employee < ActiveRecord::Base
       start_date, end_date, start_date, end_date, end_date, start_date
     )
   end)
+
+  class << self
+    private
+
+    def related_to_date(date, operator)
+      joins(:events)
+        .where(
+          Employee::Event.arel_table[:event_type].eq("hired")
+            .and(Employee::Event.arel_table[:effective_at].public_send(operator, date.to_date))
+            .or(previous_event_sql(date.to_date))
+        )
+        .distinct
+    end
+  end
 
   class ContractPeriods
     pattr_initialize :employee
@@ -118,20 +120,19 @@ class Employee < ActiveRecord::Base
 
     private
 
-    def previous_event_sql(type, date)
-      return unless %w(hired contract_end).include?(type)
-
-      formatted_date = date.strftime("%Y-%m-%d")
-      "
-        '#{type}' = (
-          SELECT employee_events.event_type FROM employee_events
-          WHERE employee_events.effective_at < '#{formatted_date}'
-          AND employee_events.employee_id = employees.id
-          AND employee_events.event_type IN ('hired', 'contract_end')
-          ORDER BY employee_events.effective_at DESC
-          LIMIT 1
-        )
-      "
+    def previous_event_sql(date)
+      Arel.sql(
+        format("
+          'hired' = (
+            SELECT employee_events.event_type FROM employee_events
+            WHERE employee_events.effective_at < '%<date>s'
+            AND employee_events.employee_id = employees.id
+            AND employee_events.event_type IN ('hired', 'contract_end')
+            ORDER BY employee_events.effective_at DESC
+            LIMIT 1
+          )
+        ", date: date.iso8601)
+      )
     end
   end
 

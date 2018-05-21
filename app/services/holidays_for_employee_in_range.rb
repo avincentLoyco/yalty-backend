@@ -41,7 +41,7 @@ class HolidaysForEmployeeInRange
   def period_interval_for_employee_working_place(active)
     [
       active_employee_working_places.first == active ? range_start : active.effective_at.to_date,
-      active_employee_working_places.last == active ? range_end : active.effective_till.to_date
+      active_employee_working_places.last == active ? range_end : active.effective_till.to_date,
     ]
   end
 

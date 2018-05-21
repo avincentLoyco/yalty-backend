@@ -7,7 +7,7 @@ module Api
           assignation_type: resource_type,
           effective_at: resource.effective_at,
           effective_till: resource.effective_till,
-          order_of_start_day: resource.order_of_start_day
+          order_of_start_day: resource.order_of_start_day,
         }
           .merge(employee_json)
       end

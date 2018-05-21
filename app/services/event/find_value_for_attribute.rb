@@ -10,7 +10,7 @@ class FindValueForAttribute
   end
 
   def call
-    return attribute[:value] unless attribute_type && attribute_type.eql?("File") &&
+    return attribute[:value] unless attribute_type&.eql?("File") &&
         attribute[:value].present?
     generic_file = assign_file_to_employee_file!(attribute[:value])
     form_employee_attribute_version(generic_file)
@@ -45,7 +45,7 @@ class FindValueForAttribute
     {
       id: attribute[:value],
       size: generic_file.file_file_size.to_f,
-      file_type: generic_file.file_content_type
+      file_type: generic_file.file_content_type,
     }.merge(generic_file.sha_sums)
   end
 end

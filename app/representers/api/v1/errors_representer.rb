@@ -24,7 +24,7 @@ module Api::V1
         type: exception.type,
         messages: exception.messages,
         field: exception.field,
-        codes: exception.codes
+        codes: exception.codes,
       }]
     end
 
@@ -46,7 +46,7 @@ module Api::V1
           status: "invalid",
           type: resource_type,
           codes: generate_codes(field, messages).flatten,
-          employee_id: join_table_employee_id
+          employee_id: join_table_employee_id,
         }
       end
       errors

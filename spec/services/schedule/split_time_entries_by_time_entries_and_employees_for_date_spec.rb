@@ -9,14 +9,14 @@ RSpec.describe SplitTimeEntriesByTimeEntriesAndEmployeesForDate, type: :service 
           :type => "working_time",
           :start_time => "00:00:00",
           :end_time => "05:00:00",
-          :employee_id => "employeeIdnumberOne"
+          :employee_id => "employeeIdnumberOne",
         },
         {
           :type => "working_time",
           :start_time => "10:00:00",
           :end_time => "15:00:00",
-          :employee_id => "employeeIdnumberTwo"
-        }
+          :employee_id => "employeeIdnumberTwo",
+        },
       ]
     end
 
@@ -26,37 +26,37 @@ RSpec.describe SplitTimeEntriesByTimeEntriesAndEmployeesForDate, type: :service 
             {
               :type => "working_time",
               :start_time => "00:00:00",
-              :end_time => "01:00:00"
+              :end_time => "01:00:00",
             },
             {
               :type => "working_time",
               :start_time => "02:00:00",
-              :end_time => "03:00:00"
+              :end_time => "03:00:00",
             },
             {
               :type => "working_time",
               :start_time => "04:00:00",
-              :end_time => "05:00:00"
-            }
+              :end_time => "05:00:00",
+            },
           ],
         :employeeIdnumberTwo =>
           [
             {
               :type => "working_time",
               :start_time => "10:00:00",
-              :end_time => "11:00:00"
+              :end_time => "11:00:00",
             },
             {
               :type => "working_time",
               :start_time => "12:00:00",
-              :end_time => "13:00:00"
+              :end_time => "13:00:00",
             },
             {
               :type => "working_time",
               :start_time => "14:00:00",
-              :end_time => "15:00:00"
-            }
-          ]
+              :end_time => "15:00:00",
+            },
+          ],
       }
     end
 
@@ -74,27 +74,27 @@ RSpec.describe SplitTimeEntriesByTimeEntriesAndEmployeesForDate, type: :service 
                   {
                     :type => "working_time",
                     :start_time => "01:00:00",
-                    :end_time => "02:00:00"
+                    :end_time => "02:00:00",
                   },
                   {
                     :type => "working_time",
                     :start_time => "03:00:00",
-                    :end_time => "04:00:00"
-                  }
+                    :end_time => "04:00:00",
+                  },
                 ],
               :employeeIdnumberTwo =>
                 [
                   {
                     :type => "working_time",
                     :start_time => "11:00:00",
-                    :end_time => "12:00:00"
+                    :end_time => "12:00:00",
                   },
                   {
                     :type => "working_time",
                     :start_time => "13:00:00",
-                    :end_time => "14:00:00"
-                  }
-                ]
+                    :end_time => "14:00:00",
+                  },
+                ],
             }
           )
         end
@@ -109,17 +109,17 @@ RSpec.describe SplitTimeEntriesByTimeEntriesAndEmployeesForDate, type: :service 
                   {
                     :type => "working_time",
                     :start_time => "00:00:00",
-                    :end_time => "05:00:00"
-                  }
+                    :end_time => "05:00:00",
+                  },
                 ],
               :employeeIdnumberTwo =>
                 [
                   {
                     :type => "working_time",
                     :start_time => "10:00:00",
-                    :end_time => "15:00:00"
-                  }
-                ]
+                    :end_time => "15:00:00",
+                  },
+                ],
             }
           )
         end

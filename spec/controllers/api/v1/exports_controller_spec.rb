@@ -50,7 +50,7 @@ RSpec.describe API::V1::ExportsController, type: :controller do
         {
           status: "complete",
           file_id: archive_file.id,
-          archive_date: archive_file.created_at.strftime("%Y-%m-%dT%H:%M:%S.%LZ")
+          archive_date: archive_file.created_at.strftime("%Y-%m-%dT%H:%M:%S.%LZ"),
         }
       end
 

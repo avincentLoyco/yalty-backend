@@ -82,7 +82,7 @@ RSpec.describe API::V1::EmployeeAttributeDefinitionsController, type: :controlle
         name: name,
         label: "test",
         attribute_type: attribute_type,
-        system: "true"
+        system: "true",
       }
     end
 
@@ -151,7 +151,7 @@ RSpec.describe API::V1::EmployeeAttributeDefinitionsController, type: :controlle
         name: name,
         label: "test",
         attribute_type: attribute_type,
-        system: "true"
+        system: "true",
       }
     end
 

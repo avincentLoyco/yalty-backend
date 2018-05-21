@@ -29,7 +29,7 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
   let(:subscription_items) do
     [
       StripeSubscriptionItem.new("si_123", plans.first, 5),
-      StripeSubscriptionItem.new("si_456", plans.last, 5)
+      StripeSubscriptionItem.new("si_456", plans.last, 5),
     ]
   end
 
@@ -39,7 +39,7 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
       subscription_id: subscription.id,
       available_modules: Payments::AvailableModules.new(data: [
         Payments::PlanModule.new(id: plans.first.id, canceled: false),
-        Payments::PlanModule.new(id: plans.second.id, canceled: true)
+        Payments::PlanModule.new(id: plans.second.id, canceled: true),
       ])
     )
     Account::User.current.update(role: "account_owner")
@@ -69,7 +69,7 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
             interval: plans.first.interval,
             name: plans.first.name,
             active: true,
-            free: false
+            free: false,
           },
           {
             id: plans.second.id,
@@ -78,7 +78,7 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
             interval: plans.second.interval,
             name: plans.second.name,
             active: false,
-            free: false
+            free: false,
           },
           {
             id: plans.third.id,
@@ -87,15 +87,15 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
             interval: plans.third.interval,
             name: plans.third.name,
             active: false,
-            free: false
-          }
+            free: false,
+          },
         ],
         invoice: {
           id: invoice.id,
           amount_due: invoice.amount_due,
           date: "2016-01-01T00:00:00.000Z",
           prorate_amount: 0,
-          line_items: []
+          line_items: [],
         },
         default_card: {
           id: card.id,
@@ -104,7 +104,7 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
           exp_month: card.exp_month,
           exp_year: card.exp_year,
           default: card.default,
-          name: card.name
+          name: card.name,
         },
         billing_information: {
           company_information: {
@@ -115,10 +115,10 @@ RSpec.describe API::V1::Payments::SubscriptionsController, type: :controller do
             postalcode: account.company_information.postalcode,
             country: account.company_information.country,
             region: account.company_information.region,
-            phone: account.company_information.phone
+            phone: account.company_information.phone,
           },
-          emails: account.invoice_emails
-        }
+          emails: account.invoice_emails,
+        },
       }
     end
 

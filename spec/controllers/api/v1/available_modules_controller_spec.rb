@@ -27,7 +27,7 @@ RSpec.describe API::V1::AvailableModulesController, type: :controller do
           { id: "master-plan", name: "Master Plan", enabled: false, free: false },
           { id: "evil-plan", name: "Evil Plan", enabled: false, free: false },
           { id: "sweet-sweet-plan", name: "Sweet Sweet Plan", enabled: false, free: false },
-          { id: "automatedexport", name: "Automated Export", enabled: true, free: true }
+          { id: "automatedexport", name: "Automated Export", enabled: true, free: true },
         ]
       end
 

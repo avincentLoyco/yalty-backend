@@ -21,7 +21,7 @@ class SplitTimeEntriesByTimeEntriesForDate
       {
         type: @time_entries_to_split_type,
         start_time: time_entry.first.strftime("%H:%M:%S"),
-        end_time: format_end_time(time_entry.last)
+        end_time: format_end_time(time_entry.last),
       }
     end
   end

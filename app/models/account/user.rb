@@ -6,7 +6,7 @@ class Account::User < ActiveRecord::Base
   has_secure_password
 
   validates :email, presence: true
-  validates :email, format: { with: /\b[A-Z0-9._%a-z\-]+@(?:[A-Z0-9a-z\-]+\.)+[A-Za-z]{2,}\z/ }
+  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :email, uniqueness: { scope: :account_id, case_sensitive: false }
   validates :email, exclusion: { in: [ENV["YALTY_ACCESS_EMAIL"]] }, if: ->() { !role.eql?("yalty") }
   validates :password, length: { in: 8..74 }, if: ->() { !password.nil? }

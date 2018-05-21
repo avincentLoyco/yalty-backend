@@ -6,7 +6,7 @@ module Api::V1
 
     def relationships
       {
-        employee_attributes: employee_attributes_json
+        employee_attributes: employee_attributes_json,
       }
     end
 

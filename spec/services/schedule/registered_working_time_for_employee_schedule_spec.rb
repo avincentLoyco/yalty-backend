@@ -33,27 +33,27 @@ RSpec.describe RegisteredWorkingTimeForEmployeeSchedule, type: :service do
                 {
                   :type => "working_time",
                   :start_time => "10:00:00",
-                  :end_time => "14:00:00"
+                  :end_time => "14:00:00",
                 },
                 {
                   :type => "working_time",
                   :start_time => "15:00:00",
-                  :end_time => "20:00:00"
-                }
+                  :end_time => "20:00:00",
+                },
               ],
               "2015-01-02" => [
                 {
                   :type => "working_time",
                   :start_time => "10:00:00",
-                  :end_time => "14:00:00"
+                  :end_time => "14:00:00",
                 },
                 {
                   :type => "working_time",
                   :start_time => "15:00:00",
-                  :end_time => "20:00:00"
-                }
+                  :end_time => "20:00:00",
+                },
               ],
-              "2015-01-03" => [{}]
+              "2015-01-03" => [{}],
             }
           )
         end
@@ -68,27 +68,27 @@ RSpec.describe RegisteredWorkingTimeForEmployeeSchedule, type: :service do
                 {
                   :type => "working_time",
                   :start_time => "10:00:00",
-                  :end_time => "14:00:00"
+                  :end_time => "14:00:00",
                 },
                 {
                   :type => "working_time",
                   :start_time => "15:00:00",
-                  :end_time => "20:00:00"
-                }
+                  :end_time => "20:00:00",
+                },
               ],
               "2015-01-02" => [
                 {
                   :type => "working_time",
                   :start_time => "10:00:00",
-                  :end_time => "14:00:00"
+                  :end_time => "14:00:00",
                 },
                 {
                   :type => "working_time",
                   :start_time => "15:00:00",
-                  :end_time => "20:00:00"
-                }
+                  :end_time => "20:00:00",
+                },
               ],
-              "2015-01-03" => []
+              "2015-01-03" => [],
             }
           )
         end
@@ -102,7 +102,7 @@ RSpec.describe RegisteredWorkingTimeForEmployeeSchedule, type: :service do
           {
             "2015-01-01" => [],
             "2015-01-02" => [],
-            "2015-01-03" => []
+            "2015-01-03" => [],
           }
         )
       end

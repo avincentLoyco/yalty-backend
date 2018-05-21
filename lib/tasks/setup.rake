@@ -11,7 +11,7 @@ task setup: [:environment] do
     uid: client_id,
     secret: client_secret,
     redirect_uri: client_redirect_uri,
-    scopes: "all_access"
+    scopes: "all_access",
   }
 
   app.save!

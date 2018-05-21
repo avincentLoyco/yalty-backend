@@ -4,7 +4,7 @@ RSpec.describe CurrentUserMiddleware do
   let(:account_user) { create(:account_user) }
   let(:token) { create(:account_user_token, resource_owner_id: account_user.id).token }
   let(:env) { Rack::MockRequest.env_for("https://api.yalty.io", {
-    "HTTP_AUTHORIZATION" => "Bearer #{token}"
+    "HTTP_AUTHORIZATION" => "Bearer #{token}",
   })}
   let(:app) { ->(env) { [200, env, [""]] }}
   let(:middleware) { CurrentUserMiddleware.new(app) }

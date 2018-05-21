@@ -38,11 +38,11 @@ RSpec.describe UpdateEvent do
       effective_at: effective_at,
       event_type: event_type,
       employee: {
-        id: employee_id
+        id: employee_id,
       },
       presence_policy_id: presence_policy.id,
       time_off_policy_amount: 20,
-      employee_attributes: employee_attributes_params
+      employee_attributes: employee_attributes_params,
     }
   end
 
@@ -51,22 +51,22 @@ RSpec.describe UpdateEvent do
       {
         value: "Snow",
         id: first_attribute.id,
-        attribute_name: first_attribute.attribute_definition.name
+        attribute_name: first_attribute.attribute_definition.name,
       },
       {
         value: "Stark",
         id: second_attribute.id,
-        attribute_name: second_attribute.attribute_definition.name
+        attribute_name: second_attribute.attribute_definition.name,
       },
       {
         value: first_name_value,
         attribute_name: "firstname",
-        order: first_name_order
+        order: first_name_order,
       },
       {
         value: "0.5",
-        attribute_name: "occupation_rate"
-      }
+        attribute_name: "occupation_rate",
+      },
     ]
   end
 
@@ -114,7 +114,7 @@ RSpec.describe UpdateEvent do
             type: "employee_attribute",
             attribute_name: "profile_picture",
             value: generic_file_id,
-            id: picture_version.id
+            id: picture_version.id,
           }
         )
         event.reload
@@ -680,7 +680,7 @@ RSpec.describe UpdateEvent do
           {
             value: "ned",
             attribute_name: "firstname",
-            order: 2
+            order: 2,
           }
         )
       end
@@ -701,8 +701,8 @@ RSpec.describe UpdateEvent do
             order: 2,
             value: {
               lastname: "Stark",
-              firstname: "Arya"
-            }
+              firstname: "Arya",
+            },
           }
         )
       end

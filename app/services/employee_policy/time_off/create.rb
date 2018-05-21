@@ -33,7 +33,7 @@ module EmployeePolicy
           employee_id: event.employee_id,
           occupation_rate: event.attribute_value("occupation_rate"),
           time_off_policy_id: time_off_policy.id,
-          employee_event_id: event.id
+          employee_event_id: event.id,
         }
       end
     end

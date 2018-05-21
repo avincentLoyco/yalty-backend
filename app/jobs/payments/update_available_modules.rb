@@ -19,7 +19,7 @@ module Payments
           subscription: account.subscription_id,
           plan: plan_id,
           quantity: account.employees.chargeable_at_date.count,
-          prorate: index.positive? || !subscribed_plans.empty?
+          prorate: index.positive? || !subscribed_plans.empty?,
         }
         params[:proration_date] = proration_date(Time.zone.today) if params[:prorate]
         Stripe::SubscriptionItem.create(params)

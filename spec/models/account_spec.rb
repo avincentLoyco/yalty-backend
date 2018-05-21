@@ -48,7 +48,7 @@ RSpec.describe Account, type: :model do
          ":ratio"        =>  "ratio",
          "Dash--Company" =>  "dash-company",
          "--dash first " =>  "dash-first",
-         " dash  last--" =>  "dash-last"
+         " dash  last--" =>  "dash-last",
     }.each do |company_name, subdomain|
 
       it "should transcode `#{company_name}` to `#{subdomain}`" do
@@ -214,7 +214,7 @@ RSpec.describe Account, type: :model do
           id: file.id,
           size: file.file_file_size,
           file_type: file.file_content_type,
-          file_sha: "123"
+          file_sha: "123",
         })
       end
     end

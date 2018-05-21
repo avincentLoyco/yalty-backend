@@ -44,7 +44,7 @@ module ExceptionHandler
   end
 
   def render_stripe_error(exception)
-    render json: ::Api::V1::StripeErrorRepresenter.new(exception).complete, status: 502
+    render json: ::Api::V1::StripeErrorRepresenter.new(exception).complete, status: :bad_gateway
   end
 
   def render_no_content
@@ -54,7 +54,7 @@ module ExceptionHandler
   def resource_invalid_error(exception)
     resource = exception.try(:record) ? exception.record : exception
     render json:
-      ::Api::V1::ErrorsRepresenter.new(resource).complete, status: 422
+      ::Api::V1::ErrorsRepresenter.new(resource).complete, status: :unprocessable_entity
   end
 
   def generate_locked_error(type, field)
@@ -73,11 +73,11 @@ module ExceptionHandler
       messages: [get_message(type)],
       codes: [get_code(type)]
     )
-    render json: ::Api::V1::ErrorsRepresenter.new(exception).complete, status: 423
+    render json: ::Api::V1::ErrorsRepresenter.new(exception).complete, status: :locked
   end
 
   def record_not_found_error(exception = nil)
-    resource = exception.record if exception && exception.respond_to?(:record)
+    resource = exception.record if exception&.respond_to?(:record)
 
     error = CustomError.new(
       type: resource,
@@ -87,7 +87,7 @@ module ExceptionHandler
     )
 
     render json:
-      ::Api::V1::ErrorsRepresenter.new(error).complete, status: 404
+      ::Api::V1::ErrorsRepresenter.new(error).complete, status: :not_found
   end
 
   def render_500_error(exception = nil)
@@ -97,7 +97,7 @@ module ExceptionHandler
       codes: ["error_internal_server_error"]
     )
     render json:
-      ::Api::V1::ErrorsRepresenter.new(error).complete, status: 500
+      ::Api::V1::ErrorsRepresenter.new(error).complete, status: :internal_server_error
   end
 
   def bad_request_error
@@ -106,43 +106,44 @@ module ExceptionHandler
       codes: ["error_bad_request"]
     )
     render json:
-      ::Api::V1::ErrorsRepresenter.new(error).complete, status: 400
+      ::Api::V1::ErrorsRepresenter.new(error).complete, status: :bad_request
   end
 
   def forbidden_error(exception = nil)
     messages = { error: [exception.message] }
     render json:
-      ::Api::V1::ErrorsRepresenter.new(nil, messages).complete, status: 403
+      ::Api::V1::ErrorsRepresenter.new(nil, messages).complete, status: :forbidden
   end
 
   def invalid_resources_error(exception)
-    render json:
-      ::Api::V1::ErrorsRepresenter.new(exception.resource, exception.messages).complete, status: 422
+    render json: exception_representer(exception), status: :unprocessable_entity
   end
 
   def invalid_password_error(exception)
-    render json:
-      ::Api::V1::ErrorsRepresenter.new(exception.resource, exception.messages).complete, status: 403
+    render json: exception_representer(exception), status: :forbidden
   end
 
   def event_type_not_found(exception)
-    render json:
-      ::Api::V1::ErrorsRepresenter.new(exception.resource, exception.messages).complete, status: 404
+    render json: exception_representer(exception), status: :not_found
+  end
+
+  def exception_representer(exception)
+    ::Api::V1::ErrorsRepresenter.new(exception.resource, exception.messages).complete
   end
 
   def custom_error(exception)
-    render json: ::Api::V1::ErrorsRepresenter.new(exception).complete, status: 422
+    render json: ::Api::V1::ErrorsRepresenter.new(exception).complete, status: :unprocessable_entity
   end
 
   def locked_error(exception)
-    render json: ::Api::V1::ErrorsRepresenter.new(exception).complete, status: 423
+    render json: ::Api::V1::ErrorsRepresenter.new(exception).complete, status: :locked
   end
 
   def destroy_forbidden(exception)
     render json:
       ::Api::V1::ErrorsRepresenter.new(
         exception.record, exception.record.errors.messages
-      ).complete, status: 403
+      ).complete, status: :forbidden
   end
 
   def get_message(type)

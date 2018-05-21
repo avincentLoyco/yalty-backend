@@ -31,7 +31,7 @@ module Payments
         pdf.font_families.update(
           "Lato" => {
             normal: "#{@path_to_assets}/fonts/Lato-Regular.ttf",
-            bold: "#{@path_to_assets}/fonts/Lato-Bold.ttf"
+            bold: "#{@path_to_assets}/fonts/Lato-Bold.ttf",
           }
         )
         pdf.font "Lato", size: 11
@@ -134,7 +134,7 @@ module Payments
         t("payment.pdf.items.header.period"),
         t("payment.pdf.items.header.units"),
         t("payment.pdf.items.header.unit_price"),
-        t("payment.pdf.items.header.amount")
+        t("payment.pdf.items.header.amount"),
       ]
       line_items.unshift(table_headers).push(subtotal_and_tax, total)
     end
@@ -150,7 +150,7 @@ module Payments
           period(line.period_start, line.period_end),
           units(line),
           unit_price(line),
-          in_chf(line.amount)
+          in_chf(line.amount),
         ]
       end
     end
@@ -170,7 +170,7 @@ module Payments
             period(set.first[1], set.first[2]),
             nil,
             nil,
-            in_chf(amount_sum)
+            in_chf(amount_sum),
           ]
         end.compact
     end

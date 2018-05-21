@@ -12,9 +12,9 @@ module Api
               type: @exception.type,
               message: @exception.message,
               field: @exception.field,
-              code:  @exception.code
-            }
-          ]
+              code:  @exception.code,
+            },
+          ],
         }
       end
     end

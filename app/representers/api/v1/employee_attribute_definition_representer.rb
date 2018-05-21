@@ -6,7 +6,7 @@ module Api::V1
         label:          resource.label,
         attribute_type: resource.attribute_type,
         system:         resource.system,
-        multiple:       resource.multiple
+        multiple:       resource.multiple,
       }
         .merge(basic)
     end

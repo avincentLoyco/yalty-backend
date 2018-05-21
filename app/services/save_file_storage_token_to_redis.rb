@@ -47,7 +47,7 @@ class SaveFileStorageTokenToRedis
       created_at: created_at.to_s,
       expires_at: (created_at + @time_to_expire.seconds).to_s,
       counter: 1,
-      action_type: file_id.present? ? "download" : "upload"
+      action_type: file_id.present? ? "download" : "upload",
     }
   end
 
@@ -69,7 +69,7 @@ class SaveFileStorageTokenToRedis
     {
       sha:  file.sha_sums[:"#{@version}_sha"],
       type: file.file_content_type,
-      name: file.user_friendly_name
+      name: file.user_friendly_name,
     }
   end
 end

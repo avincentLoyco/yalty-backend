@@ -36,7 +36,7 @@ module API
       def filters
         {
           category: verified_attributes[:category],
-          date: verified_attributes[:date]
+          date: verified_attributes[:date],
         }.compact
       end
 

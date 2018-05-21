@@ -6,7 +6,7 @@ module Api::V1
       {
         category: resource.category.name,
         employee: resource.employee.id,
-        result: resource.balance_result
+        result: resource.balance_result,
       }
     end
   end

@@ -128,7 +128,7 @@ RSpec.describe Export::GenerateEmployeesSpreadsheet, type: :service do
       before do
         [
           { name: "Jim",      employee: employees.first },
-          { name: "Sherlock", employee: employees.second }
+          { name: "Sherlock", employee: employees.second },
         ].each do |firstname_attr|
           create(:employee_attribute,
             employee: firstname_attr[:employee], event: change_event,
@@ -137,7 +137,7 @@ RSpec.describe Export::GenerateEmployeesSpreadsheet, type: :service do
 
         [
           { name: "Moriarty", employee: employees.first },
-          { name: "Holmes",   employee: employees.second }
+          { name: "Holmes",   employee: employees.second },
         ].each do |lastname_attr|
           create(:employee_attribute,
             employee: lastname_attr[:employee], event: change_event,

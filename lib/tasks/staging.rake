@@ -22,7 +22,7 @@ namespace :staging do
             number: "4242424242424242",
             exp_month: "12",
             exp_year: Time.zone.today.year.to_s,
-            cvc: "204"
+            cvc: "204",
           }
         )
 

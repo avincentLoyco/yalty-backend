@@ -52,7 +52,7 @@ module API
             subscription: Account.current.subscription_id,
             plan: plan_id,
             quantity: Account.current.employees.chargeable_at_date.count,
-            prorate: prorate
+            prorate: prorate,
           }
           return creation_params unless prorate
           creation_params.merge(proration_date: proration_date(Time.zone.today))
@@ -111,7 +111,7 @@ module API
 
         def stripe_error(exception)
           error = StripeError.new(type: "plan", field: "id", message: exception.message)
-          render json: ::Api::V1::StripeErrorRepresenter.new(error).complete, status: 502
+          render json: ::Api::V1::StripeErrorRepresenter.new(error).complete, status: :bad_gateway
         end
       end
     end

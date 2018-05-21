@@ -36,7 +36,7 @@ RSpec.describe Payments::UpdateAvailableModules, type: :job do
   context "when subscription exist" do
     let(:subscription_items) do
       [
-        StripeSubscriptionItem.new(SecureRandom.hex, StripePlan.new(plan_ids.first))
+        StripeSubscriptionItem.new(SecureRandom.hex, StripePlan.new(plan_ids.first)),
       ]
     end
 

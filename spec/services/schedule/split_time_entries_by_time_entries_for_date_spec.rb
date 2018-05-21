@@ -7,8 +7,8 @@ RSpec.describe SplitTimeEntriesByTimeEntriesForDate, type: :service do
       {
         :type => "working_time",
         :start_time => "00:00:00",
-        :end_time => "05:00:00"
-      }
+        :end_time => "05:00:00",
+      },
     ]
   end
 
@@ -17,18 +17,18 @@ RSpec.describe SplitTimeEntriesByTimeEntriesForDate, type: :service do
       {
         :type => "working_time",
         :start_time => "00:00:00",
-        :end_time => "01:00:00"
+        :end_time => "01:00:00",
       },
       {
         :type => "working_time",
         :start_time => "02:00:00",
-        :end_time => "03:00:00"
+        :end_time => "03:00:00",
       },
       {
         :type => "working_time",
         :start_time => "04:00:00",
-        :end_time => "05:00:00"
-      }
+        :end_time => "05:00:00",
+      },
     ]
   end
 
@@ -45,13 +45,13 @@ RSpec.describe SplitTimeEntriesByTimeEntriesForDate, type: :service do
           {
             :type => "working_time",
             :start_time => "01:00:00",
-            :end_time => "02:00:00"
+            :end_time => "02:00:00",
           },
           {
             :type => "working_time",
             :start_time => "03:00:00",
-            :end_time => "04:00:00"
-          }
+            :end_time => "04:00:00",
+          },
         ]
 
         )
@@ -66,8 +66,8 @@ RSpec.describe SplitTimeEntriesByTimeEntriesForDate, type: :service do
             {
               :type => "working_time",
               :start_time => "00:00:00",
-              :end_time => "05:00:00"
-            }
+              :end_time => "05:00:00",
+            },
           ]
         )
       end

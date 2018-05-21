@@ -60,7 +60,7 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
             :effective_at,
             :assignation_id,
             :order_of_start_day,
-            :effective_till
+            :effective_till,
           ]
         )
       end
@@ -145,7 +145,7 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
         employee_id: employee.id,
         presence_policy_id: presence_policy_id,
         effective_at: effective_at,
-        order_of_start_day: 1
+        order_of_start_day: 1,
       }
     end
 
@@ -169,7 +169,7 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
             :effective_at,
             :assignation_id,
             :order_of_start_day,
-            :effective_till
+            :effective_till,
           ])
         end
       end

@@ -62,7 +62,7 @@ RSpec.describe Auth::UsersController, type: :controller do
       {
         reset_password_token: reset_password_token,
         password: password,
-        password_confirmation: password_confirmation
+        password_confirmation: password_confirmation,
       }
     end
 

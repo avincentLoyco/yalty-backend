@@ -7,7 +7,7 @@ module Api::V1
         standard_day_duration: resource.standard_day_duration,
         default_full_time: resource.default_full_time,
         active: resource.active,
-        deletable: assigned_employees_json.empty?
+        deletable: assigned_employees_json.empty?,
       }
         .merge(basic)
     end

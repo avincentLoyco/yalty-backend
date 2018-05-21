@@ -40,9 +40,9 @@ RSpec.describe CreateEvent do
       event_type: event_type,
       time_off_policy_amount: 9600,
       employee: {
-        id: employee_id
+        id: employee_id,
       },
-      presence_policy_id: presence_policy.id
+      presence_policy_id: presence_policy.id,
     }
   end
   let(:employee_attributes_params) do
@@ -50,18 +50,18 @@ RSpec.describe CreateEvent do
       {
         value: value,
         attribute_name: attribute_name,
-        order: 1
+        order: 1,
       },
       {
         value: 0.8,
         attribute_name: occupation_rate_attribute,
-        order: 2
+        order: 2,
       },
       {
         value: "xyz",
         attribute_name: attribute_name,
-        order: 3
-      }
+        order: 3,
+      },
     ]
   end
 
@@ -108,8 +108,8 @@ RSpec.describe CreateEvent do
               order: 2,
               value: {
                 lastname: "Stark",
-                firstname: "Arya"
-              }
+                firstname: "Arya",
+              },
             }
           )
         end

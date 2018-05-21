@@ -77,10 +77,10 @@ RSpec.describe API::V1::PresenceDaysController, type: :controller do
       {
         presence_policy: {
           id: presence_policy_id,
-          type: "presence_policy"
+          type: "presence_policy",
         },
         order: order,
-        type: "presence_day"
+        type: "presence_day",
       }
     end
 
@@ -164,7 +164,7 @@ RSpec.describe API::V1::PresenceDaysController, type: :controller do
       {
         id: id,
         order: order,
-        type: "presence_day"
+        type: "presence_day",
       }
     end
 

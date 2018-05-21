@@ -13,9 +13,9 @@ RSpec.shared_examples "example_relationships_working_places" do |settings|
         working_places: [
           {
             "type": "working_places",
-            "id": first_working_place.id
-          }
-        ]
+            "id": first_working_place.id,
+          },
+        ],
       }
     end
     let(:second_working_place_json) do
@@ -23,9 +23,9 @@ RSpec.shared_examples "example_relationships_working_places" do |settings|
         working_places: [
           {
             "type": "working_places",
-            "id": second_working_place.id
-          }
-        ]
+            "id": second_working_place.id,
+          },
+        ],
       }
     end
     let(:both_working_places_json) do
@@ -33,13 +33,13 @@ RSpec.shared_examples "example_relationships_working_places" do |settings|
         working_places: [
           {
             "type": "working_places",
-            "id": first_working_place.id
+            "id": first_working_place.id,
           },
           {
             "type": "working_places",
-            "id": second_working_place.id
-          }
-        ]
+            "id": second_working_place.id,
+          },
+        ],
       }
     end
 
@@ -48,9 +48,9 @@ RSpec.shared_examples "example_relationships_working_places" do |settings|
         working_places: [
           {
             "type": "working_places",
-            "id": "12345678-1234-1234-1234-123456789012"
-          }
-        ]
+            "id": "12345678-1234-1234-1234-123456789012",
+          },
+        ],
       }
     end
 

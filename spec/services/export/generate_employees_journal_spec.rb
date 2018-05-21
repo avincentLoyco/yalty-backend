@@ -70,7 +70,7 @@ RSpec.describe Export::GenerateEmployeesJournal, type: :service do
       postalcode: "NW1",
       region: "Westminster",
       street: "Baker Street",
-      streetno: "221B"
+      streetno: "221B",
     }
   end
 

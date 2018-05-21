@@ -54,8 +54,8 @@ RSpec.describe API::V1::EmployeeAttributesController, type: :controller do
           time_off_policy_amount: 20,
           employee_attributes: [
             { attribute_name: "firstname", value: "James" },
-            { attribute_name: "occupation_rate", value: "0.5" }
-          ]
+            { attribute_name: "occupation_rate", value: "0.5" },
+          ],
         }
       ).call
 
@@ -63,7 +63,7 @@ RSpec.describe API::V1::EmployeeAttributesController, type: :controller do
         {
           effective_at: 5.days.from_now,
           event_type: "default",
-          employee: { id: employee.id }
+          employee: { id: employee.id },
         },
         [{attribute_name: "lastname", value: "Howlett"}]
       ).call
@@ -72,7 +72,7 @@ RSpec.describe API::V1::EmployeeAttributesController, type: :controller do
         {
           effective_at: 10.days.from_now,
           event_type: "default",
-          employee: { id: employee.id }
+          employee: { id: employee.id },
         },
         [{attribute_name: "firstname", value: "Logan"}]
       ).call

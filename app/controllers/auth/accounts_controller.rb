@@ -65,7 +65,7 @@ class Auth::AccountsController < ApplicationController
       format.json do
         render status: 201, json: {
           code: authorization_token,
-          redirect_uri: authorization_uri
+          redirect_uri: authorization_uri,
         }
       end
       format.any do

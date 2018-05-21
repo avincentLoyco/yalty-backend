@@ -37,14 +37,14 @@ RSpec.describe HolidaysForEmployeeSchedule, type: :service do
               "2015-12-25" => [
                 {
                   :type=>"holiday",
-                  :name=>"christmas"
-                }
+                  :name=>"christmas",
+                },
               ],
               "2015-12-26" => [
                 {
                   :type=>"holiday",
-                  :name=>"st_stephens_day"
-                }
+                  :name=>"st_stephens_day",
+                },
               ],
               "2015-12-27" => [],
               "2015-12-28" => [],
@@ -54,8 +54,8 @@ RSpec.describe HolidaysForEmployeeSchedule, type: :service do
               "2016-01-01" => [
                 {
                   :type=>"holiday",
-                  :name=>"new_years_day"
-                }
+                  :name=>"new_years_day",
+                },
               ],
             }
           )

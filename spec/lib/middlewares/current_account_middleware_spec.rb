@@ -4,7 +4,7 @@ RSpec.describe CurrentAccountMiddleware do
   let(:account_user) { create(:account_user) }
   let(:account_subdomain) { account_user.account.subdomain }
   let(:env) { Rack::MockRequest.env_for("https://api.yalty.io", {
-    "HTTP_YALTY_ACCOUNT_SUBDOMAIN" => "#{account_subdomain}"
+    "HTTP_YALTY_ACCOUNT_SUBDOMAIN" => "#{account_subdomain}",
   })}
   let(:app) { ->(env) { [200, env, [""]] }}
   let(:middleware) { CurrentAccountMiddleware.new(app) }

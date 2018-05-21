@@ -4,7 +4,7 @@ module Api::V1
       {
         start_time: resource.start_time,
         end_time: resource.end_time,
-        duration: resource.duration
+        duration: resource.duration,
       }
         .merge(basic)
         .merge(relationships)
@@ -12,7 +12,7 @@ module Api::V1
 
     def relationships
       {
-        presence_day: presence_day_json
+        presence_day: presence_day_json,
       }
     end
 

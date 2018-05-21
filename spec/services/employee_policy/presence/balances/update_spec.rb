@@ -17,7 +17,7 @@ RSpec.describe EmployeePolicy::Presence::Balances::Update do
       {
         id: employee_presence_policy.id,
         effective_at: effective_at,
-        order_of_start_day: order_of_start_day
+        order_of_start_day: order_of_start_day,
       }
     }
 
@@ -30,7 +30,7 @@ RSpec.describe EmployeePolicy::Presence::Balances::Update do
         id: employee_presence_policy.id,
         effective_at: effective_at,
         order_of_start_day: order_of_start_day,
-        previous_order_of_start_day: previous_order_of_start_day
+        previous_order_of_start_day: previous_order_of_start_day,
       }
     }
 

@@ -6,7 +6,7 @@ module Api::V1
         locale:           resource.locale,
         balance_in_hours: resource.balance_in_hours,
         role:             resource.role,
-        referral_token:   resource.referrer.try(:token)
+        referral_token:   resource.referrer.try(:token),
       }
         .merge(basic)
         .merge(relationships)
@@ -16,7 +16,7 @@ module Api::V1
       {
         locale:           resource.locale,
         balance_in_hours: resource.balance_in_hours,
-        role:             resource.role
+        role:             resource.role,
       }
         .merge(basic)
         .merge(intercom_hash)
@@ -25,7 +25,7 @@ module Api::V1
 
     def relationships
       {
-        employee: employee_json
+        employee: employee_json,
       }
     end
 
@@ -37,7 +37,7 @@ module Api::V1
           "sha256",
           ENV["INTERCOM_SECRET_KEY"],
           resource.id
-        )
+        ),
       }
     end
 

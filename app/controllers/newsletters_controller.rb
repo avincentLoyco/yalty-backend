@@ -14,7 +14,7 @@ class NewslettersController < ApplicationController
           email: attributes[:email],
           name: attributes[:name],
           custom_attributes: {
-            newsletter_language: attributes[:language]
+            newsletter_language: attributes[:language],
           }
         )
       end

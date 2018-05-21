@@ -17,7 +17,7 @@ namespace :db do
         time_off.time_off_category,
         time_off.employee,
         time_off.employee.account,
-        time_off_id: time_off.id, amount: time_off.balance
+        time_off_id: time_off.id, amount: time_off.balance,
       ]
     end
 

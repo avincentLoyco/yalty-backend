@@ -53,7 +53,7 @@ module Export
         event.id,
         event.event_type,
         event.effective_at.strftime("%d-%m-%Y"),
-        event.updated_at.strftime("%d-%m-%YT%H:%M:%S")
+        event.updated_at.strftime("%d-%m-%YT%H:%M:%S"),
       ]
     end
 
@@ -81,7 +81,7 @@ module Export
       [
         "employee_events.updated_at >= ?::timestamp AND employee_events.updated_at < ?::timestamp",
         journal_since,
-        journal_timestamp
+        journal_timestamp,
       ]
     end
   end

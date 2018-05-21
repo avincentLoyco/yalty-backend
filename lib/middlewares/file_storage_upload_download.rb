@@ -59,9 +59,9 @@ class FileStorageUploadDownload
         200,
         {
           "Content-Type" => token_data["file_type"],
-          "Content-Disposition" => "#{params["disposition"]}; filename=\"#{filename}\""
+          "Content-Disposition" => "#{params["disposition"]}; filename=\"#{filename}\"",
         },
-        file
+        file,
       ]
     end
 

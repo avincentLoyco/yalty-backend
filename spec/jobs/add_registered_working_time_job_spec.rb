@@ -58,8 +58,8 @@ RSpec.describe AddRegisteredWorkingTimes do
               [
                 {
                   "start_time" => "02:00:00",
-                  "end_time" => "10:00:00"
-                }
+                  "end_time" => "10:00:00",
+                },
               ]
             )
           end
@@ -74,12 +74,12 @@ RSpec.describe AddRegisteredWorkingTimes do
             [
               {
                 "start_time" => "01:00:00",
-                "end_time" => "02:00:00"
+                "end_time" => "02:00:00",
               },
               {
                 "start_time" => "03:00:00",
-                "end_time" => "04:00:00"
-              }
+                "end_time" => "04:00:00",
+              },
             ]
           )
           expect(first_employee_rwt.schedule_generated).to eq(true)
@@ -90,8 +90,8 @@ RSpec.describe AddRegisteredWorkingTimes do
             [
               {
                 "start_time" => "05:00:00",
-                "end_time" => "06:00:00"
-              }
+                "end_time" => "06:00:00",
+              },
             ]
           )
           expect(second_employee_rwt.schedule_generated).to eq(true)
@@ -120,16 +120,16 @@ RSpec.describe AddRegisteredWorkingTimes do
             [
               {
                 "start_time" => "01:00:00",
-                "end_time" => "01:20:00"
+                "end_time" => "01:20:00",
               },
               {
                 "start_time" => "01:40:00",
-                "end_time" => "02:00:00"
+                "end_time" => "02:00:00",
               },
               {
                 "start_time" => "03:00:00",
-                "end_time" => "04:00:00"
-              }
+                "end_time" => "04:00:00",
+              },
             ]
           )
           expect(first_employee_rwt.schedule_generated).to eq(true)
@@ -140,12 +140,12 @@ RSpec.describe AddRegisteredWorkingTimes do
             [
               {
                 "start_time" => "05:00:00",
-                "end_time" => "05:20:00"
+                "end_time" => "05:20:00",
               },
               {
                 "start_time" => "05:40:00",
-                "end_time" => "06:00:00"
-              }
+                "end_time" => "06:00:00",
+              },
             ]
           )
           expect(second_employee_rwt.schedule_generated).to eq(true)
@@ -246,8 +246,8 @@ RSpec.describe AddRegisteredWorkingTimes do
           [
             {
               "start_time" => "05:00:00",
-              "end_time" => "06:00:00"
-            }
+              "end_time" => "06:00:00",
+            },
           ]
         )
         expect(second_employee_rwt.schedule_generated).to eq(true)
@@ -272,12 +272,12 @@ RSpec.describe AddRegisteredWorkingTimes do
             [
               {
                 "start_time" => "05:00:00",
-                "end_time" => "05:20:00"
+                "end_time" => "05:20:00",
               },
               {
                 "start_time" => "05:40:00",
-                "end_time" => "06:00:00"
-              }
+                "end_time" => "06:00:00",
+              },
             ]
           )
           expect(second_employee_rwt.schedule_generated).to eq(true)
@@ -322,12 +322,12 @@ RSpec.describe AddRegisteredWorkingTimes do
           [
             {
               "start_time" => "10:00:00",
-              "end_time" => "14:00:00"
+              "end_time" => "14:00:00",
             },
             {
               "start_time" => "15:00:00",
-              "end_time" => "20:00:00"
-            }
+              "end_time" => "20:00:00",
+            },
           ]
         )
         expect(first_employee_rwt.schedule_generated).to eq(false)
@@ -359,8 +359,8 @@ RSpec.describe AddRegisteredWorkingTimes do
           [
             {
               "start_time" => "01:00:00",
-              "end_time" => "02:00:00"
-            }
+              "end_time" => "02:00:00",
+            },
           ]
         )
         expect(first_employee_rwt.schedule_generated).to eq(true)
@@ -395,12 +395,12 @@ RSpec.describe AddRegisteredWorkingTimes do
           [
             {
               "start_time" => "10:00:00",
-              "end_time" => "14:00:00"
+              "end_time" => "14:00:00",
             },
             {
               "start_time" => "15:00:00",
-              "end_time" => "20:00:00"
-            }
+              "end_time" => "20:00:00",
+            },
           ]
         )
         expect(first_employee_rwt.schedule_generated).to eq(false)
@@ -416,8 +416,8 @@ RSpec.describe AddRegisteredWorkingTimes do
           [
             {
               "start_time" => "05:00:00",
-              "end_time" => "06:00:00"
-            }
+              "end_time" => "06:00:00",
+            },
           ]
         )
         expect(second_employee_rwt.schedule_generated).to eq(true)

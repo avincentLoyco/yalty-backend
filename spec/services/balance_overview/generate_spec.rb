@@ -40,13 +40,13 @@ RSpec.describe BalanceOverview::Generate do
           },
           {
             value: "John",
-            attribute_name: "firstname"
+            attribute_name: "firstname",
           },
           {
             value: "Smith",
-            attribute_name: "lastname"
-          }
-        ]
+            attribute_name: "lastname",
+          },
+        ],
       }
     end
 
@@ -61,7 +61,7 @@ RSpec.describe BalanceOverview::Generate do
     let(:params) do
       {
         date: query_date,
-        category: filter_category
+        category: filter_category,
       }.compact
     end
 
@@ -86,7 +86,7 @@ RSpec.describe BalanceOverview::Generate do
         expect(mapped_values).to contain_exactly(
           {
             category: "vacation",
-            result: vacation_minutes
+            result: vacation_minutes,
           }
         )
       end
@@ -111,7 +111,7 @@ RSpec.describe BalanceOverview::Generate do
             expect(mapped_values).to contain_exactly(
               {
                 category: "vacation",
-                result: vacation_minutes - time_off_minutes
+                result: vacation_minutes - time_off_minutes,
               }
             )
           end
@@ -126,7 +126,7 @@ RSpec.describe BalanceOverview::Generate do
             expect(mapped_values).to contain_exactly(
               {
                 category: "vacation",
-                result: vacation_minutes
+                result: vacation_minutes,
               }
             )
           end
@@ -142,14 +142,14 @@ RSpec.describe BalanceOverview::Generate do
             event_type: "adjustment_of_balances",
             employee: {
               id: employee.id,
-              type: "employee"
+              type: "employee",
             },
             employee_attributes: [
               {
                 type: "employee_attribute",
                 attribute_name: "adjustment",
-                value: adjustment_minutes
-              }
+                value: adjustment_minutes,
+              },
             ]
           )
         end
@@ -161,7 +161,7 @@ RSpec.describe BalanceOverview::Generate do
             expect(mapped_values).to contain_exactly(
               {
                 category: "vacation",
-                result: vacation_minutes + adjustment_minutes
+                result: vacation_minutes + adjustment_minutes,
               }
             )
           end
@@ -174,7 +174,7 @@ RSpec.describe BalanceOverview::Generate do
             expect(mapped_values).to contain_exactly(
               {
                 category: "vacation",
-                result: vacation_minutes
+                result: vacation_minutes,
               }
             )
           end
@@ -201,11 +201,11 @@ RSpec.describe BalanceOverview::Generate do
         expect(mapped_values).to contain_exactly(
           {
             category: "vacation",
-            result: vacation_minutes
+            result: vacation_minutes,
           },
           {
             category: "emergency",
-            result: 0
+            result: 0,
           }
         )
       end
@@ -217,7 +217,7 @@ RSpec.describe BalanceOverview::Generate do
           expect(mapped_values).to contain_exactly(
             {
               category: "vacation",
-              result: vacation_minutes
+              result: vacation_minutes,
             }
           )
         end
@@ -253,11 +253,11 @@ RSpec.describe BalanceOverview::Generate do
           expect(mapped_values).to contain_exactly(
             {
               category: "vacation",
-              result: vacation_minutes - time_off_minutes
+              result: vacation_minutes - time_off_minutes,
             },
             {
               category: "emergency",
-              result: 0 - time_off_minutes
+              result: 0 - time_off_minutes,
             }
           )
         end
@@ -271,7 +271,7 @@ RSpec.describe BalanceOverview::Generate do
         expect(mapped_values).to contain_exactly(
           {
             category: "vacation",
-            result: 0
+            result: 0,
           }
         )
       end
@@ -285,8 +285,8 @@ RSpec.describe BalanceOverview::Generate do
           effective_at: contract_end_date,
           event_type: "contract_end",
           employee: {
-            id: employee.id
-          }
+            id: employee.id,
+          },
         }
       end
 
@@ -301,7 +301,7 @@ RSpec.describe BalanceOverview::Generate do
           expect(mapped_values).to contain_exactly(
             {
               category: "vacation",
-              result: vacation_minutes
+              result: vacation_minutes,
             }
           )
         end
@@ -314,7 +314,7 @@ RSpec.describe BalanceOverview::Generate do
           expect(mapped_values).to contain_exactly(
             {
               category: "vacation",
-              result: 0
+              result: 0,
             }
           )
         end

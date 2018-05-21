@@ -3,11 +3,6 @@ require "rake"
 
 RSpec.describe "remove_original_files", type: :rake do
   include_context "rake"
-  before(:all) do
-    ENV["TEST_ENV_NUMBER"] = "1" if ENV["TEST_ENV_NUMBER"].nil?
-    ENV["FILE_STORAGE_UPLOAD_PATH"] = "spec/tmp/files"
-  end
-  after { FileUtils.rm_rf(ENV["FILE_STORAGE_UPLOAD_PATH"]) }
 
   let(:file_path)     { ENV["FILE_STORAGE_UPLOAD_PATH"]}
   let(:original_path) { file_path + "/file_id_#{ENV["TEST_ENV_NUMBER"]}/original" }

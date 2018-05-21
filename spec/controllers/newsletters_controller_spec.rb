@@ -6,7 +6,7 @@ RSpec.describe NewslettersController, type: :controller do
       {
         email: "test@example.com",
         name: "Test User",
-        language: "fr"
+        language: "fr",
       }
     end
 

@@ -99,7 +99,7 @@ class CreateEvent
     errors = event.employee_attribute_versions.map do |attr|
       return {} unless attr.attribute_definition
       {
-        attr.attribute_definition.name => attr.errors.messages
+        attr.attribute_definition.name => attr.errors.messages,
       }
     end
     errors.delete_if { |error| error.values.first.empty? }.reduce({}, :merge)

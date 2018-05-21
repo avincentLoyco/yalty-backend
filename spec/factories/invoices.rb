@@ -28,7 +28,7 @@ FactoryGirl.define do
           amount: Faker::Number.between(100, 1000),
           currency: "chf",
           interval: "month",
-          interval_count: 1
+          interval_count: 1,
         }
       )])
     }

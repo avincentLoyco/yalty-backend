@@ -58,7 +58,7 @@ module Export
         attribute_value(firstname_attribute.try(:[], "data")),
         attribute_effective_at(firstname_attribute),
         normalize_date(employee.hired_date),
-        normalize_date(employee.contract_end_date)
+        normalize_date(employee.contract_end_date),
       ]
     end
 

@@ -96,7 +96,7 @@ class ManageEmployeeBalanceAdditions
         skip_update: true,
         resource_amount: balance_type.eql?("addition") ? resource_amount : 0,
         effective_at: date + Employee::Balance.const_get("#{balance_type}_offset".upcase),
-        balance_type: balance_type
+        balance_type: balance_type,
       }.merge(validity_date(etop, date, balance_type))
     ).call
   end
@@ -109,7 +109,7 @@ class ManageEmployeeBalanceAdditions
   def validity_date(etop, date, balance_type)
     return {} if etop.time_off_policy.counter?
     {
-      validity_date: RelatedPolicyPeriod.new(etop).validity_date_for_balance_at(date, balance_type)
+      validity_date: RelatedPolicyPeriod.new(etop).validity_date_for_balance_at(date, balance_type),
     }
   end
 

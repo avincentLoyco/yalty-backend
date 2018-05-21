@@ -127,7 +127,7 @@ RSpec.describe API::V1::Payments::WebhooksController, type: :controller do
         before do
           modules = [
             ::Payments::PlanModule.new(id: "filevault", canceled: false),
-            ::Payments::PlanModule.new(id: "exports", canceled: true)
+            ::Payments::PlanModule.new(id: "exports", canceled: true),
           ]
           account.update!(available_modules: ::Payments::AvailableModules.new(data: modules))
         end
@@ -156,7 +156,7 @@ RSpec.describe API::V1::Payments::WebhooksController, type: :controller do
             ::Payments::PlanModule.new(id: "filevault", canceled: false, free: false),
             ::Payments::PlanModule.new(id: "exports", canceled: true, free: true),
             ::Payments::PlanModule.new(id: "premium", canceled: true, free: false),
-            ::Payments::PlanModule.new(id: "automatedexport", canceled: false, free: true)
+            ::Payments::PlanModule.new(id: "automatedexport", canceled: false, free: true),
           ]
           account.update!(available_modules: ::Payments::AvailableModules.new(data: modules))
         end

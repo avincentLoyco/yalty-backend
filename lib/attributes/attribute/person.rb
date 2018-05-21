@@ -11,7 +11,7 @@ module Attribute
 
     def allowed_values
       {
-        "nationality" => ISO3166::Country.codes
+        "nationality" => ISO3166::Country.codes,
       }
     end
   end

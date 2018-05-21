@@ -13,7 +13,7 @@ RSpec.describe Account::User, type: :model do
   it { is_expected.to allow_value("test@test.com").for(:email) }
   it { is_expected.to_not allow_value("testtest.com").for(:email) }
   it { is_expected.to_not allow_value("testtestcom").for(:email) }
-  it { is_expected.to_not allow_value("test@testcom").for(:email) }
+  it { is_expected.to_not allow_value("test@test!com").for(:email) }
   it { is_expected.to validate_uniqueness_of(:email).scoped_to(:account_id).case_insensitive }
 
   it { is_expected.to have_db_column(:password_digest).with_options(null: false) }

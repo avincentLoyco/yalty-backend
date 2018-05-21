@@ -182,7 +182,7 @@ RSpec.describe UpdateBalanceJob do
           let(:options) do
             {
               manual_amount: 2000,
-              validity_date: Date.new(2016, 4, 2) + Employee::Balance::REMOVAL_OFFSET
+              validity_date: Date.new(2016, 4, 2) + Employee::Balance::REMOVAL_OFFSET,
             }
           end
 
@@ -269,7 +269,7 @@ RSpec.describe UpdateBalanceJob do
           let(:options) do
             {
               manual_amount: -100,
-              effective_at: current.last + Employee::Balance::END_OF_PERIOD_OFFSET
+              effective_at: current.last + Employee::Balance::END_OF_PERIOD_OFFSET,
             }
           end
 
@@ -398,7 +398,7 @@ RSpec.describe UpdateBalanceJob do
             let(:options) do
               {
                 validity_date: 1.years.since + 3.months + 1.day + Employee::Balance::REMOVAL_OFFSET,
-                resource_amount: 4000
+                resource_amount: 4000,
               }
             end
             let(:addition) { existing_balances.additions.last(2).first }

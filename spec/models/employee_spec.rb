@@ -194,7 +194,7 @@ RSpec.describe Employee, type: :model do
             id: file.id,
             size: file.file_file_size,
             file_type: file.file_content_type,
-            file_sha: "123"
+            file_sha: "123",
           })
         end
       end

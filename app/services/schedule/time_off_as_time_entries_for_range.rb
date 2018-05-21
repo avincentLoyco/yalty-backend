@@ -43,9 +43,9 @@ class TimeOffAsTimeEntriesForRange
           type: "time_off",
           name: time_off.time_off_category.name,
           start_time: single_day_start_time.strftime("%H:%M:%S"),
-          end_time: day_end_time(single_day_end_time)
+          end_time: day_end_time(single_day_end_time),
 
-        }
+        },
       ]
     time_off_hashes =
       grouped_by_employee ? { @time_off.employee_id => time_off_hashes } : time_off_hashes

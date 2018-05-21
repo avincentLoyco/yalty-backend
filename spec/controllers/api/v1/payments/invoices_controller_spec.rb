@@ -45,9 +45,9 @@ RSpec.describe API::V1::Payments::InvoicesController, type: :controller do
               interval: invoice.lines.data.first.plan.interval,
               name: invoice.lines.data.first.plan.name,
               active: invoice.lines.data.first.plan.active,
-              free: false
-            }
-          }]
+              free: false,
+            },
+          }],
         }]
       end
 

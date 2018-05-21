@@ -115,7 +115,7 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
     let(:params) do
       {
         name: name,
-        system: true
+        system: true,
       }
     end
     subject { post :create, params }
@@ -160,7 +160,7 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
       {
         id: id,
         name: name,
-        system: "true"
+        system: "true",
       }
     end
 

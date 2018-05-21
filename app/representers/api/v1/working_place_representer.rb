@@ -13,7 +13,7 @@ module Api::V1
         country: resource.country,
         country_code: resource.country_code,
         timezone: resource.timezone,
-        deletable: assigned_employees_json.empty?
+        deletable: assigned_employees_json.empty?,
       }
         .merge(basic)
         .merge(relationships)
@@ -21,7 +21,7 @@ module Api::V1
 
     def relationships
       {
-        employees: assigned_employees_json
+        employees: assigned_employees_json,
       }
     end
 

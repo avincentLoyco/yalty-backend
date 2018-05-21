@@ -14,7 +14,7 @@ namespace :assign_types_to_existing_balances do
     Employee::Balance.includes(:balance_credit_additions)
                      .where(balance_type: "removal")
                      .where(balance_credit_additions_employee_balances: {
-                              balance_credit_removal_id: nil
+                              balance_credit_removal_id: nil,
                             })
                      .destroy_all
 

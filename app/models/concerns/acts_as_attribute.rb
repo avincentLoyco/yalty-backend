@@ -59,7 +59,7 @@ module ActsAsAttribute
     else
       self.data = {
         :attribute_type => data.attribute_type,
-        attribute_key => value
+        attribute_key => value,
       }
     end
   end

@@ -29,8 +29,8 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
               status: "invalid",
               type: "nil_class",
               codes: ["error_user_unauthorized"],
-              employee_id: nil
-            }
+              employee_id: nil,
+            },
           ]
         )}
       end
@@ -52,8 +52,8 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
               status: "invalid",
               type: "nil_class",
               codes: ["error_user_unauthorized"],
-              employee_id: nil
-            }
+              employee_id: nil,
+            },
           ]
         )}
       end
@@ -167,14 +167,14 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         type: "employee_attribute",
         attribute_name: multiple_attribute_definition.name,
         value: first_pet_name,
-        order: 1
+        order: 1,
       },
       {
         type: "employee_attribute",
         attribute_name: multiple_attribute_definition.name,
         value: second_pet_name,
-        order: 2
-      }
+        order: 2,
+      },
     ]
   end
   let!(:presence_policy) do
@@ -287,22 +287,22 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           presence_policy_id: presence_policy.id,
           time_off_policy_amount: 9600,
           employee: {
-            type: "employee"
+            type: "employee",
           },
           employee_attributes: [
             {
               attribute_name: first_name_attribute_definition,
-              value: first_name
+              value: first_name,
             },
             {
               attribute_name: last_name_attribute_definition,
-              value: last_name
+              value: last_name,
             },
             {
               attribute_name: occupation_rate_attribute_definition,
-              value: 0.8
-            }
-          ]
+              value: 0.8,
+            },
+          ],
         }
       end
 
@@ -327,7 +327,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
                 {
                   type: "employee_attribute",
                   attribute_name: file_definition.name,
-                  value: generic_file.id
+                  value: generic_file.id,
                 }
               )
             end
@@ -368,7 +368,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
               {
                 type: "employee_attribute",
                 attribute_name: file_definition.name,
-                value: generic_file.id
+                value: generic_file.id,
               }
             )
           end
@@ -411,8 +411,8 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
                 firstname: "Jon",
                 lastname: "Snow",
                 nationality: "CH",
-                other_parent_work_status: other_parent_work_status
-              }
+                other_parent_work_status: other_parent_work_status,
+              },
             }
           )
         end
@@ -585,20 +585,20 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           event_type: "change",
           employee: {
             id: employee_id,
-            type: "employee"
+            type: "employee",
           },
           employee_attributes: [
             {
               type: "employee_attribute",
               attribute_name: first_name_attribute_definition,
-              value: first_name
+              value: first_name,
             },
             {
               type: "employee_attribute",
               attribute_name: last_name_attribute_definition,
-              value: last_name
-            }
-          ]
+              value: last_name,
+            },
+          ],
         }
       end
 
@@ -622,7 +622,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
               {
                 type: "employee_attribute",
                 attribute_name: file_definition.name,
-                value: generic_file.id
+                value: generic_file.id,
               }
             )
           end
@@ -742,14 +742,14 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
               type: "employee_attribute",
               attribute_name: multiple_system_definition.name,
               value: first_pet_name,
-              order: 1
+              order: 1,
             },
             {
               type: "employee_attribute",
               attribute_name: multiple_system_definition.name,
               value: second_pet_name,
-              order: 2
-            }
+              order: 2,
+            },
           ]
         end
         it "should create event with multiple pet attributes" do
@@ -771,20 +771,20 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
             event_type: "adjustment_of_balances",
             employee: {
               id: employee_id,
-              type: "employee"
+              type: "employee",
             },
             employee_attributes: [
               {
                 type: "employee_attribute",
                 attribute_name: "adjustment",
-                value: adjustment_value
+                value: adjustment_value,
               },
               {
                 type: "employee_attribute",
                 attribute_name: "comment",
-                value: "correction"
-              }
-            ]
+                value: "correction",
+              },
+            ],
           }
         end
 
@@ -879,10 +879,10 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           employee_attributes: [
             {
               attribute_name: occupation_rate_attribute_definition,
-              value: 0.8
-            }
+              value: 0.8,
+            },
           ],
-          time_off_policy_amount: 9600
+          time_off_policy_amount: 9600,
         }
       end
 
@@ -1070,27 +1070,27 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         employee_attributes: [
           {
             attribute_name: occupation_rate_attribute_definition,
-            value: 1.0
+            value: 1.0,
           },
           {
             id: first_name_attribute_id,
             type: "employee_attribute",
             attribute_name: first_name_attribute_definition,
-            value: first_name
+            value: first_name,
           },
           {
             id: last_name_attribute_id,
             type: "employee_attribute",
             attribute_name: last_name_attribute_definition,
-            value: last_name
+            value: last_name,
           },
           {
             id: annual_salary_attribute_id,
             type: "employee_attribute",
             attribute_name: annual_salary_attribute_definition,
-            value: annual_salary
-          }
-        ]
+            value: annual_salary,
+          },
+        ],
       }
     end
 
@@ -1131,7 +1131,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           {
             type: "employee_attribute",
             attribute_name: file_definition.name,
-            value: file_value
+            value: file_value,
           }
         )
       end
@@ -1537,7 +1537,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           time_off_policy_amount: 9600,
           employee: { id: employee.id },
           type: "employee_event",
-          presence_policy_id: presence_policy.id
+          presence_policy_id: presence_policy.id,
         }
       end
 
@@ -1545,7 +1545,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         before do
           json_payload.merge!(employee_attributes:
             [
-              { attribute_name: "occupation_rate", value: "1.0" }
+              { attribute_name: "occupation_rate", value: "1.0" },
             ])
           rehired.employee_presence_policy = repp
         end
@@ -1606,20 +1606,20 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           event_type: "adjustment_of_balances",
           employee: {
             id: employee.id,
-            type: "employee"
+            type: "employee",
           },
           employee_attributes: [
             {
               type: "employee_attribute",
               attribute_name: "adjustment",
-              value: adjustment_value
+              value: adjustment_value,
             },
             {
               type: "employee_attribute",
               attribute_name: "comment",
-              value: "new correction"
-            }
-          ]
+              value: "new correction",
+            },
+          ],
         }
       end
 
@@ -1632,14 +1632,14 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           event_type: "adjustment_of_balances",
           employee: {
             id: employee.id,
-            type: "employee"
+            type: "employee",
           },
           employee_attributes: [
             {
               type: "employee_attribute",
               attribute_name: "adjustment",
-              value: 0
-            }
+              value: 0,
+            },
           ]
         )
       end
@@ -2165,14 +2165,14 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           event_type: "adjustment_of_balances",
           employee: {
             id: employee.id,
-            type: "employee"
+            type: "employee",
           },
           employee_attributes: [
             {
               type: "employee_attribute",
               attribute_name: "adjustment",
-              value: 0
-            }
+              value: 0,
+            },
           ]
         )
       end

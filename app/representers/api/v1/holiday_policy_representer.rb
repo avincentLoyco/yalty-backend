@@ -4,7 +4,7 @@ module Api::V1
       {
         name: resource.name,
         country: resource.country,
-        region: resource.region
+        region: resource.region,
       }
         .merge(basic)
         .merge(relationships)
@@ -12,7 +12,7 @@ module Api::V1
 
     def relationships
       {
-        working_places: working_places_json
+        working_places: working_places_json,
       }
     end
 

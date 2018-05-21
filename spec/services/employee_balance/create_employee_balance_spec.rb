@@ -138,7 +138,7 @@ RSpec.describe CreateEmployeeBalance, type: :service, jobs: true do
         let(:effective_at) { Time.now + Employee::Balance::ADDITION_OFFSET }
         let(:options) do
           {
-            effective_at: effective_at
+            effective_at: effective_at,
           }
         end
         let!(:other_working_place_policy) do
@@ -258,7 +258,7 @@ RSpec.describe CreateEmployeeBalance, type: :service, jobs: true do
         {
           effective_at: employee_policy.effective_at + Employee::Balance::ADDITION_OFFSET,
           resource_amount: 2000,
-          balance_type: "addition"
+          balance_type: "addition",
         }
       end
 

@@ -21,7 +21,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
           {
             "2016-01-01" => [],
             "2016-01-02" => [],
-            "2016-01-03" => []
+            "2016-01-03" => [],
           }
         )
       end
@@ -43,25 +43,25 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                   :type => "time_off",
                   :name => category_name,
                   :start_time => "00:00:00",
-                  :end_time => "24:00:00"
-                }
+                  :end_time => "24:00:00",
+                },
               ],
               "2016-01-02" => [
                 {
                   :type => "time_off",
                   :name => category_name,
                   :start_time => "00:00:00",
-                  :end_time => "24:00:00"
-                }
+                  :end_time => "24:00:00",
+                },
               ],
               "2016-01-03" => [
                 {
                   :type => "time_off",
                   :name => category_name,
                   :start_time => "00:00:00",
-                  :end_time => "24:00:00"
-                }
-              ]
+                  :end_time => "24:00:00",
+                },
+              ],
             }
           )
         end
@@ -86,17 +86,17 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                       :type => "time_off",
                       :name => category_name,
                       :start_time => "02:00:00",
-                      :end_time => "05:00:00"
+                      :end_time => "05:00:00",
                     },
                     {
                       :type => "time_off",
                       :name => category_name,
                       :start_time => "07:00:00",
-                      :end_time => "12:00:00"
-                    }
+                      :end_time => "12:00:00",
+                    },
                   ],
                   "2016-01-02" => [],
-                  "2016-01-03" => []
+                  "2016-01-03" => [],
                 }
               )
             end
@@ -120,29 +120,29 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                         :type => "time_off",
                         :name => category_name,
                         :start_time => "01:00:00",
-                        :end_time => "04:00:00"
+                        :end_time => "04:00:00",
                       },
                       {
                         :type => "time_off",
                         :name => category_name,
                         :start_time => "05:00:00",
-                        :end_time => "08:00:00"
+                        :end_time => "08:00:00",
                       },
                       {
                         :type => "time_off",
                         :name => category_name,
                         :start_time => "09:00:00",
-                        :end_time => "12:00:00"
+                        :end_time => "12:00:00",
                       },
                       {
                         :type => "time_off",
                         :name => category_name,
                         :start_time => "13:00:00",
-                        :end_time => "16:00:00"
-                      }
+                        :end_time => "16:00:00",
+                      },
                     ],
                     "2016-01-02" => [],
-                    "2016-01-03" => []
+                    "2016-01-03" => [],
                   }
                 )
               end
@@ -166,7 +166,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                       :type => "time_off",
                       :name => category_name,
                       :start_time => "02:00:00",
-                      :end_time => "05:00:00"
+                      :end_time => "05:00:00",
                     },
                   ],
                   "2016-01-02" => [
@@ -174,10 +174,10 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                       :type => "time_off",
                       :name => category_name,
                       :start_time => "07:00:00",
-                      :end_time => "24:00:00"
-                    }
+                      :end_time => "24:00:00",
+                    },
                   ],
-                  "2016-01-03" => []
+                  "2016-01-03" => [],
                 }
               )
             end
@@ -201,7 +201,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                     :type => "time_off",
                     :name => category_name,
                     :start_time => "01:00:00",
-                    :end_time => "24:00:00"
+                    :end_time => "24:00:00",
                   },
                 ],
                 "2016-01-02" => [
@@ -209,23 +209,23 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                     :type => "time_off",
                     :name => category_name,
                     :start_time => "00:00:00",
-                    :end_time => "02:00:00"
+                    :end_time => "02:00:00",
                   },
                   {
                     :type => "time_off",
                     :name => category_name,
                     :start_time => "07:00:00",
-                    :end_time => "24:00:00"
-                  }
+                    :end_time => "24:00:00",
+                  },
                 ],
                 "2016-01-03" => [
                   {
                     :type => "time_off",
                     :name => category_name,
                     :start_time => "00:00:00",
-                    :end_time => "12:00:00"
+                    :end_time => "12:00:00",
                   },
-                ]
+                ],
               }
             )
           end
@@ -245,7 +245,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
           {
             "2016-01-01" => {},
             "2016-01-02" => {},
-            "2016-01-03" => {}
+            "2016-01-03" => {},
           }
         )
       end
@@ -262,7 +262,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
             start_time: Time.zone.now + 1.hour ,
             end_time: Time.zone.now - 1.hour + 3.days,
             employee: another_employee,
-            time_off_category: time_offs_in_range.first.time_off_category)
+            time_off_category: time_offs_in_range.first.time_off_category),
           ]
         end
 
@@ -282,8 +282,8 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                       :type => "time_off",
                       :name => category_name,
                       :start_time => "00:00:00",
-                      :end_time => "24:00:00"
-                    }
+                      :end_time => "24:00:00",
+                    },
                   ],
                 another_employee_id =>
                   [
@@ -291,8 +291,8 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                       :type => "time_off",
                       :name => category_name,
                       :start_time => "01:00:00",
-                      :end_time => "24:00:00"
-                    }
+                      :end_time => "24:00:00",
+                    },
                   ],
               },
               "2016-01-02" => {
@@ -302,8 +302,8 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                       :type => "time_off",
                       :name => category_name,
                       :start_time => "00:00:00",
-                      :end_time => "24:00:00"
-                    }
+                      :end_time => "24:00:00",
+                    },
                   ],
                 another_employee_id =>
                   [
@@ -311,9 +311,9 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                       :type => "time_off",
                       :name => category_name,
                       :start_time => "00:00:00",
-                      :end_time => "24:00:00"
-                    }
-                  ]
+                      :end_time => "24:00:00",
+                    },
+                  ],
               },
               "2016-01-03" => {
                 employee.id =>
@@ -322,8 +322,8 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                       :type => "time_off",
                       :name => category_name,
                       :start_time => "00:00:00",
-                      :end_time => "24:00:00"
-                    }
+                      :end_time => "24:00:00",
+                    },
                   ],
                 another_employee_id =>
                   [
@@ -331,10 +331,10 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                       :type => "time_off",
                       :name => category_name,
                       :start_time => "00:00:00",
-                      :end_time => "23:00:00"
-                    }
-                  ]
-              }
+                      :end_time => "23:00:00",
+                    },
+                  ],
+              },
             }
           )
         end
@@ -361,18 +361,18 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                           :type => "time_off",
                           :name => category_name,
                           :start_time => "02:00:00",
-                          :end_time => "05:00:00"
+                          :end_time => "05:00:00",
                         },
                         {
                           :type => "time_off",
                           :name => category_name,
                           :start_time => "07:00:00",
-                          :end_time => "12:00:00"
-                        }
+                          :end_time => "12:00:00",
+                        },
                       ],
                   },
                   "2016-01-02" => {},
-                  "2016-01-03" => {}
+                  "2016-01-03" => {},
                 }
               )
             end
@@ -398,30 +398,30 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                             :type => "time_off",
                             :name => category_name,
                             :start_time => "01:00:00",
-                            :end_time => "04:00:00"
+                            :end_time => "04:00:00",
                           },
                           {
                             :type => "time_off",
                             :name => category_name,
                             :start_time => "05:00:00",
-                            :end_time => "08:00:00"
+                            :end_time => "08:00:00",
                           },
                           {
                             :type => "time_off",
                             :name => category_name,
                             :start_time => "09:00:00",
-                            :end_time => "12:00:00"
+                            :end_time => "12:00:00",
                           },
                           {
                             :type => "time_off",
                             :name => category_name,
                             :start_time => "13:00:00",
-                            :end_time => "16:00:00"
-                          }
+                            :end_time => "16:00:00",
+                          },
                         ],
                     },
                     "2016-01-02" => {},
-                    "2016-01-03" => {}
+                    "2016-01-03" => {},
                   }
                 )
               end
@@ -447,7 +447,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                           :type => "time_off",
                           :name => category_name,
                           :start_time => "02:00:00",
-                          :end_time => "05:00:00"
+                          :end_time => "05:00:00",
                         },
                       ],
                   },
@@ -458,11 +458,11 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                           :type => "time_off",
                           :name => category_name,
                           :start_time => "07:00:00",
-                          :end_time => "24:00:00"
-                        }
+                          :end_time => "24:00:00",
+                        },
                       ],
                   },
-                  "2016-01-03" => {}
+                  "2016-01-03" => {},
                 }
               )
             end
@@ -488,7 +488,7 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                         :type => "time_off",
                         :name => category_name,
                         :start_time => "01:00:00",
-                        :end_time => "24:00:00"
+                        :end_time => "24:00:00",
                       },
                     ],
                 },
@@ -499,14 +499,14 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                         :type => "time_off",
                         :name => category_name,
                         :start_time => "00:00:00",
-                        :end_time => "02:00:00"
+                        :end_time => "02:00:00",
                       },
                       {
                         :type => "time_off",
                         :name => category_name,
                         :start_time => "07:00:00",
-                        :end_time => "24:00:00"
-                      }
+                        :end_time => "24:00:00",
+                      },
                     ],
                 },
                 "2016-01-03" => {
@@ -516,10 +516,10 @@ RSpec.describe TimeOffForEmployeeSchedule, type: :service do
                         :type => "time_off",
                         :name => category_name,
                         :start_time => "00:00:00",
-                        :end_time => "12:00:00"
+                        :end_time => "12:00:00",
                       },
-                    ]
-                }
+                    ],
+                },
               }
             )
           end

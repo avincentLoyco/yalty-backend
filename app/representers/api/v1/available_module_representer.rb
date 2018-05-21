@@ -6,7 +6,7 @@ module Api
           id: resource.id,
           name: resource.name,
           enabled: resource.enabled,
-          free: resource.free
+          free: resource.free,
         }
       end
     end

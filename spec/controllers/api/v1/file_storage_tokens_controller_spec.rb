@@ -107,7 +107,7 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
               "type" => "file_storage_tokens",
               "field" => "duration",
               "messages" => ["Requested longterm token when not allowed"],
-              "codes" => ["duration.requested_longterm_token_when_not_allowed"]
+              "codes" => ["duration.requested_longterm_token_when_not_allowed"],
             }
           end
 
@@ -149,7 +149,7 @@ RSpec.describe API::V1::FileStorageTokensController, type: :controller do
           "type" => nil,
           "messages" => ["Record Not Found"],
           "field" => "id",
-          "codes" => ["error_record_not_found"]
+          "codes" => ["error_record_not_found"],
         }
       end
 

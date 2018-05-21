@@ -51,9 +51,9 @@ module Api
               country: @account.company_information.country,
               postalcode: @account.company_information.postalcode,
               region: @account.company_information.region,
-              phone: @account.company_information.phone
+              phone: @account.company_information.phone,
             },
-            emails: @account.invoice_emails
+            emails: @account.invoice_emails,
           }
         end
       end

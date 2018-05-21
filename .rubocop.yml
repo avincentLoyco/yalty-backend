@@ -76,9 +76,13 @@ Layout/SpaceInLambdaLiteral:
 Layout/AlignParameters:
   EnforcedStyle: with_fixed_indentation
 
-Lint/AmbiguousBlockAssociation:
+Layout/BlockEndNewline:
   Exclude:
     - "spec/**/*"
 
 Lint/DefEndAlignment:
   AutoCorrect: true
+
+Lint/AmbiguousBlockAssociation:
+  Exclude:
+    - "spec/**/*"

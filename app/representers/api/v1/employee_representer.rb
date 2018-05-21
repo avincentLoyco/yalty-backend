@@ -5,7 +5,7 @@ module Api::V1
     def complete
       {
         hiring_status: resource.can_be_hired?,
-        is_old_employee: resource.hired_before_migration?
+        is_old_employee: resource.hired_before_migration?,
       }
         .merge(basic)
         .merge(employee_data)
@@ -18,7 +18,7 @@ module Api::V1
         contract_end_date: resource.contract_end_date,
         civil_status: resource.civil_status_for,
         civil_status_date: resource.civil_status_date_for,
-        time_off_policy_amount: time_off_policy_amount
+        time_off_policy_amount: time_off_policy_amount,
       }
     end
 
@@ -27,7 +27,7 @@ module Api::V1
         employee_attributes: employee_attributes_json,
         working_place: working_place_json,
         active_presence_policy: active_presence_policy_json,
-        active_vacation_policy: active_vacation_policy_json
+        active_vacation_policy: active_vacation_policy_json,
       }
     end
 
@@ -61,7 +61,7 @@ module Api::V1
       {
         id: active_presence_policy.id,
         type: active_presence_policy.class.name.underscore,
-        standard_day_duration: active_presence_policy.standard_day_duration
+        standard_day_duration: active_presence_policy.standard_day_duration,
       }
     end
 
@@ -74,7 +74,7 @@ module Api::V1
         assignation_type: active_vacation_policy.class.name.underscore,
         effective_at: active_vacation_policy.effective_at,
         effective_till: active_vacation_policy.effective_till,
-        employee_balance: employee_balance_json(active_vacation_policy)
+        employee_balance: employee_balance_json(active_vacation_policy),
       }
     end
 

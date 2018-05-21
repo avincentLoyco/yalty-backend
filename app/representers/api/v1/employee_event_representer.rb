@@ -7,7 +7,7 @@ module Api::V1
         deletable: resource.can_destroy_event?,
         active: resource.can_edit_event?,
         presence_policy_id: presence_policy_id,
-        time_off_policy_amount: time_off_policy_amount
+        time_off_policy_amount: time_off_policy_amount,
       }
         .merge(basic)
         .merge(relationship)
@@ -16,7 +16,7 @@ module Api::V1
     def relationship
       {
         employee: employee_json,
-        employee_attributes: attribute_versions
+        employee_attributes: attribute_versions,
       }
     end
 

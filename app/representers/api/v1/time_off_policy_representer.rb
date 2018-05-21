@@ -11,7 +11,7 @@ module Api::V1
         policy_type: resource.policy_type,
         years_to_effect: resource.years_to_effect,
         active: resource.active,
-        deletable: assigned_employees_json.empty?
+        deletable: assigned_employees_json.empty?,
       }
         .merge(basic)
         .merge(time_off_category: time_off_category_json)

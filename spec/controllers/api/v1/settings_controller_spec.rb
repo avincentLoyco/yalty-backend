@@ -71,7 +71,7 @@ RSpec.describe API::V1::SettingsController, type: :controller do
         subdomain: subdomain,
         yalty_access: yalty_access,
         timezone: timezone,
-        default_locale: "en"
+        default_locale: "en",
       }
     end
 

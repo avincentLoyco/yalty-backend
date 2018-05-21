@@ -7,7 +7,7 @@ RSpec.shared_context "event create use case" do
   let(:params) do
     {
       employee_attributes: employee_attributes,
-      data: :data
+      data: :data,
     }
   end
   let(:employee_attributes) { nil }

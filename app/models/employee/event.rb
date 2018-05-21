@@ -35,7 +35,7 @@ class Employee::Event < ActiveRecord::Base
     child_studies: %w(child),
     contract_end: %w(),
     adjustment_of_balances: %w(comment adjustment),
-    other: %w(title comment_communication)
+    other: %w(title comment_communication),
   }.with_indifferent_access
 
   MANAGER_EVENTS = %w(
@@ -63,7 +63,7 @@ class Employee::Event < ActiveRecord::Base
   validates :effective_at,
     uniqueness: {
       scope: [:event_type, :employee_id],
-      message: "adjustment at that day already exists"
+      message: "adjustment at that day already exists",
     },
     if: :adjustment_event?
   validates :event_type,

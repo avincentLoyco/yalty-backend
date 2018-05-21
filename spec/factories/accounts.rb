@@ -44,7 +44,7 @@ FactoryGirl.define do
           postalcode: Faker::Address.postcode,
           region: Faker::Address.country_code,
           address_1: "#{Faker::Address.building_number} #{Faker::Address.street_name}",
-          phone: Faker::PhoneNumber.phone_number
+          phone: Faker::PhoneNumber.phone_number,
         }
       }
       invoice_emails [ Faker::Internet.email, Faker::Internet.email ]

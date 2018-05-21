@@ -29,7 +29,7 @@ module Api
             subtotal: resource.subtotal,
             tax: resource.tax,
             tax_percent: resource.tax_percent&.to_f,
-            total: resource.total
+            total: resource.total,
           }
         end
 

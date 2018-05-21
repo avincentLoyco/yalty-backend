@@ -14,7 +14,7 @@ module Api
             subscription: resource.subscription,
             subscription_item: resource.subscription_item,
             type: resource.type,
-            plan: plan
+            plan: plan,
           }
         end
 

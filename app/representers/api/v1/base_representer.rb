@@ -10,7 +10,7 @@ module Api::V1
       return unless resource.present?
       {
         id: resource.id,
-        type: resource_type
+        type: resource_type,
       }
     end
 

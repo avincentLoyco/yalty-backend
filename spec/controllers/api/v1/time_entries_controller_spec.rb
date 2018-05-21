@@ -74,8 +74,8 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
         type: "time_entry",
         presence_day: {
           id: presence_day_id,
-          type: "presence_day"
-        }
+          type: "presence_day",
+        },
       }
     end
 
@@ -114,7 +114,7 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
         let(:end_time) { "12:00" }
 
         before(:each) do
-          time_entry.update_attributes(
+          time_entry.update(
             start_time: "10:00", end_time: "24:00", presence_day: presence_day
           )
         end
@@ -148,8 +148,8 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
         type: "time_entry",
         presence_day: {
           id: presence_day_id,
-          type: "presence_day"
-        }
+          type: "presence_day",
+        },
       }
     end
 

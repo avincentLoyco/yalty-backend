@@ -12,7 +12,7 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
     let(:params) do
       {
         effective_at: params_effective_at,
-        employee_id: employee.id
+        employee_id: employee.id,
       }.merge(resource_params)
     end
 
@@ -196,7 +196,7 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
             event_params = {
               effective_at: Time.zone.parse("2016/03/01"),
               event_type: "contract_end",
-              employee: { id: employee.id }
+              employee: { id: employee.id },
             }
             CreateEvent.new(event_params, {}).call
             subject
@@ -358,7 +358,7 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
             event_params = {
               effective_at: Time.zone.parse("2016/03/01"),
               event_type: "contract_end",
-              employee: { id: employee.reload.id }
+              employee: { id: employee.reload.id },
             }
             CreateEvent.new(event_params, {}).call
             subject
@@ -555,7 +555,7 @@ RSpec.describe CreateOrUpdateJoinTable, type: :service do
             event_params = {
               effective_at: Time.zone.parse("2016/03/01"),
               event_type: "contract_end",
-              employee: { id: employee.id }
+              employee: { id: employee.id },
             }
             CreateEvent.new(event_params, {}).call
             subject

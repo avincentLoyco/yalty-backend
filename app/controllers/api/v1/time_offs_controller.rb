@@ -107,7 +107,7 @@ module API
         {
           manual_amount: verified_params[:manual_amount] ? verified_params[:manual_amount] : 0,
           resource_amount: resource.balance,
-          effective_at: find_effective_at(previous_start_time).to_s
+          effective_at: find_effective_at(previous_start_time).to_s,
         }
       end
 

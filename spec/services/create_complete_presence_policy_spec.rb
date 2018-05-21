@@ -8,11 +8,11 @@ RSpec.describe CreateCompletePresencePolicy, type: :service do
       [
         {
           start_time: "16:00:00" ,
-          end_time: "16:20:00"
+          end_time: "16:20:00",
         } ,
         {
           start_time: "18:20:00",
-          end_time: "18:20:00"
+          end_time: "18:20:00",
         } ,
       ]
     end
@@ -20,11 +20,11 @@ RSpec.describe CreateCompletePresencePolicy, type: :service do
       [
         {
           start_time: "12:00:00",
-          end_time: "13:00:00"
+          end_time: "13:00:00",
         },
         {
           start_time: "15:00:00",
-          end_time: "16:00:00"
+          end_time: "16:00:00",
         },
       ]
     end
@@ -33,13 +33,13 @@ RSpec.describe CreateCompletePresencePolicy, type: :service do
         {
           time_entries: first_time_entry,
           minutes: 40,
-          order: 1
+          order: 1,
         },
         {
           time_entries: second_time_entry,
           minutes: 120,
-          order: 2
-        }
+          order: 2,
+        },
       ]
     end
     let(:active_record_params) {

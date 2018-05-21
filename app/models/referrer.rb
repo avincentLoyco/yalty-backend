@@ -8,18 +8,20 @@ class Referrer < ActiveRecord::Base
   before_validation :assign_token, unless: :token
 
   validates :email, presence: true, uniqueness: true
-  validates :email, format: { with: /\b[A-Z0-9._%a-z\-]+@(?:[A-Z0-9a-z\-]+\.)+[A-Za-z]{2,4}\z/ }
+  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :token, presence: true, uniqueness: true
 
   scope(:with_referred_accounts_count, lambda do |from = nil, to = nil|
-    from = Time.zone.parse("1920-01-01").beginning_of_day unless from.present?
-    to = Time.zone.now.end_of_day unless to.present?
+    from ||= Time.zone.parse("1920-01-01").beginning_of_day
+    to ||= Time.zone.now.end_of_day
 
-    Referrer.select("referrers.*, (
-        SELECT COUNT(accounts.*) FROM accounts
-        WHERE accounts.referred_by = referrers.token
-        AND (accounts.created_at::date BETWEEN '#{from}'::date AND '#{to}'::date)
-      ) AS referred_accounts_count")
+    account_query = Account
+      .where("referred_by = referrers.token")
+      .where(created_at: from..to)
+      .select("count(accounts.*)")
+      .to_sql
+
+    Referrer.select("referrers.*, (#{account_query}) AS referred_accounts_count")
   end)
 
   private

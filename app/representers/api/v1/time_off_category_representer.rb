@@ -10,7 +10,7 @@ module Api::V1
     def complete
       {
         name: resource.name,
-        system: resource.system
+        system: resource.system,
       }
         .merge(basic)
         .merge(dates)
@@ -19,7 +19,7 @@ module Api::V1
     def dates
       return {} if periods.blank?
       {
-        periods: periods
+        periods: periods,
       }
     end
   end

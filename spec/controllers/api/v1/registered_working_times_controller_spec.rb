@@ -15,7 +15,7 @@ RSpec.describe API::V1::RegisteredWorkingTimesController, type: :controller do
         employee_id: employee_id,
         date: date,
         time_entries: time_entries_params,
-        comment: comment
+        comment: comment,
       }
     end
     let(:time_entries_params) do
@@ -23,13 +23,13 @@ RSpec.describe API::V1::RegisteredWorkingTimesController, type: :controller do
         {
           "start_time" =>"11:00",
           "end_time" => "15:00",
-          "type" => "working_time"
+          "type" => "working_time",
         },
         {
           "start_time" => first_start_time,
           "end_time" => first_end_time,
-          "type" => "working_time"
-        }
+          "type" => "working_time",
+        },
       ]
     end
     let(:comment) { nil }
@@ -180,9 +180,9 @@ RSpec.describe API::V1::RegisteredWorkingTimesController, type: :controller do
             [
               {
                 "test" =>"11:00",
-                "test2" => "15:00"
+                "test2" => "15:00",
               },
-              []
+              [],
             ]
           end
 
@@ -195,9 +195,9 @@ RSpec.describe API::V1::RegisteredWorkingTimesController, type: :controller do
             [
               {
                 "start_time" =>"11:00",
-                "end_time" => "15:00"
+                "end_time" => "15:00",
               },
-              []
+              [],
             ]
           end
 

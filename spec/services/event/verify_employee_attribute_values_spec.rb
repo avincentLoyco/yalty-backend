@@ -23,7 +23,7 @@ RSpec.describe VerifyEmployeeAttributeValues, type: :service do
   let(:params) do
     {
       attribute_name: attribute_name,
-      value: value
+      value: value,
     }
   end
 

@@ -51,7 +51,7 @@ module Events
       def presence_policy_params
         {
           event_id: event.id,
-          presence_policy_id: params[:presence_policy_id]
+          presence_policy_id: params[:presence_policy_id],
         }
       end
 

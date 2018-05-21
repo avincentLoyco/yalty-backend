@@ -82,7 +82,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
         name: name,
         type: "working_place",
         state_code: state_param,
-        country_code: country_code
+        country_code: country_code,
       }
     end
 
@@ -271,7 +271,7 @@ RSpec.describe API::V1::WorkingPlacesController, type: :controller do
         name: name,
         type: "working_place",
         state_code: state_param,
-        country_code: country_code
+        country_code: country_code,
       }
     end
 

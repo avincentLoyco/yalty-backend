@@ -86,7 +86,7 @@ RSpec.describe API::V1::Payments::PlansController, type: :controller do
             currency: plan.currency,
             interval: plan.interval,
             name: plan.name,
-            active: true
+            active: true,
           }
         end
 
@@ -145,7 +145,7 @@ RSpec.describe API::V1::Payments::PlansController, type: :controller do
         before do
           modules = [
             ::Payments::PlanModule.new(id: "any-plan", canceled: false),
-            ::Payments::PlanModule.new(id: plan_id, canceled: true)
+            ::Payments::PlanModule.new(id: plan_id, canceled: true),
           ]
           account.update(available_modules: ::Payments::AvailableModules.new(data: modules))
         end
@@ -269,7 +269,7 @@ RSpec.describe API::V1::Payments::PlansController, type: :controller do
             currency: plan.currency,
             interval: plan.interval,
             name: plan.name,
-            active: false
+            active: false,
           }
         end
 

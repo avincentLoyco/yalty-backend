@@ -18,7 +18,7 @@ module EmployeePolicy
     JOIN_TABLE_MODULE_NAME = {
       "employee_working_places" => "WorkingPlace",
       "employee_presence_policies" => "Presence",
-      "employee_time_off_policies" => "TimeOff"
+      "employee_time_off_policies" => "TimeOff",
     }.freeze
     RESET = { true => :with_reset, false => :not_reset }.freeze
 

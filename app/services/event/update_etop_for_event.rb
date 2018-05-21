@@ -47,7 +47,7 @@ class UpdateEtopForEvent
       employee_id: etop.employee_id,
       occupation_rate: event_occupation_rate,
       time_off_policy_id: time_off_policy.id,
-      employee_event_id: event.id
+      employee_event_id: event.id,
     }
     CreateOrUpdateJoinTable.new(EmployeeTimeOffPolicy, TimeOffPolicy, attributes, etop).call
   end

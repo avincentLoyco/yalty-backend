@@ -10,7 +10,7 @@ module Attribute
           "salaried employee", "unemployed", "no activity", "sick", "injured", "self-employed",
           "pensioner"
         ],
-        "nationality" => ISO3166::Country.codes
+        "nationality" => ISO3166::Country.codes,
       }
     end
   end

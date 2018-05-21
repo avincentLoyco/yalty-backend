@@ -47,7 +47,7 @@ class SplitTimeEntriesByTimeEntriesAndEmployeesForDate
         time_entries_in_time_format.map do |time_entry|
           formatted_entry = {
             start_time: time_entry.first.strftime("%H:%M:%S"),
-            end_time: format_end_time(time_entry.last)
+            end_time: format_end_time(time_entry.last),
           }
           formatted_entry[:type] = @time_entries_to_split_type unless @without_type
           formatted_entry

@@ -90,19 +90,19 @@ RSpec.describe ScheduleForEmployee, type: :service do
                 time_entries: [
                   {
                     type: "holiday",
-                    name: "christmas"
+                    name: "christmas",
                   },
                   {
                     type: "working_time",
                     start_time: "10:00:00",
-                    end_time: "14:00:00"
+                    end_time: "14:00:00",
                   },
                   {
                     type: "working_time",
                     start_time: "15:00:00",
-                    end_time: "20:00:00"
-                  }
-                ]
+                    end_time: "20:00:00",
+                  },
+                ],
               },
               {
                 date: "2015-12-26",
@@ -111,13 +111,13 @@ RSpec.describe ScheduleForEmployee, type: :service do
                     type: "time_off",
                     name: time_offs.first.time_off_category.name,
                     start_time: "12:00:00",
-                    end_time: "24:00:00"
+                    end_time: "24:00:00",
                   },
                   {
                     type: "holiday",
-                    name: "st_stephens_day"
-                  }
-                ]
+                    name: "st_stephens_day",
+                  },
+                ],
               },
               {
                 date: "2015-12-27",
@@ -127,19 +127,19 @@ RSpec.describe ScheduleForEmployee, type: :service do
                     type: "time_off",
                     name: time_offs.first.time_off_category.name,
                     start_time: "05:00:00",
-                    end_time: "10:00:00"
+                    end_time: "10:00:00",
                   },
                   {
                     type: "working_time",
                     start_time: "10:00:00",
-                    end_time: "14:00:00"
+                    end_time: "14:00:00",
                   },
                   {
                     type: "working_time",
                     start_time: "15:00:00",
-                    end_time: "20:00:00"
-                  }
-                ]
+                    end_time: "20:00:00",
+                  },
+                ],
               },
               {
                 date: "2015-12-28",
@@ -148,14 +148,14 @@ RSpec.describe ScheduleForEmployee, type: :service do
                   {
                     type: "working_time",
                     start_time: "10:00:00",
-                    end_time: "14:00:00"
+                    end_time: "14:00:00",
                   },
                   {
                     type: "working_time",
                     start_time: "15:00:00",
-                    end_time: "20:00:00"
-                  }
-                ]
+                    end_time: "20:00:00",
+                  },
+                ],
               },
               {
                 date: "2015-12-29",
@@ -163,9 +163,9 @@ RSpec.describe ScheduleForEmployee, type: :service do
                   {
                     type: "working_time",
                     start_time: "01:00:00",
-                    end_time: "06:00:00"
-                  }
-                ]
+                    end_time: "06:00:00",
+                  },
+                ],
               },
               {
                 date: "2015-12-30",
@@ -174,37 +174,37 @@ RSpec.describe ScheduleForEmployee, type: :service do
                     type: "time_off",
                     name: time_offs.first.time_off_category.name,
                     start_time: "00:00:00",
-                    end_time: "02:00:00"
+                    end_time: "02:00:00",
                   },
                   {
                     type: "time_off",
                     name: time_offs.first.time_off_category.name,
                     start_time: "05:00:00",
-                    end_time: "07:00:00"
+                    end_time: "07:00:00",
                   },
                   {
                     type: "working_time",
                     start_time: "02:00:00",
-                    end_time: "03:00:00"
+                    end_time: "03:00:00",
                   },
                   {
                     type: "time_off",
                     name: time_offs.first.time_off_category.name,
                     start_time: "03:00:00",
-                    end_time: "04:00:00"
+                    end_time: "04:00:00",
                   },
                   {
                     type: "working_time",
                     start_time: "04:00:00",
-                    end_time: "05:00:00"
-                  }
-                ]
+                    end_time: "05:00:00",
+                  },
+                ],
               },
               {
                 date: "2015-12-31",
                 comment: "Working day comment",
-                time_entries: []
-              }
+                time_entries: [],
+              },
             ]
           )
         end
@@ -235,21 +235,21 @@ RSpec.describe ScheduleForEmployee, type: :service do
                      type: "time_off",
                      name: time_offs.first.time_off_category.name,
                      start_time: "05:00:00",
-                     end_time: "06:00:00"
+                     end_time: "06:00:00",
                    },
                    {
                      type: "time_off",
                      name: time_offs.first.time_off_category.name,
                      start_time: "07:00:00",
-                     end_time: "10:00:00"
+                     end_time: "10:00:00",
                    },
                    {
                      type: "working_time",
                      start_time: "01:00:00",
-                     end_time: "05:00:00"
-                   }
-                 ]
-               }
+                     end_time: "05:00:00",
+                   },
+                 ],
+               },
             ]
           )
         end
@@ -275,9 +275,9 @@ RSpec.describe ScheduleForEmployee, type: :service do
                     type: "time_off",
                     name: time_off.time_off_category.name,
                     start_time: "00:00:00",
-                    end_time: "24:00:00"
-                  }
-                ]
+                    end_time: "24:00:00",
+                  },
+                ],
               },
               {
                 date: "2016-01-05",
@@ -286,14 +286,14 @@ RSpec.describe ScheduleForEmployee, type: :service do
                     type: "time_off",
                     name: time_off.time_off_category.name,
                     start_time: "00:00:00",
-                    end_time: "24:00:00"
-                  }
-                ]
+                    end_time: "24:00:00",
+                  },
+                ],
               },
               {
                 date: "2016-01-06",
-                time_entries: []
-              }
+                time_entries: [],
+              },
             ]
           )
         end
@@ -324,21 +324,21 @@ RSpec.describe ScheduleForEmployee, type: :service do
                      type: "time_off",
                      name: time_offs.first.time_off_category.name,
                      start_time: "01:00:00",
-                     end_time: "02:00:00"
+                     end_time: "02:00:00",
                    },
                    {
                      type: "time_off",
                      name: time_offs.first.time_off_category.name,
                      start_time: "07:00:00",
-                     end_time: "10:00:00"
+                     end_time: "10:00:00",
                    },
                    {
                      type: "working_time",
                      start_time: "02:00:00",
-                     end_time: "06:00:00"
-                   }
-                 ]
-               }
+                     end_time: "06:00:00",
+                   },
+                 ],
+               },
             ]
           )
         end
@@ -363,9 +363,9 @@ RSpec.describe ScheduleForEmployee, type: :service do
                   {
                     type: "working_time",
                     start_time: "01:00:00",
-                    end_time: "06:00:00"
-                  }
-                ]
+                    end_time: "06:00:00",
+                  },
+                ],
               },
               {
                 date: "2015-12-29",
@@ -373,10 +373,10 @@ RSpec.describe ScheduleForEmployee, type: :service do
                   {
                     type: "working_time",
                     start_time: "00:00:00",
-                    end_time: "24:00:00"
-                  }
+                    end_time: "24:00:00",
+                  },
                 ],
-                comment: registered_working_time.comment
+                comment: registered_working_time.comment,
               },
               {
                 date: "2015-12-30",
@@ -384,10 +384,10 @@ RSpec.describe ScheduleForEmployee, type: :service do
                   {
                     type: "working_time",
                     start_time: "01:00:00",
-                    end_time: "06:00:00"
-                  }
-                ]
-              }
+                    end_time: "06:00:00",
+                  },
+                ],
+              },
             ]
           )
         end
@@ -403,24 +403,24 @@ RSpec.describe ScheduleForEmployee, type: :service do
             [
               {
                 date: "2015-12-27",
-                time_entries: []
+                time_entries: [],
               },
               {
                 date: "2015-12-28",
-                time_entries: []
+                time_entries: [],
               },
               {
                 date: "2015-12-29",
-                time_entries: []
+                time_entries: [],
               },
               {
                 date: "2015-12-30",
-                time_entries: []
+                time_entries: [],
               },
               {
                 date: "2015-12-31",
-                time_entries: []
-              }
+                time_entries: [],
+              },
             ]
           )
         end
@@ -445,8 +445,8 @@ RSpec.describe ScheduleForEmployee, type: :service do
                 time_entries: [
                   { type: "working_time", start_time: "10:00:00", end_time: "14:00:00" },
                   { type: "working_time", start_time: "15:00:00", end_time: "20:00:00" },
-                ]
-              }
+                ],
+              },
             ]
           )
         end

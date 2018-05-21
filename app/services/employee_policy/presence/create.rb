@@ -32,7 +32,7 @@ module EmployeePolicy
             params[:presence_policy_id], event.effective_at
           ),
           presence_policy_id: params[:presence_policy_id],
-          employee_event_id: event.id
+          employee_event_id: event.id,
         }
       end
     end

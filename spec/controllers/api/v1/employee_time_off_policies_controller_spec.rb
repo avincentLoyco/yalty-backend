@@ -175,7 +175,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
             :effective_at,
             :assignation_id,
             :effective_till,
-            :employee_balance
+            :employee_balance,
           ]
         )
       end
@@ -257,7 +257,7 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
       {
         employee_id: employee.id,
         time_off_policy_id: time_off_policy_id,
-        effective_at: effective_at
+        effective_at: effective_at,
       }
     end
 

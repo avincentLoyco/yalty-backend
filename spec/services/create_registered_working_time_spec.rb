@@ -18,7 +18,7 @@ RSpec.describe CreateRegisteredWorkingTime do
       working_days: [1, 2, 3, 4, 5],
       hours: [
         %w(08:00 12:00),
-        %w(13:00 17:00)
+        %w(13:00 17:00),
       ]
     )
   end
@@ -29,7 +29,7 @@ RSpec.describe CreateRegisteredWorkingTime do
       working_days: [2],
       hours: [
         %w(08:00 12:00),
-        %w(13:00 17:00)
+        %w(13:00 17:00),
       ]
     )
   end
@@ -39,7 +39,7 @@ RSpec.describe CreateRegisteredWorkingTime do
       number_of_days: 7,
       working_days: [3],
       hours: [
-        %w(13:00 17:00)
+        %w(13:00 17:00),
       ]
     )
   end
@@ -82,7 +82,7 @@ RSpec.describe CreateRegisteredWorkingTime do
           expect(rwt.date.cwday).to eq(1)
           expect(rwt.time_entries).to match_array([
             { "start_time" => "08:00:00", "end_time" => "12:00:00" },
-            { "start_time" => "13:00:00", "end_time" => "17:00:00" }
+            { "start_time" => "13:00:00", "end_time" => "17:00:00" },
           ])
         end
       end
@@ -152,7 +152,7 @@ RSpec.describe CreateRegisteredWorkingTime do
               expect(rwt.date.cwday).to eq(2)
               expect(rwt.time_entries).to match_array([
                 { "start_time" => "08:00:00", "end_time" => "12:00:00" },
-                { "start_time" => "13:00:00", "end_time" => "17:00:00" }
+                { "start_time" => "13:00:00", "end_time" => "17:00:00" },
               ])
             end
           end
@@ -263,7 +263,7 @@ RSpec.describe CreateRegisteredWorkingTime do
           expect(rwt.date.cwday).to eq(1)
           expect(rwt.time_entries).to match_array([
             { "start_time" => "08:00:00", "end_time" => "12:00:00" },
-            { "start_time" => "13:00:00", "end_time" => "17:00:00" }
+            { "start_time" => "13:00:00", "end_time" => "17:00:00" },
           ])
         end
       end

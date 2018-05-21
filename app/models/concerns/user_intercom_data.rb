@@ -24,15 +24,15 @@ module UserIntercomData
       email: email,
       signed_up_at: created_at,
       companies: [{
-        company_id: account.id
+        company_id: account.id,
       }],
       custom_attributes: [
         {
           referral_token: referrer.try(:token),
-          role: role
+          role: role,
         },
-        intercom_employee_data
-      ].inject(:merge)
+        intercom_employee_data,
+      ].inject(:merge),
     }
   end
 
@@ -53,7 +53,7 @@ module UserIntercomData
           RegisteredWorkingTime.manually_created_ratio_per_employee(employee.id),
         number_of_files: employee.number_of_files,
         total_amount_of_data: employee.total_amount_of_data,
-        number_of_events: employee.events.count
+        number_of_events: employee.events.count,
       }
     else
       {
@@ -64,7 +64,7 @@ module UserIntercomData
         manual_working_time_ratio: nil,
         number_of_files: nil,
         total_amount_of_data: nil,
-        number_of_events: nil
+        number_of_events: nil,
       }
     end
   end

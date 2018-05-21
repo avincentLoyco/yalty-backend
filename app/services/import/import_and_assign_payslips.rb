@@ -45,7 +45,7 @@ module Import
         ENV["LOYCO_SSH_HOST"],
         ENV["LOYCO_SSH_USER"],
         ENV["LOYCO_SSH_KEY_PATH"],
-        ENV["LOYCO_SSH_IMPORT_PAYSLIPS_PATH"]
+        ENV["LOYCO_SSH_IMPORT_PAYSLIPS_PATH"],
       ].all?(&:present?)
     end
 
@@ -68,7 +68,7 @@ module Import
       {
         size: payslip.file_file_size,
         id: payslip.id,
-        file_type: payslip.file_content_type
+        file_type: payslip.file_content_type,
       }.merge(payslip.sha_sums)
     end
   end

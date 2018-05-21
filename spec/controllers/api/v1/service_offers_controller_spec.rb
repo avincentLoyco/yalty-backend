@@ -19,23 +19,23 @@ RSpec.describe API::V1::ServiceOffersController, type: :controller do
             "from-when": "2017-02-01",
             "meta": {
               "recurring": 150,
-              "onetime": 67.5
-            }
+              "onetime": 67.5,
+            },
           },
           "hr-administration": {
             "toggle": true,
             "meta": {
               "recurring": 51,
-              "onetime": 0
-            }
+              "onetime": 0,
+            },
           },
           "sickness-accident-mgmt": {
             "toggle": true,
             "meta": {
               "recurring": 27,
-              "onetime": 0
-            }
-          }
+              "onetime": 0,
+            },
+          },
         },
         "enterprise-administration": {
           "accounting": {
@@ -44,8 +44,8 @@ RSpec.describe API::V1::ServiceOffersController, type: :controller do
             "num-of-intermediate-closing": 3,
             "meta": {
               "recurring": 912.5,
-              "onetime": 1500
-            }
+              "onetime": 1500,
+            },
           },
           "taxation": {
             "toggle": true,
@@ -53,25 +53,25 @@ RSpec.describe API::V1::ServiceOffersController, type: :controller do
             "hours-of-consulting": 2,
             "meta": {
               "recurring": 80,
-              "onetime": 400
-            }
+              "onetime": 400,
+            },
           },
           "enterprise-creation": {
             "toggle": true,
             "juridic-form": "SARL",
             "meta": {
               "recurring": 0,
-              "onetime": 3000
-            }
+              "onetime": 3000,
+            },
           },
           "hr-consulting": {
             "toggle": true,
             "num-of-hours": 2,
             "meta": {
               "recurring": 0,
-              "onetime": 400
-            }
-          }
+              "onetime": 400,
+            },
+          },
         },
         "marketing-communication": {
           "website-creation": {
@@ -80,20 +80,20 @@ RSpec.describe API::V1::ServiceOffersController, type: :controller do
             "photo-shooting": true,
             "meta": {
               "recurring": 0,
-              "onetime": 2800
-            }
+              "onetime": 2800,
+            },
           },
           "social-networks": {
             "toggle": true,
             "network-list": [
               "Twitter",
-              "LinkedIn"
+              "LinkedIn",
             ],
             "animate": true,
             "meta": {
               "recurring": 500,
-              "onetime": 700
-            }
+              "onetime": 700,
+            },
           },
           "creative-content-creation": {
             "toggle": true,
@@ -102,8 +102,8 @@ RSpec.describe API::V1::ServiceOffersController, type: :controller do
             "num-of-photo-shooting": 0,
             "meta": {
               "recurring": 0,
-              "onetime": 3000
-            }
+              "onetime": 3000,
+            },
           },
           "marketing-campaign": {
             "toggle": true,
@@ -111,8 +111,8 @@ RSpec.describe API::V1::ServiceOffersController, type: :controller do
             "num-of-social-network-campaigns": 3,
             "meta": {
               "recurring": 0,
-              "onetime": 3200
-            }
+              "onetime": 3200,
+            },
           },
           "promotional-movie": {
             "toggle": true,
@@ -121,9 +121,9 @@ RSpec.describe API::V1::ServiceOffersController, type: :controller do
             "num-of-voiceover-packages": 3,
             "meta": {
               "recurring": 0,
-              "onetime": 13050
-            }
-          }
+              "onetime": 13050,
+            },
+          },
         },
         "it": {
           "it-consulting": {
@@ -131,9 +131,9 @@ RSpec.describe API::V1::ServiceOffersController, type: :controller do
             "num-of-hours": 3,
             "meta": {
               "recurring": 0,
-              "onetime": 600
-            }
-          }
+              "onetime": 600,
+            },
+          },
         },
         "logistics": {
           "logistics-support": {
@@ -141,18 +141,18 @@ RSpec.describe API::V1::ServiceOffersController, type: :controller do
             "num-of-hours": 1,
             "meta": {
               "recurring": 0,
-              "onetime": 150
-            }
-          }
-        }
+              "onetime": 150,
+            },
+          },
+        },
       },
       "meta": {
         "action": service_action,
         "costs": {
           "recurring": 1720.5,
-          "onetime": 28867.5
-        }
-      }
+          "onetime": 28867.5,
+        },
+      },
     }.with_indifferent_access
   end
 

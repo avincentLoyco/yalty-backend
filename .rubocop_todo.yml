@@ -44,12 +44,7 @@ Layout/AlignParameters:
     - 'spec/services/event/delete_event_spec.rb'
     - 'spec/services/event/update_event_spec.rb'
 
-# Offense count: 77
-# Cop supports --auto-correct.
-Layout/BlockEndNewline:
-  Enabled: false
-
-# Offense count: 19
+# Offense count: 18
 # Cop supports --auto-correct.
 Layout/ClosingParenthesisIndentation:
   Exclude:
@@ -495,6 +490,8 @@ Metrics/BlockLength:
 # Configuration parameters: CountComments.
 Metrics/ClassLength:
   Max: 236
+  Exclude:
+    - "app/models/account.rb"
 
 # Offense count: 19
 Metrics/CyclomaticComplexity:
@@ -738,6 +735,7 @@ RSpec/MessageChain:
     - 'spec/models/account_spec.rb'
     - 'spec/services/employee_policy/presence/order_of_start_day/calculate_spec.rb'
     - 'spec/services/import/import_and_assign_payslip_spec.rb'
+    - 'spec/services/event/contract_ends/*'
 
 # Offense count: 75
 # Configuration parameters: EnforcedStyle.
@@ -1276,13 +1274,6 @@ Style/SpecialGlobalVars:
 # Configuration parameters: EnforcedStyleForMultiline.
 # SupportedStylesForMultiline: comma, consistent_comma, no_comma
 Style/TrailingCommaInArguments:
-  Enabled: false
-
-# Offense count: 870
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyleForMultiline.
-# SupportedStylesForMultiline: comma, consistent_comma, no_comma
-Style/TrailingCommaInLiteral:
   Enabled: false
 
 # Offense count: 2

@@ -9,7 +9,7 @@ module Api
         {
           status: archive_status,
           file_id: file_id,
-          archive_date: archive_date
+          archive_date: archive_date,
         }
       end
 

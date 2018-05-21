@@ -10,7 +10,7 @@ module API
           attr_version = find_attribute_version(attributes[:file_id])
           wrong_duration!(attr_version, attributes[:duration])
           authorize! :create, :tokens, attributes[:file_id], attr_version
-          render json: SaveFileStorageTokenToRedis.new(attributes).call, status: 201
+          render json: SaveFileStorageTokenToRedis.new(attributes).call, status: :created
         end
       end
 
@@ -53,7 +53,7 @@ module API
         Account
           .current.employee_attribute_versions
           .includes(:attribute_definition)
-          .where("data -> 'attribute_type' = 'File' AND data -> 'id' = '#{file_id}'")
+          .where("data -> 'attribute_type' = 'File' AND data -> 'id' = ?", file_id)
           .first
       end
     end

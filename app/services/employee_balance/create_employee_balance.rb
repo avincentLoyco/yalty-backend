@@ -84,7 +84,7 @@ class CreateEmployeeBalance
       resource_amount: options.key?(:resource_amount) ? options[:resource_amount] : 0,
       validity_date: validity_date,
       effective_at: options[:effective_at],
-      balance_type: options[:balance_type]
+      balance_type: options[:balance_type],
     }
   end
 

@@ -20,7 +20,7 @@ class CalculatePeriodOverview
     {
       amount_taken: amount_taken.abs,
       period_result: period_result,
-      balance: @period[:type].eql?("balancer") ? last_balance_value_in_period : amount_taken
+      balance: @period[:type].eql?("balancer") ? last_balance_value_in_period : amount_taken,
     }
   end
 

@@ -4,7 +4,7 @@ module Api::V1
       {
         attribute_name: resource.attribute_name,
         value: resource.data.value,
-        order: resource.order
+        order: resource.order,
       }.merge(basic)
     end
   end

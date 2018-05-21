@@ -114,7 +114,7 @@ RSpec.describe API::V1::CompanyEventsController, type: :controller do
         {
           title: title,
           effective_at: effective_at.strftime("%Y-%m-%d"),
-          comment: nil
+          comment: nil,
         }
       end
 
@@ -123,12 +123,12 @@ RSpec.describe API::V1::CompanyEventsController, type: :controller do
           {
             "type" => "file",
             "id" => jpg_file.id,
-            "original_filename" => "test.jpg"
+            "original_filename" => "test.jpg",
           },
           {
             "type" => "file",
             "id" => pdf_file.id,
-            "original_filename" => "example.pdf"
+            "original_filename" => "example.pdf",
           },
         ]
       end
@@ -180,7 +180,7 @@ RSpec.describe API::V1::CompanyEventsController, type: :controller do
         let(:files_params) do
           [
             { id: jpg_file.id, type: "file", original_filename: jpg_file.original_filename },
-            { id: pdf_file.id, type: "file", original_filename: pdf_file.original_filename }
+            { id: pdf_file.id, type: "file", original_filename: pdf_file.original_filename },
           ]
         end
 
@@ -298,7 +298,7 @@ RSpec.describe API::V1::CompanyEventsController, type: :controller do
         let(:files_params) do
           [
             { id: jpg_file.id, type: "file", original_filename: jpg_file.original_filename },
-            { id: pdf_file.id, type: "file", original_filename: pdf_file.original_filename }
+            { id: pdf_file.id, type: "file", original_filename: pdf_file.original_filename },
           ]
         end
 

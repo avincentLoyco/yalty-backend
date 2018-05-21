@@ -39,7 +39,7 @@ class RegisteredWorkingTimeForEmployeeSchedule
 
   def single_day_hash(working_time)
     {
-      working_time.date.to_s => single_day_time_entires_hash(working_time[:time_entries])
+      working_time.date.to_s => single_day_time_entires_hash(working_time[:time_entries]),
     }
   end
 
@@ -49,7 +49,7 @@ class RegisteredWorkingTimeForEmployeeSchedule
       {
         type: "working_time",
         start_time: TimeEntry.hour_as_time(time_entry["start_time"]).strftime("%H:%M:%S"),
-        end_time: prepare_end_time(time_entry["end_time"])
+        end_time: prepare_end_time(time_entry["end_time"]),
       }
     end
   end

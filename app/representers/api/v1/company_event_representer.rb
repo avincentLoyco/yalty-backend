@@ -7,7 +7,7 @@ module Api
           title: resource.title,
           effective_at: resource.effective_at,
           comment: resource.comment,
-          files: files_json
+          files: files_json,
         }
       end
 
@@ -18,7 +18,7 @@ module Api
           {
             type: "file",
             id: file.id,
-            original_filename: file.original_filename
+            original_filename: file.original_filename,
           }
         end
       end

@@ -20,7 +20,7 @@ module Export
             time_off.employee_id,
             time_off.time_off_category.name,
             time_off.start_time.strftime("%Y.%m.%d %T"),
-            time_off.end_time.strftime("%Y.%m.%d %T")
+            time_off.end_time.strftime("%Y.%m.%d %T"),
           ]
         end
       end

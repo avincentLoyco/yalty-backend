@@ -3,7 +3,7 @@ module Api::V1
     def complete
       {
         start_time: resource.start_time,
-        end_time: resource.end_time
+        end_time: resource.end_time,
       }
         .merge(basic)
         .merge(relationships)
@@ -13,7 +13,7 @@ module Api::V1
       {
         employee: employee_json,
         time_off_category: time_off_category_json,
-        employee_balance: employee_balance_json
+        employee_balance: employee_balance_json,
       }
     end
 

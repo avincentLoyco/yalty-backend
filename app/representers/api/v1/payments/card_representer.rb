@@ -8,7 +8,7 @@ module Api::V1::Payments
         exp_month: resource.exp_month,
         exp_year: resource.exp_year,
         default: resource.default,
-        name: resource.name
+        name: resource.name,
       }
     end
   end

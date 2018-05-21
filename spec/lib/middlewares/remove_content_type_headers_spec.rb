@@ -5,7 +5,7 @@ RSpec.describe RemoveContentTypeHeader do
   let(:middleware) { RemoveContentTypeHeader.new(app) }
   let(:env) { Rack::MockRequest.env_for("https://api.yalty.io", {
     "Content-Type" => "text/plain",
-    "Content-Length" => 3
+    "Content-Length" => 3,
   })}
 
   before { RequestStore.clear! }

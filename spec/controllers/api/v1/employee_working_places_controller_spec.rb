@@ -152,7 +152,7 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
       {
         employee_id: employee_id,
         working_place_id: working_place_id,
-        effective_at: effective_at
+        effective_at: effective_at,
       }
     end
 

@@ -77,7 +77,7 @@ RSpec.describe "Employee balance", type: :request do
           {
             category: "vacation",
             employee: employee.id,
-            result: 0
+            result: 0,
           }
         )
       end
@@ -140,12 +140,12 @@ RSpec.describe "Employee balance", type: :request do
           {
             category: "vacation",
             employee: employee.id,
-            result: 0
+            result: 0,
           },
           {
             category: "vacation",
             employee: employee_2.id,
-            result: 0
+            result: 0,
           }
         )
       end

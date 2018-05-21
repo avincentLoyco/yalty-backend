@@ -55,13 +55,13 @@ RSpec.describe API::V1::SchedulesController , type: :controller do
                 {
                   "type" => "working_time",
                   "start_time" => "01:00:00",
-                  "end_time" => "24:00:00"
-                }
-              ]
+                  "end_time" => "24:00:00",
+                },
+              ],
             },
             {
               "date" => "2019-02-04",
-              "time_entries" => []
+              "time_entries" => [],
             },
             {
               "date" => "2019-02-05",
@@ -70,10 +70,10 @@ RSpec.describe API::V1::SchedulesController , type: :controller do
                 {
                   "type" => "working_time",
                   "start_time" => "01:00:00",
-                  "end_time" => "24:00:00"
-                }
-              ]
-            }
+                  "end_time" => "24:00:00",
+                },
+              ],
+            },
           ]
         )
       end
@@ -112,18 +112,18 @@ RSpec.describe API::V1::SchedulesController , type: :controller do
               "time_entries" => [
                 {
                   "type" => "holiday",
-                  "name" => "christmas"
-                }
-              ]
+                  "name" => "christmas",
+                },
+              ],
             },
             {
               "date" => "2015-12-26",
               "time_entries" => [
                 {
                   "type" => "holiday",
-                  "name" => "st_stephens_day"
-                }
-              ]
+                  "name" => "st_stephens_day",
+                },
+              ],
             },
             {
               "date" => "2015-12-27",
@@ -132,20 +132,20 @@ RSpec.describe API::V1::SchedulesController , type: :controller do
                   "type" => "time_off",
                   "name" => time_off.time_off_category.name,
                   "start_time" => "03:00:00",
-                  "end_time" => "05:00:00"
+                  "end_time" => "05:00:00",
                 },
                 {
                   "type" => "working_time",
                   "start_time" => "01:00:00",
-                  "end_time" => "03:00:00"
+                  "end_time" => "03:00:00",
                 },
                 {
                   "type" => "working_time",
                   "start_time" => "05:00:00",
-                  "end_time" => "24:00:00"
-                }
-              ]
-            }
+                  "end_time" => "24:00:00",
+                },
+              ],
+            },
           ]
         )
       end

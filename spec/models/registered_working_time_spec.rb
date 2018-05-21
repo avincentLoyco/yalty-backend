@@ -81,7 +81,7 @@ RSpec.describe RegisteredWorkingTime, type: :model do
             [
               { start_time: "7:00", end_time: "11:00" },
               { start_time: "11:00", end_time: "15:00" },
-              { start_time: "14:00", end_time: "19:00" }
+              { start_time: "14:00", end_time: "19:00" },
             ]
           end
 
@@ -97,7 +97,7 @@ RSpec.describe RegisteredWorkingTime, type: :model do
             [
               { start_time: "7:00", end_time: "11:00" },
               { start_time: "11:00", end_time: "15:00" },
-              { start_time: "12:00", end_time: "14:00" }
+              { start_time: "12:00", end_time: "14:00" },
             ]
           end
 
@@ -116,7 +116,7 @@ RSpec.describe RegisteredWorkingTime, type: :model do
           [
             { start_time: "7:00", end_time: "11:00" },
             { start_time: "11:00", end_time: "15:00" },
-            { start_time: "11:00", end_time: "15:00" }
+            { start_time: "11:00", end_time: "15:00" },
           ]
         end
 
