@@ -1,7 +1,6 @@
 module Events
   module ContractEnd
     class Update < Default::Update
-
       config_accessor :contract_end_service do
         ::ContractEnds::Update
       end
@@ -34,7 +33,6 @@ module Events
           old_contract_end_date: old_effective_at
         )
       end
-
     end
   end
 end

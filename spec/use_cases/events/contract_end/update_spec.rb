@@ -3,8 +3,6 @@ require "rails_helper"
 RSpec.describe Events::ContractEnd::Update do
   include_context "event update context"
 
-  it_behaves_like "event update example"
-
   before do
     use_case.contract_end_service = contract_end_handler
 
@@ -23,8 +21,10 @@ RSpec.describe Events::ContractEnd::Update do
   end
 
   let(:changed_event) do
-    event.dup.tap{ |event| event.effective_at -= 5.day }
+    event.dup.tap { |event| event.effective_at -= 5.days }
   end
+
+  it_behaves_like "event update example"
 
   it "calls ContractEnds::Update service" do
     subject

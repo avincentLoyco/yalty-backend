@@ -3,8 +3,6 @@ require "rails_helper"
 RSpec.describe Events::WorkContract::Update do
   include_context "event update context"
 
-  it_behaves_like "event update example"
-
   shared_examples "calls ContractEnd::Update" do
     it "calls ContractEnd::Update service" do
       subject
@@ -13,7 +11,7 @@ RSpec.describe Events::WorkContract::Update do
           event.id,
           time_off_policy_amount,
           event.effective_at
-      )
+        )
       expect(update_etop_for_event_instance).to have_received(:call)
     end
   end
@@ -41,7 +39,7 @@ RSpec.describe Events::WorkContract::Update do
   let(:employee) { create(:employee, account: account) }
 
   let(:effective_at)  { employee.events.order(:effective_at).first.effective_at + 10.days }
-  let(:changed_event) { event.dup.tap{ |event| event.effective_at -= 5.day } }
+  let(:changed_event) { event.dup.tap { |event| event.effective_at -= 5.days } }
 
   let(:default_presence_policy) { employee.account.presence_policies.full_time }
   let(:presence_policy_id)      { default_presence_policy.id }
@@ -74,6 +72,8 @@ RSpec.describe Events::WorkContract::Update do
     }
   end
 
+  it_behaves_like "event update example"
+
   context "when presence policy did not change" do
     it "updates employee presence policy" do
       subject
@@ -99,19 +99,19 @@ RSpec.describe Events::WorkContract::Update do
     context "without time off policy amount" do
       let(:time_off_policy_amount) { nil }
 
-      it { expect{ subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
+      it { expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
     end
 
     context "without presence policy" do
       let(:presence_policy_id) { nil }
 
-      it { expect{ subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
+      it { expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
     end
 
     context "without matching occupation rate" do
       before { allow(event).to receive(:attribute_value).with("occupation_rate").and_return("0.8") }
 
-      it { expect{ subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
+      it { expect { subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError) }
     end
   end
 end

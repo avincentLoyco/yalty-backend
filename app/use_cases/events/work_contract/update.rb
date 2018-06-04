@@ -32,10 +32,6 @@ module Events
           validate_time_off_policy_days_presence
           validate_presence_policy_presence
 
-          default_full_time_policy = Account.current.presence_policies.full_time
-          time_off_policy_amount =
-            params[:time_off_policy_amount] * default_full_time_policy.standard_day_duration
-
           if params[:presence_policy_id].eql?(event.employee_presence_policy&.presence_policy&.id)
             EmployeePolicy::Presence::Update.call(update_presence_policy_params)
           else
