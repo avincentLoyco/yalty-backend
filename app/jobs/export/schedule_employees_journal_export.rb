@@ -4,7 +4,7 @@ module Export
 
     def perform
       return unless ::Export::SendEmployeesJournal.enable?
-      ::Account.with_yalty_access.where(id: accounts_ids).find_each do |account|
+      Account.with_yalty_access.where(id: accounts_ids).find_each do |account|
         ::Export::SendEmployeesJournal.perform_later(account)
       end
     end
