@@ -1,0 +1,24 @@
+module TimeOffs
+  class Resubmit < UseCase
+    include SubjectObservable
+
+    pattr_initialize :time_off, :attributes
+
+    def call
+      TimeOff.transaction do
+        ::TimeOffs::Destroy.call(time_off)
+        ::TimeOffs::Create.call(time_off_attributes) do |create|
+          create.add_observers(*observers)
+        end
+      end
+
+      run_callback(:success)
+    end
+
+    private
+
+    def time_off_attributes
+      time_off.attributes.merge(attributes.stringify_keys).except("approval_status")
+    end
+  end
+end

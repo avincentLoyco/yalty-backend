@@ -422,11 +422,14 @@ RSpec.describe UpdateBalanceJob do
           subject { UpdateBalanceJob.perform_now(balance.id, options) }
           let(:pp) { create(:presence_policy, :with_time_entries) }
           let!(:balance) { time_off.employee_balance.tap { |b| b.update!(being_processed: true) } }
-          let!(:time_off) do
+          let(:time_off) do
             create(:time_off,
               start_time: "21 Sep 2015 13:00:00", end_time: "29 Sep 2015 15:00:00",
               time_off_category: category, employee: employee
-            )
+            ) do |time_off|
+              TimeOffs::Approve.call(time_off)
+              time_off.reload
+            end
           end
           let(:epps) do
             ["21/09/2015", "27/09/2015"].map do |date|

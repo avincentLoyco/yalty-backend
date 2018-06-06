@@ -54,7 +54,7 @@ class CreateOrUpdateJoinTable
   def remove_policy_assignation_balances(join_tables_to_remove)
     return unless join_table_class.eql?(EmployeeTimeOffPolicy)
     join_tables_to_remove.map(&:policy_assignation_balance).compact.map do |balance|
-      DestroyEmployeeBalance.new(balance, false).call unless balance.balance_type.eql?("reset")
+      DestroyEmployeeBalance.call(balance, update: false) unless balance.balance_type.eql?("reset")
     end
   end
 
@@ -104,7 +104,7 @@ class CreateOrUpdateJoinTable
     if assignation_balance &&
         !join_table_resource.employee.contract_periods_include?(assignation_balance.effective_at)
       if related_balances.present?
-        DestroyEmployeeBalance.new(assignation_balance, false).call
+        DestroyEmployeeBalance.new(assignation_balance, update: false).call
       else
         UpdateEmployeeBalance.new(
           assignation_balance, effective_at: assignation_effective_at

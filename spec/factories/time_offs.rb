@@ -3,7 +3,7 @@ FactoryGirl.define do
     start_time Time.now
     end_time Time.now + 1.month
     employee
-    time_off_category
+    time_off_category { FactoryGirl.create(:time_off_category, account: employee.account) }
     employee_balance { nil }
 
     after(:build) do |time_off|
@@ -14,26 +14,20 @@ FactoryGirl.define do
         end
       end
 
-      if time_off.employee_balance.blank?
-        time_off.employee_balance = build(:employee_balance,
+      etop = time_off
+        .employee
+        .active_policy_in_category_at_date(time_off.time_off_category_id, time_off.start_time)
+      if etop.blank?
+        create(:employee_time_off_policy,
+          time_off_policy: create(:time_off_policy, time_off_category: time_off.time_off_category),
           employee: time_off.employee,
-          time_off_category: time_off.time_off_category,
-          effective_at: time_off.end_time,
-          time_off: time_off,
-          resource_amount: time_off.balance,
-          balance_type: "time_off"
+          effective_at: time_off.start_time
         )
       end
     end
 
     trait :processed do
       being_processed true
-    end
-
-    trait :without_balance do
-      after(:build) do |time_off|
-        time_off.employee_balance.destroy!
-      end
     end
   end
 

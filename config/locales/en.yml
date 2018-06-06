@@ -133,6 +133,13 @@ en:
   export_mailer:
     archive_generation:
       subject: "%{company_name}: Your archive is ready to download!"
+  notification_mailer:
+    time_off_approved:
+      subject: Time-off accepted
+    time_off_declined:
+      subject: Time-off declined
+    time_off_request:
+      subject: Time-off requested
   date:
     formats:
       default: "%d %B %Y"

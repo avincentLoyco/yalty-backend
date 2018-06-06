@@ -1,4 +1,6 @@
 module Yalty
+  WrongAuthUser = Class.new(StandardError)
+
   module Helpers
     def wrap_env(envs = {})
       original_envs = ENV.to_h.slice(*envs.keys)

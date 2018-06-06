@@ -6,12 +6,11 @@ RSpec.describe ContractEnds::Create, :service do
 
   before do
     Account.current = account
-
     allow(DeleteTypeInPeriod).to receive(:call).and_return([])
     allow(EmployeePolicy::DeleteInPeriod).to receive(:call).and_return([])
     allow(TimeOffs::DeleteInPeriod).to receive(:call).and_return([])
-    allow(AssignResetJoinTable).to receive_message_chain(:new, :call)       { [] }
-    allow(AssignResetEmployeeBalance).to receive_message_chain(:new, :call) { [] }
+    allow_any_instance_of(AssignResetJoinTable).to receive(:call) { [] }
+    allow_any_instance_of(AssignResetEmployeeBalance).to receive(:call) { [] }
   end
 
   subject(:create_contract_end) do
@@ -49,9 +48,15 @@ RSpec.describe ContractEnds::Create, :service do
       end
 
       [["2011/1/1", "2011/1/10"], [start_time, end_time]].map do |dates|
-        create(:time_off, employee: employee, time_off_category: time_off_categories.first,
-               start_time: dates[0], end_time: dates[1])
+        create(
+          :time_off,
+          employee: employee,
+          time_off_category: time_off_categories.first,
+          start_time: dates[0],
+          end_time: dates[1]
+        )
       end
+      TimeOffs::Approve.call(last_time_off)
     end
 
     it "moves time off end time at contract end" do

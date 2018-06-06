@@ -63,7 +63,11 @@ RSpec.describe UpdateEmployeeBalance, type: :service do
         let(:time_off) do
           create(:time_off,
             employee: employee, time_off_category: category, start_time: 1.year.ago,
-            end_time: 1.year.ago)
+            end_time: 1.year.ago
+          ) do |time_off|
+            TimeOffs::Approve.call(time_off)
+            time_off.reload
+          end
         end
         let!(:balance_in_the_middle) do
           time_off.employee_balance.tap do |balance|

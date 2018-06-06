@@ -37,14 +37,6 @@ class API::ApplicationController < ApplicationController
     UpdateAffectedEmployeeBalances.new(presence_policy, employees).call
   end
 
-  def prepare_balances_to_update(resource, attributes = {})
-    PrepareEmployeeBalancesToUpdate.new(resource, attributes).call
-  end
-
-  def update_balances_job(resource, attributes = {})
-    UpdateBalanceJob.perform_later(resource, attributes)
-  end
-
   def next_balance(resource)
     RelativeEmployeeBalancesFinder.new(resource).next_balance
   end
@@ -162,5 +154,13 @@ class API::ApplicationController < ApplicationController
   def verify_if_resource_not_locked!(resource_type, resource_field = "employees")
     return unless resource_type.send(resource_field).present?
     raise generate_locked_error(resource_type.class.name.underscore, resource_field)
+  end
+
+  def internal_dispatcher
+    @internal_dispatcher ||= InternalDispatcher.new
+  end
+
+  def email_dispatcher
+    @email_dispatcher ||= EmailDispatcher.new
   end
 end

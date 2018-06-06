@@ -3,6 +3,13 @@
 
   ],
   "after_migration": [
-
+    "task_name": "employee_event:migrate_managers",
+		"description": [
+			"Migrate existing managers to the new persistence layer"
+		],
+    "task_name": "update_time_offs",
+		"description": [
+			"Mark all existing time-offs as approved"
+		]
   ]
 }

@@ -99,7 +99,14 @@ RSpec.describe BalanceOverview::Generate do
         end
 
         before do
-          TimeOffs::Create.call(vacation_start, vacation_end, vacation_category.id, employee.id)
+          create(:time_off,
+            start_time: vacation_start,
+            end_time: vacation_end,
+            time_off_category: vacation_category,
+            employee: employee
+          ) do |time_off|
+            TimeOffs::Approve.call(time_off)
+          end
         end
 
         context "this year" do
@@ -243,10 +250,19 @@ RSpec.describe BalanceOverview::Generate do
         end
 
         before do
-          TimeOffs::Create.call(vacation_start, vacation_end, vacation_category.id, employee.id)
-          TimeOffs::Create.call(
-            emergency_timeoff_start, emergency_timeoff_end, emergency_category.id, employee.id
+          create(:time_off,
+            start_time: vacation_start,
+            end_time: vacation_end,
+            time_off_category: vacation_category,
+            employee: employee
           )
+          create(:time_off,
+            start_time: emergency_timeoff_start,
+            end_time: emergency_timeoff_end,
+            time_off_category: emergency_category,
+            employee: employee
+          )
+          TimeOff.all.map { |time_off| TimeOffs::Approve.call(time_off) }
         end
 
         it "returns correct values" do

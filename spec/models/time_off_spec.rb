@@ -22,6 +22,15 @@ RSpec.describe TimeOff, type: :model do
   it { is_expected.to validate_presence_of(:time_off_category_id) }
   it { is_expected.to validate_presence_of(:employee_id) }
 
+  describe "#auto_approved?" do
+    subject { time_off_category.time_offs.new }
+
+    let(:time_off_category) { build(:time_off_category, auto_approved: true) }
+
+
+    it { is_expected.to be_auto_approved }
+  end
+
   context "validations" do
     let(:employee_policy) { build(:employee_time_off_policy) }
     before do
@@ -479,7 +488,7 @@ RSpec.describe TimeOff, type: :model do
       end
 
       it "returns last created time_off for an employee" do
-        expect(described_class.for_account(account.id).count).to eq(2)
+        expect(described_class.for_account(account.id).count).to eq(4)
       end
     end
   end

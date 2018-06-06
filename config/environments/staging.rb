@@ -66,4 +66,7 @@ Rails.application.configure do
 
   # Do not dump schema after migrations.
   config.active_record.dump_schema_after_migration = false
+
+  # Email preview folder
+  config.action_mailer.preview_path = "#{Rails.root}/spec/mailers/previews"
 end

@@ -10,7 +10,7 @@ module Events
       def call
         ActiveRecord::Base.transaction do
           destroy_event.tap do
-            balance_destroyer.new(adjustment_balance).call
+            balance_destroyer.call(adjustment_balance)
           end
         end
       end

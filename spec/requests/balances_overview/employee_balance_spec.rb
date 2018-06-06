@@ -1,16 +1,11 @@
 require "rails_helper"
 
 RSpec.describe "Employee balance", type: :request do
-  let_it_be(:account_user) { create(:account_user, role: "account_owner") }
-  let_it_be(:token) { create(:account_user_token, resource_owner_id: account_user.id).token }
-  let_it_be(:vacation_category) { account_user.account.time_off_categories.vacation.first }
+  let_it_be(:account_owner) { create(:account_user, role: "account_owner") }
+  let_it_be(:vacation_category) { account_owner.account.time_off_categories.vacation.first }
   let_it_be(:vacation_policy) { create(:time_off_policy, time_off_category: vacation_category) }
 
-  let_it_be(:employee) { account_user.employee }
-
-  let(:headers) do
-    { "HTTP_AUTHORIZATION" => "Bearer #{token}" }
-  end
+  let_it_be(:employee) { account_owner.employee }
 
   let(:params) { {} }
 
@@ -60,8 +55,7 @@ RSpec.describe "Employee balance", type: :request do
     end
   end
 
-  describe "GET /employees/:employee_id/employee_balance_overview" do
-
+  describe "GET /employees/:employee_id/employee_balance_overview", :auth_user do
     subject(:request) do
       get(api_v1_employee_employee_balance_overview_path(employee.id), params, headers) && response
     end
@@ -69,6 +63,8 @@ RSpec.describe "Employee balance", type: :request do
     before do
       RequestStore.clear!
     end
+
+    let(:auth_user) { account_owner }
 
     context "when accesing own data" do
       it { is_expected.to have_http_status(:success) }
@@ -110,7 +106,7 @@ RSpec.describe "Employee balance", type: :request do
     end
   end
 
-  describe "GET /employee_balance_overview" do
+  describe "GET /employee_balance_overview", :auth_user do
 
     subject(:request) do
       get(api_v1_employee_balance_overview_path, params, headers) && response
@@ -119,6 +115,8 @@ RSpec.describe "Employee balance", type: :request do
     before do
       RequestStore.clear!
     end
+
+    let(:auth_user) { account_owner }
 
     it { is_expected.to have_http_status(:success) }
 
@@ -136,7 +134,7 @@ RSpec.describe "Employee balance", type: :request do
     end
 
     context "when multiple employees hired" do
-      let_it_be(:employee_2) { create(:employee, account: account_user.account) }
+      let_it_be(:employee_2) { create(:employee, account: account_owner.account) }
 
       before_all do
         create(:employee_time_off_policy, employee: employee_2, time_off_policy: vacation_policy)

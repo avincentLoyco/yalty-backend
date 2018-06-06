@@ -17,11 +17,8 @@ class CurrentUserMiddleware
   end
 
   def find_current_account_user
-    Account::User.current = if access_token.blank?
-                              nil
-                            else
-                              Account::User.where(id: access_token.resource_owner_id).first
-                            end
+    Account::User.current =
+      access_token.blank? ? nil : Account::User.where(id: access_token.resource_owner_id).first
   end
 
   def check_token(env)

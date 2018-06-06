@@ -20,10 +20,16 @@ RSpec.describe FindAndUpdateEmployeeBalancesForJoinTables, type: :service, jobs:
        [5.months.since, 6.months.since, categories.last]]
     dates_with_categories.map do |starts, ends, category|
       create(:time_off,
-        end_time: ends, start_time: ends, employee: employee, time_off_category: category)
+        end_time: ends, start_time: ends, employee: employee, time_off_category: category
+      )
+    end
+    TimeOff.all.map { |time_off| TimeOffs::Approve.call(time_off) }
+  end
+  let(:balances) do
+    Employee::Balance.where(balance_type: "time_off").order(:effective_at).tap do |balances|
+      balances.update_all(being_processed: false)
     end
   end
-  let(:balances) { TimeOff.all.map(&:employee_balance).sort_by { |b| b[:effective_at] } }
 
   subject { described_class.new(join_table, new_date).call }
 
@@ -148,7 +154,10 @@ RSpec.describe FindAndUpdateEmployeeBalancesForJoinTables, type: :service, jobs:
            [5.months.ago, 6.months.ago, categories.last]]
         dates_with_categories.map do |starts, ends, category|
           create(:time_off,
-            end_time: ends, start_time: ends, employee: employee, time_off_category: category)
+            end_time: ends, start_time: ends, employee: employee, time_off_category: category
+          ) do |time_off|
+            TimeOffs::Approve.call(time_off)
+          end
         end
       end
       let!(:employee_working_places) do

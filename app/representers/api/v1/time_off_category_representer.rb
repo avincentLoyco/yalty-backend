@@ -11,6 +11,7 @@ module Api::V1
       {
         name: resource.name,
         system: resource.system,
+        auto_approved: resource.auto_approved,
       }
         .merge(basic)
         .merge(dates)

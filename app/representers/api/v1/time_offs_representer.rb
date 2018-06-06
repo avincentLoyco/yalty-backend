@@ -4,6 +4,7 @@ module Api::V1
       {
         start_time: resource.start_time,
         end_time: resource.end_time,
+        approval_status: resource.approval_status,
       }
         .merge(basic)
         .merge(relationships)
@@ -18,6 +19,7 @@ module Api::V1
     end
 
     def employee_balance_json
+      return unless resource.approved?
       EmployeeBalanceRepresenter.new(resource.employee_balance).with_status
     end
 

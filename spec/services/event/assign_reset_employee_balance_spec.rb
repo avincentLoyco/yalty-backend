@@ -61,7 +61,11 @@ RSpec.describe AssignResetEmployeeBalance do
           create(:time_off,
             employee: employee, time_off_category: category,
             end_time: (contract_end.effective_at + 1.day).beginning_of_day,
-            start_time: 20.days.since)
+            start_time: 20.days.since
+          ) do |time_off|
+            TimeOffs::Approve.call(time_off)
+            time_off.reload
+          end
         end
 
 

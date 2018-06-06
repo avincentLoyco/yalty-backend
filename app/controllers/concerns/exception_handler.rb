@@ -19,6 +19,7 @@ module ExceptionHandler
     rescue_from InvalidPasswordError, with: :invalid_password_error
     rescue_from InvalidResourcesError, with: :invalid_resources_error
     rescue_from CanCan::AccessDenied, with: :forbidden_error
+    rescue_from AASM::InvalidTransition, with: :aasm_invalid_transaction
     rescue_from(
       Stripe::CardError,
       Stripe::InvalidRequestError,
@@ -88,6 +89,16 @@ module ExceptionHandler
 
     render json:
       ::Api::V1::ErrorsRepresenter.new(error).complete, status: :not_found
+  end
+
+  def aasm_invalid_transaction(exception)
+    error = CustomError.new(
+      type: "aasm_state",
+      messages: [exception.message],
+      codes: ["invalid_state"]
+    )
+
+    render json: ::Api::V1::ErrorsRepresenter.new(error).complete, status: 422
   end
 
   def render_500_error(exception = nil)

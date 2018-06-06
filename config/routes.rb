@@ -34,6 +34,7 @@ Rails.application.routes.draw do
         get '/working_places', to: "employee_working_places#index"
         get '/attributes', to: 'employee_attributes#show'
       end
+      resources :managers, only: [:index]
       get '/employee_balance_overview', to: 'employee_balance_overviews#index'
       get '/employee_events', to: 'employee_events#index'
       resources :employee_events, only: [:show, :create, :update]
@@ -52,7 +53,12 @@ Rails.application.routes.draw do
         resources :time_offs, only: :index
         resources :time_off_policies, only: :index
       end
-      resources :time_offs, except: [:edit, :new, :index]
+      resources :time_offs, except: [:edit, :new, :index] do
+        scope module: "time_offs" do
+          put "/approve", to: "status#approve"
+          put "/decline", to: "status#decline"
+        end
+      end
       resources :time_entries, except: [:edit, :new, :index]
       resources :time_off_policies, except: [:edit, :new] do
         post '/employees', to: "employee_time_off_policies#create"
@@ -63,6 +69,9 @@ Rails.application.routes.draw do
 
       resources :users
       resources :file_storage_tokens, only: :create
+      resources :notifications, only: [:index] do
+        put :read, to: "notifications#read"
+      end
 
       get '/employee_event_types/:employee_event_type', to: "employee_event_types#show"
     end
@@ -90,6 +99,12 @@ Rails.application.routes.draw do
   constraints subdomain: /^admin/ do
     mount Sidekiq::Web => '/sidekiq'
     get 'referrals/referrers', to: 'referrals#referrers_csv', defaults: { format: :csv }
+  end
+
+  # Mailers preview routes (needs to be specified because of invalid routes catch)
+  if %w(development staging).include?(Rails.env)
+    get '/rails/mailers' => "rails/mailers#index"
+    get '/rails/mailers/*path' => "rails/mailers#preview"
   end
 
   # Catch all invalid routings

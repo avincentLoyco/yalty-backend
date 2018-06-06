@@ -13,6 +13,8 @@ RSpec.describe UpdateEvent do
   subject { UpdateEvent.new(event, params).call }
   let(:first_name_order) { 1 }
   let(:employee) { create(:employee, :with_attributes) }
+  let!(:manager_employee) { create(:employee, :with_attributes, account: employee.account) }
+  let(:manager) { create(:account_user, account: employee.account, employee: manager_employee) }
   let(:event) { employee.events.first }
   let(:first_attribute) { event.employee_attribute_versions.first }
   let(:second_attribute) { event.employee_attribute_versions.last }
@@ -92,6 +94,42 @@ RSpec.describe UpdateEvent do
       it { expect { subject }.to change { event.employee_attribute_versions.count }.by(2) }
       it { expect { subject }.to change { first_attribute.reload.data.value }.to eq "Snow" }
       it { expect { subject }.to change { second_attribute.reload.data.value }.to eq "Stark" }
+    end
+
+    context "when manager_id key is present" do
+      before do
+        params[:employee][:manager_id] = manager_id
+      end
+
+      context "when manager is assigned" do
+        let(:manager_id) { manager.id }
+
+        it "assigns manager" do
+          expect { subject }.to change { employee.reload.manager }.to(manager)
+        end
+      end
+
+      context "when manager is unassigned" do
+        before do
+          employee.update!(manager: manager)
+        end
+
+        let(:manager_id) { nil }
+
+        it "unassigns manager" do
+          expect { subject }.to change { employee.reload.manager }.to(nil)
+        end
+      end
+    end
+
+    context "when manager_id key is not present" do
+      before do
+        employee.update!(manager: manager)
+      end
+
+      it "doesn't change manager" do
+        expect { subject }.not_to change { employee.reload.manager }
+      end
     end
 
     context "for profile picture" do
@@ -714,6 +752,32 @@ RSpec.describe UpdateEvent do
           .first.data.value[:firstname]).to eq("Arya")
       end
     end
+
+    context "when manager_id key is present" do
+      before do
+        params[:employee][:manager_id] = manager_id
+      end
+
+      context "when manager is assigned" do
+        let(:manager_id) { manager.id }
+
+        it "assigns manager" do
+          expect { subject }.to change { employee.reload.manager }.to(manager)
+        end
+      end
+
+      context "when manager is unassigned" do
+        before do
+          employee.update!(manager: manager)
+        end
+
+        let(:manager_id) { nil }
+
+        it "unassigns manager" do
+          expect { subject }.to change { employee.reload.manager }.to(nil)
+        end
+      end
+    end
   end
 
   context "contract_end" do
@@ -746,7 +810,11 @@ RSpec.describe UpdateEvent do
       ].map do |starts, ends|
         create(:time_off,
           employee: employee, start_time: starts, end_time: ends,
-          time_off_category: categories.first)
+          time_off_category: categories.first
+        ) do |time_off|
+          TimeOffs::Approve.call(time_off)
+          time_off.reload
+        end
       end
     end
     let!(:event) do
@@ -979,10 +1047,6 @@ RSpec.describe UpdateEvent do
           it do
             expect(employee.employee_balances.where(balance_type: "reset")
               .pluck(:effective_at).uniq).to eq ([reset_balance_effective_at])
-          end
-          it do
-            expect(time_offs.first.reload.employee_balance.validity_date)
-              .to eq (reset_balance_effective_at)
           end
 
           it do

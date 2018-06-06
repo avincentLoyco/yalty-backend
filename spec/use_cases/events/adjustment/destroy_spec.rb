@@ -6,7 +6,7 @@ RSpec.describe Events::Adjustment::Destroy do
   it_behaves_like "event destroy example"
 
   before do
-    allow(DestroyEmployeeBalance).to receive(:new).and_call_original
+    allow(DestroyEmployeeBalance).to receive(:call).and_call_original
   end
 
   let_it_be(:account) { create(:account) }
@@ -44,6 +44,6 @@ RSpec.describe Events::Adjustment::Destroy do
 
   it "calls DestroyEmployeeBalance" do
     subject
-    expect(DestroyEmployeeBalance).to have_received(:new).with(adjustment_balance)
+    expect(DestroyEmployeeBalance).to have_received(:call).with(adjustment_balance)
   end
 end

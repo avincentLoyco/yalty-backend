@@ -27,8 +27,9 @@ class Ability
       can :read, WorkingPlace
       can [:read, :update], Employee, account_user_id: user.id
       can [:update, :read, :index], Account::User, id: user.id
-      can [:show, :create, :update], TimeOff do |time_off|
-        time_off.employee_id == user.employee.try(:id)
+      can [:show, :create, :update], TimeOff, employee_id: user.employee.try(:id)
+      can [:decline, :approve], TimeOff do |time_off|
+        time_off.employee.manager_id == user.id
       end
       can [:read], Account, id: user.account_id
       can [:show], Employee::Balance do |employee_balance|

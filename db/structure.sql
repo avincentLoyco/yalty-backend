@@ -336,7 +336,8 @@ CREATE TABLE employees (
     account_id uuid,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
-    account_user_id uuid
+    account_user_id uuid,
+    manager_id uuid
 );
 
 
@@ -410,6 +411,22 @@ CREATE TABLE invoices (
     total integer,
     period_start timestamp without time zone,
     period_end timestamp without time zone
+);
+
+
+--
+-- Name: notifications; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE notifications (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    seen boolean DEFAULT false NOT NULL,
+    user_id uuid NOT NULL,
+    resource_id uuid,
+    resource_type character varying,
+    notification_type character varying,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL
 );
 
 
@@ -627,7 +644,8 @@ CREATE TABLE time_off_categories (
     system boolean DEFAULT false NOT NULL,
     account_id uuid NOT NULL,
     created_at timestamp without time zone NOT NULL,
-    updated_at timestamp without time zone NOT NULL
+    updated_at timestamp without time zone NOT NULL,
+    auto_approved boolean DEFAULT false
 );
 
 
@@ -665,7 +683,8 @@ CREATE TABLE time_offs (
     employee_id uuid NOT NULL,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
-    being_processed boolean DEFAULT false
+    being_processed boolean DEFAULT false,
+    approval_status integer DEFAULT 0
 );
 
 
@@ -841,6 +860,14 @@ ALTER TABLE ONLY holidays
 
 ALTER TABLE ONLY invoices
     ADD CONSTRAINT invoices_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: notifications_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY notifications
+    ADD CONSTRAINT notifications_pkey PRIMARY KEY (id);
 
 
 --
@@ -1143,6 +1170,13 @@ CREATE UNIQUE INDEX index_employees_on_id_and_account_id ON employees USING btre
 
 
 --
+-- Name: index_employees_on_manager_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE INDEX index_employees_on_manager_id ON employees USING btree (manager_id);
+
+
+--
 -- Name: index_generic_files_on_fileable_id_and_fileable_type; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -1175,6 +1209,13 @@ CREATE INDEX index_invoices_on_account_id ON invoices USING btree (account_id);
 --
 
 CREATE UNIQUE INDEX index_invoices_on_invoice_id ON invoices USING btree (invoice_id);
+
+
+--
+-- Name: index_notifications_on_user_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE INDEX index_notifications_on_user_id ON notifications USING btree (user_id);
 
 
 --
@@ -1262,6 +1303,13 @@ CREATE INDEX index_time_off_policies_on_time_off_category_id ON time_off_policie
 
 
 --
+-- Name: index_time_offs_on_approval_status; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE INDEX index_time_offs_on_approval_status ON time_offs USING btree (approval_status);
+
+
+--
 -- Name: index_time_offs_on_employee_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -1326,6 +1374,14 @@ ALTER TABLE ONLY employee_time_off_policies
 
 ALTER TABLE ONLY time_entries
     ADD CONSTRAINT fk_rails_0c64f4ddd5 FOREIGN KEY (presence_day_id) REFERENCES presence_days(id) ON DELETE CASCADE;
+
+
+--
+-- Name: fk_rails_0fe1519b79; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY employees
+    ADD CONSTRAINT fk_rails_0fe1519b79 FOREIGN KEY (manager_id) REFERENCES account_users(id) ON DELETE SET NULL;
 
 
 --
@@ -1470,6 +1526,14 @@ ALTER TABLE ONLY registered_working_times
 
 ALTER TABLE ONLY holiday_policies
     ADD CONSTRAINT fk_rails_ae92552259 FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE;
+
+
+--
+-- Name: fk_rails_b080fb4855; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY notifications
+    ADD CONSTRAINT fk_rails_b080fb4855 FOREIGN KEY (user_id) REFERENCES account_users(id) ON DELETE CASCADE;
 
 
 --
@@ -1875,4 +1939,12 @@ INSERT INTO schema_migrations (version) VALUES ('20180118094424');
 INSERT INTO schema_migrations (version) VALUES ('20180130141310');
 
 INSERT INTO schema_migrations (version) VALUES ('20180207092439');
+
+INSERT INTO schema_migrations (version) VALUES ('20180416135052');
+
+INSERT INTO schema_migrations (version) VALUES ('20180426121906');
+
+INSERT INTO schema_migrations (version) VALUES ('20180515134613');
+
+INSERT INTO schema_migrations (version) VALUES ('20180518090622');
 

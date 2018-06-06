@@ -87,7 +87,7 @@ class HandleMapOfJoinTablesToNewHiredDate
     grouped_etops_in_range.map do |_category, etop_collection|
       join_tables_to_destroy = etop_collection.first(etop_collection.size - 1)
       assignations = join_tables_to_destroy.map(&:policy_assignation_balance).compact
-      DestroyEmployeeBalance.new(assignations, false).call
+      DestroyEmployeeBalance.call(assignations, update: false)
       join_tables_to_destroy.map(&:destroy!)
       update_time_off_policy_assignation_balance(etop_collection.last)
       etop_collection.last.tap { |etop| etop.assign_attributes(effective_at: new_hired_date) }
@@ -124,7 +124,7 @@ class HandleMapOfJoinTablesToNewHiredDate
       .not_time_off
       .where.not(id: [assignation.id, balance_at_new_hired(etop)])
       .between(old_hired_date, new_hired_date + Employee::Balance::REMOVAL_OFFSET)
-    DestroyEmployeeBalance.new(balances_to_remove, false).call
+    DestroyEmployeeBalance.new(balances_to_remove, update: false).call
   end
 
   def find_join_tables_in_range
@@ -149,7 +149,7 @@ class HandleMapOfJoinTablesToNewHiredDate
   def update_existing_balance(etop, existing_balance, assignation_balance)
     existing_balance.manual_amount = assignation_balance.manual_amount
     existing_balance.validity_date = RelatedPolicyPeriod.new(etop).validity_date_for(new_hired_date)
-    DestroyEmployeeBalance.new(assignation_balance, false).call
+    DestroyEmployeeBalance.new(assignation_balance, update: false).call
     existing_balance
   end
 

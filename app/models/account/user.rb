@@ -4,6 +4,7 @@ class Account::User < ActiveRecord::Base
   include StripeHelpers
 
   has_secure_password
+  has_many :notifications
 
   validates :email, presence: true
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }
@@ -63,6 +64,10 @@ class Account::User < ActiveRecord::Base
 
   def owner_or_administrator?
     role.in?(%w(account_owner account_administrator yalty))
+  end
+
+  def locale
+    super || account&.default_locale
   end
 
   private

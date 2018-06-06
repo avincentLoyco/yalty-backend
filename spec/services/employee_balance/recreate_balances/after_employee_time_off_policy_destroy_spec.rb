@@ -97,7 +97,11 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyDestroy, type: :servi
       let(:time_off_effective_at) { destroyed_effective_at }
       let!(:time_off) do
         create(:time_off, employee: employee, time_off_category: category,
-          start_time: time_off_effective_at - 5.days, end_time: time_off_effective_at)
+          start_time: time_off_effective_at - 5.days, end_time: time_off_effective_at
+        ) do |time_off|
+          TimeOffs::Approve.call(time_off)
+          time_off.reload
+        end
       end
 
       before do

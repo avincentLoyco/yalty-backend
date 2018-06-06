@@ -21,6 +21,12 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
       end
     end
 
+    it "has proper structure" do
+      subject
+
+      expect_json_keys("*", %i(id system type name auto_approved))
+    end
+
     it "should not be visible in context of other account" do
       Account.current = create(:account)
       subject
@@ -55,7 +61,8 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
           id: category.id,
           type: "time_off_category",
           system: category.system,
-          name: category.name
+          name: category.name,
+          auto_approved: false
           )
         }
       end
@@ -116,12 +123,17 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
       {
         name: name,
         system: true,
+        auto_approved: true,
       }
     end
     subject { post :create, params }
 
     context "with valid params" do
-      it { expect { subject }.to change { TimeOffCategory.where(system: false).count }.by(1) }
+      it "creates time off category" do
+        expect { subject }
+          .to change { TimeOffCategory.where(system: false, auto_approved: true).count }
+          .by(1)
+      end
       it { expect { subject }.to change { TimeOffPolicy.count } }
       it { expect { subject }.to_not change { TimeOffCategory.where(system: true).count } }
 
@@ -153,7 +165,8 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
 
   describe "PUT #update" do
     subject { put :update, params }
-    let(:time_off_category) { create(:time_off_category, account: account) }
+    let(:time_off_category) { create(:time_off_category, account: account, system: system) }
+    let(:system) { false }
     let(:name) { "abc" }
     let(:id) { time_off_category.id }
     let(:params) do
@@ -161,17 +174,38 @@ RSpec.describe API::V1::TimeOffCategoriesController, type: :controller do
         id: id,
         name: name,
         system: "true",
+        auto_approved: true,
       }
     end
 
     context "with valid data" do
       it { expect { subject }.to change { time_off_category.reload.name } }
+      it { expect { subject }.to change { time_off_category.reload.auto_approved } }
       it { is_expected.to have_http_status(204) }
 
       context "it should not change system field even when set to true" do
         before { subject }
 
         it { expect(time_off_category.reload.system).to eq false }
+      end
+
+      context "when editing system time_off_category" do
+        let(:system) { true }
+
+        it "doesn't change name field" do
+          expect { subject }.not_to change { time_off_category.reload.name }
+        end
+      end
+
+      context "when havind pending time offs" do
+        before do
+          create(:time_off, time_off_category: time_off_category)
+        end
+
+        it "can't be updated to auto_approved" do
+          expect { subject }.not_to change { time_off_category.reload.auto_approved }
+        end
+        it { is_expected.to have_http_status(422) }
       end
     end
 

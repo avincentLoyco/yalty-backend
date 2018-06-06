@@ -32,7 +32,7 @@ Metrics/ModuleLength:
 
 Metrics/BlockLength:
   Exclude:
-    - spec/controllers/**/*
+    - spec/**/*
 
 Style/BracesAroundHashParameters:
   EnforcedStyle: context_dependent
@@ -66,6 +66,9 @@ Style/PercentLiteralDelimiters:
     '%i': '()'
     '%w': '()'
     '%W': '()'
+
+Style/MultilineBlockChain:
+  Enabled: false
 
 Layout/MultilineOperationIndentation:
   EnforcedStyle: indented

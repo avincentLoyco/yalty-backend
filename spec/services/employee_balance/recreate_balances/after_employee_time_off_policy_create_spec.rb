@@ -97,7 +97,11 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyCreate, type: :servic
       let(:balances_dates_with_time_off) { expeted_balances_dates.push("2014-04-15".to_date) }
       let!(:time_off) do
         create(:time_off, employee: employee, time_off_category: category,
-          start_time: new_effective_at - 5.days, end_time: new_effective_at)
+          start_time: new_effective_at - 5.days, end_time: new_effective_at
+        ) do |time_off|
+          TimeOffs::Approve.call(time_off)
+          time_off.reload
+        end
       end
 
       before do
@@ -172,7 +176,11 @@ RSpec.describe RecreateBalances::AfterEmployeeTimeOffPolicyCreate, type: :servic
     end
     let!(:time_off) do
       create(:time_off, employee: employee, time_off_category: category,
-        start_time: Time.zone.parse("2014-12-24"), end_time: Time.zone.parse("2015-01-15"))
+        start_time: Time.zone.parse("2014-12-24"), end_time: Time.zone.parse("2015-01-15")
+      ) do |time_off|
+        TimeOffs::Approve.call(time_off)
+        time_off.reload
+      end
     end
 
     before do

@@ -16,6 +16,7 @@ class CreateEvent
   def call
     event.tap do
       find_or_build_employee
+      assign_manager
       build_versions
       save!
     end
@@ -40,6 +41,16 @@ class CreateEvent
 
   def event
     @event ||= Account.current.employee_events.new(event_params)
+  end
+
+  def assign_manager
+    return unless employee_params.key?(:manager_id)
+    AssignManager.call(employee: @employee, manager_id: employee_params[:manager_id])
+  end
+
+  def manager
+    return if employee_params[:manager_id].blank?
+    @manager ||= Account.current.managers.find_by!(id: employee_params[:manager_id])
   end
 
   def build_versions
