@@ -2,10 +2,12 @@ Dear <%= @firstname %>,
 <br/>
 Your absence request for <%= @time_off_category %>
 from <%= I18n.l(@time_off.start_time, format: :long) %>
-to <%= I18n.l(@time_off.end_time, format: :long) %>has been declined.
+to <%= I18n.l(@time_off.end_time, format: :long) %> has been declined.
+<br/>
 <br/>
 Best regards,
 <br/>
 The Yalty team.
+<br/>
 <br/>
 PS: This email has been automatically generated, please do not respond.

@@ -1,16 +1,18 @@
 Dear <%= @firstname %>,
 <br/>
-
 <%= @employee.fullname %> asked time-off for <%= @time_off_category %>
 from <%= I18n.l(@time_off.start_time, format: :long) %>
 to <%= I18n.l(@time_off.end_time, format: :long) %>.
-
+<br/>
+<br/>
 Please connect you to Yalty to respond: <%= @client_url %>
-
+<br/>
 Thanks in advance.
-
+<br/>
+<br/>
 Best regards,
-
+<br/>
 The yalty team.
-
+<br/>
+<br/>
 PS: This email has been automatically generated, please do not respond.
