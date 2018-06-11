@@ -1,5 +1,5 @@
 module Api::V1
-  class TimeOffsRepresenter < BaseRepresenter
+  class TimeOffRepresenter < BaseRepresenter
     def complete
       {
         start_time: resource.start_time,
@@ -8,6 +8,15 @@ module Api::V1
       }
         .merge(basic)
         .merge(relationships)
+    end
+
+    def for_notification
+      basic.merge(
+        start_time: resource.start_time,
+        end_time: resource.end_time,
+        approval_status: resource.approval_status,
+        employee: EmployeeRepresenter.new(resource.employee).fullname
+      )
     end
 
     def relationships

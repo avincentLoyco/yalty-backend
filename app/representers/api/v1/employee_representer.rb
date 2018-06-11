@@ -12,8 +12,11 @@ module Api::V1
         .merge(relationships)
     end
 
-    def dropdown
-      basic.merge(fullname: resource.fullname, account_user_id: resource.account_user_id)
+    def fullname
+      basic.merge(
+        fullname: resource.fullname,
+        account_user_id: resource.account_user_id
+      )
     end
 
     def employee_data

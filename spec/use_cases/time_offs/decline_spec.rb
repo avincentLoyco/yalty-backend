@@ -17,11 +17,13 @@ RSpec.describe TimeOffs::Decline do
 
   let(:observer) { double }
 
+  let(:start_time) { 1.day.ago }
+
   let(:time_off) do
     # enable status change temporarily for factory to build
     TimeOff.aasm(:approval_status).state_machine.config.no_direct_assignment = false
 
-    build(:time_off, approval_status: approval_status) do
+    build(:time_off, approval_status: approval_status, start_time: start_time) do
       # and disable again
       TimeOff.aasm(:approval_status).state_machine.config.no_direct_assignment = true
     end
@@ -54,20 +56,31 @@ RSpec.describe TimeOffs::Decline do
         allow(DestroyEmployeeBalance).to receive(:call)
       end
 
-      it "updates time off status to declined" do
-        expect { use_case.call }.to change { time_off.declined? }.to(true)
+      context "when time-off has started" do
+        it "calls error callback" do
+          expect { use_case.call }.to raise_error AASM::InvalidTransition
+        end
       end
 
-      it "call balance destroy service" do
-        use_case.call
-        expect(DestroyEmployeeBalance).to have_received(:call).with(time_off.employee_balance)
-      end
+      context "when time-off has not started" do
+        let(:start_time) { 1.minute.since }
 
-      it "notifies observers" do
-        use_case.call
 
-        expect(observer).to have_received(:update)
-          .with(notification_type: :time_off_declined, resource: time_off)
+        it "updates time off status to declined" do
+          expect { use_case.call }.to change { time_off.declined? }.to(true)
+        end
+
+        it "call balance destroy service" do
+          use_case.call
+          expect(DestroyEmployeeBalance).to have_received(:call).with(time_off.employee_balance)
+        end
+
+        it "notifies observers" do
+          use_case.call
+
+          expect(observer).to have_received(:update)
+            .with(notification_type: :time_off_declined, resource: time_off)
+        end
       end
     end
 

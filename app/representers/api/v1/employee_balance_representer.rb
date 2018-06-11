@@ -49,7 +49,7 @@ module Api::V1
 
     def time_off_json
       return nil unless resource.time_off.present?
-      TimeOffsRepresenter.new(resource.time_off).basic
+      TimeOffRepresenter.new(resource.time_off).basic
     end
 
     def employee_json

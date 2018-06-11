@@ -34,7 +34,7 @@ Rails.application.routes.draw do
         get '/working_places', to: "employee_working_places#index"
         get '/attributes', to: 'employee_attributes#show'
       end
-      resources :managers, only: [:index]
+      resources :managers, only: [:index, :show]
       get '/employee_balance_overview', to: 'employee_balance_overviews#index'
       get '/employee_events', to: 'employee_events#index'
       resources :employee_events, only: [:show, :create, :update]

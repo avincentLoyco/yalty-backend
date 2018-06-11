@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe "Managers", type: :request do
+RSpec.describe "List managers", type: :request do
   describe "GET /managers", :auth_user do
     subject(:request) do
       get("/v1/managers",{}, headers) && response

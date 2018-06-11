@@ -33,7 +33,9 @@ module API
         verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :update, resource
           update_scenario.call(resource, attributes) do |update|
-            update.add_observers(internal_dispatcher, email_dispatcher)
+            update.add_observers(
+              internal_dispatcher, email_dispatcher, clear_notifications_observer
+            )
             update.on(:success) { render_no_content }
           end
         end
@@ -80,13 +82,17 @@ module API
       end
 
       def resource_representer
-        ::Api::V1::TimeOffsRepresenter
+        ::Api::V1::TimeOffRepresenter
       end
 
       def convert_times_to_utc
         return unless params[:start_time].present? && params[:end_time].present?
         params[:start_time] = params.delete(:start_time) + "+00:00"
         params[:end_time] = params.delete(:end_time) + "+00:00"
+      end
+
+      def clear_notifications_observer
+        ::ClearNotificationsObserver.new
       end
     end
   end

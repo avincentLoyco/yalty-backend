@@ -670,14 +670,23 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
             build(:account_user)
           end
 
+          let(:manager) do
+            build(:account_user)
+          end
+
           let(:approve_notification) do
             an_object_having_attributes(notification_type: "time_off_declined")
           end
 
           before do
-            employee.update!(user: employee_user)
+            employee.update!(user: employee_user, manager: manager)
             ActionMailer::Base.deliveries = []
             time_off_category.update_column(:auto_approved, true)
+            Notification.create!(
+              user: manager,
+              resource: time_off,
+              notification_type: :time_off_request
+            )
           end
 
           it "sends an email to the employee" do
@@ -691,6 +700,10 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
             subject
 
             expect(employee_user.notifications).to contain_exactly(approve_notification)
+          end
+
+          it "clears notifications for manager" do
+            expect { subject }.to change { manager.notifications.unread.count }.by(-1)
           end
         end
       end

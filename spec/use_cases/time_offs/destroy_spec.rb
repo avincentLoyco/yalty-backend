@@ -62,18 +62,8 @@ RSpec.describe TimeOffs::Destroy do
         allow(DestroyEmployeeBalance).to receive(:call)
       end
 
-      it "destroys time off" do
-        expect { use_case.call }.to change { TimeOff.exists?(time_off.id) }.from(true).to(false)
-      end
-
-      it "call balance destroy service" do
-        use_case.call
-        expect(DestroyEmployeeBalance).to have_received(:call).with(time_off.employee_balance)
-      end
-
-      it "calls Decline use case" do
-        use_case.call
-        expect(TimeOffs::Decline).to have_received(:call).with(time_off)
+      it "calls error callback" do
+        expect { use_case.call }.to raise_error AASM::InvalidTransition
       end
     end
 
