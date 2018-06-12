@@ -6,7 +6,7 @@ namespace :employee_event do
 
       def call
         return unless manager
-        employee.update(manager: manager)
+        employee.update_columns(manager_id: manager.id)
       end
 
       private
