@@ -18,11 +18,13 @@ RSpec.describe TimeOffs::Destroy do
     # enable status change temporarily for factory to build
     TimeOff.aasm(:approval_status).state_machine.config.no_direct_assignment = false
 
-    create(:time_off, approval_status: approval_status) do
+    create(:time_off, approval_status: approval_status, start_time: start_time) do
       # and disable again
       TimeOff.aasm(:approval_status).state_machine.config.no_direct_assignment = true
     end
   end
+
+  let(:start_time) { 1.day.ago }
 
   describe "#call" do
     context "notifications" do
@@ -62,8 +64,27 @@ RSpec.describe TimeOffs::Destroy do
         allow(DestroyEmployeeBalance).to receive(:call)
       end
 
-      it "calls error callback" do
-        expect { use_case.call }.to raise_error AASM::InvalidTransition
+      context "when time-off has started" do
+        it "calls error callback" do
+          expect { use_case.call }.to raise_error AASM::InvalidTransition
+        end
+      end
+
+      context "when time-off has not started" do
+        let(:start_time) { 1.day.since }
+
+        it "destroys time off" do
+          expect { use_case.call }.to change { TimeOff.exists?(time_off.id) }.from(true).to(false)
+        end
+
+        it "calls success callback" do
+          expect(use_case.call).to eq :ok
+        end
+
+        it "calls Decline use case" do
+          use_case.call
+          expect(TimeOffs::Decline).to have_received(:call).with(time_off)
+        end
       end
     end
 

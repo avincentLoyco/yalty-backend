@@ -3,9 +3,13 @@ require "rails_helper"
 RSpec.describe "Decline time-off request", type: :request do
   let_it_be(:account) { create(:account) }
   let_it_be(:category) { account.time_off_categories.first }
-  let(:time_off) { create(:time_off, employee: employee, time_off_category: category) }
+  let(:time_off) do
+    create(:time_off, employee: employee, time_off_category: category, start_time: start_time)
+  end
 
   let(:employee) { create(:employee, account: account, manager: manager) }
+
+  let(:start_time) { 1.day.since }
 
   let(:manager) { nil }
 
@@ -113,6 +117,25 @@ RSpec.describe "Decline time-off request", type: :request do
         let(:manager) { auth_user }
 
         it_behaves_like "successfull decline"
+
+        context "when time off has been approved and started" do
+          before do
+            TimeOffs::Approve.call(time_off)
+          end
+
+          let(:start_time) { 1.day.ago }
+
+          it "doesn't change time-off status to declines" do
+            request
+
+            expect(time_off).not_to be_declined
+          end
+
+          it "has errors in ther response body" do
+            request
+            expect_json_keys("errors.*", %i(type messages codes))
+          end
+        end
       end
     end
   end
