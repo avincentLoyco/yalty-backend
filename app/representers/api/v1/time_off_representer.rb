@@ -15,7 +15,8 @@ module Api::V1
         start_time: resource.start_time,
         end_time: resource.end_time,
         approval_status: resource.approval_status,
-        employee: EmployeeRepresenter.new(resource.employee).fullname
+        employee: EmployeeRepresenter.new(resource.employee).fullname,
+        time_off_category: TimeOffCategoryRepresenter.new(resource.time_off_category).complete
       )
     end
 

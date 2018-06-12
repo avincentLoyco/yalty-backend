@@ -43,6 +43,13 @@ RSpec.describe "List unread notifications", :auth_user, type: :request do
               fullname: time_off.employee.fullname,
               account_user_id: nil,
             },
+            time_off_category: {
+              name: time_off.time_off_category.name,
+              system: false,
+              auto_approved: false,
+              id: time_off.time_off_category.id,
+              type: "time_off_category",
+            },
           },
         }
       )
