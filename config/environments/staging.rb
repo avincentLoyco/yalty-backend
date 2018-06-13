@@ -69,4 +69,5 @@ Rails.application.configure do
 
   # Email preview folder
   config.action_mailer.preview_path = "#{Rails.root}/spec/mailers/previews"
+  config.action_mailer.show_previews = true
 end
