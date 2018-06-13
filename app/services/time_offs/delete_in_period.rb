@@ -12,8 +12,7 @@ module TimeOffs
 
     def call
       time_offs_to_delete.each do |time_off|
-        time_off.employee_balance&.destroy!
-        time_off.destroy!
+        TimeOffs::Destroy.call(time_off)
       end
     end
 
