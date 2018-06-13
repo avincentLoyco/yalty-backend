@@ -1,0 +1,34 @@
+{
+  "type": "object",
+  "definitions": {},
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "properties": {
+    "before_migration": {
+      "type": "array",
+      "additionalItems": false
+    },
+    "after_migration": {
+      "type": "array",
+      "additionalItems": false,
+      "items": {
+        "type": "object",
+        "properties": {
+          "task_name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "task_name",
+          "description"
+        ]
+      }
+    }
+  },
+  "required": [
+    "before_migration",
+    "after_migration"
+  ]
+}

@@ -193,6 +193,8 @@ GEM
     intercom (3.5.23)
       json (>= 1.8)
     json (2.1.0)
+    json-schema (2.8.0)
+      addressable (>= 2.4)
     launchy (2.4.3)
       addressable (~> 2.3)
     letter_opener (1.4.1)
@@ -490,6 +492,7 @@ DEPENDENCIES
   guard-rspec
   holidays (~> 4.0)
   intercom (~> 3.5.23)
+  json-schema (~> 2.8.0)
   letter_opener (~> 1.4.1)
   meta_request
   mutant-rspec
