@@ -65,12 +65,11 @@ class TimeOff < ActiveRecord::Base
     state :declined, :approved
 
     event :approve do
-      transitions from: :pending, to: :approved, guard: :valid?
+      transitions from: [:pending, :declined], to: :approved, guard: :valid?
     end
 
     event :decline do
-      transitions from: :pending, to: :declined
-      transitions from: :approved, to: :declined, guard: :not_started?
+      transitions from: [:approved, :pending], to: :declined
     end
   end
 
@@ -89,10 +88,6 @@ class TimeOff < ActiveRecord::Base
 
   def employee_time_off_policy
     employee.active_policy_in_category_at_date(time_off_category_id, start_time)
-  end
-
-  def not_started?
-    start_time > Time.current
   end
 
   private

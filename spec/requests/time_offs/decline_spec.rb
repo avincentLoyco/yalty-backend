@@ -3,13 +3,9 @@ require "rails_helper"
 RSpec.describe "Decline time-off request", type: :request do
   let_it_be(:account) { create(:account) }
   let_it_be(:category) { account.time_off_categories.first }
-  let(:time_off) do
-    create(:time_off, employee: employee, time_off_category: category, start_time: start_time)
-  end
+  let(:time_off) { create(:time_off, employee: employee, time_off_category: category) }
 
   let(:employee) { create(:employee, account: account, manager: manager) }
-
-  let(:start_time) { 1.day.since }
 
   let(:manager) { nil }
 
@@ -49,19 +45,6 @@ RSpec.describe "Decline time-off request", type: :request do
         expect(employee_user.notifications).to contain_exactly(notification)
       end
     end
-
-    context "when declining approved time_off" do
-      before do
-        TimeOffs::Approve.call(time_off)
-      end
-
-      it "removes employee balance" do
-        expect { request }
-          .to change { time_off.reload.employee_balance }
-          .from(Employee::Balance)
-          .to(nil)
-      end
-    end
   end
 
 
@@ -96,6 +79,19 @@ RSpec.describe "Decline time-off request", type: :request do
 
         it { is_expected.to have_http_status(:success) }
       end
+
+      context "when time_off was approved" do
+        before do
+          TimeOffs::Approve.call(time_off)
+        end
+
+        it "removes employee balance" do
+          expect { request }
+            .to change { time_off.reload.employee_balance }
+            .from(Employee::Balance)
+            .to(nil)
+        end
+      end
     end
 
     context "when logged in as account admin" do
@@ -118,23 +114,20 @@ RSpec.describe "Decline time-off request", type: :request do
 
         it_behaves_like "successfull decline"
 
-        context "when time off has been approved and started" do
+        context "when time off already approved" do
           before do
-            TimeOffs::Approve.call(time_off)
+            time_off.approve!
           end
 
-          let(:start_time) { 1.day.ago }
+          it { is_expected.to have_http_status(:forbidden) }
+        end
 
-          it "doesn't change time-off status to declines" do
-            request
-
-            expect(time_off).not_to be_declined
+        context "when time off already declined" do
+          before do
+            time_off.decline!
           end
 
-          it "has errors in ther response body" do
-            request
-            expect_json_keys("errors.*", %i(type messages codes))
-          end
+          it { is_expected.to have_http_status(:forbidden) }
         end
       end
     end

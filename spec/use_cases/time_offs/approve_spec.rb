@@ -27,41 +27,46 @@ RSpec.describe TimeOffs::Approve do
     end
   end
 
+  shared_examples "successfull approve" do
+    before do
+      allow(CreateEmployeeBalance).to receive(:call)
+    end
+
+    it "updates time off status to approved" do
+      expect { use_case.call }.to change { time_off.approved? }.to(true)
+    end
+
+    it "calls success callback" do
+      expect(use_case.call).to eq :ok
+    end
+
+    it "calls create balance callback" do
+      use_case.call
+      expect(CreateEmployeeBalance).to have_received(:call).with(
+        time_off.time_off_category_id,
+        time_off.employee_id,
+        time_off.employee.account_id,
+        time_off_id: time_off.id,
+        balance_type: "time_off",
+        resource_amount: time_off.balance,
+        effective_at: time_off.end_time
+      )
+    end
+
+    it "notifies observers" do
+      use_case.call
+
+      expect(observer).to have_received(:update)
+        .with(notification_type: :time_off_approved, resource: time_off)
+    end
+  end
+
+
   describe "#call" do
     context "when status was pending" do
       let(:approval_status) { :pending }
 
-      before do
-        allow(CreateEmployeeBalance).to receive(:call)
-      end
-
-      it "updates time off status to approved" do
-        expect { use_case.call }.to change { time_off.approved? }.to(true)
-      end
-
-      it "calls success callback" do
-        expect(use_case.call).to eq :ok
-      end
-
-      it "calls create balance callback" do
-        use_case.call
-        expect(CreateEmployeeBalance).to have_received(:call).with(
-          time_off.time_off_category_id,
-          time_off.employee_id,
-          time_off.employee.account_id,
-          time_off_id: time_off.id,
-          balance_type: "time_off",
-          resource_amount: time_off.balance,
-          effective_at: time_off.end_time
-        )
-      end
-
-      it "notifies observers" do
-        use_case.call
-
-        expect(observer).to have_received(:update)
-          .with(notification_type: :time_off_approved, resource: time_off)
-      end
+      it_behaves_like "successfull approve"
     end
 
     context "when status was already approved" do
@@ -85,9 +90,7 @@ RSpec.describe TimeOffs::Approve do
     context "when status was declined" do
       let(:approval_status) { :declined }
 
-      it "calls error callback" do
-        expect { use_case.call }.to raise_error AASM::InvalidTransition
-      end
+      it_behaves_like "successfull approve"
     end
   end
 end

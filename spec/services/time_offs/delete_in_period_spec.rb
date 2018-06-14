@@ -12,7 +12,6 @@ RSpec.describe TimeOffs::DeleteInPeriod, type: :service do
   end
 
   before do
-    travel_to Date.new(2015, 1, 1)
     time_offs =
       [Date.new(2016, 1, 1), Date.new(2016, 6, 6), Date.new(2017, 7, 7)].map do |start_time|
         create(:time_off,
@@ -25,8 +24,6 @@ RSpec.describe TimeOffs::DeleteInPeriod, type: :service do
     TimeOffs::Approve.call(time_offs.first)
     time_offs.first.reload
   end
-
-  after { travel_back }
 
   subject do
     described_class.call(

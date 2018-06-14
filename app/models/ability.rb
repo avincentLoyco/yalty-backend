@@ -29,7 +29,7 @@ class Ability
       can [:update, :read, :index], Account::User, id: user.id
       can [:show, :create, :update], TimeOff, employee_id: user.employee.try(:id)
       can [:decline, :approve], TimeOff do |time_off|
-        time_off.employee.manager_id == user.id
+        time_off.employee.manager_id == user.id && time_off.pending?
       end
       can [:read], Account, id: user.account_id
       can [:show], Employee::Balance do |employee_balance|

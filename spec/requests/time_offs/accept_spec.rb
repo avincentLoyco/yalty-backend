@@ -101,12 +101,7 @@ RSpec.describe "Accept time-off request", type: :request do
           time_off.decline!
         end
 
-        it { is_expected.to have_http_status(:unprocessable_entity) }
-
-        it "has errors in ther response body" do
-          request
-          expect_json_keys("errors.*", %i(type messages codes))
-        end
+        it_behaves_like "successfull approve"
       end
     end
 
@@ -129,6 +124,22 @@ RSpec.describe "Accept time-off request", type: :request do
         let(:manager) { auth_user }
 
         it_behaves_like "successfull approve"
+
+        context "when time off already approved" do
+          before do
+            time_off.approve!
+          end
+
+          it { is_expected.to have_http_status(:forbidden) }
+        end
+
+        context "when time off already declined" do
+          before do
+            time_off.decline!
+          end
+
+          it { is_expected.to have_http_status(:forbidden) }
+        end
       end
     end
   end

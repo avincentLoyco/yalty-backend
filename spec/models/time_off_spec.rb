@@ -31,22 +31,6 @@ RSpec.describe TimeOff, type: :model do
     it { is_expected.to be_auto_approved }
   end
 
-  describe "#not_started?" do
-    subject { time_off.not_started? }
-
-    let(:time_off) { build(:time_off) }
-
-    it { is_expected.to eq false }
-
-    context "when not started" do
-      before do
-        time_off.start_time = 1.day.since
-      end
-
-      it { is_expected.to eq true }
-    end
-  end
-
   context "validations" do
     let(:employee_policy) { build(:employee_time_off_policy) }
     before do
