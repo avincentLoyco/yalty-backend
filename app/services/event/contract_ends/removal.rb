@@ -8,8 +8,8 @@ module ContractEnds
     def call
       ActiveRecord::Base.transaction do
         remove_join_tables
-        remove_time_offs
         remove_balances
+        remove_time_offs
         remove_work_contracts
         remove_adjustment_events
         assign_reset_resources

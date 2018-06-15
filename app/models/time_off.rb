@@ -60,12 +60,12 @@ class TimeOff < ActiveRecord::Base
 
   enum approval_status: { pending: 0, approved: 1, declined: 2 }
 
-  aasm :approval_status, enum: true, no_direct_assignment: true do
+  aasm :approval_status, enum: true, no_direct_assignment: true, skip_validation_on_save: true do
     state :pending, initial: true
     state :declined, :approved
 
     event :approve do
-      transitions from: [:pending, :declined], to: :approved, guard: :valid?
+      transitions from: [:pending, :declined], to: :approved
     end
 
     event :decline do
