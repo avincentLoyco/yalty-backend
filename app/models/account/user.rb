@@ -66,8 +66,8 @@ class Account::User < ActiveRecord::Base
     role.in?(%w(account_owner account_administrator yalty))
   end
 
-  def locale
-    super || account&.default_locale
+  def default_locale
+    locale || account&.default_locale
   end
 
   private

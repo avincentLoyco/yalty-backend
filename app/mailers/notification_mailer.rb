@@ -20,7 +20,7 @@ class NotificationMailer < ApplicationMailer
     @time_off_category = @time_off.time_off_category.name
     @firstname = recipient.employee.fullname
 
-    I18n.with_locale(recipient.locale) do
+    I18n.with_locale(recipient.default_locale) do
       mail to: recipient.email
     end
   end
