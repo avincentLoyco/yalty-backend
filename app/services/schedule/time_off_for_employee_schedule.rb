@@ -3,7 +3,8 @@ class TimeOffForEmployeeSchedule
 
   def initialize(employee, start_date, end_date)
     @employee = employee
-    @time_offs_in_range = TimeOff.for_employee_in_period(employee, start_date, end_date)
+    @time_offs_in_range =
+      TimeOff.for_employee_in_period(employee, start_date, end_date).not_declined
     @start_date = start_date
     @end_date = end_date
     @time_offs_hash = {}

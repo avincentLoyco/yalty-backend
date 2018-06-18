@@ -32,6 +32,8 @@ class TimeOff < ActiveRecord::Base
     joins(:time_off_category).where.not(time_off_categories: { name: "vacation" })
   end)
 
+  scope :not_declined, -> { where.not(approval_status: TimeOff.approval_statuses.fetch(:declined)) }
+
   scope(:for_employee_in_period, lambda do |employee_id, start_date, end_date|
     for_employee(employee_id)
       .where(
