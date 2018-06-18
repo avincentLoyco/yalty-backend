@@ -21,7 +21,7 @@ RSpec.describe TimeOffs::Approve do
     # enable status change temporarily for factory to build
     TimeOff.aasm(:approval_status).state_machine.config.no_direct_assignment = false
 
-    build(:time_off, approval_status: approval_status) do
+    create(:time_off, approval_status: approval_status) do
       # and disable again
       TimeOff.aasm(:approval_status).state_machine.config.no_direct_assignment = true
     end
