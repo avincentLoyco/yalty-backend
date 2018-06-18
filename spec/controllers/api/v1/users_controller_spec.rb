@@ -180,7 +180,7 @@ RSpec.describe API::V1::UsersController, type: :controller do
       end
       it do
         expect_json(
-          email: user.email, id: user.id, type: "account_user", locale: "en", balance_in_hours: false
+          email: user.email, id: user.id, type: "account_user", locale: nil, balance_in_hours: false
         )
       end
 
