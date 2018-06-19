@@ -135,6 +135,13 @@ fr:
   export_mailer:
     archive_generation:
       subject: "%{company_name} : Votre archive est prête à être téléchargée !"
+  notification_mailer:
+    time_off_approved:
+      subject: Absence acceptée
+    time_off_declined:
+      subject: Absence refusée
+    time_off_request:
+      subject: Validation d'absence demandée
   date:
     formats:
       default: "%d %B %Y"
@@ -191,7 +198,7 @@ fr:
   time:
     formats:
       default: "%d. %B %Y %H h %M"
-      long: "%A, %d %B %Y %H h %M min %S s %Z"
+      long: "%d. %B %Y %H h %M"
       short: "%d %b %H h %M"
   company_events_mailer:
     event_changed:

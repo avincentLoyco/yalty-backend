@@ -1,0 +1,16 @@
+Bonjour,
+<br/>
+<%= @employee.fullname %> a posé dans le système une absence de type <%= @time_off_category %>
+du <%= I18n.l(@time_off.start_time, format: :long) %>
+au <%= I18n.l(@time_off.end_time, format: :long) %>.
+<br/>
+<br/>
+Nous nous prions de vous connecter à Yalty pour accepter ou refuser cette absence. <%= @client_url %>
+<br/>
+Meilleures salutations
+<br/>
+<br/>
+Votre équipe Yalty
+<br/>
+<br/>
+PS : cette email a été envoyé automatiquement, merci de ne pas répondre

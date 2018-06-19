@@ -181,6 +181,13 @@ de:
     - :day
     - :month
     - :year
+  time:
+    am: vormittags
+    formats:
+      default: "%A, %d. %B %Y, %H:%M Uhr"
+      long: "%A, %d. %B %Y, %H:%M Uhr"
+      short: "%d. %B, %H:%M Uhr"
+    pm: nachmittags
   export_mailer:
     archive_generation:
       subject: "%{company_name}: Die Archivdatei ist für downloaden bereit!"

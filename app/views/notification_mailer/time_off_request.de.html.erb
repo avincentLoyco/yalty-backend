@@ -1,0 +1,16 @@
+Guten Tag,
+<br/>
+<%= @employee.fullname %> hat im System eine Abwesenheit type <%= @time_off_category %>
+du <%= I18n.l(@time_off.start_time, format: :long) %>
+au <%= I18n.l(@time_off.end_time, format: :long) %>.
+<br/>
+<br/>
+Bitte melden Sie sich bei Yalty an, um diese Abwesenheit zu akzeptieren oder abzulehnen. <%= @client_url %>
+<br/>
+<br/>
+Mit freundlichen Grüßen
+<br/>
+Ihr Yalty Team
+<br/>
+<br/>
+PS: Diese E-Mail wurde automatisch gesendet, bitte antworten Sie nicht
