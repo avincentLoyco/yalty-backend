@@ -35,7 +35,7 @@ RSpec.describe Export::Employee::SpreadsheetColumnBuilder, type: :service do
       value: {
         lastname: nil,
         firstname: nil,
-      }
+      },
     }
   end
 
@@ -56,7 +56,7 @@ RSpec.describe Export::Employee::SpreadsheetColumnBuilder, type: :service do
       "lastname", "lastname (effective_at)",
       "firstname", "firstname (effective_at)",
       "hired_date", "contract_end_date",
-      "martial_status",
+      "martial_status"
     ]
   end
 
@@ -72,7 +72,7 @@ RSpec.describe Export::Employee::SpreadsheetColumnBuilder, type: :service do
       spouse: [
         ["spouse_lastname", "spouse_lastname (effective_at)"],
         ["spouse_firstname", "spouse_firstname (effective_at)"],
-      ]
+      ],
     }
   end
 
@@ -85,7 +85,7 @@ RSpec.describe Export::Employee::SpreadsheetColumnBuilder, type: :service do
       2 => [
         ["child_2_lastname", "child_2_lastname (effective_at)"],
         ["child_2_firstname", "child_2_firstname (effective_at)"],
-      ]
+      ],
     }
   end
 

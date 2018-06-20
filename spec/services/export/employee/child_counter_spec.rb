@@ -23,7 +23,7 @@ RSpec.describe Export::Employee::ChildCounter, type: :service do
     {
       value: attribute,
       effective_at: "",
-      event_type: event_type
+      event_type: event_type,
     }
   end
 
@@ -31,7 +31,7 @@ RSpec.describe Export::Employee::ChildCounter, type: :service do
     {
       value: daughter,
       effective_at: "",
-      event_type: event_type
+      event_type: event_type,
     }
   end
 

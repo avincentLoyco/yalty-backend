@@ -8,7 +8,7 @@ module Export
           "firstname", "firstname (effective_at)",
           "hired_date",
           "contract_end_date",
-          "martial_status",
+          "martial_status"
         ].freeze
 
       pattr_initialize :attributes
@@ -22,7 +22,7 @@ module Export
           basic: BASIC_EMPLOYEE_COLUMNS,
           plain: default_columns,
           nested: nested_columns,
-          nested_array: child_columns
+          nested_array: child_columns,
         }
       end
 
@@ -74,7 +74,7 @@ module Export
       def attribute_with_effective_at(attribute_name)
         [
           attribute_name.to_s,
-          "#{attribute_name} (effective_at)"
+          "#{attribute_name} (effective_at)",
         ]
       end
     end

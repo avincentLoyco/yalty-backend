@@ -62,7 +62,7 @@ RSpec.describe Export::Employee::GenerateSpreadsheet, type: :service do
       lastname: "Holmes",
       birthday: "1887-01-01",
       gender: "Male",
-      job_title: "Detective"
+      job_title: "Detective",
     }
   end
 

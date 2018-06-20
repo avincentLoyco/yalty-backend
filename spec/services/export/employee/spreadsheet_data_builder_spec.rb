@@ -39,7 +39,7 @@ RSpec.describe Export::Employee::SpreadsheetDataBuilder, type: :service do
     {
       birthday: {
         value: "1993-06-06", effective_at: "2016-06-06"
-      }
+      },
     }
   end
 
@@ -49,10 +49,10 @@ RSpec.describe Export::Employee::SpreadsheetDataBuilder, type: :service do
       {
         value: {
           lastname: "Moriarty",
-          firstname: "Son"
+          firstname: "Son",
         },
-        effective_at: "2015-06-06"
-      }
+        effective_at: "2015-06-06",
+      },
     ]
   end
 
@@ -62,7 +62,7 @@ RSpec.describe Export::Employee::SpreadsheetDataBuilder, type: :service do
     {
       gender: {
         value: "male", effective_at: "2016-06-06"
-      }
+      },
     }
   end
   let(:second_nested_attributes) do
@@ -70,10 +70,10 @@ RSpec.describe Export::Employee::SpreadsheetDataBuilder, type: :service do
       spouse: {
         value: {
           lastname: "Adler",
-          firstname: "Irene"
+          firstname: "Irene",
         },
-        effective_at: "2012-06-06"
-      }
+        effective_at: "2012-06-06",
+      },
     }
   end
   let(:second_nested_array_attributes) do
@@ -81,17 +81,17 @@ RSpec.describe Export::Employee::SpreadsheetDataBuilder, type: :service do
       {
         value: {
           lastname: "Holmes",
-          firstname: "Son"
+          firstname: "Son",
         },
-        effective_at: "2014-06-06"
+        effective_at: "2014-06-06",
       },
       {
         value: {
           lastname: "Holmes",
-          firstname: "Daughter"
+          firstname: "Daughter",
         },
-        effective_at: "2015-06-06"
-      }
+        effective_at: "2015-06-06",
+      },
     ]
   end
 
@@ -102,7 +102,7 @@ RSpec.describe Export::Employee::SpreadsheetDataBuilder, type: :service do
       "lastname", "lastname (effective_at)",
       "firstname", "firstname (effective_at)",
       "hired_date", "contract_end_date",
-      "martial_status",
+      "martial_status"
     ]
   end
 
@@ -118,7 +118,7 @@ RSpec.describe Export::Employee::SpreadsheetDataBuilder, type: :service do
       spouse: [
         ["spouse_lastname", "spouse_lastname (effective_at)"],
         ["spouse_firstname", "spouse_firstname (effective_at)"],
-      ]
+      ],
     }
   end
 
@@ -131,7 +131,7 @@ RSpec.describe Export::Employee::SpreadsheetDataBuilder, type: :service do
       2 => [
         ["child_2_lastname", "child_2_lastname (effective_at)"],
         ["child_2_firstname", "child_2_firstname (effective_at)"],
-      ]
+      ],
     }
   end
 
@@ -143,7 +143,7 @@ RSpec.describe Export::Employee::SpreadsheetDataBuilder, type: :service do
       first_basic_result,
       first_plain_result,
       first_nested_result,
-      first_nested_array_result
+      first_nested_array_result,
     ]
   end
 
@@ -152,7 +152,7 @@ RSpec.describe Export::Employee::SpreadsheetDataBuilder, type: :service do
       second_basic_result,
       second_plain_result,
       second_nested_result,
-      second_nested_array_result
+      second_nested_array_result,
     ]
   end
 
@@ -162,7 +162,7 @@ RSpec.describe Export::Employee::SpreadsheetDataBuilder, type: :service do
   let(:first_nested_array_result) do
     [
       [["Moriarty", "2015-06-06"], ["Son", "2015-06-06"]],
-      [[nil, nil], [nil, nil]]
+      [[nil, nil], [nil, nil]],
     ]
   end
 
@@ -172,7 +172,7 @@ RSpec.describe Export::Employee::SpreadsheetDataBuilder, type: :service do
   let(:second_nested_array_result) do
     [
       [["Holmes", "2014-06-06"], ["Son", "2014-06-06"]],
-      [["Holmes", "2015-06-06"], ["Daughter", "2015-06-06"]]
+      [["Holmes", "2015-06-06"], ["Daughter", "2015-06-06"]],
     ]
   end
 

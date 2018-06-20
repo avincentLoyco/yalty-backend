@@ -32,8 +32,8 @@ RSpec.describe Export::Employee::AttributesBuilder, type: :service do
           gender: "male",
           nationality: "English",
           is_student: "true",
-        }
-      }
+        },
+      },
     ]
   end
 
@@ -97,8 +97,8 @@ RSpec.describe Export::Employee::AttributesBuilder, type: :service do
           permit_expiry: nil,
         },
         effective_at: "2013-12-12",
-        event_type: "change"
-      }
+        event_type: "change",
+      },
     }
   end
 

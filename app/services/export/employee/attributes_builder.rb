@@ -61,7 +61,7 @@ module Export
           employee_id: employee.id,
           hired_date: work_event_date("hired"),
           contract_end_date: work_event_date("contract_end"),
-          marital_status: marital_status
+          marital_status: marital_status,
         }
       end
 
