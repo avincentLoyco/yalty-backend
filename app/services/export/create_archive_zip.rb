@@ -10,7 +10,7 @@ module Export
         employees_dir_path = Pathname.new(archive_dir_path).join("employees")
         FileUtils.mkdir_p(archive_dir_path)
 
-        GenerateEmployeesSpreadsheet.new(@account, archive_dir_path).call
+        Export::Employee::GenerateSpreadsheet.call(@account, archive_dir_path)
         GenerateWorkingHoursSpreadsheet.new(@account, archive_dir_path).call
         GenerateTimeOffSpreadsheet.new(@account, archive_dir_path).call
 
