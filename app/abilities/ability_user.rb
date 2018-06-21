@@ -1,11 +1,6 @@
 class AbilityUser < Ability
   def initialize(user)
-    can :show, PresencePolicy do |presence_policy|
-      EmployeePresencePolicy
-        .where(employee_id: user.employee.id)
-        .pluck(:presence_policy_id)
-        .include?(presence_policy.id)
-    end
+    can :show, PresencePolicy, id: user.employee.presence_policies.pluck(:id)
     can :read, Employee::AttributeDefinition
     can :read, WorkingPlace
     can [:read, :update], Employee, account_user_id: user.id
