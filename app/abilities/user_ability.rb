@@ -1,6 +1,6 @@
 class UserAbility < Ability
   def initialize(user)
-    can :show, PresencePolicy, id: user.employee.presence_policies.pluck(:id)
+    can :show, PresencePolicy, id: user.employee&.presence_policies&.pluck(:id)
     can :read, [Employee::AttributeDefinition, WorkingPlace]
     can [:read, :update], Employee, account_user_id: user.id
     can [:update, :read, :index], Account::User, id: user.id
