@@ -10,19 +10,19 @@ RSpec.describe AbilityFactory do
     context "when normal user" do
       let(:role) { :user }
 
-      it { is_expected.to be_a AbilityUser }
+      it { is_expected.to be_a UserAbility }
     end
 
     context "when account owner" do
       let(:role) { :account_owner }
 
-      it { is_expected.to be_a AbilityAccountOwner }
+      it { is_expected.to be_a AccountOwnerAbility }
     end
 
     context "when account administrator" do
       let(:role) { :account_administrator }
 
-      it { is_expected.to be_a AbilityAccountAdministrator }
+      it { is_expected.to be_a AccountAdministratorAbility }
     end
 
     context "when anonymous" do

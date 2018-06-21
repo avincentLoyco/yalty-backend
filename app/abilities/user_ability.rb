@@ -1,8 +1,7 @@
-class AbilityUser < Ability
+class UserAbility < Ability
   def initialize(user)
     can :show, PresencePolicy, id: user.employee.presence_policies.pluck(:id)
-    can :read, Employee::AttributeDefinition
-    can :read, WorkingPlace
+    can :read, [Employee::AttributeDefinition, WorkingPlace]
     can [:read, :update], Employee, account_user_id: user.id
     can [:update, :read, :index], Account::User, id: user.id
     can [:show, :create, :update], TimeOff, employee_id: user.employee.try(:id)
@@ -16,10 +15,6 @@ class AbilityUser < Ability
     end
     can :schedule_for_employee, Employee, id: user.employee.try(:id)
     can [:create], RegisteredWorkingTime, employee_id: user.employee.try(:id)
-    can :create, :tokens do |_, file_id, attribute_version|
-      (file_id.nil? && attribute_version.nil?) ||
-        (attribute_version.present? && attribute_version.attribute_name == "profile_picture") ||
-        (user.employee.present? && user.employee.file_with?(file_id))
-    end
+    merge TokensAbility.new(user)
   end
 end

@@ -18,6 +18,6 @@ class AbilityFactory
   end
 
   def ability_class
-    "ability_#{user.role}".classify.constantize
+    "#{user.role}_ability".classify.constantize
   end
 end
