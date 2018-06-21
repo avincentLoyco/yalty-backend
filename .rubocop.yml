@@ -18,10 +18,6 @@ AllCops:
 Rails:
   Enabled: true
 
-Metrics:
-  Exclude:
-    - 'app/models/ability.rb'
-
 Metrics/LineLength:
   Max: 100
   Exclude:

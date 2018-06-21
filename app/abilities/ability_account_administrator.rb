@@ -1,0 +1,2 @@
+class AbilityAccountAdministrator < AbilityAccountOwner
+end
