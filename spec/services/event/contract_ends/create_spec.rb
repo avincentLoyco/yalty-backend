@@ -55,7 +55,8 @@ RSpec.describe ContractEnds::Create, :service do
     end
 
     it "moves time off end time at contract end" do
-      expect { create_contract_end }.to change { last_time_off.reload.end_time }
+      expect { create_contract_end }
+        .to change { last_time_off.reload.end_time.to_date }.to(contract_end_date)
     end
 
     it "leaves time off before contract end unchanged" do

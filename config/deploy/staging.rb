@@ -7,7 +7,7 @@ ask :docker_tag, proc {
     if branch.match?(/^releases?\/[\d\.]+$/)
       [fetch(:app_version), 'rc', fetch(:app_version_sha1)].join('-')
     else
-      branch[/ywa-\d+/]
+      branch[/yw?a-\d+/]
     end
   end
 }
