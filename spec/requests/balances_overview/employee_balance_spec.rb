@@ -66,6 +66,10 @@ RSpec.describe "Employee balance", type: :request do
       get(api_v1_employee_employee_balance_overview_path(employee.id), params, headers) && response
     end
 
+    before do
+      RequestStore.clear!
+    end
+
     context "when accesing own data" do
       it { is_expected.to have_http_status(:success) }
 
@@ -110,6 +114,10 @@ RSpec.describe "Employee balance", type: :request do
 
     subject(:request) do
       get(api_v1_employee_balance_overview_path, params, headers) && response
+    end
+
+    before do
+      RequestStore.clear!
     end
 
     it { is_expected.to have_http_status(:success) }
