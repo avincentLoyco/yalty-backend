@@ -57,7 +57,7 @@ end
 if ENV['YALTY_DOCKER_BUILD'] == 'master'
   reset_git_working_tree('master', ENV['YALTY_DOCKER_BUILD_SHA1'])
   result = build_docker_image('latest')
-elsif ENV['YALTY_DOCKER_BUILD_BRANCH'] =~ %r{^[^/]+/(ywa-[[:digit:]]+)}i
+elsif ENV['YALTY_DOCKER_BUILD_BRANCH'] =~ %r{^[^/]+/(yw?a-[[:digit:]]+)}i
   reset_git_working_tree("pull/#{ENV['YALTY_DOCKER_BUILD']}/head", ENV['YALTY_DOCKER_BUILD_SHA1'])
   result = build_docker_image(Regexp.last_match(1).downcase)
 elsif ENV['YALTY_DOCKER_BUILD_BRANCH'] =~ %r{^releases?/(.+)}i
