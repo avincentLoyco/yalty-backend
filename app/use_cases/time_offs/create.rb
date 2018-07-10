@@ -1,12 +1,17 @@
 module TimeOffs
   class Create < UseCase
-    pattr_initialize :attributes
+    attr_reader :attributes, :is_manager
+
+    def initialize(attributes, is_manager: false)
+      @attributes = attributes
+      @is_manager = is_manager
+    end
 
     include SubjectObservable
 
     def call
       TimeOff.transaction do
-        time_off.auto_approved? ? approve_time_off : notify_pending
+        auto_approved ? approve_time_off : notify_pending
 
         run_callback(:success, time_off)
       end
@@ -26,6 +31,10 @@ module TimeOffs
 
     def time_off
       @time_off ||= TimeOff.create!(attributes)
+    end
+
+    def auto_approved
+      time_off.auto_approved? || is_manager
     end
   end
 end

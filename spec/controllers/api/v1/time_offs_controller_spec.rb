@@ -169,6 +169,10 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
       end
 
       context "when not auto approved" do
+        before { Account::User.current = normal_user }
+
+        let(:normal_user) { create(:account_user, employee: employee) }
+
         it { expect { subject }.not_to change { Employee::Balance.count } }
       end
     end
@@ -276,7 +280,32 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
           end
         end
 
-        context "when not auto approved" do
+        context "when user is admin" do
+          it "sends an email to the employee" do
+            subject
+
+            expect(ActionMailer::Base.deliveries)
+              .to contain_exactly(an_object_having_attributes(to: [employee_user.email]))
+          end
+
+          it "sends a notification to the employee" do
+            subject
+
+            expect(employee_user.notifications).to contain_exactly(approve_notification)
+          end
+
+          it "doesn't send a notification to the manager" do
+            subject
+
+            expect { subject }.not_to change { manager.notifications.count }
+          end
+        end
+
+        context "when not auto approved and user is not a manager" do
+          before { Account::User.current = normal_user }
+
+          let(:normal_user) { create(:account_user, employee: employee) }
+
           it "sends an email to the manager" do
             subject
 

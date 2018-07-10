@@ -193,6 +193,7 @@ class TimeOff < ActiveRecord::Base
     employee_time_offs_in_period =
       employee
       .time_offs
+      .not_declined
       .where(
         '((start_time >= ? AND start_time < ?) OR (end_time > ? AND end_time <= ?))
          OR (start_time <= ? AND end_time >= ?)',

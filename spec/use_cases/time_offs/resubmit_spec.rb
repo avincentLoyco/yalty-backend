@@ -91,5 +91,32 @@ RSpec.describe TimeOffs::Resubmit do
           .with(notification_type: :time_off_approved, resource: expected_time_off.first)
       end
     end
+
+    context "when time-off not modified" do
+      let(:attributes) do
+        {
+          start_time: time_off.start_time,
+          end_time: time_off.end_time,
+        }
+      end
+
+      it "calls success callback" do
+        expect(use_case.call).to eq :ok
+      end
+
+      it "doesn't modify time off" do
+        expect { use_case.call }.not_to change { time_off.reload }
+      end
+
+      it "doesn't modify employee balance" do
+        expect { use_case.call }.not_to change { time_off.reload.employee_balance }
+      end
+
+      it "doesn't notify observers" do
+        use_case.call
+
+        expect(observer).not_to have_received(:update)
+      end
+    end
   end
 end

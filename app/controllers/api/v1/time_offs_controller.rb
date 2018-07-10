@@ -19,7 +19,9 @@ module API
         verified_dry_params(dry_validation_schema) do |attributes|
           resource = TimeOff.new(time_off_attributes(attributes))
           authorize! :create, resource
-          ::TimeOffs::Create.call(time_off_attributes(attributes)) do |create|
+          ::TimeOffs::Create.call(
+            time_off_attributes(attributes), is_manager: can?(:approve, resource)
+          ) do |create|
             create.add_observers(internal_dispatcher, email_dispatcher)
             create.on(:success) do |time_off|
               render_resource(time_off, status: :created)
