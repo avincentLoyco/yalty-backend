@@ -19,7 +19,7 @@ RSpec.describe NotificationMailer, type: :mailer do
 
   let_it_be(:user) { build(:account_user, employee: employee) }
   let_it_be(:manager) { build(:account_user, employee: manager_employee) }
-  let_it_be(:time_off_category) { build(:time_off_category, name: "Friday") }
+  let_it_be(:time_off_category) { build(:time_off_category, name: "other") }
   let_it_be(:time_off) do
     build(:time_off,
       time_off_category: time_off_category,
@@ -55,7 +55,7 @@ RSpec.describe NotificationMailer, type: :mailer do
     it { expect(mail.body).to include("John Jaworski") }
     it { expect(mail.body).to include("from May 01, 2018 08:00") }
     it { expect(mail.body).to include("to May 10, 2018 08:00") }
-    it { expect(mail.body).to include("Your absence request for Friday") }
+    it { expect(mail.body).to include("Your absence request for Other") }
     it { expect(mail.body).to include("has been accepted") }
   end
 
@@ -68,7 +68,7 @@ RSpec.describe NotificationMailer, type: :mailer do
     it { expect(mail.body).to include("John Jaworski") }
     it { expect(mail.body).to include("from May 01, 2018 08:00") }
     it { expect(mail.body).to include("to May 10, 2018 08:00") }
-    it { expect(mail.body).to include("Your absence request for Friday") }
+    it { expect(mail.body).to include("Your absence request for Other") }
     it { expect(mail.body).to include("has been declined") }
   end
 end
