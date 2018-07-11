@@ -197,8 +197,8 @@ fr:
     - :year
   time:
     formats:
-      default: "%d. %B %Y %H h %M"
-      long: "%d. %B %Y %H h %M"
+      default: "%d %B %Y %H h %M"
+      long: "%d %B %Y %H h %M"
       short: "%d %b %H h %M"
   company_events_mailer:
     event_changed:
@@ -206,3 +206,11 @@ fr:
     action_create: 'créé'
     action_update: 'mis à jour'
     action_destroy: 'détruit'
+  content:
+    time_off_categories:
+      sickness: Maladie
+      vacation: Vacances
+      accident: Accident
+      maternity: Maternité
+      civil_service: Militaire / Service Civil
+      other: Autre

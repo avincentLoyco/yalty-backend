@@ -197,3 +197,11 @@ de:
     action_create: 'erstellt'
     action_update: 'aktualisiert'
     action_destroy: 'vernichtet'
+  content:
+    time_off_categories:
+      sickness: Krankheit
+      vacation: Urlaub
+      accident: Unfall
+      maternity: Mutterschutz
+      civil_service: Militärdienst / Zivildienst
+      other: Sonstiges

@@ -17,10 +17,11 @@ class NotificationMailer < ApplicationMailer
 
   def notification_mail(recipient, resource)
     @time_off = resource
-    @time_off_category = @time_off.time_off_category.name
     @firstname = recipient.employee.fullname
+    time_off_category_name = @time_off.time_off_category.name
 
     I18n.with_locale(recipient.default_locale) do
+      @time_off_category = I18n.t time_off_category_name, scope: [:content, :time_off_categories]
       mail to: recipient.email
     end
   end

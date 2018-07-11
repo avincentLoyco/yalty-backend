@@ -204,3 +204,11 @@ en:
     action_create: 'created'
     action_update: 'updated'
     action_destroy: 'destroyed'
+  content:
+    time_off_categories:
+      sickness: Sickness
+      vacation: Vacation
+      accident: Accident
+      maternity: Maternity
+      civil_service: Military / Civil Service
+      other: Other
