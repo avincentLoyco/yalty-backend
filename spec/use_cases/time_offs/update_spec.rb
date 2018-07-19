@@ -32,6 +32,7 @@ RSpec.describe TimeOffs::Update do
       end_time: end_time,
     }
   end
+  let(:approval_status) { :pending }
   let(:start_time) { time_off.start_time + 3.days }
   let(:end_time) { start_time + 3.months }
   let(:observer) { double }
