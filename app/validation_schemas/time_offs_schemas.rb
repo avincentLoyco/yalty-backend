@@ -18,7 +18,6 @@ module TimeOffsSchemas
     Dry::Validation.Form do
       required(:start_time).filled
       required(:end_time).filled
-      optional(:approval_status).filled(:str?)
     end
   end
 end
