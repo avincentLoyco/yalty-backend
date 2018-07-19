@@ -700,8 +700,9 @@ RSpec.describe API::V1::TimeOffsController, type: :controller, jobs: true do
       context "when there are balances between time off start and end time" do
         before do
           TimeOffs::Update.call(
-            time_off, start_time: Date.new(2017, 1, 1), approval_status: "approved"
+            time_off, start_time: Date.new(2017, 1, 1)
           )
+          TimeOffs::Approve.call(time_off)
         end
 
         let!(:policy_start_balance) do
