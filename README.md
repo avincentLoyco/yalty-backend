@@ -232,9 +232,21 @@ git checkout releases/X.X.X && git pull && bundle
 
 Known issues
 ------------
+Postgres policy doesn't allow adding columns with the default values and  NULL marker. Thus rails shortcuts as below are not allowed:
+```ruby
+add_column :users, :age, :integer, default: 0
+```
+The correct migration flow is:
+* add column
+* add default value and NULL marker
+* update existing records
+Example: 
+```ruby
+add_column :users, :age, :integer
+change_column_default :users, :age, 0
+change_column_null :users, :age, false
+```
 
-With *prax* and *RVM*, ensure RVM works. To do that you can follow instruction
-from [prax wiki](https://github.com/ysbaddaden/prax/wiki/Ruby-Version-Managers#rvm).
-
-With *prax* and *Chrome*, the .dev urls may not work. You can follow instructions
-from this issue [Chrome can't resolve .dev domains #117](https://github.com/ysbaddaden/prax/issues/117#issuecomment-78342316), by creating the script and restarting the network-manager.
+TODO
+------------
+Update staging to have the same PG configuration as production, including policies
