@@ -240,11 +240,13 @@ The correct migration flow is:
 * add column
 * add default value and NULL marker
 * update existing records
+
 Example: 
 ```ruby
 add_column :users, :age, :integer
 change_column_default :users, :age, 0
 change_column_null :users, :age, false
+execute("UPDATE users SET age = 0")
 ```
 
 TODO
