@@ -30,7 +30,7 @@ RSpec.describe EmployeePresencePolicy, type: :model do
       let(:time_off) { create(:time_off, employee: employee, time_off_category: category) }
       let(:new_policy) do
         build(:employee_presence_policy,
-          employee: balance.employee,
+          employee: employee,
           effective_at: Time.now - 4.years
         )
       end
@@ -38,18 +38,6 @@ RSpec.describe EmployeePresencePolicy, type: :model do
       subject { new_policy }
 
       context "when there is no employee balance from a time off after the effective_at" do
-        let(:effective_at) { Time.now - 6.years }
-        before { balance.update_attribute(:effective_at, effective_at) }
-
-        it { expect(subject.valid?).to eq true }
-        it { expect { subject.valid? }.to_not change { subject.errors.messages.count } }
-      end
-
-      context "when there is employee balance from a time off after the effective_at" do
-        let(:effective_at) { Time.now - 2.years }
-
-        before { balance.update_attribute(:effective_at, effective_at) }
-
         it { expect(subject.valid?).to eq true }
         it { expect { subject.valid? }.to_not change { subject.errors.messages.count } }
       end

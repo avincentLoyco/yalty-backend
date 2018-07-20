@@ -210,14 +210,21 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
       end
 
       context "when there are emloyee balances with time offs assigned" do
-        let(:policy) { create(:time_off_policy) }
-        let(:employee_policy) do
-          create(:employee_time_off_policy, employee: employee, effective_at: 2.years.ago)
+        let(:category) { create(:time_off_category, account: Account.current) }
+        let(:policy) { create(:time_off_policy, time_off_category: category) }
+        let!(:employee_policy) do
+          create(
+            :employee_time_off_policy,
+            employee: employee,
+            effective_at: 2.years.ago,
+            time_off_policy: policy
+          )
         end
+
         let!(:balances) do
           [2.months.ago, 2.months.since].map do |date|
             create(:employee_balance_manual, :with_time_off,
-              employee: employee, effective_at: date, time_off_category: policy.time_off_category)
+              employee: employee, effective_at: date, time_off_category: category)
           end
         end
 
@@ -388,7 +395,7 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
       let(:category) { create(:time_off_category, account_id: employee.account_id) }
       let(:presence_policy) { create(:presence_policy, account_id: employee.account_id) }
       let(:time_off) do
-        create(:time_off, :without_balance, employee: employee, time_off_category: category)
+        create(:time_off, employee: employee, time_off_category: category)
       end
 
       context "when there is employee balance after effective at" do
@@ -450,9 +457,15 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
     subject { put :update, params }
 
     context "when there are employee balances with time offs assigned" do
-      let(:policy) { create(:time_off_policy) }
-      let(:employee_policy) do
-        create(:employee_time_off_policy, employee: employee, effective_at: 5.years.ago)
+      let(:category) { create(:time_off_category, account: Account.current) }
+      let(:policy) { create(:time_off_policy, time_off_category: category) }
+      let!(:employee_policy) do
+        create(
+          :employee_time_off_policy,
+          employee: employee,
+          effective_at: 2.years.ago,
+          time_off_policy: policy
+        )
       end
       let!(:balances) do
         [2.months.ago, 2.months.since, 6.months.since].map do |date|
@@ -902,10 +915,12 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
 
       context "when there is employee balance but its effective at is before resource's" do
         let!(:time_off) do
-          create(:time_off, start_time: 3.years.ago, end_time: 2.years.ago, employee: employee)
+          create(:time_off, start_time: 3.years.ago, end_time: 2.years.ago) do |time_off|
+            TimeOffs::Approve.call(time_off)
+          end
         end
         it { expect { subject }.to change { EmployeePresencePolicy.count }.by(-1) }
-        it { expect { subject }.to_not change { time_off.employee_balance.reload.being_processed } }
+        it { expect { subject }.to_not change { time_off.reload.employee_balance.being_processed } }
 
         it { expect { subject }.to_not have_enqueued_job(UpdateBalanceJob) }
         it { is_expected.to have_http_status(204) }
@@ -913,10 +928,12 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
 
       context "when there is employee balance after" do
         let!(:time_off) do
-          create(:time_off, start_time: 2.days.since, end_time: 4.days.since, employee: employee)
+          create(:time_off, start_time: 2.days.since, employee: employee) do |time_off|
+            TimeOffs::Approve.call(time_off)
+          end
         end
 
-        it { expect { subject }.to change { time_off.employee_balance.reload.being_processed } }
+        it { expect { subject }.to change { time_off.reload.employee_balance.being_processed } }
         it { expect { subject }.to have_enqueued_job(UpdateBalanceJob).exactly(1) }
 
         it { is_expected.to have_http_status(204) }

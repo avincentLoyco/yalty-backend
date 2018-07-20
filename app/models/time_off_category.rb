@@ -8,6 +8,7 @@ class TimeOffCategory < ActiveRecord::Base
 
   validates :account, :name, presence: true
   validates :name, uniqueness: { scope: :account }
+  validate :check_pending_time_offs
 
   scope :editable, -> { where(system: false) }
 
@@ -34,5 +35,13 @@ class TimeOffCategory < ActiveRecord::Base
 
   def create_reset_policy!
     time_off_policies.create!(reset: true, name: "Reset time off policy")
+  end
+
+
+  private
+
+  def check_pending_time_offs
+    return unless auto_approved? && time_offs.pending.any?
+    errors.add(:auto_approved, "has pending time-offs and cannot be auto approved")
   end
 end

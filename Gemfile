@@ -2,6 +2,7 @@ source "https://rubygems.org"
 
 ruby "2.4.1"
 
+gem "aasm",                 "~> 4.12"
 gem "ar_after_transaction", "~> 0.4.1"
 gem "attr_extras",          "~> 5.2.0"
 gem "bcrypt",               "~> 3.1.10"

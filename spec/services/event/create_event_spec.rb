@@ -23,6 +23,7 @@ RSpec.describe CreateEvent do
       standard_day_duration: 9600, default_full_time: true)
   end
   let(:employee) { create(:employee) }
+  let(:manager) { create(:account_user, account: employee.account) }
   let(:employee_id) { employee.id }
   let(:effective_at) { Date.new(2015, 4, 21) }
   let(:event_type) { "work_contract" }
@@ -74,6 +75,43 @@ RSpec.describe CreateEvent do
 
       it { expect(subject.effective_at).to eq effective_at }
       it { expect(subject.employee_attribute_versions.first.data.line).to eq value }
+
+      context "when manager_id key is present" do
+        before do
+          params[:employee][:manager_id] = manager_id
+        end
+
+        context "when manager is assigned" do
+          let(:manager_id) { manager.id }
+
+          it "assigns manager" do
+            expect { subject }.to change { employee.reload.manager }.to(manager)
+          end
+        end
+
+        context "when manager is unassigned" do
+          before do
+            employee.update!(manager: manager)
+          end
+
+          let(:manager_id) { nil }
+
+          it "unassigns manager" do
+            expect { subject }.to change { employee.reload.manager }.to(nil)
+          end
+        end
+      end
+
+      context "when manager_id key is not present" do
+        before do
+          employee.update!(manager: manager)
+        end
+
+        it "doesn't change manager" do
+          expect { subject }.not_to change { employee.reload.manager }
+        end
+      end
+
 
       context "and this is contract end event" do
         let(:event_type) { "contract_end" }
@@ -174,7 +212,7 @@ RSpec.describe CreateEvent do
 
       before do
         definition.update(name: attribute_name)
-        params[:employee] = {}
+        params[:employee].delete(:id)
       end
 
       it { expect { subject }.to change { Employee.count }.by(1) }
@@ -203,6 +241,32 @@ RSpec.describe CreateEvent do
 
         it { expect { subject }.to change { Employee::AttributeVersion.count }.by(3) }
         it { expect { subject }.to_not raise_error }
+      end
+
+      context "when manager_id key is present" do
+        before do
+          definition.update(name: "job_title")
+          params[:employee][:manager_id] = manager_id
+          definition.update(name: attribute_name)
+        end
+
+        context "when manager is set" do
+          let(:manager_id) { manager.id }
+
+          it "it creates employee with manager" do
+            expect { subject }.to change { Employee.where(manager: manager).count }.by(1)
+          end
+        end
+
+        context "when manager is not set" do
+          let(:manager_id) { nil }
+          let(:new_employee) { Account.current.employees.order(created_at: :desc).last }
+
+          it "it creates employee without manager" do
+            subject
+            expect(new_employee.manager).to be_blank
+          end
+        end
       end
     end
   end

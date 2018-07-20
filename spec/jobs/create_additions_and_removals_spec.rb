@@ -176,9 +176,13 @@ RSpec.describe CreateAdditionsAndRemovals do
       end
       let!(:time_off) do
         create(:time_off,
-          start_time: 1.month.ago, end_time: 1.month.ago + 4.days, employee: employee,
-           time_off_category: category
-        )
+          start_time: 1.month.ago,
+          end_time: 1.month.ago + 4.days,
+          employee: employee,
+          time_off_category: category
+        ) do |time_off|
+          TimeOffs::Approve.call(time_off)
+        end
       end
 
       it { expect { subject }.to change { Employee::Balance.count }.by(6) }

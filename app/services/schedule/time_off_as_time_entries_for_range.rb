@@ -37,10 +37,12 @@ class TimeOffAsTimeEntriesForRange
   end
 
   def prepare_single_day_hash(single_day_start_time = start_time, single_day_end_time = end_time)
+    type = time_off.approval_status.eql?("pending") ? "time_off_pending" : "time_off"
+
     time_off_hashes =
       [
         {
-          type: "time_off",
+          type: type,
           name: time_off.time_off_category.name,
           start_time: single_day_start_time.strftime("%H:%M:%S"),
           end_time: day_end_time(single_day_end_time),

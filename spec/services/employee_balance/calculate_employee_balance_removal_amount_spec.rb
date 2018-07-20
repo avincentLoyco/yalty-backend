@@ -40,7 +40,11 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
     let(:time_off) do
       create(:time_off,
         employee: employee, time_off_category: category, start_time: 5.days.since,
-        end_time: 1.week.since)
+        end_time: 1.week.since
+      ) do |time_off|
+        TimeOffs::Approve.call(time_off)
+        time_off.reload
+      end
     end
 
     subject { described_class.new(removal).call }
@@ -107,7 +111,9 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
               create(:time_off,
                 employee: employee, time_off_category: removal.time_off_category,
                 start_time: removal.effective_at - 1.days, end_time: removal.effective_at + 2.days
-              )
+              ) do |time_off|
+                TimeOffs::Approve.call(time_off)
+              end
             end
 
             context "when removal manual amount greater than time off related amount" do
@@ -149,7 +155,10 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
             let!(:new_time_off) do
               create(:time_off,
                 employee: employee, time_off_category: category, start_time: "3/3/2016",
-                end_time: "6/3/2016")
+                end_time: "6/3/2016") do |time_off|
+                  TimeOffs::Approve.call(time_off)
+                  time_off.reload
+                end
             end
 
             it "" do
@@ -164,7 +173,11 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
             let!(:new_time_off) do
               create(:time_off,
                 employee: employee, time_off_category: category, start_time: "25/3/2016",
-                end_time: "4/4/2016")
+                end_time: "4/4/2016"
+              ) do |time_off|
+                TimeOffs::Approve.call(time_off)
+                time_off.reload
+              end
             end
 
             it "has proper value" do
@@ -287,7 +300,11 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
             let!(:new_time_off) do
               create(:time_off,
                 employee: employee, time_off_category: category, start_time: "3/3/2016",
-                end_time: "6/3/2016")
+                end_time: "6/3/2016"
+              ) do |time_off|
+                TimeOffs::Approve.call(time_off)
+                time_off.reload
+              end
             end
 
             it { expect(subject).to eq -(10100 + time_off.balance + new_time_off.balance) }
@@ -297,7 +314,11 @@ RSpec.describe CalculateEmployeeBalanceRemovalAmount do
             let!(:new_time_off) do
               create(:time_off,
                 employee: employee, time_off_category: category, start_time: "25/3/2016",
-                end_time: "4/4/2016")
+                end_time: "4/4/2016"
+              ) do |time_off|
+                TimeOffs::Approve.call(time_off)
+                time_off.reload
+              end
             end
 
             it do

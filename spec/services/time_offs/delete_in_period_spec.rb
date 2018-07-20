@@ -21,6 +21,8 @@ RSpec.describe TimeOffs::DeleteInPeriod, type: :service do
           time_off_category: time_off_category)
       end
     allow(TimeOffs::FindInPeriod).to receive(:call) { time_offs }
+    TimeOffs::Approve.call(time_offs.first)
+    time_offs.first.reload
   end
 
   subject do

@@ -20,10 +20,10 @@ RSpec.describe TimeOffAsTimeEntriesForRange, type: :service do
           {
             "2016-01-01" => [
               {
-                :type => "time_off",
-                :name => category_name,
-                :start_time => "05:00:00",
-                :end_time => "19:00:00",
+                type: "time_off_pending",
+                name: category_name,
+                start_time: "05:00:00",
+                end_time: "19:00:00",
               },
             ],
           }
@@ -40,18 +40,18 @@ RSpec.describe TimeOffAsTimeEntriesForRange, type: :service do
           {
             "2016-01-01" => [
               {
-                :type => "time_off",
-                :name => category_name,
-                :start_time => "05:00:00",
-                :end_time => "24:00:00",
+                type: "time_off_pending",
+                name: category_name,
+                start_time: "05:00:00",
+                end_time: "24:00:00",
               },
             ],
             "2016-01-02" => [
               {
-                :type => "time_off",
-                :name => category_name,
-                :start_time => "00:00:00",
-                :end_time => "24:00:00",
+                type: "time_off_pending",
+                name: category_name,
+                start_time: "00:00:00",
+                end_time: "24:00:00",
               },
             ],
           }
@@ -68,26 +68,26 @@ RSpec.describe TimeOffAsTimeEntriesForRange, type: :service do
           {
             "2016-01-03" => [
               {
-                :type => "time_off",
-                :name => category_name,
-                :start_time => "00:00:00",
-                :end_time => "12:00:00",
+                type: "time_off_pending",
+                name: category_name,
+                start_time: "00:00:00",
+                end_time: "12:00:00",
               },
             ],
             "2016-01-01" => [
               {
-                :start_time => "05:00:00",
-                :end_time => "24:00:00",
-                :type => "time_off",
-                :name => category_name,
+                start_time: "05:00:00",
+                end_time: "24:00:00",
+                type: "time_off_pending",
+                name: category_name,
               },
             ],
             "2016-01-02" => [
               {
-                :start_time => "00:00:00",
-                :end_time => "24:00:00",
-                :type => "time_off",
-                :name => category_name,
+                start_time: "00:00:00",
+                end_time: "24:00:00",
+                type: "time_off_pending",
+                name: category_name,
               },
             ],
           }
@@ -110,10 +110,10 @@ RSpec.describe TimeOffAsTimeEntriesForRange, type: :service do
               employee_id =>
                 [
                   {
-                    :type => "time_off",
-                    :name => category_name,
-                    :start_time => "05:00:00",
-                    :end_time => "19:00:00",
+                    type: "time_off_pending",
+                    name: category_name,
+                    start_time: "05:00:00",
+                    end_time: "19:00:00",
                   },
                 ],
             },
@@ -133,10 +133,10 @@ RSpec.describe TimeOffAsTimeEntriesForRange, type: :service do
               employee_id =>
                 [
                   {
-                    :type => "time_off",
-                    :name => category_name,
-                    :start_time => "05:00:00",
-                    :end_time => "24:00:00",
+                    type: "time_off_pending",
+                    name: category_name,
+                    start_time: "05:00:00",
+                    end_time: "24:00:00",
                   },
                 ],
             },
@@ -144,10 +144,10 @@ RSpec.describe TimeOffAsTimeEntriesForRange, type: :service do
               employee_id =>
                 [
                   {
-                    :type => "time_off",
-                    :name => category_name,
-                    :start_time => "00:00:00",
-                    :end_time => "24:00:00",
+                    type: "time_off_pending",
+                    name: category_name,
+                    start_time: "00:00:00",
+                    end_time: "24:00:00",
                   },
                 ],
             },
@@ -167,10 +167,10 @@ RSpec.describe TimeOffAsTimeEntriesForRange, type: :service do
               employee_id =>
                 [
                   {
-                    :type => "time_off",
-                    :name => category_name,
-                    :start_time => "05:00:00",
-                    :end_time => "24:00:00",
+                    type: "time_off_pending",
+                    name: category_name,
+                    start_time: "05:00:00",
+                    end_time: "24:00:00",
                   },
                 ],
             },
@@ -178,10 +178,10 @@ RSpec.describe TimeOffAsTimeEntriesForRange, type: :service do
               employee_id =>
                 [
                   {
-                    :type => "time_off",
-                    :name => category_name,
-                    :start_time => "00:00:00",
-                    :end_time => "24:00:00",
+                    type: "time_off_pending",
+                    name: category_name,
+                    start_time: "00:00:00",
+                    end_time: "24:00:00",
                   },
                 ],
             },
@@ -189,10 +189,10 @@ RSpec.describe TimeOffAsTimeEntriesForRange, type: :service do
               employee_id =>
                 [
                   {
-                    :type => "time_off",
-                    :name => category_name,
-                    :start_time => "00:00:00",
-                    :end_time => "12:00:00",
+                    type: "time_off_pending",
+                    name: category_name,
+                    start_time: "00:00:00",
+                    end_time: "12:00:00",
                   },
                 ],
             },

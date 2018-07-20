@@ -11,7 +11,6 @@ module TimeOffsSchemas
       required(:employee).schema do
         required(:id).filled(:str?)
       end
-      optional(:manual_amount).filled(:int?)
     end
   end
 
@@ -19,7 +18,6 @@ module TimeOffsSchemas
     Dry::Validation.Form do
       required(:start_time).filled
       required(:end_time).filled
-      optional(:manual_amount).filled(:int?)
     end
   end
 end

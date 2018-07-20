@@ -17,47 +17,54 @@ module API
       def create
         convert_times_to_utc
         verified_dry_params(dry_validation_schema) do |attributes|
-          resource = resources.new(time_off_attributes(attributes.except(:manual_amount)))
+          resource = TimeOff.new(time_off_attributes(attributes))
           authorize! :create, resource
-          transactions do
-            resource.save! && create_new_employee_balance(resource)
+          ::TimeOffs::Create.call(
+            time_off_attributes(attributes), is_manager: can?(:approve, resource)
+          ) do |create|
+            create.add_observers(internal_dispatcher, email_dispatcher)
+            create.on(:success) do |time_off|
+              render_resource(time_off, status: :created)
+            end
           end
-          render_resource(resource, status: :created)
         end
       end
 
       def update
         convert_times_to_utc
         verified_dry_params(dry_validation_schema) do |attributes|
-          previous_start_time = resource.start_time
-          attributes_for_balance = balance_attributes(attributes, previous_start_time)
-
-          transactions do
-            resource.update!(attributes.except(:manual_amount))
-            prepare_balances_to_update(resource.employee_balance, attributes_for_balance)
+          authorize! :update, resource
+          update_scenario.call(resource, attributes) do |update|
+            update.add_observers(
+              internal_dispatcher, email_dispatcher, clear_notifications_observer
+            )
+            update.on(:success) { render_no_content }
           end
-
-          update_balances_job(resource.employee_balance.id, attributes_for_balance)
-          render_no_content
         end
       end
 
       def destroy
-        transactions do
-          DestroyEmployeeBalance.new(resource.employee_balance).call
-          resource.destroy!
+        ::TimeOffs::Destroy.call(resource) do |destroy|
+          destroy.on(:success) { render_no_content }
         end
-        render_no_content
       end
 
       private
 
+      def update_scenario
+        can?(:approve, resource) ? ::TimeOffs::Update : ::TimeOffs::Resubmit
+      end
+
       def time_off_category
-        @time_off_category ||= Account.current.time_off_categories.find(time_off_category_params)
+        @time_off_category ||= Account.current.time_off_categories.find(time_off_category_id)
+      end
+
+      def time_off_category_id
+        params[:time_off_category_id] || params[:time_off_category][:id]
       end
 
       def employee
-        @employee ||= Account.current.employees.find(employee_params)
+        @employee ||= Account.current.employees.find(params[:employee][:id])
       end
 
       def resource
@@ -70,45 +77,14 @@ module API
         time_off_category.time_offs.where(employee: current_user.employee)
       end
 
-      def employee_params
-        params[:employee_id] ? params[:employee_id] : params[:employee][:id]
-      end
-
-      def time_off_category_params
-        return params[:time_off_category][:id] unless params[:time_off_category_id]
-        params[:time_off_category_id]
-      end
-
       def time_off_attributes(attributes)
-        attributes.tap do |attr|
-          attr.delete(:employee)
-          attr.delete(:time_off_category)
-        end.merge(employee: employee, being_processed: true)
-      end
-
-      def create_new_employee_balance(resource)
-        CreateEmployeeBalance.new(
-          resource.time_off_category_id,
-          resource.employee_id,
-          Account.current.id,
-          time_off_id: resource.id,
-          balance_type: "time_off",
-          resource_amount: resource.balance,
-          manual_amount: params[:manual_amount] || 0,
-          effective_at: resource.end_time
-        ).call
+        attributes
+          .except(:employee, :time_off_category)
+          .merge(employee: employee, being_processed: true, time_off_category: time_off_category)
       end
 
       def resource_representer
-        ::Api::V1::TimeOffsRepresenter
-      end
-
-      def balance_attributes(verified_params = {}, previous_start_time = nil)
-        {
-          manual_amount: verified_params[:manual_amount] ? verified_params[:manual_amount] : 0,
-          resource_amount: resource.balance,
-          effective_at: find_effective_at(previous_start_time).to_s,
-        }
+        ::Api::V1::TimeOffRepresenter
       end
 
       def convert_times_to_utc
@@ -117,9 +93,8 @@ module API
         params[:end_time] = params.delete(:end_time) + "+00:00"
       end
 
-      def find_effective_at(previous_start_time)
-        previous_start_time if previous_start_time && previous_start_time < resource.start_time
-        resource.start_time
+      def clear_notifications_observer
+        ::ClearNotificationsObserver.new
       end
     end
   end

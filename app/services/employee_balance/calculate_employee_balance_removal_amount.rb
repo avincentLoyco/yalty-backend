@@ -21,9 +21,7 @@ class CalculateEmployeeBalanceRemovalAmount
   attr_reader :removal, :additions, :amount_to_expire, :first_addition
 
   def calculate_amount_for_counter
-    previous_balance =
-      RelativeEmployeeBalancesFinder.new(removal).previous_balances.last.try(:balance).to_i
-    0 - previous_balance.to_i
+    - RelativeEmployeeBalancesFinder.new(removal).previous_balances.last.try(:balance).to_i
   end
 
   def calculate_amount_for_balancer

@@ -1,13 +1,15 @@
 class DestroyEmployeeBalance
   attr_reader :balances, :update, :removals
 
-  def initialize(balance, update = true)
+  method_object :balance, [:update]
+
+  def initialize(balance, update: true)
     @balances = balance.respond_to?(:map) ? balance : [balance]
     @update = update
   end
 
   def call
-    return unless balances.present?
+    return unless balances.any?
     @removals = balances.map(&:balance_credit_removal).uniq.compact
     balances.map(&:destroy!)
     destroy_removals

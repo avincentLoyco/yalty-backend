@@ -489,9 +489,7 @@ Metrics/BlockLength:
 # Offense count: 27
 # Configuration parameters: CountComments.
 Metrics/ClassLength:
-  Max: 236
-  Exclude:
-    - "app/models/account.rb"
+  Max: 500
 
 # Offense count: 19
 Metrics/CyclomaticComplexity:

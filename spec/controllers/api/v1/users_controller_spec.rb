@@ -185,9 +185,9 @@ RSpec.describe API::V1::UsersController, type: :controller do
       end
 
       context "when locale is set" do
-        let(:user) { create(:account_user, account: account, locale: "en") }
+        let(:user) { create(:account_user, account: account, locale: "fr") }
 
-        it { expect_json(locale: "en") }
+        it { expect_json(locale: "fr") }
       end
 
       context "when balance_in_hours is true" do
@@ -209,7 +209,7 @@ RSpec.describe API::V1::UsersController, type: :controller do
     let(:email) { "test123@example.com" }
     let(:role) { user.role }
     let(:balance_in_hours) { true }
-    let(:locale) { "en" }
+    let(:locale) { "fr" }
     let(:params) do
       {
         id: user.id,
@@ -383,7 +383,7 @@ RSpec.describe API::V1::UsersController, type: :controller do
       end
 
       describe "when authorized attributes change" do
-        let(:locale) { "en" }
+        let(:locale) { "fr" }
 
         it { is_expected.to have_http_status(204) }
         it { expect { subject }.to change { user.reload.locale } }

@@ -227,7 +227,10 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
               end_time: ends, start_time: ends, employee: employee, time_off_category: category)
           end
         end
-        let!(:balances) { TimeOff.all.map(&:employee_balance).sort_by { |b| b[:effective_at] } }
+        let!(:balances) do
+          TimeOff.all.map {|time_off| TimeOffs::Approve.call(time_off) }
+          TimeOff.all.map(&:employee_balance).sort_by { |b| b[:effective_at] }
+        end
 
         context "when there is contract end date" do
           before do
@@ -484,7 +487,10 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
               end_time: ends, start_time: ends, employee: employee, time_off_category: category)
           end
         end
-        let!(:balances) { TimeOff.all.map(&:employee_balance).sort_by { |b| b[:effective_at] } }
+        let!(:balances) do
+          TimeOff.all.map {|time_off| TimeOffs::Approve.call(time_off) }
+          TimeOff.all.map(&:employee_balance).sort_by { |b| b[:effective_at] }
+        end
         before do
           new_employee_working_place.working_place.update!(holiday_policy: holiday_policy)
         end
@@ -830,7 +836,10 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
               end_time: ends, start_time: ends, employee: employee, time_off_category: category)
           end
         end
-        let!(:balances) { TimeOff.all.map(&:employee_balance) }
+        let!(:balances) do
+          TimeOff.all.map {|time_off| TimeOffs::Approve.call(time_off) }
+          TimeOff.all.map(&:employee_balance)
+        end
 
         context "when employee working place effective at is one day after contract end" do
           let(:contract_end_date) { Time.now }

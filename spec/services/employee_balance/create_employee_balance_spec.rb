@@ -189,7 +189,7 @@ RSpec.describe CreateEmployeeBalance, type: :service, jobs: true do
         let(:options) {{ time_off_id: time_off.id }}
         let(:amount) { time_off.balance }
         let(:time_off) do
-          create(:time_off, :without_balance, employee: employee, time_off_category: category)
+          create(:time_off, employee: employee, time_off_category: category)
         end
 
         it { expect { subject }.to change { Employee::Balance.count }.by(1) }
@@ -295,7 +295,9 @@ RSpec.describe CreateEmployeeBalance, type: :service, jobs: true do
             employee: employee, effective_at: 1.year.ago)
           create(:time_off,
             start_time: contract_end - 1.week, end_time: contract_end - 2.days,
-            employee: employee, time_off_category: category)
+            employee: employee, time_off_category: category
+          )
+          TimeOffs::Approve.call(TimeOff.first)
           subject
         end
 

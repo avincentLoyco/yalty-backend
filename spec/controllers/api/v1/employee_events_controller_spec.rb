@@ -288,6 +288,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           time_off_policy_amount: 9600,
           employee: {
             type: "employee",
+            manager_id: manager_id,
           },
           employee_attributes: [
             {
@@ -305,6 +306,8 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           ],
         }
       end
+
+      let(:manager_id) { nil }
 
       it_behaves_like "Invalid Authorization"
 
@@ -440,6 +443,17 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
             expect(response.body).to include "value not allowed"
           end
+        end
+      end
+
+      context "when manager_id sent" do
+        let(:manager) { create(:account_user, account: employee.account) }
+        let(:manager_id) { manager.id }
+        let(:new_employee) { default_presence.account.employees.order(created_at: :desc).first }
+
+        it "sets manager" do
+          subject
+          expect(new_employee.manager).to eq manager
         end
       end
 
@@ -1064,6 +1078,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         event_type: "hired",
         employee: {
           id: employee_id,
+          manager_id: manager_id,
           type: "employee",
         },
         presence_policy_id: presence_policy.id,
@@ -1101,6 +1116,8 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     let(:first_name) { "Walter" }
     let(:last_name) { "Smith" }
     let(:annual_salary) { "300" }
+
+    let(:manager_id) { nil }
 
     context "with change in all fields and added occupation rate" do
       it { expect { subject }.to_not change { Employee::Event.count } }
@@ -1705,6 +1722,15 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         it "doesn't update event attributes" do
           expect { subject }.not_to change { adjustment_event.reload.attribute_values }
         end
+      end
+    end
+
+    context "when updating manager" do
+      let(:manager) { create(:account_user, account: employee.account) }
+      let(:manager_id) { manager.id }
+
+      it "updates manager" do
+        expect { subject }.to change { employee.reload.manager }.to manager
       end
     end
   end

@@ -16,7 +16,7 @@ RSpec.describe CalculateTimeOffBalance, type: :service do
     )
   end
   let(:time_off) do
-    create(:time_off, :without_balance,
+    create(:time_off,
       employee: employee, time_off_category: category, start_time: start_time, end_time: end_time
     )
   end

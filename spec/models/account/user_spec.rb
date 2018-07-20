@@ -30,6 +30,7 @@ RSpec.describe Account::User, type: :model do
   it { is_expected.to have_one(:employee) }
   it { is_expected.to validate_presence_of(:employee) }
 
+  it { is_expected.to have_many(:notifications) }
 
   context "on account creation (account owner)" do
     subject { build(:account_user, role: "account_owner") }

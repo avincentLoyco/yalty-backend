@@ -46,6 +46,7 @@ class Account < ActiveRecord::Base
   has_many :company_events, dependent: :destroy
   belongs_to :referrer, primary_key: :token, foreign_key: :referred_by
   has_one :archive_file, as: :fileable, class_name: "GenericFile"
+  has_many :managers, -> { joins(:employee) }, class_name: "Account::User"
 
   scope :with_yalty_access, lambda {
     joins("INNER JOIN account_users ON account_users.account_id = accounts.id")

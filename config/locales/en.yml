@@ -133,6 +133,13 @@ en:
   export_mailer:
     archive_generation:
       subject: "%{company_name}: Your archive is ready to download!"
+  notification_mailer:
+    time_off_approved:
+      subject: Time-off accepted
+    time_off_declined:
+      subject: Time-off declined
+    time_off_request:
+      subject: Time-off requested
   date:
     formats:
       default: "%d %B %Y"
@@ -197,3 +204,11 @@ en:
     action_create: 'created'
     action_update: 'updated'
     action_destroy: 'destroyed'
+  content:
+    time_off_categories:
+      sickness: Sickness
+      vacation: Vacation
+      accident: Accident
+      maternity: Maternity
+      civil_service: Military / Civil Service
+      other: Other

@@ -4,12 +4,16 @@ require "rake"
 RSpec.describe "remove_original_files", type: :rake do
   include_context "rake"
 
+  after { FileUtils.rm_rf(ENV["FILE_STORAGE_UPLOAD_PATH"]) }
+
+  let(:env_subpath) { ENV["TEST_ENV_NUMBER"] || "1" }
+
   let(:file_path)     { ENV["FILE_STORAGE_UPLOAD_PATH"]}
-  let(:original_path) { file_path + "/file_id_#{ENV["TEST_ENV_NUMBER"]}/original" }
-  let(:second_path)   { file_path + "/file_id2_#{ENV["TEST_ENV_NUMBER"]}/original" }
-  let(:file)          { original_path + "/file_file_id_#{ENV["TEST_ENV_NUMBER"]}.txt" }
+  let(:original_path) { file_path + "/file_id_#{env_subpath}/original" }
+  let(:second_path)   { file_path + "/file_id2_#{env_subpath}/original" }
+  let(:file)          { original_path + "/file_file_id_#{env_subpath}.txt" }
   let(:original_file) { original_path + "/original.txt" }
-  let(:second_file)   { second_path + "/file_file_id2_#{ENV["TEST_ENV_NUMBER"]}.txt" }
+  let(:second_file)   { second_path + "/file_file_id2_#{env_subpath}.txt" }
 
   context "with multiple folders and files" do
     before do
@@ -36,7 +40,7 @@ RSpec.describe "remove_original_files", type: :rake do
   end
 
   context "when orginal folder does not exist" do
-    let(:not_original_path) { file_path + "/file_id_#{ENV["TEST_ENV_NUMBER"]}/not_original"}
+    let(:not_original_path) { file_path + "/file_id_#{env_subpath}/not_original"}
     before do
       FileUtils.mkdir_p(not_original_path)
       FileUtils.touch(not_original_path + "/file.txt")

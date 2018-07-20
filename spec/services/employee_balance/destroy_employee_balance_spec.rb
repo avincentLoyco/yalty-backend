@@ -8,7 +8,7 @@ RSpec.describe DestroyEmployeeBalance, type: :service do
     create_list(:employee_balance, 3, employee: employee, time_off_category: category)
   end
 
-  subject { DestroyEmployeeBalance.new(balance, update).call }
+  subject { DestroyEmployeeBalance.new(balance, update: update).call }
 
   shared_examples "Dependent balances update" do
     let(:balances_to_update) { balances - [balance].flatten }

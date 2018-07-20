@@ -193,11 +193,16 @@ RSpec.describe Employee::Balance, type: :model do
             let(:end_time) { (employee.contract_end_for(Date.today) + 1.day).beginning_of_day }
             let(:time_off) do
               create(:time_off,
-                employee: employee, time_off_category: time_off_category,
-                start_time: end_time - 1.day, end_time: end_time)
+                employee: employee,
+                time_off_category: time_off_category,
+                start_time: end_time - 1.day,
+                end_time: end_time
+              ) do |time_off|
+                TimeOffs::Approve.call(time_off)
+              end
             end
 
-            subject { time_off.employee_balance }
+            subject { time_off.reload.employee_balance }
 
             context "with valid effective_at" do
               it { expect(subject).to be_valid }
@@ -489,11 +494,20 @@ RSpec.describe Employee::Balance, type: :model do
       end
 
       let(:time_off) do
-        create(:time_off, employee: employee, time_off_category: time_off_category,
-          start_time: time_off_start, end_time: time_off_end)
+        create(:time_off,
+          employee: employee,
+          time_off_category: time_off_category,
+          start_time: time_off_start,
+          end_time: time_off_end
+        ) do |time_off|
+          TimeOffs::Approve.call(time_off)
+          time_off.reload
+        end
       end
 
-      let(:time_off_balance) { time_off.employee_balance }
+      let(:time_off_balance) do
+        time_off.employee_balance
+      end
 
       around(:each) do |example|
         travel_to Date.new(2015, 1, 15) do

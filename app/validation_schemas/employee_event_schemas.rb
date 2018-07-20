@@ -8,6 +8,7 @@ module EmployeeEventSchemas
       optional(:time_off_policy_amount).filled(:int?)
       required(:employee).schema do
         optional(:id).filled(:str?)
+        optional(:manager_id).maybe(:str?)
       end
       optional(:presence_policy_id).filled(:str?)
       optional(:employee_attributes).maybe do
@@ -28,6 +29,7 @@ module EmployeeEventSchemas
       optional(:time_off_policy_amount).filled(:int?)
       required(:employee).schema do
         required(:id).filled(:str?)
+        optional(:manager_id).maybe(:str?)
       end
       optional(:presence_policy_id).filled(:str?)
       optional(:employee_attributes).maybe do

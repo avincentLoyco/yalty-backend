@@ -25,9 +25,10 @@ module API
       end
 
       def update
-        authorize! :create, editable_resource
+        authorize! :create, resource
         verified_dry_params(dry_validation_schema) do |attributes|
-          editable_resource.update!(attributes)
+          attributes.delete(:name) if resource.system?
+          resource.update!(attributes)
           render_no_content
         end
       end

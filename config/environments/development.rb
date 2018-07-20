@@ -27,4 +27,7 @@ Rails.application.configure do
 
   # Preview email in the browser instead of sending.
   config.action_mailer.delivery_method = :letter_opener
+
+  # Email preview folder
+  config.action_mailer.preview_path = "#{Rails.root}/spec/mailers/previews"
 end

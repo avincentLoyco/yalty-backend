@@ -16,6 +16,7 @@ class Employee < ActiveRecord::Base
     class_name: "Account::User",
     foreign_key: :account_user_id,
     inverse_of: :employee
+  belongs_to :manager, class_name: "Account::User"
   has_many :employee_attribute_versions,
     class_name: "Employee::AttributeVersion",
     inverse_of: :employee

@@ -108,7 +108,7 @@ RSpec.describe ScheduleForEmployee, type: :service do
                 date: "2015-12-26",
                 time_entries: [
                   {
-                    type: "time_off",
+                    type: "time_off_pending",
                     name: time_offs.first.time_off_category.name,
                     start_time: "12:00:00",
                     end_time: "24:00:00",
@@ -124,7 +124,7 @@ RSpec.describe ScheduleForEmployee, type: :service do
                 comment: nil,
                 time_entries: [
                   {
-                    type: "time_off",
+                    type: "time_off_pending",
                     name: time_offs.first.time_off_category.name,
                     start_time: "05:00:00",
                     end_time: "10:00:00",
@@ -171,13 +171,13 @@ RSpec.describe ScheduleForEmployee, type: :service do
                 date: "2015-12-30",
                 time_entries: [
                   {
-                    type: "time_off",
+                    type: "time_off_pending",
                     name: time_offs.first.time_off_category.name,
                     start_time: "00:00:00",
                     end_time: "02:00:00",
                   },
                   {
-                    type: "time_off",
+                    type: "time_off_pending",
                     name: time_offs.first.time_off_category.name,
                     start_time: "05:00:00",
                     end_time: "07:00:00",
@@ -188,7 +188,7 @@ RSpec.describe ScheduleForEmployee, type: :service do
                     end_time: "03:00:00",
                   },
                   {
-                    type: "time_off",
+                    type: "time_off_pending",
                     name: time_offs.first.time_off_category.name,
                     start_time: "03:00:00",
                     end_time: "04:00:00",
@@ -212,16 +212,33 @@ RSpec.describe ScheduleForEmployee, type: :service do
 
       context "when there are time offs after already processed time entry" do
         let(:start_date) { Date.new(2015, 12, 29) }
-        let(:end_date) { Date.new(2015, 12, 29) }
-        let!(:time_offs) do
-          time = Time.now + 1.day
-          time_offs_dates =
-            [
-              [time + 5.hours, time + 6.hours],
-              [time + 7.hours, time + 10.hours],
-            ]
-          time_offs_dates.map do |start_time, end_time|
-             create(:time_off, employee: employee, start_time: start_time, end_time: end_time)
+        let(:end_date)   { Date.new(2015, 12, 29) }
+        let(:time)       { Time.now + 1.day }
+        let!(:pending_time_off) do
+          create(
+            :time_off,
+            employee: employee,
+            start_time: time + 1.hour,
+            end_time: time + 2.hours
+          )
+        end
+
+        let(:time_off_params) do
+          {
+            employee: employee,
+            start_time: time + 7.hour,
+            end_time: time + 10.hours,
+            approval_status: "approved",
+          }
+        end
+
+        let!(:approved_time_off) do
+          # enable status change temporarily for factory to build
+          TimeOff.aasm(:approval_status).state_machine.config.no_direct_assignment = false
+
+          create(:time_off, time_off_params) do
+            # and disable again
+            TimeOff.aasm(:approval_status).state_machine.config.no_direct_assignment = true
           end
         end
 
@@ -232,21 +249,21 @@ RSpec.describe ScheduleForEmployee, type: :service do
                  date: "2015-12-29",
                  time_entries: [
                    {
-                     type: "time_off",
-                     name: time_offs.first.time_off_category.name,
-                     start_time: "05:00:00",
-                     end_time: "06:00:00",
+                     type: "time_off_pending",
+                     name: pending_time_off.time_off_category.name,
+                     start_time: "01:00:00",
+                     end_time: "02:00:00",
                    },
                    {
                      type: "time_off",
-                     name: time_offs.first.time_off_category.name,
+                     name: approved_time_off.time_off_category.name,
                      start_time: "07:00:00",
                      end_time: "10:00:00",
                    },
                    {
                      type: "working_time",
-                     start_time: "01:00:00",
-                     end_time: "05:00:00",
+                     start_time: "02:00:00",
+                     end_time: "06:00:00",
                    },
                  ],
                },
@@ -272,7 +289,7 @@ RSpec.describe ScheduleForEmployee, type: :service do
                 date: "2016-01-04",
                 time_entries: [
                   {
-                    type: "time_off",
+                    type: "time_off_pending",
                     name: time_off.time_off_category.name,
                     start_time: "00:00:00",
                     end_time: "24:00:00",
@@ -283,7 +300,7 @@ RSpec.describe ScheduleForEmployee, type: :service do
                 date: "2016-01-05",
                 time_entries: [
                   {
-                    type: "time_off",
+                    type: "time_off_pending",
                     name: time_off.time_off_category.name,
                     start_time: "00:00:00",
                     end_time: "24:00:00",
@@ -321,13 +338,13 @@ RSpec.describe ScheduleForEmployee, type: :service do
                  date: "2015-12-29",
                  time_entries: [
                    {
-                     type: "time_off",
+                     type: "time_off_pending",
                      name: time_offs.first.time_off_category.name,
                      start_time: "01:00:00",
                      end_time: "02:00:00",
                    },
                    {
-                     type: "time_off",
+                     type: "time_off_pending",
                      name: time_offs.first.time_off_category.name,
                      start_time: "07:00:00",
                      end_time: "10:00:00",

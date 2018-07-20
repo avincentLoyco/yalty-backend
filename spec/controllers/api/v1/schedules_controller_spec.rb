@@ -129,7 +129,7 @@ RSpec.describe API::V1::SchedulesController , type: :controller do
               "date" => "2015-12-27",
               "time_entries" => [
                 {
-                  "type" => "time_off",
+                  "type" => "time_off_pending",
                   "name" => time_off.time_off_category.name,
                   "start_time" => "03:00:00",
                   "end_time" => "05:00:00",
@@ -148,6 +148,74 @@ RSpec.describe API::V1::SchedulesController , type: :controller do
             },
           ]
         )
+      end
+
+      context "with approved time_off" do
+        let(:time_off_params) do
+          {
+            employee: employee,
+            start_time: Time.now - 5.days + 3.hours,
+            end_time: Time.now - 5.days + 5.hours,
+            approval_status: "approved",
+          }
+        end
+
+        let!(:time_off) do
+          # enable status change temporarily for factory to build
+          TimeOff.aasm(:approval_status).state_machine.config.no_direct_assignment = false
+
+          create(:time_off, time_off_params) do
+            # and disable again
+            TimeOff.aasm(:approval_status).state_machine.config.no_direct_assignment = true
+          end
+        end
+
+        it "should have valid response body" do
+          subject
+          expect(JSON.parse(response.body)).to eq(
+            [
+              {
+                "date" => "2015-12-25",
+                "time_entries" => [
+                  {
+                    "type" => "holiday",
+                    "name" => "christmas",
+                  },
+                ],
+              },
+              {
+                "date" => "2015-12-26",
+                "time_entries" => [
+                  {
+                    "type" => "holiday",
+                    "name" => "st_stephens_day",
+                  },
+                ],
+              },
+              {
+                "date" => "2015-12-27",
+                "time_entries" => [
+                  {
+                    "type" => "time_off",
+                    "name" => time_off.time_off_category.name,
+                    "start_time" => "03:00:00",
+                    "end_time" => "05:00:00",
+                  },
+                  {
+                    "type" => "working_time",
+                    "start_time" => "01:00:00",
+                    "end_time" => "03:00:00",
+                  },
+                  {
+                    "type" => "working_time",
+                    "start_time" => "05:00:00",
+                    "end_time" => "24:00:00",
+                  },
+                ],
+              },
+            ]
+          )
+        end
       end
 
       context "when account user is not account manager but he has employee with given id" do

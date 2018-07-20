@@ -1,14 +1,18 @@
 class TimeOff < ActiveRecord::Base
   include ActsAsIntercomTrigger
+  include AASM
 
   belongs_to :employee
   belongs_to :time_off_category
   has_one :employee_balance, class_name: "Employee::Balance"
 
+  delegate :auto_approved?, to: :time_off_category
+
+  delegate :manager, to: :employee, allow_nil: true
+
   validates :employee_id, :time_off_category_id, :start_time, :end_time, presence: true
   validate :end_time_after_start_time
   validate :time_off_policy_presence, if: "employee.present?"
-  validates :employee_balance, presence: true, on: :update
   validate :does_not_overlap_with_other_users_time_offs, if: [:employee, :time_off_category_id]
   validate :does_not_overlap_with_registered_working_times, if: [:employee]
   validate :start_and_end_time_in_employee_periods, if: [:employee, :end_time, :start_time]
@@ -27,6 +31,8 @@ class TimeOff < ActiveRecord::Base
   scope(:not_vacations, lambda do
     joins(:time_off_category).where.not(time_off_categories: { name: "vacation" })
   end)
+
+  scope :not_declined, -> { where.not(approval_status: TimeOff.approval_statuses.fetch(:declined)) }
 
   scope(:for_employee_in_period, lambda do |employee_id, start_date, end_date|
     for_employee(employee_id)
@@ -54,7 +60,23 @@ class TimeOff < ActiveRecord::Base
 
   scope :in_category, ->(category_id) { where(time_off_category_id: category_id) }
 
+  enum approval_status: { pending: 0, approved: 1, declined: 2 }
+
+  aasm :approval_status, enum: true, no_direct_assignment: true, skip_validation_on_save: true do
+    state :pending, initial: true
+    state :declined, :approved
+
+    event :approve do
+      transitions from: [:pending, :declined], to: :approved
+    end
+
+    event :decline do
+      transitions from: [:approved, :pending], to: :declined
+    end
+  end
+
   def balance(starts = start_time, ends = end_time)
+    return 0 unless approved?
     - CalculateTimeOffBalance.new(self, starts, ends).call
   end
 
@@ -171,6 +193,7 @@ class TimeOff < ActiveRecord::Base
     employee_time_offs_in_period =
       employee
       .time_offs
+      .not_declined
       .where(
         '((start_time >= ? AND start_time < ?) OR (end_time > ? AND end_time <= ?))
          OR (start_time <= ? AND end_time >= ?)',

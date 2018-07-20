@@ -20,6 +20,7 @@ class UpdateEvent
     ActiveRecord::Base.transaction do
       find_and_update_event
       find_employee
+      assign_manager
       update_employee_join_tables
       manage_versions
       save!
@@ -29,6 +30,11 @@ class UpdateEvent
   end
 
   private
+
+  def assign_manager
+    return unless employee_params.key?(:manager_id)
+    AssignManager.call(employee: @employee, manager_id: employee_params[:manager_id])
+  end
 
   def handle_hired_or_work_contract_event
     return unless event.event_type.in?(%w(hired work_contract))

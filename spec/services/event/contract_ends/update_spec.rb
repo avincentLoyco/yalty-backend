@@ -16,9 +16,9 @@ RSpec.describe ContractEnds::Update, :service do
     allow(DeleteTypeInPeriod).to receive(:call).and_return([])
     allow(EmployeePolicy::DeleteInPeriod).to receive(:call).and_return([])
     allow(TimeOffs::DeleteInPeriod).to receive(:call).and_return([])
-    allow(AssignResetJoinTable).to receive_message_chain(:new, :call)           { [] }
-    allow(AssignResetEmployeeBalance).to receive_message_chain(:new, :call)     { [] }
-    allow(ManageEmployeeBalanceAdditions).to receive_message_chain(:new, :call) { [] }
+    allow_any_instance_of(AssignResetJoinTable).to receive(:call) { [] }
+    allow_any_instance_of(AssignResetEmployeeBalance).to receive(:call) { [] }
+    allow_any_instance_of(ManageEmployeeBalanceAdditions).to receive(:call) { [] }
   end
 
   subject(:update_contract_end) do
@@ -82,6 +82,8 @@ RSpec.describe ContractEnds::Update, :service do
                start_time: dates[0], end_time: dates[1]
         )
       end
+
+      TimeOffs::Approve.call(last_time_off)
     end
 
     let(:start_time) { "2016/2/20" }
