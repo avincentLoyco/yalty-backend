@@ -93,7 +93,8 @@ RSpec.describe ContractEnds::Update, :service do
     let(:first_time_off) { employee.time_offs.order(:start_time).first }
 
     it "moves time off end time at contract end" do
-      expect { update_contract_end }.to change { last_time_off.reload.end_time }
+      expect { update_contract_end }
+        .to change { last_time_off.reload.end_time.to_date }.to(new_contract_end_date)
     end
 
     it "leaves time off before contract end unchanged" do

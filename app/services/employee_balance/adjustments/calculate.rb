@@ -64,7 +64,7 @@ class Adjustments::Calculate
   end
 
   def previous_etop
-    all_vacation_etops.last
+    all_vacation_etops.sort_by(&:effective_at).last
   end
 
   # Maybe add method that looks through vacation or 'name' policies in ETOP model

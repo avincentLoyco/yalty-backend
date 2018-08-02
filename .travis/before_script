@@ -42,10 +42,10 @@ if ENV["DISABLE_DOCKER_IMAGE"] != "true" &&
     (
       (
         ENV["TRAVIS_PULL_REQUEST"] == "false" &&
-        (branch == "mater" || branch =~ %r{^releases?/\d+\.\d+\.\d+(?:\.\d+)?$}i)
+        (branch == "master" || branch =~ %r{^releases?/\d+\.\d+\.\d+(?:\.\d+)?$}i)
       ) || (
         ENV["TRAVIS_PULL_REQUEST"] != "false" &&
-        branch =~ %r{^(?:tasks?|features?|bugs?|fix(?:es)?)/.*?ywa-\d+}i
+        branch =~ %r{^(?:tasks?|features?|bugs?|fix(?:es)?)/.*?yw?a-\d+}i
       )
     )
 

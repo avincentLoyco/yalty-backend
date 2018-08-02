@@ -63,7 +63,7 @@ module ContractEnds
 
     def move_time_offs
       time_offs_to_move.map do |time_off|
-        TimeOffs::Update.call(time_off, end_time: unemployment_period.start_date + 1.day)
+        TimeOffs::Update.call(time_off, end_time: unemployment_period.start_date.end_of_day)
       end
     end
 

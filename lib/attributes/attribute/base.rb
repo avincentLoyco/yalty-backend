@@ -26,9 +26,9 @@ module Attribute
       except_type = attributes.except(:attribute_type, *optional_attributes)
       return if additional_validation.try(:[], "allow_nil").eql?(true) &&
           except_type.values.compact.empty?
-      return unless except_type.values.size != except_type.values.compact.size
+      return if except_type.values.all?(&:present?)
       except_type.each do |k, v|
-        errors.add(k, "can't be blank") unless v
+        errors.add(k, "can't be blank") unless v.present?
       end
     end
 
