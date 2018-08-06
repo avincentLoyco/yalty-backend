@@ -21,7 +21,11 @@ class NotificationMailer < ApplicationMailer
     time_off_category_name = @time_off.time_off_category.name
 
     I18n.with_locale(recipient.default_locale) do
-      @time_off_category = I18n.t time_off_category_name, scope: [:content, :time_off_categories]
+      @time_off_category = I18n.t(
+        time_off_category_name,
+        scope: [:content, :time_off_categories],
+        default: time_off_category_name.titleize
+      )
       mail to: recipient.email
     end
   end
