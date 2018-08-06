@@ -29,6 +29,7 @@ module Export
         FileUtils.mkdir_p(employee_dir_path)
 
         employee.files.each do |employee_file|
+          next unless File.exist?(employee_file.file.path)
           FileUtils.cp(employee_file.file.path, employee_dir_path)
         end
       end
