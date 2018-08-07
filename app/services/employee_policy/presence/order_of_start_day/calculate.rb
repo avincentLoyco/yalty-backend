@@ -8,7 +8,7 @@ module EmployeePolicy
       end
 
       def initialize(presence_policy_id, effective_at)
-        @presence_policy = Account.current.presence_policies.find(presence_policy_id)
+        @presence_policy = PresencePolicy.find(presence_policy_id)
         @effective_at    = effective_at
       end
 
