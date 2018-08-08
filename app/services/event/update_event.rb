@@ -42,7 +42,7 @@ class UpdateEvent
     validate_time_off_policy_days_presence
     validate_presence_policy_presence
 
-    default_full_time_policy = Account.current.presence_policies.full_time
+    default_full_time_policy = current_account.presence_policies.full_time
     time_off_policy_amount = time_off_policy_days * default_full_time_policy.standard_day_duration
 
     if presence_policy_id.eql?(event.employee_presence_policy&.presence_policy&.id)
@@ -53,7 +53,6 @@ class UpdateEvent
     end
 
     validate_matching_occupation_rate
-
     UpdateEtopForEvent.new(event.id, time_off_policy_amount, old_effective_at).call
   end
 
@@ -84,7 +83,7 @@ class UpdateEvent
   end
 
   def find_employee
-    @employee = Account.current.employees.find(employee_params[:id])
+    @employee = current_account.employees.find(employee_params[:id])
   end
 
   def find_and_update_event
@@ -137,7 +136,7 @@ class UpdateEvent
   end
 
   def definition_for(attribute)
-    Account.current.employee_attribute_definitions.find_by(name: attribute[:attribute_name])
+    current_account.employee_attribute_definitions.find_by(name: attribute[:attribute_name])
   end
 
   def unique_attribute_versions?
@@ -277,5 +276,9 @@ class UpdateEvent
 
   def event_occupation_rate
     event.attribute_value("occupation_rate").to_f
+  end
+
+  def current_account
+    @account ||= event.account
   end
 end
