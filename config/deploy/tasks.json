@@ -3,9 +3,6 @@
 
   ],
   "after_migration": [
-    {
-      "task_name": "employee_event:fix_time_off_balances",
-      "description": "Update balances after work contract event fix"
-    }
+
   ]
 }
