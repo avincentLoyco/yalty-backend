@@ -271,6 +271,10 @@ class Employee < ActiveRecord::Base
     created_at < MIGRATION_DATE
   end
 
+  def hired_at?(date)
+    contract_periods_include?(date)
+  end
+
   private
 
   def employee_file_ids

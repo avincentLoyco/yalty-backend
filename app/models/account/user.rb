@@ -70,6 +70,10 @@ class Account::User < ActiveRecord::Base
     locale || account&.default_locale
   end
 
+  def inactive?
+    employee_required? && (employee.nil? || !employee.hired_at?(Date.today))
+  end
+
   private
 
   def create_referrer
@@ -125,5 +129,9 @@ class Account::User < ActiveRecord::Base
       role.eql?("account_owner") && (
         account.nil? || account.recently_created? || changed.eql?(%w(password_digest))
       )
+  end
+
+  def employee_required?
+    !empty_employee_allowed
   end
 end

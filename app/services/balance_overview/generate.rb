@@ -29,11 +29,7 @@ module BalanceOverview
     end
 
     def period_class
-      employee_hired? ? Period : EmptyPeriod
-    end
-
-    def employee_hired?
-      employee.contract_periods_include?(date)
+      employee.hired_at?(date) ? Period : EmptyPeriod
     end
   end
 end
