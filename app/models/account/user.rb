@@ -123,9 +123,14 @@ class Account::User < ActiveRecord::Base
     false
   end
 
+  def single_owner?
+    role.eql?("account_owner") && account.users.where(role: "account_owner").count == 1
+  end
+
   def empty_employee_allowed
     role.eql?("yalty") ||
       changed.eql?(%w(reset_password_token)) ||
+      single_owner? ||
       role.eql?("account_owner") && (
         account.nil? || account.recently_created? || changed.eql?(%w(password_digest))
       )
