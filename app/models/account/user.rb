@@ -130,13 +130,12 @@ class Account::User < ActiveRecord::Base
   def empty_employee_allowed
     role.eql?("yalty") ||
       changed.eql?(%w(reset_password_token)) ||
-      single_owner? ||
       role.eql?("account_owner") && (
         account.nil? || account.recently_created? || changed.eql?(%w(password_digest))
       )
   end
 
   def employee_required?
-    !empty_employee_allowed
+    !(empty_employee_allowed || single_owner?)
   end
 end
