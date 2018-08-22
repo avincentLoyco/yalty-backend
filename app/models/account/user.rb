@@ -24,6 +24,8 @@ class Account::User < ActiveRecord::Base
   belongs_to :referrer, primary_key: :email, foreign_key: :email
   has_one :employee, inverse_of: :user, foreign_key: :account_user_id
 
+  scope :admins, -> { where(role: [:account_administrator, :account_owner]) }
+
   before_validation :generate_password, unless: :password_digest?, on: :create
   after_create :create_referrer
   before_destroy :check_if_last_owner

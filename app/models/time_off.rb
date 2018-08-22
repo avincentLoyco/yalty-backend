@@ -8,7 +8,7 @@ class TimeOff < ActiveRecord::Base
 
   delegate :auto_approved?, to: :time_off_category
 
-  delegate :manager, to: :employee, allow_nil: true
+  delegate :manager, :user, to: :employee, allow_nil: true
 
   validates :employee_id, :time_off_category_id, :start_time, :end_time, presence: true
   validate :end_time_after_start_time

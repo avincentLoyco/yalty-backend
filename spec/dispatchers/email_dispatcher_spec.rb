@@ -44,8 +44,8 @@ RSpec.describe EmailDispatcher do
       it { expect { send_notification }.to raise_error described_class::UnsupportedNotificationType}
     end
 
-    context "when recipient is not present" do
-      let(:recipient) { nil }
+    context "when recipients are not present" do
+      let(:recipient) { [] }
 
       it "doesn't call mailer" do
         expect(send_notification).to be_nil

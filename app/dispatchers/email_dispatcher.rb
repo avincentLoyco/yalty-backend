@@ -8,9 +8,9 @@ class EmailDispatcher
   end
 
   def update(notification_type:, resource:)
-    recipient = Notifications::Recipient.call(notification_type, resource)
-    return unless recipient
-    notification_mailer.public_send(notification_type, recipient, resource).deliver_later
+    recipients = Notifications::Recipient.call(notification_type, resource)
+    return if recipients.empty?
+    notification_mailer.public_send(notification_type, recipients, resource).deliver_later
   rescue NoMethodError
     raise UnsupportedNotificationType, "notification #{notification_type} is not supported"
   end
