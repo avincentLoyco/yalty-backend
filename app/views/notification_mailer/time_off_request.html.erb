@@ -5,7 +5,8 @@ from <%= I18n.l(@time_off.start_time, format: :long) %>
 to <%= I18n.l(@time_off.end_time, format: :long) %>.
 <br/>
 <br/>
-Please connect you to Yalty to respond: <%= @client_url %>
+Please connect you to Yalty to respond:
+<%= link_to @client_url, @client_url %>
 <br/>
 Thanks in advance.
 <br/>
