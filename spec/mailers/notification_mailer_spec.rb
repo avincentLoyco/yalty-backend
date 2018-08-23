@@ -34,7 +34,7 @@ RSpec.describe NotificationMailer, type: :mailer do
   end
 
   describe "time_off_request" do
-    subject(:mail) { described_class.time_off_request(Array.wrap(manager), time_off) }
+    subject(:mail) { described_class.time_off_request(manager, time_off) }
 
     it { expect(mail.subject).to eq("Time-off requested") }
     it { expect(mail.to).to contain_exactly manager.email }
@@ -47,7 +47,7 @@ RSpec.describe NotificationMailer, type: :mailer do
   end
 
   describe "time_off_approved" do
-    subject(:mail) { described_class.time_off_approved(Array.wrap(user), time_off) }
+    subject(:mail) { described_class.time_off_approved(user, time_off) }
 
     it { expect(mail.subject).to eq("Time-off accepted") }
     it { expect(mail.to).to contain_exactly user.email }
@@ -60,7 +60,7 @@ RSpec.describe NotificationMailer, type: :mailer do
   end
 
   describe "time_off_declined" do
-    subject(:mail) { described_class.time_off_declined(Array.wrap(user), time_off) }
+    subject(:mail) { described_class.time_off_declined(user, time_off) }
 
     it { expect(mail.subject).to eq("Time-off declined") }
     it { expect(mail.to).to contain_exactly user.email }
