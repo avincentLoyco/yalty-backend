@@ -10,7 +10,7 @@ RSpec.describe Export::GenerateEmployeesJournal, type: :service do
 
   let(:folder_path) { Rails.application.config.file_upload_root_path }
   let(:file_path) { folder_path.join(file_name) }
-  let(:fixture) { Rails.root.join("spec", "fixtures", "files",  fixture_name) }
+  let(:fixture) { Rails.root.join("spec", "fixtures", "files", "spreadsheets", fixture_name) }
   let(:file_name) { "#{account.id}-#{journal_timestamp.strftime("%Y-%m-%dT%H:%M:%S")}.csv" }
   let(:last_employee_journal_export) { nil }
   let(:journal_timestamp) { Time.zone.parse("2016-03-01") }
