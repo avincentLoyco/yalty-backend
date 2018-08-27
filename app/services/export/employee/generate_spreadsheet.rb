@@ -41,7 +41,7 @@ module Export
         return if value.nil?
 
         begin
-          date = Date.parse(value)
+          date = Date.strptime(value, "%Y-%m-%d")
           date.strftime("%d.%m.%Y")
         rescue ArgumentError
           value
