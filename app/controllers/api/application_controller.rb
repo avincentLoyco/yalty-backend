@@ -5,6 +5,10 @@ class API::ApplicationController < ApplicationController
     @current_user ||= Account::User.current
   end
 
+  def current_ability
+    @current_ability ||= AbilityFactory.build_for(current_user)
+  end
+
   protected
 
   def resources
