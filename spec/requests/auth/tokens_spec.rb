@@ -23,7 +23,7 @@ RSpec.describe "Tokens", type: :request do
     let(:expected_response) do
       {
         access_token: String,
-        token_type: "bearer",
+        token_type: "Bearer",
         expires_in: Integer,
         refresh_token: String,
         created_at: Integer,
