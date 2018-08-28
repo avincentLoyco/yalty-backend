@@ -15,19 +15,19 @@ RSpec.describe Export::Employee::MaritalStatus, type: :service do
 
   context "when all marital events are present" do
     context "when divorce is latest event" do
-      it { expect(subject).to eq("divorced") }
+      it { expect(subject).to include(status: "divorced", date: divorce_date) }
     end
 
     context "when marriage is latest event" do
       let(:married_date) { "2017-06-07" }
 
-      it { expect(subject).to eq("married") }
+      it { expect(subject).to include(status: "married", date: married_date) }
     end
 
     context "when spouse_death is latest event" do
       let(:death_date) { "2017-06-07"  }
 
-      it { expect(subject).to eq("single") }
+      it { expect(subject).to include(status: "single", date: death_date) }
     end
   end
 
@@ -35,25 +35,25 @@ RSpec.describe Export::Employee::MaritalStatus, type: :service do
     context "divorce" do
       let(:employee_events) { [divorce] }
 
-      it { expect(subject).to eq("divorced") }
+      it { expect(subject).to include(status: "divorced", date: divorce_date) }
     end
 
     context "marriage" do
       let(:employee_events) { [marriage] }
 
-      it { expect(subject).to eq("married") }
+      it { expect(subject).to include(status: "married", date: married_date) }
     end
 
     context "spouse_death" do
       let(:employee_events) { [death] }
 
-      it { expect(subject).to eq("single") }
+      it { expect(subject).to include(status: "single", date: death_date) }
     end
   end
 
   context "without marital events" do
     let(:employee_events) { [] }
 
-    it { expect(subject).to eq("single") }
+    it { expect(subject).to include(status: "single", date: "") }
   end
 end

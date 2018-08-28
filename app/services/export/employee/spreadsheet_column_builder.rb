@@ -8,7 +8,7 @@ module Export
           "firstname", "firstname (effective_at)",
           "hired_date",
           "contract_end_date",
-          "martial_status"
+          "marital_status", "marital_status (effective_at)"
         ].freeze
 
       pattr_initialize :attributes
@@ -29,7 +29,7 @@ module Export
       private
 
       def default_columns
-        deletable_columns = [:firstname, :lastname]
+        deletable_columns = [:firstname, :lastname, :marital_status]
         default_columns = attributes.map(&:plain).map(&:keys).flatten.uniq - deletable_columns
         default_columns.map { |attribute| attribute_with_effective_at(attribute) }
       end

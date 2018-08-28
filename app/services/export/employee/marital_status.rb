@@ -15,8 +15,10 @@ module Export
       end
 
       def call
-        select_marital_status
-        @marital_status
+        {
+          status: status,
+          date: event_date(latest_marital_event).to_s,
+        }
       end
 
       private
@@ -30,15 +32,16 @@ module Export
         marital_events.max_by { |event| event_date(event) }
       end
 
-      def select_marital_status
+      def status
         event_type = latest_marital_event.try(:[], "event_type")
-        return if [nil, "spouse_death"].include?(event_type)
+
+        return @marital_status if [nil, "spouse_death"].include?(event_type)
 
         @marital_status = event_type.eql?("marriage") ? "married" : "divorced"
       end
 
       def event_date(event)
-        event.try(:[], "effective_at").try(:to_time).to_i
+        event.try(:[], "effective_at").try(:to_date)
       end
 
       def event_by_type(type)

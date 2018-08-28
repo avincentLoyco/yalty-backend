@@ -17,11 +17,20 @@ module Export
       def call
         set_basic_data
         set_attributes
+        set_marital_data
         employee_attributes_object
       end
 
       def set_basic_data
         employee_attributes_object.basic = basic_data
+      end
+
+      def set_marital_data
+        employee_attributes_object.plain[:marital_status] = build_attribute_data(
+          marital_data[:status],
+          marital_data[:date].presence,
+          marital_data[:status],
+        )
       end
 
       def set_attributes
@@ -61,7 +70,6 @@ module Export
           employee_id: employee.id,
           hired_date: work_event_date("hired"),
           contract_end_date: work_event_date("contract_end"),
-          marital_status: marital_status,
         }
       end
 
@@ -79,7 +87,7 @@ module Export
         end.try(:[], "effective_at")
       end
 
-      def marital_status
+      def marital_data
         Export::Employee::MaritalStatus.call(employee_work_and_marriage_events)
       end
 

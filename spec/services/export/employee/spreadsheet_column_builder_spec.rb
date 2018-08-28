@@ -56,7 +56,7 @@ RSpec.describe Export::Employee::SpreadsheetColumnBuilder, type: :service do
       "lastname", "lastname (effective_at)",
       "firstname", "firstname (effective_at)",
       "hired_date", "contract_end_date",
-      "martial_status"
+      "marital_status", "marital_status (effective_at)"
     ]
   end
 

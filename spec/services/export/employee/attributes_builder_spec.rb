@@ -21,7 +21,12 @@ RSpec.describe Export::Employee::AttributesBuilder, type: :service do
   let(:work_and_marriage_events)    { [] }
 
   # stubbed services responses
-  let(:marital_status) { "single" }
+  let(:marital_status) do
+    {
+      status: "single",
+      date: "2016-01-01",
+    }
+  end
   let(:children) do
     [
       {
@@ -75,12 +80,14 @@ RSpec.describe Export::Employee::AttributesBuilder, type: :service do
       employee_id: employee.id,
       hired_date: hired_date,
       contract_end_date: contract_end_date,
-      marital_status: marital_status,
     }
   end
 
   let(:plain_employee_attributes) do
-    { lastname: { value: "Holmes", effective_at: "2012-12-12", event_type: "hired" } }
+    {
+      lastname: { value: "Holmes", effective_at: "2012-12-12", event_type: "hired" },
+      marital_status: { value: "single", effective_at: "2016-01-01", event_type: "single" },
+    }
   end
 
   let(:nested_employee_attributes) do
@@ -122,25 +129,20 @@ RSpec.describe Export::Employee::AttributesBuilder, type: :service do
 
   context "with Child attribute" do
     let(:employee_attribute_versions) { [child_attribute] }
-    let(:plain_employee_attributes)   { {} }
     let(:nested_employee_attributes)  { {} }
+    let(:plain_employee_attributes) do
+      { marital_status: { value: "single", effective_at: "2016-01-01", event_type: "single" } }
+    end
 
     it_behaves_like "Valid Attributes"
   end
 
   context "with nested attribute" do
     let(:employee_attribute_versions)      { [nested_attribute] }
-    let(:plain_employee_attributes)        { {} }
     let(:nested_array_employee_attributes) { [] }
-
-    it_behaves_like "Valid Attributes"
-  end
-
-  context "without any attribute" do
-    let(:employee_attribute_versions)      { [] }
-    let(:plain_employee_attributes)        { {} }
-    let(:nested_employee_attributes)       { {} }
-    let(:nested_array_employee_attributes) { [] }
+    let(:plain_employee_attributes) do
+      { marital_status: { value: "single", effective_at: "2016-01-01", event_type: "single" } }
+    end
 
     it_behaves_like "Valid Attributes"
   end

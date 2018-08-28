@@ -57,11 +57,14 @@ RSpec.describe Export::Employee::SpreadsheetDataBuilder, type: :service do
   end
 
   # second employee attributes
-  let(:second_basic_attributes) { { employee_id: "2", marital_status: "married" } }
+  let(:second_basic_attributes) { { employee_id: "2" } }
   let(:second_plain_attributes) do
     {
       gender: {
         value: "male", effective_at: "2016-06-06"
+      },
+      marital_status: {
+        value: "married", effective_at: "2016-01-01"
       },
     }
   end
@@ -156,7 +159,7 @@ RSpec.describe Export::Employee::SpreadsheetDataBuilder, type: :service do
     ]
   end
 
-  let(:first_basic_result)  { ["1", nil, nil, nil, nil, "2016-06-06", nil, nil] }
+  let(:first_basic_result)  { ["1", nil, nil, nil, nil, "2016-06-06", nil, nil, nil] }
   let(:first_plain_result)  { [["1993-06-06", "2016-06-06"], [nil, nil]] }
   let(:first_nested_result) { [[[nil, nil], [nil, nil]]] }
   let(:first_nested_array_result) do
@@ -166,7 +169,7 @@ RSpec.describe Export::Employee::SpreadsheetDataBuilder, type: :service do
     ]
   end
 
-  let(:second_basic_result)  { ["2", nil, nil, nil, nil, nil, nil, "married"] }
+  let(:second_basic_result)  { ["2", nil, nil, nil, nil, nil, nil, "married", "2016-01-01"] }
   let(:second_plain_result)  { [[nil, nil], ["male", "2016-06-06"]] }
   let(:second_nested_result) { [[["Adler", "2012-06-06"], ["Irene", "2012-06-06"]]] }
   let(:second_nested_array_result) do

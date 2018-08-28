@@ -29,7 +29,8 @@ module Export
           employee_attributes.plain[:firstname].try(:[], :effective_at),
           employee_attributes.basic[:hired_date],
           employee_attributes.basic[:contract_end_date],
-          employee_attributes.basic[:marital_status],
+          employee_attributes.plain[:marital_status].try(:[], :value),
+          employee_attributes.plain[:marital_status].try(:[], :effective_at),
         ]
       end
 
