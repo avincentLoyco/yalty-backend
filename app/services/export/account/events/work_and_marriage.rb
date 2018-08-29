@@ -21,8 +21,24 @@ module Export
           INNER JOIN employees
           ON employees.id = latest_employee_events.employee_id
           WHERE employees.account_id = '#{account.id}'
-          AND latest_employee_events.event_type IN ('hired', 'contract_end', 'marriage', 'divorce')
+          AND latest_employee_events.event_type IN (#{statuses_query.join(",")})
           ORDER BY employees.id").to_hash
+        end
+
+        private
+
+        def statuses_query
+          (civil_events + work_events).map do |value|
+            "'#{value}'"
+          end
+        end
+
+        def civil_events
+          ::Employee::CIVIL_STATUS.keys
+        end
+
+        def work_events
+          %w(hired contract_end)
         end
       end
     end

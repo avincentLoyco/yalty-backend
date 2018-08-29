@@ -31,7 +31,7 @@ module Export
       def default_columns
         deletable_columns = [:firstname, :lastname, :marital_status]
         default_columns = attributes.map(&:plain).map(&:keys).flatten.uniq - deletable_columns
-        default_columns.map { |attribute| attribute_with_effective_at(attribute) }
+        default_columns.sort.map { |attribute| attribute_with_effective_at(attribute) }
       end
 
       def nested_columns

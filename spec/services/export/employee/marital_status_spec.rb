@@ -27,7 +27,7 @@ RSpec.describe Export::Employee::MaritalStatus, type: :service do
     context "when spouse_death is latest event" do
       let(:death_date) { "2017-06-07"  }
 
-      it { expect(subject).to include(status: "single", date: death_date) }
+      it { expect(subject).to include(status: "widowed", date: death_date) }
     end
   end
 
@@ -47,7 +47,7 @@ RSpec.describe Export::Employee::MaritalStatus, type: :service do
     context "spouse_death" do
       let(:employee_events) { [death] }
 
-      it { expect(subject).to include(status: "single", date: death_date) }
+      it { expect(subject).to include(status: "widowed", date: death_date) }
     end
   end
 
