@@ -1,8 +1,12 @@
 class API::ApplicationController < ApplicationController
-  before_action :authenticate!
+  before_action :authenticate!, :verify_employment!
 
   def current_user
     @current_user ||= Account::User.current
+  end
+
+  def current_ability
+    @current_ability ||= AbilityFactory.build_for(current_user)
   end
 
   protected
@@ -25,6 +29,12 @@ class API::ApplicationController < ApplicationController
     return unless Account.current.nil? || Account::User.current.nil?
     render json:
       ::Api::V1::ErrorsRepresenter.new(nil, error: ["User unauthorized"]).complete, status: 401
+  end
+
+  def verify_employment!
+    return unless Account::User.current.present? && Account::User.current.inactive?
+    render json:
+      ::Api::V1::ErrorsRepresenter.new(nil, error: ["User inactive"]).complete, status: 401
   end
 
   def subdomain_access!

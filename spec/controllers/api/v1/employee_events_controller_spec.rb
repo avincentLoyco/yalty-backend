@@ -883,12 +883,23 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     end
 
     context "rehired event one day after contract end" do
+      let(:user_employee) do
+        create(:employee_with_working_place, :with_attributes,
+          account: default_presence.account,
+          employee_attributes: {
+            firstname: employee_first_name,
+            lastname: employee_last_name,
+            annual_salary: employee_annual_salary
+            # occupation_rate: 0.5
+          })
+      end
+
       let(:json_payload) do
         {
           type: "employee_event",
           effective_at: effective_at,
           event_type: event_type,
-          employee: { id: employee.id },
+          employee: { id: user_employee.id },
           presence_policy_id: presence_policy.id,
           employee_attributes: [
             {
@@ -904,11 +915,11 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         let(:event_type) { "hired" }
         let!(:employee_time_off_policy) do
           create(:employee_time_off_policy, :with_employee_balance,
-            employee: employee,
-            effective_at: employee.events.order(:effective_at).first.effective_at)
+            employee: user_employee,
+            effective_at: user_employee.events.order(:effective_at).first.effective_at)
         end
         let!(:contract_end) do
-          create(:employee_event, employee: employee, event_type: "contract_end",
+          create(:employee_event, employee: user_employee, event_type: "contract_end",
             effective_at: event.effective_at + 2.months)
         end
 

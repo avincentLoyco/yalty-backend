@@ -53,6 +53,31 @@ RSpec.shared_examples "example_authorization" do |settings|
         )}
       end
     end
+
+    context "when current user is inactive" do
+      before do
+        Account::User.current.employee = nil
+      end
+
+      it { is_expected.to have_http_status(401) }
+
+      context "response body" do
+        before { subject }
+
+        it { expect_json(
+          errors: [
+            {
+              field: "error",
+              messages: ["User inactive"],
+              status: "invalid",
+              type: "nil_class",
+              codes: ["error_user_inactive"],
+              employee_id: nil,
+            },
+          ]
+        )}
+      end
+    end
   end
 
   if actions.include?(:show)

@@ -24,6 +24,8 @@ class Account::User < ActiveRecord::Base
   belongs_to :referrer, primary_key: :email, foreign_key: :email
   has_one :employee, inverse_of: :user, foreign_key: :account_user_id
 
+  scope :admins, -> { where(role: [:account_administrator, :account_owner]) }
+
   before_validation :generate_password, unless: :password_digest?, on: :create
   after_create :create_referrer
   before_destroy :check_if_last_owner
@@ -68,6 +70,10 @@ class Account::User < ActiveRecord::Base
 
   def default_locale
     locale || account&.default_locale
+  end
+
+  def inactive?
+    employee_required? && (employee.nil? || !employee.hired_at?(Date.today))
   end
 
   private
@@ -119,11 +125,19 @@ class Account::User < ActiveRecord::Base
     false
   end
 
+  def single_owner?
+    role.eql?("account_owner") && account.users.where(role: "account_owner").count == 1
+  end
+
   def empty_employee_allowed
     role.eql?("yalty") ||
       changed.eql?(%w(reset_password_token)) ||
       role.eql?("account_owner") && (
         account.nil? || account.recently_created? || changed.eql?(%w(password_digest))
       )
+  end
+
+  def employee_required?
+    !(empty_employee_allowed || single_owner?)
   end
 end

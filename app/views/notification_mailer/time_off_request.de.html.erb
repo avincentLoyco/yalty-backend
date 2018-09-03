@@ -5,7 +5,8 @@ du <%= I18n.l(@time_off.start_time, format: :long) %>
 au <%= I18n.l(@time_off.end_time, format: :long) %>.
 <br/>
 <br/>
-Bitte melden Sie sich bei Yalty an, um diese Abwesenheit zu akzeptieren oder abzulehnen. <%= @client_url %>
+Bitte melden Sie sich bei Yalty an, um diese Abwesenheit zu akzeptieren oder abzulehnen.
+<%= link_to @client_url, @client_url %>
 <br/>
 <br/>
 Mit freundlichen Grüßen

@@ -188,6 +188,45 @@ RSpec.describe Account::User, type: :model do
     it { expect(user.owner_or_administrator?).to be(false) }
   end
 
+  describe "#inactive" do
+    let(:user) { build(:account_user, role: role) }
+
+    context "when user" do
+      let(:role) { "user" }
+
+      context "when no employee assigned" do
+        before do
+          user.employee = nil
+        end
+        it { expect(user).to be_inactive }
+      end
+
+      context "when fired employee assigned" do
+        let(:hired_at?) { false }
+        before do
+          allow(user.employee).to receive(:hired_at?).and_return(false)
+        end
+
+        it { expect(user).to be_inactive }
+      end
+
+      context "when not fired employee assigned" do
+        let(:hired_at?) { false }
+
+        it { expect(user).not_to be_inactive }
+      end
+    end
+
+    context "when yalty role" do
+      let(:role) { "yalty" }
+
+      before do
+        user.employee = nil
+      end
+      it { expect(user).not_to be_inactive }
+    end
+  end
+
   describe "stripe callbacks" do
     let(:customer) { StripeCustomer.new("cus123", "Some description", "test@email.com") }
     let(:subscription) { StripeSubscription.new("sub_123") }

@@ -514,7 +514,8 @@ CREATE TABLE oauth_applications (
     redirect_uri text NOT NULL,
     scopes character varying DEFAULT ''::character varying NOT NULL,
     created_at timestamp without time zone,
-    updated_at timestamp without time zone
+    updated_at timestamp without time zone,
+    confidential boolean DEFAULT true NOT NULL
 );
 
 
@@ -1947,4 +1948,6 @@ INSERT INTO schema_migrations (version) VALUES ('20180426121906');
 INSERT INTO schema_migrations (version) VALUES ('20180515134613');
 
 INSERT INTO schema_migrations (version) VALUES ('20180518090622');
+
+INSERT INTO schema_migrations (version) VALUES ('20180827130312');
 
