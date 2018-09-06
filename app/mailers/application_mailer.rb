@@ -1,7 +1,7 @@
 class ApplicationMailer < ActionMailer::Base
   default from: ENV["YALTY_APP_EMAIL"]
 
-  helper_method :subdomain_url_for
+  helper_method :subdomain_url_for, :contact_email
 
   private
 
@@ -11,5 +11,9 @@ class ApplicationMailer < ActionMailer::Base
     url << "#{account.subdomain}.#{ENV["YALTY_APP_DOMAIN"]}"
     url << ":#{ENV["EMBER_PORT"]}" if Rails.env == "e2e-testing"
     url
+  end
+
+  def contact_email
+    "yalty@loyco.ch"
   end
 end
