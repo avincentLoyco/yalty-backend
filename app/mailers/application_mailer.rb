@@ -14,6 +14,6 @@ class ApplicationMailer < ActionMailer::Base
   end
 
   def contact_email
-    "yalty@loyco.ch"
+    ENV["YALTY_CONTACT_EMAIL"]
   end
 end
