@@ -133,7 +133,24 @@ RSpec.describe BalanceOverview::Generate do
             expect(mapped_values).to contain_exactly(
               {
                 category: "vacation",
-                result: vacation_minutes,
+                result: vacation_minutes - time_off_minutes,
+              }
+            )
+          end
+        end
+
+        context "starting this year and ending next year" do
+          let(:year_end) { hired_date.end_of_year }
+
+          let(:vacation_start) do
+            year_end - 1.hour
+          end
+
+          it "returns correct values" do
+            expect(mapped_values).to contain_exactly(
+              {
+                category: "vacation",
+                result: vacation_minutes - time_off_minutes,
               }
             )
           end

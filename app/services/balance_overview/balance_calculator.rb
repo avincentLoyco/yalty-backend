@@ -7,7 +7,7 @@ module BalanceOverview
 
     def call
       return 0 unless balance_calculatable?
-      last_balance.balance
+      last_balance.balance + future_timeoff_balances_sum
     end
 
     private
@@ -19,6 +19,14 @@ module BalanceOverview
 
     def balance_calculatable?
       last_balance.present? && daterange.present?
+    end
+
+    def future_timeoff_balances_sum
+      employee_balances
+        .in_category(category.id)
+        .where(balance_type: "time_off")
+        .where(Employee::Balance.arel_table[:effective_at].gt(max))
+        .sum(:resource_amount)
     end
   end
 end
