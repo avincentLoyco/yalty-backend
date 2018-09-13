@@ -4,13 +4,11 @@
   <li><%= t('services.company_info.company_name', company_name: account.company_name, id: account.id) %></li>
   <li><%= t('services.company_info.url', url: subdomain_url_for(account)) %></li>
   <li>
-    <p><%= t('services.company_info.address') %></p>
-    <p><%= account.company_information.company_name %></p>
-    <p><%= account.company_information.address_1 %></p>
-    <p><%= account.company_information.address_2 %></p>
-    <p><%= account.company_information.postalcode %></p>
-    <p><%= account.company_information.city %></p>
-    <p><%= account.company_information.region %></p>
-    <p><%= account.company_information.country %></p>
+    <%= t('services.company_info.address') %>
+    <br />
+    <% address_attributes.each do |address_attribute| %>
+      <%= address_attribute %>
+      <br />
+    <% end %>
   </li>
 </ul>

@@ -51,68 +51,68 @@ de:
     de: Deutsch
   services:
     book-now:
-      title: Die Firma meldete diese Dienstleistungen an.
+      title: Die Firma bittet um einen Kostenanschlag für diese Dienstleistungen.
     send-quote:
-      title: Die Firma bittet um ein Zitat für diese Dienstleistungen
-      book-it-now: Wollen Sie diesen Dienst jetzt anmelden? Klicken Sie
+      title: Die Firma bittet um einen Kostenanschlag für diese Dienstleistungen
+      book-it-now: Wollen Sie diese Dienstleistungen jetzt reservieren? Klicken Sie
       here: hier
     resume:
       title: Total
-      onetime_cost: "Einzeitige Kosten: %{value}"
-      recuring_cost: "Häufige Kosten: %{value}"
+      onetime_cost: "Einmalige Kosten: %{value}"
+      recuring_cost: "Rekurrente Kosten: %{value}"
     company_info:
-      request_by: "Anfragt von %{fullname} (%{email})"
+      request_by: "Angefragt von %{fullname} (%{email})"
       phone: "Telefon %{phone}"
       company_name: "Firma %{company_name} (%{id})"
       url: "URL: %{url}"
       address: "Adresse :"
     header:
       title: Dienste
-      name: Name des Dienstes
+      name: Dienstleistungsname
       options: Optionen
-      onetime_cost: Einzeitige Kosten
-      recuring_cost: Häufige Kosten
+      onetime_cost: Einmalige Kosten
+      recuring_cost: Rekurrente Kosten
     sections:
-      employee-administration: Angestellt-Verwaltung
+      employee-administration: Mitarbeiterverwaltung
       enterprise-administration: Unternehmensverwaltung
-      marketing-communication: Marketing Kommunikation
+      marketing-communication: Marketing & Kommunikation
       it: IT
       logistics: Logistik
     names:
-      payroll-outsourcing: Payroll outsourcing
-      hr-administration: HR Verwaltung
-      sickness-accident-mgmt: Krankheit und Unfall-Management
+      payroll-outsourcing: Gehaltsabrechnung
+      hr-administration: Personalwesen
+      sickness-accident-mgmt: Verwaltung der Krankheiten und Unfällen
       accounting: Buchhaltung
-      taxation: Taxe
-      enterprise-creation: Firmengründung
-      hr-consulting: HR consulting
-      website-creation: Einrichtung einer Webseite
-      social-networks: Soziale Netwerke
+      taxation: Versteuerung
+      enterprise-creation: Unternehmensgründung
+      hr-consulting: Personalberatung
+      website-creation: Website-Erstellung
+      social-networks: Soziale Netzwerke
       creative-content-creation: Kreative Inhaltschaffung
       marketing-campaign: Marketing Kampagnen
       promotional-movie: Werbefilm
-      it-consulting: IT consulting
+      it-consulting: IT Beratung
       logistics-support: Logistik Unterstützung
     options:
       num-of-employees: "Zahl der Angestellten: %{value}"
-      from-when: "Von: %{value}"
-      num-of-accounting-pieces: "Zahl dem Buchungsbeleg: %{value}"
-      num-of-intermediate-closing: "Zahl des Zwischenschliessens: %{value}"
-      handle-tax-declaration: "Steuererklärung behanleln: %{value}"
+      from-when: "Seit: %{value}"
+      num-of-accounting-pieces: "Zahl der Buchungsbelege: %{value}"
+      num-of-intermediate-closing: "Zahl der Zwischenabschlüsse: %{value}"
+      handle-tax-declaration: "Steuererklärung: %{value}"
       hours-of-consulting: "Consulting Stunden: %{value}"
       juridic-form: "Rechtsform: %{value}"
       num-of-hours: "Stundenzahl: %{value}"
       num-of-pages: "Seitenzahl: %{value}"
-      photo-shooting: "Foto shooting: %{value}"
-      network-list: "Sozial networks Liste: %{value}"
-      animate: "Animiert: %{value}"
+      photo-shooting: "Fotoshooting: %{value}"
+      network-list: "Soziale Netzwerke Liste: %{value}"
+      animate: "verwaltet: %{value}"
       num-of-logos: "Zahl von Firmenzeichen: %{value}"
       num-of-material-packages: "Zahl von materiellen Paketen: %{value}"
-      num-of-photo-shooting: "Zahl von Foto shooting: %{value}"
+      num-of-photo-shooting: "Zahl von Fotoshooting: %{value}"
       num-of-email-campaigns: "Zahl von Email-Kampagnen: %{value}"
       num-of-social-network-campaigns: "Zahl von sozialen Netzwerk-Kampagnen: %{value}"
-      minutes-of-promotional-video: "Minuten des Beförderungsvideos: %{value}"
-      minutes-of-video-reportage: "Minuten des Videoreportage: %{value}"
+      minutes-of-promotional-video: "Minuten des Werbevideos: %{value}"
+      minutes-of-video-reportage: "Minuten der Videoreportage: %{value}"
       num-of-voiceover-packages: "Zahl von Off-Kommentar-Paketen: %{value}"
   payments_mailer:
     payment_succeeded:
