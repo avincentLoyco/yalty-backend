@@ -2,6 +2,7 @@ class TimeEntry < ActiveRecord::Base
   belongs_to :presence_day
 
   validates :start_time, :end_time, :presence_day_id, :duration, presence: true
+  validates :duration, numericality: { other_than: 0 }
   validate :time_entry_not_reserved, if: [:times_parsable?, "presence_day.present?"]
   validate :start_time_format, :end_time_format
   validate :longer_than_one_day?, if: :times_parsable?
@@ -43,7 +44,7 @@ class TimeEntry < ActiveRecord::Base
 
   def convert_time_to_hours
     self.start_time = start_time_as_time.strftime("%H:%M:%S")
-    self.end_time = midnight? ? "24:00:00" : end_time_as_time.strftime("%H:%M:%S")
+    self.end_time = midnight? ? "23:59:59" : end_time_as_time.strftime("%H:%M:%S")
   end
 
   def update_presence_day_minutes!
