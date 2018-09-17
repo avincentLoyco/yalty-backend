@@ -8,10 +8,7 @@ class CreateManualAdjustmentForEmployee
     params = {
       effective_at: Time.current,
       event_type: "adjustment_of_balances",
-      employee: {
-        id: employee.id,
-        manager_id: nil,
-      },
+      employee: { id: employee.id },
       employee_attributes: [
         {
           attribute_name: "adjustment",
