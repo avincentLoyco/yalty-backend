@@ -2,7 +2,7 @@ class TimeEntry < ActiveRecord::Base
   belongs_to :presence_day
 
   validates :start_time, :end_time, :presence_day_id, :duration, presence: true
-  validates :duration, numericality: { other_than: 0 }
+  validates :duration, numericality: { greater_than: 0 }
   validate :time_entry_not_reserved, if: [:times_parsable?, "presence_day.present?"]
   validate :start_time_format, :end_time_format
   validate :longer_than_one_day?, if: :times_parsable?
