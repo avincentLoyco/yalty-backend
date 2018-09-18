@@ -44,7 +44,7 @@ class TimeEntry < ActiveRecord::Base
 
   def convert_time_to_hours
     self.start_time = start_time_as_time.strftime("%H:%M:%S")
-    self.end_time = midnight? ? "23:59:59" : end_time_as_time.strftime("%H:%M:%S")
+    self.end_time = midnight? ? "24:00:00" : end_time_as_time.strftime("%H:%M:%S")
   end
 
   def update_presence_day_minutes!
