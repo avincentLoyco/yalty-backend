@@ -5,7 +5,7 @@
   "after_migration": [
     {
       "task_name": "db:cleanup:astrocast:create_manual_adjustment_events",
-      "description": "Fix initial zero balances for Astrocast account",
+      "description": "Fix initial zero balances for Astrocast account"
     }
   ]
 }
