@@ -31,4 +31,4 @@ set :rbenv_path, -> { File.join(fetch(:deploy_to), 'rbenv') }
 set :rbenv_map_bins, %w{ruby gem bundle}
 set :bundle_map_bins, %w(rake rails)
 
-set :keep_releases, 5
+set :keep_releases, 25
