@@ -7,7 +7,7 @@ class UseCase
     def call(*args)
       new(*args).tap do |instance|
         yield(instance) if block_given?
-        instance.call
+        return instance.call
       end
     end
   end

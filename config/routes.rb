@@ -53,6 +53,7 @@ Rails.application.routes.draw do
         resources :time_offs, only: :index
         resources :time_off_policies, only: :index
       end
+      resources :weekly_reports, only: [:index]
       resources :time_offs, except: [:edit, :new, :index] do
         scope module: "time_offs" do
           put "/approve", to: "status#approve"
