@@ -5,6 +5,10 @@ RSpec.describe "List unread notifications", :auth_user, type: :request do
 
   let(:params) { {} }
 
+  before do
+    RequestStore.clear!
+  end
+
   subject(:request) do
     get(api_v1_notifications_path, params, headers) && response
   end

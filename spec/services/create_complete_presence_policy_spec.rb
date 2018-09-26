@@ -11,7 +11,7 @@ RSpec.describe CreateCompletePresencePolicy, type: :service do
           end_time: "16:20:00",
         } ,
         {
-          start_time: "18:20:00",
+          start_time: "18:00:00",
           end_time: "18:20:00",
         } ,
       ]
