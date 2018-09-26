@@ -1,14 +1,8 @@
 {
   "before_migration": [
-    {
-      "task_name": "db:cleanup:remove_zero_time_entries",
-      "description": "Clean time entries with zero length"
-    }
+
   ],
   "after_migration": [
-    {
-      "task_name": "db:cleanup:astrocast:create_manual_adjustment_events",
-      "description": "Fix initial zero balances for Astrocast account"
-    }
+
   ]
 }
