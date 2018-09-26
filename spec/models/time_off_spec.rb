@@ -184,6 +184,8 @@ RSpec.describe TimeOff, type: :model do
       let(:employee) { create(:employee) }
       let!(:registered_working_time) do
         create(:registered_working_time, time_entries: time_entries, date: date, employee: employee)
+        create(:registered_working_time, time_entries: time_entries, date: date + 1.day, employee: employee)
+        create(:registered_working_time, time_entries: time_entries, date: date + 2.days, employee: employee)
       end
       let(:time_entries) do
         [{ start_time: "10:00", end_time: "14:00" }, { start_time: "15:00", end_time: "20:00" }]
@@ -198,9 +200,9 @@ RSpec.describe TimeOff, type: :model do
       shared_examples "TimeOff overlaps with RegisteredWorkingTime" do
         it { expect(subject.valid?).to eq false }
         it { expect { subject.valid? }.to change { subject.errors.messages[:start_time] }
-          .to include "Overlaps with registered working time" }
+          .to eq ["Overlaps with registered working time"] }
         it { expect { subject.valid? }.to change { subject.errors.messages[:end_time] }
-          .to include "Overlaps with registered working time" }
+          .to eq ["Overlaps with registered working time"] }
       end
 
       context "when overlapping occurs on the" do

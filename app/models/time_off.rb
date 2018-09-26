@@ -119,13 +119,16 @@ class TimeOff < ActiveRecord::Base
 
   def overlap_check_for_longer_than_one_day_time_off(registered_working_times)
     registered_working_times.each do |registered_working_time|
-      if registered_working_time.date == start_time.to_date
-        first_day_overlaps?(registered_working_time)
-      elsif registered_working_time.date == end_time.to_date
-        last_day_overlaps?(registered_working_time)
-      else
-        overlaps_with_middle_days?(registered_working_time)
-      end
+      any_overlapping =
+        if registered_working_time.date == start_time.to_date
+          first_day_overlaps?(registered_working_time)
+        elsif registered_working_time.date == end_time.to_date
+          last_day_overlaps?(registered_working_time)
+        else
+          overlaps_with_middle_days?(registered_working_time)
+        end
+
+      break if any_overlapping
     end
   end
 
@@ -167,20 +170,22 @@ class TimeOff < ActiveRecord::Base
   def overlaps_with_registered_working_time?(registered_working_time, to_start_time, to_end_time)
     registered_working_time.time_entries.each do |time_entry|
       next unless
-      TimeEntry.overlaps?(
-        to_start_time,
-        to_end_time,
-        TimeEntry.hour_as_time(time_entry["start_time"]),
-        TimeEntry.hour_as_time(time_entry["end_time"])
-      )
+        TimeEntry.overlaps?(
+          to_start_time,
+          to_end_time,
+          TimeEntry.hour_as_time(time_entry["start_time"]),
+          TimeEntry.hour_as_time(time_entry["end_time"])
+        )
+
       add_overlaping_with_working_time_errors
-      break
+      return true
     end
   end
 
   def overlaps_with_middle_days?(registered_working_time)
     return if registered_working_time.time_entries.empty?
     add_overlaping_with_working_time_errors
+    true
   end
 
   def add_overlaping_with_working_time_errors
