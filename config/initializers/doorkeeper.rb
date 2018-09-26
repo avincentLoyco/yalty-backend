@@ -25,7 +25,7 @@ Doorkeeper.configure do
       .where( 'lower(email) = ? AND lower(accounts.subdomain) = ?',
         username.downcase, subdomain.downcase
       ).first
-    next if user.inactive?
+    next unless user && !user.inactive?
     user.try(:authenticate, params[:password])
   end
 
