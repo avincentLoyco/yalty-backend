@@ -18,13 +18,24 @@ RSpec.describe Notification, type: :model do
 
   context "scopes" do
     describe ".unread" do
-      before do
-        create(:notification)
-        create(:notification, seen: true)
+
+      let!(:notifications) do
+        [
+          create(:notification, created_at: Time.current - 1.day),
+          create(:notification, created_at: Time.current - 3.days),
+          create(:notification, created_at: Time.current - 2.days),
+          create(:notification, seen: true),
+        ]
       end
 
-      it "returns only unread notifications" do
-        expect(described_class.unread.count).to eq 1
+      it "returns only unread and sorted notifications" do
+        expect(described_class.unread).to eq(
+          [
+            notifications[0],
+            notifications[2],
+            notifications[1],
+          ]
+        )
       end
     end
   end
