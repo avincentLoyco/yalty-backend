@@ -16,7 +16,7 @@ RSpec.describe "Tokens", type: :request do
   end
 
   describe "create auth token with auth code" do
-    subject(:request) do
+    subject(:get_token) do
       get(token_request_url, code: token) && response
     end
 
@@ -34,11 +34,11 @@ RSpec.describe "Tokens", type: :request do
     it { is_expected.to have_http_status(:success) }
 
     it "should create token" do
-      expect { request }.to change { client.access_tokens.count }.by(1)
+      expect { get_token }.to change { client.access_tokens.count }.by(1)
     end
 
     it "has correct response body" do
-      request
+      get_token
       expect(json_body).to include(**expected_response)
     end
 
@@ -46,7 +46,7 @@ RSpec.describe "Tokens", type: :request do
       let(:token) { "wrong" }
 
       it "should return error" do
-        expect(request).to have_http_status(:unauthorized)
+        expect(get_token).to have_http_status(:unauthorized)
         expect_json_keys [:error, :error_description]
       end
     end
@@ -57,7 +57,7 @@ RSpec.describe "Tokens", type: :request do
       end
 
       it "should return error" do
-        expect(request).to have_http_status(:unauthorized)
+        expect(get_token).to have_http_status(:unauthorized)
         expect_json_keys [:error, :error_description]
       end
     end

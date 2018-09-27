@@ -9,7 +9,7 @@ RSpec.describe "List unread notifications", :auth_user, type: :request do
     RequestStore.clear!
   end
 
-  subject(:request) do
+  subject(:get_notifications) do
     get(api_v1_notifications_path, params, headers) && response
   end
 
@@ -28,7 +28,7 @@ RSpec.describe "List unread notifications", :auth_user, type: :request do
     let(:time_off) { create(:time_off) }
 
     it "has only unread notifications for current_user in the response body" do
-      request
+      get_notifications
       expect(json_body).to contain_exactly(
         {
           notification_type: "time_off_request",

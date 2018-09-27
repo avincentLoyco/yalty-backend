@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "Show manager", type: :request do
   describe "GET /managers/:id", :auth_user do
-    subject(:request) do
+    subject(:get_manager) do
       get(api_v1_manager_path(manager_id),{}, headers) && response
     end
 
@@ -19,7 +19,7 @@ RSpec.describe "Show manager", type: :request do
     it { is_expected.to have_http_status(:success) }
 
     it "has correct response body" do
-      request
+      get_manager
 
       expect(json_body).to eq(
         {

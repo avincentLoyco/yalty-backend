@@ -24,11 +24,11 @@ RSpec.describe "Accept time-off request", type: :request do
     it { is_expected.to have_http_status(:success) }
 
     it "changes time-off status to approved" do
-      expect { request }.to change { time_off.reload.approved? }.to(true)
+      expect { approve_time_off }.to change { time_off.reload.approved? }.to(true)
     end
 
     it "creates balance" do
-      expect { request }.to change { time_off.reload.employee_balance }.from(nil).to(new_balance)
+      expect { approve_time_off }.to change { time_off.reload.employee_balance }.from(nil).to(new_balance)
     end
 
     describe "notifications" do
@@ -46,14 +46,14 @@ RSpec.describe "Accept time-off request", type: :request do
       end
 
       it "sends an email" do
-        request
+        approve_time_off
 
         expect(ActionMailer::Base.deliveries)
           .to contain_exactly(an_object_having_attributes(to: [employee_user.email]))
       end
 
       it "sends a notification" do
-        request
+        approve_time_off
 
         expect(employee_user.notifications).to contain_exactly(notification)
       end
@@ -61,7 +61,7 @@ RSpec.describe "Accept time-off request", type: :request do
   end
 
   describe "PUT /v1/time_offs/:time_off_id/approve", :auth_user do
-    subject(:request) do
+    subject(:approve_time_off) do
       put(api_v1_time_off_approve_path(time_off.id), params, headers) && response
     end
 
