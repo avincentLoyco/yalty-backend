@@ -26,7 +26,7 @@ RSpec.describe Policy::TimeOff::CreateCounterForCategory do
 
     it "creates employee time off policies for active employees" do
       time_off_policy = subject
-      expect(EmployeeTimeOffPolicy.all.pluck(:time_off_policy_id, :employee_id)).to eq(
+      expect(EmployeeTimeOffPolicy.all.pluck(:time_off_policy_id, :employee_id)).to match_array(
         [
           [time_off_policy.id, employees[0].id],
           [time_off_policy.id, employees[1].id],
