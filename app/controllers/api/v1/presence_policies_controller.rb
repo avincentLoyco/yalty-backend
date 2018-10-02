@@ -18,11 +18,11 @@ module API
 
       def create
         verified_dry_params(dry_validation_schema) do |attributes|
+          # TODO we need to require presence days always
           days_params = attributes.delete(:presence_days) if attributes.key?(:presence_days)
-          related = related_params(attributes).compact
           resource = Account.current.presence_policies.new(attributes)
           authorize! :create, resource
-          save!(resource, related)
+          save!(resource)
           if days_params.present?
             Policy::Presence::CreateCompletePresencePolicy.new(
               resource.reload, days_params
@@ -36,7 +36,7 @@ module API
       def update
         verified_dry_params(dry_validation_schema) do |attributes|
           resource.attributes = attributes
-          save!(resource, {})
+          save!(resource)
           render_no_content
         end
       end
@@ -49,29 +49,9 @@ module API
 
       private
 
-      def related_params(attributes)
-        related = {}
-
-        attributes.each do |key, _value|
-          if attributes[key].is_a?(Array) || attributes[key].nil?
-            related.merge!(key => attributes.delete(key))
-          end
-        end
-
-        related
-      end
-
-      def save!(resource, related)
+      def save!(resource)
         raise InvalidResourcesError.new(resource, resource.errors.messages) unless resource.valid?
         resource.save!
-        assign_related(resource, related)
-      end
-
-      def assign_related(resource, related_records)
-        return true if related_records.empty?
-        related_records.each do |key, values|
-          Policy::Presence::AssignCollection.new(resource, values, key.to_s).call
-        end
       end
 
       def resource
