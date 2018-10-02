@@ -23,8 +23,11 @@ module API
           resource = Account.current.presence_policies.new(attributes)
           authorize! :create, resource
           save!(resource, related)
-          CreateCompletePresencePolicy.new(resource.reload, days_params).call if
-            days_params.present?
+          if days_params.present?
+            Policy::Presence::CreateCompletePresencePolicy.new(
+              resource.reload, days_params
+            ).call
+          end
 
           render_resource_with_relationships(resource, status: :created)
         end
@@ -67,7 +70,7 @@ module API
       def assign_related(resource, related_records)
         return true if related_records.empty?
         related_records.each do |key, values|
-          AssignCollection.new(resource, values, key.to_s).call
+          Policy::Presence::AssignCollection.new(resource, values, key.to_s).call
         end
       end
 

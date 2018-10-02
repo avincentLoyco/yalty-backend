@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe CreateCompletePresencePolicy, type: :service do
+RSpec.describe Policy::Presence::CreateCompletePresencePolicy, type: :service do
 
   describe "#call" do
     let!(:presence_policy) { create(:presence_policy) }
