@@ -69,8 +69,12 @@ en:
       title: Services
       name: Service name
       options: Options
-      onetime_cost: One-time costs
-      recuring_cost: Recurring costs
+      onetime_cost: |
+        One-time
+        costs
+      recuring_cost: |
+        Recurring
+        costs
     sections:
       employee-administration: Employee administration
       enterprise-administration: Enterprise administration

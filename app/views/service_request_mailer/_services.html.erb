@@ -3,8 +3,8 @@
   <tr>
     <th><%= t('services.header.name') %></th>
     <th><%= t('services.header.options') %></th>
-    <th><%= t('services.header.onetime_cost') %></th>
-    <th><%= t('services.header.recuring_cost') %></th>
+    <th style="white-space: nowrap"><%= simple_format t('services.header.onetime_cost') %></th>
+    <th style="white-space: nowrap"><%= simple_format t('services.header.recuring_cost') %></th>
   </tr>
   <% services[:data].each_key do |section| %>
     <tr>

@@ -69,8 +69,12 @@ fr:
       title: Services
       name: Nom du service
       options: Options
-      onetime_cost: Coûts uniques
-      recuring_cost: Coûts récurrents
+      onetime_cost: |
+        Coûts
+        uniques
+      recuring_cost: |
+        Coûts
+        récurrents
     sections:
       employee-administration: Administration employés
       enterprise-administration: Administration d’entreprise

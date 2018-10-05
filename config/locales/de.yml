@@ -70,8 +70,12 @@ de:
       title: Dienste
       name: Dienstleistungsname
       options: Optionen
-      onetime_cost: Einmalige Kosten
-      recuring_cost: Rekurrente Kosten
+      onetime_cost: |
+        Einmalige
+        Kosten
+      recuring_cost: |
+        Rekurrente
+        Kosten
     sections:
       employee-administration: Mitarbeiterverwaltung
       enterprise-administration: Unternehmensverwaltung
