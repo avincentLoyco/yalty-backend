@@ -31,10 +31,6 @@ class AccountRemoval
   end
 
   def delete_intercom_users
-    unless intercom_client
-      Rails.logger.debug("Intercom Client is nil")
-      return
-    end
     account.user_ids.each do |user_id|
       delete_intercom_user(user_id)
     end
