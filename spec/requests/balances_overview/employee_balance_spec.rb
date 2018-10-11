@@ -16,7 +16,7 @@ RSpec.describe "Employee balance", type: :request do
   shared_examples "filterable" do
     before do
       allow(BalanceOverview::Generate).to receive(:call).and_call_original
-      request
+      get_employee_balance_overview
     end
 
     context "when no category filter passed" do
@@ -56,7 +56,7 @@ RSpec.describe "Employee balance", type: :request do
   end
 
   describe "GET /employees/:employee_id/employee_balance_overview", :auth_user do
-    subject(:request) do
+    subject(:get_employee_balance_overview) do
       get(api_v1_employee_employee_balance_overview_path(employee.id), params, headers) && response
     end
 
@@ -72,7 +72,7 @@ RSpec.describe "Employee balance", type: :request do
       it_behaves_like "filterable"
 
       it "has correct response body" do
-        request
+        get_employee_balance_overview
         expect(json_body).to contain_exactly(
           {
             category: "vacation",
@@ -89,7 +89,7 @@ RSpec.describe "Employee balance", type: :request do
       it { is_expected.to have_http_status(:unauthorized) }
 
       it "has errors in ther response body" do
-        request
+        get_employee_balance_overview
         expect_json_keys("errors.*", %i(field messages status type codes employee_id))
       end
     end
@@ -100,7 +100,7 @@ RSpec.describe "Employee balance", type: :request do
       it { is_expected.to have_http_status(:not_found) }
 
       it "has errors in ther response body" do
-        request
+        get_employee_balance_overview
         expect_json_keys("errors.*", %i(field messages type codes))
       end
     end
@@ -108,7 +108,7 @@ RSpec.describe "Employee balance", type: :request do
 
   describe "GET /employee_balance_overview", :auth_user do
 
-    subject(:request) do
+    subject(:get_employee_balance_overview) do
       get(api_v1_employee_balance_overview_path, params, headers) && response
     end
 
@@ -128,7 +128,7 @@ RSpec.describe "Employee balance", type: :request do
       it { is_expected.to have_http_status(:unauthorized) }
 
       it "has errors in ther response body" do
-        request
+        get_employee_balance_overview
         expect_json_keys("errors.*", %i(field messages status type codes employee_id))
       end
     end
@@ -141,7 +141,7 @@ RSpec.describe "Employee balance", type: :request do
       end
 
       it "has balances for both employees" do
-        request
+        get_employee_balance_overview
         expect(json_body).to contain_exactly(
           {
             category: "vacation",

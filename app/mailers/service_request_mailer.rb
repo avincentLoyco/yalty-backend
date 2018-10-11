@@ -1,5 +1,6 @@
 class ServiceRequestMailer < ApplicationMailer
-  helper_method :account, :user, :services, :options_for_service, :service_booking_url_for
+  helper_method :account, :user, :services, :options_for_service, :service_booking_url_for,
+    :address_attributes
 
   def quote_request(account, user, services)
     @account = account
@@ -33,5 +34,11 @@ class ServiceRequestMailer < ApplicationMailer
 
   def service_booking_url_for(account)
     subdomain_url_for(account) + "/account/payment/yalty-services"
+  end
+
+  def address_attributes
+    %i(
+      company_name address_1 address_2 postalcode city region country
+    ).map { |attr| account.company_information.public_send(attr) }.compact
   end
 end

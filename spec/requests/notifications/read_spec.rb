@@ -7,7 +7,7 @@ RSpec.describe "Mark notification as seen", :auth_user, type: :request do
 
   let(:params) { {} }
 
-  subject(:request) do
+  subject(:read_notification) do
     put(api_v1_notification_read_path(notification), params, headers) && response
   end
 
@@ -15,7 +15,7 @@ RSpec.describe "Mark notification as seen", :auth_user, type: :request do
     it { is_expected.to have_http_status(:success) }
 
     it "updates notification read status" do
-      expect { request }.to change { notification.reload.seen? }.from(false).to(true)
+      expect { read_notification }.to change { notification.reload.seen? }.from(false).to(true)
     end
   end
 
@@ -33,7 +33,7 @@ RSpec.describe "Mark notification as seen", :auth_user, type: :request do
     it { is_expected.to have_http_status(:not_found) }
 
     it "doesn't update notification read status" do
-      expect { request }.not_to change { notification.reload }
+      expect { read_notification }.not_to change { notification.reload }
     end
   end
 end

@@ -53,11 +53,11 @@ fr:
       title: "L'entreprise a réservé ces services"
     send-quote:
       title: "L'entreprise demande un devis pour ces services"
-      book-it-now: Voulez-vous réserver ce service maintenant? Cliquez
+      book-it-now: Voulez-vous réserver ces services dès maintenant? Cliquez
       here: ici
     resume:
       title: Total
-      onetime_cost: "Coût unique : %{value}"
+      onetime_cost: "Coûts uniques : %{value}"
       recuring_cost: "Coûts récurrents : %{value}"
     company_info:
       request_by: "Demandé par %{fullname} (%{email})"
@@ -69,11 +69,15 @@ fr:
       title: Services
       name: Nom du service
       options: Options
-      onetime_cost: Coût unique
-      recuring_cost: Coût récurant
+      onetime_cost: |
+        Coûts
+        uniques
+      recuring_cost: |
+        Coûts
+        récurrents
     sections:
       employee-administration: Administration employés
-      enterprise-administration: Administration entreprise
+      enterprise-administration: Administration d’entreprise
       marketing-communication: Marketing et communication
       it: IT
       logistics: Logistique
@@ -91,14 +95,14 @@ fr:
       marketing-campaign: Campagnes marketing
       promotional-movie: Films promotionnels
       it-consulting: Conseil en IT
-      logistics-support: Conseils en logistique
+      logistics-support: Conseil en logistique
     options:
       num-of-employees: "Nombre d'employés : %{value}"
       from-when: "Depuis : %{value}"
       num-of-accounting-pieces: "Nombre de pièces comptables : %{value}"
       num-of-intermediate-closing: "Nombre de bilans intermédiaires : %{value}"
       handle-tax-declaration: "Gestion de déclaration d'impôts : %{value}"
-      hours-of-consulting: "Heures de conseils : %{value}"
+      hours-of-consulting: "Heures de conseil : %{value}"
       juridic-form: "Forme juridique : %{value}"
       num-of-hours: "Nombre d'heures : %{value}"
       num-of-pages: "Nombre de pages : %{value}"
@@ -106,7 +110,7 @@ fr:
       network-list: "Liste des réseaux sociaux : %{value}"
       animate: "Animé : %{value}"
       num-of-logos: "Nombre de logos : %{value}"
-      num-of-material-packages: "Nombre de packs matériels : %{value}"
+      num-of-material-packages: "Nombre de packs support identitaire : %{value}"
       num-of-photo-shooting: "Nombre de séances photo : %{value}"
       num-of-email-campaigns: "Nombre de campagnes marketing par email : %{value}"
       num-of-social-network-campaigns: "Nombre de campagnes marketing via les réseaux\

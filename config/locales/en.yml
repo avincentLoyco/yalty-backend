@@ -52,13 +52,13 @@ en:
     book-now:
       title: The company booked these services
     send-quote:
-      title: The company request a quote for these services
+      title: The company requests a quote for these services
       book-it-now: Do you want to book this service now? Click
       here: here
     resume:
       title: Total
-      onetime_cost: "One time cost: %{value}"
-      recuring_cost: "Recurring cost: %{value}"
+      onetime_cost: "One-time costs: %{value}"
+      recuring_cost: "Recurring costs: %{value}"
     company_info:
       request_by: "Request by %{fullname} (%{email})"
       phone: "Phone: %{phone}"
@@ -69,8 +69,12 @@ en:
       title: Services
       name: Service name
       options: Options
-      onetime_cost: One time cost
-      recuring_cost: Recurring cost
+      onetime_cost: |
+        One-time
+        costs
+      recuring_cost: |
+        Recurring
+        costs
     sections:
       employee-administration: Employee administration
       enterprise-administration: Enterprise administration
@@ -80,7 +84,7 @@ en:
     names:
       payroll-outsourcing: Payroll outsourcing
       hr-administration: HR administration
-      sickness-accident-mgmt: Sickess and accident managment
+      sickness-accident-mgmt: Sickness and accident management
       accounting: Accounting
       taxation: Taxation
       enterprise-creation: Enterprise creation
@@ -89,9 +93,9 @@ en:
       social-networks: Social networks
       creative-content-creation: Creative content creation
       marketing-campaign: Marketing campaigns
-      promotional-movie: Promotional movie
+      promotional-movie: Promotional movies
       it-consulting: IT consulting
-      logistics-support: Logisitcs support
+      logistics-support: Logistics support
     options:
       num-of-employees: "Number of employees: %{value}"
       from-when: "From: %{value}"
@@ -99,7 +103,7 @@ en:
       num-of-intermediate-closing: "Number of intermediate closing: %{value}"
       handle-tax-declaration: "handle tax declaration: %{value}"
       hours-of-consulting: "Hours of consulting: %{value}"
-      juridic-form: "Juridic form: %{value}"
+      juridic-form: "Legal form: %{value}"
       num-of-hours: "Number of hours: %{value}"
       num-of-pages: "Number of pages: %{value}"
       photo-shooting: "Photo shooting: %{value}"
@@ -107,7 +111,7 @@ en:
       animate: "Animated: %{value}"
       num-of-logos: "Number of logos: %{value}"
       num-of-material-packages: "Number of material packages: %{value}"
-      num-of-photo-shooting: "Number of photo shooting: %{value}"
+      num-of-photo-shooting: "Number of photo shootings: %{value}"
       num-of-email-campaigns: "Number of email campaigns: %{value}"
       num-of-social-network-campaigns: "Number of social network campaigns: %{value}"
       minutes-of-promotional-video: "Minutes of promotional video: %{value}"

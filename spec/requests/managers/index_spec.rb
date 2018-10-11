@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "List managers", type: :request do
   describe "GET /managers", :auth_user do
-    subject(:request) do
+    subject(:get_managers) do
       get("/v1/managers",{}, headers) && response
     end
 
@@ -24,10 +24,10 @@ RSpec.describe "List managers", type: :request do
 
     let_it_be(:yalty_access_user) { create(:account_user, :with_yalty_role, account: account) }
 
-    it { is_expected.to have_http_status(:success) }
+    it { expect(get_managers).to have_http_status(:success) }
 
     it "has correct response body" do
-      request
+      get_managers
 
       expect(json_body).to contain_exactly(
         {

@@ -15,7 +15,7 @@ RSpec.describe "Decline time-off request", type: :request do
     it { is_expected.to have_http_status(:success) }
 
     it "changes time-off status to declines" do
-      expect { request }.to change { time_off.reload.declined? }.to(true)
+      expect { decline_time_off }.to change { time_off.reload.declined? }.to(true)
     end
 
     describe "notifications" do
@@ -33,14 +33,14 @@ RSpec.describe "Decline time-off request", type: :request do
       end
 
       it "sends an email" do
-        request
+        decline_time_off
 
         expect(ActionMailer::Base.deliveries)
           .to contain_exactly(an_object_having_attributes(to: [employee_user.email]))
       end
 
       it "sends a notification" do
-        request
+        decline_time_off
 
         expect(employee_user.notifications).to contain_exactly(notification)
       end
@@ -49,7 +49,7 @@ RSpec.describe "Decline time-off request", type: :request do
 
 
   describe "PUT /v1/time_offs/:time_off_id/decline", :auth_user do
-    subject(:request) do
+    subject(:decline_time_off) do
       put(api_v1_time_off_decline_path(time_off.id), params, headers) && response
     end
 
@@ -86,7 +86,7 @@ RSpec.describe "Decline time-off request", type: :request do
         end
 
         it "removes employee balance" do
-          expect { request }
+          expect { decline_time_off }
             .to change { time_off.reload.employee_balance }
             .from(Employee::Balance)
             .to(nil)
