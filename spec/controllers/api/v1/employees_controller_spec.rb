@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "rails_helper"
 
 RSpec.describe API::V1::EmployeesController, type: :controller do
@@ -13,8 +15,6 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
     )
   }
 
-  let!(:vacation_category) { create(:time_off_category, name: "vacation", account: account) }
-
   context "GET #show" do
     let!(:employee) { create(:employee_with_working_place, :with_attributes, account: account) }
     let!(:employee_working_place) { employee.employee_working_places.order(:effective_at).first }
@@ -23,6 +23,7 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
     let!(:future_employee_working_place) do
       create(:employee_working_place, employee: employee, effective_at: Time.now + 1.month)
     end
+    let!(:vacation_category) { create(:time_off_category, name: "vacation", account: account) }
 
     subject { get :show, id: employee.id }
 
@@ -223,8 +224,11 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
 
   context "GET #index" do
     let!(:employees) do
-      create_list(:employee_with_working_place, 3, :with_attributes, account: account) << user.employee
+      create_list(
+        :employee_with_working_place, 3, :with_attributes, account: account
+      ) << user.employee
     end
+    let!(:vacation_category) { create(:time_off_category, name: "vacation", account: account) }
 
     subject { get :index }
 
@@ -369,6 +373,76 @@ RSpec.describe API::V1::EmployeesController, type: :controller do
 
         it { expect_json_sizes(1) }
       end
+    end
+  end
+
+  context "DELETE #destroy" do
+    RSpec.shared_examples "employee destruction" do |options|
+      let(:employee) { employees[options[:destroying]] }
+
+      if options[:status] == 204
+        it "destroys the employee" do
+          is_expected.to have_http_status(options[:status])
+          expect(destroy_employee_mock).to have_received(:call).with(employee)
+        end
+      else
+        it "does not destroy the employee" do
+          is_expected.to have_http_status(options[:status])
+          expect(destroy_employee_mock).not_to have_received(:call)
+        end
+      end
+    end
+
+    subject { delete :destroy, id: employee.id }
+
+    let_it_be(:account) { build(:account) }
+    let_it_be(:employees) do
+      {
+        account_administrator1: build(:employee, account: account, role: "account_administrator"),
+        account_administrator2: build(:employee, account: account, role: "account_administrator"),
+        account_owner1: build(:employee, account: account, role: "account_owner"),
+        account_owner2: build(:employee, account: account, role: "account_owner"),
+        user1: build(:employee, account: account, role: "user"),
+        user2: build(:employee, account: account, role: "user"),
+        no_role: build(:employee, account: account),
+      }
+    end
+    let(:destroy_employee_mock) { instance_double(Employees::Destroy, call: true) }
+    let(:get_employee_mock) { instance_double(Employees::Show, call: employee) }
+
+    before do
+      controller.instance_variable_set("@get_employee", get_employee_mock)
+      controller.instance_variable_set("@destroy_employee", destroy_employee_mock)
+    end
+
+    context "when current user has 'account_administrator' role" do
+      before { Account::User.current = employees[:account_administrator1].user }
+
+      it_behaves_like "employee destruction", destroying: :user1, status: 204
+      it_behaves_like "employee destruction", destroying: :no_role, status: 204
+      it_behaves_like "employee destruction", destroying: :account_administrator1, status: 403
+      it_behaves_like "employee destruction", destroying: :account_administrator2, status: 403
+      it_behaves_like "employee destruction", destroying: :account_owner1, status: 403
+    end
+
+    context "when current user has 'account_owner' role" do
+      before { Account::User.current = employees[:account_owner1].user }
+
+      it_behaves_like "employee destruction", destroying: :user1, status: 204
+      it_behaves_like "employee destruction", destroying: :no_role, status: 204
+      it_behaves_like "employee destruction", destroying: :account_administrator1, status: 204
+      it_behaves_like "employee destruction", destroying: :account_owner1, status: 403
+      it_behaves_like "employee destruction", destroying: :account_owner2, status: 403
+    end
+
+    context "when current user is has 'user' role" do
+      before { Account::User.current = employees[:user1].user }
+
+      it_behaves_like "employee destruction", destroying: :user1, status: 403
+      it_behaves_like "employee destruction", destroying: :user2, status: 403
+      it_behaves_like "employee destruction", destroying: :no_role, status: 403
+      it_behaves_like "employee destruction", destroying: :account_administrator1, status: 403
+      it_behaves_like "employee destruction", destroying: :account_owner1, status: 403
     end
   end
 end

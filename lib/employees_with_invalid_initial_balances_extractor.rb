@@ -10,7 +10,7 @@ class EmployeesWithInvalidInitialBalancesExtractor
       Employee
         .joins(:account, :user)
         .where(id: employees_with_invalid_initial_balances_ids)
-        .select { |e| !e.employee_balances.any? { |bal| bal.balance_type == "reset" }}
+        .reject { |e| e.employee_balances.any? { |bal| bal.balance_type == "reset" }}
         .group_by(&:account)
     end
 

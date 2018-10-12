@@ -38,6 +38,7 @@ module Yalty
     config.eager_load_paths << config.root.join('app', 'services', 'employee_balance')
     config.eager_load_paths << config.root.join('app', 'services', 'schedule')
     config.eager_load_paths << config.root.join('app', 'services', 'event')
+    config.eager_load_paths << config.root.join('app', 'dependencies')
 
     # Genrators
     config.generators do |g|

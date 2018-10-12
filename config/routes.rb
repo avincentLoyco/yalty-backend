@@ -26,7 +26,7 @@ Rails.application.routes.draw do
       resources :countries, only: [:show]
       resource :settings, only: [:show, :update]
       resources :employee_attribute_definitions
-      resources :employees, only: [:index, :show] do
+      resources :employees, only: [:index, :show, :destroy] do
         get 'employee_balance_overview', to: 'employee_balance_overviews#show'
         resources :employee_events, only: :index
         post '/working_times', to: 'registered_working_times#create'

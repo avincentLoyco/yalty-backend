@@ -1,6 +1,14 @@
+# frozen_string_literal: true
+
 module API
   module V1
     class EmployeesController < ApplicationController
+      include AppDependencies[
+        get_employees: "use_cases.employees.index",
+        get_employee: "use_cases.employees.show",
+        destroy_employee: "use_cases.employees.destroy",
+      ]
+
       authorize_resource
 
       def show
@@ -9,6 +17,12 @@ module API
 
       def index
         render_resources
+      end
+
+      def destroy
+        authorize! :destroy, resource
+        destroy_employee.call(resource)
+        render_no_content
       end
 
       private
@@ -34,19 +48,11 @@ module API
       end
 
       def resource
-        @resource ||= resources.find(params[:id])
+        @resource ||= get_employee.call(params[:id])
       end
 
       def resources
-        @resources ||= Account.current.employees.send(resources_scope)
-      end
-
-      def resources_scope
-        case params[:status]
-        when "active" then "active_at_date"
-        when "inactive" then "inactive_at_date"
-        else "all"
-        end
+        @resources ||= get_employees.call(status: params[:status])
       end
     end
   end
