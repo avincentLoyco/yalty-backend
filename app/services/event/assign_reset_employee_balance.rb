@@ -17,14 +17,35 @@ class AssignResetEmployeeBalance
 
   def create_reset_employee_balance
     @reset_employee_balance =
-      CreateEmployeeBalance.new(
-        @time_off_category.id,
-        @employee.id,
-        @employee.account.id,
-        balance_type: "reset",
-        effective_at: @new_contract_end + Employee::Balance::RESET_OFFSET,
-        skip_update: true
-      ).call.first
+      if @time_off_category.name.eql?("vacation")
+        end_of_contract_balance
+      else
+        reset_balance
+      end
+  end
+
+  def reset_balance
+    CreateEmployeeBalance.new(
+      @time_off_category.id,
+      @employee.id,
+      @employee.account.id,
+      balance_type: "reset",
+      effective_at: @new_contract_end + Employee::Balance::RESET_OFFSET,
+      skip_update: true
+    ).call.first
+  end
+
+  # NOTE: end_of_contract balance is only for vacation time off category.
+  # This new type of balance was created to recalculate balance value on contract end event.
+  def end_of_contract_balance
+    CreateEmployeeBalance.new(
+      @time_off_category.id,
+      @employee.id,
+      @employee.account.id,
+      balance_type: "end_of_contract",
+      effective_at: @new_contract_end + Employee::Balance::ASSIGNATION_OFFSET,
+      skip_update: true
+    ).call.first
   end
 
   def update_balances_valid_after_contract_end
