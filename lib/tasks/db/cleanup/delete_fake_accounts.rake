@@ -91,6 +91,29 @@ namespace :db do
         verylongcompanyname
         yalty-194
         z-test-z-test
+        kamila-469
+        hgjhgfj
+        hgjhgfj-997
+        delete-me
+        tetetetetetetet
+        kamila
+        kamila-223
+        kamila-253
+        kamila-448
+        kamila-818
+        kamila-test
+        kamila-test-682
+        kamila-test-339
+        kamila-test-787
+        dawid-828
+        mj2
+        test-473
+        test-355
+        test-428
+        balance
+        czarny-co
+        dawid
+        kujawa
       )
 
       account_subdomains.each do |subdomain|
