@@ -114,6 +114,40 @@ namespace :db do
         czarny-co
         dawid
         kujawa
+        aaa
+        bartek-company
+        companysetup
+        companysetup-366
+        companysetup-588
+        companysetup2
+        czarny
+        dawid-828
+        dawidcompany
+        delete-me
+        ffff
+        fffffffff
+        hello
+        hgjhgfj
+        hgjhgfj-997
+        kamila
+        kamila-223
+        kamila-253
+        kamila-448
+        kamila-469
+        kamila-818
+        kamila-test-339
+        kamila-test-787
+        madlenusz
+        mojprod
+        plock
+        setup
+        setup2
+        setupmobile
+        taki-tescik
+        test-355
+        test-428
+        test-473
+        tetetetetetetet
       )
 
       account_subdomains.each do |subdomain|
