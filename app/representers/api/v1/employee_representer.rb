@@ -6,6 +6,7 @@ module Api::V1
       {
         hiring_status: resource.can_be_hired?,
         is_old_employee: resource.hired_before_migration?,
+        role: resource.user&.role,
       }
         .merge(basic)
         .merge(employee_data)
