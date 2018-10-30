@@ -94,7 +94,6 @@ namespace :db do
         kamila-469
         hgjhgfj
         hgjhgfj-997
-        delete-me
         tetetetetetetet
         kamila
         kamila-223
