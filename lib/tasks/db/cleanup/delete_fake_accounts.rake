@@ -147,6 +147,7 @@ namespace :db do
         test-428
         test-473
         tetetetetetetet
+        kamila-test-155
       )
 
       account_subdomains.each do |subdomain|
