@@ -101,10 +101,13 @@ class CreateEmployeeBalance
 
   def calculate_amount
     return unless employee_balance.balance_type.eql?("reset") ||
+        employee_balance.balance_type.eql?("end_of_contract") ||
         employee_balance.balance_credit_additions.present? || counter_addition? ||
         balance_removal.present?
     if balance_removal
       balance_removal.calculate_removal_amount
+    elsif employee_balance.balance_type.eql?("end_of_contract")
+      employee_balance.resource_amount = Adjustments::Calculate.call(options[:event_id])
     else
       employee_balance.calculate_removal_amount
     end

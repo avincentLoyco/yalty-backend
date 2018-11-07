@@ -1,3 +1,5 @@
+# TODO: refactor this class to use dependency injection
+
 module Events
   module WorkContract
     class Create < Default::Create

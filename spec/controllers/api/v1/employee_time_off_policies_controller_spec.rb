@@ -1174,13 +1174,16 @@ RSpec.describe API::V1::EmployeeTimeOffPoliciesController, type: :controller do
   end
 
   describe "DELETE #destroy" do
+    subject { delete :destroy, id: id }
+
     let(:employee_time_off_policy) do
       create(:employee_time_off_policy, :with_employee_balance,
         employee: employee, time_off_policy: time_off_policy, effective_at: Time.zone.now)
     end
     let(:id) { employee_time_off_policy.id }
-
-    subject { delete :destroy, id: id }
+    let!(:vacation_toc) do
+      create(:time_off_category, account: employee.account, name: "vacation")
+    end
 
     context "with valid params" do
       context "when removing etop between the same etops" do

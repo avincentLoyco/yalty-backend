@@ -1,7 +1,9 @@
+# TODO: refactor this class to use dependency injection
+
 module Events
   module Adjustment
     class Update < Default::Update
-      include Balances
+      include Adjustment::Balances
 
       config_accessor :next_balance_updater do
         UpdateNextEmployeeBalances

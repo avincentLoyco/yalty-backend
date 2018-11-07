@@ -66,6 +66,7 @@ class API::ApplicationController < ApplicationController
         employee: resource.employee,
         new_contract_end_date: contract_end,
         old_contract_end_date: contract_end,
+        event_id: resource.employee.event_at(date: contract_end, type: "contract_end")
       )
     else
       duplicated = FindSequenceJoinTableInTime.new(

@@ -275,6 +275,10 @@ class Employee < ActiveRecord::Base
     contract_periods_include?(date)
   end
 
+  def event_at(date:, type:)
+    events.where(event_type: type, effective_at: date).first
+  end
+
   private
 
   def employee_file_ids

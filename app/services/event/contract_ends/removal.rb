@@ -14,6 +14,7 @@ module ContractEnds
         remove_adjustment_events
         assign_reset_resources
         move_time_offs
+        assign_end_of_contract_balance
         assign_reset_balances_and_create_additions
       end
     end
@@ -54,6 +55,7 @@ module ContractEnds
       employee
         .employee_balances
         .not_time_off
+        .not_end_of_contract
         .where("effective_at > ?", balance_remove_date)
     end
 
@@ -73,6 +75,19 @@ module ContractEnds
 
     def employee_used_time_off_categories
       employee.employee_time_off_policies.pluck(:time_off_category_id).uniq
+    end
+
+    def eoc_balance_effective_at(vacation_toc_id, contract_end_date)
+      # NOTE: If employee has no time offs, last vacation balance should be an assignation balance
+      last_vacation_balance =  employee
+        .employee_balances.where(
+          "time_off_category_id = ? AND effective_at <= ?", vacation_toc_id, contract_end_date)
+        .order(:effective_at)
+        .last
+
+      return nil unless last_vacation_balance
+      last_vacation_balance
+        .effective_at.to_date.to_time(:utc) + Employee::Balance::END_OF_CONTRACT_OFFSET
     end
   end
 end

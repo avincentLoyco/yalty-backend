@@ -16,15 +16,14 @@ class AssignResetEmployeeBalance
   private
 
   def create_reset_employee_balance
-    @reset_employee_balance =
-      CreateEmployeeBalance.new(
-        @time_off_category.id,
-        @employee.id,
-        @employee.account.id,
-        balance_type: "reset",
-        effective_at: @new_contract_end + Employee::Balance::RESET_OFFSET,
-        skip_update: true
-      ).call.first
+    @reset_employee_balance = CreateEmployeeBalance.new(
+      @time_off_category.id,
+      @employee.id,
+      @employee.account.id,
+      balance_type: "reset",
+      effective_at: @new_contract_end + Employee::Balance::RESET_OFFSET,
+      skip_update: true,
+    ).call.first
   end
 
   def update_balances_valid_after_contract_end

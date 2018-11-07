@@ -61,7 +61,8 @@ class UpdateEvent
     ContractEnds::Update.call(
       employee: employee,
       new_contract_end_date: event.effective_at,
-      old_contract_end_date: old_effective_at
+      old_contract_end_date: old_effective_at,
+      event_id: event.id
     )
   end
 
@@ -87,7 +88,7 @@ class UpdateEvent
   end
 
   def find_and_update_event
-    event.attributes = event_params.except(:presence_policy_id)
+    event.attributes = event_params.except(:presence_policy_id, :event)
   end
 
   def update_employee_join_tables
@@ -207,7 +208,8 @@ class UpdateEvent
     ::ContractEnds::Update.call(
       employee: employee,
       new_contract_end_date: old_effective_at,
-      old_contract_end_date: old_effective_at
+      old_contract_end_date: old_effective_at,
+      event_id: event.id
     )
   end
 

@@ -1,7 +1,9 @@
+# TODO: refactor this class to use dependency injection
+
 module Events
   module Adjustment
     class Destroy < Default::Destroy
-      include Balances
+      include Adjustment::Balances
 
       config_accessor :balance_destroyer do
         DestroyEmployeeBalance

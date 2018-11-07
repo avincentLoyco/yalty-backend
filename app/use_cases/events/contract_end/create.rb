@@ -1,22 +1,33 @@
 module Events
   module ContractEnd
-    class Create < Default::Create
-      config_accessor :contract_end_service do
-        ::ContractEnds::Create
-      end
+    class Create
+      include AppDependencies[
+        assign_employee_top_to_event: "use_cases.events.contract_end.assign_employee_top_to_event",
+        contract_end_service: "services.event.contract_ends.create",
+        create_event_service: "services.event.create_event",
+      ]
 
-      def call
+      def call(params)
         ActiveRecord::Base.transaction do
-          event.tap do
-            handle_contract_end
+          create_event(params).tap do |event|
+            assign_employee_top_to_event.call(event)
+            handle_contract_end(event)
           end
         end
       end
 
       private
 
-      def handle_contract_end
-        contract_end_service.call(employee: event.employee, contract_end_date: event.effective_at)
+      def create_event(params)
+        create_event_service.new(params, params[:employee_attributes].to_a).call
+      end
+
+      def handle_contract_end(event)
+        contract_end_service.call(
+          employee: event.employee,
+          contract_end_date: event.effective_at,
+          event_id: event.id,
+        )
       end
     end
   end
