@@ -10,11 +10,16 @@ class SendDataToIntercom < ActiveJob::Base
 
     resource = resource_class.constantize.find(resource_id)
     intercom_client.send(resource.intercom_type.to_sym).create(resource.intercom_data)
+    log_event(resource.intercom_type.to_sym, resource.intercom_data)
   rescue Intercom::RateLimitExceeded
     self.class.set(wait: 1.minute).perform_later(resource_id, resource_class)
   end
 
   private
+
+  def log_event(resource_type, data)
+    Rails.logger.info "Sending data to intercom, resource_type: #{resource_type}, data: #{data}"
+  end
 
   def intercom_client
     @intercom_client ||= IntercomService.new.client
