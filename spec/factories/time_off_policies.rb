@@ -1,5 +1,6 @@
 FactoryGirl.define do
   factory :time_off_policy do
+    id { SecureRandom.uuid }
     time_off_category
     name { Faker::Lorem.word }
     amount { Faker::Number.number(4) }

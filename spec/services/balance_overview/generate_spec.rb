@@ -53,7 +53,7 @@ RSpec.describe BalanceOverview::Generate do
     let_it_be(:hire_employee) do
       # TODO: refactor service to not rely on Account.current
       Account.current = account
-      Events::WorkContract::Create.call(event_params)
+      Events::WorkContract::Create.new.call(event_params)
     end
 
     let_it_be(:employee) { hire_employee.employee }

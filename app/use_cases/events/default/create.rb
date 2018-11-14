@@ -1,3 +1,5 @@
+# TODO: remove this file after all event use cases are refactored to use dependency injection
+
 module Events
   module Default
     class Create

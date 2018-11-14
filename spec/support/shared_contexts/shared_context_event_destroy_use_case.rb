@@ -1,3 +1,5 @@
+# TODO: remove this file after all use cases are refactored to use dependency injection
+
 RSpec.shared_context "event destroy context" do
   subject { use_case.call }
 

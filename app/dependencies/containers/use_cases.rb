@@ -6,6 +6,9 @@ module Containers
       register("index") { Employees::Index.new }
       register("show") { Employees::Show.new }
       register("destroy") { Employees::Destroy.new }
+
+      register("assign_employee_to_all_tops") { Employees::AssignEmployeeToAllTops.new }
+      register("find_unassigned_tops_for_employee") { Employees::FindUnassignedTopsForEmployee.new }
     end
 
     namespace "balances" do

@@ -1,53 +1,73 @@
-# TODO: refactor this class to use dependency injection
-
 module Events
   module WorkContract
-    class Create < Default::Create
-      include API::V1::Exceptions
+    class Create
+      include AppDependencies[
+        create_event_service: "services.event.create_event",
+        create_etop_for_event_service: "services.event.create_etop_for_event",
+        create_employee_presence_policy_service: "services.employee_policy.presence.create",
+        assign_employee_to_all_tops: "use_cases.employees.assign_employee_to_all_tops",
+        account_model: "models.account",
+        invalid_resources_error: "errors.invalid_resources_error"
+      ]
 
-      config_accessor :etop_creator do
-        CreateEtopForEvent
-      end
+      def call(params)
+        @params = params
 
-      def call
         ActiveRecord::Base.transaction do
           event.tap do
             handle_hired_or_work_contract_event
+            assign_employee_to_all_tops.call(event.employee)
           end
         end
       end
 
       private
 
+      attr_reader :params
+
+      def event
+        @event ||= create_event_service.new(params, params[:employee_attributes].to_a).call
+      end
+
       def handle_hired_or_work_contract_event
         validate_time_off_policy_days_presence
         validate_presence_policy_presence
 
-        EmployeePolicy::Presence::Create.call(presence_policy_params)
+        create_employee_presence_policy_service.call(presence_policy_params)
         validate_matching_occupation_rate
 
-        etop_creator.new(event.id, time_off_policy_amount).call
+        create_etop_for_event_service.new(event.id, time_off_policy_amount).call
       end
 
+      # TODO: extract all validations to a separate file
       def validate_time_off_policy_days_presence
         return unless time_off_policy_amount.nil?
-        raise InvalidResourcesError.new(event, ["Time Off Policy amount not present"])
+        raise invalid_resources_error.new(event, ["Time Off Policy amount not present"])
       end
 
       def validate_presence_policy_presence
         return unless params[:presence_policy_id].nil?
-        raise InvalidResourcesError.new(event, ["Presence Policy days not present"])
+        raise invalid_resources_error.new(event, ["Presence Policy days not present"])
       end
 
       def validate_matching_occupation_rate
         return if presence_policy_occupation_rate.eql?(event_occupation_rate)
-        raise InvalidResourcesError.new(event, ["Occupation Rate does not match Presence Policy"])
+        raise invalid_resources_error.new(event, ["Occupation Rate does not match Presence Policy"])
+      end
+
+      # TODO: extract to a repository
+      def presence_policy_occupation_rate
+        event.employee_presence_policy.presence_policy.occupation_rate
       end
 
       def time_off_policy_amount
         return if params[:time_off_policy_amount].nil?
-        default_full_time_policy = Account.current.presence_policies.full_time
         params[:time_off_policy_amount] * default_full_time_policy.standard_day_duration
+      end
+
+      # TODO: extract to a repository
+      def default_full_time_policy
+        @default_full_time_policy ||= account_model.current.presence_policies.full_time
       end
 
       def presence_policy_params
@@ -55,10 +75,6 @@ module Events
           event_id: event.id,
           presence_policy_id: params[:presence_policy_id],
         }
-      end
-
-      def presence_policy_occupation_rate
-        event.employee_presence_policy.presence_policy.occupation_rate
       end
 
       def event_occupation_rate

@@ -6,7 +6,8 @@ module API
 
       # TODO: remove after all event use cases are refactored
       REFACTORED_CLASSES = [
-        Events::ContractEnd::Create, Events::ContractEnd::Update, Events::ContractEnd::Destroy
+        Events::ContractEnd::Create,  Events::ContractEnd::Update,  Events::ContractEnd::Destroy,
+        Events::WorkContract::Create, Events::WorkContract::Update, Events::WorkContract::Destroy
       ].freeze
 
       def show

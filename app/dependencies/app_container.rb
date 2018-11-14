@@ -6,4 +6,5 @@ class AppContainer
   import Containers::Models
   import Containers::UseCases
   import Containers::Services
+  import Containers::Errors
 end

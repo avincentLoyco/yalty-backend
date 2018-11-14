@@ -1,7 +1,46 @@
 require "rails_helper"
 
 RSpec.describe Events::WorkContract::Create do
-  include_context "event create use case"
+  subject do
+    described_class
+      .new(
+        create_event_service: create_event_service_class_mock,
+        create_etop_for_event_service: create_etop_for_event_service_class_mock,
+        create_employee_presence_policy_service: create_employee_presence_policy_service_mock,
+        assign_employee_to_all_tops: assign_employee_to_all_tops_mock,
+        account_model: account_model_mock,
+        invalid_resources_error: invalid_resources_error,
+      )
+      .call(params)
+  end
+
+  let(:create_event_service_class_mock) do
+    class_double(CreateEvent, new: create_event_service_instance_mock)
+  end
+  let(:create_event_service_instance_mock) do
+    instance_double(CreateEvent, call: event)
+  end
+
+  let(:create_etop_for_event_service_class_mock) do
+    class_double(CreateEtopForEvent, new: create_etop_for_event_service_instance_mock)
+  end
+  let(:create_etop_for_event_service_instance_mock) do
+    instance_double(CreateEtopForEvent, call: true)
+  end
+
+  let(:create_employee_presence_policy_service_mock) do
+    class_double(EmployeePolicy::Presence::Create, call: true)
+  end
+
+  let(:assign_employee_to_all_tops_mock) do
+    instance_double(Employees::AssignEmployeeToAllTops, call: true)
+  end
+
+  let(:account) { build(:account) }
+  let(:account_model_mock) { class_double(Account, current: account) }
+
+  let(:invalid_resources_error) { API::V1::Exceptions::InvalidResourcesError }
+
 
   let(:params) do
     {
@@ -11,92 +50,76 @@ RSpec.describe Events::WorkContract::Create do
       effective_at: effective_at,
       employee: {},
       employee_attributes: [
-        {attribute_name: "firstname", value: "Walter"},
-        {attribute_name: "lastname", value: "Smith"},
-        {attribute_name: "occupation_rate", value: "0.8"},
+        { attribute_name: "firstname", value: "Walter" },
+        { attribute_name: "lastname", value: "Smith" },
+        { attribute_name: "occupation_rate", value: event_occupation_rate },
       ],
     }
   end
 
   let(:effective_at) { Date.new(2105,02,02) }
   let(:time_off_policy_amount) { 30 }
-  let(:presence_policy_id) { "fake_id" }
-  let(:account) { create(:account) }
+  let(:presence_policy_id) { "presence_policy_id" }
+  let(:event_occupation_rate) { "0.8" }
+
+  let(:event) { build(:employee_event, employee_presence_policy: employee_presence_policy) }
+  let!(:employee_presence_policy) { build(:employee_presence_policy) }
+  let(:default_full_time_policy) do
+    build(:presence_policy, default_full_time: true, standard_day_duration: 9600)
+  end
 
   before do
     Account.current = account
-    use_case.event_creator = ::CreateEvent
+    allow(account.presence_policies).to receive(:full_time).and_return(default_full_time_policy)
   end
 
   context "with valid params" do
     before do
-      create(
-        :employee_attribute_definition,
-        name: "occupation_rate",
-        account: account,
-        attribute_type: Attribute::Number.attribute_type,
-        validation: { range: [0, 1] }
-      )
-
-      allow(EmployeePolicy::Presence::Create).to receive(:call).and_call_original
-    end
-
-    let(:presence_policy) do
-      create(
-        :presence_policy,
-        :with_time_entries,
-        account: account,
-        occupation_rate: presence_policy_occupation_rate,
-        standard_day_duration: day_duration,
-        default_full_time: false
-      )
+      allow(create_employee_presence_policy_service_mock).to receive(:call).and_return(true)
+      allow(event).to receive(:attribute_value).and_return(event_occupation_rate)
+      employee_presence_policy.presence_policy.occupation_rate = presence_policy_occupation_rate
     end
 
     let(:day_duration) { account.presence_policies.full_time.standard_day_duration }
     let(:presence_policy_occupation_rate) { 0.8 }
-    let(:presence_policy_id) { presence_policy.id }
 
-    it "returns result from event_creator" do
-      expect(subject)
-        .to have_attributes(
-          effective_at: effective_at,
-          event_type: "hired",
-          active: true,
-          employee_id: kind_of(String),
-          attribute_values: {"firstname"=>"Walter", "lastname"=>"Smith", "occupation_rate"=>"0.8"},
-        )
+    it "creates event" do
+      expect(subject).to eq(event)
+
+      expect(create_event_service_class_mock).to have_received(:new).with(
+        params, params[:employee_attributes]
+      )
+
+      expect(create_event_service_instance_mock).to have_received(:call)
     end
 
-    it "calls EmployeePolicy::Presence::Create service" do
+    it "creates employee presence policy" do
       subject
-      expect(EmployeePolicy::Presence::Create)
+      expect(create_employee_presence_policy_service_mock)
         .to have_received(:call)
-        .with hash_including(event_id: subject.id, presence_policy_id: presence_policy_id)
+        .with(event_id: event.id, presence_policy_id: presence_policy_id)
     end
 
-    context "CreateEtopForEvent" do
-      before do
-        use_case.etop_creator = create_etop_service
-        allow(create_etop_service).to receive(:new).and_return(create_etop_instance)
-        allow(create_etop_instance).to receive(:call)
-      end
+    it "creates employee time off policy for event" do
+      subject
+      expect(create_etop_for_event_service_class_mock).to have_received(:new).with(
+        event.id,
+        time_off_policy_amount * default_full_time_policy.standard_day_duration
+      )
 
-      let(:create_etop_service) { class_double("CreateEtopForEvent") }
-      let(:create_etop_instance) { instance_double("CreateEtopForEvent") }
-      let(:etop_amount) { day_duration * 30 }
+      expect(create_etop_for_event_service_instance_mock).to have_received(:call)
+    end
 
-      it "calls CreateEtopForEvent service" do
-        subject
-        expect(create_etop_service).to have_received(:new).with(subject.id, etop_amount)
-        expect(create_etop_instance).to have_received(:call)
-      end
+    it "assigns employee to all time off policies" do
+      subject
+      expect(assign_employee_to_all_tops_mock).to have_received(:call).with(event.employee)
     end
 
     context "when occupation rate is doesn't match" do
       let(:presence_policy_occupation_rate) { 0.9 }
 
       it "raises InvalidResourcesError" do
-        expect{ subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError)
+        expect { subject }.to raise_error(invalid_resources_error)
       end
     end
   end
@@ -106,7 +129,7 @@ RSpec.describe Events::WorkContract::Create do
       let(:time_off_policy_amount) { nil }
 
       it "raises InvalidResourcesError" do
-        expect{ subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError)
+        expect { subject }.to raise_error(invalid_resources_error)
       end
     end
 
@@ -114,7 +137,7 @@ RSpec.describe Events::WorkContract::Create do
       let(:presence_policy_id) { nil }
 
       it "raises InvalidResourcesError" do
-        expect{ subject }.to raise_error(API::V1::Exceptions::InvalidResourcesError)
+        expect { subject }.to raise_error(invalid_resources_error)
       end
     end
   end
