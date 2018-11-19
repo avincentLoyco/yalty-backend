@@ -13,12 +13,8 @@ class PresencePolicy < ActiveRecord::Base
   validates :occupation_rate,
     numericality: { less_than_or_equal_to: 1, greater_than_or_equal_to: 0 }
 
-  before_create :set_standard_day_duration,
-    if: -> { !standard_day_duration.present? && presence_days.any? }
-
-  before_save :set_uniq_default_full_time, if: -> { default_full_time.eql?(true) }
-
   scope :not_reset, -> { where(reset: false) }
+  scope :active, -> { where(active: true) }
   scope :for_account, ->(account_id) { not_reset.where(account_id: account_id) }
 
   scope(:actives_for_employee, lambda do |employee_id, date|
@@ -39,22 +35,19 @@ class PresencePolicy < ActiveRecord::Base
     actives_for_employee(employee_id, date).first
   end
 
-  def self.full_time
-    find_by(default_full_time: true)
-  end
-
-  def set_standard_day_duration
-    self.standard_day_duration = presence_days.map(&:minutes).compact.max
-  end
-
-  def set_uniq_default_full_time
-    account.presence_policies
-           .where(default_full_time: true)
-           .where("id != ?", id)
-           .update_all(default_full_time: false)
+  def standard_day_duration
+    @standard_day_duration ||= begin
+      pd = presence_days.with_minutes_not_empty
+      return unless pd.any?
+      pd.map(&:minutes).sum.to_f / pd.count
+    end
   end
 
   def policy_length
     @policy_length ||= presence_days.maximum(:order).to_i
+  end
+
+  def default_full_time?
+    account.default_full_time_presence_policy_id == id
   end
 end

@@ -6,12 +6,12 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
   include_context "shared_context_headers"
 
   let(:presence_policy) { create(:presence_policy, account: account) }
-  let!(:presence_day) { create(:presence_day, presence_policy: presence_policy, order: 1) }
-  let!(:time_entry) { create(:time_entry, presence_day: presence_day) }
+  let(:presence_day) { create(:presence_day, presence_policy: presence_policy, order: 1) }
+  let(:time_entry) { create(:time_entry, presence_day: presence_day) }
 
   describe "GET #show" do
     subject { get :show, id: id }
-    let(:id) { time_entry.id }
+    let!(:id) { time_entry.id }
 
     context "with valid params" do
       it { is_expected.to have_http_status(200) }
@@ -43,6 +43,7 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
   describe "GET #index" do
     subject { get :index, presence_day_id: presence_day.id }
     let!(:other_user_entry) { create(:time_entry) }
+    let!(:time_entry) { create(:time_entry, presence_day: presence_day) }
     let!(:second_time_entry) do
       create(:time_entry, start_time: "18:00", 'end_time': "19:00", presence_day: presence_day)
     end
@@ -67,7 +68,7 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
     let(:presence_day_id) { presence_day.id }
     let(:start_time) { "20:00" }
     let(:end_time) { "22:00" }
-    let(:params) do
+    let!(:params) do
       {
         start_time: start_time,
         end_time: end_time,
@@ -81,7 +82,6 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
 
     context "with valid params" do
       before { presence_day.reload.update_minutes! }
-      it { expect { subject }.to change { TimeEntry.count }.by(1) }
       it { expect { subject }.to change { presence_day.reload.time_entries.count }.by(1) }
       it { expect { subject }.to change { presence_day.reload.minutes }.by(120) }
       it { is_expected.to have_http_status(201) }
@@ -139,7 +139,7 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
     let(:presence_day_id) { presence_day.id }
     let(:start_time) { "20:00" }
     let(:end_time) { "22:00" }
-    let(:id) { time_entry.id }
+    let!(:id) { time_entry.id }
     let(:params) do
       {
         id: id,
@@ -196,7 +196,7 @@ RSpec.describe  API::V1::TimeEntriesController, type: :controller do
 
   describe "DELETE #destroy" do
     subject { delete :destroy, id: id }
-    let(:id) { time_entry.id }
+    let!(:id) { time_entry.id }
 
     context "with valid data" do
       it { expect { subject }.to change { TimeEntry.count }.by(-1) }

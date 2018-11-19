@@ -16,9 +16,13 @@ class Account < ActiveRecord::Base
     },
     exclusion: { in: Yalty.reserved_subdomains }
   validates :company_name, presence: true
-  validate :timezone_must_exist, if: -> { timezone.present? }
   validates :default_locale, inclusion: { in: I18n.available_locales.map(&:to_s) }
+  validate :timezone_must_exist, if: -> { timezone.present? }
   validate :referrer_must_exist, if: :referred_by, on: :create
+
+  with_options if: :any_active_presence_policies?, on: :update do
+    validates :default_full_time_presence_policy_id, :standard_day_duration, presence: true
+  end
 
   has_many :users, -> { where.not(role: "yalty") },
     class_name: "Account::User",
@@ -32,6 +36,7 @@ class Account < ActiveRecord::Base
   has_many :employee_attribute_versions, through: :employees
   has_many :holiday_policies
   has_many :presence_policies
+  belongs_to :default_full_time_presence_policy, class_name: "PresencePolicy"
   has_many :presence_days, through: :presence_policies
   has_one :registration_key, class_name: "Account::RegistrationKey"
   has_many :time_off_categories, dependent: :destroy
@@ -209,6 +214,10 @@ class Account < ActiveRecord::Base
 
   def vacation_category
     time_off_categories.find_by(name: "vacation")
+  end
+
+  def any_active_presence_policies?
+    presence_policies.not_reset.active.any?
   end
 
   private

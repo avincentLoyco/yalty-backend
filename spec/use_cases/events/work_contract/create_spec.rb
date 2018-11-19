@@ -64,13 +64,10 @@ RSpec.describe Events::WorkContract::Create do
 
   let(:event) { build(:employee_event, employee_presence_policy: employee_presence_policy) }
   let!(:employee_presence_policy) { build(:employee_presence_policy) }
-  let(:default_full_time_policy) do
-    build(:presence_policy, default_full_time: true, standard_day_duration: 9600)
-  end
 
   before do
+    allow(account).to receive(:standard_day_duration).and_return(9600)
     Account.current = account
-    allow(account.presence_policies).to receive(:full_time).and_return(default_full_time_policy)
   end
 
   context "with valid params" do
@@ -80,7 +77,7 @@ RSpec.describe Events::WorkContract::Create do
       employee_presence_policy.presence_policy.occupation_rate = presence_policy_occupation_rate
     end
 
-    let(:day_duration) { account.presence_policies.full_time.standard_day_duration }
+    let(:day_duration) { account.standard_day_duration }
     let(:presence_policy_occupation_rate) { 0.8 }
 
     it "creates event" do
@@ -104,7 +101,7 @@ RSpec.describe Events::WorkContract::Create do
       subject
       expect(create_etop_for_event_service_class_mock).to have_received(:new).with(
         event.id,
-        time_off_policy_amount * default_full_time_policy.standard_day_duration
+        time_off_policy_amount * account.standard_day_duration
       )
 
       expect(create_etop_for_event_service_instance_mock).to have_received(:call)

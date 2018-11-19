@@ -13,8 +13,7 @@ module Policy
       end
 
       def call
-        standard_day_duration = account.presence_policies.full_time.standard_day_duration
-        days_off = time_off_policy_amount / standard_day_duration
+        days_off = time_off_policy_amount / account.standard_day_duration
 
         TimeOffPolicy.create!(
           start_day: 1,

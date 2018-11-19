@@ -12,7 +12,7 @@ class Adjustments::Calculate
   def initialize(event_id)
     @event                 = Employee::Event.find(event_id)
     @employee              = Employee.find(event.employee_id)
-    @standard_day_duration = employee.account.presence_policies.full_time.standard_day_duration
+    @standard_day_duration = employee.account.standard_day_duration
   end
 
   def call

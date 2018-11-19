@@ -13,8 +13,7 @@ RSpec.describe CreateEtopForEvent do
   let(:employee) { event.employee }
   let!(:vacation_category) { create(:time_off_category, account: employee.account, name: "vacation") }
   let!(:presence_policy) do
-    create(:presence_policy, :with_time_entries, account: employee.account, occupation_rate: 0.8,
-      standard_day_duration: 9600, default_full_time: true)
+    create(:presence_policy, :with_time_entries, account: employee.account, occupation_rate: 0.8)
   end
   let(:employee_id) { employee.id }
   let(:time_off_policy_amount) { 9600 }

@@ -5,7 +5,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
   include_context "shared_context_remove_original_helper"
 
   before do
-    Account.current = default_presence.account
+    Account.current = account
     Account.current.update(
       available_modules: ::Payments::AvailableModules.new(data: available_modules)
     )
@@ -60,10 +60,8 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     end
   end
 
-  let!(:default_presence) do
-    create(:presence_policy, :with_time_entries, occupation_rate: 0.5,
-      standard_day_duration: 9600, default_full_time: true)
-  end
+  let!(:account) { create(:account) }
+  let!(:default_presence) { account.default_full_time_presence_policy }
 
   let(:epp) do
     create(:employee_presence_policy, effective_at: event.effective_at, employee: event.employee)
@@ -76,26 +74,26 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
   let(:available_modules) { [] }
   let!(:employee_eattribute_definition) do
     create(:employee_attribute_definition,
-      account: Account.current,
+      account: account,
       name: "address",
       attribute_type: "Address")
   end
   let(:attribute_name) { "profile_picture" }
   let!(:file_definition) do
     create(:employee_attribute_definition, :required_with_nil_allowed,
-      account: Account.current,
+      account: account,
       name: attribute_name,
       attribute_type: "File"
     )
   end
 
-  let!(:vacation_category) { create(:time_off_category, account: Account.current, name: "vacation") }
+  let!(:vacation_category) { create(:time_off_category, account: account, name: "vacation") }
 
   let!(:user) { create(:account_user, employee: employee, role: "account_administrator") }
 
   let(:employee) do
     create(:employee_with_working_place, :with_attributes,
-      account: default_presence.account,
+      account: account,
       employee_attributes: {
         firstname: employee_first_name,
         lastname: employee_last_name,
@@ -145,7 +143,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
   let(:last_name_attribute_id) { last_name_attribute.id }
   let!(:occupation_rate_definition) do
     create(:employee_attribute_definition,
-      account: default_presence.account,
+      account: account,
       name: "occupation_rate",
       attribute_type: "Number",
       validation: { range: [0, 1] })
@@ -159,7 +157,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
   let(:first_pet_name) { "Pluto" }
   let(:second_pet_name) { "Scooby Doo" }
   let!(:multiple_attribute_definition) do
-    create(:employee_attribute_definition, :pet_multiple, account: Account.current)
+    create(:employee_attribute_definition, :pet_multiple, account: account)
   end
   let(:pet_multiple_attribute) do
     [
@@ -178,8 +176,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     ]
   end
   let!(:presence_policy) do
-    create(:presence_policy, :with_time_entries, account: employee.account, occupation_rate: 0.8,
-      standard_day_duration: 9600, default_full_time: true)
+    create(:presence_policy, :with_time_entries, account: account, occupation_rate: 0.8)
   end
 
   shared_examples "Unprocessable Entity on create" do
@@ -402,7 +399,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       context "when child attribute send" do
         let!(:child_definition) do
           create(:employee_attribute_definition,
-            account: default_presence.account, name: "child", attribute_type: "Child",
+            account: account, name: "child", attribute_type: "Child",
             validation: { inclusion: true })
         end
 
@@ -447,9 +444,9 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       end
 
       context "when manager_id sent" do
-        let(:manager) { create(:account_user, account: employee.account) }
+        let(:manager) { create(:account_user, account: account) }
         let(:manager_id) { manager.id }
-        let(:new_employee) { default_presence.account.employees.order(created_at: :desc).first }
+        let(:new_employee) { account.employees.order(created_at: :desc).first }
 
         it "sets manager" do
           subject
@@ -546,7 +543,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
       context "attributes validations" do
         before do
-          Account.current.employee_attribute_definitions
+          account.employee_attribute_definitions
                  .where(name: "lastname").first.update!(validation: { presence: true })
         end
 
@@ -735,7 +732,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         context "when employee wants to create event for other employee" do
           before do
             Account::User.current.update!(
-               employee: create(:employee, account: default_presence.account), role: "user"
+               employee: create(:employee, account: account), role: "user"
             )
           end
 
@@ -748,7 +745,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
       context "with multiple and system attribute definition" do
         let!(:multiple_system_definition) do
-          create(:employee_attribute_definition, :multiple, :system, account: Account.current)
+          create(:employee_attribute_definition, :multiple, :system, account: account)
         end
         let(:system_multiple_attribute) do
           [
@@ -818,14 +815,14 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
         before do
           create(:employee_attribute_definition,
-            account: Account.current,
+            account: account,
             name: "adjustment",
             attribute_type: "Number",
             validation: { integer: true }
           )
 
           create(:employee_attribute_definition,
-            account: Account.current,
+            account: account,
             name: "comment",
             attribute_type: "String"
           )
@@ -885,7 +882,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
     context "rehired event one day after contract end" do
       let(:user_employee) do
         create(:employee_with_working_place, :with_attributes,
-          account: default_presence.account,
+          account: account,
           employee_attributes: {
             firstname: employee_first_name,
             lastname: employee_last_name,
@@ -1250,7 +1247,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
       context "and he wants to update other employee attributes" do
         before do
-          user.employee = create(:employee, account: default_presence.account)
+          user.employee = create(:employee, account: account)
           json_payload[:employee_attributes].pop
         end
 
@@ -1321,7 +1318,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
     context "attributes validations" do
       before do
-        Account.current.employee_attribute_definitions
+        account.employee_attribute_definitions
                .where(name: "lastname").first.update!(validation: { presence: true })
       end
 
@@ -1678,13 +1675,13 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
       before do
         create(:employee_attribute_definition, :required,
-          account: Account.current,
+          account: account,
           name: "adjustment",
           attribute_type: "Number"
         )
 
         create(:employee_attribute_definition,
-          account: Account.current,
+          account: account,
           name: "comment",
           attribute_type: "String"
         )
@@ -1749,7 +1746,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
   context "GET #index" do
     context "when employee_id specified" do
       before(:each) do
-        create_list(:employee_event, 3, account: default_presence.account, employee: employee)
+        create_list(:employee_event, 3, account: account, employee: employee)
       end
 
       let(:subject) { get :index, employee_id: employee.id }
@@ -1791,7 +1788,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       end
 
       context "with regular user role" do
-        let(:user) { create(:account_user, account: default_presence.account, employee: employee, role: "user") }
+        let(:user) { create(:account_user, account: account, employee: employee, role: "user") }
 
         it "should respond with success" do
           subject
@@ -1804,12 +1801,12 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
     context "when employee_id isn't specified" do
       let!(:second_employee) do
-        create(:employee_with_working_place, :with_attributes, account: default_presence.account)
+        create(:employee_with_working_place, :with_attributes, account: account)
       end
 
       before(:each) do
-        create_list(:employee_event, 3, account: default_presence.account, employee: employee)
-        create_list(:employee_event, 2, account: default_presence.account, employee: second_employee)
+        create_list(:employee_event, 3, account: account, employee: employee)
+        create_list(:employee_event, 2, account: account, employee: second_employee)
       end
 
       let(:subject) { get :index }
@@ -1894,7 +1891,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       subject { get :show, id: event_id }
 
       context "when current user is an administrator" do
-        let!(:user) { create(:account_user, account: default_presence.account, role: "account_administrator") }
+        let!(:user) { create(:account_user, account: account, role: "account_administrator") }
 
         it "should include some attributes" do
           subject
@@ -1918,7 +1915,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       end
 
       context "when current user is a standard user" do
-        let!(:user) { create(:account_user, account: default_presence.account, role: "user") }
+        let!(:user) { create(:account_user, account: account, role: "user") }
 
         it "should not include some attributes" do
           subject
@@ -1944,7 +1941,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
     context "with regular user role" do
       let(:user) do
-        create(:account_user, account: default_presence.account, employee: employee, role: "user")
+        create(:account_user, account: account, employee: employee, role: "user")
       end
 
       it "should respond with success" do
@@ -2017,7 +2014,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
           context "UpdateSubscriptionQuantity job" do
             it "is scheduled" do
-              expect(::Payments::UpdateSubscriptionQuantity).to receive(:perform_now).with(default_presence.account)
+              expect(::Payments::UpdateSubscriptionQuantity).to receive(:perform_now).with(account)
               delete_event
             end
           end
@@ -2142,7 +2139,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           before do
             create(:employee_working_place, employee: employee, effective_at: 1.year.ago)
             create(:employee_presence_policy, employee: employee, effective_at: 1.year.ago)
-            categories = create_list(:time_off_category, 2, account: default_presence.account)
+            categories = create_list(:time_off_category, 2, account: account)
             policies =
               categories.map do |category|
                 create(:time_off_policy, time_off_category: category)
@@ -2182,7 +2179,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
       context "UpdateSubscriptionQuantity job" do
         it "is scheduled" do
-          expect(::Payments::UpdateSubscriptionQuantity).to receive(:perform_now).with(default_presence.account)
+          expect(::Payments::UpdateSubscriptionQuantity).to receive(:perform_now).with(account)
           delete_event
         end
       end
@@ -2278,7 +2275,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
 
       context "wrong employee" do
         let!(:user) { create(:account_user, role: "user") }
-        let!(:other_employee) { create(:employee, account: default_presence.account) }
+        let!(:other_employee) { create(:employee, account: account) }
         let!(:event) { create(:employee_event, employee: other_employee) }
         let(:event_to_delete_id) { event.id }
 

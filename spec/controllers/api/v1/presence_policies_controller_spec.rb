@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "rails_helper"
 
 RSpec.describe API::V1::PresencePoliciesController, type: :controller do
@@ -54,7 +56,7 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
         it { is_expected.to have_http_status(404) }
       end
 
-      context "with not accounts presence policy id" do
+      context "when presence policy accessed from other account" do
         before(:each) do
           user = create(:account_user)
           Account.current = user.account
@@ -67,18 +69,23 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
 
   describe "GET #index" do
     subject { get :index, { status: status } }
-    let!(:presence_policies) do
+
+    let!(:inactive_presence_policies) do
       create_list(:presence_policy, 2, :with_presence_day, account: account,
         created_at: Date.new(2017, 2, 1),
         active: false)
     end
 
-    before do
-      presence_policies << create(:presence_policy, :with_presence_day, account: account,
+    let!(:active_presence_policies) do
+      create_list(:presence_policy, 2, :with_presence_day, account: account,
         created_at: Date.new(2018, 1, 1),
         active: true)
-      create(:employee_presence_policy, presence_policy: presence_policies.last, employee: first_employee)
-      create(:employee_presence_policy, presence_policy: presence_policies.last, employee: second_employee)
+    end
+
+    before do
+      active_presence_policy = active_presence_policies.last
+      create(:employee_presence_policy, presence_policy: active_presence_policy, employee: first_employee)
+      create(:employee_presence_policy, presence_policy: active_presence_policy, employee: second_employee)
     end
 
     context "with account presence policy" do
@@ -88,10 +95,10 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
         JSON.parse(response.body).select { |p| p["assigned_employees"].present? }.first
       end
       let(:presence_policy_without_employees) do
-        JSON.parse(response.body).select { |p| p["assigned_employees"].empty? }.first
+        JSON.parse(response.body).select { |p| p["assigned_employees"].empty? && p["default_full_time"] == false }.first
       end
 
-      it { expect_json_sizes(2) }
+      it { expect_json_sizes(3) }
       it { is_expected.to have_http_status(200) }
       it do
         expect_json_keys("*", [:id, :type, :name, :deletable, :occupation_rate, :presence_days, :assigned_employees])
@@ -118,28 +125,27 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
       end
     end
 
-    context "inactive policies" do
-      let(:status) { "inactive" }
-      let(:active_policy) { presence_policies.last }
-      let(:inactive_policies) { presence_policies[0 .. 1] }
+    context "active/inactive policies" do
+      let(:active_policy) { active_presence_policies.last }
+      let(:inactive_policies) { inactive_presence_policies[0..1] }
 
-      before { subject }
+      context "inactive policies" do
+        let(:status) { "inactive" }
 
-      it { expect(response.body).to_not include active_policy.id }
-      it { expect(response.body).to include inactive_policies.first.id }
-      it { expect(response.body).to include inactive_policies.last.id }
-    end
+        before { subject }
 
-    context "active policies" do
-      let(:status) { "active" }
-      let(:active_policy) { presence_policies.last }
-      let(:inactive_policies) { presence_policies[0 .. 1] }
+        it { expect(response.body).to_not include active_policy.id }
+        it { expect(response.body).to include(inactive_policies.first.id, inactive_policies.last.id) }
+      end
 
-      before { subject }
+      context "active policies" do
+        let(:status) { "active" }
 
-      it { expect(response.body).to include active_policy.id }
-      it { expect(response.body).to_not include inactive_policies.first.id }
-      it { expect(response.body).to_not include inactive_policies.last.id }
+        before { subject }
+
+        it { expect(response.body).to include active_policy.id }
+        it { expect(response.body).to_not include(inactive_policies.first.id, inactive_policies.last.id) }
+      end
     end
   end
 
@@ -148,14 +154,24 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
     let(:first_employee_id)     { first_employee.id }
     let(:second_employee_id)    { second_employee.id }
     let(:working_place_id)      { working_place.id }
-    let(:standard_day_duration) { 123 }
+    let(:days_params) do
+      [
+        {
+          time_entries: [{ start_time: "12:00:00", end_time: "16:00:00" }],
+          order: 1,
+        },
+        {
+          time_entries: [{ start_time: "12:00:00", end_time: "16:00:00" }],
+          order: 7,
+        },
+      ]
+    end
     let(:valid_data_json) do
       {
         name: name,
         type: "presence_policy",
         occupation_rate: 0.8,
-        standard_day_duration: standard_day_duration,
-      }
+      }.merge(presence_days: days_params)
     end
 
     shared_examples "Invalid Id" do
@@ -178,7 +194,7 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
 
       context "response" do
         let(:json_keys) do
-          [:id, :type, :name, :presence_days, :occupation_rate, :assigned_employees, :standard_day_duration]
+          [:id, :type, :name, :presence_days, :occupation_rate, :assigned_employees]
         end
 
         before { subject }
@@ -187,24 +203,8 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
         it { expect_json_keys(json_keys) }
       end
 
-      context "when days params are present" do
-        subject { post :create, valid_data_json.merge(presence_days: days_params) }
-        let(:days_params) do
-          [
-            {
-              time_entries: [{ start_time: "12:00:00", end_time: "16:00:00" }],
-              minutes: 40,
-              order: 1,
-            },
-            {
-              time_entries: [{ start_time: "12:00:00", end_time: "16:00:00" }],
-              minutes: 40,
-              order: 7,
-            },
-          ]
-        end
-
-        context "and there is day with order 7" do
+      context "presence days" do
+        context "there is day with order 7" do
           it { expect { subject }.to change { PresencePolicy.count }.by(1) }
           it { expect { subject }.to change { PresenceDay.count }.by(2) }
           it { expect { subject }.to change { TimeEntry.count }.by(2) }
@@ -212,7 +212,7 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
           it { is_expected.to have_http_status(201) }
         end
 
-        context "and there is no day with order 7" do
+        context "there is no day with order 7" do
           before { days_params.pop }
 
           it { expect { subject }.to change { PresencePolicy.count }.by(1) }
@@ -270,16 +270,10 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
 
           it_behaves_like "params invalid", "must be filled"
         end
-
-        context "invalid standard_day_duration" do
-          let(:standard_day_duration) { "asd" }
-
-          it_behaves_like "params invalid", "must be an integer"
-        end
       end
 
-      context "when day params are present and days are not valid" do
-        subject { post :create, valid_data_json.merge(presence_days: days_params) }
+      context "when days are not valid" do
+        subject { post :create, valid_data_json }
         let(:days_params) do
           [
             {
@@ -313,13 +307,10 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
     let(:first_employee_id) { first_employee.id }
     let(:second_employee_id) { second_employee.id }
     let(:working_place_id) { working_place.id }
-    let(:standard_day_duration) { 456 }
     let(:valid_data_json) do
       {
         id: id,
         name: name,
-        standard_day_duration: standard_day_duration,
-        type: "presence_policy",
       }
     end
 
@@ -339,17 +330,18 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
     context "with valid data" do
       subject { put :update, valid_data_json }
 
-      context "when policy is not assigned" do
-        it { expect { subject }.to change { presence_policy.reload.standard_day_duration } }
+      # TODO use presence days for this test instead of standard_day_duration
+      # context "when policy is not assigned to any employee" do
+      #   it { expect { subject }.to change { presence_policy.reload.standard_day_duration } }
+      #
+      #   context "response" do
+      #     before { subject }
+      #
+      #     it { is_expected.to have_http_status(204) }
+      #   end
+      # end
 
-        context "response" do
-          before { subject }
-
-          it { is_expected.to have_http_status(204) }
-        end
-      end
-
-      context "when policy is assigned" do
+      context "when policy is assigned to some employee" do
         before do
           presence_policy.update!(presence_days: [create(:presence_day)])
           create(:employee_presence_policy,
@@ -360,22 +352,7 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
 
         it { is_expected.to have_http_status(204) }
         it { expect { subject }.to change { presence_policy.reload.name } }
-        it { expect { subject }.to change { presence_policy.reload.standard_day_duration } }
         it { expect { subject }.to_not change { presence_policy.reload.presence_days.count } }
-      end
-
-      context "it does not overwrite records when do not send" do
-        let(:policy_params) {{ name: "test", id: presence_policy.id, standard_day_duration: 23 }}
-        subject { put :update, policy_params }
-
-        it { expect { subject }.to change { presence_policy.reload.name } }
-        it { expect { subject }.to_not change { presence_policy.reload.presence_days.count } }
-
-        context "response" do
-          before { subject }
-
-          it { is_expected.to have_http_status(204) }
-        end
       end
 
       context "when new occupation rate is passed" do
@@ -385,7 +362,7 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
       end
     end
 
-    context "invalid data" do
+    context "with invalid data" do
       context "invalid records ids" do
         context "invalid presence policy id" do
           let(:id) { "1" }
@@ -399,8 +376,6 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
         let(:missing_data_json) { valid_data_json.tap { |json| json.delete(:name) } }
         subject { put :update, missing_data_json }
 
-        it { expect { subject }.to_not change { presence_policy.reload.presence_days.count } }
-
         context "response" do
           before { subject }
 
@@ -412,8 +387,6 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
       context "data do not pass validation" do
         let(:name) { "" }
         subject { put :update, valid_data_json }
-
-        it { expect { subject }.to_not change { presence_policy.reload.presence_days.count } }
 
         context "response" do
           before { subject }
@@ -427,30 +400,23 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
 
   describe "DELETE #destroy" do
     let!(:presence_policy) { create(:presence_policy, account: account) }
+    let(:employee) { create(:employee, account: account) }
+    let!(:presence_day) do
+      create(:presence_day, presence_policy: presence_policy)
+    end
     subject { delete :destroy, id: presence_policy.id }
 
     context "valid data" do
-      it { expect { subject }.to change { PresencePolicy.count }.by(-1) }
       it { is_expected.to have_http_status(204) }
+      it { expect { subject }.to change { PresencePolicy.count }.by(-1) }
+      it { expect { subject }.to change { PresenceDay.count}.by(-1) }
 
       context "and the policy is already assigned to an employee" do
-        before { presence_policy.update!(presence_days: [create(:presence_day)]) }
-        let(:employee) { create(:employee, account: account) }
         let!(:epp) do
           create(:employee_presence_policy, presence_policy: presence_policy, employee: employee)
         end
         it { is_expected.to have_http_status(423) }
         it { expect { subject }.to_not change { PresencePolicy.count } }
-      end
-
-      context "if it has an presence_day associated" do
-        let(:employee) { create(:employee, account: account) }
-        let!(:presence_day) do
-          create(:presence_day, presence_policy: presence_policy)
-        end
-        it { is_expected.to have_http_status(204) }
-        it { expect { subject }.to change {PresencePolicy.count}.by(-1) }
-        it { expect { subject }.to change {PresenceDay.count}.by(-1) }
       end
     end
 

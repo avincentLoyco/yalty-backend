@@ -68,12 +68,7 @@ module ExceptionHandler
   end
 
   def render_locked_error(type, field)
-    exception = LockedError.new(
-      type: type,
-      field: field,
-      messages: [get_message(type)],
-      codes: [get_code(type)]
-    )
+    exception = generate_locked_error(type, field)
     render json: ::Api::V1::ErrorsRepresenter.new(exception).complete, status: :locked
   end
 

@@ -589,7 +589,6 @@ RSpec/ContextWording:
 RSpec/DescribeClass:
   Exclude:
     - 'spec/lib/tasks/add_active_attr_to_events_spec.rb'
-    - 'spec/lib/tasks/add_standard_day_duration_spec.rb'
     - 'spec/lib/tasks/attribute_definitions.rb'
     - 'spec/lib/tasks/db/cleanup/create_missing_balances_spec.rb'
     - 'spec/lib/tasks/presence_policies_spec.rb'

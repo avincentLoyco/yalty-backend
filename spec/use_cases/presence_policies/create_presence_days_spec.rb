@@ -1,19 +1,18 @@
 require "rails_helper"
 
-RSpec.describe CreateCompletePresencePolicy, type: :service do
-
+RSpec.describe PresencePolicies::CreatePresenceDays do
   describe "#call" do
     let!(:presence_policy) { create(:presence_policy) }
     let(:first_time_entry) do
       [
         {
-          start_time: "16:00:00" ,
+          start_time: "16:00:00",
           end_time: "16:20:00",
-        } ,
+        },
         {
           start_time: "18:00:00",
           end_time: "18:20:00",
-        } ,
+        },
       ]
     end
     let(:second_time_entry) do
@@ -32,12 +31,10 @@ RSpec.describe CreateCompletePresencePolicy, type: :service do
       [
         {
           time_entries: first_time_entry,
-          minutes: 40,
           order: 1,
         },
         {
           time_entries: second_time_entry,
-          minutes: 120,
           order: 2,
         },
       ]
@@ -46,9 +43,14 @@ RSpec.describe CreateCompletePresencePolicy, type: :service do
       ActionController::Parameters.new(dummy_key: presence_day_params).delete(:dummy_key)
     }
 
-    subject { described_class.new(presence_policy, active_record_params).call() }
-    context "with time_entries" do
+    subject do
+      described_class.new.call(
+        presence_policy: presence_policy,
+        params: active_record_params
+      )
+    end
 
+    context "with time_entries" do
       it { expect { subject }.to change { presence_policy.reload.presence_days.count }.by(2) }
       it { expect { subject }.to change { TimeEntry.count }.by(4) }
     end

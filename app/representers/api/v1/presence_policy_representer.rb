@@ -4,10 +4,10 @@ module Api::V1
       {
         name: resource.name,
         occupation_rate: resource.occupation_rate,
-        standard_day_duration: resource.standard_day_duration,
-        default_full_time: resource.default_full_time,
+        standard_day_duration: full_time_standard_day_duration,
+        default_full_time: resource.default_full_time?,
         active: resource.active,
-        deletable: assigned_employees_json.empty?,
+        deletable: deletable?,
       }
         .merge(basic)
     end
@@ -23,10 +23,22 @@ module Api::V1
       end
     end
 
+    def assigned_employees
+      related_resources(EmployeePresencePolicy, resource.id)
+    end
+
     def assigned_employees_json
-      related_resources(EmployeePresencePolicy, resource.id).map do |employee_presence_policy|
+      assigned_employees.map do |employee_presence_policy|
         EmployeePresencePolicyRepresenter.new(employee_presence_policy).complete
       end
+    end
+
+    def deletable?
+      assigned_employees.empty? && !resource.default_full_time?
+    end
+
+    def full_time_standard_day_duration
+      resource.account.standard_day_duration
     end
   end
 end

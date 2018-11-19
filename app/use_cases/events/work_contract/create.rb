@@ -62,12 +62,7 @@ module Events
 
       def time_off_policy_amount
         return if params[:time_off_policy_amount].nil?
-        params[:time_off_policy_amount] * default_full_time_policy.standard_day_duration
-      end
-
-      # TODO: extract to a repository
-      def default_full_time_policy
-        @default_full_time_policy ||= account_model.current.presence_policies.full_time
+        params[:time_off_policy_amount] * account_model.current.standard_day_duration
       end
 
       def presence_policy_params

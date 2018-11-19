@@ -26,8 +26,34 @@ module Containers
       end
     end
 
+    namespace "time_entries" do
+      register("create") { TimeEntries::Create.new }
+      register("destroy") { TimeEntries::Destroy.new }
+      register("update") { TimeEntries::Update.new }
+    end
+
     namespace "time_off_categories" do
       register("find_by_name") { TimeOffCategories::FindByName.new }
+    end
+
+    namespace "presence_days" do
+      register("destroy") { PresenceDays::Destroy.new }
+      register("create") { PresenceDays::Create.new }
+      register("update") { PresenceDays::Update.new }
+    end
+
+    namespace "presence_policies" do
+      register("create_presence_days") { PresencePolicies::CreatePresenceDays.new }
+      register("create") { PresencePolicies::Create.new }
+      register("destroy") { PresencePolicies::Destroy.new }
+      register("update") { PresencePolicies::Update.new }
+      register("update_default_full_time") { PresencePolicies::UpdateDefaultFullTime.new }
+      register("verify_employees_not_assigned") do
+        PresencePolicies::VerifyEmployeesNotAssigned.new
+      end
+      register("verify_not_default_full_time") do
+        PresencePolicies::VerifyNotDefaultFullTime.new
+      end
     end
   end
 end

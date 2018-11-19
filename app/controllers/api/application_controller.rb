@@ -162,8 +162,9 @@ class API::ApplicationController < ApplicationController
     head :reset_content
   end
 
+  # NOTE: resource is locked when there are any employees assigned to it
   def verify_if_resource_not_locked!(resource_type, resource_field = "employees")
-    return unless resource_type.send(resource_field).present?
+    return unless resource_type.public_send(resource_field).present?
     raise generate_locked_error(resource_type.class.name.underscore, resource_field)
   end
 

@@ -14,12 +14,11 @@ RSpec.describe Adjustments::Calculate, type: :service do
 
   let!(:vacation_category) { employee.account.time_off_categories.find_by(name: "vacation") }
   let!(:time_off_policy) { create(:time_off_policy, time_off_category: vacation_category) }
-  let!(:presence_policy) do
-    create(:presence_policy, :with_time_entries, account: employee.account,
-           standard_day_duration: 9600, default_full_time: true)
-  end
+  let!(:presence_policy) { account.default_full_time_presence_policy }
 
-  let(:employee) { create(:employee) }
+  let(:account) { create(:account) }
+  let(:standard_day_duration) { account.standard_day_duration }
+  let(:employee) { create(:employee, account: account) }
   let(:employee_presence_policy) do
     create(:employee_presence_policy, presence_policy: presence_policy, employee: employee,
            effective_at: event.effective_at)
@@ -42,7 +41,7 @@ RSpec.describe Adjustments::Calculate, type: :service do
     end
     let(:event_type) { "hired" }
 
-    it { expect(subject).to eq(9600) }
+    it { expect(subject).to eq(standard_day_duration) }
   end
 
   context "work_contract" do
@@ -60,7 +59,7 @@ RSpec.describe Adjustments::Calculate, type: :service do
 
     let(:event_type) { "work_contract" }
 
-    it { expect(subject).to eq(9600 * 2) }
+    it { expect(subject).to eq(standard_day_duration * 2) }
   end
 
   context "contract_end" do
@@ -69,6 +68,6 @@ RSpec.describe Adjustments::Calculate, type: :service do
     end
     let(:event_type) { "contract_end" }
 
-    it { expect(subject).to eq(9600 * 3) }
+    it { expect(subject).to eq(standard_day_duration * 3) }
   end
 end

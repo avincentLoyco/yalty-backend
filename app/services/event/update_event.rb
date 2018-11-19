@@ -42,8 +42,7 @@ class UpdateEvent
     validate_time_off_policy_days_presence
     validate_presence_policy_presence
 
-    default_full_time_policy = current_account.presence_policies.full_time
-    time_off_policy_amount = time_off_policy_days * default_full_time_policy.standard_day_duration
+    time_off_policy_amount = time_off_policy_days * current_account.standard_day_duration
 
     if presence_policy_id.eql?(event.employee_presence_policy&.presence_policy&.id)
       EmployeePolicy::Presence::Update.call(update_presence_policy_params)

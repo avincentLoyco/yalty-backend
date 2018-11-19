@@ -3,36 +3,56 @@ require "rails_helper"
 RSpec.describe Account, type: :model do
   subject { build(:account, subdomain: "subdomain") }
 
-  it { is_expected.to have_db_column(:id).of_type(:uuid) }
-  it { is_expected.to have_db_column(:customer_id).of_type(:string) }
-  it { is_expected.to have_db_column(:available_modules).of_type(:json) }
-  it { is_expected.to have_db_column(:subscription_renewal_date).of_type(:date) }
-  it { is_expected.to have_db_column(:subdomain).with_options(null: false) }
-  it { is_expected.to have_db_column(:company_information).of_type(:hstore) }
-  it { is_expected.to have_db_column(:invoice_emails).of_type(:text) }
-  it { is_expected.to have_db_column(:archive_processing).of_type(:boolean).with_options(default: false) }
-  it { is_expected.to have_db_column(:company_name) }
-  it { is_expected.to have_db_index(:subdomain).unique(true) }
-  it { is_expected.to validate_presence_of(:subdomain).on(:update) }
-  it { is_expected.to validate_uniqueness_of(:subdomain).case_insensitive }
-  it { is_expected.to validate_length_of(:subdomain).is_at_most(63) }
-  it { is_expected.to allow_value("a", "subdomain", "sub-domain", "123subdomain", "subdomain-123").for(:subdomain) }
-  it { is_expected.to_not allow_value("-subdomain", "subdomain-", "sub domain", "subdömaìn", "SubDomain").for(:subdomain) }
-  it { is_expected.to validate_exclusion_of(:subdomain).in_array(["www", "staging"]) }
-  it { is_expected.to validate_presence_of(:company_name) }
+  context "attributes" do
+    it { is_expected.to have_db_column(:id).of_type(:uuid) }
+    it { is_expected.to have_db_column(:customer_id).of_type(:string) }
+    it { is_expected.to have_db_column(:available_modules).of_type(:json) }
+    it { is_expected.to have_db_column(:subscription_renewal_date).of_type(:date) }
+    it { is_expected.to have_db_column(:subdomain).with_options(null: false) }
+    it { is_expected.to have_db_column(:company_information).of_type(:hstore) }
+    it { is_expected.to have_db_column(:invoice_emails).of_type(:text) }
+    it { is_expected.to have_db_column(:archive_processing).of_type(:boolean).with_options(default: false) }
+    it { is_expected.to have_db_column(:company_name) }
+    it { is_expected.to have_db_column(:standard_day_duration) }
+    it { is_expected.to have_db_column(:default_full_time_presence_policy_id) }
+    it { is_expected.to have_db_index(:subdomain).unique(true) }
+  end
 
-  it { is_expected.to have_many(:employee_events).through(:employees) }
-  it { is_expected.to have_many(:employee_attribute_versions).through(:employees) }
-  it { is_expected.to have_many(:presence_policies) }
-  it { is_expected.to have_many(:time_off_categories) }
-  it { is_expected.to have_many(:invoices) }
-  it { is_expected.to have_many(:working_places) }
-  it { is_expected.to have_many(:users).class_name("Account::User").inverse_of(:account) }
-  it { is_expected.to have_many(:employees).inverse_of(:account) }
-  it { is_expected.to have_many(:employee_attribute_definitions).class_name("Employee::AttributeDefinition").inverse_of(:account) }
-  it { is_expected.to have_one(:registration_key) }
-  it { is_expected.to have_one(:archive_file).class_name("GenericFile") }
+  context "validations" do
+    it { is_expected.to validate_presence_of(:subdomain).on(:update) }
+    it { is_expected.to validate_uniqueness_of(:subdomain).case_insensitive }
+    it { is_expected.to validate_length_of(:subdomain).is_at_most(63) }
+    it { is_expected.to allow_value("a", "subdomain", "sub-domain", "123subdomain", "subdomain-123").for(:subdomain) }
+    it { is_expected.to_not allow_value("-subdomain", "subdomain-", "sub domain", "subdömaìn", "SubDomain").for(:subdomain) }
+    it { is_expected.to validate_exclusion_of(:subdomain).in_array(["www", "staging"]) }
+    it { is_expected.to validate_presence_of(:company_name) }
 
+    context "when any active non-reset presence policies" do
+      let(:account) { create(:account) }
+
+      before do
+        allow(account).to receive(:any_active_presence_policies?).and_return(true)
+      end
+
+      it { expect(account).to validate_presence_of(:standard_day_duration).on(:update) }
+      it { expect(account).to validate_presence_of(:default_full_time_presence_policy_id).on(:update) }
+    end
+  end
+
+  context "associations" do
+    it { is_expected.to have_many(:employee_events).through(:employees) }
+    it { is_expected.to have_many(:employee_attribute_versions).through(:employees) }
+    it { is_expected.to have_many(:presence_policies) }
+    it { is_expected.to have_many(:time_off_categories) }
+    it { is_expected.to have_many(:invoices) }
+    it { is_expected.to have_many(:working_places) }
+    it { is_expected.to have_many(:users).class_name("Account::User").inverse_of(:account) }
+    it { is_expected.to have_many(:employees).inverse_of(:account) }
+    it { is_expected.to have_many(:employee_attribute_definitions).class_name("Employee::AttributeDefinition").inverse_of(:account) }
+    it { is_expected.to have_one(:registration_key) }
+    it { is_expected.to have_one(:archive_file).class_name("GenericFile") }
+    it { is_expected.to belong_to(:default_full_time_presence_policy).class_name("PresencePolicy") }
+  end
   context "generate subdomain from company name on create" do
 
     it "should not be blank" do
@@ -142,20 +162,24 @@ RSpec.describe Account, type: :model do
     expect(account.reload.users).to_not include(user)
   end
 
-  it "#current= should accept an account" do
-    account = create(:account)
+  context "#current=" do
+    it "accepts an account" do
+      account = create(:account)
 
-    expect(Account).to respond_to(:current=)
-    expect {
-      Account.current = account
-    }.to_not raise_error
+      expect(Account).to respond_to(:current=)
+      expect {
+        Account.current = account
+      }.to_not raise_error
+    end
   end
 
-  it "#current should return account" do
-    account = create(:account)
-    Account.current = account
+  context "#current" do
+    it "returns the account" do
+      account = create(:account)
+      Account.current = account
 
-    expect(Account.current).to eql(account)
+      expect(Account.current).to eql(account)
+    end
   end
 
   context "#timezone" do
