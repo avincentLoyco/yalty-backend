@@ -13,7 +13,7 @@ class VerifyEmployeeAttributeValues
   end
 
   def valid?
-    return true unless type && !value[:value].nil?
+    return true unless type && value[:value].present?
     verify_value
 
     errors.blank?

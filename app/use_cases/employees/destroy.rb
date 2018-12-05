@@ -3,13 +3,19 @@
 module Employees
   class Destroy
     def call(employee)
-      Employee.transaction do
-        delete_intercom_user(employee.user.id) unless employee.user.nil?
+      ActiveRecord::Base.transaction do
+        delete_user(employee.user)
         employee.destroy!
       end
     end
 
     private
+
+    def delete_user(user)
+      return unless user
+      delete_intercom_user(user.id)
+      user.destroy!
+    end
 
     def delete_intercom_user(user_id)
       user = intercom_client.users.find(user_id: user_id)

@@ -1,7 +1,7 @@
 class IntercomService
   def client
-    return unless enabled?
     return IntercomServiceMock.new if Rails.env.development?
+    return unless enabled?
 
     Intercom::Client.new(token: ENV["INTERCOM_ACCESS_TOKEN"])
   end
