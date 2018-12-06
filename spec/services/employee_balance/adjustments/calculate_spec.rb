@@ -19,9 +19,8 @@ RSpec.describe Adjustments::Calculate, type: :service do
   let(:account) { create(:account) }
   let(:standard_day_duration) { account.standard_day_duration }
   let(:employee) { create(:employee, account: account) }
-  let(:employee_presence_policy) do
-    create(:employee_presence_policy, presence_policy: presence_policy, employee: employee,
-           effective_at: event.effective_at)
+  let!(:employee_presence_policy) do
+    create(:employee_presence_policy, presence_policy: presence_policy, employee: employee)
   end
   let(:event) do
     create(:employee_event, event_type: event_type, employee: employee, effective_at: 1.week.since)

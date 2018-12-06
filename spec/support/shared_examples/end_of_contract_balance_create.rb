@@ -20,9 +20,8 @@ RSpec.shared_examples "end of contract balance create" do
     subject
     expect(create_end_of_contract_balance_mock).to have_received(:call).with(
       employee: employee,
-      vacation_toc_id: vacation_toc.id,
-      effective_at: eoc_balance_effective_at,
-      event_id: event.id,
+      contract_end_date: contract_end_date,
+      eoc_event_id: event.id,
     )
   end
 end

@@ -9,10 +9,11 @@ RSpec.describe ContractEnds::Update, :service do
       employee: employee,
       new_contract_end_date: new_contract_end_date,
       old_contract_end_date: old_contract_end_date,
-      event_id: event.id
+      eoc_event_id: event.id
     )
   end
 
+  let(:contract_end_date)     { new_contract_end_date }
   let(:hired_date)            { Time.zone.parse("2016/01/01") }
   let(:new_contract_end_date) { Time.zone.parse("2016/03/01") }
   let(:old_contract_end_date) { Time.zone.parse("2016/03/20") }
@@ -61,6 +62,16 @@ RSpec.describe ContractEnds::Update, :service do
       time_off_policy: vacation_top,
       employee: employee,
       effective_at: hired_date
+    )
+  end
+
+  let(:presence_policy) { create(:presence_policy, :with_presence_day, account: account) }
+  let!(:employee_presence_policy) do
+    create(
+      :employee_presence_policy,
+      presence_policy: presence_policy,
+      effective_at: hired_date,
+      employee: employee,
     )
   end
 

@@ -61,7 +61,7 @@ class UpdateEvent
       employee: employee,
       new_contract_end_date: event.effective_at,
       old_contract_end_date: old_effective_at,
-      event_id: event.id
+      eoc_event_id: event.id
     )
   end
 
@@ -208,7 +208,7 @@ class UpdateEvent
       employee: employee,
       new_contract_end_date: old_effective_at,
       old_contract_end_date: old_effective_at,
-      event_id: event.id
+      eoc_event_id: event.id
     )
   end
 

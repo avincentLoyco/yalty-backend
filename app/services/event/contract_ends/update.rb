@@ -1,25 +1,24 @@
 module ContractEnds
   class Update < Removal
     attr_reader :employee, :old_contract_end_date, :new_contract_end_date, :next_hire_date,
-      :unemployment_period, :vacation_toc, :event_id
+      :unemployment_period, :eoc_event_id
 
-    def self.call(employee:, new_contract_end_date:, old_contract_end_date:, event_id:)
+    def self.call(employee:, new_contract_end_date:, old_contract_end_date:, eoc_event_id:)
       new(
         employee: employee,
         new_contract_end_date: new_contract_end_date,
         old_contract_end_date: old_contract_end_date,
-        event_id: event_id,
+        eoc_event_id: eoc_event_id,
       ).call
     end
 
-    def initialize(employee:, new_contract_end_date:, old_contract_end_date:, event_id:)
+    def initialize(employee:, new_contract_end_date:, old_contract_end_date:, eoc_event_id:)
       @employee              = employee
       @old_contract_end_date = old_contract_end_date + 1
       @new_contract_end_date = new_contract_end_date
       @next_hire_date        = find_next_hire_date || Float::INFINITY
       @unemployment_period   = UnemploymentPeriod.new(new_contract_end_date, next_hire_date)
-      @vacation_toc          = employee.account.time_off_categories.find_by(name: "vacation")
-      @event_id              = event_id
+      @eoc_event_id          = eoc_event_id
     end
 
     def call
@@ -53,18 +52,14 @@ module ContractEnds
     end
 
     def assign_end_of_contract_balance
-      effective_at = eoc_balance_effective_at(vacation_toc.id, new_contract_end_date)
-      return unless effective_at
-
       Balances::EndOfContract::FindAndDestroy.new.call(
         employee: employee, eoc_date: old_contract_end_date
       )
 
       Balances::EndOfContract::Create.new.call(
-        vacation_toc_id: vacation_toc.id,
         employee: employee,
-        effective_at: effective_at,
-        event_id: event_id
+        contract_end_date: new_contract_end_date,
+        eoc_event_id: eoc_event_id
       )
     end
 

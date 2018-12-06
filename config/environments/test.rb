@@ -43,6 +43,11 @@ Rails.application.configure do
   # Active Job adapter
   config.active_job.queue_adapter = :test
 
+  # Config for ar_after_transaction gem
+  config.after_initialize do
+    ActiveRecord::Base.normally_open_transactions = 1
+  end
+
   # Raises error for missing translations
   # config.action_view.raise_on_missing_translations = true
   config.log_level = :unknown

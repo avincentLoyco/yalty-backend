@@ -4,6 +4,8 @@ module Containers
   Services = Dry::Container::Namespace.new("services") do
     namespace "employee_balance" do
       register("create_employee_balance") { CreateEmployeeBalance }
+      register("destroy_employee_balance") { DestroyEmployeeBalance }
+      register("update_next_employee_balances") { UpdateNextEmployeeBalances }
     end
 
     namespace "employee_policy" do

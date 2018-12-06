@@ -1,18 +1,17 @@
 # module Event
 module ContractEnds
   class Create < Removal
-    attr_reader :employee, :unemployment_period, :event_id, :vacation_toc, :contract_end_date
+    attr_reader :employee, :unemployment_period, :eoc_event_id, :contract_end_date
 
-    def self.call(employee:, contract_end_date:, event_id:)
-      new(employee: employee, contract_end_date: contract_end_date, event_id: event_id).call
+    def self.call(employee:, contract_end_date:, eoc_event_id:)
+      new(employee: employee, contract_end_date: contract_end_date, eoc_event_id: eoc_event_id).call
     end
 
-    def initialize(employee:, contract_end_date:, event_id:)
+    def initialize(employee:, contract_end_date:, eoc_event_id:)
       @employee             = employee
-      @event_id             = event_id
+      @eoc_event_id         = eoc_event_id
       @contract_end_date    = contract_end_date
       @unemployment_period  = UnemploymentPeriod.new(contract_end_date, Float::INFINITY)
-      @vacation_toc         = employee.account.time_off_categories.find_by(name: "vacation")
     end
 
     def call
@@ -32,18 +31,10 @@ module ContractEnds
     end
 
     def assign_end_of_contract_balance
-      effective_at = eoc_balance_effective_at(vacation_toc.id, contract_end_date)
-
-      # NOTE: Most probably there should always be at least one vacation balance for an employee.
-      # This check was added to handle random situations and to avoid fixing a lot of controller
-      # specs
-      return unless effective_at
-
       Balances::EndOfContract::Create.new.call(
-        vacation_toc_id: vacation_toc.id,
         employee: employee,
-        effective_at: effective_at,
-        event_id: event_id
+        contract_end_date: contract_end_date,
+        eoc_event_id: eoc_event_id
       )
     end
 

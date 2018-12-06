@@ -24,7 +24,7 @@ module EmployeePolicy
               employee: employee,
               new_contract_end_date: contract_end,
               old_contract_end_date: contract_end,
-              event_id: employee.event_at(date: contract_end, type: "contract_end")
+              eoc_event_id: employee.event_at(date: contract_end, type: "contract_end")
             )
           else
             duplicated = FindSequenceJoinTableInTime.new(

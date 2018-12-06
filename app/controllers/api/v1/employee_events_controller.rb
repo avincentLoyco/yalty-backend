@@ -4,12 +4,6 @@ module API
       include EmployeeEventSchemas
       DryValidationResult = Struct.new(:attributes, :errors)
 
-      # TODO: remove after all event use cases are refactored
-      REFACTORED_CLASSES = [
-        Events::ContractEnd::Create,  Events::ContractEnd::Update,  Events::ContractEnd::Destroy,
-        Events::WorkContract::Create, Events::WorkContract::Update, Events::WorkContract::Destroy
-      ].freeze
-
       def show
         authorize! :show, resource
         render_resource(resource)
@@ -25,13 +19,7 @@ module API
           authorize! :create, event_for_auth(attributes)
           verify_employee_attributes_values(attributes[:employee_attributes])
           UpdateEventAttributeValidator.new(attributes[:employee_attributes]).call
-
-          # TODO: remove if/else statement after all event use cases are refactored
-          new_resource = if event_service_class_refactored?
-                           event_service_class.new.call(attributes)
-                         else
-                           event_service_class.new(attributes).call
-                         end
+          new_resource = event_service_class.new.call(attributes)
 
           render_resource(new_resource, status: :created)
         end
@@ -42,13 +30,7 @@ module API
           authorize! :update, resource, attributes.except(:employee_attributes)
           verify_employee_attributes_values(attributes[:employee_attributes])
           UpdateEventAttributeValidator.new(attributes[:employee_attributes]).call
-
-          # TODO: remove if/else statement after all event use cases are refactored
-          if event_service_class_refactored?
-            event_service_class.new.call(resource, attributes)
-          else
-            event_service_class.new(resource, attributes).call
-          end
+          event_service_class.new.call(resource, attributes)
 
           render_no_content
         end
@@ -56,22 +38,12 @@ module API
 
       def destroy
         authorize! :destroy, resource
+        event_service_class.new.call(resource)
 
-        # TODO: remove if/else statement after all event use cases are refactored
-        if event_service_class_refactored?
-          event_service_class.new.call(resource)
-        else
-          event_service_class.new(resource).call
-        end
         render_no_content
       end
 
       private
-
-      # TODO: remove after all event use cases are refactored
-      def event_service_class_refactored?
-        REFACTORED_CLASSES.include?(event_service_class)
-      end
 
       def resource
         @resource ||= Account.current.employee_events.find_by!(id: params[:id])

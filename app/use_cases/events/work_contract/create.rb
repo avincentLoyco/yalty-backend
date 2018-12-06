@@ -1,20 +1,22 @@
 module Events
   module WorkContract
-    class Create
+    class Create < Default::Create
+      include EndOfContractHandler # eoc_event, destroy_eoc_balance, recreate_eoc_balance
       include AppDependencies[
-        create_event_service: "services.event.create_event",
         create_etop_for_event_service: "services.event.create_etop_for_event",
         create_employee_presence_policy_service: "services.employee_policy.presence.create",
         assign_employee_to_all_tops: "use_cases.employees.assign_employee_to_all_tops",
         account_model: "models.account",
-        invalid_resources_error: "errors.invalid_resources_error"
+        invalid_resources_error: "errors.invalid_resources_error",
+        find_and_destroy_eoc_balance: "use_cases.balances.end_of_contract.find_and_destroy",
+        create_eoc_balance: "use_cases.balances.end_of_contract.create",
+        find_first_eoc_event_after: "use_cases.events.contract_end.find_first_after_date",
       ]
 
       def call(params)
-        @params = params
-
         ActiveRecord::Base.transaction do
-          event.tap do
+          super.tap do |created_event|
+            destroy_eoc_balance if eoc_event
             handle_hired_or_work_contract_event
             # NOTE: Assignations to time off policies are created after the hire event is created -
             # FE is calling API endpoints for creating assignations to all of the default
@@ -25,18 +27,14 @@ module Events
             # - newly hired employee won't be assigned to time off policies from
             # custom time off categories. The proper fix will be introduced in the mentioned task.
 
-            # assign_employee_to_all_tops.call(event.employee)
+            # assign_employee_to_all_tops.call(created_event.employee)
+
+            recreate_eoc_balance if eoc_event
           end
         end
       end
 
       private
-
-      attr_reader :params
-
-      def event
-        @event ||= create_event_service.new(params, params[:employee_attributes].to_a).call
-      end
 
       def handle_hired_or_work_contract_event
         validate_time_off_policy_days_presence
@@ -64,7 +62,6 @@ module Events
         raise invalid_resources_error.new(event, ["Occupation Rate does not match Presence Policy"])
       end
 
-      # TODO: extract to a repository
       def presence_policy_occupation_rate
         event.employee_presence_policy.presence_policy.occupation_rate
       end

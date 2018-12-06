@@ -7,7 +7,7 @@ RSpec.describe ContractEnds::Create, :service do
 
   subject(:create_contract_end) do
     described_class.call(
-      employee: employee, contract_end_date: contract_end_date, event_id: event.id
+      employee: employee, contract_end_date: contract_end_date, eoc_event_id: event.id
     )
   end
 
@@ -45,6 +45,16 @@ RSpec.describe ContractEnds::Create, :service do
       .employee_balances
       .where(time_off_category_id: vacation_toc.id)
       .order(:effective_at)
+  end
+
+  let(:presence_policy) { create(:presence_policy, :with_presence_day, account: account) }
+  let!(:employee_presence_policy) do
+    create(
+      :employee_presence_policy,
+      presence_policy: presence_policy,
+      effective_at: contract_end_date - 1.month,
+      employee: employee,
+    )
   end
 
   before do

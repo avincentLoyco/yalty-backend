@@ -1,30 +1,31 @@
-# TODO: remove this file after all event use cases are refactored to use dependency injection
-
 module Events
   module Default
     class Update
-      include ActiveSupport::Configurable
+      include AppDependencies[
+        update_event_service: "services.event.update_event",
+      ]
 
-      pattr_initialize :event, :params
+      def call(event, params)
+        @event = event
+        @params = params
 
-      config_accessor :event_updater do
-        ::UpdateEvent
-      end
-
-      class << self
-        def call(event, params)
-          new(event, params).call
-        end
-      end
-
-      def call
         update_event
       end
 
       private
 
+      attr_reader :event, :params
+
       def update_event
-        event_updater.new(event, params).call
+        update_event_service.new(event, params).call
+      end
+
+      def employee
+        @employee ||= event.employee
+      end
+
+      def effective_at
+        @effective_at ||= params[:effective_at]
       end
     end
   end

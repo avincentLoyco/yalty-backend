@@ -2,62 +2,54 @@ require "rails_helper"
 
 RSpec.describe Events::Adjustment::Update do
   include_context "event update context"
+  include_context "end of contract balance handler context"
 
-  it_behaves_like "event update example"
+  let(:subject) do
+    described_class.new(
+      find_adjustment_balance: find_adjustment_balance_mock,
+      update_event_service: update_event_service_class_mock,
+      update_next_employee_balances_service: update_next_employee_balances_service_class_mock,
+      find_and_destroy_eoc_balance: find_and_destroy_eoc_balance_mock,
+      create_eoc_balance: create_eoc_balance_mock,
+      find_first_eoc_event_after: find_first_eoc_event_after_mock,
+    ).call(event, params)
+  end
 
-  let_it_be(:account) { create(:account) }
-  let_it_be(:vacation_category) { account.vacation_category }
-  let_it_be(:time_off_policy) { create(:time_off_policy, time_off_category: vacation_category) }
-  let_it_be(:employee) { create(:employee, account: account) }
+  let(:find_adjustment_balance_mock) do
+    instance_double(Events::Adjustment::FindAdjustmentBalance, call: adjustment_balance)
+  end
 
-  let!(:adjustment_balance) do
-    Employee::Balance.create!(
-      employee: employee,
-      resource_amount: 200,
-      time_off_category: vacation_category,
-      balance_type: "manual_adjustment",
-      effective_at: event.effective_at + Employee::Balance::MANUAL_ADJUSTMENT_OFFSET
+  let(:update_next_employee_balances_service_instance_mock) do
+    instance_double(UpdateNextEmployeeBalances, call: true)
+  end
+  let(:update_next_employee_balances_service_class_mock) do
+    class_double(
+      UpdateNextEmployeeBalances, new: update_next_employee_balances_service_instance_mock
     )
   end
 
-  let(:balance_updater) { class_double("UpdateNextEmployeeBalances") }
-  let(:balance_updater_instance) { instance_double("UpdateNextEmployeeBalances") }
-
-  let(:event) do
-    build_stubbed(:employee_event, event_type: "adjustment_of_balances", employee: employee)
-  end
-
-  let(:changed_event) do
-    event.dup.tap{ |event| event.effective_at += 1.day }
-  end
-
-  before_all do
-    create(:employee_time_off_policy,
-      employee: employee, time_off_policy: time_off_policy,
-      effective_at: Date.new(2018,1,1)
-    )
-  end
+  let(:adjustment_balance) { build(:employee_balance) }
 
   before do
-    use_case.next_balance_updater = balance_updater
-
-    allow(balance_updater).to receive(:new).and_return(balance_updater_instance)
-    allow(balance_updater_instance).to receive(:call)
-    allow(event_updater_instance).to receive(:call).and_return(changed_event)
-    allow(changed_event).to receive(:attribute_value).with("adjustment").and_return(30)
+    allow(adjustment_balance).to receive(:update!)
   end
 
-  it "updates balance amount" do
-    expect{ subject }.to change { adjustment_balance.reload.resource_amount }.to(30)
-  end
+  it_behaves_like "event update example"
+  it_behaves_like "end of contract balance handler for an event"
 
-  it "updates balance effective_at" do
-    expect{ subject }.to change { adjustment_balance.reload.effective_at }
-  end
-
-  it "calls UpdateNextEmployeeBalances" do
+  it "updates adjustment balance" do
     subject
-    expect(balance_updater).to have_received(:new).with(adjustment_balance)
-    expect(balance_updater_instance).to have_received(:call)
+    expect(adjustment_balance).to have_received(:update!).with(
+      resource_amount: updated_event.attribute_value("adjustment"),
+      effective_at: updated_event.effective_at + Employee::Balance::MANUAL_ADJUSTMENT_OFFSET
+    )
+  end
+
+  it "updates next employee balances" do
+    subject
+    expect(update_next_employee_balances_service_class_mock).to have_received(:new).with(
+      adjustment_balance
+    )
+    expect(update_next_employee_balances_service_instance_mock).to have_received(:call)
   end
 end

@@ -1,22 +1,20 @@
-# TODO: remove this file after all use cases are refactored to use dependency injection
-
 RSpec.shared_context "event create use case" do
-  subject { use_case.call }
+  subject do
+    described_class
+      .new(create_event_service: create_event_service_class_mock)
+      .call(params)
+  end
 
-  let(:use_case) { described_class.new(params) }
-  let(:event_creator) { class_double("CreateEvent") }
-  let(:event_creator_instance) { instance_double("CreateEvent") }
+  let(:create_event_service_class_mock) do
+    class_double(CreateEvent, new: create_event_service_instance_mock)
+  end
+  let(:create_event_service_instance_mock) do
+    instance_double(CreateEvent, call: event)
+  end
+
+  let(:event) { build(:employee_event) }
   let(:params) do
-    {
-      employee_attributes: employee_attributes,
-      data: :data,
-    }
+    { effective_at: Time.current, data: :data, employee: { id: event.employee.id } }
   end
-  let(:employee_attributes) { nil }
-
-  before do
-    use_case.event_creator = event_creator
-    allow(event_creator).to receive(:new).and_return(event_creator_instance)
-    allow(event_creator_instance).to receive(:call)
-  end
+  let(:effective_at) { params[:effective_at] }
 end

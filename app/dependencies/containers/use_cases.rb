@@ -15,13 +15,21 @@ module Containers
       namespace "end_of_contract" do
         register("create") { Balances::EndOfContract::Create.new }
         register("find_and_destroy") { Balances::EndOfContract::FindAndDestroy.new }
+        register("find_effective_at") { Balances::EndOfContract::FindEffectiveAt.new }
       end
     end
 
     namespace "events" do
+      namespace "adjustment" do
+        register("find_adjustment_balance") { Events::Adjustment::FindAdjustmentBalance.new }
+      end
+
       namespace "contract_end" do
         register("assign_employee_top_to_event") {
           Events::ContractEnd::AssignEmployeeTopToEvent.new
+        }
+        register("find_first_after_date") {
+          Events::ContractEnd::FindFirstAfter.new
         }
       end
     end

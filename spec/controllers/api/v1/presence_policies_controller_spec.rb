@@ -330,7 +330,7 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
     context "with valid data" do
       subject { put :update, valid_data_json }
 
-      # TODO use presence days for this test instead of standard_day_duration
+      # TODO: use presence days for this test instead of standard_day_duration
       # context "when policy is not assigned to any employee" do
       #   it { expect { subject }.to change { presence_policy.reload.standard_day_duration } }
       #

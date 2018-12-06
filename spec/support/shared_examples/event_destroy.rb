@@ -1,11 +1,7 @@
 RSpec.shared_examples "event destroy example" do
-  it "returns result from event_destroyer" do
-    expect(subject).to eq(event_destroyer_instance.call)
-  end
-
-  it "calls DestroyEvent service" do
+  it "deletes the event" do
     subject
-    expect(event_destroyer).to have_received(:new).with(event)
-    expect(event_destroyer_instance).to have_received(:call)
+    expect(delete_event_service_class_mock).to have_received(:new).with(event)
+    expect(delete_event_service_instance_mock).to have_received(:call)
   end
 end

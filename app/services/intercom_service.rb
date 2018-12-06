@@ -14,7 +14,7 @@ class IntercomService
 end
 
 class IntercomServiceMock
-  def method_missing(_name, *_args)
+  def method_missing(_name, *_args) # rubocop:disable Style/MethodMissing
     self
   end
 end

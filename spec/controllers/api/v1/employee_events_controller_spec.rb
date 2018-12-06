@@ -1615,6 +1615,22 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
         let(:update_event_id) { event.id }
         let(:event_type) { event.event_type }
         let(:effective_at) { contract_end.effective_at - 1.day }
+        let!(:etop_at_contract_end) do
+          create(:employee_time_off_policy,
+            :with_employee_balance,
+            employee: employee,
+            effective_at: contract_end.effective_at,
+            time_off_policy: time_off_policy,
+            employee_event: contract_end,
+          )
+        end
+
+        before do
+          json_payload.merge!(employee_attributes:
+            [
+              { attribute_name: "occupation_rate", value: "1.0" },
+            ])
+        end
 
         it { expect { subject }.to change { event.reload.effective_at }.to(effective_at) }
       end
@@ -1652,7 +1668,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       let(:event_effective_at) { effective_at }
 
       let(:adjustment_event) do
-        Events::Adjustment::Create.call(
+        Events::Adjustment::Create.new.call(
           effective_at: 5.days.from_now,
           event_type: "adjustment_of_balances",
           employee: {
@@ -1670,7 +1686,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       end
 
       let(:adjustment_balance) do
-        Events::Adjustment::Update.new(adjustment_event.reload, {}).adjustment_balance
+        Events::Adjustment::FindAdjustmentBalance.new.call(adjustment_event.reload)
       end
 
       before do
@@ -2194,7 +2210,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       let(:event_to_delete_id) { adjustment_event.id }
 
       let(:adjustment_event) do
-        Events::Adjustment::Create.call(
+        Events::Adjustment::Create.new.call(
           effective_at: 5.days.from_now,
           event_type: "adjustment_of_balances",
           employee: {
@@ -2212,7 +2228,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
       end
 
       let(:adjustment_balance) do
-        Events::Adjustment::Update.new(adjustment_event.reload, {}).adjustment_balance
+        Events::Adjustment::FindAdjustmentBalance.new.call(adjustment_event.reload)
       end
 
       before do
@@ -2246,7 +2262,7 @@ RSpec.describe API::V1::EmployeeEventsController, type: :controller do
           .from(true).to(false)
       end
 
-      it "delets adjustment balance" do
+      it "deletes adjustment balance" do
         expect { subject }
           .to change { Employee::Balance.exists?(adjustment_balance.id) }
           .from(true).to(false)

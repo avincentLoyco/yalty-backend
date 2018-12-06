@@ -1,23 +1,20 @@
 require "rails_helper"
 
 RSpec.describe Events::WorkContract::Update do
-  subject do
+  include_context "event update context"
+  include_context "end of contract balance handler context"
+
+  let(:subject) do
     described_class
-      .new(update_event_service: update_event_service_class_mock)
+      .new(
+        update_event_service: update_event_service_class_mock,
+        find_and_destroy_eoc_balance: find_and_destroy_eoc_balance_mock,
+        create_eoc_balance: create_eoc_balance_mock,
+        find_first_eoc_event_after: find_first_eoc_event_after_mock,
+      )
       .call(event, params)
   end
 
-  let(:event) { build(:employee_event) }
-  let(:params) { { some_param: "some_param" } }
-  let(:update_event_service_class_mock) do
-    class_double(UpdateEvent, new: update_event_service_instance_mock)
-  end
-  let(:update_event_service_instance_mock) do
-    instance_double(UpdateEvent, call: true)
-  end
-
-  before { subject }
-
-  it { expect(update_event_service_class_mock).to have_received(:new).with(event, params) }
-  it { expect(update_event_service_instance_mock).to have_received(:call) }
+  it_behaves_like "event update example"
+  it_behaves_like "end of contract balance handler for an event"
 end

@@ -161,7 +161,7 @@ RSpec.describe BalanceOverview::Generate do
         let(:adjustment_minutes) { 500 }
 
         before do
-          Events::Adjustment::Create.call(
+          Events::Adjustment::Create.new.call(
             effective_at: adjustment_date,
             event_type: "adjustment_of_balances",
             employee: {

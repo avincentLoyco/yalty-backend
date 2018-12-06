@@ -1,18 +1,17 @@
-# TODO: remove this file after all use cases are refactored to use dependency injection
-
 RSpec.shared_context "event destroy context" do
-  subject { use_case.call }
+  subject do
+    described_class
+      .new(delete_event_service: delete_event_service_class_mock)
+      .call(event)
+  end
 
-  let(:use_case) { described_class.new(event) }
+  let(:event) { build(:employee_event) }
+  let(:effective_at) { event.effective_at }
 
-  let(:event_destroyer) { class_double("DestroyEvent") }
-  let(:event_destroyer_instance) { instance_double("DestroyEvent") }
-
-  let(:event) { double }
-
-  before do
-    use_case.event_destroyer = event_destroyer
-    allow(event_destroyer).to receive(:new).and_return(event_destroyer_instance)
-    allow(event_destroyer_instance).to receive(:call)
+  let(:delete_event_service_class_mock) do
+    class_double(DeleteEvent, new: delete_event_service_instance_mock)
+  end
+  let(:delete_event_service_instance_mock) do
+    instance_double(DeleteEvent, call: true)
   end
 end

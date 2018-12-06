@@ -14,7 +14,7 @@ module TimeEntries
 
       ActiveRecord::Base.transaction do
         time_entry.destroy!
-        # TODO Add a use case for updating presence day minutes
+        # TODO: Add a use case for updating presence day minutes
         presence_day.update_minutes!
         update_standard_day_duration_for_default_full_time
       end

@@ -2,48 +2,36 @@ require "rails_helper"
 
 RSpec.describe Events::Adjustment::Destroy do
   include_context "event destroy context"
+  include_context "end of contract balance handler context"
+
+  subject do
+    described_class.new(
+      delete_event_service: delete_event_service_class_mock,
+      destroy_employee_balance_service: destroy_employee_balance_service_mock,
+      find_adjustment_balance: find_adjustment_balance_mock,
+      find_and_destroy_eoc_balance: find_and_destroy_eoc_balance_mock,
+      create_eoc_balance: create_eoc_balance_mock,
+      find_first_eoc_event_after: find_first_eoc_event_after_mock,
+    ).call(event)
+  end
+
+  let(:destroy_employee_balance_service_mock) { class_double(DestroyEmployeeBalance, call: true) }
+  let(:delete_event_service_instance_mock) { instance_double(DeleteEvent, call: event) }
+  let(:delete_event_service_class_mock) do
+    class_double(DeleteEvent, new: delete_event_service_instance_mock)
+  end
+  let(:find_adjustment_balance_mock) do
+    instance_double(Events::Adjustment::FindAdjustmentBalance, call: adjustment_balance)
+  end
+
+  let(:adjustment_balance) { build(:employee_balance) }
 
   it_behaves_like "event destroy example"
+  it_behaves_like "end of contract balance handler for an event"
 
-  before do
-    allow(DestroyEmployeeBalance).to receive(:call).and_call_original
-  end
-
-  let_it_be(:account) { create(:account) }
-  let_it_be(:vacation_category) { account.vacation_category }
-  let_it_be(:time_off_policy) { create(:time_off_policy, time_off_category: vacation_category) }
-  let_it_be(:employee) { create(:employee, account: account) }
-
-  let!(:adjustment_balance) do
-    Employee::Balance.create!(
-      employee: employee,
-      resource_amount: 200,
-      time_off_category: vacation_category,
-      balance_type: "manual_adjustment",
-      effective_at: event.effective_at + Employee::Balance::MANUAL_ADJUSTMENT_OFFSET
-    )
-  end
-
-  let(:event) do
-    build_stubbed(:employee_event, event_type: "adjustment_of_balances", employee: employee)
-  end
-
-  before_all do
-    create(:employee_time_off_policy,
-      employee: employee, time_off_policy: time_off_policy,
-      effective_at: Date.new(2018,1,1)
-    )
-  end
-
-  it "destroy balance" do
-    expect{ subject }
-      .to change { Employee::Balance.exists?(adjustment_balance.id) }
-      .from(true)
-      .to(false)
-  end
-
-  it "calls DestroyEmployeeBalance" do
+  it "finds and destroys adjustment balance" do
     subject
-    expect(DestroyEmployeeBalance).to have_received(:call).with(adjustment_balance)
+    expect(find_adjustment_balance_mock).to have_received(:call).with(event)
+    expect(destroy_employee_balance_service_mock).to have_received(:call).with(adjustment_balance)
   end
 end
