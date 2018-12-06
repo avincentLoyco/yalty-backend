@@ -107,7 +107,7 @@ RSpec.describe Events::WorkContract::Create do
       expect(create_etop_for_event_service_instance_mock).to have_received(:call)
     end
 
-    it "assigns employee to all time off policies" do
+    xit "assigns employee to all time off policies" do
       subject
       expect(assign_employee_to_all_tops_mock).to have_received(:call).with(event.employee)
     end

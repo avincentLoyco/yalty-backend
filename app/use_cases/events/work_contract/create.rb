@@ -16,7 +16,16 @@ module Events
         ActiveRecord::Base.transaction do
           event.tap do
             handle_hired_or_work_contract_event
-            assign_employee_to_all_tops.call(event.employee)
+            # NOTE: Assignations to time off policies are created after the hire event is created -
+            # FE is calling API endpoints for creating assignations to all of the default
+            # time off policies (from default time off categories like maternity, sickness etc.)
+            # Assignations are therefore created two times. To fix that and move the whole logic to
+            # BE, we need to do proper refactor and it was agreed to not to do that in the scope
+            # of this task (task for refactor - YA-2091). After commenting out the line below
+            # - newly hired employee won't be assigned to time off policies from
+            # custom time off categories. The proper fix will be introduced in the mentioned task.
+
+            # assign_employee_to_all_tops.call(event.employee)
           end
         end
       end
