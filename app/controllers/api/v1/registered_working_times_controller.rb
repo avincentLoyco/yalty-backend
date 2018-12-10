@@ -6,6 +6,8 @@ module API
       def create
         verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :create, resource
+          # We need to check if registered working time isn't violating end of contract
+          validate_part_of_employment_period!
           resource.update!(
             comment: attributes[:comment],
             time_entries: filtered_attributes(attributes)
@@ -15,6 +17,23 @@ module API
       end
 
       private
+
+      def part_of_employment_period?
+        last_event_for = employee.events.contract_types.where("effective_at < ?", resource.date)
+          .order(:effective_at).last
+        last_event_for.nil? || last_event_for.event_type.eql?("hired")
+      end
+
+      def validate_part_of_employment_period!
+        return if part_of_employment_period?
+        raise(
+          CustomError,
+          type: controller_name,
+          field: "date",
+          messages: ["Date must be in employment period"],
+          codes: ["registered_working_time.must_be_in_employement_period"]
+        )
+      end
 
       def filtered_attributes(attributes)
         return [] if attributes[:time_entries].nil?
