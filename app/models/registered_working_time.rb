@@ -97,7 +97,7 @@ class RegisteredWorkingTime < ActiveRecord::Base
   end
 
   def time_entries_does_not_overlaps_with_time_off
-    time_offs_for_day = TimeOff.for_employee_at_date(employee_id, date)
+    time_offs_for_day = TimeOff.for_employee_at_date(employee_id, date).not_declined
     return unless time_offs_for_day.map do |time_off|
       time_off_entries_overlap?(time_off)
     end.flatten.include?(true)
