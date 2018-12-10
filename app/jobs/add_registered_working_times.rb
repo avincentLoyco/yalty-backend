@@ -10,13 +10,15 @@ class AddRegisteredWorkingTimes < ActiveJob::Base
       .where(registered_working_times: { date: today })
       .pluck(:id)
 
+    # NOTE: registered working time should be created till the last day of work
+    # (including the last day)
     employees_ids =
       Employee.where.not(id: employees_with_working_hours_ids).select do |employee|
         last_event_for =
           employee
           .events
           .contract_types
-          .where("effective_at <= ?", Time.zone.today)
+          .where("effective_at < ?", Time.zone.today)
           .order(:effective_at).last
 
         last_event_for.nil? || last_event_for.event_type.eql?("hired")
