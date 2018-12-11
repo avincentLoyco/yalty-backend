@@ -192,7 +192,8 @@ RSpec.describe AddRegisteredWorkingTimes do
               .to change { second_employee.reload.registered_working_times.count }.by(1)
           end
           it do
-            expect { subject }.to_not change { first_employee.registered_working_times.count }
+            expect { subject }
+              .to change { first_employee.reload.registered_working_times.count }.by(1)
           end
         end
 
