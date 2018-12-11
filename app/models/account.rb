@@ -201,11 +201,12 @@ class Account < ActiveRecord::Base
     end
   end
 
-  def yalty_access=(value)
+  def yalty_access=(value, notification_email: true)
     value = (value == true)
     return value if value == yalty_access
     attribute_will_change!(:yalty_access)
     @yalty_access = value
+    @yalty_access_notification_email = notification_email
   end
 
   def recently_created?
@@ -291,7 +292,7 @@ class Account < ActiveRecord::Base
         password_digest: ENV["YALTY_ACCESS_PASSWORD_DIGEST"],
         role: "yalty"
       )
-      YaltyAccessMailer.access_enable(self).deliver_later
+      YaltyAccessMailer.access_enable(self).deliver_later if @yalty_access_notification_email
     else
       Account::User.where(account_id: id, role: "yalty").destroy_all
       YaltyAccessMailer.access_disable(self).deliver_later

@@ -362,10 +362,23 @@ RSpec.describe Account, type: :model do
         expect(user.authenticate("1234567890")).to_not be_falsey
       end
 
-      it "should send an email to yalty access email" do
-        expect(YaltyAccessMailer).to receive_message_chain(:access_enable, :deliver_later)
-        expect(subject.yalty_access).to be_falsey
-        subject.update!(yalty_access: true)
+      context "when yalty_access_notification_email set to true" do
+        it "should send an email to yalty access email" do
+          expect(subject.yalty_access).to be_falsey
+          # True is a default value for yalty_access_notification_email
+          expect { subject.update!(yalty_access: true) }
+            .to change { ActionMailer::Base.deliveries.count }.by(1)
+        end
+      end
+
+      context "when yalty_access_notification_email set to false" do
+        it "should not send an email to yalty access email" do
+          expect(subject.yalty_access).to be_falsey
+          expect {
+            subject.public_send(:yalty_access=, true, notification_email: false)
+            subject.save
+          }.not_to change { ActionMailer::Base.deliveries.count }
+        end
       end
     end
 
