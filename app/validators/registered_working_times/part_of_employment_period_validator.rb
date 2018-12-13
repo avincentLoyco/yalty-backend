@@ -2,6 +2,8 @@ module RegisteredWorkingTimes
   class PartOfEmploymentPeriodValidator
     include AppDependencies[
       custom_error: "errors.custom_error",
+      verify_part_of_employment_period:
+        "use_cases.registered_working_times.verify_part_of_employment_period",
     ]
 
     def call(employee:, date:)
@@ -19,14 +21,12 @@ module RegisteredWorkingTimes
     end
 
     def part_of_employment_period?
-      last_event_for = employee.events.contract_types.where("effective_at < ?", date)
-        .order(:effective_at).last
-      last_event_for.nil? || last_event_for.event_type.eql?("hired")
+      verify_part_of_employment_period.call(employee: employee, date: date)
     end
 
     def raise_error
       raise(
-        CustomError,
+        custom_error,
         type: "registered_working_times",
         field: "date",
         messages: ["Date must be in employment period"],

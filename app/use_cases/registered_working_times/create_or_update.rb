@@ -5,10 +5,10 @@ module RegisteredWorkingTimes
     include AppDependencies[
       part_of_employment_period_validator:
         "validators.registered_working_times.part_of_employment_period",
-      registered_working_time_model: "models.registered_working_time",
     ]
 
-    def call(employee:, date:, params:)
+    def call(registered_working_time:, employee:, date:, params:)
+      @registered_working_time = registered_working_time
       @employee = employee
       @date = date
 
@@ -22,13 +22,7 @@ module RegisteredWorkingTimes
 
     private
 
-    attr_reader :employee, :date
-
-    def registered_working_time
-      @registered_working_time ||= registered_working_time_model.find_or_initialize_by(
-        employee: employee, date: date
-      )
-    end
+    attr_reader :registered_working_time, :employee, :date
 
     def validate!
       part_of_employment_period_validator.call(employee: employee, date: date)
