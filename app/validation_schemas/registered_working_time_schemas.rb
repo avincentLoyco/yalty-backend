@@ -5,7 +5,12 @@ module RegisteredWorkingTimeSchemas
     Dry::Validation.Form do
       required(:date).filled(:date?)
       required(:employee_id).filled(:str?)
-      required(:time_entries).maybe(:array?)
+      required(:time_entries).each do
+        schema do
+          required(:start_time).filled(:str?)
+          required(:end_time).filled(:str?)
+        end
+      end
       required(:comment).maybe(:str?)
     end
   end

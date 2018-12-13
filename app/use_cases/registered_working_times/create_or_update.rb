@@ -14,10 +14,7 @@ module RegisteredWorkingTimes
 
       validate!
 
-      registered_working_time.update!(
-        comment: params[:comment],
-        time_entries: filtered_attributes(params),
-      )
+      registered_working_time.update!(params.slice(:comment, :time_entries))
     end
 
     private
@@ -26,14 +23,6 @@ module RegisteredWorkingTimes
 
     def validate!
       part_of_employment_period_validator.call(employee: employee, date: date)
-    end
-
-    def filtered_attributes(attributes)
-      return [] if attributes[:time_entries].nil?
-      attributes[:time_entries].map do |entry|
-        next unless entry.is_a?(Hash)
-        entry.except("type")
-      end
     end
   end
 end

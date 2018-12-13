@@ -3,7 +3,8 @@ module API
     class RegisteredWorkingTimesController < ApplicationController
       include RegisteredWorkingTimeSchemas
       include AppDependencies[
-        create_or_update_registered_working_time: "use_cases.registered_working_times.create_or_update",
+        create_or_update_registered_working_time:
+          "use_cases.registered_working_times.create_or_update",
         account_model: "models.account",
         registered_working_time_model: "models.registered_working_time",
       ]
