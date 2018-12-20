@@ -63,5 +63,12 @@ module Containers
         PresencePolicies::VerifyNotDefaultFullTime.new
       end
     end
+
+    namespace "registered_working_times" do
+      register("create_or_update") { RegisteredWorkingTimes::CreateOrUpdate.new }
+      register("verify_part_of_employment_period") do
+        RegisteredWorkingTimes::VerifyPartOfEmploymentPeriod.new
+      end
+    end
   end
 end
