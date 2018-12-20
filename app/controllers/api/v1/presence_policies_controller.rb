@@ -6,7 +6,7 @@ module API
       include PresencePolicySchemas
       include AppDependencies[
         create_presence_policy: "use_cases.presence_policies.create",
-        destroy_presence_policy: "use_cases.presence_policies.destroy",
+        archive_presence_policy: "use_cases.presence_policies.archive",
         update_presence_policy: "use_cases.presence_policies.update",
       ]
 
@@ -18,7 +18,7 @@ module API
 
       def index
         response =
-          filter_by_status.not_reset.map do |presence_policy|
+          filter_by_status.not_reset.not_archived.map do |presence_policy|
             resource_representer.new(presence_policy).with_relationships
           end
         render json: response
@@ -57,7 +57,7 @@ module API
       end
 
       def destroy
-        destroy_presence_policy.call(presence_policy: resource)
+        archive_presence_policy.call(presence_policy: resource)
         render_no_content
       end
 

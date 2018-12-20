@@ -7,4 +7,5 @@ class AppContainer
   import Containers::UseCases
   import Containers::Services
   import Containers::Errors
+  import Containers::Validators
 end

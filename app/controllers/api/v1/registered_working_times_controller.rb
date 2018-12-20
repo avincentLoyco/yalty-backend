@@ -2,13 +2,21 @@ module API
   module V1
     class RegisteredWorkingTimesController < ApplicationController
       include RegisteredWorkingTimeSchemas
+      include AppDependencies[
+        create_or_update_registered_working_time:
+          "use_cases.registered_working_times.create_or_update",
+        account_model: "models.account",
+        registered_working_time_model: "models.registered_working_time",
+      ]
 
       def create
         verified_dry_params(dry_validation_schema) do |attributes|
           authorize! :create, resource
-          resource.update!(
-            comment: attributes[:comment],
-            time_entries: filtered_attributes(attributes)
+
+          create_or_update_registered_working_time.call(
+            registered_working_time: resource,
+            employee: employee,
+            params: attributes,
           )
           render_no_content
         end
@@ -16,35 +24,15 @@ module API
 
       private
 
-      def filtered_attributes(attributes)
-        return [] if attributes[:time_entries].nil?
-        attributes[:time_entries].map do |entry|
-          next unless entry.is_a?(Hash)
-          entry.except("type")
-        end
-      end
-
       def employee
-        Account.current.employees.find(params[:employee_id])
+        account_model.current.employees.find(params[:employee_id])
       end
 
       def resource
         @resource ||=
-          RegisteredWorkingTime.find_or_initialize_by(
-            employee: employee, date: parse_or_raise_error
+          registered_working_time_model.find_or_initialize_by(
+            employee: employee, date: params[:date]
           )
-      end
-
-      def parse_or_raise_error
-        Date.parse(params[:date])
-      rescue
-        raise(
-          CustomError,
-          type: controller_name,
-          field: "date",
-          messages: ["Date must be valid date"],
-          codes: ["registered_working_time.must_be_valid_date"]
-        )
       end
     end
   end
