@@ -62,7 +62,7 @@ class Adjustments::Calculate
   # NOTE: A separate eoc_annual_allowance function for end of contract was added to avoid
   # complicated refactoring of annual_allowance function for other event types.
   def eoc_annual_allowance(etop)
-    (etop.time_off_policy.amount / standard_day_duration) * current_occupation_rate
+    (etop.time_off_policy.amount / current_standard_day_duration) * current_occupation_rate
   end
 
   def current_occupation_rate
@@ -70,6 +70,13 @@ class Adjustments::Calculate
       employee
         .active_presence_policy_at(event.effective_at)
         .occupation_rate
+  end
+
+  def current_standard_day_duration
+    @current_standard_day_duration ||=
+      employee
+        .active_presence_policy_at(event.effective_at)
+        .standard_day_duration
   end
 
   def current_etop

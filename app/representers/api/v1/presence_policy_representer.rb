@@ -4,7 +4,8 @@ module Api::V1
       {
         name: resource.name,
         occupation_rate: resource.occupation_rate,
-        standard_day_duration: full_time_standard_day_duration,
+        standard_day_duration: resource.standard_day_duration,
+        default_full_time_standard_day_duration: full_time_standard_day_duration,
         default_full_time: resource.default_full_time?,
         active: resource.active,
         deletable: deletable?,

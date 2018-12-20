@@ -70,7 +70,7 @@ module Api::V1
       {
         id: active_presence_policy.id,
         type: active_presence_policy.class.name.underscore,
-        standard_day_duration: full_time_standard_day_duration,
+        standard_day_duration: active_presence_policy.standard_day_duration,
       }
     end
 
