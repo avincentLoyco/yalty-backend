@@ -53,11 +53,14 @@ module Containers
     namespace "presence_policies" do
       register("create_presence_days") { PresencePolicies::CreatePresenceDays.new }
       register("create") { PresencePolicies::Create.new }
-      register("destroy") { PresencePolicies::Destroy.new }
+      register("archive") { PresencePolicies::Archive.new }
       register("update") { PresencePolicies::Update.new }
       register("update_default_full_time") { PresencePolicies::UpdateDefaultFullTime.new }
       register("verify_employees_not_assigned") do
         PresencePolicies::VerifyEmployeesNotAssigned.new
+      end
+      register("verify_active_employees_not_assigned") do
+        PresencePolicies::VerifyActiveEmployeesNotAssigned.new
       end
       register("verify_not_default_full_time") do
         PresencePolicies::VerifyNotDefaultFullTime.new

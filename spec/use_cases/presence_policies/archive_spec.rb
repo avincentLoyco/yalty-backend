@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe PresencePolicies::Destroy do
+RSpec.describe PresencePolicies::Archive do
   describe "#call" do
     subject do
       described_class.new(

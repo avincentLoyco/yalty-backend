@@ -1,7 +1,6 @@
 class PresencePolicy < ActiveRecord::Base
   include ActsAsIntercomTrigger
 
-  has_many :employees
   has_many :presence_days, dependent: :destroy
   has_many :time_entries, through: :presence_days
   has_many :employee_presence_policies
@@ -14,6 +13,7 @@ class PresencePolicy < ActiveRecord::Base
     numericality: { less_than_or_equal_to: 1, greater_than_or_equal_to: 0 }
 
   scope :not_reset, -> { where(reset: false) }
+  scope :not_archived, -> { where(archived: false) }
   scope :active, -> { where(active: true) }
   scope :for_account, ->(account_id) { not_reset.where(account_id: account_id) }
 
