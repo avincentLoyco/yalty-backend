@@ -11,7 +11,7 @@ env:
     - YALTY_DOCKER_BUILD_SHA1=HEAD
 before_install:
   - rvm @global do gem uninstall bundler -a -x
-  - rvm @global do gem install bundler -v 1.14.6
+  - rvm @global do gem install bundler -v 1.14.6 --force
 script: ./.travis/build
 before_cache:
   - git reset --hard travis-docker-build
