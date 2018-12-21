@@ -408,8 +408,7 @@ RSpec.describe API::V1::PresencePoliciesController, type: :controller do
 
     context "valid data" do
       it { is_expected.to have_http_status(204) }
-      it { expect { subject }.to change { PresencePolicy.count }.by(-1) }
-      it { expect { subject }.to change { PresenceDay.count}.by(-1) }
+      it { expect { subject }.to change { presence_policy.reload.archived }.from(false).to(true) }
 
       context "and the policy is already assigned to an employee" do
         let!(:epp) do
