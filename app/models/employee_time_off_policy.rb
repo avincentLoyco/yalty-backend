@@ -115,6 +115,7 @@ class EmployeeTimeOffPolicy < ActiveRecord::Base
     employee
       .time_offs
       .in_category(time_off_category_id)
+      .not_declined
       .where("end_time >= ?", date)
       .order(:start_time)
       .first
