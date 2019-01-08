@@ -5,26 +5,26 @@ RSpec.describe BalanceOverview::Generate do
     subject(:generate) { described_class.call(employee.reload, **params) }
 
     let_it_be(:account) { create(:account, create_presence_policy: false) }
-    let_it_be(:hired_date) { Date.new(2018, 1, 1) }
-    let_it_be(:query_date) { hired_date + 2.months }
-
-    let_it_be(:day_duration) { 60 * 60 * 8 } # 8 hours
-    let_it_be(:vacation_days) { 10 }
-    let_it_be(:vacation_minutes) { day_duration * vacation_days }
-
     let_it_be(:presence_policy) do
-      create(
+      pp = create(
         :presence_policy,
         :with_time_entries,
         account: account,
         occupation_rate: 1.0,
-        default_full_time: true,
-        standard_day_duration: day_duration,
         number_of_days: 7,
         working_days: (1..7).to_a,
         hours: [["00:00", "24:00"]],
       )
+      account.update_column(:default_full_time_presence_policy_id, pp.id)
+      account.update_column(:standard_day_duration, pp.standard_day_duration)
+      pp
     end
+    let_it_be(:hired_date) { Date.new(2018, 1, 1) }
+    let_it_be(:query_date) { hired_date + 2.months }
+
+    let_it_be(:day_duration) { account.standard_day_duration }
+    let_it_be(:vacation_days) { 10 }
+    let_it_be(:vacation_minutes) { day_duration * vacation_days }
 
     let_it_be(:event_params) do
       {
@@ -53,7 +53,7 @@ RSpec.describe BalanceOverview::Generate do
     let_it_be(:hire_employee) do
       # TODO: refactor service to not rely on Account.current
       Account.current = account
-      Events::WorkContract::Create.call(event_params)
+      Events::WorkContract::Create.new.call(event_params)
     end
 
     let_it_be(:employee) { hire_employee.employee }
@@ -161,7 +161,7 @@ RSpec.describe BalanceOverview::Generate do
         let(:adjustment_minutes) { 500 }
 
         before do
-          Events::Adjustment::Create.call(
+          Events::Adjustment::Create.new.call(
             effective_at: adjustment_date,
             event_type: "adjustment_of_balances",
             employee: {

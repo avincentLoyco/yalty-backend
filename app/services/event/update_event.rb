@@ -42,8 +42,7 @@ class UpdateEvent
     validate_time_off_policy_days_presence
     validate_presence_policy_presence
 
-    default_full_time_policy = current_account.presence_policies.full_time
-    time_off_policy_amount = time_off_policy_days * default_full_time_policy.standard_day_duration
+    time_off_policy_amount = time_off_policy_days * current_account.standard_day_duration
 
     if presence_policy_id.eql?(event.employee_presence_policy&.presence_policy&.id)
       EmployeePolicy::Presence::Update.call(update_presence_policy_params)
@@ -61,7 +60,8 @@ class UpdateEvent
     ContractEnds::Update.call(
       employee: employee,
       new_contract_end_date: event.effective_at,
-      old_contract_end_date: old_effective_at
+      old_contract_end_date: old_effective_at,
+      eoc_event_id: event.id
     )
   end
 
@@ -87,7 +87,7 @@ class UpdateEvent
   end
 
   def find_and_update_event
-    event.attributes = event_params.except(:presence_policy_id)
+    event.attributes = event_params.except(:presence_policy_id, :event)
   end
 
   def update_employee_join_tables
@@ -207,7 +207,8 @@ class UpdateEvent
     ::ContractEnds::Update.call(
       employee: employee,
       new_contract_end_date: old_effective_at,
-      old_contract_end_date: old_effective_at
+      old_contract_end_date: old_effective_at,
+      eoc_event_id: event.id
     )
   end
 

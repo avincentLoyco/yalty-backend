@@ -1,3 +1,5 @@
+# TODO: refactor this class to use dependency injection
+
 module TimeOffs
   class Create < UseCase
     attr_reader :attributes, :is_manager

@@ -1,7 +1,11 @@
 module Api::V1
   class PublicEmployeeRepresenter < BaseRepresenter
     def complete
-      basic.merge(relationships)
+      basic.merge(
+        relationships.merge(
+          role: resource.user&.role,
+        )
+      )
     end
 
     def relationships

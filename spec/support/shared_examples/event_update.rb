@@ -1,11 +1,7 @@
 RSpec.shared_examples "event update example" do
-  it "returns result from event_updater" do
-    expect(subject).to eq(event_updater_instance.call)
-  end
-
-  it "calls UpdateEvent service" do
-    subject
-    expect(event_updater).to have_received(:new).with(event, params)
-    expect(event_updater_instance).to have_received(:call)
+  it "updates event" do
+    expect(subject).to eq(updated_event)
+    expect(update_event_service_class_mock).to have_received(:new).with(event, params)
+    expect(update_event_service_instance_mock).to have_received(:call)
   end
 end

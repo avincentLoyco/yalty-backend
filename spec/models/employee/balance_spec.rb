@@ -398,7 +398,7 @@ RSpec.describe Employee::Balance, type: :model do
 
             it { expect(subject.valid?).to eq false }
             it { expect { subject.valid? }.to change { subject.errors.messages[:effective_at] }
-              .to include "Must be at TimeOffPolicy  assignations date, end date, start date"\
+              .to include "Must be at TimeOffPolicy assignations date, end date, start date"\
               " or the previous day to start date" }
           end
         end

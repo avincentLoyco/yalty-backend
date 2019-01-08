@@ -24,8 +24,8 @@ module Api::V1
     private
 
     def default_presence_policy
-      return if resource.presence_policies.full_time.nil?
-      PresencePolicyRepresenter.new(resource.presence_policies.full_time).complete
+      return if resource.default_full_time_presence_policy_id.nil?
+      PresencePolicyRepresenter.new(resource.default_full_time_presence_policy).complete
     end
 
     def company_information_json

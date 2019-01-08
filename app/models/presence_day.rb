@@ -5,6 +5,8 @@ class PresenceDay < ActiveRecord::Base
   validates :order, presence: true, uniqueness: { scope: :presence_policy_id }
   validates :presence_policy_id, presence: true
 
+  # TODO: check if those two scopes could be replaced by only one
+  scope :with_minutes_not_empty, -> { where("minutes IS NOT NULL and minutes <> 0") }
   scope :with_entries, -> { joins(:time_entries).includes(:time_entries) }
 
   def update_minutes!

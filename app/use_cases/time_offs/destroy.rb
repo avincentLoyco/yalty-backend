@@ -1,3 +1,5 @@
+# TODO: refactor this class to use dependency injection
+
 module TimeOffs
   class Destroy < UseCase
     pattr_initialize :time_off

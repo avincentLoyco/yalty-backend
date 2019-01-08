@@ -9,13 +9,13 @@ FactoryGirl.define do
     after(:create) do |account, evaluator|
       if evaluator.create_presence_policy
         default_presence_policy =
-          create(:presence_policy, :with_time_entries, occupation_rate: 0.5,
-                 standard_day_duration: 9600, default_full_time: true, account: account)
+          create(:presence_policy, :with_time_entries, occupation_rate: 0.5, account: account)
 
         account.presence_policies << default_presence_policy
+        account.update_column(:default_full_time_presence_policy_id, default_presence_policy.id)
+        account.update_column(:standard_day_duration, default_presence_policy.standard_day_duration)
       end
     end
-
 
     trait :from_zurich do
       timezone { "Europe/Zurich" }

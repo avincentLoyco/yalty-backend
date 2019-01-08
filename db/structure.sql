@@ -2,12 +2,17 @@
 -- PostgreSQL database dump
 --
 
+-- Dumped from database version 9.5.15
+-- Dumped by pg_dump version 9.5.15
+
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
 SET check_function_bodies = false;
 SET client_min_messages = warning;
+SET row_security = off;
 
 --
 -- Name: tiger; Type: SCHEMA; Schema: -; Owner: -
@@ -93,13 +98,11 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
 COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UUIDs)';
 
 
-SET search_path = public, pg_catalog;
-
 --
 -- Name: assign_receipt_number(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION assign_receipt_number() RETURNS trigger
+CREATE FUNCTION public.assign_receipt_number() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
             BEGIN
@@ -114,11 +117,11 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
--- Name: account_registration_keys; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: account_registration_keys; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE account_registration_keys (
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+CREATE TABLE public.account_registration_keys (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     token character varying,
     account_id character varying,
     created_at timestamp without time zone NOT NULL,
@@ -127,16 +130,16 @@ CREATE TABLE account_registration_keys (
 
 
 --
--- Name: account_users; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: account_users; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE account_users (
-    email citext NOT NULL,
+CREATE TABLE public.account_users (
+    email public.citext NOT NULL,
     password_digest character varying NOT NULL,
     account_id uuid NOT NULL,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     reset_password_token character varying,
     role character varying DEFAULT 'user'::character varying NOT NULL,
     locale character varying,
@@ -145,35 +148,37 @@ CREATE TABLE account_users (
 
 
 --
--- Name: accounts; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: accounts; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE accounts (
+CREATE TABLE public.accounts (
     subdomain character varying NOT NULL,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
     company_name character varying,
     default_locale character varying DEFAULT 'en'::character varying,
     timezone character varying,
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     referred_by character varying,
     customer_id character varying,
     subscription_renewal_date date,
     subscription_id character varying,
-    company_information hstore,
+    company_information public.hstore,
     invoice_emails text[],
     available_modules json,
     archive_processing boolean DEFAULT false NOT NULL,
-    last_employee_journal_export timestamp without time zone
+    last_employee_journal_export timestamp without time zone,
+    standard_day_duration double precision,
+    default_full_time_presence_policy_id uuid
 );
 
 
 --
--- Name: company_events; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: company_events; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE company_events (
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+CREATE TABLE public.company_events (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     title character varying NOT NULL,
     effective_at date,
     comment character varying,
@@ -184,10 +189,10 @@ CREATE TABLE company_events (
 
 
 --
--- Name: employee_attribute_definitions; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: employee_attribute_definitions; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE employee_attribute_definitions (
+CREATE TABLE public.employee_attribute_definitions (
     name character varying NOT NULL,
     label character varying,
     system boolean DEFAULT false NOT NULL,
@@ -195,7 +200,7 @@ CREATE TABLE employee_attribute_definitions (
     account_id uuid NOT NULL,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     multiple boolean DEFAULT false NOT NULL,
     long_token_allowed boolean DEFAULT false NOT NULL,
     validation json
@@ -203,32 +208,32 @@ CREATE TABLE employee_attribute_definitions (
 
 
 --
--- Name: employee_attribute_versions; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: employee_attribute_versions; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE employee_attribute_versions (
-    data hstore,
+CREATE TABLE public.employee_attribute_versions (
+    data public.hstore,
     employee_id uuid,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
     attribute_definition_id uuid,
     employee_event_id uuid,
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     "order" integer,
     multiple boolean DEFAULT false NOT NULL
 );
 
 
 --
--- Name: employee_events; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: employee_events; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE employee_events (
+CREATE TABLE public.employee_events (
     employee_id uuid,
     effective_at date,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     event_type character varying NOT NULL,
     active boolean DEFAULT true NOT NULL
 );
@@ -238,7 +243,7 @@ CREATE TABLE employee_events (
 -- Name: employee_attributes; Type: VIEW; Schema: public; Owner: -
 --
 
-CREATE VIEW employee_attributes AS
+CREATE VIEW public.employee_attributes AS
  SELECT DISTINCT ON (employee_attribute_versions.employee_id, employee_attribute_versions.attribute_definition_id, employee_attribute_versions."order") employee_attribute_versions.id,
     employee_attribute_versions.data,
     employee_events.effective_at,
@@ -251,19 +256,19 @@ CREATE VIEW employee_attributes AS
     employee_attribute_versions.created_at,
     employee_attribute_versions.updated_at,
     employee_attribute_versions."order"
-   FROM ((employee_attribute_versions
-     JOIN employee_events ON ((employee_attribute_versions.employee_event_id = employee_events.id)))
-     JOIN employee_attribute_definitions ON ((employee_attribute_versions.attribute_definition_id = employee_attribute_definitions.id)))
+   FROM ((public.employee_attribute_versions
+     JOIN public.employee_events ON ((employee_attribute_versions.employee_event_id = employee_events.id)))
+     JOIN public.employee_attribute_definitions ON ((employee_attribute_versions.attribute_definition_id = employee_attribute_definitions.id)))
   WHERE (employee_events.effective_at <= now())
   ORDER BY employee_attribute_versions.employee_id, employee_attribute_versions.attribute_definition_id, employee_attribute_versions."order", employee_events.effective_at DESC;
 
 
 --
--- Name: employee_balances; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: employee_balances; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE employee_balances (
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+CREATE TABLE public.employee_balances (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     balance integer DEFAULT 0 NOT NULL,
     resource_amount integer DEFAULT 0 NOT NULL,
     time_off_id uuid,
@@ -281,11 +286,11 @@ CREATE TABLE employee_balances (
 
 
 --
--- Name: employee_presence_policies; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: employee_presence_policies; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE employee_presence_policies (
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+CREATE TABLE public.employee_presence_policies (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     employee_id uuid NOT NULL,
     presence_policy_id uuid NOT NULL,
     effective_at date NOT NULL,
@@ -297,11 +302,11 @@ CREATE TABLE employee_presence_policies (
 
 
 --
--- Name: employee_time_off_policies; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: employee_time_off_policies; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE employee_time_off_policies (
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+CREATE TABLE public.employee_time_off_policies (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     employee_id uuid NOT NULL,
     time_off_policy_id uuid NOT NULL,
     effective_at date NOT NULL,
@@ -314,11 +319,11 @@ CREATE TABLE employee_time_off_policies (
 
 
 --
--- Name: employee_working_places; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: employee_working_places; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE employee_working_places (
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+CREATE TABLE public.employee_working_places (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     employee_id uuid NOT NULL,
     working_place_id uuid NOT NULL,
     effective_at date NOT NULL,
@@ -328,11 +333,11 @@ CREATE TABLE employee_working_places (
 
 
 --
--- Name: employees; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: employees; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE employees (
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+CREATE TABLE public.employees (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     account_id uuid,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
@@ -342,11 +347,11 @@ CREATE TABLE employees (
 
 
 --
--- Name: generic_files; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: generic_files; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE generic_files (
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+CREATE TABLE public.generic_files (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     created_at timestamp without time zone,
     updated_at timestamp without time zone,
     file_file_name character varying,
@@ -361,11 +366,11 @@ CREATE TABLE generic_files (
 
 
 --
--- Name: holiday_policies; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: holiday_policies; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE holiday_policies (
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+CREATE TABLE public.holiday_policies (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     country character varying,
     region character varying,
     created_at timestamp without time zone NOT NULL,
@@ -375,11 +380,11 @@ CREATE TABLE holiday_policies (
 
 
 --
--- Name: holidays; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: holidays; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE holidays (
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+CREATE TABLE public.holidays (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     name character varying NOT NULL,
     date date NOT NULL,
     created_at timestamp without time zone NOT NULL,
@@ -389,18 +394,18 @@ CREATE TABLE holidays (
 
 
 --
--- Name: invoices; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: invoices; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE invoices (
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+CREATE TABLE public.invoices (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     invoice_id character varying NOT NULL,
     amount_due integer NOT NULL,
     status character varying NOT NULL,
     attempts integer,
     next_attempt timestamp without time zone,
     date timestamp without time zone NOT NULL,
-    address hstore,
+    address public.hstore,
     lines json,
     account_id uuid,
     receipt_number integer,
@@ -415,11 +420,11 @@ CREATE TABLE invoices (
 
 
 --
--- Name: notifications; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: notifications; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE notifications (
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+CREATE TABLE public.notifications (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     seen boolean DEFAULT false NOT NULL,
     user_id uuid NOT NULL,
     resource_id uuid,
@@ -431,10 +436,10 @@ CREATE TABLE notifications (
 
 
 --
--- Name: oauth_access_grants; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: oauth_access_grants; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE oauth_access_grants (
+CREATE TABLE public.oauth_access_grants (
     id integer NOT NULL,
     resource_owner_id uuid NOT NULL,
     application_id integer NOT NULL,
@@ -451,7 +456,7 @@ CREATE TABLE oauth_access_grants (
 -- Name: oauth_access_grants_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE oauth_access_grants_id_seq
+CREATE SEQUENCE public.oauth_access_grants_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -463,14 +468,14 @@ CREATE SEQUENCE oauth_access_grants_id_seq
 -- Name: oauth_access_grants_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE oauth_access_grants_id_seq OWNED BY oauth_access_grants.id;
+ALTER SEQUENCE public.oauth_access_grants_id_seq OWNED BY public.oauth_access_grants.id;
 
 
 --
--- Name: oauth_access_tokens; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: oauth_access_tokens; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE oauth_access_tokens (
+CREATE TABLE public.oauth_access_tokens (
     id integer NOT NULL,
     resource_owner_id uuid,
     application_id integer,
@@ -487,7 +492,7 @@ CREATE TABLE oauth_access_tokens (
 -- Name: oauth_access_tokens_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE oauth_access_tokens_id_seq
+CREATE SEQUENCE public.oauth_access_tokens_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -499,14 +504,14 @@ CREATE SEQUENCE oauth_access_tokens_id_seq
 -- Name: oauth_access_tokens_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE oauth_access_tokens_id_seq OWNED BY oauth_access_tokens.id;
+ALTER SEQUENCE public.oauth_access_tokens_id_seq OWNED BY public.oauth_access_tokens.id;
 
 
 --
--- Name: oauth_applications; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: oauth_applications; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE oauth_applications (
+CREATE TABLE public.oauth_applications (
     id integer NOT NULL,
     name character varying NOT NULL,
     uid character varying NOT NULL,
@@ -523,7 +528,7 @@ CREATE TABLE oauth_applications (
 -- Name: oauth_applications_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE oauth_applications_id_seq
+CREATE SEQUENCE public.oauth_applications_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -535,15 +540,15 @@ CREATE SEQUENCE oauth_applications_id_seq
 -- Name: oauth_applications_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE oauth_applications_id_seq OWNED BY oauth_applications.id;
+ALTER SEQUENCE public.oauth_applications_id_seq OWNED BY public.oauth_applications.id;
 
 
 --
--- Name: presence_days; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: presence_days; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE presence_days (
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+CREATE TABLE public.presence_days (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     "order" integer,
     presence_policy_id uuid NOT NULL,
     created_at timestamp without time zone NOT NULL,
@@ -553,20 +558,19 @@ CREATE TABLE presence_days (
 
 
 --
--- Name: presence_policies; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: presence_policies; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE presence_policies (
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+CREATE TABLE public.presence_policies (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     account_id uuid NOT NULL,
     name character varying,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
     reset boolean DEFAULT false NOT NULL,
-    standard_day_duration integer,
     occupation_rate double precision DEFAULT 1.0 NOT NULL,
-    default_full_time boolean DEFAULT false NOT NULL,
-    active boolean DEFAULT true NOT NULL
+    active boolean DEFAULT true NOT NULL,
+    archived boolean DEFAULT false NOT NULL
 );
 
 
@@ -574,7 +578,7 @@ CREATE TABLE presence_policies (
 -- Name: receipt_number_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE receipt_number_seq
+CREATE SEQUENCE public.receipt_number_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -583,11 +587,11 @@ CREATE SEQUENCE receipt_number_seq
 
 
 --
--- Name: referrers; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: referrers; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE referrers (
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+CREATE TABLE public.referrers (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     email character varying NOT NULL,
     token character varying NOT NULL,
     created_at timestamp without time zone NOT NULL,
@@ -596,11 +600,11 @@ CREATE TABLE referrers (
 
 
 --
--- Name: registered_working_times; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: registered_working_times; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE registered_working_times (
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+CREATE TABLE public.registered_working_times (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     employee_id uuid NOT NULL,
     schedule_generated boolean DEFAULT false NOT NULL,
     date date NOT NULL,
@@ -612,20 +616,20 @@ CREATE TABLE registered_working_times (
 
 
 --
--- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE schema_migrations (
+CREATE TABLE public.schema_migrations (
     version character varying NOT NULL
 );
 
 
 --
--- Name: time_entries; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: time_entries; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE time_entries (
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+CREATE TABLE public.time_entries (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     start_time character varying NOT NULL,
     end_time character varying NOT NULL,
     presence_day_id uuid NOT NULL,
@@ -636,11 +640,11 @@ CREATE TABLE time_entries (
 
 
 --
--- Name: time_off_categories; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: time_off_categories; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE time_off_categories (
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+CREATE TABLE public.time_off_categories (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     name character varying NOT NULL,
     system boolean DEFAULT false NOT NULL,
     account_id uuid NOT NULL,
@@ -651,11 +655,11 @@ CREATE TABLE time_off_categories (
 
 
 --
--- Name: time_off_policies; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: time_off_policies; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE time_off_policies (
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+CREATE TABLE public.time_off_policies (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     start_day integer,
     end_day integer,
     start_month integer,
@@ -673,11 +677,11 @@ CREATE TABLE time_off_policies (
 
 
 --
--- Name: time_offs; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: time_offs; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE time_offs (
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+CREATE TABLE public.time_offs (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     end_time timestamp without time zone NOT NULL,
     start_time timestamp without time zone NOT NULL,
     time_off_category_id uuid NOT NULL,
@@ -690,15 +694,15 @@ CREATE TABLE time_offs (
 
 
 --
--- Name: working_places; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: working_places; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE working_places (
+CREATE TABLE public.working_places (
     name character varying NOT NULL,
     account_id uuid,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
-    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     holiday_policy_id uuid,
     country character varying(60),
     state character varying(60),
@@ -718,894 +722,909 @@ CREATE TABLE working_places (
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY oauth_access_grants ALTER COLUMN id SET DEFAULT nextval('oauth_access_grants_id_seq'::regclass);
+ALTER TABLE ONLY public.oauth_access_grants ALTER COLUMN id SET DEFAULT nextval('public.oauth_access_grants_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY oauth_access_tokens ALTER COLUMN id SET DEFAULT nextval('oauth_access_tokens_id_seq'::regclass);
+ALTER TABLE ONLY public.oauth_access_tokens ALTER COLUMN id SET DEFAULT nextval('public.oauth_access_tokens_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY oauth_applications ALTER COLUMN id SET DEFAULT nextval('oauth_applications_id_seq'::regclass);
+ALTER TABLE ONLY public.oauth_applications ALTER COLUMN id SET DEFAULT nextval('public.oauth_applications_id_seq'::regclass);
 
 
 --
--- Name: account_registration_keys_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: account_registration_keys_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY account_registration_keys
+ALTER TABLE ONLY public.account_registration_keys
     ADD CONSTRAINT account_registration_keys_pkey PRIMARY KEY (id);
 
 
 --
--- Name: account_users_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: account_users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY account_users
+ALTER TABLE ONLY public.account_users
     ADD CONSTRAINT account_users_pkey PRIMARY KEY (id);
 
 
 --
--- Name: accounts_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: accounts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY accounts
+ALTER TABLE ONLY public.accounts
     ADD CONSTRAINT accounts_pkey PRIMARY KEY (id);
 
 
 --
--- Name: company_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: company_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY company_events
+ALTER TABLE ONLY public.company_events
     ADD CONSTRAINT company_events_pkey PRIMARY KEY (id);
 
 
 --
--- Name: employee_attribute_definitions_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: employee_attribute_definitions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY employee_attribute_definitions
+ALTER TABLE ONLY public.employee_attribute_definitions
     ADD CONSTRAINT employee_attribute_definitions_pkey PRIMARY KEY (id);
 
 
 --
--- Name: employee_attribute_versions_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: employee_attribute_versions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY employee_attribute_versions
+ALTER TABLE ONLY public.employee_attribute_versions
     ADD CONSTRAINT employee_attribute_versions_pkey PRIMARY KEY (id);
 
 
 --
--- Name: employee_balances_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: employee_balances_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY employee_balances
+ALTER TABLE ONLY public.employee_balances
     ADD CONSTRAINT employee_balances_pkey PRIMARY KEY (id);
 
 
 --
--- Name: employee_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: employee_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY employee_events
+ALTER TABLE ONLY public.employee_events
     ADD CONSTRAINT employee_events_pkey PRIMARY KEY (id);
 
 
 --
--- Name: employee_files_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: employee_files_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY generic_files
+ALTER TABLE ONLY public.generic_files
     ADD CONSTRAINT employee_files_pkey PRIMARY KEY (id);
 
 
 --
--- Name: employee_presence_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: employee_presence_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY employee_presence_policies
+ALTER TABLE ONLY public.employee_presence_policies
     ADD CONSTRAINT employee_presence_policies_pkey PRIMARY KEY (id);
 
 
 --
--- Name: employee_time_off_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: employee_time_off_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY employee_time_off_policies
+ALTER TABLE ONLY public.employee_time_off_policies
     ADD CONSTRAINT employee_time_off_policies_pkey PRIMARY KEY (id);
 
 
 --
--- Name: employee_working_places_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: employee_working_places_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY employee_working_places
+ALTER TABLE ONLY public.employee_working_places
     ADD CONSTRAINT employee_working_places_pkey PRIMARY KEY (id);
 
 
 --
--- Name: employees_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: employees_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY employees
+ALTER TABLE ONLY public.employees
     ADD CONSTRAINT employees_pkey PRIMARY KEY (id);
 
 
 --
--- Name: holiday_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: holiday_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY holiday_policies
+ALTER TABLE ONLY public.holiday_policies
     ADD CONSTRAINT holiday_policies_pkey PRIMARY KEY (id);
 
 
 --
--- Name: holidays_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: holidays_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY holidays
+ALTER TABLE ONLY public.holidays
     ADD CONSTRAINT holidays_pkey PRIMARY KEY (id);
 
 
 --
--- Name: invoices_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: invoices_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY invoices
+ALTER TABLE ONLY public.invoices
     ADD CONSTRAINT invoices_pkey PRIMARY KEY (id);
 
 
 --
--- Name: notifications_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: notifications_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY notifications
+ALTER TABLE ONLY public.notifications
     ADD CONSTRAINT notifications_pkey PRIMARY KEY (id);
 
 
 --
--- Name: oauth_access_grants_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: oauth_access_grants_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY oauth_access_grants
+ALTER TABLE ONLY public.oauth_access_grants
     ADD CONSTRAINT oauth_access_grants_pkey PRIMARY KEY (id);
 
 
 --
--- Name: oauth_access_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: oauth_access_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY oauth_access_tokens
+ALTER TABLE ONLY public.oauth_access_tokens
     ADD CONSTRAINT oauth_access_tokens_pkey PRIMARY KEY (id);
 
 
 --
--- Name: oauth_applications_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: oauth_applications_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY oauth_applications
+ALTER TABLE ONLY public.oauth_applications
     ADD CONSTRAINT oauth_applications_pkey PRIMARY KEY (id);
 
 
 --
--- Name: presence_days_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: presence_days_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY presence_days
+ALTER TABLE ONLY public.presence_days
     ADD CONSTRAINT presence_days_pkey PRIMARY KEY (id);
 
 
 --
--- Name: presence_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: presence_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY presence_policies
+ALTER TABLE ONLY public.presence_policies
     ADD CONSTRAINT presence_policies_pkey PRIMARY KEY (id);
 
 
 --
--- Name: referrers_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: referrers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY referrers
+ALTER TABLE ONLY public.referrers
     ADD CONSTRAINT referrers_pkey PRIMARY KEY (id);
 
 
 --
--- Name: registered_working_times_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: registered_working_times_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY registered_working_times
+ALTER TABLE ONLY public.registered_working_times
     ADD CONSTRAINT registered_working_times_pkey PRIMARY KEY (id);
 
 
 --
--- Name: time_entries_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: time_entries_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY time_entries
+ALTER TABLE ONLY public.time_entries
     ADD CONSTRAINT time_entries_pkey PRIMARY KEY (id);
 
 
 --
--- Name: time_off_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: time_off_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY time_off_categories
+ALTER TABLE ONLY public.time_off_categories
     ADD CONSTRAINT time_off_categories_pkey PRIMARY KEY (id);
 
 
 --
--- Name: time_off_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: time_off_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY time_off_policies
+ALTER TABLE ONLY public.time_off_policies
     ADD CONSTRAINT time_off_policies_pkey PRIMARY KEY (id);
 
 
 --
--- Name: time_offs_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: time_offs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY time_offs
+ALTER TABLE ONLY public.time_offs
     ADD CONSTRAINT time_offs_pkey PRIMARY KEY (id);
 
 
 --
--- Name: working_places_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: working_places_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY working_places
+ALTER TABLE ONLY public.working_places
     ADD CONSTRAINT working_places_pkey PRIMARY KEY (id);
 
 
 --
--- Name: index_account_registration_keys_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_account_registration_keys_on_account_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_account_registration_keys_on_account_id ON account_registration_keys USING btree (account_id);
+CREATE INDEX index_account_registration_keys_on_account_id ON public.account_registration_keys USING btree (account_id);
 
 
 --
--- Name: index_account_users_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_account_users_on_account_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_account_users_on_account_id ON account_users USING btree (account_id);
+CREATE INDEX index_account_users_on_account_id ON public.account_users USING btree (account_id);
 
 
 --
--- Name: index_account_users_on_email_and_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_account_users_on_email_and_account_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_account_users_on_email_and_account_id ON account_users USING btree (email, account_id);
+CREATE UNIQUE INDEX index_account_users_on_email_and_account_id ON public.account_users USING btree (email, account_id);
 
 
 --
--- Name: index_accounts_on_subdomain; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_accounts_on_default_full_time_presence_policy_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_accounts_on_subdomain ON accounts USING btree (subdomain);
+CREATE INDEX index_accounts_on_default_full_time_presence_policy_id ON public.accounts USING btree (default_full_time_presence_policy_id);
 
 
 --
--- Name: index_company_events_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_accounts_on_subdomain; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_company_events_on_account_id ON company_events USING btree (account_id);
+CREATE UNIQUE INDEX index_accounts_on_subdomain ON public.accounts USING btree (subdomain);
 
 
 --
--- Name: index_employee_attribute_definitions_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_company_events_on_account_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_employee_attribute_definitions_on_account_id ON employee_attribute_definitions USING btree (account_id);
+CREATE INDEX index_company_events_on_account_id ON public.company_events USING btree (account_id);
 
 
 --
--- Name: index_employee_attribute_definitions_on_name_and_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_employee_attribute_definitions_on_account_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_employee_attribute_definitions_on_name_and_account_id ON employee_attribute_definitions USING btree (name, account_id);
+CREATE INDEX index_employee_attribute_definitions_on_account_id ON public.employee_attribute_definitions USING btree (account_id);
 
 
 --
--- Name: index_employee_attribute_versions_on_attribute_definition_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_employee_attribute_definitions_on_name_and_account_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_employee_attribute_versions_on_attribute_definition_id ON employee_attribute_versions USING btree (attribute_definition_id);
+CREATE UNIQUE INDEX index_employee_attribute_definitions_on_name_and_account_id ON public.employee_attribute_definitions USING btree (name, account_id);
 
 
 --
--- Name: index_employee_attribute_versions_on_employee_event_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_employee_attribute_versions_on_attribute_definition_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_employee_attribute_versions_on_employee_event_id ON employee_attribute_versions USING btree (employee_event_id);
+CREATE INDEX index_employee_attribute_versions_on_attribute_definition_id ON public.employee_attribute_versions USING btree (attribute_definition_id);
 
 
 --
--- Name: index_employee_attribute_versions_on_employee_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_employee_attribute_versions_on_employee_event_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_employee_attribute_versions_on_employee_id ON employee_attribute_versions USING btree (employee_id);
+CREATE INDEX index_employee_attribute_versions_on_employee_event_id ON public.employee_attribute_versions USING btree (employee_event_id);
 
 
 --
--- Name: index_employee_balances_on_balance_credit_removal_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_employee_attribute_versions_on_employee_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_employee_balances_on_balance_credit_removal_id ON employee_balances USING btree (balance_credit_removal_id);
+CREATE INDEX index_employee_attribute_versions_on_employee_id ON public.employee_attribute_versions USING btree (employee_id);
 
 
 --
--- Name: index_employee_balances_on_employee_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_employee_balances_on_balance_credit_removal_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_employee_balances_on_employee_id ON employee_balances USING btree (employee_id);
+CREATE INDEX index_employee_balances_on_balance_credit_removal_id ON public.employee_balances USING btree (balance_credit_removal_id);
 
 
 --
--- Name: index_employee_balances_on_time_off_category_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_employee_balances_on_employee_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_employee_balances_on_time_off_category_id ON employee_balances USING btree (time_off_category_id);
+CREATE INDEX index_employee_balances_on_employee_id ON public.employee_balances USING btree (employee_id);
 
 
 --
--- Name: index_employee_balances_on_time_off_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_employee_balances_on_time_off_category_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_employee_balances_on_time_off_id ON employee_balances USING btree (time_off_id);
+CREATE INDEX index_employee_balances_on_time_off_category_id ON public.employee_balances USING btree (time_off_category_id);
 
 
 --
--- Name: index_employee_events_on_employee_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_employee_balances_on_time_off_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_employee_events_on_employee_id ON employee_events USING btree (employee_id);
+CREATE INDEX index_employee_balances_on_time_off_id ON public.employee_balances USING btree (time_off_id);
 
 
 --
--- Name: index_employee_id_presence_policy_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_employee_events_on_employee_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_employee_id_presence_policy_id ON employee_presence_policies USING btree (presence_policy_id, employee_id);
+CREATE INDEX index_employee_events_on_employee_id ON public.employee_events USING btree (employee_id);
 
 
 --
--- Name: index_employee_id_time_off_policy_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_employee_id_presence_policy_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_employee_id_time_off_policy_id ON employee_time_off_policies USING btree (time_off_policy_id, employee_id);
+CREATE INDEX index_employee_id_presence_policy_id ON public.employee_presence_policies USING btree (presence_policy_id, employee_id);
 
 
 --
--- Name: index_employee_id_working_place_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_employee_id_time_off_policy_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_employee_id_working_place_id ON employee_working_places USING btree (working_place_id, employee_id, effective_at);
+CREATE INDEX index_employee_id_time_off_policy_id ON public.employee_time_off_policies USING btree (time_off_policy_id, employee_id);
 
 
 --
--- Name: index_employee_id_working_place_id_order; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_employee_id_working_place_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_employee_id_working_place_id_order ON employee_attribute_versions USING btree (employee_id, attribute_definition_id, "order");
+CREATE UNIQUE INDEX index_employee_id_working_place_id ON public.employee_working_places USING btree (working_place_id, employee_id, effective_at);
 
 
 --
--- Name: index_employee_presence_policies_on_employee_event_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_employee_id_working_place_id_order; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_employee_presence_policies_on_employee_event_id ON employee_presence_policies USING btree (employee_event_id);
+CREATE UNIQUE INDEX index_employee_id_working_place_id_order ON public.employee_attribute_versions USING btree (employee_id, attribute_definition_id, "order");
 
 
 --
--- Name: index_employee_presence_policies_on_employee_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_employee_presence_policies_on_employee_event_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_employee_presence_policies_on_employee_id ON employee_presence_policies USING btree (employee_id);
+CREATE INDEX index_employee_presence_policies_on_employee_event_id ON public.employee_presence_policies USING btree (employee_event_id);
 
 
 --
--- Name: index_employee_presence_policies_on_presence_policy_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_employee_presence_policies_on_employee_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_employee_presence_policies_on_presence_policy_id ON employee_presence_policies USING btree (presence_policy_id);
+CREATE INDEX index_employee_presence_policies_on_employee_id ON public.employee_presence_policies USING btree (employee_id);
 
 
 --
--- Name: index_employee_presence_policy_effective_at; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_employee_presence_policies_on_presence_policy_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_employee_presence_policy_effective_at ON employee_presence_policies USING btree (employee_id, presence_policy_id, effective_at);
+CREATE INDEX index_employee_presence_policies_on_presence_policy_id ON public.employee_presence_policies USING btree (presence_policy_id);
 
 
 --
--- Name: index_employee_time_off_category_effective_at; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_employee_presence_policy_effective_at; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_employee_time_off_category_effective_at ON employee_time_off_policies USING btree (employee_id, time_off_category_id, effective_at);
+CREATE UNIQUE INDEX index_employee_presence_policy_effective_at ON public.employee_presence_policies USING btree (employee_id, presence_policy_id, effective_at);
 
 
 --
--- Name: index_employee_time_off_policies_on_employee_event_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_employee_time_off_category_effective_at; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_employee_time_off_policies_on_employee_event_id ON employee_time_off_policies USING btree (employee_event_id);
+CREATE UNIQUE INDEX index_employee_time_off_category_effective_at ON public.employee_time_off_policies USING btree (employee_id, time_off_category_id, effective_at);
 
 
 --
--- Name: index_employee_time_off_policies_on_employee_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_employee_time_off_policies_on_employee_event_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_employee_time_off_policies_on_employee_id ON employee_time_off_policies USING btree (employee_id);
+CREATE INDEX index_employee_time_off_policies_on_employee_event_id ON public.employee_time_off_policies USING btree (employee_event_id);
 
 
 --
--- Name: index_employee_time_off_policies_on_time_off_policy_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_employee_time_off_policies_on_employee_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_employee_time_off_policies_on_time_off_policy_id ON employee_time_off_policies USING btree (time_off_policy_id);
+CREATE INDEX index_employee_time_off_policies_on_employee_id ON public.employee_time_off_policies USING btree (employee_id);
 
 
 --
--- Name: index_employees_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_employee_time_off_policies_on_time_off_policy_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_employees_on_account_id ON employees USING btree (account_id);
+CREATE INDEX index_employee_time_off_policies_on_time_off_policy_id ON public.employee_time_off_policies USING btree (time_off_policy_id);
 
 
 --
--- Name: index_employees_on_id_and_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_employees_on_account_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_employees_on_id_and_account_id ON employees USING btree (id, account_id);
+CREATE INDEX index_employees_on_account_id ON public.employees USING btree (account_id);
 
 
 --
--- Name: index_employees_on_manager_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_employees_on_id_and_account_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_employees_on_manager_id ON employees USING btree (manager_id);
+CREATE UNIQUE INDEX index_employees_on_id_and_account_id ON public.employees USING btree (id, account_id);
 
 
 --
--- Name: index_generic_files_on_fileable_id_and_fileable_type; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_employees_on_manager_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_generic_files_on_fileable_id_and_fileable_type ON generic_files USING btree (fileable_id, fileable_type);
+CREATE INDEX index_employees_on_manager_id ON public.employees USING btree (manager_id);
 
 
 --
--- Name: index_holiday_policies_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_generic_files_on_fileable_id_and_fileable_type; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_holiday_policies_on_account_id ON holiday_policies USING btree (account_id);
+CREATE INDEX index_generic_files_on_fileable_id_and_fileable_type ON public.generic_files USING btree (fileable_id, fileable_type);
 
 
 --
--- Name: index_holidays_on_holiday_policy_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_holiday_policies_on_account_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_holidays_on_holiday_policy_id ON holidays USING btree (holiday_policy_id);
+CREATE INDEX index_holiday_policies_on_account_id ON public.holiday_policies USING btree (account_id);
 
 
 --
--- Name: index_invoices_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_holidays_on_holiday_policy_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_invoices_on_account_id ON invoices USING btree (account_id);
+CREATE INDEX index_holidays_on_holiday_policy_id ON public.holidays USING btree (holiday_policy_id);
 
 
 --
--- Name: index_invoices_on_invoice_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_invoices_on_account_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_invoices_on_invoice_id ON invoices USING btree (invoice_id);
+CREATE INDEX index_invoices_on_account_id ON public.invoices USING btree (account_id);
 
 
 --
--- Name: index_notifications_on_user_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_invoices_on_invoice_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_notifications_on_user_id ON notifications USING btree (user_id);
+CREATE UNIQUE INDEX index_invoices_on_invoice_id ON public.invoices USING btree (invoice_id);
 
 
 --
--- Name: index_oauth_access_grants_on_token; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_notifications_on_user_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_oauth_access_grants_on_token ON oauth_access_grants USING btree (token);
+CREATE INDEX index_notifications_on_user_id ON public.notifications USING btree (user_id);
 
 
 --
--- Name: index_oauth_access_tokens_on_refresh_token; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_oauth_access_grants_on_token; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_oauth_access_tokens_on_refresh_token ON oauth_access_tokens USING btree (refresh_token);
+CREATE UNIQUE INDEX index_oauth_access_grants_on_token ON public.oauth_access_grants USING btree (token);
 
 
 --
--- Name: index_oauth_access_tokens_on_resource_owner_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_oauth_access_tokens_on_refresh_token; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_oauth_access_tokens_on_resource_owner_id ON oauth_access_tokens USING btree (resource_owner_id);
+CREATE UNIQUE INDEX index_oauth_access_tokens_on_refresh_token ON public.oauth_access_tokens USING btree (refresh_token);
 
 
 --
--- Name: index_oauth_access_tokens_on_token; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_oauth_access_tokens_on_resource_owner_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_oauth_access_tokens_on_token ON oauth_access_tokens USING btree (token);
+CREATE INDEX index_oauth_access_tokens_on_resource_owner_id ON public.oauth_access_tokens USING btree (resource_owner_id);
 
 
 --
--- Name: index_oauth_applications_on_uid; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_oauth_access_tokens_on_token; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_oauth_applications_on_uid ON oauth_applications USING btree (uid);
+CREATE UNIQUE INDEX index_oauth_access_tokens_on_token ON public.oauth_access_tokens USING btree (token);
 
 
 --
--- Name: index_presence_days_on_presence_policy_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_oauth_applications_on_uid; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_presence_days_on_presence_policy_id ON presence_days USING btree (presence_policy_id);
+CREATE UNIQUE INDEX index_oauth_applications_on_uid ON public.oauth_applications USING btree (uid);
 
 
 --
--- Name: index_presence_policies_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_presence_days_on_presence_policy_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_presence_policies_on_account_id ON presence_policies USING btree (account_id);
+CREATE INDEX index_presence_days_on_presence_policy_id ON public.presence_days USING btree (presence_policy_id);
 
 
 --
--- Name: index_referrers_on_email; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_presence_policies_on_account_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_referrers_on_email ON referrers USING btree (email);
+CREATE INDEX index_presence_policies_on_account_id ON public.presence_policies USING btree (account_id);
 
 
 --
--- Name: index_registered_working_times_on_employee_id_and_date; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_referrers_on_email; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_registered_working_times_on_employee_id_and_date ON registered_working_times USING btree (employee_id, date);
+CREATE INDEX index_referrers_on_email ON public.referrers USING btree (email);
 
 
 --
--- Name: index_time_entries_on_presence_day_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_registered_working_times_on_employee_id_and_date; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_time_entries_on_presence_day_id ON time_entries USING btree (presence_day_id);
+CREATE UNIQUE INDEX index_registered_working_times_on_employee_id_and_date ON public.registered_working_times USING btree (employee_id, date);
 
 
 --
--- Name: index_time_off_categories_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_time_entries_on_presence_day_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_time_off_categories_on_account_id ON time_off_categories USING btree (account_id);
+CREATE INDEX index_time_entries_on_presence_day_id ON public.time_entries USING btree (presence_day_id);
 
 
 --
--- Name: index_time_off_policies_on_time_off_category_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_time_off_categories_on_account_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_time_off_policies_on_time_off_category_id ON time_off_policies USING btree (time_off_category_id);
+CREATE INDEX index_time_off_categories_on_account_id ON public.time_off_categories USING btree (account_id);
 
 
 --
--- Name: index_time_offs_on_approval_status; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_time_off_policies_on_time_off_category_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_time_offs_on_approval_status ON time_offs USING btree (approval_status);
+CREATE INDEX index_time_off_policies_on_time_off_category_id ON public.time_off_policies USING btree (time_off_category_id);
 
 
 --
--- Name: index_time_offs_on_employee_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_time_offs_on_approval_status; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_time_offs_on_employee_id ON time_offs USING btree (employee_id);
+CREATE INDEX index_time_offs_on_approval_status ON public.time_offs USING btree (approval_status);
 
 
 --
--- Name: index_time_offs_on_time_off_category_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_time_offs_on_employee_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_time_offs_on_time_off_category_id ON time_offs USING btree (time_off_category_id);
+CREATE INDEX index_time_offs_on_employee_id ON public.time_offs USING btree (employee_id);
 
 
 --
--- Name: index_working_places_on_account_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_time_offs_on_time_off_category_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_working_places_on_account_id ON working_places USING btree (account_id);
+CREATE INDEX index_time_offs_on_time_off_category_id ON public.time_offs USING btree (time_off_category_id);
 
 
 --
--- Name: unique_schema_migrations; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: index_working_places_on_account_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX unique_schema_migrations ON schema_migrations USING btree (version);
+CREATE INDEX index_working_places_on_account_id ON public.working_places USING btree (account_id);
+
+
+--
+-- Name: unique_schema_migrations; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX unique_schema_migrations ON public.schema_migrations USING btree (version);
 
 
 --
 -- Name: receipt_number_generator; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER receipt_number_generator BEFORE UPDATE ON invoices FOR EACH ROW WHEN ((((old.status)::text IS DISTINCT FROM (new.status)::text) AND ((new.status)::text = 'success'::text))) EXECUTE PROCEDURE assign_receipt_number();
+CREATE TRIGGER receipt_number_generator BEFORE UPDATE ON public.invoices FOR EACH ROW WHEN ((((old.status)::text IS DISTINCT FROM (new.status)::text) AND ((new.status)::text = 'success'::text))) EXECUTE PROCEDURE public.assign_receipt_number();
 
 
 --
 -- Name: fk_rails_03a3e21eaf; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY employee_presence_policies
-    ADD CONSTRAINT fk_rails_03a3e21eaf FOREIGN KEY (employee_event_id) REFERENCES employee_events(id);
+ALTER TABLE ONLY public.employee_presence_policies
+    ADD CONSTRAINT fk_rails_03a3e21eaf FOREIGN KEY (employee_event_id) REFERENCES public.employee_events(id);
 
 
 --
 -- Name: fk_rails_04a25b070a; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY employee_working_places
-    ADD CONSTRAINT fk_rails_04a25b070a FOREIGN KEY (working_place_id) REFERENCES working_places(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.employee_working_places
+    ADD CONSTRAINT fk_rails_04a25b070a FOREIGN KEY (working_place_id) REFERENCES public.working_places(id) ON DELETE CASCADE;
 
 
 --
 -- Name: fk_rails_06c847ea6d; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY employee_time_off_policies
-    ADD CONSTRAINT fk_rails_06c847ea6d FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.employee_time_off_policies
+    ADD CONSTRAINT fk_rails_06c847ea6d FOREIGN KEY (employee_id) REFERENCES public.employees(id) ON DELETE CASCADE;
 
 
 --
 -- Name: fk_rails_0c64f4ddd5; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY time_entries
-    ADD CONSTRAINT fk_rails_0c64f4ddd5 FOREIGN KEY (presence_day_id) REFERENCES presence_days(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.time_entries
+    ADD CONSTRAINT fk_rails_0c64f4ddd5 FOREIGN KEY (presence_day_id) REFERENCES public.presence_days(id) ON DELETE CASCADE;
+
+
+--
+-- Name: fk_rails_0f2d339704; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.accounts
+    ADD CONSTRAINT fk_rails_0f2d339704 FOREIGN KEY (default_full_time_presence_policy_id) REFERENCES public.presence_policies(id) ON DELETE SET NULL;
 
 
 --
 -- Name: fk_rails_0fe1519b79; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY employees
-    ADD CONSTRAINT fk_rails_0fe1519b79 FOREIGN KEY (manager_id) REFERENCES account_users(id) ON DELETE SET NULL;
+ALTER TABLE ONLY public.employees
+    ADD CONSTRAINT fk_rails_0fe1519b79 FOREIGN KEY (manager_id) REFERENCES public.account_users(id) ON DELETE SET NULL;
 
 
 --
 -- Name: fk_rails_1776c10fbd; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY employee_presence_policies
-    ADD CONSTRAINT fk_rails_1776c10fbd FOREIGN KEY (presence_policy_id) REFERENCES presence_policies(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.employee_presence_policies
+    ADD CONSTRAINT fk_rails_1776c10fbd FOREIGN KEY (presence_policy_id) REFERENCES public.presence_policies(id) ON DELETE CASCADE;
 
 
 --
 -- Name: fk_rails_1c5b30ec32; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY working_places
-    ADD CONSTRAINT fk_rails_1c5b30ec32 FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.working_places
+    ADD CONSTRAINT fk_rails_1c5b30ec32 FOREIGN KEY (account_id) REFERENCES public.accounts(id) ON DELETE CASCADE;
 
 
 --
 -- Name: fk_rails_1d20586b4f; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY employee_attribute_versions
-    ADD CONSTRAINT fk_rails_1d20586b4f FOREIGN KEY (attribute_definition_id) REFERENCES employee_attribute_definitions(id);
+ALTER TABLE ONLY public.employee_attribute_versions
+    ADD CONSTRAINT fk_rails_1d20586b4f FOREIGN KEY (attribute_definition_id) REFERENCES public.employee_attribute_definitions(id);
 
 
 --
 -- Name: fk_rails_2b93aa4b89; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY employee_working_places
-    ADD CONSTRAINT fk_rails_2b93aa4b89 FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.employee_working_places
+    ADD CONSTRAINT fk_rails_2b93aa4b89 FOREIGN KEY (employee_id) REFERENCES public.employees(id) ON DELETE CASCADE;
 
 
 --
 -- Name: fk_rails_330c32d8d9; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY oauth_access_grants
-    ADD CONSTRAINT fk_rails_330c32d8d9 FOREIGN KEY (resource_owner_id) REFERENCES account_users(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.oauth_access_grants
+    ADD CONSTRAINT fk_rails_330c32d8d9 FOREIGN KEY (resource_owner_id) REFERENCES public.account_users(id) ON DELETE CASCADE;
 
 
 --
 -- Name: fk_rails_4421c7d101; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY employee_presence_policies
-    ADD CONSTRAINT fk_rails_4421c7d101 FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.employee_presence_policies
+    ADD CONSTRAINT fk_rails_4421c7d101 FOREIGN KEY (employee_id) REFERENCES public.employees(id) ON DELETE CASCADE;
 
 
 --
 -- Name: fk_rails_489b112f2d; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY employee_balances
-    ADD CONSTRAINT fk_rails_489b112f2d FOREIGN KEY (time_off_id) REFERENCES time_offs(id);
+ALTER TABLE ONLY public.employee_balances
+    ADD CONSTRAINT fk_rails_489b112f2d FOREIGN KEY (time_off_id) REFERENCES public.time_offs(id);
 
 
 --
 -- Name: fk_rails_4ce8347ccb; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY time_off_categories
-    ADD CONSTRAINT fk_rails_4ce8347ccb FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.time_off_categories
+    ADD CONSTRAINT fk_rails_4ce8347ccb FOREIGN KEY (account_id) REFERENCES public.accounts(id) ON DELETE CASCADE;
 
 
 --
 -- Name: fk_rails_5092c7896c; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY time_offs
-    ADD CONSTRAINT fk_rails_5092c7896c FOREIGN KEY (time_off_category_id) REFERENCES time_off_categories(id);
+ALTER TABLE ONLY public.time_offs
+    ADD CONSTRAINT fk_rails_5092c7896c FOREIGN KEY (time_off_category_id) REFERENCES public.time_off_categories(id);
 
 
 --
 -- Name: fk_rails_5a8fc35128; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY employee_events
-    ADD CONSTRAINT fk_rails_5a8fc35128 FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.employee_events
+    ADD CONSTRAINT fk_rails_5a8fc35128 FOREIGN KEY (employee_id) REFERENCES public.employees(id) ON DELETE CASCADE;
 
 
 --
 -- Name: fk_rails_6e495897f4; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY employee_attribute_versions
-    ADD CONSTRAINT fk_rails_6e495897f4 FOREIGN KEY (employee_event_id) REFERENCES employee_events(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.employee_attribute_versions
+    ADD CONSTRAINT fk_rails_6e495897f4 FOREIGN KEY (employee_event_id) REFERENCES public.employee_events(id) ON DELETE CASCADE;
 
 
 --
 -- Name: fk_rails_76b69bfe10; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY employee_time_off_policies
-    ADD CONSTRAINT fk_rails_76b69bfe10 FOREIGN KEY (employee_event_id) REFERENCES employee_events(id);
+ALTER TABLE ONLY public.employee_time_off_policies
+    ADD CONSTRAINT fk_rails_76b69bfe10 FOREIGN KEY (employee_event_id) REFERENCES public.employee_events(id);
 
 
 --
 -- Name: fk_rails_836004d785; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY employee_attribute_definitions
-    ADD CONSTRAINT fk_rails_836004d785 FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.employee_attribute_definitions
+    ADD CONSTRAINT fk_rails_836004d785 FOREIGN KEY (account_id) REFERENCES public.accounts(id) ON DELETE CASCADE;
 
 
 --
 -- Name: fk_rails_878bdb42b2; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY employee_balances
-    ADD CONSTRAINT fk_rails_878bdb42b2 FOREIGN KEY (time_off_category_id) REFERENCES time_off_categories(id);
+ALTER TABLE ONLY public.employee_balances
+    ADD CONSTRAINT fk_rails_878bdb42b2 FOREIGN KEY (time_off_category_id) REFERENCES public.time_off_categories(id);
 
 
 --
 -- Name: fk_rails_8df7ccdc3f; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY holidays
-    ADD CONSTRAINT fk_rails_8df7ccdc3f FOREIGN KEY (holiday_policy_id) REFERENCES holiday_policies(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.holidays
+    ADD CONSTRAINT fk_rails_8df7ccdc3f FOREIGN KEY (holiday_policy_id) REFERENCES public.holiday_policies(id) ON DELETE CASCADE;
 
 
 --
 -- Name: fk_rails_95b0b0db67; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY presence_policies
-    ADD CONSTRAINT fk_rails_95b0b0db67 FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.presence_policies
+    ADD CONSTRAINT fk_rails_95b0b0db67 FOREIGN KEY (account_id) REFERENCES public.accounts(id) ON DELETE CASCADE;
 
 
 --
 -- Name: fk_rails_a2016e0f0d; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY registered_working_times
-    ADD CONSTRAINT fk_rails_a2016e0f0d FOREIGN KEY (employee_id) REFERENCES employees(id);
+ALTER TABLE ONLY public.registered_working_times
+    ADD CONSTRAINT fk_rails_a2016e0f0d FOREIGN KEY (employee_id) REFERENCES public.employees(id);
 
 
 --
 -- Name: fk_rails_ae92552259; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY holiday_policies
-    ADD CONSTRAINT fk_rails_ae92552259 FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.holiday_policies
+    ADD CONSTRAINT fk_rails_ae92552259 FOREIGN KEY (account_id) REFERENCES public.accounts(id) ON DELETE CASCADE;
 
 
 --
 -- Name: fk_rails_b080fb4855; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY notifications
-    ADD CONSTRAINT fk_rails_b080fb4855 FOREIGN KEY (user_id) REFERENCES account_users(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.notifications
+    ADD CONSTRAINT fk_rails_b080fb4855 FOREIGN KEY (user_id) REFERENCES public.account_users(id) ON DELETE CASCADE;
 
 
 --
 -- Name: fk_rails_b0c50133fb; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY employee_balances
-    ADD CONSTRAINT fk_rails_b0c50133fb FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.employee_balances
+    ADD CONSTRAINT fk_rails_b0c50133fb FOREIGN KEY (employee_id) REFERENCES public.employees(id) ON DELETE CASCADE;
 
 
 --
 -- Name: fk_rails_be9ada4c17; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY employee_time_off_policies
-    ADD CONSTRAINT fk_rails_be9ada4c17 FOREIGN KEY (time_off_policy_id) REFERENCES time_off_policies(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.employee_time_off_policies
+    ADD CONSTRAINT fk_rails_be9ada4c17 FOREIGN KEY (time_off_policy_id) REFERENCES public.time_off_policies(id) ON DELETE CASCADE;
 
 
 --
 -- Name: fk_rails_c96445f213; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY account_users
-    ADD CONSTRAINT fk_rails_c96445f213 FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.account_users
+    ADD CONSTRAINT fk_rails_c96445f213 FOREIGN KEY (account_id) REFERENCES public.accounts(id) ON DELETE CASCADE;
 
 
 --
 -- Name: fk_rails_d55a0137c3; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY employees
-    ADD CONSTRAINT fk_rails_d55a0137c3 FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.employees
+    ADD CONSTRAINT fk_rails_d55a0137c3 FOREIGN KEY (account_id) REFERENCES public.accounts(id) ON DELETE CASCADE;
 
 
 --
 -- Name: fk_rails_d8df29117a; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY time_off_policies
-    ADD CONSTRAINT fk_rails_d8df29117a FOREIGN KEY (time_off_category_id) REFERENCES time_off_categories(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.time_off_policies
+    ADD CONSTRAINT fk_rails_d8df29117a FOREIGN KEY (time_off_category_id) REFERENCES public.time_off_categories(id) ON DELETE CASCADE;
 
 
 --
 -- Name: fk_rails_e31d8e8b9d; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY presence_days
-    ADD CONSTRAINT fk_rails_e31d8e8b9d FOREIGN KEY (presence_policy_id) REFERENCES presence_policies(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.presence_days
+    ADD CONSTRAINT fk_rails_e31d8e8b9d FOREIGN KEY (presence_policy_id) REFERENCES public.presence_policies(id) ON DELETE CASCADE;
 
 
 --
 -- Name: fk_rails_ee63f25419; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY oauth_access_tokens
-    ADD CONSTRAINT fk_rails_ee63f25419 FOREIGN KEY (resource_owner_id) REFERENCES account_users(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.oauth_access_tokens
+    ADD CONSTRAINT fk_rails_ee63f25419 FOREIGN KEY (resource_owner_id) REFERENCES public.account_users(id) ON DELETE CASCADE;
 
 
 --
 -- Name: fk_rails_f5cbfdb8ce; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY time_offs
-    ADD CONSTRAINT fk_rails_f5cbfdb8ce FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.time_offs
+    ADD CONSTRAINT fk_rails_f5cbfdb8ce FOREIGN KEY (employee_id) REFERENCES public.employees(id) ON DELETE CASCADE;
 
 
 --
 -- PostgreSQL database dump complete
 --
 
-SET search_path TO "$user",public;
+SET search_path TO "$user", public;
 
 INSERT INTO schema_migrations (version) VALUES ('20150506171210');
 
@@ -1950,4 +1969,8 @@ INSERT INTO schema_migrations (version) VALUES ('20180515134613');
 INSERT INTO schema_migrations (version) VALUES ('20180518090622');
 
 INSERT INTO schema_migrations (version) VALUES ('20180827130312');
+
+INSERT INTO schema_migrations (version) VALUES ('20181001124627');
+
+INSERT INTO schema_migrations (version) VALUES ('20181220085822');
 

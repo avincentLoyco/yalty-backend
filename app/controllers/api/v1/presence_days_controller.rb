@@ -3,6 +3,11 @@ module API
     class PresenceDaysController < ApplicationController
       authorize_resource except: :create
       include PresenceDaySchemas
+      include AppDependencies[
+        create_presence_day: "use_cases.presence_days.create",
+        destroy_presence_day: "use_cases.presence_days.destroy",
+        update_presence_day: "use_cases.presence_days.update",
+      ]
 
       def show
         render_resource(resource)
@@ -13,27 +18,26 @@ module API
       end
 
       def create
-        verified_dry_params(dry_validation_schema) do |attributes|
-          verify_if_resource_not_locked!(presence_policy)
-          resource = presence_policy.presence_days.new(presence_day_params(attributes))
-          authorize! :create, resource
+        authorize! :create, PresenceDay
 
-          resource.save!
+        verified_dry_params(dry_validation_schema) do |attributes|
+          resource = create_presence_day.call(
+            params: presence_day_params(attributes),
+            presence_policy: presence_policy,
+          )
           render_resource(resource, status: :created)
         end
       end
 
       def update
         verified_dry_params(dry_validation_schema) do |attributes|
-          verify_if_resource_not_locked!(resource.presence_policy)
-          resource.update!(attributes)
+          update_presence_day.call(presence_day: resource, params: attributes)
           render_no_content
         end
       end
 
       def destroy
-        verify_if_resource_not_locked!(resource.presence_policy)
-        resource.destroy!
+        destroy_presence_day.call(presence_day: resource)
         render_no_content
       end
 

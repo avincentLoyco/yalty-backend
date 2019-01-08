@@ -1,3 +1,5 @@
+# TODO: refactor this class to use dependency injection
+
 module TimeOffs
   class Decline < UseCase
     include SubjectObservable

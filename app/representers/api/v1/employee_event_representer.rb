@@ -35,7 +35,7 @@ module Api::V1
           resource.employee_time_off_policy.present?
 
       standard_day_duration =
-        resource.employee.account.presence_policies.full_time.standard_day_duration
+        resource.employee.account.standard_day_duration
 
       return if standard_day_duration.nil?
       resource.employee_time_off_policy.time_off_policy.amount / standard_day_duration

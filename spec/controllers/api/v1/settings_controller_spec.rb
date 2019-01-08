@@ -6,8 +6,7 @@ RSpec.describe API::V1::SettingsController, type: :controller do
   include_context "shared_context_headers"
 
   let!(:presence_policy) do
-    create(:presence_policy, :with_time_entries, account: account, occupation_rate: 0.8,
-      standard_day_duration: 9600, default_full_time: true)
+    create(:presence_policy, :with_time_entries, account: account, occupation_rate: 0.8)
   end
 
   describe "GET #show" do

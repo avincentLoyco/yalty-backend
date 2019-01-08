@@ -12,7 +12,7 @@ class Adjustments::Calculate
   def initialize(event_id)
     @event                 = Employee::Event.find(event_id)
     @employee              = Employee.find(event.employee_id)
-    @standard_day_duration = employee.account.presence_policies.full_time.standard_day_duration
+    @standard_day_duration = employee.account.standard_day_duration
   end
 
   def call
@@ -22,7 +22,7 @@ class Adjustments::Calculate
                    )
                  elsif event.event_type.eql?("contract_end")
                    Adjustments::Calculator::ContractEnd.call(
-                     annual_allowance(current_etop), event.effective_at
+                     eoc_annual_allowance(current_etop), event.effective_at
                    )
                  elsif event.event_type.eql?("work_contract")
                    Adjustments::Calculator::WorkContract.call(
@@ -57,6 +57,19 @@ class Adjustments::Calculate
 
   def annual_allowance(etop)
     (etop.time_off_policy.amount / standard_day_duration) * etop.occupation_rate
+  end
+
+  # NOTE: A separate eoc_annual_allowance function for end of contract was added to avoid
+  # complicated refactoring of annual_allowance function for other event types.
+  def eoc_annual_allowance(etop)
+    (etop.time_off_policy.amount / standard_day_duration) * current_occupation_rate
+  end
+
+  def current_occupation_rate
+    @current_occupation_rate ||=
+      employee
+        .active_presence_policy_at(event.effective_at)
+        .occupation_rate
   end
 
   def current_etop

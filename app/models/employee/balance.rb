@@ -13,8 +13,11 @@ class Employee::Balance < ActiveRecord::Base
   ASSIGNATION_OFFSET       = 4.seconds
   ADDITION_OFFSET          = 5.seconds
   MANUAL_ADJUSTMENT_OFFSET = 6.seconds
+  END_OF_CONTRACT_OFFSET   = 7.seconds
 
-  TYPES = %w(time_off reset removal end_of_period assignation addition manual_adjustment)
+  TYPES = %w(
+    time_off reset removal end_of_period assignation addition manual_adjustment end_of_contract
+  )
 
   belongs_to :employee
   belongs_to :time_off_category
@@ -65,6 +68,7 @@ class Employee::Balance < ActiveRecord::Base
   scope :in_category, ->(category_id) { where(time_off_category_id: category_id) }
   scope :with_time_off, -> { where.not(time_off_id: nil) }
   scope :not_time_off, -> { where(time_off_id: nil) }
+  scope :not_end_of_contract, -> { where.not(balance_type: "end_of_contract") }
   scope :recent, -> { order(effective_at: :desc) }
 
   def amount
@@ -129,9 +133,13 @@ class Employee::Balance < ActiveRecord::Base
   def end_time_not_after_contract_end
     contract_end = employee.contract_end_for(effective_at)
 
-    return unless !balance_type.eql?("reset") && contract_end.present? &&
-        contract_end > employee.hired_date_for(effective_at) &&
-        (contract_end + 1.day) + Employee::Balance::REMOVAL_OFFSET < effective_at
+    return unless
+      !balance_type.eql?("end_of_contract")                    &&
+          !balance_type.eql?("reset")                          &&
+          contract_end.present?                                &&
+          contract_end > employee.hired_date_for(effective_at) &&
+          (contract_end + 1.day) + Employee::Balance::REMOVAL_OFFSET < effective_at
+
     errors.add(:effective_at, "Employee Balance can not be added after employee contract end date")
   end
 
@@ -182,13 +190,20 @@ class Employee::Balance < ActiveRecord::Base
   end
 
   def time_off_policy_presence
-    return if time_off_policy && (balance_type.eql?("reset") || balance_type.eql?("time_off") ||
-                                  (!balance_type.eql?("reset") && !time_off_policy.reset))
+    return if time_off_policy && (
+      balance_type.eql?("reset") ||
+      balance_type.eql?("time_off") ||
+      balance_type.eql?("end_of_contract") ||
+      (!balance_type.eql?("reset") && !time_off_policy.reset)
+    )
     errors.add(:employee, "Must have an associated time off policy in the balance category")
   end
 
   def effective_after_employee_start_date
-    return if balance_type.eql?("reset") || employee.contract_periods_include?(effective_at)
+    return if
+      balance_type.eql?("reset") ||
+          balance_type.eql?("end_of_contract") ||
+          employee.contract_periods_include?(effective_at)
 
     errors.add(:effective_at, "can't be set outside of employee contract period")
   end

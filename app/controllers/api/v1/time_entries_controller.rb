@@ -3,6 +3,11 @@ module API
     class TimeEntriesController < API::ApplicationController
       authorize_resource except: :create
       include TimeEntriesSchemas
+      include AppDependencies[
+        create_time_entry: "use_cases.time_entries.create",
+        destroy_time_entry: "use_cases.time_entries.destroy",
+        update_time_entry: "use_cases.time_entries.update",
+      ]
 
       def show
         render_resource(resource)
@@ -13,27 +18,29 @@ module API
       end
 
       def create
+        authorize! :create, TimeEntry
+
         verified_dry_params(dry_validation_schema) do |attributes|
-          @resource = resources.new(time_entry_params(attributes))
-          authorize! :create, resource
-          verify_if_resource_not_locked!(resource.presence_day.presence_policy)
-          resource.save!
+          resource = create_time_entry.call(
+            params: attributes.except(:presence_day),
+            presence_day: presence_day,
+          )
           render_resource(resource, status: :created)
         end
       end
 
       def update
         verified_dry_params(dry_validation_schema) do |attributes|
-          verify_if_resource_not_locked!(resource.presence_day.presence_policy)
-          resource.update!(attributes)
+          update_time_entry.call(
+            time_entry: resource,
+            params: attributes,
+          )
           render_no_content
         end
       end
 
       def destroy
-        verify_if_resource_not_locked!(resource.presence_day.presence_policy)
-        resource.destroy!
-        resource.presence_day.update_minutes!
+        destroy_time_entry.call(time_entry: resource)
         render_no_content
       end
 
@@ -54,10 +61,6 @@ module API
       def presence_day_id
         return params[:presence_day].try(:[], :id) unless params[:presence_day_id]
         params[:presence_day_id]
-      end
-
-      def time_entry_params(attributes)
-        attributes.tap { |attr| attr.delete(:presence_day) }
       end
 
       def resource_representer

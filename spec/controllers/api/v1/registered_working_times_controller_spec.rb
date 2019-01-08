@@ -41,10 +41,15 @@ RSpec.describe API::V1::RegisteredWorkingTimesController, type: :controller do
         it { is_expected.to have_http_status(204) }
       end
 
-      context "when data for time entries is empty" do
+      context "when data for time entries is nil" do
         let(:time_entries_params) { nil }
 
-        it { expect { subject }.to change { RegisteredWorkingTime.count }.by(1) }
+        it { is_expected.to have_http_status(422) }
+      end
+
+      context "when data for time entries is empty" do
+        let(:time_entries_params) { [] }
+
         it { expect { subject }.to change { employee.registered_working_times.count }.by(1) }
 
         it { is_expected.to have_http_status(204) }

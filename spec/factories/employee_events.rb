@@ -1,5 +1,6 @@
 FactoryGirl.define do
   factory :employee_event, :class => "Employee::Event" do
+    id { SecureRandom.uuid }
     effective_at { 1.day.ago.at_beginning_of_day }
     event_type "default"
 

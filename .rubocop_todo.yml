@@ -269,7 +269,6 @@ Layout/SpaceAroundOperators:
     - 'spec/services/employee_balance/recreate_balances/after_employee_time_off_policy_create_spec.rb'
     - 'spec/services/schedule/holidays_for_employee_shedule_spec.rb'
     - 'spec/services/schedule/time_off_as_time_entries_in_range_spec.rb'
-    - 'spec/use_cases/events/work_contract/create_spec.rb'
 
 # Offense count: 16
 # Cop supports --auto-correct.
@@ -285,7 +284,6 @@ Layout/SpaceBeforeBlockBraces:
     - 'spec/services/event/delete_event_spec.rb'
     - 'spec/use_cases/events/adjustment/destroy_spec.rb'
     - 'spec/use_cases/events/adjustment/update_spec.rb'
-    - 'spec/use_cases/events/work_contract/create_spec.rb'
 
 # Offense count: 21
 # Cop supports --auto-correct.
@@ -359,7 +357,6 @@ Layout/SpaceInsideHashLiteralBraces:
     - 'spec/services/event/create_event_spec.rb'
     - 'spec/services/event/update_event_spec.rb'
     - 'spec/services/schedule/schedule_for_employee_spec.rb'
-    - 'spec/use_cases/events/work_contract/create_spec.rb'
 
 # Offense count: 46
 # Cop supports --auto-correct.
@@ -592,7 +589,6 @@ RSpec/ContextWording:
 RSpec/DescribeClass:
   Exclude:
     - 'spec/lib/tasks/add_active_attr_to_events_spec.rb'
-    - 'spec/lib/tasks/add_standard_day_duration_spec.rb'
     - 'spec/lib/tasks/attribute_definitions.rb'
     - 'spec/lib/tasks/db/cleanup/create_missing_balances_spec.rb'
     - 'spec/lib/tasks/presence_policies_spec.rb'

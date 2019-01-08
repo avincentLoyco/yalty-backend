@@ -1,6 +1,9 @@
 {
   "before_migration": [
-
+    {
+      "task_name": "db:cleanup:delete_fake_accounts",
+      "description": "Delete fake and test accounts"
+    }
   ],
   "after_migration": [
 

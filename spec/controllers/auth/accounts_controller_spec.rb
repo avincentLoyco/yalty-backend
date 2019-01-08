@@ -28,10 +28,17 @@ RSpec.describe Auth::AccountsController, type: :controller do
     subject { post :create, params }
 
     context "with valid params" do
+      let(:created_account) { Account.find_by(company_name: company_name) }
+
       it { expect { subject }.to change(Account, :count).by(1)  }
-      it { expect { subject }.to change(Account::User, :count).by(1)  }
+      it { expect { subject }.to change(Account::User, :count).by(2)  }
 
       it { is_expected.to have_http_status(:found) }
+
+      it "enables yalty access" do
+        subject
+        expect(created_account.yalty_access).to eq(true)
+      end
 
       it "should send email with account url" do
         expect do
@@ -56,7 +63,7 @@ RSpec.describe Auth::AccountsController, type: :controller do
         end
 
         it { expect { subject }.to change(user.referrer.referred_accounts, :count).by(1) }
-        it { expect { subject }.to change(Account::User, :count).by(1) }
+        it { expect { subject }.to change(Account::User, :count).by(2) }
         it { expect { subject }.to change(Account, :count).by(1) }
       end
 
@@ -66,7 +73,7 @@ RSpec.describe Auth::AccountsController, type: :controller do
           params[:user][:email] = "someRandomEmail@random.com"
         end
 
-        it { expect { subject }.to change(Account::User, :count).by(1) }
+        it { expect { subject }.to change(Account::User, :count).by(2) }
         it { expect { subject }.to change(Account, :count).by(1) }
       end
 
@@ -76,7 +83,7 @@ RSpec.describe Auth::AccountsController, type: :controller do
           params[:user][:email] = "someRandomEmail@random.com"
         end
 
-        it { expect { subject }.to change(Account::User, :count).by(1) }
+        it { expect { subject }.to change(Account::User, :count).by(2) }
         it { expect { subject }.to change(Account, :count).by(1) }
       end
 
@@ -90,7 +97,7 @@ RSpec.describe Auth::AccountsController, type: :controller do
         let(:customer) { StripeCustomer.new("cus_123") }
         let(:subscription) { StripeSubscription.new("sub_123") }
 
-        it { expect { subject }.to change(Account::User, :count).by(1) }
+        it { expect { subject }.to change(Account::User, :count).by(2) }
         it { expect { subject }.to change(Account, :count).by(1) }
         it { expect { subject }.to_not have_enqueued_job(Payments::CreateOrUpdateCustomerWithSubscription) }
 

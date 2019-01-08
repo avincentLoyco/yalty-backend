@@ -47,7 +47,7 @@ FactoryGirl.define do
               end
             end
           end
-
+          presence_day.update_minutes!
           presence_policy.presence_days << presence_day
         end
       end

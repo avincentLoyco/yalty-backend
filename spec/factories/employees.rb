@@ -1,13 +1,19 @@
 FactoryGirl.define do
   factory :employee do
+    id { SecureRandom.uuid }
     account { create(:account) }
 
     transient do
       hired_at { 6.years.ago }
       contract_end_at { nil }
+      role { nil }
     end
 
     after(:build) do |employee, evaluator|
+      unless evaluator.role.nil?
+        create(:account_user, employee: employee, account: employee.account, role: evaluator.role)
+      end
+
       if employee.events.empty?
         hired_at = if employee.employee_working_places.empty?
                      evaluator.hired_at

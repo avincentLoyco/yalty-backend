@@ -17,7 +17,7 @@ class CreateManualAdjustmentForEmployee
       ],
     }
 
-    Events::Adjustment::Create.new(params).call
+    Events::Adjustment::Create.new.call(params)
     Rails.logger.info "Manual adjustment for #{@email} with value: #{adjustment_value} added"
   end
 

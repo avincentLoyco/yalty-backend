@@ -1,11 +1,11 @@
 class CalculateTimeOffBalance
-  attr_reader :time_off, :employee, :balane, :presence_policy, :time_off_start_date,
-    :time_off_end_date, :holidays_dates_hash
+  attr_reader :time_off, :employee, :balane, :presence_policy, :time_off_starts_at,
+    :time_off_ends_at, :holidays_dates_hash
 
   def initialize(time_off, start_time = nil, end_time = nil)
     @time_off = time_off
-    @time_off_start_date = start_time || time_off.start_time
-    @time_off_end_date = end_time || time_off.end_time
+    @time_off_starts_at = start_time || time_off.start_time
+    @time_off_ends_at = end_time || time_off.end_time
     @employee = time_off.employee
     @holidays_dates_hash = holidays_dates_in_time_off(time_off_holidays)
   end
@@ -27,8 +27,8 @@ class CalculateTimeOffBalance
 
   def calculate_start_date_for_epp(epp, active_epps)
     @epp_start_datetime =
-      if epp == active_epps.first && epp.effective_at.to_datetime <= time_off_start_date
-        time_off_start_date
+      if epp == active_epps.first && epp.effective_at.to_datetime <= time_off_starts_at
+        time_off_starts_at
       else
         epp.effective_at.to_datetime
       end
@@ -37,7 +37,7 @@ class CalculateTimeOffBalance
 
   def calculate_end_date_for_epp(epp, active_epps)
     @epp_end_datetime =
-      epp == active_epps.last ? time_off_end_date : epp.effective_till.to_datetime + 1
+      epp == active_epps.last ? time_off_ends_at : epp.effective_till.to_datetime + 1
     @epp_end_date = @epp_end_datetime.to_date
   end
 
@@ -49,8 +49,8 @@ class CalculateTimeOffBalance
         nil,
         employee.id,
         nil,
-        time_off_start_date,
-        time_off_end_date
+        time_off_starts_at,
+        time_off_ends_at
       )
       .call
       .map do |join_table_hash|
@@ -59,13 +59,13 @@ class CalculateTimeOffBalance
   end
 
   def time_off_holidays
-    HolidaysForEmployeeInRange.new(employee, time_off_start_date, time_off_end_date).call
+    HolidaysForEmployeeInRange.new(employee, time_off_starts_at, time_off_ends_at).call
   end
 
   def holidays_dates_in_time_off(time_off_holidays)
     holidays_hash = { start_or_end_days: [], middle_days: [] }
     time_off_holidays.each do |holiday|
-      if holiday.date == time_off_start_date || holiday.date == time_off_end_date
+      if holiday.date == time_off_starts_at.to_date || holiday.date == time_off_ends_at.to_date
         holidays_hash[:start_or_end_days] << holiday.date
       else
         holidays_hash[:middle_days] << holiday.date

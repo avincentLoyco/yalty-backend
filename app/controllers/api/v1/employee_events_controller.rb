@@ -19,7 +19,7 @@ module API
           authorize! :create, event_for_auth(attributes)
           verify_employee_attributes_values(attributes[:employee_attributes])
           UpdateEventAttributeValidator.new(attributes[:employee_attributes]).call
-          new_resource = event_service_class.new(attributes).call
+          new_resource = event_service_class.new.call(attributes)
 
           render_resource(new_resource, status: :created)
         end
@@ -30,7 +30,7 @@ module API
           authorize! :update, resource, attributes.except(:employee_attributes)
           verify_employee_attributes_values(attributes[:employee_attributes])
           UpdateEventAttributeValidator.new(attributes[:employee_attributes]).call
-          event_service_class.new(resource, attributes).call
+          event_service_class.new.call(resource, attributes)
 
           render_no_content
         end
@@ -38,7 +38,8 @@ module API
 
       def destroy
         authorize! :destroy, resource
-        event_service_class.new(resource).call
+        event_service_class.new.call(resource)
+
         render_no_content
       end
 

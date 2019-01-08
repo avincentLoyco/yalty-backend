@@ -9,7 +9,7 @@ notifications:
 bundler_args: "--without production staging review --deployment"
 before_install:
   - rvm @global do gem uninstall bundler -a -x
-  - rvm @global do gem install bundler -v 1.15.1
+  - rvm @global do gem install bundler -v 1.15.1 --force
   - rvm @global do gem install travis octokit
 before_script:
   - ./.travis/before_script

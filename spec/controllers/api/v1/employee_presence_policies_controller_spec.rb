@@ -818,12 +818,14 @@ RSpec.describe API::V1::EmployeePresencePoliciesController, type: :controller do
   end
 
   describe "DELETE #destroy" do
+    subject { delete :destroy, { id: id } }
+
     let(:id) { employee_presence_policy.id }
     let!(:employee_presence_policy) do
       create(:employee_presence_policy,
         employee: employee, presence_policy: presence_policy, effective_at: Time.now)
     end
-    subject { delete :destroy, { id: id } }
+    let!(:vacation_toc) { create(:time_off_category, account: employee.account, name: "vacation") }
 
     context "with valid params" do
       context "when they are no join tables with the same resources before and after" do

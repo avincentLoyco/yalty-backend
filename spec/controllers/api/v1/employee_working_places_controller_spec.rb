@@ -817,9 +817,12 @@ RSpec.describe API::V1::EmployeeWorkingPlacesController, type: :controller do
       end
 
 
-      context "when they are employee balances after resource effective at" do
+      context "when there are employee balances after resource effective at" do
+        let!(:vacation_toc) do
+          create(:time_off_category, account: employee.account, name: "vacation")
+        end
         let(:holiday_policy) { create(:holiday_policy, account: account) }
-        let(:categories) { create_list(:time_off_category, 2, account: account) }
+        let(:categories) { create_list(:time_off_category, 2, account: account) + [vacation_toc] }
         let(:policies) { categories.map { |cat| create(:time_off_policy, time_off_category: cat) } }
         let!(:employee_policies) do
           policies.map do |policy|

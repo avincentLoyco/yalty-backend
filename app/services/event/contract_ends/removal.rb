@@ -14,6 +14,7 @@ module ContractEnds
         remove_adjustment_events
         assign_reset_resources
         move_time_offs
+        assign_end_of_contract_balance
         assign_reset_balances_and_create_additions
       end
     end
@@ -54,6 +55,7 @@ module ContractEnds
       employee
         .employee_balances
         .not_time_off
+        .not_end_of_contract
         .where("effective_at > ?", balance_remove_date)
     end
 

@@ -11,7 +11,7 @@ class BalanceEffectiveAtValidator
     return unless validation_required?
 
     return if matches_effective_at || matches_end_or_start_top_date
-    message = "Must be at TimeOffPolicy  assignations date, end date, start date or the previous"\
+    message = "Must be at TimeOffPolicy assignations date, end date, start date or the previous"\
       " day to start date"
     balance.errors.add(:effective_at, message)
   end
@@ -19,12 +19,20 @@ class BalanceEffectiveAtValidator
   private
 
   def validation_required?
-    balance.employee_id.present? && not_time_off? && not_manual_adjustment? && not_reset?
+    balance.employee_id.present? &&
+      not_time_off?              &&
+      not_manual_adjustment?     &&
+      not_reset?                 &&
+      not_end_of_contract?
   end
 
   def not_reset?
     return if balance.employee_time_off_policy.blank?
     !balance.balance_type.eql?("reset") && balance.employee_time_off_policy.not_reset?
+  end
+
+  def not_end_of_contract?
+    !balance.balance_type.eql?("end_of_contract")
   end
 
   def not_time_off?

@@ -44,6 +44,7 @@ class Auth::AccountsController < ApplicationController
 
   def build_account_and_user(params)
     account = Account.new(params[:account])
+    account.public_send(:yalty_access=, true, notification_email: false)
     user = account.users.new(params[:user].merge(role: "account_owner"))
     [account, user]
   end
